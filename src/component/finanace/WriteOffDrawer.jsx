@@ -7,7 +7,7 @@ import CustomSelect from "../common/CustomSelect";
 import MyDatePicker1 from "../common/MyDatePicker1";
 import MemberSearch from "../profile/MemberSearch";
 
-const WriteOffDrawer = ({ open, onClose, onSubmit }) => {
+const WriteOffDrawer = ({ open, onClose, onSubmit, hideMemberSearch = false }) => {
     const [formValues, setFormValues] = useState({
         writeOff: "",
         writeOffDate: dayjs(),
@@ -74,6 +74,7 @@ const WriteOffDrawer = ({ open, onClose, onSubmit }) => {
         >
             <div style={{ padding: "10px" }}>
                 <Row gutter={[16, 16]}>
+                    {!hideMemberSearch ? (
                     <Col span={24}>
                         <label className="my-input-label">Member Search</label>
                         <MemberSearch
@@ -82,6 +83,7 @@ const WriteOffDrawer = ({ open, onClose, onSubmit }) => {
                             onSelectBehavior="none"
                         />
                     </Col>
+                    ) : null}
                     <Col span={24}>
                         <MyInput
                             label="Ref No."

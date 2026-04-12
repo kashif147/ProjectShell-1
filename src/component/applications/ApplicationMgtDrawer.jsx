@@ -68,16 +68,65 @@ function membershipCategoryCompareKey(s) {
     .replace(/\s+/g, " ");
 }
 
+/** Normalize API/profile membership category to a string (id, name, or plain string). */
+function scalarMembershipCategoryValue(mc) {
+  if (mc == null || mc === "") return "";
+  if (typeof mc === "object" && mc != null) {
+    if (mc._id != null && String(mc._id).trim() !== "")
+      return String(mc._id).trim();
+    if (mc.name != null && String(mc.name).trim() !== "")
+      return String(mc.name).trim();
+    return "";
+  }
+  return String(mc).trim();
+}
+
+/**
+ * Read membership category from application payloads (CRM API, drafts, nested submission).
+ */
+function extractMembershipCategoryFromApplication(app) {
+  if (!app || typeof app !== "object") return "";
+  const candidates = [
+    app.subscriptionDetails?.membershipCategory,
+    app.submission?.subscriptionDetails?.membershipCategory,
+    app.latestSubmission?.subscriptionDetails?.membershipCategory,
+    app.pendingSubmission?.subscriptionDetails?.membershipCategory,
+    app.personalDetails?.subscriptionDetails?.membershipCategory,
+  ];
+  for (const mc of candidates) {
+    const s = scalarMembershipCategoryValue(mc);
+    if (s) return s;
+  }
+  return "";
+}
+
+/**
+ * Read membership category from profile search / member record shapes.
+ */
+function extractMembershipCategoryFromProfile(profile) {
+  if (!profile || typeof profile !== "object") return "";
+  const subs = profile.subscriptions;
+  const candidates = [
+    profile.subscription?.membershipCategory,
+    profile.subscriptionDetails?.membershipCategory,
+    profile.currentSubscription?.membershipCategory,
+    Array.isArray(subs) && subs.length > 0
+      ? subs[0]?.membershipCategory
+      : undefined,
+    profile.membershipCategory,
+  ];
+  for (const mc of candidates) {
+    const s = scalarMembershipCategoryValue(mc);
+    if (s) return s;
+  }
+  return "";
+}
+
 /**
  * Canonical label from API value (id, object with _id, or label with any casing/spacing).
  */
 function normalizeMembershipCategoryToLabel(raw, categoryData) {
-  if (raw == null || raw === "") return "";
-  const fromObj =
-    typeof raw === "object" && raw != null && raw._id != null
-      ? String(raw._id)
-      : null;
-  const str = (fromObj ?? String(raw)).trim();
+  const str = scalarMembershipCategoryValue(raw);
   if (!str) return "";
 
   if (!Array.isArray(categoryData) || categoryData.length === 0) {
@@ -389,7 +438,7 @@ function ApplicationMgtDrawer({
         inmoRewards: searchResult?.cornMarket?.inmoRewards || false,
         valueAddedServices: searchResult?.preferences?.valueAddedServices || false,
         termsAndConditions: searchResult?.preferences?.termsAndConditions || false,
-        membershipCategory: "", // This might need to be determined differently
+        membershipCategory: extractMembershipCategoryFromProfile(searchResult),
         confirmedRecruiterProfileId: searchResult?.recruitmentDetails?.confirmedRecruiterProfileId || null,
         dateJoined: toDayJS(searchResult?.firstJoinedDate || new Date()),
         submissionDate: toDayJS(searchResult?.submissionDate),
@@ -644,12 +693,7 @@ function ApplicationMgtDrawer({
           apiData?.subscriptionDetails?.valueAddedServices || false,
         termsAndConditions:
           apiData?.subscriptionDetails?.termsAndConditions || false,
-        membershipCategory: (() => {
-          const mc = apiData?.subscriptionDetails?.membershipCategory;
-          if (mc == null || mc === "") return "";
-          if (typeof mc === "object" && mc._id != null) return String(mc._id);
-          return String(mc);
-        })(),
+        membershipCategory: extractMembershipCategoryFromApplication(apiData),
         confirmedRecruiterProfileId:
           apiData?.subscriptionDetails?.confirmedRecruiterProfileId || null,
         dateJoined: toDayJS(
@@ -667,18 +711,17 @@ function ApplicationMgtDrawer({
   );
   console.log(categoryData, "categoryData");
 
-  const withMembershipCategoryIdsForApi = (prepared) => {
+  /** Align CRM payloads with portal: send membershipCategory as lookup label, not product id. */
+  const withMembershipCategoryLabelsForApi = (prepared) => {
     if (!prepared?.subscriptionDetails) return prepared;
-    const id = membershipCategoryLabelToId(
-      prepared.subscriptionDetails.membershipCategory,
-      categoryData
-    );
+    const raw = prepared.subscriptionDetails.membershipCategory;
+    const label = normalizeMembershipCategoryToLabel(raw, categoryData);
     return {
       ...prepared,
       subscriptionDetails: {
         ...prepared.subscriptionDetails,
         membershipCategory:
-          id || prepared.subscriptionDetails.membershipCategory,
+          label !== "" ? label : raw,
       },
     };
   };
@@ -735,7 +778,7 @@ function ApplicationMgtDrawer({
     setOriginalData((prev) =>
       prev ? patchMembershipCategory(prev) : prev
     );
-  }, [categoryData, application, isEdit]);
+  }, [categoryData, application, isEdit, profileSearchData]);
 
   useEffect(() => {
     if (!Array.isArray(disciplineOptions) || disciplineOptions.length === 0)
@@ -1345,7 +1388,7 @@ function ApplicationMgtDrawer({
         throw new Error("No authentication token found");
       }
 
-      const apiData = withMembershipCategoryIdsForApi(
+      const apiData = withMembershipCategoryLabelsForApi(
         dateUtils.prepareForAPI(InfData)
       );
 
@@ -1406,7 +1449,7 @@ function ApplicationMgtDrawer({
           let approvalPayload;
 
           if (isEdit && originalData) {
-            const apiOriginalData = withMembershipCategoryIdsForApi(
+            const apiOriginalData = withMembershipCategoryLabelsForApi(
               dateUtils.prepareForAPI(originalData)
             );
             const proposedPatch = generatePatch(apiOriginalData, apiData);
@@ -1627,12 +1670,14 @@ function ApplicationMgtDrawer({
 
       if (field === "membershipCategory") {
         const c =
-          membershipCategoryLabelToId(currentVal, categoryData) ||
-          currentVal;
+          normalizeMembershipCategoryToLabel(currentVal, categoryData) ||
+          String(currentVal ?? "").trim();
         const o =
-          membershipCategoryLabelToId(originalVal, categoryData) ||
-          originalVal;
-        return c !== o;
+          normalizeMembershipCategoryToLabel(originalVal, categoryData) ||
+          String(originalVal ?? "").trim();
+        return (
+          membershipCategoryCompareKey(c) !== membershipCategoryCompareKey(o)
+        );
       }
 
       if (currentVal && originalVal) {
@@ -1657,7 +1702,7 @@ function ApplicationMgtDrawer({
       if (!token) {
         throw new Error("No authentication token found");
       }
-      const apiData = withMembershipCategoryIdsForApi(
+      const apiData = withMembershipCategoryLabelsForApi(
         dateUtils.prepareForAPI(InfData)
       );
       if (!isEdit || !originalData) {
@@ -1669,7 +1714,7 @@ function ApplicationMgtDrawer({
         throw new Error("ApplicationId not found");
       }
 
-      const apiOriginalData = withMembershipCategoryIdsForApi(
+      const apiOriginalData = withMembershipCategoryLabelsForApi(
         dateUtils.prepareForAPI(originalData)
       );
       const savePromises = [];
@@ -2063,10 +2108,10 @@ function ApplicationMgtDrawer({
         throw new Error("No authentication token found");
       }
 
-      const apiInfData = withMembershipCategoryIdsForApi(
+      const apiInfData = withMembershipCategoryLabelsForApi(
         dateUtils.prepareForAPI(InfData)
       );
-      const apiOriginalData = withMembershipCategoryIdsForApi(
+      const apiOriginalData = withMembershipCategoryLabelsForApi(
         dateUtils.prepareForAPI(originalData)
       );
 

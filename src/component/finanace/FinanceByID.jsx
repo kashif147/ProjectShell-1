@@ -1,17 +1,108 @@
-import React, { useState, useEffect, useMemo } from "react";
-import { Input, Select, DatePicker, Button, Card, Row, Col, Spin, Empty, notification } from "antd";
-import CommonPopConfirm from "../common/CommonPopConfirm";
+import React, { useState, useEffect, useMemo, useCallback } from "react";
+import { Button, Empty, notification, Dropdown, Tooltip } from "antd";
+import { MoreOutlined, InfoCircleOutlined } from "@ant-design/icons";
+import RefundDrawer from "./RefundDrawer";
+import WriteOffDrawer from "./WriteOffDrawer";
+import ReallocationDrawer from "./ReallocationDrawer";
 import dayjs from "dayjs";
 import { useLocation, useSearchParams } from "react-router-dom";
 import axios from "axios";
 import { useSelector } from "react-redux";
 import MyTable from "../common/MyTable";
-import { centsToEuro } from "../../utils/Utilities";
+import { centsToEuro, convertToLocalTime } from "../../utils/Utilities";
 // import axios from "axios";
 import { useTableColumns } from "../../context/TableColumnsContext ";
 
-const { Option } = Select;
-const { RangePicker } = DatePicker;
+/** GL doc type values shown with friendlier labels in the Finance grid. */
+function displayDocTypeLabel(raw) {
+  if (raw == null || String(raw).trim() === "") return "—";
+  const s = String(raw).trim();
+  const norm = s.toLowerCase();
+  if (norm === "claim") return "Receipt";
+  if (norm === "adjustment") return "Fee Adjustment";
+  return s;
+}
+
+function pickFirstNonEmptyString(...candidates) {
+  for (let i = 0; i < candidates.length; i += 1) {
+    const c = candidates[i];
+    if (c != null && String(c).trim() !== "") return String(c).trim();
+  }
+  return null;
+}
+
+/** How the payment was received (ledger / settlement / GL). */
+function resolvePaymentTypeSource(item, gl) {
+  const st =
+    item?.settlement && typeof item.settlement === "object"
+      ? item.settlement
+      : null;
+  return pickFirstNonEmptyString(
+    item?.paymentType,
+    item?.paymentMethod,
+    item?.payMethod,
+    item?.method,
+    item?.paymentChannel,
+    item?.channel,
+    st?.provider,
+    st?.paymentMethod,
+    st?.method,
+    st?.type,
+    item?.payment?.method,
+    item?.payment?.type,
+    gl?.paymentType,
+    gl?.paymentMethod,
+    gl?.payMethod
+  );
+}
+
+/** Normalize payment method labels for display (deductions, card, DD, etc.). */
+function displayPaymentType(raw) {
+  if (raw == null || String(raw).trim() === "") return "—";
+  const s = String(raw).trim();
+  const compact = s.toLowerCase().replace(/[\s_-]+/g, "");
+  const aliases = {
+    stripe: "Credit Card",
+    card: "Credit Card",
+    creditcard: "Credit Card",
+    directdebit: "Direct Debit",
+    standingorder: "Standing Order",
+    standingorders: "Standing Order",
+    cheque: "Cheque",
+    check: "Cheque",
+    cash: "Cash",
+    cashpayment: "Cash",
+    deduction: "Deductions",
+    deductions: "Deductions",
+    salarydeduction: "Deductions",
+    payrolldeduction: "Deductions",
+    payroll: "Deductions",
+    banktransfer: "Bank Transfer",
+    transfer: "Bank Transfer",
+    paypal: "PayPal",
+    revolut: "Revolut",
+  };
+  if (aliases[compact]) return aliases[compact];
+  return s
+    .replace(/[_-]+/g, " ")
+    .replace(/\b\w/g, (ch) => ch.toUpperCase());
+}
+
+function isClaimDocType(record) {
+  const raw = record?.docType ?? record?.doc_type ?? record?.documentType;
+  return raw != null && String(raw).trim().toLowerCase() === "claim";
+}
+
+function isInvoiceDocType(record) {
+  const raw = record?.docType ?? record?.doc_type ?? record?.documentType;
+  return raw != null && String(raw).trim().toLowerCase() === "invoice";
+}
+
+/** Claim (receipt) lines are shown as paid by credit card in the grid. */
+function displayPaymentTypeForRow(record) {
+  if (isClaimDocType(record)) return "Credit Card";
+  return displayPaymentType(record?.paymentType);
+}
 
 const TransactionHistory = () => {
   const location = useLocation();
@@ -32,11 +123,15 @@ const TransactionHistory = () => {
   const [loading, setLoading] = useState(false);
   const [data, setData] = useState([]);
   const { ProfileDetails } = useTableColumns();
-  const [searchText, setSearchText] = useState("");
-  const [transactionType, setTransactionType] = useState("All");
-  const [dateRange, setDateRange] = useState([]);
-  const [amountRange, setAmountRange] = useState("All");
   const [selectedRowKeys, setSelectedRowKeys] = useState([]);
+  const [refundDrawerOpen, setRefundDrawerOpen] = useState(false);
+  const [prefillRefundEuros, setPrefillRefundEuros] = useState(null);
+  const [receiptSummaryText, setReceiptSummaryText] = useState(null);
+  const [refundReceiptRows, setRefundReceiptRows] = useState([]);
+  const [writeOffDrawerOpen, setWriteOffDrawerOpen] = useState(false);
+  const [writeOffLedgerRows, setWriteOffLedgerRows] = useState([]);
+  const [reallocationDrawerOpen, setReallocationDrawerOpen] = useState(false);
+  const [reallocationSourceRow, setReallocationSourceRow] = useState(null);
   const targetTransactionId = String(
     location.state?.transactionId || searchParams.get("transactionId") || ""
   )
@@ -118,11 +213,33 @@ const TransactionHistory = () => {
 
         cumulativeBalance += (totalCredit - totalDebit);
 
+        const gl =
+          item.glTransaction ??
+          (Array.isArray(item.glTransactions) && item.glTransactions.length
+            ? item.glTransactions[0]
+            : null);
+
+        const docType =
+          item.docType ?? item.doc_type ?? item.documentType ??
+          gl?.docType ?? gl?.doc_type ?? gl?.documentType;
+        const docNo =
+          item.docNo ?? item.doc_no ?? item.documentNo ??
+          gl?.docNo ?? gl?.doc_no ?? gl?.documentNo;
+        const memoField = pickFirstNonEmptyString(
+          item.memo,
+          gl?.memo,
+          item.description
+        );
+        const paymentType = resolvePaymentTypeSource(item, gl);
+
         return {
           ...item,
           key: item._id || `ledger-${index}-${item.date}-${cumulativeBalance}`,
-          description: (item.memo || item.description || "-").trim(),
-          reference: (item.docNo || item.reference || "-").trim(),
+          docType,
+          docNo,
+          memo: memoField,
+          paymentType,
+          reference: (docNo || item.reference || "-").trim(),
           debit: totalDebit,
           credit: totalCredit,
           balance: cumulativeBalance,
@@ -144,17 +261,184 @@ const TransactionHistory = () => {
     }
   };
 
-  const columns = useMemo(() => [
+  const closeRefundDrawer = useCallback(() => {
+    setRefundDrawerOpen(false);
+    setPrefillRefundEuros(null);
+    setReceiptSummaryText(null);
+    setRefundReceiptRows([]);
+  }, []);
+
+  const closeWriteOffDrawer = useCallback(() => {
+    setWriteOffDrawerOpen(false);
+    setWriteOffLedgerRows([]);
+  }, []);
+
+  const closeReallocationDrawer = useCallback(() => {
+    setReallocationDrawerOpen(false);
+    setReallocationSourceRow(null);
+  }, []);
+
+  const openReallocationForSelection = useCallback(() => {
+    const rows = data.filter((r) =>
+      selectedRowKeys.some((k) => String(k) === String(r.key))
+    );
+    if (rows.length !== 1) {
+      notification.warning({
+        message: "Select one payment",
+        description:
+          "Reallocation applies to a single Receipt (payment) row.",
+        placement: "topRight",
+      });
+      return;
+    }
+    if (!isClaimDocType(rows[0])) {
+      notification.error({
+        message: "Reallocation not allowed",
+        description:
+          "Only Receipt transactions can be reclassified. Change your selection and try again.",
+        placement: "topRight",
+      });
+      return;
+    }
+    setReallocationSourceRow(rows[0]);
+    setReallocationDrawerOpen(true);
+  }, [data, selectedRowKeys]);
+
+  const openWriteOffForSelection = useCallback(() => {
+    const rows = data.filter((r) =>
+      selectedRowKeys.some((k) => String(k) === String(r.key))
+    );
+    if (!rows.length) {
+      notification.warning({
+        message: "Nothing selected",
+        description: "Select one or more ledger rows to write off.",
+        placement: "topRight",
+      });
+      return;
+    }
+    const nonInvoice = rows.filter((r) => !isInvoiceDocType(r));
+    if (nonInvoice.length) {
+      notification.error({
+        message: "Write-off not allowed",
+        description:
+          "Write off is only available for Invoice doc type. Change your selection and try again.",
+        placement: "topRight",
+      });
+      return;
+    }
+    setWriteOffLedgerRows(rows);
+    setWriteOffDrawerOpen(true);
+  }, [data, selectedRowKeys]);
+
+  const openRefundForRecords = useCallback((rows) => {
+    if (!rows?.length) {
+      notification.warning({
+        message: "Nothing selected",
+        description:
+          "Select Receipt rows using the checkboxes, or use Refund from a Receipt row’s menu.",
+        placement: "topRight",
+      });
+      return;
+    }
+    const nonReceipt = rows.filter((r) => !isClaimDocType(r));
+    if (nonReceipt.length) {
+      notification.error({
+        message: "Refund not allowed",
+        description:
+          "Only Receipt transactions can be refunded. Your selection includes other doc types — change the selection and try again.",
+        placement: "topRight",
+      });
+      return;
+    }
+    const totalCents = rows.reduce((s, r) => s + (Number(r.credit) || 0), 0);
+    if (totalCents <= 0) {
+      notification.warning({
+        message: "No payment to refund",
+        description: "Selected receipts have no credit (payment) amount.",
+        placement: "topRight",
+      });
+      return;
+    }
+    const euros = centsToEuro(totalCents);
+    const formatted = euros.toLocaleString("en-IE", {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    });
+    setRefundReceiptRows(rows);
+    setPrefillRefundEuros(euros);
+    setReceiptSummaryText(
+      `${rows.length} receipt(s) — total payments: €${formatted}`
+    );
+    setRefundDrawerOpen(true);
+  }, []);
+
+  const columns = useMemo(() => {
+    const docTypeLabels = new Set();
+    const paymentTypeLabels = new Set();
+    (data || []).forEach((r) => {
+      const dt = displayDocTypeLabel(r.docType ?? r.doc_type ?? r.documentType);
+      if (dt !== "—") docTypeLabels.add(dt);
+      const pt = displayPaymentTypeForRow(r);
+      if (pt !== "—") paymentTypeLabels.add(pt);
+    });
+    const docTypeFilters = [...docTypeLabels]
+      .sort((a, b) => a.localeCompare(b, undefined, { sensitivity: "base" }))
+      .map((text) => ({ text, value: text }));
+    const paymentTypeFilters = [...paymentTypeLabels]
+      .sort((a, b) => a.localeCompare(b, undefined, { sensitivity: "base" }))
+      .map((text) => ({ text, value: text }));
+
+    return [
     {
       title: "Date",
       dataIndex: "date",
       key: "date",
-      width: 110,
-      sorter: (a, b) => dayjs(a.date).unix() - dayjs(b.date).unix(),
-      render: (text) => text ? dayjs(text).format("DD/MM/YYYY") : "-",
+      width: 165,
+      sorter: {
+        compare: (a, b) => dayjs(a.date).unix() - dayjs(b.date).unix(),
+      },
+      render: (text) =>
+        text && dayjs(text).isValid() ? convertToLocalTime(text) : "-",
     },
-    { title: "Description", dataIndex: "description", key: "description", width: 250, ellipsis: true },
-    { title: "Reference", dataIndex: "reference", key: "reference", width: 180, ellipsis: true },
+    {
+      title: "Doc Type",
+      dataIndex: "docType",
+      key: "docType",
+      width: 150,
+      ellipsis: true,
+      sorter: {
+        compare: (a, b) =>
+          displayDocTypeLabel(a.docType ?? a.doc_type ?? a.documentType).localeCompare(
+            displayDocTypeLabel(b.docType ?? b.doc_type ?? b.documentType),
+            undefined,
+            { sensitivity: "base" }
+          ),
+      },
+      filters: docTypeFilters,
+      onFilter: (value, record) =>
+        displayDocTypeLabel(record.docType ?? record.doc_type ?? record.documentType) ===
+        value,
+      filterSearch: true,
+      render: (_, r) =>
+        displayDocTypeLabel(r.docType ?? r.doc_type ?? r.documentType),
+    },
+    {
+      title: "Payment Type",
+      dataIndex: "paymentType",
+      key: "paymentType",
+      width: 150,
+      ellipsis: true,
+      sorter: {
+        compare: (a, b) =>
+          displayPaymentTypeForRow(a).localeCompare(displayPaymentTypeForRow(b), undefined, {
+            sensitivity: "base",
+          }),
+      },
+      filters: paymentTypeFilters,
+      onFilter: (value, record) => displayPaymentTypeForRow(record) === value,
+      filterSearch: true,
+      render: (_, r) => displayPaymentTypeForRow(r),
+    },
     {
       title: "Debit",
       dataIndex: "debit",
@@ -183,56 +467,73 @@ const TransactionHistory = () => {
         </span>
       ),
     },
-  ], []);
+    {
+      title: "Memo",
+      dataIndex: "memo",
+      key: "memo",
+      width: 200,
+      ellipsis: true,
+      render: (v, record) => {
+        const memoText =
+          v != null && String(v).trim() !== "" ? String(v).trim() : "—";
+        const refRaw = record?.reference;
+        const refText =
+          refRaw != null && String(refRaw).trim() !== "" && String(refRaw).trim() !== "-"
+            ? String(refRaw).trim()
+            : "—";
+        return (
+          <span
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              gap: 8,
+              maxWidth: "100%",
+            }}
+          >
+            <span
+              style={{
+                overflow: "hidden",
+                textOverflow: "ellipsis",
+                whiteSpace: "nowrap",
+                flex: 1,
+                minWidth: 0,
+              }}
+            >
+              {memoText}
+            </span>
+            <Tooltip title={refText === "—" ? "No reference" : `Reference: ${refText}`}>
+              <InfoCircleOutlined
+                style={{ color: "#8c8c8c", flexShrink: 0, cursor: "help" }}
+                aria-label="Show reference"
+              />
+            </Tooltip>
+          </span>
+        );
+      },
+    },
+  ];
+  }, [data]);
 
-  // ---- Filtering logic ----
-  const filteredData = useMemo(() => {
-    if (!Array.isArray(data)) return [];
+  const selectedLedgerRows = useMemo(
+    () =>
+      data.filter((r) =>
+        selectedRowKeys.some((k) => String(k) === String(r.key))
+      ),
+    [data, selectedRowKeys]
+  );
 
-    const searchLower = searchText.trim().toLowerCase();
+  const writeOffMenuEnabled =
+    selectedLedgerRows.length > 0 &&
+    selectedLedgerRows.every((r) => isInvoiceDocType(r));
 
-    return data.filter((d) => {
-      // Search text (description or reference)
-      const matchesSearch = !searchLower ||
-        (d.description?.toLowerCase().includes(searchLower)) ||
-        (d.reference?.toLowerCase().includes(searchLower));
+  /** Receipt = Claim doc type in ledger. */
+  const refundMenuEnabled =
+    selectedLedgerRows.length > 0 &&
+    selectedLedgerRows.every((r) => isClaimDocType(r));
 
-      // Transaction type (debit/credit/all)
-      const matchesType =
-        transactionType === "All" ||
-        (transactionType === "debit" && d.debit) ||
-        (transactionType === "credit" && d.credit);
-
-      // Date range filter
-      const matchesDate =
-        !dateRange || !dateRange.length ||
-        (dayjs(d.date).isAfter(dateRange[0].startOf("day")) &&
-          dayjs(d.date).isBefore(dateRange[1].endOf("day")));
-
-      // Amount range filter (check debit/credit whichever exists)
-      const amount = d.debit || d.credit || 0;
-      let matchesAmount = true;
-      if (amountRange === "small") matchesAmount = amount <= 500;
-      if (amountRange === "medium") matchesAmount = amount > 500 && amount <= 1000;
-      if (amountRange === "large") matchesAmount = amount > 1000;
-
-      return matchesSearch && matchesType && matchesDate && matchesAmount;
-    });
-  }, [data, searchText, transactionType, dateRange, amountRange]);
-
-  // Reset filters
-  const handleReset = () => {
-    setSearchText("");
-    setTransactionType("All");
-    setDateRange([]);
-    setAmountRange("All");
-  };
-
-  // Refund handler
-  const handleRefund = () => {
-    console.log("Refund confirmed for:", selectedRowKeys);
-    // TODO: call refund API here
-  };
+  const reallocationMenuEnabled =
+    selectedLedgerRows.length === 1 &&
+    isClaimDocType(selectedLedgerRows[0]);
 
   if (!memberId) {
     return <div className="mt-4"><Empty description="No Member ID provided" /></div>;
@@ -253,103 +554,113 @@ const TransactionHistory = () => {
         width: '100%'
       }}
     >
-      {/* Filters */}
-      <Card className="mb-3">
-        <Row gutter={[12, 12]} align="middle">
-          <Col xs={24} md={5}>
-            <Input
-              size="large"
-              placeholder="Search transactions"
-              value={searchText}
-              onChange={(e) => setSearchText(e.target.value)}
-            />
-          </Col>
-          <Col xs={24} md={4}>
-            <Select
-              size="large"
-              value={transactionType}
-              onChange={(v) => setTransactionType(v)}
-              style={{ width: "100%" }}
-            >
-              <Option value="All">Transaction Type</Option>
-              <Option value="debit">Debit</Option>
-              <Option value="credit">Credit</Option>
-            </Select>
-          </Col>
-          <Col xs={24} md={6}>
-            <RangePicker
-              size="large"
-              style={{ width: "100%" }}
-              value={dateRange}
-              onChange={(val) => setDateRange(val || [])}
-            />
-          </Col>
-          <Col xs={24} md={3}>
-            <Select
-              size="large"
-              value={amountRange}
-              onChange={(v) => setAmountRange(v)}
-              style={{ width: "100%" }}
-            >
-              <Option value="All">Amount Range</Option>
-              <Option value="small">0 - 500</Option>
-              <Option value="medium">500 - 1000</Option>
-              <Option value="large">1000+</Option>
-            </Select>
-          </Col>
-          <Col xs={24} md={3}>
-            <Button size="large" block onClick={handleReset}>
-              Reset
-            </Button>
-          </Col>
-          <Col xs={24} md={3}>
-            {selectedRowKeys.length > 0 ? (
-              <CommonPopConfirm
-                title="Are you sure you want to refund the selected transaction(s)?"
-                onConfirm={handleRefund}
-                okText="Yes, Refund"
-                cancelText="Cancel"
-              >
-                <Button
-                  size="large"
-                  block
-                  className="butn primary-btn"
-                >
-                  Refund
-                </Button>
-              </CommonPopConfirm>
-            ) : (
-              <Button
-                size="large"
-                block
-                className="butn primary-btn"
-                onClick={() =>
-                  notification.warning({
-                    message: "No Selection",
-                    description: "Please select at least one transaction to refund.",
-                    placement: "topRight",
-                  })
-                }
-              >
-                Refund
-              </Button>
-            )}
-          </Col>
-        </Row>
-      </Card>
+      <div className="d-flex justify-content-end align-items-center mb-2">
+        <Dropdown
+          menu={{
+            items: [
+              {
+                key: "refund",
+                label: "Refund",
+                danger: true,
+                disabled: !refundMenuEnabled,
+                onClick: () =>
+                  openRefundForRecords(
+                    data.filter((r) =>
+                      selectedRowKeys.some((k) => String(k) === String(r.key))
+                    )
+                  ),
+              },
+              { type: "divider" },
+              {
+                key: "writeoff",
+                label: "Write off",
+                disabled: !writeOffMenuEnabled,
+                onClick: () => openWriteOffForSelection(),
+              },
+              { type: "divider" },
+              {
+                key: "reallocation",
+                label: "Reallocation",
+                disabled: !reallocationMenuEnabled,
+                onClick: () => openReallocationForSelection(),
+              },
+            ],
+          }}
+          trigger={["click"]}
+        >
+          <Button
+            size="large"
+            type="default"
+            icon={<MoreOutlined />}
+            aria-label="More actions"
+          />
+        </Dropdown>
+      </div>
 
-      {/* Table */}
-      {/* <Card bodyStyle={{ padding: 0 }}> */}
       <MyTable
         columns={columns}
-        dataSource={filteredData}
+        dataSource={data}
         loading={loading}
-        selection={true}
+        selection
         rowSelection={{ selectedRowKeys }}
         onSelectionChange={(keys) => setSelectedRowKeys(keys)}
         tablePadding={{ paddingLeft: "0", paddingRight: "0" }}
+        defaultSortField="date"
+        defaultSortOrder="descend"
       />
-      {/* </Card> */}
+
+      <RefundDrawer
+        open={refundDrawerOpen}
+        onClose={closeRefundDrawer}
+        hideMemberSearch
+        prefillRefundAmountEuro={prefillRefundEuros}
+        receiptSummary={receiptSummaryText}
+        onSubmit={(values) => {
+          console.log("Refund submit", values, refundReceiptRows);
+          notification.success({
+            message: "Refund",
+            description: "Refund request submitted.",
+            placement: "topRight",
+          });
+          setSelectedRowKeys([]);
+        }}
+      />
+
+      <WriteOffDrawer
+        open={writeOffDrawerOpen}
+        onClose={closeWriteOffDrawer}
+        hideMemberSearch
+        onSubmit={(values) => {
+          console.log("Write-off submit", values, writeOffLedgerRows);
+          notification.success({
+            message: "Write-off",
+            description: "Write-off request submitted.",
+            placement: "topRight",
+          });
+          setSelectedRowKeys([]);
+        }}
+      />
+
+      <ReallocationDrawer
+        open={reallocationDrawerOpen}
+        onClose={closeReallocationDrawer}
+        hideMemberSearch
+        sourceRow={reallocationSourceRow}
+        currentPaymentTypeLabel={
+          reallocationSourceRow
+            ? displayPaymentTypeForRow(reallocationSourceRow)
+            : null
+        }
+        onSubmit={(values) => {
+          console.log("Reallocation submit", values);
+          notification.success({
+            message: "Reallocation",
+            description: "Payment reclassification request submitted.",
+            placement: "topRight",
+          });
+          setSelectedRowKeys([]);
+        }}
+      />
     </div>
   );
 };

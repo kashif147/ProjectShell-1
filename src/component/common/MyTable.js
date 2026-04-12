@@ -14,10 +14,17 @@ const MyTable = ({
   loading = false,
   onRowClick,
   tablePadding = { paddingLeft: "34px", paddingRight: "34px" },
+  /** When set with defaultSortOrder, table starts sorted (e.g. date latest first). */
+  defaultSortField,
+  defaultSortOrder,
 }) => {
   const [internalSelectedRowKeys, setInternalSelectedRowKeys] = useState([]);
   const [filteredInfo, setFilteredInfo] = useState({});
-  const [sortedInfo, setSortedInfo] = useState({});
+  const [sortedInfo, setSortedInfo] = useState(() =>
+    defaultSortField && defaultSortOrder
+      ? { field: defaultSortField, order: defaultSortOrder }
+      : {}
+  );
 
   const isExternallyControlled =
     externalRowSelection !== undefined && onSelectionChange !== undefined;
@@ -73,7 +80,8 @@ const MyTable = ({
 
   const handleTableChange = (pagination, filters, sorter) => {
     setFilteredInfo(filters);
-    setSortedInfo(sorter);
+    const next = Array.isArray(sorter) ? sorter[0] : sorter;
+    setSortedInfo(next && next.field && next.order ? next : {});
     setCurrentPage(1); // Reset to first page on filter/sort change
   };
 
@@ -103,7 +111,7 @@ const MyTable = ({
     });
 
     // Sort data
-    if (sortedInfo.column && sortedInfo.field) {
+    if (sortedInfo.field && sortedInfo.order) {
       const { field, order } = sortedInfo;
       const column = columns.find(
         (col) => col.dataIndex === field || col.key === field
