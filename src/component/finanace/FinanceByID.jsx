@@ -19,7 +19,20 @@ function displayDocTypeLabel(raw) {
   const s = String(raw).trim();
   const norm = s.toLowerCase();
   if (norm === "ledgersummary") return "Summary";
+  if (norm === "invoice") return "Invoice";
+  if (norm === "adjustment") return "Adjustment";
+  if (norm === "receipt") return "Receipt";
+  if (norm === "claim") return "Receipt";
   return s;
+}
+
+/** Prefer API simple-view label (ledgerDisplayDocType) when present. */
+function resolveLedgerDocTypeDisplay(record) {
+  const api = record?.ledgerDisplayDocType;
+  if (api != null && String(api).trim() !== "") return String(api).trim();
+  return displayDocTypeLabel(
+    record?.docType ?? record?.doc_type ?? record?.documentType,
+  );
 }
 
 function pickFirstNonEmptyString(...candidates) {
@@ -461,7 +474,7 @@ const TransactionHistory = () => {
     const docTypeLabels = new Set();
     const paymentTypeLabels = new Set();
     (data || []).forEach((r) => {
-      const dt = displayDocTypeLabel(r.docType ?? r.doc_type ?? r.documentType);
+      const dt = resolveLedgerDocTypeDisplay(r);
       if (dt !== "—") docTypeLabels.add(dt);
       const pt = displayPaymentTypeForRow(r);
       if (pt !== "—") paymentTypeLabels.add(pt);
@@ -521,25 +534,23 @@ const TransactionHistory = () => {
       ellipsis: true,
       sorter: {
         compare: (a, b) =>
-          displayDocTypeLabel(a.docType ?? a.doc_type ?? a.documentType).localeCompare(
-            displayDocTypeLabel(b.docType ?? b.doc_type ?? b.documentType),
+          resolveLedgerDocTypeDisplay(a).localeCompare(
+            resolveLedgerDocTypeDisplay(b),
             undefined,
             { sensitivity: "base" }
           ),
       },
       filters: docTypeFilters,
       onFilter: (value, record) =>
-        displayDocTypeLabel(record.docType ?? record.doc_type ?? record.documentType) ===
-        value,
+        resolveLedgerDocTypeDisplay(record) === value,
       filterSearch: true,
       render: (_, r) => {
-        const main = displayDocTypeLabel(
-          r.docType ?? r.doc_type ?? r.documentType
-        );
-        const tip =
+        const main = resolveLedgerDocTypeDisplay(r);
+        const tipRaw =
           r.displayLabel != null && String(r.displayLabel).trim() !== ""
             ? String(r.displayLabel).trim()
             : "";
+        const tip = tipRaw && tipRaw !== main ? tipRaw : "";
         return (
           <span
             style={{
