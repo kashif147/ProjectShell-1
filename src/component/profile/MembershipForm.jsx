@@ -28,6 +28,72 @@ import utc from "dayjs/plugin/utc";
 import timezone from "dayjs/plugin/timezone";
 import dayjs from "dayjs";
 
+/** CustomSelect uses option label as <select> value; API often stores gender lowercase (e.g. male). */
+function normalizeGenderToSelectLabel(raw, options) {
+  if (raw == null || raw === "") return "";
+  const s = String(raw).trim();
+  if (!s) return "";
+  if (!Array.isArray(options) || options.length === 0) return s;
+
+  const exact = options.find((o) => o.label === s);
+  if (exact) return exact.label;
+
+  const lower = s.toLowerCase();
+  const byLabel = options.find(
+    (o) => (o.label || "").toLowerCase() === lower
+  );
+  if (byLabel) return byLabel.label;
+
+  const byKey = options.find((o) => {
+    const k = o.key != null ? String(o.key).toLowerCase() : "";
+    const v = o.value != null ? String(o.value).toLowerCase() : "";
+    return k === lower || v === lower || String(o.key) === s || String(o.value) === s;
+  });
+  if (byKey) return byKey.label;
+
+  return s;
+}
+
+function isPayrollOrSalaryDeduction(paymentType) {
+  const s = (paymentType || "").trim().toLowerCase();
+  if (!s) return false;
+  if (s === "payroll deduction" || s === "salary deduction") return true;
+  if (s.includes("deduction") && (s.includes("payroll") || s.includes("salary")))
+    return true;
+  return false;
+}
+
+/** Membership category value may be product _id or display name from API. */
+function isUndergraduateStudentMembershipCategory(selected, categoryOptions) {
+  const sel = (selected || "").trim();
+  if (!sel) return false;
+
+  const opts = Array.isArray(categoryOptions) ? categoryOptions : [];
+  const ugOpt = opts.find((o) => {
+    const lab = (o.label || "").toLowerCase();
+    return (
+      lab.includes("undergraduate") &&
+      lab.includes("student") &&
+      !lab.includes("postgraduate")
+    );
+  });
+  if (ugOpt) {
+    if (ugOpt.value === sel || ugOpt.label === sel || ugOpt.key === sel) {
+      return true;
+    }
+  }
+
+  const norm = sel.toLowerCase().replace(/\s+/g, "_");
+  if (norm === "undergraduate_student") return true;
+
+  const combined = sel.toLowerCase();
+  return (
+    combined.includes("undergraduate") &&
+    combined.includes("student") &&
+    !combined.includes("postgraduate")
+  );
+}
+
 const MembershipForm = ({
   isEditMode = false,
   setIsEditMode,
@@ -176,7 +242,14 @@ const MembershipForm = ({
       title: source.personalInfo?.title || "",
       surname: source.personalInfo?.surname || "",
       forename: source.personalInfo?.forename || "",
-      gender: source.personalInfo?.gender || "",
+      gender: normalizeGenderToSelectLabel(
+        source.personalInfo?.gender || "",
+        [
+          { key: "male", label: "Male" },
+          { key: "female", label: "Female" },
+          { key: "other", label: "Other" },
+        ]
+      ),
       dateOfBirth: convertUTCToLocalDate(source.personalInfo?.dateOfBirth),
       countryPrimaryQualification:
         source.personalInfo?.countryPrimaryQualification || "",
@@ -340,6 +413,15 @@ const MembershipForm = ({
     ProfileSubData,
   ]);
 
+  useEffect(() => {
+    if (!Array.isArray(genderOptions) || genderOptions.length === 0) return;
+    setFormData((prev) => {
+      if (!prev.gender) return prev;
+      const next = normalizeGenderToSelectLabel(prev.gender, genderOptions);
+      return next === prev.gender ? prev : { ...prev, gender: next };
+    });
+  }, [genderOptions]);
+
   // Internal form state
   const [formData, setFormData] = useState({
     title: "",
@@ -497,8 +579,48 @@ const MembershipForm = ({
     ],
   };
 
+  /** Match ApplicationMgtDrawer: hierarchical rows have lookup / branch / region with lookupname. */
+  const resolveWorkLocationFromHierarchy = (branchLabel, regionLabel) => {
+    try {
+      const raw = localStorage.getItem("hierarchicalLookups");
+      if (!raw) return null;
+      const rows = JSON.parse(raw);
+      if (!Array.isArray(rows) || rows.length === 0) return null;
+
+      const b =
+        typeof branchLabel === "string" ? branchLabel.trim() : "";
+      const r =
+        typeof regionLabel === "string" ? regionLabel.trim() : "";
+      if (!b && !r) return null;
+
+      const branchName = (item) =>
+        item.branch?.lookupname || item.branch?.label || "";
+      const regionName = (item) =>
+        item.region?.lookupname || item.region?.label || "";
+      const wlName = (item) =>
+        item.lookup?.lookupname || item.lookup?.label || "";
+
+      const candidates = rows.filter((item) => {
+        if (!item.lookup) return false;
+        if (b && branchName(item) !== b) return false;
+        if (r && regionName(item) !== r) return false;
+        return true;
+      });
+      if (candidates.length === 0) return null;
+      return wlName(candidates[0]) || null;
+    } catch {
+      return null;
+    }
+  };
+
   const handleChange = (field, value) => {
     const updatedData = { ...formData, [field]: value };
+    if (field === "workLocation") {
+      if (typeof value === "object" && value !== null) {
+        updatedData.workLocation =
+          value.label || value.lookupname || value.name || "";
+      }
+    }
     if (field === "consentCorrespondence") {
       updatedData.consent = value;
     }
@@ -559,6 +681,30 @@ const MembershipForm = ({
       // Update parent component
       if (setIsDeceased) setIsDeceased(false);
     }
+    if (field === "branch" || field === "region") {
+      const nextBranch =
+        field === "branch" ? value : updatedData.branch;
+      const nextRegion =
+        field === "region" ? value : updatedData.region;
+      const resolved = resolveWorkLocationFromHierarchy(
+        nextBranch,
+        nextRegion
+      );
+      if (resolved) {
+        updatedData.workLocation = resolved;
+      }
+    }
+    if (field === "paymentType" && !isPayrollOrSalaryDeduction(value)) {
+      updatedData.payrollNumber = "";
+    }
+    if (
+      field === "membershipCategory" &&
+      !isUndergraduateStudentMembershipCategory(value, categoryData)
+    ) {
+      updatedData.studyLocation = "";
+      updatedData.discipline = "";
+      updatedData.graduationDate = null;
+    }
     setFormData(updatedData);
   };
 
@@ -589,6 +735,27 @@ const MembershipForm = ({
     !isEditMode ||
     formData.isDeceased ||
     formData.subscriptionStatus === "Resigned";
+
+  const membershipCategorySelected = Boolean(
+    String(formData.membershipCategory || "").trim()
+  );
+
+  const payrollDeductionPayment = useMemo(
+    () => isPayrollOrSalaryDeduction(formData.paymentType),
+    [formData.paymentType]
+  );
+
+  const undergradEducationalActive = useMemo(
+    () =>
+      isUndergraduateStudentMembershipCategory(
+        formData.membershipCategory,
+        categoryData
+      ),
+    [formData.membershipCategory, categoryData]
+  );
+
+  const educationalSectionDisabled =
+    isFormReadOnly || !undergradEducationalActive;
 
   // Calculate indeterminate state for main checkbox
   const isIndeterminate = () => {
@@ -630,6 +797,59 @@ const MembershipForm = ({
       MyAlert("error", "Cannot save: missing profile id");
       return;
     }
+
+    if (membershipCategorySelected) {
+      const sd = formData.startDate;
+      const startOk =
+        sd &&
+        (dayjs.isDayjs(sd) ? sd.isValid() : dayjs(sd).isValid());
+      if (!startOk) {
+        MyAlert(
+          "error",
+          "Subscription start date is required when a membership category is selected."
+        );
+        return;
+      }
+    }
+
+    if (payrollDeductionPayment) {
+      if (!String(formData.payrollNumber || "").trim()) {
+        MyAlert(
+          "error",
+          "Payroll number is required when payment type is payroll or salary deduction."
+        );
+        return;
+      }
+    }
+
+    if (undergradEducationalActive) {
+      if (!String(formData.studyLocation || "").trim()) {
+        MyAlert(
+          "error",
+          "Study location is required for undergraduate student membership."
+        );
+        return;
+      }
+      const gd = formData.graduationDate;
+      const gradOk =
+        gd &&
+        (dayjs.isDayjs(gd) ? gd.isValid() : dayjs(gd).isValid());
+      if (!gradOk) {
+        MyAlert(
+          "error",
+          "Graduation date is required for undergraduate student membership."
+        );
+        return;
+      }
+      if (!String(formData.discipline || "").trim()) {
+        MyAlert(
+          "error",
+          "Discipline is required for undergraduate student membership."
+        );
+        return;
+      }
+    }
+
     setSaveLoading(true);
     try {
       const profileBody = formDataToProfilePutPayload(
@@ -834,7 +1054,11 @@ const MembershipForm = ({
               <CustomSelect
                 label="Gender"
                 placeholder="Select your gender"
-                options={lookupData.genders}
+                options={
+                  Array.isArray(genderOptions) && genderOptions.length > 0
+                    ? genderOptions
+                    : lookupData.genders
+                }
                 value={formData.gender}
                 onChange={(e) => handleChange("gender", e.target.value)}
                 disabled={isFormReadOnly}
@@ -1186,7 +1410,6 @@ const MembershipForm = ({
               <CustomSelect
                 label="Work Location"
                 placeholder="Select Location..."
-                isObjectValue={true}
                 options={workLocationOptions}
                 value={formData.workLocation}
                 onChange={(e) => handleChange("workLocation", e.target.value)}
@@ -1265,21 +1488,23 @@ const MembershipForm = ({
                 options={lookupData.studyLocations}
                 value={formData.studyLocation}
                 onChange={(e) => handleChange("studyLocation", e.target.value)}
-                disabled={isFormReadOnly}
+                disabled={educationalSectionDisabled}
+                required={undergradEducationalActive && !isFormReadOnly}
               />
               <MyDatePicker
                 label="Start Date"
                 placeholder="Select start date (Optional)"
-                // value={formData.startDate}
+                value={formData.startDate}
                 onChange={(date) => handleChange("startDate", date)}
-                disabled={isFormReadOnly}
+                disabled={educationalSectionDisabled}
               />
               <MyDatePicker
                 label="Graduation Date"
                 placeholder="Select graduation date"
                 value={formData.graduationDate}
                 onChange={(date) => handleChange("graduationDate", date)}
-                disabled={isFormReadOnly}
+                disabled={educationalSectionDisabled}
+                required={undergradEducationalActive && !isFormReadOnly}
               />
               <CustomSelect
                 label="Discipline"
@@ -1287,7 +1512,8 @@ const MembershipForm = ({
                 options={lookupData.disciplines}
                 value={formData.discipline}
                 onChange={(e) => handleChange("discipline", e.target.value)}
-                disabled={isFormReadOnly}
+                disabled={educationalSectionDisabled}
+                required={undergradEducationalActive && !isFormReadOnly}
               />
             </Card>
 
@@ -1513,20 +1739,21 @@ const MembershipForm = ({
                 value={formData.startDate}
                 onChange={(date) => handleChange("startDate", date)}
                 disabled={isFormReadOnly}
+                required={membershipCategorySelected}
               />
               <MyDatePicker
                 label="Subscription End Date"
                 placeholder="Select end date"
                 value={formData.endDate}
                 onChange={(date) => handleChange("endDate", date)}
-                disabled={isFormReadOnly}
+                disabled
               />
               <MyDatePicker
                 label="Renewal Date"
                 placeholder="Select renewal date"
                 value={formData.renewalDate}
                 onChange={(date) => handleChange("renewalDate", date)}
-                disabled={isFormReadOnly}
+                disabled
               />
               <CustomSelect
                 label="Membership Movement"
@@ -1542,7 +1769,7 @@ const MembershipForm = ({
                 onChange={(e) =>
                   handleChange("membershipMovement", e.target.value)
                 }
-                disabled={isFormReadOnly}
+                disabled
               />
               {/* <div style={{ marginTop: "16px", marginBottom: "16px" }}>
                 <Checkbox
@@ -1610,7 +1837,8 @@ const MembershipForm = ({
                 placeholder="Enter Payroll No."
                 value={formData.payrollNumber}
                 onChange={(e) => handleChange("payrollNumber", e.target.value)}
-                disabled={isFormReadOnly}
+                disabled={isFormReadOnly || !payrollDeductionPayment}
+                required={payrollDeductionPayment && !isFormReadOnly}
               />
               <CustomSelect
                 label="Payment Frequency"
@@ -1698,14 +1926,20 @@ const MembershipForm = ({
                 label="Retirement Date"
                 value={formData.retiredDate}
                 onChange={(date) => handleChange("retiredDate", date)}
-                disabled={isFormReadOnly}
+                disabled={
+                  isFormReadOnly ||
+                  formData.membershipCategory !== "retired_associate"
+                }
                 required={formData.membershipCategory === "retired_associate"}
               />
               <MyInput
                 label="Pension No."
                 value={formData.pensionNumber}
                 onChange={(e) => handleChange("pensionNumber", e.target.value)}
-                disabled={isFormReadOnly}
+                disabled={
+                  isFormReadOnly ||
+                  formData.membershipCategory !== "retired_associate"
+                }
                 required={formData.membershipCategory === "retired_associate"}
               />
             </Card>
