@@ -22,7 +22,7 @@ function displayDocTypeLabel(raw) {
   if (norm === "invoice") return "Invoice";
   if (norm === "adjustment") return "Adjustment";
   if (norm === "receipt") return "Receipt";
-  if (norm === "claim") return "Receipt";
+  if (norm === "claim") return "Claim";
   return s;
 }
 
@@ -39,6 +39,18 @@ function pickFirstNonEmptyString(...candidates) {
   for (let i = 0; i < candidates.length; i += 1) {
     const c = candidates[i];
     if (c != null && String(c).trim() !== "") return String(c).trim();
+  }
+  return null;
+}
+
+/** Ledger Tx Type from API object e.g. `txType: { description: "Credit Card" }`. */
+function pickFirstTxTypeDescription(...sources) {
+  for (let i = 0; i < sources.length; i += 1) {
+    const o = sources[i];
+    if (o != null && typeof o === "object") {
+      const d = pickFirstNonEmptyString(o.description, o.Description);
+      if (d) return d;
+    }
   }
   return null;
 }
@@ -128,21 +140,38 @@ function resolvePaymentTypeSource(item, gl) {
       ? item.settlement
       : null;
   return pickFirstNonEmptyString(
+    pickFirstTxTypeDescription(
+      item?.txType,
+      item?.TxType,
+      gl?.txType,
+      gl?.TxType,
+      st?.txType,
+      st?.TxType,
+      item?.payment?.txType,
+      item?.payment?.TxType
+    ),
+    typeof item?.txType === "string" ? item.txType : null,
+    typeof item?.TxType === "string" ? item.TxType : null,
     item?.paymentType,
     item?.paymentMethod,
     item?.payMethod,
     item?.method,
     item?.paymentChannel,
     item?.channel,
+    item?.gateway,
+    item?.paymentProvider,
     st?.provider,
+    st?.gateway,
     st?.paymentMethod,
     st?.method,
     st?.type,
     item?.payment?.method,
     item?.payment?.type,
+    item?.payment?.provider,
     gl?.paymentType,
     gl?.paymentMethod,
-    gl?.payMethod
+    gl?.payMethod,
+    gl?.gateway
   );
 }
 
@@ -178,9 +207,12 @@ function displayPaymentType(raw) {
     .replace(/\b\w/g, (ch) => ch.toUpperCase());
 }
 
+/** Ledger payment-like docs: API may send `claim` or `receipt` (refund/reallocation use both). */
 function isClaimDocType(record) {
   const raw = record?.docType ?? record?.doc_type ?? record?.documentType;
-  return raw != null && String(raw).trim().toLowerCase() === "claim";
+  if (raw == null) return false;
+  const norm = String(raw).trim().toLowerCase();
+  return norm === "claim" || norm === "receipt";
 }
 
 function isInvoiceDocType(record) {
@@ -188,10 +220,148 @@ function isInvoiceDocType(record) {
   return raw != null && String(raw).trim().toLowerCase() === "invoice";
 }
 
-/** Claim (receipt) lines are shown as paid by credit card in the grid. */
+function normalizeLedgerMemberKey(v) {
+  if (v == null) return "";
+  return String(v).trim().toLowerCase();
+}
+
+function ledgerItemDocTypeNormForMember(item, gl) {
+  const raw =
+    item?.docType ??
+    item?.doc_type ??
+    item?.documentType ??
+    gl?.docType ??
+    gl?.doc_type ??
+    gl?.documentType;
+  return raw != null ? String(raw).trim().toLowerCase() : "";
+}
+
+/** Member the claim is for on the document (not arbitrary GL split lines). */
+function resolveClaimDocumentMemberId(item) {
+  return pickFirstNonEmptyString(
+    item?.memberId,
+    item?.member_id,
+    item?.claimMemberId,
+    item?.claimMemberNumber,
+    item?.claim?.memberId,
+    item?.claim?.member_id,
+    item?.claim?.membershipNumber,
+    item?.claim?.regNo,
+    item?.membershipNumber,
+    item?.regNo
+  );
+}
+
+const CLAIM_LEDGER_DOC = "claim";
+
+/** Include row on this member’s ledger: claims match document member; others match entry lines. */
+function ledgerItemIncludedForMember(item, gl, targetId) {
+  const tid = normalizeLedgerMemberKey(targetId);
+  const dt = ledgerItemDocTypeNormForMember(item, gl);
+  const claimMember = resolveClaimDocumentMemberId(item);
+
+  if (
+    dt === CLAIM_LEDGER_DOC &&
+    claimMember != null &&
+    String(claimMember).trim() !== ""
+  ) {
+    return normalizeLedgerMemberKey(claimMember) === tid;
+  }
+
+  return (
+    item.entries?.some(
+      (e) => normalizeLedgerMemberKey(e.memberId) === tid
+    ) ?? false
+  );
+}
+
+/** Debit/credit lines to aggregate: for claims, only lines tied to the claim’s member. */
+function entriesForMemberLedgerAggregation(item, gl, targetId) {
+  const tid = normalizeLedgerMemberKey(targetId);
+  const dt = ledgerItemDocTypeNormForMember(item, gl);
+  const claimMember = resolveClaimDocumentMemberId(item);
+  const list = item.entries || [];
+
+  if (
+    dt === CLAIM_LEDGER_DOC &&
+    claimMember != null &&
+    String(claimMember).trim() !== ""
+  ) {
+    const cid = normalizeLedgerMemberKey(claimMember);
+    if (cid !== tid) return [];
+    const byClaim = list.filter(
+      (e) => normalizeLedgerMemberKey(e.memberId) === cid
+    );
+    if (byClaim.length > 0) return byClaim;
+    return list.filter((e) => normalizeLedgerMemberKey(e.memberId) === tid);
+  }
+
+  return list.filter((e) => normalizeLedgerMemberKey(e.memberId) === tid);
+}
+
+/**
+ * Tx Type column: `paymentType` on the row prefers `txType.description` from the API.
+ * Claim/receipt rows fall back to Credit Card only when nothing else is set.
+ */
 function displayPaymentTypeForRow(record) {
+  const label = displayPaymentType(record?.paymentType);
+  if (label !== "—") return label;
   if (isClaimDocType(record)) return "Credit Card";
-  return displayPaymentType(record?.paymentType);
+  return "—";
+}
+
+const CREDIT_CARD_PAYMENT_LABEL = "Credit Card";
+
+/** Underlying settlement method (not the claim-row display override). */
+function ledgerRowPaymentTypeLabel(record) {
+  const gl = glFromLedgerItem(record);
+  return displayPaymentType(resolvePaymentTypeSource(record, gl));
+}
+
+const STRIPE_KEY_HINT = /stripe|payment_?intent|charge_?id|^pi_[a-z0-9]+$/i;
+
+/** True if ledger row / settlement looks like Stripe (IDs or provider), even when paymentType is empty. */
+function hasStripeLikeSettlementSignal(record) {
+  const gl = glFromLedgerItem(record);
+  const st =
+    record?.settlement && typeof record.settlement === "object"
+      ? record.settlement
+      : null;
+  const pay = record?.payment && typeof record.payment === "object"
+    ? record.payment
+    : null;
+  const blobs = [record, gl, st, pay].filter(
+    (o) => o && typeof o === "object"
+  );
+  for (const o of blobs) {
+    for (const k of Object.keys(o)) {
+      if (!STRIPE_KEY_HINT.test(k)) continue;
+      const v = o[k];
+      if (v != null && String(v).trim() !== "") return true;
+    }
+    const prov = o.provider ?? o.gateway ?? o.paymentProvider;
+    if (prov != null && /stripe/i.test(String(prov))) return true;
+  }
+  const raw = resolvePaymentTypeSource(record, gl);
+  return raw != null && /stripe/i.test(String(raw));
+}
+
+/**
+ * Prefer external refund only when we have a clear non–credit-card method.
+ * Claim/receipt rows often omit paymentType for Stripe; treat those as online.
+ */
+function rowPrefersExternalRefundSource(row) {
+  if (hasStripeLikeSettlementSignal(row)) return false;
+  const label = ledgerRowPaymentTypeLabel(row);
+  if (label === CREDIT_CARD_PAYMENT_LABEL) return false;
+  if (label === "—" && isClaimDocType(row)) return false;
+  return true;
+}
+
+function refundInitialModeFromReceiptRows(rows) {
+  if (!rows?.length) return "stripe";
+  const anyExternal = rows.some((r) => rowPrefersExternalRefundSource(r));
+  return anyExternal ? "external" : "stripe";
 }
 
 const TransactionHistory = () => {
@@ -216,6 +386,7 @@ const TransactionHistory = () => {
   const [selectedRowKeys, setSelectedRowKeys] = useState([]);
   const [refundDrawerOpen, setRefundDrawerOpen] = useState(false);
   const [prefillRefundEuros, setPrefillRefundEuros] = useState(null);
+  const [refundInitialMode, setRefundInitialMode] = useState("stripe");
   const [receiptSummaryText, setReceiptSummaryText] = useState(null);
   const [refundReceiptRows, setRefundReceiptRows] = useState([]);
   const [writeOffDrawerOpen, setWriteOffDrawerOpen] = useState(false);
@@ -248,6 +419,7 @@ const TransactionHistory = () => {
 
     if (!matchedRow) return;
 
+    setSelectedRowKeys([matchedRow.key]);
   }, [data, location.state?.transactionId, searchParams, targetTransactionId]);
 
   const fetchLedgerData = useCallback(async () => {
@@ -270,22 +442,23 @@ const TransactionHistory = () => {
       // Normalize memberId for comparison
       const targetId = String(memberId).trim().toLowerCase();
 
-      // Show only data that has entries for the specific memberId
-      const filteredRawData = rawData.filter((item) =>
-        item.entries?.some((e) =>
-          String(e.memberId).trim().toLowerCase() === targetId
-        )
-      );
+      // Claims: row belongs to the member on the claim document, not any incidental entry line.
+      const filteredRawData = rawData.filter((item) => {
+        const gl = glFromLedgerItem(item);
+        return ledgerItemIncludedForMember(item, gl, targetId);
+      });
 
       // Oldest-first by createdAt/updatedAt only — running balance does not use Tx Date
       const sortedData = [...filteredRawData].sort(compareLedgerByCreatedAtAsc);
 
       let cumulativeBalance = 0;
       const ledgerData = sortedData.map((item, index) => {
-        // Collect ALL entries for this specific member in this transaction
-        const memberEntries = item.entries?.filter((e) =>
-          String(e.memberId).trim().toLowerCase() === targetId
-        ) || [];
+        const gl = glFromLedgerItem(item);
+        const memberEntries = entriesForMemberLedgerAggregation(
+          item,
+          gl,
+          targetId
+        );
 
         // Aggregate amounts (handles split entries in a single transaction)
         let totalDebit = 0;
@@ -298,8 +471,6 @@ const TransactionHistory = () => {
         });
 
         cumulativeBalance += (totalCredit - totalDebit);
-
-        const gl = glFromLedgerItem(item);
 
         const docType =
           item.docType ?? item.doc_type ?? item.documentType ??
@@ -362,6 +533,7 @@ const TransactionHistory = () => {
   const closeRefundDrawer = useCallback(() => {
     setRefundDrawerOpen(false);
     setPrefillRefundEuros(null);
+    setRefundInitialMode("stripe");
     setReceiptSummaryText(null);
     setRefundReceiptRows([]);
   }, []);
@@ -464,6 +636,7 @@ const TransactionHistory = () => {
     });
     setRefundReceiptRows(rows);
     setPrefillRefundEuros(euros);
+    setRefundInitialMode(refundInitialModeFromReceiptRows(rows));
     setReceiptSummaryText(
       `${rows.length} receipt(s) — total payments: €${formatted}`
     );
@@ -718,8 +891,8 @@ const TransactionHistory = () => {
         <Segmented
           aria-label="Ledger detail level"
           options={[
-            { label: "Simple", value: "simple" },
-            { label: "Full detail", value: "full" },
+            { label: "Summary", value: "simple" },
+            { label: "Full View", value: "full" },
           ]}
           value={ledgerView}
           onChange={(v) => setLedgerView(v)}
@@ -783,6 +956,7 @@ const TransactionHistory = () => {
         onClose={closeRefundDrawer}
         hideMemberSearch
         prefillRefundAmountEuro={prefillRefundEuros}
+        initialRefundMode={refundInitialMode}
         receiptSummary={receiptSummaryText}
         onSubmit={(values) => {
           console.log("Refund submit", values, refundReceiptRows);

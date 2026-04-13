@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react";
-import { Row, Col, message, Checkbox, InputNumber, Alert } from "antd";
+import { Row, Col, message, Checkbox, InputNumber, Alert, Radio } from "antd";
 import dayjs from "dayjs";
 import MyDrawer from "../common/MyDrawer";
 import MyInput from "../common/MyInput";
@@ -18,10 +18,11 @@ function generateCreditCardRefNo() {
 }
 
 const initialFormState = () => ({
+    mode: "stripe",
     refund: "",
     refundDate: dayjs(),
-    type: "",
-    refNo: "",
+    type: CREDIT_CARD_TYPE,
+    refNo: generateCreditCardRefNo(),
     memo: "",
 });
 
@@ -31,6 +32,8 @@ const RefundDrawer = ({
     onSubmit,
     /** When set, refund amount field is prefilled (euros). */
     prefillRefundAmountEuro = null,
+    /** Opening default: online (stripe + Credit Card) vs external (manual type). */
+    initialRefundMode = "stripe",
     /** Hide member search (e.g. member profile finance tab). */
     hideMemberSearch = false,
     /** Optional info banner above the form. */
@@ -47,17 +50,40 @@ const RefundDrawer = ({
 
     useEffect(() => {
         if (!open) return;
-        const n =
-            prefillRefundAmountEuro != null && !Number.isNaN(Number(prefillRefundAmountEuro))
+
+        const prefillRaw =
+            prefillRefundAmountEuro != null &&
+            !Number.isNaN(Number(prefillRefundAmountEuro))
                 ? Number(prefillRefundAmountEuro)
                 : null;
-        if (n != null && n > 0) {
-            setFormValues((prev) => ({
-                ...prev,
-                refund: Math.round(n * 100) / 100,
-            }));
+        const refundAmt =
+            prefillRaw != null && prefillRaw > 0
+                ? Math.round(prefillRaw * 100) / 100
+                : "";
+
+        const useExternal = initialRefundMode === "external";
+
+        if (useExternal) {
+            setFormValues({
+                mode: "external",
+                refund: refundAmt,
+                refundDate: dayjs(),
+                type: "",
+                refNo: "",
+                memo: "",
+            });
+        } else {
+            setFormValues({
+                mode: "stripe",
+                refund: refundAmt,
+                refundDate: dayjs(),
+                type: CREDIT_CARD_TYPE,
+                refNo: generateCreditCardRefNo(),
+                memo: "",
+            });
         }
-    }, [open, prefillRefundAmountEuro]);
+        setErrors({});
+    }, [open, initialRefundMode, prefillRefundAmountEuro]);
 
     const handleDrawerClose = () => {
         resetForm();
@@ -72,12 +98,30 @@ const RefundDrawer = ({
     };
 
     const handleRefundTypeChange = (value) => {
+        if (formValues.mode === "stripe") return;
         setFormValues((prev) => {
             const next = { ...prev, type: value };
             if (value === CREDIT_CARD_TYPE) {
                 next.refNo = generateCreditCardRefNo();
             }
             return next;
+        });
+        if (errors.type) {
+            setErrors((prev) => ({ ...prev, type: false }));
+        }
+    };
+
+    const handleModeChange = (mode) => {
+        setFormValues((prev) => {
+            if (mode === "stripe") {
+                return {
+                    ...prev,
+                    mode: "stripe",
+                    type: CREDIT_CARD_TYPE,
+                    refNo: generateCreditCardRefNo(),
+                };
+            }
+            return { ...prev, mode: "external" };
         });
         if (errors.type) {
             setErrors((prev) => ({ ...prev, type: false }));
@@ -98,6 +142,7 @@ const RefundDrawer = ({
             const refundNum = Number(formValues.refund);
             const formattedValues = {
                 ...formValues,
+                mode: formValues.mode === "external" ? "external" : "stripe",
                 refund: Number.isFinite(refundNum)
                     ? Math.round(refundNum * 100) / 100
                     : formValues.refund,
@@ -147,6 +192,20 @@ const RefundDrawer = ({
                     </Col>
                     ) : null}
                     <Col span={24}>
+                        <div className="my-input-wrapper" style={{ marginBottom: 0 }}>
+                            <label className="my-input-label">Refund Source</label>
+                            <Radio.Group
+                                value={formValues.mode}
+                                onChange={(e) => handleModeChange(e.target.value)}
+                                options={[
+                                    { label: "Online", value: "stripe" },
+                                    { label: "External", value: "external" },
+                                ]}
+                                size="large"
+                            />
+                        </div>
+                    </Col>
+                    <Col span={24}>
                         <CustomSelect
                             label="Refund Type"
                             name="type"
@@ -161,6 +220,7 @@ const RefundDrawer = ({
                             required
                             hasError={errors.type}
                             isMarginBtm={false}
+                            disabled={formValues.mode === "stripe"}
                         />
                     </Col>
                     <Col span={24}>

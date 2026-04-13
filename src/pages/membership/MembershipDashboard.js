@@ -1,9 +1,8 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import {
   Card,
   Row,
   Col,
-  Statistic,
   Modal,
   Button,
   Spin,
@@ -45,6 +44,17 @@ import {
 import membershipDashboardAPI from "../../services/membershipDashboardAPI";
 import "../../styles/MembershipDashboard.css";
 
+/** KPI tiles: thousands separators, no decimals (en-IE). */
+function formatTileCount(value) {
+  if (value == null || value === "") return "0";
+  const n = Number(value);
+  if (!Number.isFinite(n)) return "0";
+  return new Intl.NumberFormat("en-IE", {
+    maximumFractionDigits: 0,
+    minimumFractionDigits: 0,
+  }).format(Math.round(n));
+}
+
 const MembershipDashboard = () => {
   const [loading, setLoading] = useState(true);
   const [expandedChart, setExpandedChart] = useState(null);
@@ -55,6 +65,35 @@ const MembershipDashboard = () => {
     title: "",
     loading: false,
   });
+
+  const exportDashboardData = () => {
+    const rows = [
+      ["Metric", "Value"],
+      ["Total Active Members", formatTileCount(dashboardData.totalActive)],
+      ["New Joiners", formatTileCount(dashboardData.newJoiners)],
+      ["Leavers", formatTileCount(dashboardData.leavers)],
+      [
+        "Net Growth",
+        formatTileCount(
+          (dashboardData.newJoiners || 0) - (dashboardData.leavers || 0)
+        ),
+      ],
+      ["Paid Members", formatTileCount(dashboardData.paidMembers)],
+      ["Honorary Members", formatTileCount(dashboardData.honoraryMembers)],
+      ["Student Members", formatTileCount(dashboardData.studentMembers)],
+    ];
+
+    const csvContent = rows.map((row) => row.join(",")).join("\n");
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const link = document.createElement("a");
+    const url = URL.createObjectURL(blob);
+    link.setAttribute("href", url);
+    link.setAttribute("download", "membership_dashboard_summary.csv");
+    link.style.visibility = "hidden";
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
 
   // Helper function to calculate percentage change
   const calculatePercentageChange = (current, previous) => {
@@ -250,46 +289,46 @@ const MembershipDashboard = () => {
   };
 
   // Fetch dashboard data from API
-  useEffect(() => {
-    const fetchDashboardData = async () => {
-      setLoading(true);
-      try {
-        const [
-          stats,
-          categoryData,
-          gradeData,
-          sectionData,
-          branchData,
-          regionData,
-          workLocationData,
-        ] = await Promise.all([
-          membershipDashboardAPI.getDashboardStats(),
-          membershipDashboardAPI.getMembershipByCategory(),
-          membershipDashboardAPI.getMembershipByGrade(),
-          membershipDashboardAPI.getMembershipBySection(),
-          membershipDashboardAPI.getMembershipByBranch(),
-          membershipDashboardAPI.getMembershipByRegion(),
-          membershipDashboardAPI.getMembershipByWorkLocation(),
-        ]);
+  const fetchDashboardData = useCallback(async () => {
+    setLoading(true);
+    try {
+      const [
+        stats,
+        categoryData,
+        gradeData,
+        sectionData,
+        branchData,
+        regionData,
+        workLocationData,
+      ] = await Promise.all([
+        membershipDashboardAPI.getDashboardStats(),
+        membershipDashboardAPI.getMembershipByCategory(),
+        membershipDashboardAPI.getMembershipByGrade(),
+        membershipDashboardAPI.getMembershipBySection(),
+        membershipDashboardAPI.getMembershipByBranch(),
+        membershipDashboardAPI.getMembershipByRegion(),
+        membershipDashboardAPI.getMembershipByWorkLocation(),
+      ]);
 
-        setDashboardData({
-          ...stats,
-          categoryData,
-          gradeData,
-          sectionData,
-          branchData,
-          regionData,
-          workLocationData,
-        });
-      } catch (error) {
-        console.error("Error fetching dashboard data:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchDashboardData();
+      setDashboardData({
+        ...stats,
+        categoryData,
+        gradeData,
+        sectionData,
+        branchData,
+        regionData,
+        workLocationData,
+      });
+    } catch (error) {
+      console.error("Error fetching dashboard data:", error);
+    } finally {
+      setLoading(false);
+    }
   }, []);
+
+  useEffect(() => {
+    fetchDashboardData();
+  }, [fetchDashboardData]);
 
   const handleChartExpand = (chartType) => {
     setExpandedChart(chartType);
@@ -485,414 +524,419 @@ const MembershipDashboard = () => {
     <div className="membership-dashboard">
       {/* Breadcrumb */}
 
-      <div style={{ padding: "24px", minHeight: "100vh" }}>
-        <h1
-          style={{ marginBottom: "24px", fontSize: "28px", fontWeight: "bold" }}
-        >
-          Membership Dashboard
-        </h1>
+      <div className="membership-dashboard-content">
+        <div className="membership-dashboard-header">
+          <h1 className="membership-dashboard-title">Membership Dashboard</h1>
+          <Space>
+            <Button
+              icon={<DownloadOutlined />}
+              onClick={exportDashboardData}
+              className="dashboard-action-btn"
+            >
+              Export Data
+            </Button>
+            <Button
+              onClick={fetchDashboardData}
+              className="dashboard-action-btn dashboard-action-btn-primary"
+            >
+              Refresh
+            </Button>
+          </Space>
+        </div>
 
         {/* Main Statistics Row */}
         <Row gutter={[24, 24]} style={{ marginBottom: "32px" }}>
           <Col xs={24} sm={12} md={6}>
-            <Card style={{ height: "180px", borderRadius: "12px" }}>
-              <Statistic
-                title={
-                  <span
-                    style={{
-                      fontSize: "16px",
-                      fontWeight: "600",
-                      color: "#262626",
-                    }}
-                  >
-                    Total Active Members
-                  </span>
-                }
-                value={dashboardData.totalActive}
-                prefix={
-                  <UserOutlined
-                    style={{ fontSize: "24px", marginRight: "8px" }}
-                  />
-                }
-                valueStyle={{
-                  color: "#3f8600",
-                  fontSize: "32px",
-                  fontWeight: "700",
-                  cursor: "pointer",
-                  transition: "color 0.3s ease",
+            <Card
+              className="membership-kpi-card membership-kpi-card-icon-right"
+              style={{ height: "180px", borderRadius: "12px" }}
+            >
+              <div className="membership-kpi-card__top">
+                <span className="membership-kpi-card__title">
+                  Total Active Members
+                </span>
+                <span
+                  className="membership-kpi-card__icon-wrap"
+                  style={{
+                    color: "#3f8600",
+                    background: "rgba(63, 134, 0, 0.12)",
+                  }}
+                  aria-hidden
+                >
+                  <UserOutlined />
+                </span>
+              </div>
+              <div
+                className="membership-kpi-card__value"
+                style={{ color: "#3f8600" }}
+                onClick={() => handleBackupClick("Total Active Members")}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === " ") {
+                    e.preventDefault();
+                    handleBackupClick("Total Active Members");
+                  }
                 }}
-                onValueClick={() => handleBackupClick("Total Active Members")}
-                suffix={
-                  <div
-                    style={{
-                      fontSize: "14px",
-                      color: "#666",
-                      marginTop: "12px",
-                      lineHeight: "1.6",
-                    }}
-                  >
-                    <div style={{ marginBottom: "8px" }}>
-                      <span style={{ color: "#1890ff", fontWeight: 500 }}>
-                        YTD:
-                      </span>{" "}
-                      {dashboardData.totalActiveYTD || 0} vs LY:{" "}
-                      {dashboardData.totalActiveLY || 0}
-                      {(() => {
-                        const change = calculatePercentageChange(
-                          dashboardData.totalActiveYTD,
-                          dashboardData.totalActiveLY
-                        );
-                        return (
-                          change !== 0 && (
-                            <span
-                              style={{
-                                color: change >= 0 ? "#52c41a" : "#ff4d4f",
-                                marginLeft: "6px",
-                                fontWeight: "500",
-                              }}
-                            >
-                              ({change >= 0 ? "+" : ""}
-                              {change}%)
-                            </span>
-                          )
-                        );
-                      })()}
-                    </div>
-                    <div>
-                      <span style={{ color: "#52c41a", fontWeight: 500 }}>
-                        This Month:
-                      </span>{" "}
-                      {dashboardData.totalActiveThisMonth || 0} vs LM:{" "}
-                      {dashboardData.totalActiveLastMonth || 0}
-                      {(() => {
-                        const change = calculatePercentageChange(
-                          dashboardData.totalActiveThisMonth,
-                          dashboardData.totalActiveLastMonth
-                        );
-                        return (
-                          change !== 0 && (
-                            <span
-                              style={{
-                                color: change >= 0 ? "#52c41a" : "#ff4d4f",
-                                marginLeft: "6px",
-                                fontWeight: "500",
-                              }}
-                            >
-                              ({change >= 0 ? "+" : ""}
-                              {change}%)
-                            </span>
-                          )
-                        );
-                      })()}
-                    </div>
-                  </div>
-                }
-              />
+                role="button"
+                tabIndex={0}
+              >
+                {formatTileCount(dashboardData.totalActive)}
+              </div>
+              <div className="membership-kpi-card__meta">
+                <div className="membership-kpi-card__meta-row">
+                  <span style={{ color: "#1890ff", fontWeight: 500 }}>
+                    YTD:
+                  </span>{" "}
+                  {formatTileCount(dashboardData.totalActiveYTD)} vs LY:{" "}
+                  {formatTileCount(dashboardData.totalActiveLY)}
+                  {(() => {
+                    const change = calculatePercentageChange(
+                      dashboardData.totalActiveYTD,
+                      dashboardData.totalActiveLY
+                    );
+                    return (
+                      change !== 0 && (
+                        <span
+                          style={{
+                            color: change >= 0 ? "#52c41a" : "#ff4d4f",
+                            marginLeft: "6px",
+                            fontWeight: "500",
+                          }}
+                        >
+                          ({change >= 0 ? "+" : ""}
+                          {change}%)
+                        </span>
+                      )
+                    );
+                  })()}
+                </div>
+                <div className="membership-kpi-card__meta-row">
+                  <span style={{ color: "#52c41a", fontWeight: 500 }}>
+                    This Month:
+                  </span>{" "}
+                  {formatTileCount(dashboardData.totalActiveThisMonth)} vs LM:{" "}
+                  {formatTileCount(dashboardData.totalActiveLastMonth)}
+                  {(() => {
+                    const change = calculatePercentageChange(
+                      dashboardData.totalActiveThisMonth,
+                      dashboardData.totalActiveLastMonth
+                    );
+                    return (
+                      change !== 0 && (
+                        <span
+                          style={{
+                            color: change >= 0 ? "#52c41a" : "#ff4d4f",
+                            marginLeft: "6px",
+                            fontWeight: "500",
+                          }}
+                        >
+                          ({change >= 0 ? "+" : ""}
+                          {change}%)
+                        </span>
+                      )
+                    );
+                  })()}
+                </div>
+              </div>
             </Card>
           </Col>
           <Col xs={24} sm={12} md={6}>
-            <Card style={{ height: "180px", borderRadius: "12px" }}>
-              <Statistic
-                title={
-                  <span
-                    style={{
-                      fontSize: "16px",
-                      fontWeight: "600",
-                      color: "#262626",
-                    }}
-                  >
-                    New Joiners
-                  </span>
-                }
-                value={dashboardData.newJoiners}
-                prefix={
-                  <UsergroupAddOutlined
-                    style={{ fontSize: "24px", marginRight: "8px" }}
-                  />
-                }
-                valueStyle={{
-                  color: "#1890ff",
-                  fontSize: "32px",
-                  fontWeight: "700",
-                  cursor: "pointer",
-                  transition: "color 0.3s ease",
+            <Card
+              className="membership-kpi-card membership-kpi-card-icon-right"
+              style={{ height: "180px", borderRadius: "12px" }}
+            >
+              <div className="membership-kpi-card__top">
+                <span className="membership-kpi-card__title">New Joiners</span>
+                <span
+                  className="membership-kpi-card__icon-wrap"
+                  style={{
+                    color: "#1890ff",
+                    background: "rgba(24, 144, 255, 0.12)",
+                  }}
+                  aria-hidden
+                >
+                  <UsergroupAddOutlined />
+                </span>
+              </div>
+              <div
+                className="membership-kpi-card__value"
+                style={{ color: "#1890ff" }}
+                onClick={() => handleBackupClick("New Joiners")}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === " ") {
+                    e.preventDefault();
+                    handleBackupClick("New Joiners");
+                  }
                 }}
-                onValueClick={() => handleBackupClick("New Joiners")}
-                suffix={
-                  <div
-                    style={{
-                      fontSize: "14px",
-                      color: "#666",
-                      marginTop: "12px",
-                      lineHeight: "1.6",
-                    }}
-                  >
-                    <div style={{ marginBottom: "8px" }}>
-                      <span style={{ color: "#1890ff", fontWeight: 500 }}>
-                        YTD:
-                      </span>{" "}
-                      {dashboardData.newJoinersYTD || 0} vs LY:{" "}
-                      {dashboardData.newJoinersLY || 0}
-                      {(() => {
-                        const change = calculatePercentageChange(
-                          dashboardData.newJoinersYTD,
-                          dashboardData.newJoinersLY
-                        );
-                        return (
-                          change !== 0 && (
-                            <span
-                              style={{
-                                color: change >= 0 ? "#52c41a" : "#ff4d4f",
-                                marginLeft: "6px",
-                                fontWeight: "500",
-                              }}
-                            >
-                              ({change >= 0 ? "+" : ""}
-                              {change}%)
-                            </span>
-                          )
-                        );
-                      })()}
-                    </div>
-                    <div>
-                      <span style={{ color: "#52c41a", fontWeight: 500 }}>
-                        This Month:
-                      </span>{" "}
-                      {dashboardData.newJoinersThisMonth || 0} vs LM:{" "}
-                      {dashboardData.newJoinersLastMonth || 0}
-                      {(() => {
-                        const change = calculatePercentageChange(
-                          dashboardData.newJoinersThisMonth,
-                          dashboardData.newJoinersLastMonth
-                        );
-                        return (
-                          change !== 0 && (
-                            <span
-                              style={{
-                                color: change >= 0 ? "#52c41a" : "#ff4d4f",
-                                marginLeft: "6px",
-                                fontWeight: "500",
-                              }}
-                            >
-                              ({change >= 0 ? "+" : ""}
-                              {change}%)
-                            </span>
-                          )
-                        );
-                      })()}
-                    </div>
-                  </div>
-                }
-              />
+                role="button"
+                tabIndex={0}
+              >
+                {formatTileCount(dashboardData.newJoiners)}
+              </div>
+              <div className="membership-kpi-card__meta">
+                <div className="membership-kpi-card__meta-row">
+                  <span style={{ color: "#1890ff", fontWeight: 500 }}>
+                    YTD:
+                  </span>{" "}
+                  {formatTileCount(dashboardData.newJoinersYTD)} vs LY:{" "}
+                  {formatTileCount(dashboardData.newJoinersLY)}
+                  {(() => {
+                    const change = calculatePercentageChange(
+                      dashboardData.newJoinersYTD,
+                      dashboardData.newJoinersLY
+                    );
+                    return (
+                      change !== 0 && (
+                        <span
+                          style={{
+                            color: change >= 0 ? "#52c41a" : "#ff4d4f",
+                            marginLeft: "6px",
+                            fontWeight: "500",
+                          }}
+                        >
+                          ({change >= 0 ? "+" : ""}
+                          {change}%)
+                        </span>
+                      )
+                    );
+                  })()}
+                </div>
+                <div className="membership-kpi-card__meta-row">
+                  <span style={{ color: "#52c41a", fontWeight: 500 }}>
+                    This Month:
+                  </span>{" "}
+                  {formatTileCount(dashboardData.newJoinersThisMonth)} vs LM:{" "}
+                  {formatTileCount(dashboardData.newJoinersLastMonth)}
+                  {(() => {
+                    const change = calculatePercentageChange(
+                      dashboardData.newJoinersThisMonth,
+                      dashboardData.newJoinersLastMonth
+                    );
+                    return (
+                      change !== 0 && (
+                        <span
+                          style={{
+                            color: change >= 0 ? "#52c41a" : "#ff4d4f",
+                            marginLeft: "6px",
+                            fontWeight: "500",
+                          }}
+                        >
+                          ({change >= 0 ? "+" : ""}
+                          {change}%)
+                        </span>
+                      )
+                    );
+                  })()}
+                </div>
+              </div>
             </Card>
           </Col>
           <Col xs={24} sm={12} md={6}>
-            <Card style={{ height: "180px", borderRadius: "12px" }}>
-              <Statistic
-                title={
-                  <span
-                    style={{
-                      fontSize: "16px",
-                      fontWeight: "600",
-                      color: "#262626",
-                    }}
-                  >
-                    Leavers
-                  </span>
-                }
-                value={dashboardData.leavers}
-                prefix={
-                  <UsergroupDeleteOutlined
-                    style={{ fontSize: "24px", marginRight: "8px" }}
-                  />
-                }
-                valueStyle={{
-                  color: "#cf1322",
-                  fontSize: "32px",
-                  fontWeight: "700",
-                  cursor: "pointer",
-                  transition: "color 0.3s ease",
+            <Card
+              className="membership-kpi-card membership-kpi-card-icon-right"
+              style={{ height: "180px", borderRadius: "12px" }}
+            >
+              <div className="membership-kpi-card__top">
+                <span className="membership-kpi-card__title">Leavers</span>
+                <span
+                  className="membership-kpi-card__icon-wrap"
+                  style={{
+                    color: "#cf1322",
+                    background: "rgba(207, 19, 34, 0.12)",
+                  }}
+                  aria-hidden
+                >
+                  <UsergroupDeleteOutlined />
+                </span>
+              </div>
+              <div
+                className="membership-kpi-card__value"
+                style={{ color: "#cf1322" }}
+                onClick={() => handleBackupClick("Leavers")}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === " ") {
+                    e.preventDefault();
+                    handleBackupClick("Leavers");
+                  }
                 }}
-                onValueClick={() => handleBackupClick("Leavers")}
-                suffix={
-                  <div
-                    style={{
-                      fontSize: "14px",
-                      color: "#666",
-                      marginTop: "12px",
-                      lineHeight: "1.6",
-                    }}
-                  >
-                    <div style={{ marginBottom: "8px" }}>
-                      <span style={{ color: "#1890ff", fontWeight: 500 }}>
-                        YTD:
-                      </span>{" "}
-                      {dashboardData.leaversYTD || 0} vs LY:{" "}
-                      {dashboardData.leaversLY || 0}
-                      {(() => {
-                        const change = calculatePercentageChange(
-                          dashboardData.leaversYTD,
-                          dashboardData.leaversLY
-                        );
-                        return (
-                          change !== 0 && (
-                            <span
-                              style={{
-                                color: change >= 0 ? "#ff4d4f" : "#52c41a",
-                                marginLeft: "6px",
-                                fontWeight: "500",
-                              }}
-                            >
-                              ({change >= 0 ? "+" : ""}
-                              {change}%)
-                            </span>
-                          )
-                        );
-                      })()}
-                    </div>
-                    <div>
-                      <span style={{ color: "#52c41a", fontWeight: 500 }}>
-                        This Month:
-                      </span>{" "}
-                      {dashboardData.leaversThisMonth || 0} vs LM:{" "}
-                      {dashboardData.leaversLastMonth || 0}
-                      {(() => {
-                        const change = calculatePercentageChange(
-                          dashboardData.leaversThisMonth,
-                          dashboardData.leaversLastMonth
-                        );
-                        return (
-                          change !== 0 && (
-                            <span
-                              style={{
-                                color: change >= 0 ? "#ff4d4f" : "#52c41a",
-                                marginLeft: "6px",
-                                fontWeight: "500",
-                              }}
-                            >
-                              ({change >= 0 ? "+" : ""}
-                              {change}%)
-                            </span>
-                          )
-                        );
-                      })()}
-                    </div>
-                  </div>
-                }
-              />
+                role="button"
+                tabIndex={0}
+              >
+                {formatTileCount(dashboardData.leavers)}
+              </div>
+              <div className="membership-kpi-card__meta">
+                <div className="membership-kpi-card__meta-row">
+                  <span style={{ color: "#1890ff", fontWeight: 500 }}>
+                    YTD:
+                  </span>{" "}
+                  {formatTileCount(dashboardData.leaversYTD)} vs LY:{" "}
+                  {formatTileCount(dashboardData.leaversLY)}
+                  {(() => {
+                    const change = calculatePercentageChange(
+                      dashboardData.leaversYTD,
+                      dashboardData.leaversLY
+                    );
+                    return (
+                      change !== 0 && (
+                        <span
+                          style={{
+                            color: change >= 0 ? "#ff4d4f" : "#52c41a",
+                            marginLeft: "6px",
+                            fontWeight: "500",
+                          }}
+                        >
+                          ({change >= 0 ? "+" : ""}
+                          {change}%)
+                        </span>
+                      )
+                    );
+                  })()}
+                </div>
+                <div className="membership-kpi-card__meta-row">
+                  <span style={{ color: "#52c41a", fontWeight: 500 }}>
+                    This Month:
+                  </span>{" "}
+                  {formatTileCount(dashboardData.leaversThisMonth)} vs LM:{" "}
+                  {formatTileCount(dashboardData.leaversLastMonth)}
+                  {(() => {
+                    const change = calculatePercentageChange(
+                      dashboardData.leaversThisMonth,
+                      dashboardData.leaversLastMonth
+                    );
+                    return (
+                      change !== 0 && (
+                        <span
+                          style={{
+                            color: change >= 0 ? "#ff4d4f" : "#52c41a",
+                            marginLeft: "6px",
+                            fontWeight: "500",
+                          }}
+                        >
+                          ({change >= 0 ? "+" : ""}
+                          {change}%)
+                        </span>
+                      )
+                    );
+                  })()}
+                </div>
+              </div>
             </Card>
           </Col>
           <Col xs={24} sm={12} md={6}>
-            <Card style={{ height: "180px", borderRadius: "12px" }}>
-              <Statistic
-                title={
-                  <span
-                    style={{
-                      fontSize: "16px",
-                      fontWeight: "600",
-                      color: "#262626",
-                    }}
-                  >
-                    Net Growth
-                  </span>
-                }
-                value={dashboardData.newJoiners - dashboardData.leavers}
-                prefix={
-                  <TeamOutlined
-                    style={{ fontSize: "24px", marginRight: "8px" }}
-                  />
-                }
-                valueStyle={{
-                  color: "#722ed1",
-                  fontSize: "32px",
-                  fontWeight: "700",
-                  cursor: "pointer",
-                  transition: "color 0.3s ease",
+            <Card
+              className="membership-kpi-card membership-kpi-card-icon-right"
+              style={{ height: "180px", borderRadius: "12px" }}
+            >
+              <div className="membership-kpi-card__top">
+                <span className="membership-kpi-card__title">Net Growth</span>
+                <span
+                  className="membership-kpi-card__icon-wrap"
+                  style={{
+                    color: "#722ed1",
+                    background: "rgba(114, 46, 209, 0.12)",
+                  }}
+                  aria-hidden
+                >
+                  <TeamOutlined />
+                </span>
+              </div>
+              <div
+                className="membership-kpi-card__value"
+                style={{ color: "#722ed1" }}
+                onClick={() => handleBackupClick("Net Growth")}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === " ") {
+                    e.preventDefault();
+                    handleBackupClick("Net Growth");
+                  }
                 }}
-                onValueClick={() => handleBackupClick("Net Growth")}
-                suffix={
-                  <div
-                    style={{
-                      fontSize: "14px",
-                      color: "#666",
-                      marginTop: "12px",
-                      lineHeight: "1.6",
-                    }}
-                  >
-                    <div style={{ marginBottom: "8px" }}>
-                      <span style={{ color: "#1890ff", fontWeight: 500 }}>
-                        YTD:
-                      </span>{" "}
-                      {(dashboardData.newJoinersYTD || 0) -
-                        (dashboardData.leaversYTD || 0)}{" "}
-                      vs LY:{" "}
-                      {(dashboardData.newJoinersLY || 0) -
-                        (dashboardData.leaversLY || 0)}
-                      {(() => {
-                        const currentYTD =
-                          (dashboardData.newJoinersYTD || 0) -
-                          (dashboardData.leaversYTD || 0);
-                        const previousYTD =
-                          (dashboardData.newJoinersLY || 0) -
-                          (dashboardData.leaversLY || 0);
-                        const change = calculatePercentageChange(
-                          currentYTD,
-                          previousYTD
-                        );
-                        return (
-                          change !== 0 && (
-                            <span
-                              style={{
-                                color: change >= 0 ? "#52c41a" : "#ff4d4f",
-                                marginLeft: "6px",
-                                fontWeight: "500",
-                              }}
-                            >
-                              ({change >= 0 ? "+" : ""}
-                              {change}%)
-                            </span>
-                          )
-                        );
-                      })()}
-                    </div>
-                    <div>
-                      <span style={{ color: "#52c41a", fontWeight: 500 }}>
-                        This Month:
-                      </span>{" "}
-                      {(dashboardData.newJoinersThisMonth || 0) -
-                        (dashboardData.leaversThisMonth || 0)}{" "}
-                      vs LM:{" "}
-                      {(dashboardData.newJoinersLastMonth || 0) -
-                        (dashboardData.leaversLastMonth || 0)}
-                      {(() => {
-                        const currentMonth =
-                          (dashboardData.newJoinersThisMonth || 0) -
-                          (dashboardData.leaversThisMonth || 0);
-                        const previousMonth =
-                          (dashboardData.newJoinersLastMonth || 0) -
-                          (dashboardData.leaversLastMonth || 0);
-                        const change = calculatePercentageChange(
-                          currentMonth,
-                          previousMonth
-                        );
-                        return (
-                          change !== 0 && (
-                            <span
-                              style={{
-                                color: change >= 0 ? "#52c41a" : "#ff4d4f",
-                                marginLeft: "4px",
-                              }}
-                            >
-                              ({change >= 0 ? "+" : ""}
-                              {change}%)
-                            </span>
-                          )
-                        );
-                      })()}
-                    </div>
-                  </div>
-                }
-              />
+                role="button"
+                tabIndex={0}
+              >
+                {formatTileCount(
+                  (dashboardData.newJoiners || 0) - (dashboardData.leavers || 0)
+                )}
+              </div>
+              <div className="membership-kpi-card__meta">
+                <div className="membership-kpi-card__meta-row">
+                  <span style={{ color: "#1890ff", fontWeight: 500 }}>
+                    YTD:
+                  </span>{" "}
+                  {formatTileCount(
+                    (dashboardData.newJoinersYTD || 0) -
+                      (dashboardData.leaversYTD || 0)
+                  )}{" "}
+                  vs LY:{" "}
+                  {formatTileCount(
+                    (dashboardData.newJoinersLY || 0) -
+                      (dashboardData.leaversLY || 0)
+                  )}
+                  {(() => {
+                    const currentYTD =
+                      (dashboardData.newJoinersYTD || 0) -
+                      (dashboardData.leaversYTD || 0);
+                    const previousYTD =
+                      (dashboardData.newJoinersLY || 0) -
+                      (dashboardData.leaversLY || 0);
+                    const change = calculatePercentageChange(
+                      currentYTD,
+                      previousYTD
+                    );
+                    return (
+                      change !== 0 && (
+                        <span
+                          style={{
+                            color: change >= 0 ? "#52c41a" : "#ff4d4f",
+                            marginLeft: "6px",
+                            fontWeight: "500",
+                          }}
+                        >
+                          ({change >= 0 ? "+" : ""}
+                          {change}%)
+                        </span>
+                      )
+                    );
+                  })()}
+                </div>
+                <div className="membership-kpi-card__meta-row">
+                  <span style={{ color: "#52c41a", fontWeight: 500 }}>
+                    This Month:
+                  </span>{" "}
+                  {formatTileCount(
+                    (dashboardData.newJoinersThisMonth || 0) -
+                      (dashboardData.leaversThisMonth || 0)
+                  )}{" "}
+                  vs LM:{" "}
+                  {formatTileCount(
+                    (dashboardData.newJoinersLastMonth || 0) -
+                      (dashboardData.leaversLastMonth || 0)
+                  )}
+                  {(() => {
+                    const currentMonth =
+                      (dashboardData.newJoinersThisMonth || 0) -
+                      (dashboardData.leaversThisMonth || 0);
+                    const previousMonth =
+                      (dashboardData.newJoinersLastMonth || 0) -
+                      (dashboardData.leaversLastMonth || 0);
+                    const change = calculatePercentageChange(
+                      currentMonth,
+                      previousMonth
+                    );
+                    return (
+                      change !== 0 && (
+                        <span
+                          style={{
+                            color: change >= 0 ? "#52c41a" : "#ff4d4f",
+                            marginLeft: "4px",
+                          }}
+                        >
+                          ({change >= 0 ? "+" : ""}
+                          {change}%)
+                        </span>
+                      )
+                    );
+                  })()}
+                </div>
+              </div>
             </Card>
           </Col>
         </Row>
@@ -900,288 +944,277 @@ const MembershipDashboard = () => {
         {/* Membership Type Distribution */}
         <Row gutter={[24, 24]} style={{ marginBottom: "32px" }}>
           <Col xs={24} sm={12} md={8}>
-            <Card style={{ height: "180px", borderRadius: "12px" }}>
-              <Statistic
-                title={
-                  <span
-                    style={{
-                      fontSize: "16px",
-                      fontWeight: "600",
-                      color: "#262626",
-                    }}
-                  >
-                    Paid Members
-                  </span>
-                }
-                value={dashboardData.paidMembers}
-                prefix={
-                  <DollarOutlined
-                    style={{ fontSize: "24px", marginRight: "8px" }}
-                  />
-                }
-                valueStyle={{
-                  color: "#3f8600",
-                  fontSize: "32px",
-                  fontWeight: "700",
-                  cursor: "pointer",
-                  transition: "color 0.3s ease",
+            <Card
+              className="membership-kpi-card membership-kpi-card-icon-right"
+              style={{ height: "180px", borderRadius: "12px" }}
+            >
+              <div className="membership-kpi-card__top">
+                <span className="membership-kpi-card__title">Paid Members</span>
+                <span
+                  className="membership-kpi-card__icon-wrap"
+                  style={{
+                    color: "#3f8600",
+                    background: "rgba(63, 134, 0, 0.12)",
+                  }}
+                  aria-hidden
+                >
+                  <DollarOutlined />
+                </span>
+              </div>
+              <div
+                className="membership-kpi-card__value"
+                style={{ color: "#3f8600" }}
+                onClick={() => handleBackupClick("Paid Members")}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === " ") {
+                    e.preventDefault();
+                    handleBackupClick("Paid Members");
+                  }
                 }}
-                onValueClick={() => handleBackupClick("Paid Members")}
-                suffix={
-                  <div
-                    style={{
-                      fontSize: "14px",
-                      color: "#666",
-                      marginTop: "12px",
-                      lineHeight: "1.6",
-                    }}
-                  >
-                    <div style={{ marginBottom: "8px" }}>
-                      <span style={{ color: "#1890ff", fontWeight: 500 }}>
-                        YTD:
-                      </span>{" "}
-                      {dashboardData.paidMembersYTD || 0} vs LY:{" "}
-                      {dashboardData.paidMembersLY || 0}
-                      {(() => {
-                        const change = calculatePercentageChange(
-                          dashboardData.paidMembersYTD,
-                          dashboardData.paidMembersLY
-                        );
-                        return (
-                          change !== 0 && (
-                            <span
-                              style={{
-                                color: change >= 0 ? "#52c41a" : "#ff4d4f",
-                                marginLeft: "6px",
-                                fontWeight: "500",
-                              }}
-                            >
-                              ({change >= 0 ? "+" : ""}
-                              {change}%)
-                            </span>
-                          )
-                        );
-                      })()}
-                    </div>
-                    <div>
-                      <span style={{ color: "#52c41a", fontWeight: 500 }}>
-                        This Month:
-                      </span>{" "}
-                      {dashboardData.paidMembersThisMonth || 0} vs LM:{" "}
-                      {dashboardData.paidMembersLastMonth || 0}
-                      {(() => {
-                        const change = calculatePercentageChange(
-                          dashboardData.paidMembersThisMonth,
-                          dashboardData.paidMembersLastMonth
-                        );
-                        return (
-                          change !== 0 && (
-                            <span
-                              style={{
-                                color: change >= 0 ? "#52c41a" : "#ff4d4f",
-                                marginLeft: "4px",
-                              }}
-                            >
-                              ({change >= 0 ? "+" : ""}
-                              {change}%)
-                            </span>
-                          )
-                        );
-                      })()}
-                    </div>
-                  </div>
-                }
-              />
+                role="button"
+                tabIndex={0}
+              >
+                {formatTileCount(dashboardData.paidMembers)}
+              </div>
+              <div className="membership-kpi-card__meta">
+                <div className="membership-kpi-card__meta-row">
+                  <span style={{ color: "#1890ff", fontWeight: 500 }}>
+                    YTD:
+                  </span>{" "}
+                  {formatTileCount(dashboardData.paidMembersYTD)} vs LY:{" "}
+                  {formatTileCount(dashboardData.paidMembersLY)}
+                  {(() => {
+                    const change = calculatePercentageChange(
+                      dashboardData.paidMembersYTD,
+                      dashboardData.paidMembersLY
+                    );
+                    return (
+                      change !== 0 && (
+                        <span
+                          style={{
+                            color: change >= 0 ? "#52c41a" : "#ff4d4f",
+                            marginLeft: "6px",
+                            fontWeight: "500",
+                          }}
+                        >
+                          ({change >= 0 ? "+" : ""}
+                          {change}%)
+                        </span>
+                      )
+                    );
+                  })()}
+                </div>
+                <div className="membership-kpi-card__meta-row">
+                  <span style={{ color: "#52c41a", fontWeight: 500 }}>
+                    This Month:
+                  </span>{" "}
+                  {formatTileCount(dashboardData.paidMembersThisMonth)} vs LM:{" "}
+                  {formatTileCount(dashboardData.paidMembersLastMonth)}
+                  {(() => {
+                    const change = calculatePercentageChange(
+                      dashboardData.paidMembersThisMonth,
+                      dashboardData.paidMembersLastMonth
+                    );
+                    return (
+                      change !== 0 && (
+                        <span
+                          style={{
+                            color: change >= 0 ? "#52c41a" : "#ff4d4f",
+                            marginLeft: "4px",
+                          }}
+                        >
+                          ({change >= 0 ? "+" : ""}
+                          {change}%)
+                        </span>
+                      )
+                    );
+                  })()}
+                </div>
+              </div>
             </Card>
           </Col>
           <Col xs={24} sm={12} md={8}>
-            <Card style={{ height: "180px", borderRadius: "12px" }}>
-              <Statistic
-                title={
-                  <span
-                    style={{
-                      fontSize: "16px",
-                      fontWeight: "600",
-                      color: "#262626",
-                    }}
-                  >
-                    Honorary Members
-                  </span>
-                }
-                value={dashboardData.honoraryMembers}
-                prefix={
-                  <GiftOutlined
-                    style={{ fontSize: "24px", marginRight: "8px" }}
-                  />
-                }
-                valueStyle={{
-                  color: "#1890ff",
-                  fontSize: "32px",
-                  fontWeight: "700",
-                  cursor: "pointer",
-                  transition: "color 0.3s ease",
+            <Card
+              className="membership-kpi-card membership-kpi-card-icon-right"
+              style={{ height: "180px", borderRadius: "12px" }}
+            >
+              <div className="membership-kpi-card__top">
+                <span className="membership-kpi-card__title">
+                  Honorary Members
+                </span>
+                <span
+                  className="membership-kpi-card__icon-wrap"
+                  style={{
+                    color: "#1890ff",
+                    background: "rgba(24, 144, 255, 0.12)",
+                  }}
+                  aria-hidden
+                >
+                  <GiftOutlined />
+                </span>
+              </div>
+              <div
+                className="membership-kpi-card__value"
+                style={{ color: "#1890ff" }}
+                onClick={() => handleBackupClick("Honorary Members")}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === " ") {
+                    e.preventDefault();
+                    handleBackupClick("Honorary Members");
+                  }
                 }}
-                onValueClick={() => handleBackupClick("Honorary Members")}
-                suffix={
-                  <div
-                    style={{
-                      fontSize: "14px",
-                      color: "#666",
-                      marginTop: "12px",
-                      lineHeight: "1.6",
-                    }}
-                  >
-                    <div style={{ marginBottom: "8px" }}>
-                      <span style={{ color: "#1890ff", fontWeight: 500 }}>
-                        YTD:
-                      </span>{" "}
-                      {dashboardData.honoraryMembersYTD || 0} vs LY:{" "}
-                      {dashboardData.honoraryMembersLY || 0}
-                      {(() => {
-                        const change = calculatePercentageChange(
-                          dashboardData.honoraryMembersYTD,
-                          dashboardData.honoraryMembersLY
-                        );
-                        return (
-                          change !== 0 && (
-                            <span
-                              style={{
-                                color: change >= 0 ? "#52c41a" : "#ff4d4f",
-                                marginLeft: "6px",
-                                fontWeight: "500",
-                              }}
-                            >
-                              ({change >= 0 ? "+" : ""}
-                              {change}%)
-                            </span>
-                          )
-                        );
-                      })()}
-                    </div>
-                    <div>
-                      <span style={{ color: "#52c41a", fontWeight: 500 }}>
-                        This Month:
-                      </span>{" "}
-                      {dashboardData.honoraryMembersThisMonth || 0} vs LM:{" "}
-                      {dashboardData.honoraryMembersLastMonth || 0}
-                      {(() => {
-                        const change = calculatePercentageChange(
-                          dashboardData.honoraryMembersThisMonth,
-                          dashboardData.honoraryMembersLastMonth
-                        );
-                        return (
-                          change !== 0 && (
-                            <span
-                              style={{
-                                color: change >= 0 ? "#52c41a" : "#ff4d4f",
-                                marginLeft: "4px",
-                              }}
-                            >
-                              ({change >= 0 ? "+" : ""}
-                              {change}%)
-                            </span>
-                          )
-                        );
-                      })()}
-                    </div>
-                  </div>
-                }
-              />
+                role="button"
+                tabIndex={0}
+              >
+                {formatTileCount(dashboardData.honoraryMembers)}
+              </div>
+              <div className="membership-kpi-card__meta">
+                <div className="membership-kpi-card__meta-row">
+                  <span style={{ color: "#1890ff", fontWeight: 500 }}>
+                    YTD:
+                  </span>{" "}
+                  {formatTileCount(dashboardData.honoraryMembersYTD)} vs LY:{" "}
+                  {formatTileCount(dashboardData.honoraryMembersLY)}
+                  {(() => {
+                    const change = calculatePercentageChange(
+                      dashboardData.honoraryMembersYTD,
+                      dashboardData.honoraryMembersLY
+                    );
+                    return (
+                      change !== 0 && (
+                        <span
+                          style={{
+                            color: change >= 0 ? "#52c41a" : "#ff4d4f",
+                            marginLeft: "6px",
+                            fontWeight: "500",
+                          }}
+                        >
+                          ({change >= 0 ? "+" : ""}
+                          {change}%)
+                        </span>
+                      )
+                    );
+                  })()}
+                </div>
+                <div className="membership-kpi-card__meta-row">
+                  <span style={{ color: "#52c41a", fontWeight: 500 }}>
+                    This Month:
+                  </span>{" "}
+                  {formatTileCount(dashboardData.honoraryMembersThisMonth)} vs LM:{" "}
+                  {formatTileCount(dashboardData.honoraryMembersLastMonth)}
+                  {(() => {
+                    const change = calculatePercentageChange(
+                      dashboardData.honoraryMembersThisMonth,
+                      dashboardData.honoraryMembersLastMonth
+                    );
+                    return (
+                      change !== 0 && (
+                        <span
+                          style={{
+                            color: change >= 0 ? "#52c41a" : "#ff4d4f",
+                            marginLeft: "4px",
+                          }}
+                        >
+                          ({change >= 0 ? "+" : ""}
+                          {change}%)
+                        </span>
+                      )
+                    );
+                  })()}
+                </div>
+              </div>
             </Card>
           </Col>
           <Col xs={24} sm={12} md={8}>
-            <Card style={{ height: "180px", borderRadius: "12px" }}>
-              <Statistic
-                title={
-                  <span
-                    style={{
-                      fontSize: "16px",
-                      fontWeight: "600",
-                      color: "#262626",
-                    }}
-                  >
-                    Student Members
-                  </span>
-                }
-                value={dashboardData.studentMembers}
-                prefix={
-                  <BookOutlined
-                    style={{ fontSize: "24px", marginRight: "8px" }}
-                  />
-                }
-                valueStyle={{
-                  color: "#722ed1",
-                  fontSize: "32px",
-                  fontWeight: "700",
-                  cursor: "pointer",
-                  transition: "color 0.3s ease",
+            <Card
+              className="membership-kpi-card membership-kpi-card-icon-right"
+              style={{ height: "180px", borderRadius: "12px" }}
+            >
+              <div className="membership-kpi-card__top">
+                <span className="membership-kpi-card__title">
+                  Student Members
+                </span>
+                <span
+                  className="membership-kpi-card__icon-wrap"
+                  style={{
+                    color: "#722ed1",
+                    background: "rgba(114, 46, 209, 0.12)",
+                  }}
+                  aria-hidden
+                >
+                  <BookOutlined />
+                </span>
+              </div>
+              <div
+                className="membership-kpi-card__value"
+                style={{ color: "#722ed1" }}
+                onClick={() => handleBackupClick("Student Members")}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === " ") {
+                    e.preventDefault();
+                    handleBackupClick("Student Members");
+                  }
                 }}
-                onValueClick={() => handleBackupClick("Student Members")}
-                suffix={
-                  <div
-                    style={{
-                      fontSize: "14px",
-                      color: "#666",
-                      marginTop: "12px",
-                      lineHeight: "1.6",
-                    }}
-                  >
-                    <div style={{ marginBottom: "8px" }}>
-                      <span style={{ color: "#1890ff", fontWeight: 500 }}>
-                        YTD:
-                      </span>{" "}
-                      {dashboardData.studentMembersYTD || 0} vs LY:{" "}
-                      {dashboardData.studentMembersLY || 0}
-                      {(() => {
-                        const change = calculatePercentageChange(
-                          dashboardData.studentMembersYTD,
-                          dashboardData.studentMembersLY
-                        );
-                        return (
-                          change !== 0 && (
-                            <span
-                              style={{
-                                color: change >= 0 ? "#52c41a" : "#ff4d4f",
-                                marginLeft: "6px",
-                                fontWeight: "500",
-                              }}
-                            >
-                              ({change >= 0 ? "+" : ""}
-                              {change}%)
-                            </span>
-                          )
-                        );
-                      })()}
-                    </div>
-                    <div>
-                      <span style={{ color: "#52c41a", fontWeight: 500 }}>
-                        This Month:
-                      </span>{" "}
-                      {dashboardData.studentMembersThisMonth || 0} vs LM:{" "}
-                      {dashboardData.studentMembersLastMonth || 0}
-                      {(() => {
-                        const change = calculatePercentageChange(
-                          dashboardData.studentMembersThisMonth,
-                          dashboardData.studentMembersLastMonth
-                        );
-                        return (
-                          change !== 0 && (
-                            <span
-                              style={{
-                                color: change >= 0 ? "#52c41a" : "#ff4d4f",
-                                marginLeft: "4px",
-                              }}
-                            >
-                              ({change >= 0 ? "+" : ""}
-                              {change}%)
-                            </span>
-                          )
-                        );
-                      })()}
-                    </div>
-                  </div>
-                }
-              />
+                role="button"
+                tabIndex={0}
+              >
+                {formatTileCount(dashboardData.studentMembers)}
+              </div>
+              <div className="membership-kpi-card__meta">
+                <div className="membership-kpi-card__meta-row">
+                  <span style={{ color: "#1890ff", fontWeight: 500 }}>
+                    YTD:
+                  </span>{" "}
+                  {formatTileCount(dashboardData.studentMembersYTD)} vs LY:{" "}
+                  {formatTileCount(dashboardData.studentMembersLY)}
+                  {(() => {
+                    const change = calculatePercentageChange(
+                      dashboardData.studentMembersYTD,
+                      dashboardData.studentMembersLY
+                    );
+                    return (
+                      change !== 0 && (
+                        <span
+                          style={{
+                            color: change >= 0 ? "#52c41a" : "#ff4d4f",
+                            marginLeft: "6px",
+                            fontWeight: "500",
+                          }}
+                        >
+                          ({change >= 0 ? "+" : ""}
+                          {change}%)
+                        </span>
+                      )
+                    );
+                  })()}
+                </div>
+                <div className="membership-kpi-card__meta-row">
+                  <span style={{ color: "#52c41a", fontWeight: 500 }}>
+                    This Month:
+                  </span>{" "}
+                  {formatTileCount(dashboardData.studentMembersThisMonth)} vs LM:{" "}
+                  {formatTileCount(dashboardData.studentMembersLastMonth)}
+                  {(() => {
+                    const change = calculatePercentageChange(
+                      dashboardData.studentMembersThisMonth,
+                      dashboardData.studentMembersLastMonth
+                    );
+                    return (
+                      change !== 0 && (
+                        <span
+                          style={{
+                            color: change >= 0 ? "#52c41a" : "#ff4d4f",
+                            marginLeft: "4px",
+                          }}
+                        >
+                          ({change >= 0 ? "+" : ""}
+                          {change}%)
+                        </span>
+                      )
+                    );
+                  })()}
+                </div>
+              </div>
             </Card>
           </Col>
         </Row>

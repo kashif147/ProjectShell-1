@@ -662,16 +662,16 @@ function ProfileHeader({
           {/* Contact Information Section - on blue background */}
           <div className="member-contact-section-blue">
             <div className="contact-item-blue">
-              <FaMapMarkerAlt className="contact-icon-blue" />
-              <span>{memberData.address}</span>
-            </div>
-            <div className="contact-item-blue">
               <FaEnvelope className="contact-icon-blue" />
               <span>{memberData.email}</span>
             </div>
             <div className="contact-item-blue">
               <FaPhone className="contact-icon-blue" />
               <span>Cell: {memberData.phone}</span>
+            </div>
+            <div className="contact-item-blue">
+              <FaMapMarkerAlt className="contact-icon-blue" />
+              <span>{memberData.address}</span>
             </div>
           </div>
         </div>
