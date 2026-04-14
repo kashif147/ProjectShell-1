@@ -389,6 +389,7 @@ const TransactionHistory = () => {
   const [refundInitialMode, setRefundInitialMode] = useState("stripe");
   const [receiptSummaryText, setReceiptSummaryText] = useState(null);
   const [refundReceiptRows, setRefundReceiptRows] = useState([]);
+  const [refundSubmitting, setRefundSubmitting] = useState(false);
   const [writeOffDrawerOpen, setWriteOffDrawerOpen] = useState(false);
   const [writeOffLedgerRows, setWriteOffLedgerRows] = useState([]);
   const [reallocationDrawerOpen, setReallocationDrawerOpen] = useState(false);
@@ -536,6 +537,7 @@ const TransactionHistory = () => {
     setRefundInitialMode("stripe");
     setReceiptSummaryText(null);
     setRefundReceiptRows([]);
+    setRefundSubmitting(false);
   }, []);
 
   const closeWriteOffDrawer = useCallback(() => {
@@ -642,6 +644,144 @@ const TransactionHistory = () => {
     );
     setRefundDrawerOpen(true);
   }, []);
+
+  const resolvePaymentIntentId = useCallback((row) => {
+    return pickFirstNonEmptyString(
+      row?.paymentIntentId,
+      row?.paymentIntent,
+      row?.settlement?.paymentIntentId,
+      row?.settlement?.paymentIntent,
+      row?.underlyingReceiptGl?.paymentIntentId,
+      row?.underlyingReceiptGl?.paymentIntent
+    );
+  }, []);
+
+  const buildRefundPayload = useCallback(
+    (formValues, rows) => {
+      const amountEuros = Number(formValues?.refund);
+      const amount = Number.isFinite(amountEuros)
+        ? Math.round(amountEuros * 100)
+        : NaN;
+      if (!Number.isFinite(amount) || amount <= 0) {
+        const e = new Error("Refund amount must be greater than 0.");
+        e.code = "INVALID_AMOUNT";
+        throw e;
+      }
+
+      const memberIdValue = String(memberId || "").trim();
+      if (!memberIdValue) {
+        const e = new Error("Member ID is required for refund.");
+        e.code = "MISSING_MEMBER_ID";
+        throw e;
+      }
+
+      const referenceNo = String(formValues?.refNo || "").trim();
+      const memo = String(formValues?.memo || "").trim();
+      const refundDate = formValues?.refundDate || null;
+
+      const paymentIntentIds = rows
+        .map((row) => resolvePaymentIntentId(row))
+        .filter(Boolean);
+      const hasPaymentIntent = paymentIntentIds.length > 0;
+      const hasNullPaymentIntent = paymentIntentIds.length !== rows.length;
+
+      if (hasPaymentIntent && hasNullPaymentIntent) {
+        const e = new Error(
+          "Selected receipts include mixed payment intents. Please select receipts with the same payment source."
+        );
+        e.code = "MIXED_PAYMENT_INTENT";
+        throw e;
+      }
+
+      if (!hasPaymentIntent) {
+        return {
+          mode: "external",
+          memberId: memberIdValue,
+          amount,
+          payoutMethod: "bank_transfer",
+          currency: "eur",
+          refundDate,
+          reason: referenceNo,
+          note: "Paid to member bank account IE29…",
+        };
+      }
+
+      const uniquePaymentIntentIds = [...new Set(paymentIntentIds)];
+      if (uniquePaymentIntentIds.length !== 1) {
+        const e = new Error(
+          "Selected receipts have different payment intents. Please choose receipts for a single payment intent."
+        );
+        e.code = "MULTIPLE_PAYMENT_INTENTS";
+        throw e;
+      }
+
+      return {
+        paymentIntentId: uniquePaymentIntentIds[0],
+        mode: formValues?.mode === "external" ? "external" : "stripe",
+        memberId: memberIdValue,
+        amount,
+        note: memo,
+        // reason: referenceNo,
+        refundDate,
+      };
+    },
+    [memberId, resolvePaymentIntentId]
+  );
+
+  const submitRefundRequest = useCallback(async (payload) => {
+    const token = localStorage.getItem("token");
+    return axios.post(
+      `${process.env.REACT_APP_ACCOUNT_SERVICE_URL}/payments/refunds`,
+      payload,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      }
+    );
+  }, []);
+
+  const handleRefundSubmit = useCallback(
+    async (values) => {
+      if (refundSubmitting) return false;
+      try {
+        setRefundSubmitting(true);
+        const payload = buildRefundPayload(values, refundReceiptRows);
+        await submitRefundRequest(payload);
+        notification.success({
+          message: "Refund",
+          description: "Refund request submitted.",
+          placement: "topRight",
+        });
+        setSelectedRowKeys([]);
+        await fetchLedgerData();
+        closeRefundDrawer();
+        return true;
+      } catch (error) {
+        const backendMessage =
+          error?.response?.data?.message ||
+          error?.response?.data?.error ||
+          error?.message;
+        notification.error({
+          message: "Refund failed",
+          description: backendMessage || "Unable to submit refund request.",
+          placement: "topRight",
+        });
+        return false;
+      } finally {
+        setRefundSubmitting(false);
+      }
+    },
+    [
+      buildRefundPayload,
+      closeRefundDrawer,
+      fetchLedgerData,
+      refundReceiptRows,
+      refundSubmitting,
+      submitRefundRequest,
+    ]
+  );
 
   const columns = useMemo(() => {
     const docTypeLabels = new Set();
@@ -958,15 +1098,8 @@ const TransactionHistory = () => {
         prefillRefundAmountEuro={prefillRefundEuros}
         initialRefundMode={refundInitialMode}
         receiptSummary={receiptSummaryText}
-        onSubmit={(values) => {
-          console.log("Refund submit", values, refundReceiptRows);
-          notification.success({
-            message: "Refund",
-            description: "Refund request submitted.",
-            placement: "topRight",
-          });
-          setSelectedRowKeys([]);
-        }}
+        submitLoading={refundSubmitting}
+        onSubmit={handleRefundSubmit}
       />
 
       <WriteOffDrawer

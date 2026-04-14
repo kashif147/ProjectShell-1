@@ -30,6 +30,7 @@ const RefundDrawer = ({
     open,
     onClose,
     onSubmit,
+    submitLoading = false,
     /** When set, refund amount field is prefilled (euros). */
     prefillRefundAmountEuro = null,
     /** Opening default: online (stripe + Credit Card) vs external (manual type). */
@@ -137,7 +138,8 @@ const RefundDrawer = ({
         return Object.keys(newErrors).length === 0;
     };
 
-    const handleSubmit = () => {
+    const handleSubmit = async () => {
+        if (submitLoading) return;
         if (validate()) {
             const refundNum = Number(formValues.refund);
             const formattedValues = {
@@ -149,8 +151,15 @@ const RefundDrawer = ({
                 refundDate: formValues.refundDate ? formValues.refundDate.format("YYYY-MM-DD") : null,
                 memo: (formValues.memo || "").trim(),
             };
-            if (onSubmit) onSubmit(formattedValues);
-            handleDrawerClose();
+            try {
+                const result = onSubmit ? await onSubmit(formattedValues) : true;
+                if (result !== false) {
+                    handleDrawerClose();
+                }
+            } catch (error) {
+                // Parent handles notifications; keep form open so user can correct and retry.
+                console.error("Refund submit failed:", error);
+            }
         } else {
             message.error("Please fill all required fields");
         }
@@ -173,6 +182,7 @@ const RefundDrawer = ({
             width={700}
             isPagination={false}
             add={handleSubmit}
+            isLoading={submitLoading}
         >
             <div style={{ padding: "10px" }}>
                 <Row gutter={[16, 16]}>
