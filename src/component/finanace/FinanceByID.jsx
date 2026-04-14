@@ -22,14 +22,15 @@ function displayDocTypeLabel(raw) {
   if (norm === "invoice") return "Invoice";
   if (norm === "adjustment") return "Adjustment";
   if (norm === "receipt") return "Receipt";
-  if (norm === "claim") return "Claim";
+  if (norm === "claim") return "Receipt";
   return s;
 }
 
 /** Prefer API simple-view label (ledgerDisplayDocType) when present. */
 function resolveLedgerDocTypeDisplay(record) {
   const api = record?.ledgerDisplayDocType;
-  if (api != null && String(api).trim() !== "") return String(api).trim();
+  if (api != null && String(api).trim() !== "")
+    return displayDocTypeLabel(api);
   return displayDocTypeLabel(
     record?.docType ?? record?.doc_type ?? record?.documentType,
   );
@@ -43,7 +44,7 @@ function pickFirstNonEmptyString(...candidates) {
   return null;
 }
 
-/** Ledger Tx Type from API object e.g. `txType: { description: "Credit Card" }`. */
+/** Ledger Tx Type from API object e.g. `txType: { description: "Credit Card" }` → shown as Card Gateway Clearing. */
 function pickFirstTxTypeDescription(...sources) {
   for (let i = 0; i < sources.length; i += 1) {
     const o = sources[i];
@@ -181,9 +182,9 @@ function displayPaymentType(raw) {
   const s = String(raw).trim();
   const compact = s.toLowerCase().replace(/[\s_-]+/g, "");
   const aliases = {
-    stripe: "Credit Card",
-    card: "Credit Card",
-    creditcard: "Credit Card",
+    stripe: "Card Gateway Clearing",
+    card: "Card Gateway Clearing",
+    creditcard: "Card Gateway Clearing",
     directdebit: "Direct Debit",
     standingorder: "Standing Order",
     standingorders: "Standing Order",
@@ -301,16 +302,16 @@ function entriesForMemberLedgerAggregation(item, gl, targetId) {
 
 /**
  * Tx Type column: `paymentType` on the row prefers `txType.description` from the API.
- * Claim/receipt rows fall back to Credit Card only when nothing else is set.
+ * Claim/receipt rows fall back to Card Gateway Clearing only when nothing else is set.
  */
 function displayPaymentTypeForRow(record) {
   const label = displayPaymentType(record?.paymentType);
   if (label !== "—") return label;
-  if (isClaimDocType(record)) return "Credit Card";
+  if (isClaimDocType(record)) return "Card Gateway Clearing";
   return "—";
 }
 
-const CREDIT_CARD_PAYMENT_LABEL = "Credit Card";
+const CREDIT_CARD_PAYMENT_LABEL = "Card Gateway Clearing";
 
 /** Underlying settlement method (not the claim-row display override). */
 function ledgerRowPaymentTypeLabel(record) {
@@ -348,7 +349,7 @@ function hasStripeLikeSettlementSignal(record) {
 
 /**
  * Prefer external refund only when we have a clear non–credit-card method.
- * Claim/receipt rows often omit paymentType for Stripe; treat those as online.
+ * Claim/receipt rows often omit paymentType for Stripe; treat those as card-gateway (Stripe) flows.
  */
 function rowPrefersExternalRefundSource(row) {
   if (hasStripeLikeSettlementSignal(row)) return false;
@@ -759,13 +760,27 @@ const TransactionHistory = () => {
         closeRefundDrawer();
         return true;
       } catch (error) {
+        const remainingRefundableCentsRaw =
+          error?.response?.data?.remainingRefundableCents ??
+          error?.response?.data?.data?.remainingRefundableCents;
+        const remainingRefundableCents = Number(remainingRefundableCentsRaw);
+        const hasRemainingRefundableCents = Number.isFinite(remainingRefundableCents);
+        const maxRefundableAmount = hasRemainingRefundableCents
+          ? `€${centsToEuro(remainingRefundableCents).toLocaleString("en-IE", {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2,
+          })}`
+          : null;
         const backendMessage =
           error?.response?.data?.message ||
           error?.response?.data?.error ||
           error?.message;
+        const errorDescription = hasRemainingRefundableCents
+          ? `${backendMessage || "Unable to submit refund request."} Max refundable amount: ${maxRefundableAmount}.`
+          : backendMessage || "Unable to submit refund request.";
         notification.error({
           message: "Refund failed",
-          description: backendMessage || "Unable to submit refund request.",
+          description: errorDescription,
           placement: "topRight",
         });
         return false;
@@ -929,7 +944,7 @@ const TransactionHistory = () => {
       render: (value) => value ? <span style={{ color: "green" }}>€{centsToEuro(value).toLocaleString('en-IE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span> : "",
     },
     {
-      title: "Running Balance",
+      title: "Balance",
       dataIndex: "balance",
       key: "balance",
       width: 140,
@@ -999,7 +1014,7 @@ const TransactionHistory = () => {
     selectedLedgerRows.length > 0 &&
     selectedLedgerRows.every((r) => isInvoiceDocType(r));
 
-  /** Receipt = Claim doc type in ledger. */
+  /** Refund from payment-like rows: Claim (app credit → member) or Receipt (cash in). */
   const refundMenuEnabled =
     selectedLedgerRows.length > 0 &&
     selectedLedgerRows.every((r) => isClaimDocType(r));

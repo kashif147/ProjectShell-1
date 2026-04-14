@@ -11,6 +11,7 @@ import { formatMobileNumber } from "../../utils/Utilities";
 import { formatDateOnly } from "../../utils/Utilities";
 import { buildDetailsSearch } from "../../utils/detailsRoute";
 import { buildApplicationMgtSearch } from "../../utils/applicationMgtRoute";
+import { useLocation, useNavigate } from "react-router-dom";
 
 const APPROVED_MEMBERSHIP_STATUSES = new Set([
   "active",
@@ -30,6 +31,9 @@ function isApprovedRow(row) {
 
 const OnlinePayment = () => {
   const dispatch = useDispatch();
+  const navigate = useNavigate();
+  const location = useLocation();
+  const { setGridData, getProfile } = useTableColumns();
   const { stripePayments, loading } = useSelector((state) => state.account);
   const [selectedRowKeys, setSelectedRowKeys] = useState([]);
   const [selectedRows, setSelectedRows] = useState([]);
@@ -124,7 +128,7 @@ const OnlinePayment = () => {
         applicationId,
         edit: true,
       })}`;
-      window.open(appUrl, "_blank", "noopener,noreferrer");
+      navigate(appUrl);
       return;
     }
 
@@ -148,6 +152,14 @@ const OnlinePayment = () => {
         return;
       }
 
+      const selectedIndex = normalizedStripePayments.findIndex(
+        (item) => item === record
+      );
+      if (selectedIndex >= 0) {
+        setGridData(normalizedStripePayments);
+        getProfile([record], selectedIndex);
+      }
+
       const detailsParams = new URLSearchParams(
         buildDetailsSearch(matchedProfile._id).replace("?", "")
       );
@@ -159,10 +171,23 @@ const OnlinePayment = () => {
       if (record?.transactionId) {
         detailsParams.set("transactionId", String(record.transactionId));
       }
-      window.open(
-        `/Details?${detailsParams.toString()}`,
-        "_blank",
-        "noopener,noreferrer"
+      navigate(
+        {
+          pathname: "/Details",
+          search: `?${detailsParams.toString()}`,
+        },
+        {
+          state: {
+            ...location.state,
+            search: location.state?.search || "Finance",
+            activeTab: "2",
+            memberId:
+              matchedProfile.membershipNumber || memberOrApplicationNo || "",
+            name: record?.fullName || "",
+            code: matchedProfile.membershipNumber || memberOrApplicationNo || "",
+            transactionId: record?.transactionId || "",
+          },
+        }
       );
     } catch (error) {
       console.error("Failed to open member finance tab:", error);
