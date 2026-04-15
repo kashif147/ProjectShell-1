@@ -1,59 +1,125 @@
-import React, { useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
+import axios from "axios";
+import { message, Dropdown, Button } from "antd";
+import { MoreOutlined } from "@ant-design/icons";
 import MyTable from "../../component/common/MyTable";
 import { useTableColumns } from "../../context/TableColumnsContext ";
+import AssociateMemberModal from "../../component/finanace/AssociateMemberModal";
+
+const REFUNDS_ENDPOINT = "/reports/refunds";
+
+const buildRefundsUrl = () => {
+    const accountServiceBase = (
+        process.env.REACT_APP_ACCOUNT_SERVICE_URL ||
+        ""
+    ).replace(/\/$/, "");
+    if (!accountServiceBase) return REFUNDS_ENDPOINT;
+    return `${accountServiceBase}${REFUNDS_ENDPOINT}`;
+};
 
 const RefundsSummary = () => {
     const { columns } = useTableColumns();
-    const tableColumns = columns["Refunds"] || [];
+    const [refundsData, setRefundsData] = useState([]);
+    const [loading, setLoading] = useState(false);
+    const [associateRecord, setAssociateRecord] = useState(null);
 
-    // Mock data for Refunds Summary
-    const [mockData] = useState([
-        {
-            key: "1",
-            refundId: "RF-10001",
-            refNo: "TRX-1001",
-            memo: "Duplicate payment reversal",
-            refundDate: "2023-11-15",
-            refundAmount: 125.5,
-            refundType: "Bank Transfer",
-            memberNo: "M-4521",
-            createdBy: "Admin User",
-            createdAt: "2023-11-15T10:00:00.000Z",
-        },
-        {
-            key: "2",
-            refundId: "RF-10002",
-            refNo: "TRX-1002",
-            memo: "Membership cancellation credit",
-            refundDate: "2023-11-16",
-            refundAmount: 89.0,
-            refundType: "Credit Card",
-            applicationNo: "APP-8832",
-            createdBy: "Finance Manager",
-            createdAt: "2023-11-16T11:30:00.000Z",
-        },
-        {
-            key: "3",
-            refundId: "RF-10003",
-            refNo: "TRX-1003",
-            memo: "Overpayment adjustment",
-            refundDate: "2023-11-17",
-            refundAmount: 210.25,
-            refundType: "Bank Transfer",
-            memberNo: "M-9901",
-            createdBy: "Admin User",
-            createdAt: "2023-11-17T09:15:00.000Z",
-        },
-    ]);
+    const tableColumns = useMemo(() => {
+        const base = columns["Refunds"] || [];
+        return [
+            ...base,
+            {
+                title: "Actions",
+                key: "actions",
+                fixed: "right",
+                width: 72,
+                render: (_, record) => (
+                    <Dropdown
+                        menu={{
+                            items: [
+                                {
+                                    key: "associate",
+                                    label: "Associate to member",
+                                    onClick: () => setAssociateRecord(record),
+                                },
+                            ],
+                        }}
+                        trigger={["click"]}
+                        placement="bottomRight"
+                    >
+                        <Button type="text" icon={<MoreOutlined style={{ fontSize: "20px" }} />} />
+                    </Dropdown>
+                ),
+            },
+        ];
+    }, [columns]);
+
+    const fetchRefunds = useCallback(async () => {
+        setLoading(true);
+        try {
+            const token = localStorage.getItem("token");
+            const response = await axios.get(buildRefundsUrl(), {
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                    "Content-Type": "application/json",
+                },
+            });
+
+            const payload = response?.data;
+            const rows = Array.isArray(payload)
+                ? payload
+                : payload?.data?.refunds ||
+                payload?.data ||
+                payload?.items ||
+                payload?.results ||
+                [];
+
+            const normalizedRows = rows.map((item, index) => ({
+                ...item,
+                key: item?.key || item?.id || item?._id || `${item?.refundId || "refund"}-${index}`,
+                refundType: item?.refundType ?? item?.payoutMethod ?? "—",
+                refundSource: item?.refundSource ?? item?.mode ?? "—",
+                refundAmount:
+                    item?.refundAmount ??
+                    (typeof item?.amount === "number" ? item.amount / 100 : 0),
+                memberNo:
+                    item?.memberNo ??
+                    item?.membershipNo ??
+                    item?.applicationNo ??
+                    item?.applicationNumber ??
+                    item?.memberId ??
+                    "—",
+            }));
+
+            setRefundsData(normalizedRows);
+        } catch (error) {
+            console.error("Error fetching refunds report:", error);
+            message.error("Failed to load refunds report");
+            setRefundsData([]);
+        } finally {
+            setLoading(false);
+        }
+    }, []);
+
+    useEffect(() => {
+        fetchRefunds();
+    }, [fetchRefunds]);
 
     return (
         <div style={{ width: "100%", padding: "0" }}>
             <MyTable
-                dataSource={mockData}
+                dataSource={refundsData}
                 columns={tableColumns}
-                loading={false}
-                selection={true}
-                selectionType="checkbox"
+                loading={loading}
+                selection={false}
+                defaultSortField="createdAt"
+                defaultSortOrder="descend"
+            />
+            <AssociateMemberModal
+                open={associateRecord != null}
+                onClose={() => setAssociateRecord(null)}
+                onSuccess={() => fetchRefunds()}
+                selectedRows={associateRecord ? [associateRecord] : []}
+                variant="refunds"
             />
         </div>
     );

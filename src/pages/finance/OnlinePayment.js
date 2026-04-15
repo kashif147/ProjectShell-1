@@ -6,6 +6,7 @@ import { useDispatch, useSelector } from "react-redux";
 import axios from "axios";
 import { fetchStripePayments } from "../../features/AccountSlice";
 import RefundDrawer from "../../component/finanace/RefundDrawer";
+import AssociateMemberModal from "../../component/finanace/AssociateMemberModal";
 import { formatCurrency } from "../../utils/Utilities";
 import { formatMobileNumber } from "../../utils/Utilities";
 import { formatDateOnly } from "../../utils/Utilities";
@@ -39,6 +40,7 @@ const OnlinePayment = () => {
   const [selectedRows, setSelectedRows] = useState([]);
   const [refundDrawerOpen, setRefundDrawerOpen] = useState(false);
   const [selectedRecord, setSelectedRecord] = useState(null);
+  const [associateRecord, setAssociateRecord] = useState(null);
 
   useEffect(() => {
     dispatch(fetchStripePayments());
@@ -200,6 +202,11 @@ const OnlinePayment = () => {
       key: "Refund",
       label: "Refund",
       onClick: () => handleRefund(record),
+    },
+    {
+      key: "associateMember",
+      label: "Associate to member",
+      onClick: () => setAssociateRecord(record),
     },
     ...(record?.paymentStatus?.toLowerCase() === "paid" || record?.status?.toLowerCase() === "paid"
       ? [
@@ -388,10 +395,11 @@ const OnlinePayment = () => {
 
   return (
     <div style={{ width: "100%", padding: "0" }}>
-      {/* Optional: Display selected count */}
       {selectedRowKeys.length > 0 && (
-        <div style={{ marginBottom: 16, padding: "8px 12px", background: "#f0f0f0", borderRadius: 4 }}>
-          Selected {selectedRowKeys.length} item(s)
+        <div style={{ marginBottom: 16, padding: "8px 34px" }}>
+          <span style={{ padding: "8px 12px", background: "#f0f0f0", borderRadius: 4 }}>
+            Selected {selectedRowKeys.length} item(s)
+          </span>
         </div>
       )}
       <div
@@ -430,6 +438,13 @@ const OnlinePayment = () => {
         }}
         onSubmit={handleRefundSubmit}
         paymentData={selectedRecord}
+      />
+      <AssociateMemberModal
+        open={associateRecord != null}
+        onClose={() => setAssociateRecord(null)}
+        onSuccess={() => dispatch(fetchStripePayments())}
+        selectedRows={associateRecord ? [associateRecord] : []}
+        variant="receipts"
       />
     </div>
   );

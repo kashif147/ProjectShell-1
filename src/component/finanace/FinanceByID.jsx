@@ -702,8 +702,8 @@ const TransactionHistory = () => {
           payoutMethod: "bank_transfer",
           currency: "eur",
           refundDate,
-          reason: referenceNo,
-          note: "Paid to member bank account IE29…",
+          refNo: referenceNo,
+          memo: memo || "Paid to member bank account IE29…",
         };
       }
 
@@ -721,8 +721,8 @@ const TransactionHistory = () => {
         mode: formValues?.mode === "external" ? "external" : "stripe",
         memberId: memberIdValue,
         amount,
-        note: memo,
-        // reason: referenceNo,
+        refNo: referenceNo,
+        memo,
         refundDate,
       };
     },
@@ -815,34 +815,6 @@ const TransactionHistory = () => {
       .map((text) => ({ text, value: text }));
 
     return [
-    {
-      title: "Created",
-      dataIndex: "ledgerCreatedAt",
-      key: "ledgerCreatedAt",
-      width: 158,
-      sorter: {
-        compare: (a, b) => {
-          const va = dayjs(a.ledgerCreatedAt).isValid()
-            ? dayjs(a.ledgerCreatedAt).valueOf()
-            : NaN;
-          const vb = dayjs(b.ledgerCreatedAt).isValid()
-            ? dayjs(b.ledgerCreatedAt).valueOf()
-            : NaN;
-          const okA = !Number.isNaN(va);
-          const okB = !Number.isNaN(vb);
-          if (okA && okB && va !== vb) return va - vb;
-          if (okA && !okB) return -1;
-          if (!okA && okB) return 1;
-          return String(a._id ?? a.key ?? "").localeCompare(
-            String(b._id ?? b.key ?? "")
-          );
-        },
-      },
-      render: (text) =>
-        text && dayjs(text).isValid()
-          ? dayjs(text).format("DD/MM/YYYY HH:mm")
-          : "—",
-    },
     {
       title: "Tx Date",
       dataIndex: "date",
@@ -999,6 +971,34 @@ const TransactionHistory = () => {
         );
       },
     },
+    {
+      title: "Created",
+      dataIndex: "ledgerCreatedAt",
+      key: "ledgerCreatedAt",
+      width: 158,
+      sorter: {
+        compare: (a, b) => {
+          const va = dayjs(a.ledgerCreatedAt).isValid()
+            ? dayjs(a.ledgerCreatedAt).valueOf()
+            : NaN;
+          const vb = dayjs(b.ledgerCreatedAt).isValid()
+            ? dayjs(b.ledgerCreatedAt).valueOf()
+            : NaN;
+          const okA = !Number.isNaN(va);
+          const okB = !Number.isNaN(vb);
+          if (okA && okB && va !== vb) return va - vb;
+          if (okA && !okB) return -1;
+          if (!okA && okB) return 1;
+          return String(a._id ?? a.key ?? "").localeCompare(
+            String(b._id ?? b.key ?? "")
+          );
+        },
+      },
+      render: (text) =>
+        text && dayjs(text).isValid()
+          ? dayjs(text).format("DD/MM/YYYY HH:mm")
+          : "—",
+    },
   ];
   }, [data]);
 
@@ -1104,6 +1104,8 @@ const TransactionHistory = () => {
         tablePadding={{ paddingLeft: "0", paddingRight: "0" }}
         defaultSortField="ledgerCreatedAt"
         defaultSortOrder="descend"
+        alwaysFirstSortField="ledgerCreatedAt"
+        alwaysFirstSortOrder="descend"
       />
 
       <RefundDrawer

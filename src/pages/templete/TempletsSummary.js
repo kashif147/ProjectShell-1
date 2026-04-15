@@ -1,6 +1,6 @@
 import { useEffect, useState, useMemo } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { Table, Tag, Space, Button, Tooltip } from "antd";
+import { Table, Tag } from "antd";
 import { EditOutlined, EyeOutlined, DeleteOutlined } from "@ant-design/icons";
 import CustomSelect from "../../component/common/CustomSelect";
 import MyInput from "../../component/common/MyInput";
@@ -14,7 +14,6 @@ import { loadtempletedetails } from "../../features/templete/templeteDetailsSlic
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { getUnifiedPaginationConfig } from "../../component/common/UnifiedPagination";
-// Add these imports at the top of your file
 
 dayjs.extend(utc);
 dayjs.extend(timezone);
@@ -85,8 +84,6 @@ const TempletsSummary = () => {
     const [searchValue, setSearchValue] = useState("");
     const [categoryFilter, setCategoryFilter] = useState("");
     const [statusFilter, setStatusFilter] = useState("");
-    const [deletingId, setDeletingId] = useState(null);
-
     useEffect(() => {
         dispatch(getTemplates());
     }, [dispatch]);
@@ -99,16 +96,20 @@ const TempletsSummary = () => {
                 t.name.toLowerCase().includes(searchValue.toLowerCase())
             )
             .filter((t) =>
-                categoryFilter ? t.category.toLowerCase() === String(categoryFilter).toLowerCase() : true
+                categoryFilter ? t.category?.toLowerCase() === String(categoryFilter).toLowerCase() : true
             )
             .filter((t) =>
-                statusFilter ? t.status.toLowerCase() === String(statusFilter).toLowerCase() : true
+                statusFilter ? (t.status || "Active").toLowerCase() === String(statusFilter).toLowerCase() : true
             )
             .map((t) => ({
                 key: t._id,
                 templateName: t.name,
-                category: t.category.charAt(0).toUpperCase() + t.category.slice(1),
+                description: t.description || "No description available.",
+                category: t.category ? t.category.charAt(0).toUpperCase() + t.category.slice(1) : "N/A",
                 lastUpdated: dayjs.utc(t.createdAt).local().format("DD/MM/YYYY HH:mm"),
+                updatedBy: typeof t.updatedBy === "string"
+                    ? t.updatedBy
+                    : t.updatedBy?.name || t.updatedBy?.fullName || t.updatedBy?.email || "System",
                 status: t.status || "Active", // Use API status if available
             }));
     }, [templates, searchValue, categoryFilter, statusFilter]);
@@ -119,39 +120,61 @@ const TempletsSummary = () => {
             dataIndex: "templateName",
             key: "templateName",
             sorter: (a, b) => a.templateName.localeCompare(b.templateName),
+            onCell: () => ({
+                style: { verticalAlign: "top", paddingTop: "10px", paddingBottom: "10px" },
+            }),
+            render: (_, record) => (
+                <div style={{ lineHeight: 1.35 }}>
+                    <div style={{ fontWeight: 600, marginBottom: 2 }}>{record.templateName}</div>
+                    <div style={{ color: "#6b7280" }}>{record.description}</div>
+                </div>
+            ),
         },
         {
             title: "CATEGORY",
             dataIndex: "category",
             key: "category",
             sorter: (a, b) => a.category.localeCompare(b.category),
-        },
-        {
-            title: "LAST UPDATED",
-            dataIndex: "lastUpdated",
-            key: "lastUpdated",
-            sorter: (a, b) => dayjs(a.lastUpdated, "DD/MM/YYYY HH:mm").unix() - dayjs(b.lastUpdated, "DD/MM/YYYY HH:mm").unix(),
+            onCell: () => ({
+                style: { verticalAlign: "top", paddingTop: "10px", paddingBottom: "10px" },
+            }),
         },
         {
             title: "STATUS",
             dataIndex: "status",
             key: "status",
+            onCell: () => ({
+                style: { verticalAlign: "top", paddingTop: "10px", paddingBottom: "10px" },
+            }),
             render: (status) => (
                 <Tag color={status === "Active" ? "green" : "red"}>{status}</Tag>
             ),
-            filters: [
-                { text: "Active", value: "Active" },
-                { text: "Inactive", value: "Inactive" },
-            ],
-            onFilter: (value, record) => record.status === value,
+        },
+        {
+            title: "UPDATED BY",
+            dataIndex: "updatedBy",
+            key: "updatedBy",
+            sorter: (a, b) => a.updatedBy.localeCompare(b.updatedBy),
+            onCell: () => ({
+                style: { verticalAlign: "top", paddingTop: "10px", paddingBottom: "10px" },
+            }),
+            render: (_, record) => (
+                <div style={{ lineHeight: 1.35 }}>
+                    <div style={{ fontWeight: 600, marginBottom: 2 }}>{record.updatedBy}</div>
+                    <div style={{ color: "#6b7280" }}>{record.lastUpdated}</div>
+                </div>
+            ),
         },
         {
             title: "ACTIONS",
             key: "actions",
             width: 90,
             align: "center",
+            onCell: () => ({
+                style: { verticalAlign: "top", paddingTop: "10px", paddingBottom: "10px" },
+            }),
             render: (_, record) => (
-                <div className="d-flex justify-content-center gap-1">
+                <div className="d-flex justify-content-center align-items-start gap-1">
                     <button
                         type="button"
                         className="btn btn-sm p-1 rounded hover-bg-primary"
@@ -173,14 +196,14 @@ const TempletsSummary = () => {
                     <button
                         type="button"
                         className="btn btn-sm p-1 rounded hover-bg-danger"
-                        onClick={() => handleDelete && handleDelete(record)}
+                        onClick={() => handleDelete(record)}
                         title="Delete"
                     >
                         <DeleteOutlined className="text-danger" />
                     </button>
                 </div>
             ),
-        }
+        },
     ];
 
     const handleEdit = async (record) => {
@@ -237,11 +260,11 @@ const TempletsSummary = () => {
                 loading={loading}
                 scroll={{ x: "max-content", y: 590 }}
                 bordered
+                className="drawer-tbl mt-3"
                 pagination={getUnifiedPaginationConfig({
                     total: filteredData.length,
-                    itemName: "items",
+                    itemName: "templates",
                 })}
-                className="drawer-tbl"
                 size="middle"
                 locale={{
                     emptyText: "No Data"
