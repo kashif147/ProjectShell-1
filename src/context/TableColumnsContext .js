@@ -294,6 +294,16 @@ const staticColumns = {
       isGride: true,
       isVisible: true,
       width: 140,
+      render: (value) => (value ? String(value).replaceAll("_", " ") : "—"),
+    },
+    {
+      dataIndex: "refundSource",
+      title: "Refund Source",
+      ellipsis: true,
+      isGride: true,
+      isVisible: true,
+      width: 140,
+      render: (value) => (value ? String(value) : "—"),
     },
     {
       dataIndex: "memberNo",

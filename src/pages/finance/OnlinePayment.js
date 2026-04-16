@@ -6,11 +6,13 @@ import { useDispatch, useSelector } from "react-redux";
 import axios from "axios";
 import { fetchStripePayments } from "../../features/AccountSlice";
 import RefundDrawer from "../../component/finanace/RefundDrawer";
+import AssociateMemberModal from "../../component/finanace/AssociateMemberModal";
 import { formatCurrency } from "../../utils/Utilities";
 import { formatMobileNumber } from "../../utils/Utilities";
 import { formatDateOnly } from "../../utils/Utilities";
 import { buildDetailsSearch } from "../../utils/detailsRoute";
 import { buildApplicationMgtSearch } from "../../utils/applicationMgtRoute";
+import { useLocation, useNavigate } from "react-router-dom";
 
 const APPROVED_MEMBERSHIP_STATUSES = new Set([
   "active",
@@ -85,6 +87,9 @@ function resolvePrefillRefundAmountEuro(row) {
 
 const OnlinePayment = () => {
   const dispatch = useDispatch();
+  const navigate = useNavigate();
+  const location = useLocation();
+  const { setGridData, getProfile } = useTableColumns();
   const { stripePayments, loading } = useSelector((state) => state.account);
   const [selectedRowKeys, setSelectedRowKeys] = useState([]);
   const [selectedRows, setSelectedRows] = useState([]);
@@ -94,6 +99,7 @@ const OnlinePayment = () => {
   const [prefillRefundAmountEuro, setPrefillRefundAmountEuro] = useState(null);
   const [refundInitialMode, setRefundInitialMode] = useState("stripe");
   const [refundMemberSummary, setRefundMemberSummary] = useState(null);
+  const [associateRecord, setAssociateRecord] = useState(null);
 
   useEffect(() => {
     dispatch(fetchStripePayments());
@@ -283,7 +289,7 @@ const OnlinePayment = () => {
         applicationId,
         edit: true,
       })}`;
-      window.open(appUrl, "_blank", "noopener,noreferrer");
+      navigate(appUrl);
       return;
     }
 
@@ -307,6 +313,14 @@ const OnlinePayment = () => {
         return;
       }
 
+      const selectedIndex = normalizedStripePayments.findIndex(
+        (item) => item === record
+      );
+      if (selectedIndex >= 0) {
+        setGridData(normalizedStripePayments);
+        getProfile([record], selectedIndex);
+      }
+
       const detailsParams = new URLSearchParams(
         buildDetailsSearch(matchedProfile._id).replace("?", "")
       );
@@ -318,10 +332,23 @@ const OnlinePayment = () => {
       if (record?.transactionId) {
         detailsParams.set("transactionId", String(record.transactionId));
       }
-      window.open(
-        `/Details?${detailsParams.toString()}`,
-        "_blank",
-        "noopener,noreferrer"
+      navigate(
+        {
+          pathname: "/Details",
+          search: `?${detailsParams.toString()}`,
+        },
+        {
+          state: {
+            ...location.state,
+            search: location.state?.search || "Finance",
+            activeTab: "2",
+            memberId:
+              matchedProfile.membershipNumber || memberOrApplicationNo || "",
+            name: record?.fullName || "",
+            code: matchedProfile.membershipNumber || memberOrApplicationNo || "",
+            transactionId: record?.transactionId || "",
+          },
+        }
       );
     } catch (error) {
       console.error("Failed to open member finance tab:", error);
@@ -513,10 +540,11 @@ const OnlinePayment = () => {
 
   return (
     <div style={{ width: "100%", padding: "0" }}>
-      {/* Optional: Display selected count */}
       {selectedRowKeys.length > 0 && (
-        <div style={{ marginBottom: 16, padding: "8px 12px", background: "#f0f0f0", borderRadius: 4 }}>
-          Selected {selectedRowKeys.length} item(s)
+        <div style={{ marginBottom: 16, padding: "8px 34px" }}>
+          <span style={{ padding: "8px 12px", background: "#f0f0f0", borderRadius: 4 }}>
+            Selected {selectedRowKeys.length} item(s)
+          </span>
         </div>
       )}
       <div
@@ -562,6 +590,13 @@ const OnlinePayment = () => {
         initialRefundMode={refundInitialMode}
         hideMemberSearch={true}
         memberSummary={refundMemberSummary}
+      />
+      <AssociateMemberModal
+        open={associateRecord != null}
+        onClose={() => setAssociateRecord(null)}
+        onSuccess={() => dispatch(fetchStripePayments())}
+        selectedRows={associateRecord ? [associateRecord] : []}
+        variant="receipts"
       />
     </div>
   );

@@ -94,6 +94,14 @@ function isUndergraduateStudentMembershipCategory(selected, categoryOptions) {
   );
 }
 
+function isSameDayValue(a, b) {
+  if (!a || !b) return false;
+  const da = dayjs.isDayjs(a) ? a : dayjs(a);
+  const db = dayjs.isDayjs(b) ? b : dayjs(b);
+  if (!da.isValid() || !db.isValid()) return false;
+  return da.isSame(db, "day");
+}
+
 const MembershipForm = ({
   isEditMode = false,
   setIsEditMode,
@@ -127,6 +135,9 @@ const MembershipForm = ({
   const subscriptionIdParam = searchParams.get("subscriptionId") || "";
   const profileIdParam = searchParams.get("profileId") || "";
   const [saveLoading, setSaveLoading] = useState(false);
+  const [initialMembershipCategory, setInitialMembershipCategory] = useState("");
+  const [initialSubscriptionStartDate, setInitialSubscriptionStartDate] =
+    useState(null);
   const {
     titleOptions,
     genderOptions,
@@ -339,6 +350,10 @@ const MembershipForm = ({
 
     // Override with subscription data if available
     if (subscriptionData) {
+      const originalCategory = subscriptionData.membershipCategory || "";
+      const originalStartDate = convertUTCToLocalDate(subscriptionData.startDate);
+      setInitialMembershipCategory(originalCategory);
+      setInitialSubscriptionStartDate(originalStartDate || null);
 
       setFormData(prev => ({
         ...prev,
@@ -391,6 +406,8 @@ const MembershipForm = ({
         secondarySection: subscriptionData.secondarySection || prev.secondarySection || "",
       }));
     } else {
+      setInitialMembershipCategory("");
+      setInitialSubscriptionStartDate(null);
       // If no subscription data, check if it's because they are resigned
       let status = "";
       if (isSubscriptionEmpty && !ProfileSubLoading) {
@@ -739,6 +756,18 @@ const MembershipForm = ({
   const membershipCategorySelected = Boolean(
     String(formData.membershipCategory || "").trim()
   );
+  const membershipCategoryChanged =
+    String(formData.membershipCategory || "").trim() !==
+    String(initialMembershipCategory || "").trim();
+  const subscriptionStartDateChanged =
+    !initialSubscriptionStartDate ||
+    !formData.startDate ||
+    !isSameDayValue(formData.startDate, initialSubscriptionStartDate);
+  const showMembershipCategoryStartDateWarning =
+    isEditMode &&
+    !isFormReadOnly &&
+    membershipCategoryChanged &&
+    !subscriptionStartDateChanged;
 
   const payrollDeductionPayment = useMemo(
     () => isPayrollOrSalaryDeduction(formData.paymentType),
@@ -1733,6 +1762,36 @@ const MembershipForm = ({
                 disabled={isFormReadOnly}
                 required={true}
               />
+              {showMembershipCategoryStartDateWarning && (
+                <div
+                  style={{
+                    backgroundColor: "#fff7e6",
+                    border: "1px solid #ffd591",
+                    borderRadius: "6px",
+                    padding: "8px 12px",
+                    marginBottom: "12px",
+                    color: "#ad6800",
+                    fontSize: "13px",
+                    fontWeight: 500,
+                  }}
+                >
+                  Membership Category has changed. Do you want to update the
+                  Subscription Start Date?
+                </div>
+              )}
+              <div
+                style={
+                  showMembershipCategoryStartDateWarning
+                    ? {
+                        border: "2px solid #faad14",
+                        borderRadius: "8px",
+                        padding: "8px",
+                        backgroundColor: "#fffbe6",
+                        marginBottom: "8px",
+                      }
+                    : undefined
+                }
+              >
               <MyDatePicker
                 label="Subscription Start Date"
                 placeholder="Select start date"
@@ -1741,6 +1800,7 @@ const MembershipForm = ({
                 disabled={isFormReadOnly}
                 required={membershipCategorySelected}
               />
+              </div>
               <MyDatePicker
                 label="Subscription End Date"
                 placeholder="Select end date"
