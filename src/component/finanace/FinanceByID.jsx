@@ -678,35 +678,44 @@ const TransactionHistory = () => {
       const referenceNo = String(formValues?.refNo || "").trim();
       const memo = String(formValues?.memo || "").trim();
       const refundDate = formValues?.refundDate || null;
+      const isExternalMode = formValues?.mode === "external";
+      if (isExternalMode) {
+        const payoutMethod =
+          formValues?.type === "Cheque" ? "cheque" : "bank_transfer";
+        return {
+          mode: "external",
+          memberId: memberIdValue,
+          amount,
+          payoutMethod,
+          currency: "eur",
+          refundDate,
+          refNo: referenceNo,
+          memo,
+        };
+      }
 
-      const paymentIntentIds = rows
-        .map((row) => resolvePaymentIntentId(row))
-        .filter(Boolean);
-      const hasPaymentIntent = paymentIntentIds.length > 0;
-      const hasNullPaymentIntent = paymentIntentIds.length !== rows.length;
+      const paymentIntentIds = rows.map((row) => resolvePaymentIntentId(row));
+      const validPaymentIntentIds = paymentIntentIds.filter(Boolean);
+      const hasMixedPaymentIntent =
+        validPaymentIntentIds.length !== paymentIntentIds.length;
 
-      if (hasPaymentIntent && hasNullPaymentIntent) {
+      if (hasMixedPaymentIntent) {
         const e = new Error(
-          "Selected receipts include mixed payment intents. Please select receipts with the same payment source."
+          "Online refunds require payment intent on every selected receipt."
         );
         e.code = "MIXED_PAYMENT_INTENT";
         throw e;
       }
 
-      if (!hasPaymentIntent) {
-        return {
-          mode: "external",
-          memberId: memberIdValue,
-          amount,
-          payoutMethod: "bank_transfer",
-          currency: "eur",
-          refundDate,
-          reason: referenceNo,
-          note: "Paid to member bank account IE29…",
-        };
+      if (!validPaymentIntentIds.length) {
+        const e = new Error(
+          "Online refunds require a payment intent. Please choose online receipts."
+        );
+        e.code = "MISSING_PAYMENT_INTENT";
+        throw e;
       }
 
-      const uniquePaymentIntentIds = [...new Set(paymentIntentIds)];
+      const uniquePaymentIntentIds = [...new Set(validPaymentIntentIds)];
       if (uniquePaymentIntentIds.length !== 1) {
         const e = new Error(
           "Selected receipts have different payment intents. Please choose receipts for a single payment intent."
@@ -717,11 +726,12 @@ const TransactionHistory = () => {
 
       return {
         paymentIntentId: uniquePaymentIntentIds[0],
-        mode: formValues?.mode === "external" ? "external" : "stripe",
+        payoutMethod: "credit_card",
+        mode: "stripe",
         memberId: memberIdValue,
         amount,
-        note: memo,
-        // reason: referenceNo,
+        memo,
+        refNo: referenceNo,
         refundDate,
       };
     },
@@ -754,6 +764,11 @@ const TransactionHistory = () => {
           description: "Refund request submitted.",
           placement: "topRight",
         });
+        window.dispatchEvent(
+          new CustomEvent("member-finance-updated", {
+            detail: { memberId: String(memberId || "").trim() },
+          })
+        );
         setSelectedRowKeys([]);
         await fetchLedgerData();
         closeRefundDrawer();

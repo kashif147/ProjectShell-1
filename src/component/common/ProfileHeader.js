@@ -253,6 +253,29 @@ function ProfileHeader({
     fetchAccountSummary();
   }, [fetchAccountSummary]);
 
+  useEffect(() => {
+    const handleMemberFinanceUpdated = (event) => {
+      const eventMemberId = String(event?.detail?.memberId || "")
+        .trim()
+        .toLowerCase();
+      const currentMemberId = String(memberIdForLedger || "")
+        .trim()
+        .toLowerCase();
+
+      // Refresh only when event is for the currently visible member.
+      if (eventMemberId && eventMemberId !== currentMemberId) return;
+      fetchAccountSummary();
+    };
+
+    window.addEventListener("member-finance-updated", handleMemberFinanceUpdated);
+    return () => {
+      window.removeEventListener(
+        "member-finance-updated",
+        handleMemberFinanceUpdated
+      );
+    };
+  }, [fetchAccountSummary, memberIdForLedger]);
+
   const isSubscriptionEmpty = useMemo(() => {
     if (!ProfileSubData) return false;
     // Direct array empty
