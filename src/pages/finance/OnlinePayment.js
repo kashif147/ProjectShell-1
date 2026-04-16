@@ -30,6 +30,61 @@ function isApprovedRow(row) {
   return hasMembershipNo || APPROVED_MEMBERSHIP_STATUSES.has(status);
 }
 
+function normalizePaymentStatus(row) {
+  return String(row?.paymentStatus || row?.settlement?.status || row?.status || "")
+    .trim()
+    .toLowerCase();
+}
+
+function isRefundablePayment(row) {
+  return normalizePaymentStatus(row) === "pending";
+}
+
+function isUnapprovedMemberRow(row) {
+  return String(row?.memberId || "").trim() === "";
+}
+
+function isRefundableUnapprovedRow(row) {
+  return isRefundablePayment(row) && isUnapprovedMemberRow(row);
+}
+
+function resolvePaymentIntentId(row) {
+  const candidates = [
+    row?.paymentIntentId,
+    row?.paymentIntent,
+    row?.settlement?.paymentIntentId,
+    row?.settlement?.paymentIntent,
+  ];
+  for (const value of candidates) {
+    const normalized = String(value || "").trim();
+    if (normalized) return normalized;
+  }
+  return "";
+}
+
+function refundInitialModeFromRecord(row) {
+  if (resolvePaymentIntentId(row)) return "stripe";
+  const provider = String(row?.settlement?.provider || "").trim().toLowerCase();
+  return provider === "stripe" ? "stripe" : "external";
+}
+
+function resolvePrefillRefundAmountEuro(row) {
+  const entries = Array.isArray(row?.entries) ? row.entries : [];
+  if (!entries.length) return null;
+  const recordApplicationId = String(row?.applicationId || "").trim();
+  const matchById = recordApplicationId
+    ? entries.find(
+      (entry) => String(entry?.applicationId || "").trim() === recordApplicationId
+    )
+    : null;
+  const withApplicationId =
+    matchById ||
+    entries.find((entry) => String(entry?.applicationId || "").trim() !== "");
+  const cents = Number(withApplicationId?.amount);
+  if (!Number.isFinite(cents) || cents <= 0) return null;
+  return Math.round(cents) / 100;
+}
+
 const OnlinePayment = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
@@ -40,6 +95,10 @@ const OnlinePayment = () => {
   const [selectedRows, setSelectedRows] = useState([]);
   const [refundDrawerOpen, setRefundDrawerOpen] = useState(false);
   const [selectedRecord, setSelectedRecord] = useState(null);
+  const [refundSubmitting, setRefundSubmitting] = useState(false);
+  const [prefillRefundAmountEuro, setPrefillRefundAmountEuro] = useState(null);
+  const [refundInitialMode, setRefundInitialMode] = useState("stripe");
+  const [refundMemberSummary, setRefundMemberSummary] = useState(null);
   const [associateRecord, setAssociateRecord] = useState(null);
 
   useEffect(() => {
@@ -79,7 +138,7 @@ const OnlinePayment = () => {
       console.log("Selected Rows:", selectedRows);
     },
     getCheckboxProps: (record) => ({
-      disabled: record?.paymentStatus?.toLowerCase() === "refunded",
+      disabled: !isRefundableUnapprovedRow(record),
       name: record?.transactionId,
     }),
   };
@@ -90,20 +149,120 @@ const OnlinePayment = () => {
   };
 
   const handleRefund = (record) => {
+    console.log("record==========>", record);
+    if (!isRefundablePayment(record)) {
+      message.warning("Refund is only available for pending transactions.");
+      return;
+    }
+    if (!isUnapprovedMemberRow(record)) {
+      message.warning("Refund is only available for unapproved members.");
+      return;
+    }
+    const applicationId = String(record?.applicationId || "").trim();
+    if (!applicationId) {
+      message.warning("Application ID is missing for this transaction.");
+      return;
+    }
     setSelectedRecord(record);
+    setPrefillRefundAmountEuro(resolvePrefillRefundAmountEuro(record));
+    setRefundInitialMode(refundInitialModeFromRecord(record));
+    setRefundMemberSummary({
+      fullName: String(record?.fullName || "").trim() || "-",
+      membershipCategory: String(
+        record?.membershipCategory || record?.category || ""
+      ).trim() || "-",
+    });
     setRefundDrawerOpen(true);
   };
 
-  const handleRefundSubmit = (refundData) => {
-    console.log("Refund submitted:", refundData);
-    console.log("For record:", selectedRecord);
+  const buildRefundPayload = (refundData, record) => {
+    const amountEuros = Number(refundData?.refund);
+    const amount = Number.isFinite(amountEuros) ? Math.round(amountEuros * 100) : NaN;
+    if (!Number.isFinite(amount) || amount <= 0) {
+      throw new Error("Refund amount must be greater than 0.");
+    }
 
-    // Here you can dispatch an action to process the refund
-    // dispatch(processRefund({ ...refundData, record: selectedRecord }));
+    if (!isUnapprovedMemberRow(record)) {
+      throw new Error("Refund is only allowed for unapproved members.");
+    }
+    const applicationId = String(record?.applicationId || "").trim();
+    if (!applicationId) {
+      throw new Error("Application ID is missing for this transaction.");
+    }
+    const mode = refundData?.mode === "external" ? "external" : "stripe";
+    const refNo = String(refundData?.refNo || "").trim();
+    const memo = String(refundData?.memo || "").trim();
+    const refundDate = refundData?.refundDate || null;
 
-    message.success(`Refund of ${refundData.refund} processed successfully for ${selectedRecord?.fullName || selectedRecord?.memberNo}`);
-    setRefundDrawerOpen(false);
-    setSelectedRecord(null);
+    if (mode === "external") {
+      const payoutMethod =
+        refundData?.type === "Cheque" ? "cheque" : "bank_transfer";
+      return {
+        mode: "external",
+        applicationId,
+        payoutMethod,
+        amount,
+        currency: "eur",
+        refNo,
+        memo,
+        refundDate,
+      };
+    }
+
+    const paymentIntentId = resolvePaymentIntentId(record);
+    if (!paymentIntentId) {
+      throw new Error("Online refunds require a payment intent.");
+    }
+
+    return {
+      paymentIntentId,
+      mode: "stripe",
+      applicationId,
+      payoutMethod: "credit_card",
+      amount,
+      refNo,
+      memo,
+      refundDate,
+    };
+  };
+
+  const handleRefundSubmit = async (refundData) => {
+    if (!selectedRecord || refundSubmitting) return false;
+    try {
+      setRefundSubmitting(true);
+      const payload = buildRefundPayload(refundData, selectedRecord);
+      const token = localStorage.getItem("token");
+      await axios.post(
+        `${process.env.REACT_APP_ACCOUNT_SERVICE_URL}/payments/refunds`,
+        payload,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+      message.success(
+        `Refund of ${refundData.refund} processed successfully for ${selectedRecord?.fullName || selectedRecord?.memberNo}`
+      );
+      setRefundDrawerOpen(false);
+      setSelectedRecord(null);
+      setPrefillRefundAmountEuro(null);
+      setRefundInitialMode("stripe");
+      setRefundMemberSummary(null);
+      setSelectedRowKeys([]);
+      setSelectedRows([]);
+      dispatch(fetchStripePayments());
+      return true;
+    } catch (error) {
+      const backendMessage =
+        error?.response?.data?.message || error?.response?.data?.error || error?.message;
+      message.error(backendMessage || "Unable to process refund.");
+      return false;
+    } finally {
+      setRefundSubmitting(false);
+    }
   };
 
   const handleOpenMemberFinance = async (record) => {
@@ -201,23 +360,9 @@ const OnlinePayment = () => {
     {
       key: "Refund",
       label: "Refund",
+      disabled: !isRefundableUnapprovedRow(record),
       onClick: () => handleRefund(record),
     },
-    {
-      key: "associateMember",
-      label: "Associate to member",
-      onClick: () => setAssociateRecord(record),
-    },
-    ...(record?.paymentStatus?.toLowerCase() === "paid" || record?.status?.toLowerCase() === "paid"
-      ? [
-        {
-          key: "refund",
-          label: "Refund",
-          danger: true,
-          onClick: () => handleRefund(record),
-        },
-      ]
-      : []),
   ];
 
   const columns = [
@@ -435,9 +580,16 @@ const OnlinePayment = () => {
         onClose={() => {
           setRefundDrawerOpen(false);
           setSelectedRecord(null);
+          setPrefillRefundAmountEuro(null);
+          setRefundInitialMode("stripe");
+          setRefundMemberSummary(null);
         }}
         onSubmit={handleRefundSubmit}
-        paymentData={selectedRecord}
+        submitLoading={refundSubmitting}
+        prefillRefundAmountEuro={prefillRefundAmountEuro}
+        initialRefundMode={refundInitialMode}
+        hideMemberSearch={true}
+        memberSummary={refundMemberSummary}
       />
       <AssociateMemberModal
         open={associateRecord != null}

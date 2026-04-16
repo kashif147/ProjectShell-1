@@ -8,6 +8,8 @@ import MyDatePicker1 from "../common/MyDatePicker1";
 import MemberSearch from "../profile/MemberSearch";
 
 const CREDIT_CARD_TYPE = "Credit Card";
+const BANK_TRANSFER_TYPE = "Bank Transfer";
+const CHEQUE_TYPE = "Cheque";
 
 function generateCreditCardRefNo() {
     const suffix =
@@ -37,6 +39,8 @@ const RefundDrawer = ({
     initialRefundMode = "stripe",
     /** Hide member search (e.g. member profile finance tab). */
     hideMemberSearch = false,
+    /** Optional member summary shown when member search is hidden. */
+    memberSummary = null,
     /** Optional info banner above the form. */
     receiptSummary = null,
 }) => {
@@ -69,7 +73,7 @@ const RefundDrawer = ({
                 mode: "external",
                 refund: refundAmt,
                 refundDate: dayjs(),
-                type: "",
+                type: BANK_TRANSFER_TYPE,
                 refNo: "",
                 memo: "",
             });
@@ -122,12 +126,28 @@ const RefundDrawer = ({
                     refNo: generateCreditCardRefNo(),
                 };
             }
-            return { ...prev, mode: "external" };
+            const nextExternalType =
+                prev.type === BANK_TRANSFER_TYPE || prev.type === CHEQUE_TYPE
+                    ? prev.type
+                    : BANK_TRANSFER_TYPE;
+            return {
+                ...prev,
+                mode: "external",
+                type: nextExternalType,
+            };
         });
         if (errors.type) {
             setErrors((prev) => ({ ...prev, type: false }));
         }
     };
+
+    const refundTypeOptions =
+        formValues.mode === "stripe"
+            ? [{ label: CREDIT_CARD_TYPE, key: CREDIT_CARD_TYPE }]
+            : [
+                { label: BANK_TRANSFER_TYPE, key: BANK_TRANSFER_TYPE },
+                { label: CHEQUE_TYPE, key: CHEQUE_TYPE },
+            ];
 
     const validate = () => {
         const newErrors = {};
@@ -192,14 +212,62 @@ const RefundDrawer = ({
                         </Col>
                     ) : null}
                     {!hideMemberSearch ? (
-                    <Col span={24}>
-                        <label className="my-input-label">Member Search</label>
-                        <MemberSearch
-                            fullWidth={true}
-                            style={{ width: "100%" }}
-                            onSelectBehavior="none"
-                        />
-                    </Col>
+                        <Col span={24}>
+                            <label className="my-input-label">Member Search</label>
+                            <MemberSearch
+                                fullWidth={true}
+                                style={{ width: "100%" }}
+                                onSelectBehavior="none"
+                            />
+                        </Col>
+                    ) : memberSummary ? (
+                        <Col span={24}>
+  <div
+    style={{
+      border: "1px solid #e5e7eb",
+      borderRadius: "10px",
+      padding: "16px",
+      background: "#fafafa",
+      boxShadow: "0 2px 6px rgba(0,0,0,0.05)",
+    }}
+  >
+    <div
+      style={{
+        fontSize: "14px",
+        fontWeight: 600,
+        marginBottom: "10px",
+        color: "#6b7280",
+        textTransform: "uppercase",
+        letterSpacing: "0.5px",
+      }}
+    >
+      Member Details
+    </div>
+
+    <div
+      style={{
+        display: "flex",
+        justifyContent: "space-between",
+        flexWrap: "wrap",
+        gap: "10px",
+      }}
+    >
+      <div>
+        <div style={{ fontSize: "12px", color: "#9ca3af" }}>Name</div>
+        <div style={{ fontSize: "15px", fontWeight: 500 }}>
+          {memberSummary?.fullName || "-"}
+        </div>
+      </div>
+
+      <div>
+        <div style={{ fontSize: "12px", color: "#9ca3af" }}>Category</div>
+        <div style={{ fontSize: "15px", fontWeight: 500 }}>
+          {memberSummary?.membershipCategory || "-"}
+        </div>
+      </div>
+    </div>
+  </div>
+</Col>
                     ) : null}
                     <Col span={24}>
                         <div className="my-input-wrapper" style={{ marginBottom: 0 }}>
@@ -220,11 +288,7 @@ const RefundDrawer = ({
                             label="Refund Type"
                             name="type"
                             placeholder="Select refund type"
-                            options={[
-                                { label: "Credit Card", key: "Credit Card" },
-                                { label: "Bank Transfer", key: "Bank Transfer" },
-                                { label: "Cheque", key: "Cheque" },
-                            ]}
+                            options={refundTypeOptions}
                             value={formValues.type}
                             onChange={(e) => handleRefundTypeChange(e.target.value)}
                             required
