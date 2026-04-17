@@ -545,13 +545,20 @@ const TableComponent = ({
           const isMembersPage = currentPath.includes('/members');
           switch (col.title) {
             case "Full Name":
-              const resolvedFullName =
-                text ||
-                record?.user?.userFullName ||
-                record?.fullName ||
-                record?.fullname ||
-                record?.personalInfo?.fullName ||
-                `${record?.personalInfo?.forename || ""} ${record?.personalInfo?.surname || ""}`.trim();
+              const resolvedFullName = isMembersPage
+                ? text ||
+                  record?.personalDetails?.fullName ||
+                  record?.user?.userFullName ||
+                  record?.fullName ||
+                  record?.fullname ||
+                  record?.personalInfo?.fullName ||
+                  `${record?.personalInfo?.forename || ""} ${record?.personalInfo?.surname || ""}`.trim()
+                : text ||
+                  record?.user?.userFullName ||
+                  record?.fullName ||
+                  record?.fullname ||
+                  record?.personalInfo?.fullName ||
+                  `${record?.personalInfo?.forename || ""} ${record?.personalInfo?.surname || ""}`.trim();
               // Check for crm:member:read permission on Summary page
               const isFullNameOnSummaryPage = location.pathname.toLowerCase().includes('/summary');
               const hasMemberReadPermission = hasPermission('crm:member:read');
@@ -635,7 +642,11 @@ const TableComponent = ({
                   }}
                   state={{
                     search: screenName,
-                    name: record?.user?.userFullName || record?.fullName,
+                    name: isMembersPage
+                      ? record?.personalDetails?.fullName ||
+                        record?.user?.userFullName ||
+                        record?.fullName
+                      : record?.user?.userFullName || record?.fullName,
                     code: record?.personalDetails?.membershipNo || record?.regNo,
                     memberId: record?.personalDetails?.membershipNo || record?.membershipNumber || record?.regNo || record?._id,
                     applicationId: record?.applicationId || record?.ApplicationId,

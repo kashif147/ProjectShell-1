@@ -250,6 +250,9 @@ const EventsSummary = lazyWithRetry(
   () => import("./pages/events/EventsSummary"),
 );
 const EventDetails = lazyWithRetry(() => import("./pages/events/EventDetails"));
+const AttendeesSummary = lazyWithRetry(
+  () => import("./pages/events/AttendeesSummary"),
+);
 
 function Entry() {
   const location = useLocation();
@@ -604,6 +607,14 @@ function Entry() {
                         element={
                           <ProtectedRoute requiredPermission={RoutePermissions["/EventDetails"]}>
                             <EventDetails />
+                          </ProtectedRoute>
+                        }
+                      />
+                      <Route
+                        path="Attendees"
+                        element={
+                          <ProtectedRoute requiredPermission={RoutePermissions["Attendees"]}>
+                            <AttendeesSummary />
                           </ProtectedRoute>
                         }
                       />

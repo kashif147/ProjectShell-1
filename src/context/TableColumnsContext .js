@@ -85,7 +85,10 @@ function profileDetailsBreadcrumbState(record) {
   const regNo =
     record.regNo ?? record.personalDetails?.regNo ?? "";
   const regOrMember = regNo || membershipDisplay;
-  const name = record.user?.userFullName ?? record.fullName;
+  const name =
+    record.personalDetails?.fullName ??
+    record.user?.userFullName ??
+    record.fullName;
   const rowCode =
     record.code != null && String(record.code).trim() !== ""
       ? String(record.code)
@@ -2693,6 +2696,137 @@ const staticColumns = {
       width: 150,
     },
   ],
+  Attendees: [
+    {
+      dataIndex: "eventType",
+      title: "Event Type",
+      ellipsis: true,
+      isGride: true,
+      isVisible: true,
+      width: 150,
+    },
+    {
+      dataIndex: "eventName",
+      title: "Event",
+      ellipsis: true,
+      isGride: true,
+      isVisible: true,
+      width: 210,
+    },
+    {
+      dataIndex: "eventDate",
+      title: "Event Date",
+      ellipsis: true,
+      isGride: true,
+      isVisible: true,
+      width: 140,
+      render: (value) => formatDateOnly(value),
+    },
+    {
+      dataIndex: "attendeeId",
+      title: "Attendee ID",
+      ellipsis: true,
+      isGride: true,
+      isVisible: true,
+      width: 140,
+    },
+    {
+      dataIndex: "status",
+      title: "Registration Status",
+      ellipsis: true,
+      isGride: true,
+      isVisible: true,
+      width: 170,
+      render: (status) => {
+        if (!status) return "-";
+        const statusLower = String(status).toLowerCase();
+        return <Tag color={statusLower === "registered" ? "green" : "default"}>{status}</Tag>;
+      },
+    },
+    {
+      dataIndex: "totalFee",
+      title: "Total Fee",
+      ellipsis: true,
+      isGride: true,
+      isVisible: true,
+      width: 130,
+      render: (value) => formatCurrency(value),
+    },
+    {
+      dataIndex: "paymentStatus",
+      title: "Payment Status",
+      ellipsis: true,
+      isGride: true,
+      isVisible: true,
+      width: 150,
+      render: (status) => {
+        if (!status) return "-";
+        const statusLower = String(status).toLowerCase();
+        let color = "default";
+        if (statusLower === "paid") color = "green";
+        else if (statusLower === "pending") color = "orange";
+        else if (statusLower === "unpaid") color = "red";
+        else if (statusLower === "refunded") color = "purple";
+        return <Tag color={color}>{status}</Tag>;
+      },
+    },
+    {
+      dataIndex: "attendeeName",
+      title: "Attendee Name",
+      ellipsis: true,
+      isGride: true,
+      isVisible: true,
+      width: 180,
+    },
+    {
+      dataIndex: "email",
+      title: "Email",
+      ellipsis: true,
+      isGride: true,
+      isVisible: true,
+      width: 210,
+    },
+    {
+      dataIndex: "mobileNumber",
+      title: "Mobile Number",
+      ellipsis: true,
+      isGride: true,
+      isVisible: true,
+      width: 160,
+    },
+    {
+      dataIndex: "fullAddress",
+      title: "Full Address",
+      ellipsis: true,
+      isGride: true,
+      isVisible: true,
+      width: 260,
+    },
+    {
+      dataIndex: "workLocation",
+      title: "Work Location",
+      ellipsis: true,
+      isGride: true,
+      isVisible: true,
+      width: 180,
+    },
+    {
+      dataIndex: "grade",
+      title: "Grade",
+      ellipsis: true,
+      isGride: true,
+      isVisible: true,
+      width: 160,
+    },
+    {
+      dataIndex: "attendeeType",
+      title: "Type",
+      ellipsis: true,
+      isGride: true,
+      isVisible: true,
+      width: 150,
+    },
+  ],
   Popout: [
     {
       dataIndex: "code",
@@ -2807,7 +2941,7 @@ const staticColumns = {
       editable: false,
     },
     {
-      dataIndex: ["user", "userFullName"],
+      dataIndex: ["personalDetails", "fullName"],
       title: "Full Name",
       ellipsis: true,
       isGride: true,
@@ -4453,6 +4587,22 @@ const staticSearchFilters = {
       lookups: { Male: false, Female: false, Other: false },
     },
   ],
+  Attendees: [
+    { titleColumn: "Attendee ID", isSearch: true, isCheck: false, lookups: {}, comp: "==" },
+    { titleColumn: "Attendee Name", isSearch: true, isCheck: false, lookups: {}, comp: "==" },
+    { titleColumn: "Email", isSearch: true, isCheck: false, lookups: {}, comp: "==" },
+    { titleColumn: "Mobile Number", isSearch: true, isCheck: false, lookups: {}, comp: "==" },
+    { titleColumn: "Full Address", isSearch: true, isCheck: false, lookups: {}, comp: "==" },
+    { titleColumn: "Work Location", isSearch: true, isCheck: false, lookups: {}, comp: "==" },
+    { titleColumn: "Grade", isSearch: true, isCheck: false, lookups: {}, comp: "==" },
+    { titleColumn: "Type", isSearch: true, isCheck: false, lookups: {}, comp: "==" },
+    { titleColumn: "Event", isSearch: true, isCheck: false, lookups: {}, comp: "==" },
+    { titleColumn: "Event Type", isSearch: true, isCheck: false, lookups: {}, comp: "==" },
+    { titleColumn: "Date", isSearch: true, isCheck: false, lookups: {}, comp: "==" },
+    { titleColumn: "Total Fee", isSearch: false, isCheck: false, lookups: {}, comp: "==" },
+    { titleColumn: "Payment Status", isSearch: true, isCheck: false, lookups: {}, comp: "==" },
+    { titleColumn: "Registration Status", isSearch: true, isCheck: false, lookups: {}, comp: "==" },
+  ],
   ChangCateSumm: [
     {
       titleColumn: "Grade",
@@ -4722,7 +4872,19 @@ export const TableColumnsProvider = ({ children }) => {
   const location = useLocation();
   const navigate = useNavigate();
   const dispatch = useDispatch();
-  const screenName = location?.state?.search;
+  const pathScreenMap = {
+    "/Applications": "Applications",
+    "/Summary": "Profile",
+    "/members": "Members",
+    "/Members": "Members",
+    "/CasesSummary": "Cases",
+    "/EventsSummary": "Events",
+    "/Attendees": "Attendees",
+  };
+  const screenName =
+    location?.state?.search ||
+    pathScreenMap[location?.pathname] ||
+    "";
   const [claimsDrawer, setClaimsDrawer] = useState(false);
   const [isDisable, setIsDisable] = useState(true);
   const [lookupsData, setLookupsData] = useState({

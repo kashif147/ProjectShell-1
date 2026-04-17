@@ -82,6 +82,7 @@ import WriteOffDrawer from "../../component/finanace/WriteOffDrawer";
 import { fetchBatchesByType } from "../../features/profiles/batchMemberSlice";
 import CreateCasesDrawer from "../cases/CreateCasesDrawer";
 import CreateEventDrawer from "../event/CreateEventDrawer";
+import CreateAttendeeDrawer from "../event/CreateAttendeeDrawer";
 import { useCasesEdit } from "../../context/CasesEditContext";
 import { useReminderBatchesFilter } from "../../context/ReminderBatchesFilterContext";
 import { useCancellationBatchesFilter } from "../../context/CancellationBatchesFilterContext";
@@ -124,6 +125,7 @@ function HeaderDetails({
   const [writeOffDrawerOpen, setWriteOffDrawerOpen] = useState(false);
   const [casesDrawerOpen, setCasesDrawerOpen] = useState(false);
   const [eventDrawerOpen, setEventDrawerOpen] = useState(false);
+  const [attendeeDrawerOpen, setAttendeeDrawerOpen] = useState(false);
   const refundFormRef = useRef(null);
 
   const handleDateChange = (val) => {
@@ -896,6 +898,7 @@ function HeaderDetails({
           location?.pathname === "/Transfers" ||
           location?.pathname === "/RosterSummary" ||
           location?.pathname === "/EventsSummary" ||
+          location?.pathname === "/Attendees" ||
           location?.pathname === "/CasesSummary") && (
           <FaClipboardList
             style={{
@@ -1032,6 +1035,7 @@ function HeaderDetails({
             location?.pathname == "/Reports" ||
             location?.pathname == "/RosterSummary" ||
             location?.pathname == "/EventsSummary" ||
+            location?.pathname == "/Attendees" ||
             location?.pathname == "/ChangCateSumm" ||
             location?.pathname == "/RemindersSummary" ||
             location?.pathname == "/Cancallation" ||
@@ -1112,6 +1116,10 @@ function HeaderDetails({
                                       ? "Finance"
                                       : nav === "/MembershipDashboard"
                                         ? "Subscriptions & Rewards"
+                                      : nav === "/EventsSummary"
+                                        ? "Events"
+                                        : nav === "/Attendees"
+                                          ? "Attendees"
                                         : "")}
                     </h2>
                   )}
@@ -1161,7 +1169,7 @@ function HeaderDetails({
                           !hasPermission("payments:create")) ||
                         (["/Applications", "/Summary"].includes(nav) &&
                           !hasPermission("application:create")) ||
-                        (nav === "/EventsSummary" &&
+                        ((nav === "/EventsSummary" || nav === "/Attendees") &&
                           !hasPermission("events:create")) ||
                         (nav === "/ChangCateSumm" &&
                           !hasPermission("changeOfCategory:create")) ||
@@ -1213,6 +1221,8 @@ function HeaderDetails({
                               setCasesDrawerOpen(true);
                             } else if (nav === "/EventsSummary") {
                               setEventDrawerOpen(true);
+                            } else if (nav === "/Attendees") {
+                              setAttendeeDrawerOpen(true);
                             }
                           }}
                           style={{
@@ -1223,7 +1233,7 @@ function HeaderDetails({
                           }}
                           className="butn"
                         >
-                          Create
+                          {nav === "/Attendees" ? "Add Attendee" : "Create"}
                         </Button>
                       )}
                       <SimpleMenu
@@ -1851,6 +1861,10 @@ function HeaderDetails({
       <CreateEventDrawer
         open={eventDrawerOpen}
         onClose={() => setEventDrawerOpen(false)}
+      />
+      <CreateAttendeeDrawer
+        open={attendeeDrawerOpen}
+        onClose={() => setAttendeeDrawerOpen(false)}
       />
       {nav === "/CasesSummary" && (
         <Drawer

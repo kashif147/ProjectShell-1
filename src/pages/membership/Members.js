@@ -7,6 +7,7 @@ function Members() {
       personalDetails: {
         membershipNo: "M-1001",
         mobileNo: "+92-300-1234567",
+        fullName: "Ali Khan",
       },
       user: {
         userFullName: "Ali Khan",
@@ -38,6 +39,7 @@ function Members() {
       personalDetails: {
         membershipNo: "M-1002",
         mobileNo: "+92-321-9876543",
+        fullName: "Sara Ahmed",
       },
       user: {
         userFullName: "Sara Ahmed",
@@ -69,6 +71,7 @@ function Members() {
       personalDetails: {
         membershipNo: "M-1003",
         mobileNo: "+92-333-5556677",
+        fullName: "Usman Raza",
       },
       user: {
         userFullName: "Usman Raza",

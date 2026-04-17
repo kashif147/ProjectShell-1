@@ -97,6 +97,10 @@ export const FilterProvider = ({ children }) => {
     Events: {
       visibleFilters: [],
       filtersState: {}
+    },
+    Attendees: {
+      visibleFilters: [],
+      filtersState: {}
     }
   });
 
@@ -318,7 +322,8 @@ export const FilterProvider = ({ children }) => {
       "/onlinePayment": "OnlinePayment",
       "/CommunicationBatchDetail": "Communication",
       "/CasesSummary": "Cases",
-      "/EventsSummary": "Events"
+      "/EventsSummary": "Events",
+      "/Attendees": "Attendees"
     };
     return pathMap[activeScreenName] || 'Applications';
   };
@@ -452,6 +457,15 @@ export const FilterProvider = ({ children }) => {
         "Status",
         "Created At",
       ],
+      Attendees: [
+        "Event",
+        "Event Type",
+        "Registration Status",
+        "Event Date",
+        "Payment Status",
+        "Grade",
+        "Work Location",
+      ],
     }),
     []
   );
@@ -466,6 +480,7 @@ export const FilterProvider = ({ children }) => {
     Communication: ["Grade", "Work Location"],
     Cases: ["Incident Date", "Case Type", "Stakeholder", "Priority"],
     Events: ["Event Type", "Status"],
+    Attendees: ["Event", "Event Type", "Registration Status", "Event Date", "Payment Status"],
   };
 
   // 🔹 Helper to get default visible filters for a screen
@@ -485,6 +500,8 @@ export const FilterProvider = ({ children }) => {
     Members: getDefaultVisibleFilters("Members"),
     OnlinePayment: getDefaultVisibleFilters("OnlinePayment"),
     Communication: getDefaultVisibleFilters("Communication"),
+    Events: getDefaultVisibleFilters("Events"),
+    Attendees: getDefaultVisibleFilters("Attendees"),
   }), [],);
 
   // 🔹 Default filter VALUES for each screen
@@ -665,6 +682,36 @@ export const FilterProvider = ({ children }) => {
         selectedValues: []
       },
       "Created At": {
+        operator: "==",
+        selectedValues: []
+      }
+    },
+    Attendees: {
+      "Event": {
+        operator: "==",
+        selectedValues: []
+      },
+      "Event Type": {
+        operator: "==",
+        selectedValues: []
+      },
+      "Registration Status": {
+        operator: "==",
+        selectedValues: []
+      },
+      "Payment Status": {
+        operator: "==",
+        selectedValues: []
+      },
+      "Work Location": {
+        operator: "==",
+        selectedValues: []
+      },
+      "Grade": {
+        operator: "==",
+        selectedValues: []
+      },
+      "Event Date": {
         operator: "==",
         selectedValues: []
       }
@@ -858,6 +905,14 @@ export const FilterProvider = ({ children }) => {
       "Stakeholder": ["", "Internal", "External", "Partner"],
       "Event Type": ["", "Internal", "Workshop", "External"],
       "Status": ["", "Active", "Planning", "Review", "Canceled"],
+      "Event": [
+        "",
+        "Annual Nursing Conference",
+        "Advanced Clinical Skills",
+        "Infection Control Essentials",
+        "Leadership Forum",
+      ],
+      "Registration Status": ["", "Registered", "Cancelled", "Pending", "Waitlisted"],
 
       // 🔹 Text input filters
       "Email": [],
@@ -893,6 +948,7 @@ export const FilterProvider = ({ children }) => {
       "Created At": [],
       "Updated At": [],
       "Incident Date": [],
+      "Event Date": [],
     };
   }, [
     workLocationOptions,

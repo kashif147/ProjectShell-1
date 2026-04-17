@@ -50,6 +50,8 @@ const Toolbar = () => {
       "/membership": "Membership",
       "/Members": "Members",
       "/CommunicationBatchDetail": "Communication",
+      "/EventsSummary": "Events",
+      "/Attendees": "Attendees",
     };
     return pathMap[location.pathname] || "";
   };
@@ -262,6 +264,8 @@ const Toolbar = () => {
                 ? "Search Case ID, team, or stakeholder"
                 : location.pathname === "/EventsSummary"
                   ? "Search Event ID or Name"
+                  : location.pathname === "/Attendees"
+                    ? "Search Attendee ID or Name"
                   : "Membership No or Surname"
             }
             style={{
