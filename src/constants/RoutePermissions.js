@@ -63,6 +63,7 @@ export const RoutePermissions = {
   "ClaimsById": "portal:read",
 
   // Events
+  "EventsDashboard": "events:read",
   "EventsSummary": "events:read",
   "EventDetails": "events:read",
   "Attendees": "portal:read",

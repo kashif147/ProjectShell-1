@@ -452,10 +452,9 @@ export const FilterProvider = ({ children }) => {
         "Priority",
       ],
       Events: [
-        "Search",
+        "Event",
         "Event Type",
-        "Status",
-        "Created At",
+        "Event Date",
       ],
       Attendees: [
         "Event",
@@ -479,7 +478,7 @@ export const FilterProvider = ({ children }) => {
     OnlinePayment: ["Membership Status", "Payment Status"],
     Communication: ["Grade", "Work Location"],
     Cases: ["Incident Date", "Case Type", "Stakeholder", "Priority"],
-    Events: ["Event Type", "Status"],
+    Events: ["Event", "Event Type", "Event Date"],
     Attendees: ["Event", "Event Type", "Registration Status", "Event Date", "Payment Status"],
   };
 
@@ -673,15 +672,15 @@ export const FilterProvider = ({ children }) => {
       }
     },
     Events: {
+      "Event": {
+        operator: "==",
+        selectedValues: []
+      },
       "Event Type": {
         operator: "==",
         selectedValues: []
       },
-      "Status": {
-        operator: "==",
-        selectedValues: []
-      },
-      "Created At": {
+      "Event Date": {
         operator: "==",
         selectedValues: []
       }

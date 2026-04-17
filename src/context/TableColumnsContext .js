@@ -2646,6 +2646,67 @@ const staticColumns = {
       width: 150,
     },
   ],
+  Events: [
+    {
+      dataIndex: "eventId",
+      title: "Event ID",
+      ellipsis: true,
+      isGride: true,
+      isVisible: true,
+      width: 140,
+    },
+    {
+      dataIndex: "eventName",
+      title: "Event Name",
+      ellipsis: true,
+      isGride: true,
+      isVisible: true,
+      width: 220,
+    },
+    {
+      dataIndex: "eventType",
+      title: "Event Type",
+      ellipsis: true,
+      isGride: true,
+      isVisible: true,
+      width: 150,
+    },
+    {
+      dataIndex: "createdBy",
+      title: "Created By",
+      ellipsis: true,
+      isGride: true,
+      isVisible: true,
+      width: 160,
+    },
+    {
+      dataIndex: "createdAt",
+      title: "Created At",
+      ellipsis: true,
+      isGride: true,
+      isVisible: true,
+      width: 140,
+      render: (value) => formatDateOnly(value),
+    },
+    {
+      dataIndex: "status",
+      title: "Status",
+      ellipsis: true,
+      isGride: true,
+      isVisible: true,
+      width: 140,
+      render: (status) => {
+        if (!status) return "-";
+        const statusLower = String(status).toLowerCase();
+        let color = "default";
+        if (statusLower === "active") color = "green";
+        else if (statusLower === "planning") color = "blue";
+        else if (statusLower === "review") color = "gold";
+        else if (statusLower === "canceled" || statusLower === "cancelled") color = "default";
+        return <Tag color={color}>{status}</Tag>;
+      },
+    },
+  ],
   Batches: [
     {
       dataIndex: "batchName",
@@ -4602,6 +4663,14 @@ const staticSearchFilters = {
     { titleColumn: "Total Fee", isSearch: false, isCheck: false, lookups: {}, comp: "==" },
     { titleColumn: "Payment Status", isSearch: true, isCheck: false, lookups: {}, comp: "==" },
     { titleColumn: "Registration Status", isSearch: true, isCheck: false, lookups: {}, comp: "==" },
+  ],
+  Events: [
+    { titleColumn: "Event ID", isSearch: true, isCheck: false, lookups: {}, comp: "==" },
+    { titleColumn: "Event Name", isSearch: true, isCheck: false, lookups: {}, comp: "==" },
+    { titleColumn: "Event Type", isSearch: true, isCheck: false, lookups: {}, comp: "==" },
+    { titleColumn: "Created By", isSearch: true, isCheck: false, lookups: {}, comp: "==" },
+    { titleColumn: "Created At", isSearch: true, isCheck: false, lookups: {}, comp: "==" },
+    { titleColumn: "Status", isSearch: true, isCheck: false, lookups: {}, comp: "==" },
   ],
   ChangCateSumm: [
     {

@@ -37,7 +37,7 @@ const Breadcrumb = () => {
     Membership: { icon: "👤", route: "/Summary" },
     Finance: { icon: "💰", route: "/Batches" },
     Correspondence: { icon: "📧", route: "/CorrespondencesSummary" },
-    Events: { icon: "📅", route: "/EventsSummary" },
+    Events: { icon: "📅", route: "/EventsDashboard" },
     Configuration: { icon: "⚙️", route: "/Configuratin" },
     Reports: { icon: "📊", route: "/Reports" },
     Settings: { icon: "⚙️", route: "/Configuratin" },
@@ -310,21 +310,42 @@ const Breadcrumb = () => {
     },
 
     // Events Pages
+    "/EventsDashboard": {
+      module: "Events",
+      page: "Dashboard",
+      moduleIcon: "📅",
+      pageIcon: "📊",
+    },
     "/EventsSummary": {
       module: "Events",
       page: "Events Summary",
-      icon: "📅",
+      moduleIcon: "📅",
+      pageIcon: "📅",
     },
     "/EventDetails": {
       module: "Events",
       page: "Event Details",
-      icon: "📅",
+      moduleIcon: "📅",
+      pageIcon: "📅",
       recordIdField: "eventId",
     },
     "/Attendees": {
       module: "Events",
       page: "Attendees",
-      icon: "📅",
+      moduleIcon: "📅",
+      pageIcon: "👥",
+    },
+    "/Reporting": {
+      module: "Events",
+      page: "Reporting",
+      moduleIcon: "📅",
+      pageIcon: "📈",
+    },
+    "/EventsSettings": {
+      module: "Events",
+      page: "Settings",
+      moduleIcon: "📅",
+      pageIcon: "⚙️",
     },
     // Roster Pages (Legacy)
     "/RosterSummary": {
@@ -605,7 +626,8 @@ const Breadcrumb = () => {
       membershipSimpleBatchSearches.includes(simpleBatchSearch);
 
     let membershipNav = membershipSectionNav[matchedPath] || null;
-    let icon = breadcrumbData.icon;
+    let pageIcon = breadcrumbData.pageIcon || breadcrumbData.icon;
+    let moduleIcon = breadcrumbData.moduleIcon || pageIcon;
 
     if (isMembershipSimpleBatch) {
       const listingKey =
@@ -615,7 +637,8 @@ const Breadcrumb = () => {
             ? "/CornMarketRewards"
             : "/NewGraduate";
       membershipNav = membershipSectionNav[listingKey];
-      icon = routeBreadcrumbMap[listingKey]?.icon || icon;
+      pageIcon = routeBreadcrumbMap[listingKey]?.pageIcon || routeBreadcrumbMap[listingKey]?.icon || pageIcon;
+      moduleIcon = routeBreadcrumbMap[listingKey]?.moduleIcon || moduleIcon;
     }
 
     // /Details: second crumb follows listing you came from (TableComponent state.search)
@@ -641,7 +664,9 @@ const Breadcrumb = () => {
       appLauncher: appLauncherItem,
       module: breadcrumbData.module,
       page: breadcrumbData.page,
-      icon,
+      icon: pageIcon,
+      pageIcon,
+      moduleIcon,
       path: currentPath,
       matchedPath,
       recordIdField: breadcrumbData.recordIdField,
@@ -751,7 +776,7 @@ const Breadcrumb = () => {
       Correspondence: "/CorrespondencesSummary",
       Finance: "/Batches",
       Reports: "/Reports",
-      Events: "/EventsSummary",
+      Events: "/EventsDashboard",
       Settings: "/Configuratin",
       Courses: "/Courses",
       "Professional Development": "/ProfessionalDevelopment",
@@ -973,7 +998,9 @@ const Breadcrumb = () => {
     breadcrumbItems.push({
       title: (
         <span style={{ display: "flex", alignItems: "center" }}>
-          <span style={{ marginRight: 4 }}>{breadcrumbData.icon}</span>
+          <span style={{ marginRight: 4 }}>
+            {breadcrumbData.moduleIcon || breadcrumbData.icon}
+          </span>
           {breadcrumbData.module}
         </span>
       ),
@@ -985,7 +1012,9 @@ const Breadcrumb = () => {
       breadcrumbItems.push({
         title: (
           <span style={{ display: "flex", alignItems: "center" }}>
-            <span style={{ marginRight: 4 }}>{breadcrumbData.icon}</span>
+            <span style={{ marginRight: 4 }}>
+              {breadcrumbData.pageIcon || breadcrumbData.icon}
+            </span>
             {breadcrumbData.page}
           </span>
         ),

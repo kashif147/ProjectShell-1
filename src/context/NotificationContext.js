@@ -24,23 +24,28 @@ export const getNotificationServiceUrl = () => {
   return NOTIFICATION_SERVICE_FALLBACK;
 };
 
-/**
- * Socket.io-client ignores path in the URL; it only uses host/port.
- * Must pass path explicitly: io(origin, { path: basePath + "/socket.io" })
- */
-const getSocketOptions = () => {
+export const getNotificationSocketConfig = () => {
   const baseUrl = getNotificationServiceUrl();
   try {
     const url = new URL(baseUrl);
-    const origin = url.origin;
-    const path = `${url.pathname.replace(/\/$/, "")}/socket.io`;
-    return { origin, path };
+    return {
+      origin: url.origin,
+      path: `${url.pathname.replace(/\/$/, "")}/socket.io`,
+    };
   } catch {
     return {
       origin: "https://projectshell-vm.northeurope.cloudapp.azure.com",
       path: "/notification-service/api/socket.io",
     };
   }
+};
+
+/**
+ * Socket.io-client ignores path in the URL; it only uses host/port.
+ * Must pass path explicitly: io(origin, { path: basePath + "/socket.io" })
+ */
+const getSocketOptions = () => {
+  return getNotificationSocketConfig();
 };
 
 let socket = null;

@@ -79,6 +79,22 @@ const Sidebar = () => {
       dispatch(updateMenuLbl({ key: "Correspondence", value: true }));
     }
 
+    const eventsPaths = [
+      "/EventsDashboard",
+      "/EventsSummary",
+      "/EventDetails",
+      "/Attendees",
+      "/Reporting",
+      "/EventsSettings",
+      "/RosterSummary",
+      "/Roster",
+    ];
+    const isEventsRoute = eventsPaths.some((p) => path.startsWith(p));
+    if (isEventsRoute && activeKey !== "Events") {
+      dispatch(updateMenuLbl({ key: "Events", value: true }));
+      return;
+    }
+
     const subscriptionsRewardsPaths = [
       "/RemindersSummary",
       "/RemindersDetails",
@@ -152,7 +168,7 @@ const Sidebar = () => {
         if (activeKey === "Cases") {
           return { path: "/CasesSummary", state: { search: "" } };
         } else if (activeKey === "Events") {
-          return { path: "/EventsSummary", state: { search: "" } };
+          return { path: "/EventsDashboard", state: { search: "Dashboard" } };
         } else {
           return { path: "/CorrespondenceDashboard", state: { search: "" } };
         }
@@ -390,6 +406,8 @@ const Sidebar = () => {
       "/Configuratin": "System Configuration",
       "/RosterSummary": "Roster",
       "/EventsSummary": "Events",
+      "/EventDetails": "Events",
+      "/EventsDashboard": "Dashboard",
       "/Attendees": "Attendees",
       "/Reporting": "Reporting",
       "/EventsSettings": "Settings",
@@ -455,9 +473,6 @@ const Sidebar = () => {
     if (!currentPath) return "";
 
     // Handle context-specific mappings
-    if (currentPath === "/EventsSummary" && activeKey === "Events") {
-      return "Dashboard";
-    }
     if (currentPath === "/CasesSummary" && activeKey === "Cases") {
       return "Dashboard";
     }

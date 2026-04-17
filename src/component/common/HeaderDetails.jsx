@@ -897,6 +897,7 @@ function HeaderDetails({
           location?.pathname === "/CorrespondencesSummary" ||
           location?.pathname === "/Transfers" ||
           location?.pathname === "/RosterSummary" ||
+          location?.pathname === "/EventsDashboard" ||
           location?.pathname === "/EventsSummary" ||
           location?.pathname === "/Attendees" ||
           location?.pathname === "/CasesSummary") && (
@@ -1034,6 +1035,7 @@ function HeaderDetails({
             location?.pathname == "/CorrespondencesSummary" ||
             location?.pathname == "/Reports" ||
             location?.pathname == "/RosterSummary" ||
+            location?.pathname == "/EventsDashboard" ||
             location?.pathname == "/EventsSummary" ||
             location?.pathname == "/Attendees" ||
             location?.pathname == "/ChangCateSumm" ||
@@ -1116,6 +1118,8 @@ function HeaderDetails({
                                       ? "Finance"
                                       : nav === "/MembershipDashboard"
                                         ? "Subscriptions & Rewards"
+                                      : nav === "/EventsDashboard"
+                                        ? "Events Dashboard"
                                       : nav === "/EventsSummary"
                                         ? "Events"
                                         : nav === "/Attendees"
@@ -1169,7 +1173,11 @@ function HeaderDetails({
                           !hasPermission("payments:create")) ||
                         (["/Applications", "/Summary"].includes(nav) &&
                           !hasPermission("application:create")) ||
-                        ((nav === "/EventsSummary" || nav === "/Attendees") &&
+                        (([
+                          "/EventsDashboard",
+                          "/EventsSummary",
+                          "/Attendees",
+                        ].includes(nav)) &&
                           !hasPermission("events:create")) ||
                         (nav === "/ChangCateSumm" &&
                           !hasPermission("changeOfCategory:create")) ||
@@ -1219,7 +1227,10 @@ function HeaderDetails({
                               setWriteOffDrawerOpen(true);
                             } else if (nav === "/CasesSummary") {
                               setCasesDrawerOpen(true);
-                            } else if (nav === "/EventsSummary") {
+                            } else if (
+                              nav === "/EventsDashboard" ||
+                              nav === "/EventsSummary"
+                            ) {
                               setEventDrawerOpen(true);
                             } else if (nav === "/Attendees") {
                               setAttendeeDrawerOpen(true);

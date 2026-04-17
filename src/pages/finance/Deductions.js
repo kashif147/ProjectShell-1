@@ -1,8 +1,10 @@
-import React, { useEffect, useMemo, useRef } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
+import { io } from "socket.io-client";
 import MyTable from "../../component/common/MyTable";
 import { getAllBatchDetails } from "../../features/profiles/BatchDetailsSlice";
+import { getNotificationSocketConfig } from "../../context/NotificationContext";
 import { formatCurrency } from "../../utils/Utilities";
 import dayjs from "dayjs";
 
@@ -15,6 +17,7 @@ const DEDUCTIONS_COLUMN_ORDER = [
   "paymentDate",
   "workLocation",
   "batchStatus",
+  "processingProgress",
   "comments",
   "totalArrears",
   "totalCurrent",
@@ -34,6 +37,12 @@ const COLUMN_DEFS = {
   paymentDate: { dataIndex: "paymentDate", title: "Payment Date", ellipsis: true, width: 120 },
   workLocation: { dataIndex: "workLocation", title: "Work Location", ellipsis: true, width: 140 },
   batchStatus: { dataIndex: "batchStatus", title: "Batch Status", ellipsis: true, width: 120 },
+  processingProgress: {
+    dataIndex: "processingProgress",
+    title: "Processed",
+    width: 140,
+    ellipsis: true,
+  },
   comments: { dataIndex: "comments", title: "Comments", ellipsis: true, width: 160 },
   totalArrears: {
     dataIndex: "totalArrears",
@@ -76,12 +85,62 @@ const Deductions = () => {
   );
 
   const hasFetchedRef = useRef(false);
+  const [liveProgressByBatchId, setLiveProgressByBatchId] = useState({});
 
   useEffect(() => {
     if (!hasFetchedRef.current) {
       dispatch(getAllBatchDetails());
       hasFetchedRef.current = true;
     }
+  }, [dispatch]);
+
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    if (!token) return undefined;
+
+    const { origin, path } = getNotificationSocketConfig();
+    const socket = io(origin, {
+      path,
+      auth: { token },
+      query: { token },
+      transports: ["websocket"],
+    });
+
+    const handleProgress = (payload = {}) => {
+      if (!payload.batchDetailId) return;
+      setLiveProgressByBatchId((prev) => ({
+        ...prev,
+        [payload.batchDetailId]: {
+          status: payload.status || "processing_in_progress",
+          processedTransactions: Number(payload.processedTransactions || 0),
+          failedTransactions: Number(payload.failedTransactions || 0),
+          totalTransactions: Number(payload.totalTransactions || 0),
+        },
+      }));
+    };
+
+    const handleCompleted = (payload = {}) => {
+      if (!payload.batchDetailId) return;
+      setLiveProgressByBatchId((prev) => ({
+        ...prev,
+        [payload.batchDetailId]: {
+          status: payload.status || "processed",
+          processedTransactions: Number(payload.processedTransactions || 0),
+          failedTransactions: Number(payload.failedTransactions || 0),
+          totalTransactions: Number(payload.totalTransactions || 0),
+        },
+      }));
+      dispatch(getAllBatchDetails());
+    };
+
+    socket.on("batchProcessProgress", handleProgress);
+    socket.on("batchProcessCompleted", handleCompleted);
+
+    return () => {
+      socket.off("batchProcessProgress", handleProgress);
+      socket.off("batchProcessCompleted", handleCompleted);
+      socket.disconnect();
+    };
   }, [dispatch]);
 
   const formattedData = useMemo(
@@ -95,6 +154,26 @@ const Deductions = () => {
         );
         const totalAdvance = 0;
         const totalRecords = payments.length;
+        const live = liveProgressByBatchId[item._id] || null;
+        const totalTransactions =
+          Number(live?.totalTransactions) > 0
+            ? Number(live.totalTransactions)
+            : Number(item.totalTransactions) > 0
+              ? Number(item.totalTransactions)
+              : totalRecords;
+        const processedTransactions =
+          Number(live?.processedTransactions) >= 0
+            ? Number(live.processedTransactions)
+            : Number(item.processedTransactions || 0);
+        const failedTransactions =
+          Number(live?.failedTransactions) >= 0
+            ? Number(live.failedTransactions)
+            : Number(item.failedTransactions || 0);
+        const batchStatus = live?.status || item.batchStatus || "-";
+        const inProgress =
+          batchStatus === "queued" ||
+          batchStatus === "processing" ||
+          batchStatus === "processing_in_progress";
         const batchTotal = totalCurrent + totalArrears + totalAdvance;
 
         return {
@@ -107,7 +186,14 @@ const Deductions = () => {
             : item.date
               ? dayjs(item.date).format("DD/MM/YYYY")
               : "-",
-          batchStatus: item.batchStatus ?? "-",
+          batchStatus,
+          inProgress,
+          processedTransactions,
+          failedTransactions,
+          totalTransactions,
+          processingProgress: `${processedTransactions}/${totalTransactions}${
+            failedTransactions > 0 ? ` (failed ${failedTransactions})` : ""
+          }`,
           createdAt: item.createdAt
             ? dayjs(item.createdAt).format("DD/MM/YYYY HH:mm")
             : "-",
@@ -125,7 +211,7 @@ const Deductions = () => {
           batchTotal,
         };
       }),
-    [allBatches]
+    [allBatches, liveProgressByBatchId]
   );
 
   const tableColumns = useMemo(() => {
@@ -152,9 +238,69 @@ const Deductions = () => {
           </span>
         );
       }
+      if (key === "batchStatus") {
+        col.render = (text) => {
+          const status = String(text || "-");
+          const isActive =
+            status === "queued" ||
+            status === "processing" ||
+            status === "processing_in_progress";
+          return (
+            <span
+              style={{
+                display: "inline-block",
+                padding: "2px 8px",
+                borderRadius: "999px",
+                fontSize: "12px",
+                fontWeight: 600,
+                color: isActive ? "#1D4ED8" : "#374151",
+                background: isActive ? "#DBEAFE" : "#F3F4F6",
+              }}
+            >
+              {status}
+            </span>
+          );
+        };
+      }
+      if (key === "processingProgress") {
+        col.render = (_, record) => {
+          if (!record.inProgress) return <span>{record.processingProgress}</span>;
+          return (
+            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              <span
+                style={{
+                  display: "inline-block",
+                  padding: "2px 8px",
+                  borderRadius: "999px",
+                  fontSize: "12px",
+                  fontWeight: 600,
+                  color: "#065F46",
+                  background: "#D1FAE5",
+                }}
+              >
+                {record.processingProgress}
+              </span>
+              <button
+                type="button"
+                style={{
+                  border: "1px solid #D1D5DB",
+                  background: "#fff",
+                  borderRadius: 6,
+                  fontSize: 12,
+                  padding: "2px 8px",
+                  cursor: "pointer",
+                }}
+                onClick={() => dispatch(getAllBatchDetails())}
+              >
+                Refresh
+              </button>
+            </div>
+          );
+        };
+      }
       return col;
     }).filter(Boolean);
-  }, [navigate]);
+  }, [navigate, dispatch]);
 
   return (
     <div style={{ width: "100%", padding: "0" }}>

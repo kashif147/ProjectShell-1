@@ -249,6 +249,9 @@ const DirectDebitBatchDetails = lazyWithRetry(
 const EventsSummary = lazyWithRetry(
   () => import("./pages/events/EventsSummary"),
 );
+const EventsDashboard = lazyWithRetry(
+  () => import("./pages/events/EventsDashboard"),
+);
 const EventDetails = lazyWithRetry(() => import("./pages/events/EventDetails"));
 const AttendeesSummary = lazyWithRetry(
   () => import("./pages/events/AttendeesSummary"),
@@ -594,6 +597,14 @@ function Entry() {
                         }
                       />
 
+                      <Route
+                        path="EventsDashboard"
+                        element={
+                          <ProtectedRoute requiredPermission={RoutePermissions["EventsDashboard"]}>
+                            <EventsDashboard />
+                          </ProtectedRoute>
+                        }
+                      />
                       <Route
                         path="EventsSummary"
                         element={
