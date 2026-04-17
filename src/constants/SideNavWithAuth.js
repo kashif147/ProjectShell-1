@@ -156,12 +156,6 @@ export const financeItems = [
     ["payments:read"]
   ),
   createMenuItem(
-    "Batches",
-    <FaFileInvoiceDollar />,
-    "Batches",
-    ["payments:read"]
-  ),
-  createMenuItem(
     "Reconciliations",
     <FaExchangeAlt />,
     "Reconciliations",

@@ -51,7 +51,6 @@ const Sidebar = () => {
       "/DirectDebitBatchDetails",
       "/Reconciliation",
       "/BatchMemberSummary",
-      "/Batches",
     ];
 
     const isFinanceRoute = financePaths.some((p) => path.startsWith(p));
@@ -190,8 +189,6 @@ const Sidebar = () => {
         return { path: "/RosterSummary", state: { search: "Rosters" } };
       case "Events":
         return { path: "/EventsSummary", state: { search: "Events" } };
-      case "Batches":
-        return { path: "/Batches", state: { search: "Batches" } };
       case "Applications":
         return { path: "/Applications", state: { search: "Applications" } };
       case "Membership":
@@ -411,7 +408,6 @@ const Sidebar = () => {
       "/Attendees": "Attendees",
       "/Reporting": "Reporting",
       "/EventsSettings": "Settings",
-      "/Batches": "Batches",
       "/Applications": "Applications",
       "/RemindersSummary": "Reminders",
       "/RemindersDetails": "Reminders",

@@ -24,7 +24,6 @@ export const RoutePermissions = {
   "Refunds": "payments:read",
   "write-offs": "payments:read",
   "Import": "payments:read",
-  "Batches": "payments:read",
   "Reconciliation": "payments:read",
 
   // Correspondence

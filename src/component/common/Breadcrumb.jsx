@@ -35,7 +35,7 @@ const Breadcrumb = () => {
   // App launcher items mapping - matches the actual app launcher menu items
   const appLauncherItems = {
     Membership: { icon: "👤", route: "/Summary" },
-    Finance: { icon: "💰", route: "/Batches" },
+    Finance: { icon: "💰", route: "/Import" },
     Correspondence: { icon: "📧", route: "/CorrespondencesSummary" },
     Events: { icon: "📅", route: "/EventsDashboard" },
     Configuration: { icon: "⚙️", route: "/Configuratin" },
@@ -170,11 +170,6 @@ const Breadcrumb = () => {
       icon: "🔔",
     },
     // Finance Pages
-    "/Batches": {
-      module: "Finance",
-      page: "Batches",
-      icon: "💳",
-    },
     "/DirectDebit": {
       module: "Finance",
       page: "Direct Debit",
@@ -774,7 +769,7 @@ const Breadcrumb = () => {
       "Subscriptions & Rewards": "/Summary",
       "Issues Management": "/CasesSummary",
       Correspondence: "/CorrespondencesSummary",
-      Finance: "/Batches",
+      Finance: "/Import",
       Reports: "/Reports",
       Events: "/EventsDashboard",
       Settings: "/Configuratin",

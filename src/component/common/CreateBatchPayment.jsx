@@ -503,6 +503,18 @@ const CreateBatchPayment = forwardRef((props, ref) => {
     }
   };
 
+  const batchTypeOptions = (paymentTypes || [])
+    .map((p) => ({
+      value: p.value || p,
+      label: p.label || p,
+    }))
+    .filter((opt) => {
+      if (location.pathname !== "/Import") return true;
+      const label = String(opt.label || "").trim().toLowerCase();
+      const value = String(opt.value || "").trim().toLowerCase();
+      return label !== "demand draft" && value !== "demand draft";
+    });
+
   return (
     <div className="create-batch-container drwer-bg-clr">
       <div className="header">
@@ -528,10 +540,7 @@ const CreateBatchPayment = forwardRef((props, ref) => {
                     disabled={isSpecialPath} // Disable if special path
                     hasError={!!formErrors.batchType}
                     errorMessage="Please select batch type"
-                    options={(paymentTypes || []).map((p) => ({
-                      value: p.value || p,
-                      label: p.label || p,
-                    }))}
+                    options={batchTypeOptions}
                     value={formValues.batchType}
                     onChange={(e) => setField("batchType", e.target.value)}
                   />

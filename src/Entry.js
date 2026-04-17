@@ -136,7 +136,6 @@ const Cancallation = lazyWithRetry(() => import("./pages/Cancallation"));
 const CancellationDetail = lazyWithRetry(
   () => import("./pages/cancellation/CancellationDetail"),
 );
-const Batches = lazyWithRetry(() => import("./pages/finance/Batches"));
 const Import = lazyWithRetry(() => import("./pages/finance/Import"));
 const Cheque = lazyWithRetry(() => import("./pages/finance/Cheque"));
 const StandingOrders = lazyWithRetry(
@@ -715,15 +714,6 @@ function Entry() {
                         element={
                           <ProtectedRoute requiredPermission={RoutePermissions["Cancallation"]}>
                             <Cancallation />
-                          </ProtectedRoute>
-                        }
-                      />
-
-                      <Route
-                        path="Batches"
-                        element={
-                          <ProtectedRoute requiredPermission={RoutePermissions["Batches"]}>
-                            <Batches />
                           </ProtectedRoute>
                         }
                       />
