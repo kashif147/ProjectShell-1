@@ -22,9 +22,48 @@ const iconMap = {
   MAIL: <MailOutlined style={{ color: "#722ed1" }} />,
 };
 
+const isBatchProcessNotification = (type) =>
+  type === "BATCH_PROCESS_COMPLETED" || type === "BATCH_PROCESS_QUEUED";
+
 const NotificationPopover = ({ isOpen }) => {
   const { notifications, setNotifications, setBadge, markAsRead, markAllAsRead } =
     useNotifications();
+  const [clearLoading, setClearLoading] = React.useState(false);
+
+  const handleMarkAsRead = async (notificationId) => {
+    if (!notificationId) return;
+
+    const target = notifications.find((n) => String(n._id) === String(notificationId));
+    if (target?.isRead) return;
+
+    // Optimistic UI update for instant feedback
+    setNotifications((prev) =>
+      prev.map((n) =>
+        String(n._id) === String(notificationId) ? { ...n, isRead: true } : n
+      )
+    );
+    setBadge((prev) => Math.max((Number(prev) || 0) - 1, 0));
+
+    try {
+      await axios.post(
+        `${getNotificationServiceUrl().replace(/\/$/, "")}/firebase/notifications/mark-read`,
+        { notificationIds: [notificationId] },
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+      // Keep socket path for other open views/counters
+      markAsRead(notificationId);
+    } catch (error) {
+      // Re-sync if API fails
+      fetchNotifications();
+      console.error("Failed to mark notification as read:", error);
+    }
+  };
 
   const fetchNotifications = async () => {
     try {
@@ -41,6 +80,28 @@ const NotificationPopover = ({ isOpen }) => {
       if (typeof unreadCount === "number") setBadge(unreadCount);
     } catch (error) {
       console.error("Failed to fetch notifications:", error);
+    }
+  };
+
+  const handleClearNotifications = async () => {
+    if (clearLoading) return;
+    setClearLoading(true);
+    try {
+      await axios.delete(
+        `${getNotificationServiceUrl().replace(/\/$/, "")}/firebase/notifications`,
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+        }
+      );
+      setNotifications([]);
+      setBadge(0);
+      await fetchNotifications();
+    } catch (error) {
+      console.error("Failed to clear notifications:", error);
+    } finally {
+      setClearLoading(false);
     }
   };
 
@@ -65,9 +126,17 @@ const NotificationPopover = ({ isOpen }) => {
         <Title level={5} style={{ margin: 0 }}>
           Notifications
         </Title>
-        <Typography.Link style={{ fontSize: "12px" }} onClick={markAllAsRead}>
-          Mark all as read
-        </Typography.Link>
+        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+          <Typography.Link style={{ fontSize: "12px" }} onClick={markAllAsRead}>
+            Mark all as read
+          </Typography.Link>
+          <Typography.Link
+            style={{ fontSize: "12px", color: "#cf1322" }}
+            onClick={handleClearNotifications}
+          >
+            {clearLoading ? "Clearing..." : "Clear notifications"}
+          </Typography.Link>
+        </div>
       </div>
 
       <List
@@ -76,7 +145,7 @@ const NotificationPopover = ({ isOpen }) => {
         locale={{ emptyText: "No notifications" }}
         renderItem={(item) => (
           <List.Item
-            onClick={() => markAsRead(item._id)}
+            onClick={() => handleMarkAsRead(item._id)}
             style={{
               padding: "16px 24px",
               backgroundColor: item.isRead ? "#fff" : "#f6faff",
@@ -102,23 +171,50 @@ const NotificationPopover = ({ isOpen }) => {
                   }}
                 >
                   <Text strong>{item.title}</Text>
-                  {!item.isRead && (
-                    <Badge status="processing" color="#1890ff" />
-                  )}
+                  <div
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 8,
+                      marginLeft: 8,
+                    }}
+                  >
+                    {isBatchProcessNotification(item?.metadata?.type) && (
+                      <Text strong style={{ color: "#1D4ED8", fontSize: 12 }}>
+                        {Number(item?.metadata?.totalTransactions || 0)}
+                      </Text>
+                    )}
+                    {!item.isRead && (
+                      <Badge status="processing" color="#1890ff" />
+                    )}
+                  </div>
                 </div>
               }
               description={
                 <div>
-                  <div
-                    style={{
-                      fontSize: "13px",
-                      color: "#666",
-                      marginBottom: "4px",
-                      lineHeight: "1.4",
-                    }}
-                  >
-                    {item.body}
-                  </div>
+                  {isBatchProcessNotification(item?.metadata?.type) ? (
+                    <div
+                      style={{
+                        fontSize: "12px",
+                        color: "#666",
+                        marginBottom: "4px",
+                        lineHeight: "1.4",
+                      }}
+                    >
+                      <div>{`Ref No: ${item?.metadata?.referenceNumber || "-"} | Description: ${item?.metadata?.description || "-"}`}</div>
+                    </div>
+                  ) : (
+                    <div
+                      style={{
+                        fontSize: "13px",
+                        color: "#666",
+                        marginBottom: "4px",
+                        lineHeight: "1.4",
+                      }}
+                    >
+                      {item.body}
+                    </div>
+                  )}
                   <Text
                     type="secondary"
                     style={{

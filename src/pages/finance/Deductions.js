@@ -2,6 +2,8 @@ import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { io } from "socket.io-client";
+import { Tag } from "antd";
+import { ReloadOutlined } from "@ant-design/icons";
 import MyTable from "../../component/common/MyTable";
 import { getAllBatchDetails } from "../../features/profiles/BatchDetailsSlice";
 import { getNotificationSocketConfig } from "../../context/NotificationContext";
@@ -11,19 +13,17 @@ import dayjs from "dayjs";
 // Single ordered list of column keys for Deductions (no duplicates)
 const DEDUCTIONS_COLUMN_ORDER = [
   "batchName",
-  "PaymentType",
   "referenceNumber",
   "batchDate",
   "paymentDate",
   "workLocation",
   "batchStatus",
   "processingProgress",
-  "comments",
   "totalArrears",
   "totalCurrent",
   "totalAdvance",
-  "totalRecords",
   "batchTotal",
+  "comments",
   "createdAt",
   "createdBy",
 ];
@@ -75,6 +75,16 @@ const COLUMN_DEFS = {
   },
   createdAt: { dataIndex: "createdAt", title: "Created At", ellipsis: true, width: 150 },
   createdBy: { dataIndex: "createdBy", title: "Created By", ellipsis: true, width: 150 },
+};
+
+const getBatchStatusLabel = (status) => {
+  const normalized = String(status || "").trim().toLowerCase();
+  if (normalized === "processed") return "Completed";
+  if (normalized === "processing_in_progress") return "In Progress";
+  if (normalized === "queued") return "Queued";
+  if (normalized === "failed") return "Failed";
+  if (!normalized) return "-";
+  return String(status);
 };
 
 const Deductions = () => {
@@ -169,6 +179,9 @@ const Deductions = () => {
           Number(live?.failedTransactions) >= 0
             ? Number(live.failedTransactions)
             : Number(item.failedTransactions || 0);
+        const exceptionsCount = Array.isArray(item.batchExceptions)
+          ? item.batchExceptions.length
+          : 0;
         const batchStatus = live?.status || item.batchStatus || "-";
         const inProgress =
           batchStatus === "queued" ||
@@ -180,7 +193,7 @@ const Deductions = () => {
           ...item,
           key: item._id,
           batchName: item.description,
-          batchDate: item.date ? dayjs(item.date).format("DD/MM/YYYY") : "-",
+          batchDate: item.batchDate ? dayjs(item.batchDate).format("MMM YYYY") : "-",
           paymentDate: item.paymentDate
             ? dayjs(item.paymentDate).format("DD/MM/YYYY")
             : item.date
@@ -190,10 +203,9 @@ const Deductions = () => {
           inProgress,
           processedTransactions,
           failedTransactions,
+          exceptionsCount,
           totalTransactions,
-          processingProgress: `${processedTransactions}/${totalTransactions}${
-            failedTransactions > 0 ? ` (failed ${failedTransactions})` : ""
-          }`,
+          processingProgress: `${processedTransactions}/${totalTransactions}`,
           createdAt: item.createdAt
             ? dayjs(item.createdAt).format("DD/MM/YYYY HH:mm")
             : "-",
@@ -240,62 +252,98 @@ const Deductions = () => {
       }
       if (key === "batchStatus") {
         col.render = (text) => {
-          const status = String(text || "-");
+          const rawStatus = String(text || "-");
+          const normalized = rawStatus.toLowerCase();
+          const statusLabel = getBatchStatusLabel(rawStatus);
           const isActive =
-            status === "queued" ||
-            status === "processing" ||
-            status === "processing_in_progress";
+            normalized === "queued" ||
+            normalized === "processing" ||
+            normalized === "processing_in_progress";
+          const isCompleted = normalized === "processed";
+          const isFailed = normalized === "failed";
+          const color = isFailed
+            ? "error"
+            : isCompleted
+              ? "success"
+              : isActive
+                ? "processing"
+                : "default";
           return (
-            <span
+            <Tag
+              color={color}
               style={{
-                display: "inline-block",
-                padding: "2px 8px",
-                borderRadius: "999px",
+                margin: 0,
+                padding: "0px 8px",
+                borderRadius: 4,
                 fontSize: "12px",
                 fontWeight: 600,
-                color: isActive ? "#1D4ED8" : "#374151",
-                background: isActive ? "#DBEAFE" : "#F3F4F6",
               }}
             >
-              {status}
-            </span>
+              {statusLabel}
+            </Tag>
           );
         };
       }
       if (key === "processingProgress") {
         col.render = (_, record) => {
           if (!record.inProgress) return <span>{record.processingProgress}</span>;
+          const queued =
+            String(record.batchStatus || "").toLowerCase() === "queued";
+          const progressTagColor = queued ? "processing" : "success";
           return (
             <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-              <span
+              <Tag
+                color={progressTagColor}
                 style={{
-                  display: "inline-block",
-                  padding: "2px 8px",
-                  borderRadius: "999px",
+                  margin: 0,
+                  padding: "0px 8px",
+                  borderRadius: 4,
                   fontSize: "12px",
                   fontWeight: 600,
-                  color: "#065F46",
-                  background: "#D1FAE5",
                 }}
               >
                 {record.processingProgress}
-              </span>
-              <button
-                type="button"
+              </Tag>
+              {record.exceptionsCount > 0 && (
+                <span style={{ color: "#DC2626", fontWeight: 600 }}>
+                  ({record.exceptionsCount})
+                </span>
+              )}
+              <span
                 style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  width: 22,
+                  height: 22,
                   border: "1px solid #D1D5DB",
-                  background: "#fff",
-                  borderRadius: 6,
-                  fontSize: 12,
-                  padding: "2px 8px",
+                  borderRadius: 4,
                   cursor: "pointer",
                 }}
                 onClick={() => dispatch(getAllBatchDetails())}
+                title="Refresh"
               >
-                Refresh
-              </button>
+                <ReloadOutlined style={{ fontSize: 12, color: "#4B5563" }} />
+              </span>
             </div>
           );
+        };
+        const originalRender = col.render;
+        col.render = (_, record) => {
+          if (!record.inProgress) {
+            return (
+              <span>
+                {record.processingProgress}
+                {record.exceptionsCount > 0 && (
+                  <span style={{ color: "#DC2626", fontWeight: 600 }}>
+                    {" "}
+                    ({record.exceptionsCount})
+                  </span>
+                )}
+              </span>
+            );
+          }
+          return originalRender(_, record);
         };
       }
       return col;

@@ -375,7 +375,19 @@ function ProfileHeader({
     // let's check if we should still use centsToEuro. 
     // Actually, historical code used centsToEuro. If the API changed units, we should adjust.
     // Given the example "net": 120.5, it looks like Euros.
-    const balance = `€${Math.abs(centsToEuro(ledgerBalance || 0)).toLocaleString('en-IE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+    const numericLedgerBalance = Number(ledgerBalance || 0);
+    const balanceAmount = `€${Math.abs(centsToEuro(numericLedgerBalance)).toLocaleString("en-IE", {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    })}`;
+    const balanceIndicator =
+      numericLedgerBalance > 0 ? "Dr" : numericLedgerBalance < 0 ? "Cr" : "";
+    const balanceColor =
+      balanceIndicator === "Dr"
+        ? "#cf1322"
+        : balanceIndicator === "Cr"
+          ? "#389e0d"
+          : "#faad14";
     const lastPayment = `€${centsToEuro(lastPaymentAmount || 0).toLocaleString('en-IE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 
     // Use latest ledger date for payment date if available, fallback to subscription/submission
@@ -418,7 +430,9 @@ function ProfileHeader({
       subscriptionYear,
 
       // Financial Info
-      balance,
+      balance: balanceAmount,
+      balanceIndicator,
+      balanceColor,
       lastPayment,
       paymentDate,
       paymentCode: paymentCodeToUse,
@@ -734,9 +748,24 @@ function ProfileHeader({
               <span className="detail-label">Balance:</span>
               <span
                 className="detail-value"
-                style={{ color: "#faad14", fontWeight: 700, fontSize: "18px" }}
+                style={{
+                  color: memberData.balanceColor || "#faad14",
+                  fontWeight: 700,
+                  fontSize: "18px",
+                }}
               >
                 {memberData.balance}
+                {memberData.balanceIndicator && (
+                  <span
+                    style={{
+                      fontSize: "12px",
+                      marginLeft: 4,
+                      fontWeight: 600,
+                    }}
+                  >
+                    ({memberData.balanceIndicator})
+                  </span>
+                )}
               </span>
             </div>
           </div>

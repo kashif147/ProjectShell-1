@@ -1216,7 +1216,13 @@ function HeaderDetails({
                               nav === "/Cheque" ||
                               nav === "/CornMarket"
                             ) {
-                              setIsBatchOpen(!isBatchOpen);
+                              if (
+                                batchFormRef?.current &&
+                                typeof batchFormRef.current.reset === "function"
+                              ) {
+                                batchFormRef.current.reset();
+                              }
+                              setIsBatchOpen(true);
                             } else if (nav === "/ChangCateSumm") {
                               setisDrawerOpen(!isDrawerOpen);
                             } else if (nav === "/DirectDebitAuthorization") {
@@ -1752,7 +1758,13 @@ function HeaderDetails({
         open={isBatchOpen}
         isDisable={false}
         onClose={() => {
-          setIsBatchOpen(!isBatchOpen);
+          setIsBatchOpen(false);
+          if (
+            batchFormRef?.current &&
+            typeof batchFormRef.current.reset === "function"
+          ) {
+            batchFormRef.current.reset();
+          }
         }}
         add={async () => {
           // Try to submit the batch form inside drawer first
@@ -1777,7 +1789,7 @@ function HeaderDetails({
                         : "",
               },
             });
-            setIsBatchOpen(!isBatchOpen);
+            setIsBatchOpen(false);
           }
         }}
       >

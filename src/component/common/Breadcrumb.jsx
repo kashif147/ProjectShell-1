@@ -1035,9 +1035,6 @@ const Breadcrumb = () => {
     const batchId =
       location.state?.batchId ||
       (isFinanceBatchMemberSummary ? batchDetails?._id : null);
-    const batchStatus =
-      location.state?.batchStatus ||
-      (isFinanceBatchMemberSummary ? batchDetails?.batchStatus : null);
 
     breadcrumbItems.push({
       title: (
@@ -1046,21 +1043,6 @@ const Breadcrumb = () => {
           <span style={{ fontWeight: 600 }}>{recordId}</span>
           {isBatchPage && batchId && (
             <span style={{ color: "#64748b", fontSize: "12px" }}>({batchId.slice(-6).toUpperCase()})</span>
-          )}
-          {isBatchPage && batchStatus && (
-            <span style={{
-              fontSize: "10px",
-              padding: "2px 8px",
-              borderRadius: "10px",
-              backgroundColor: batchStatus === "Completed" || batchStatus === "Acknowledged" || batchStatus === "Done" ? "#f0fdf4" : "#eff6ff",
-              color: batchStatus === "Completed" || batchStatus === "Acknowledged" || batchStatus === "Done" ? "#166534" : "#1e40af",
-              border: "1px solid",
-              borderColor: batchStatus === "Completed" || batchStatus === "Acknowledged" || batchStatus === "Done" ? "#bbf7d0" : "#bfdbfe",
-              textTransform: "uppercase",
-              fontWeight: "700"
-            }}>
-              {batchStatus}
-            </span>
           )}
         </span>
       ),

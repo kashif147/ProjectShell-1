@@ -103,6 +103,11 @@ export const NotificationProvider = ({ children }) => {
     socket.on("notification", (notif) => {
       if (!notif) return;
 
+      const notifId = notif?._id ? String(notif._id) : null;
+      const alreadySeen = notifId
+        ? recentNotificationIds.current.has(notifId)
+        : false;
+
       if (notif?._id) {
         recentNotificationIds.current.add(notif._id);
 
@@ -112,6 +117,9 @@ export const NotificationProvider = ({ children }) => {
       }
 
       setNotifications((prev) => [notif, ...prev]);
+      if (!alreadySeen && notif?.isRead !== true) {
+        setBadge((prev) => prev + 1);
+      }
 
       notification.info({
         message: notif.title || "New Notification",

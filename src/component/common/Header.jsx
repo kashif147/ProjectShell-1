@@ -386,9 +386,11 @@ function Header() {
             onOpenChange={(open) => setNotificationOpen(open)}
             styles={{ body: { padding: 0 } }}
           >
-            <Badge count={badge} size="small">
-              <BellOutlined className="top-icon" />
-            </Badge>
+            <span className="notification-bell-wrap">
+              <Badge count={badge} size="small" offset={[-2, 4]}>
+                <BellOutlined className="top-icon notification-bell-icon" />
+              </Badge>
+            </span>
           </Popover>
 
           <QuestionCircleOutlined className="top-icon" />

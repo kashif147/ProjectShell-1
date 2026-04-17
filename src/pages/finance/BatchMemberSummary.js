@@ -212,6 +212,10 @@ function BatchMemberSummary() {
 
   // Strict Data Source: Only use data from Redux
   const batchInfo = batchDetails || {};
+  const isPendingBatch =
+    batchInfo?.batchStatus != null &&
+    String(batchInfo.batchStatus).trim().toLowerCase() === "pending";
+  const isBatchEditable = isPendingBatch;
 
   // Helper function to safely parse dates
   const getSafeDate = (dateValue) => {
@@ -287,6 +291,7 @@ function BatchMemberSummary() {
   const [isBatchDetailsDrawerOpen, setIsBatchDetailsDrawerOpen] =
     useState(false);
   const [isEditBatchDetails, setIsEditBatchDetails] = useState(false);
+  const [triggerBatchLoading, setTriggerBatchLoading] = useState(false);
   const batchFormRef = useRef(null);
 
   // Helper function to get unique filter values
@@ -660,12 +665,18 @@ function BatchMemberSummary() {
         key: "resolution",
         width: 250,
         render: (_, record) => (
-          <MembershipNoResolver
-            batchId={batchId}
-            exceptionId={record?._id}
-            exceptionMembershipNumber={record?.membershipNumber}
-            onResolved={refreshData}
-          />
+          isBatchEditable ? (
+            <MembershipNoResolver
+              batchId={batchId}
+              exceptionId={record?._id}
+              exceptionMembershipNumber={record?.membershipNumber}
+              onResolved={refreshData}
+            />
+          ) : (
+            <span style={{ color: "#94a3b8", fontSize: 12 }}>
+              Locked (batch not pending)
+            </span>
+          )
         ),
       },
       {
@@ -865,6 +876,7 @@ function BatchMemberSummary() {
     batchInfo.description,
     exceptions,
     refreshData,
+    isBatchEditable,
   ]);
 
   // Pagination state
@@ -1045,9 +1057,59 @@ function BatchMemberSummary() {
   const displayTotal = displayTotalCurrent + displayArrears;
   const displayRecords = members.length;
 
-  const isPendingBatch =
+  const displayBatchStatus = (() => {
+    const raw = String(batchInfo?.batchStatus || "").trim();
+    if (!raw) return "-";
+    const normalized = raw.toLowerCase();
+    if (normalized === "processed") return "Completed";
+    if (normalized === "processing_in_progress") return "In Progress";
+    return raw;
+  })();
+  const displayBatchStatusColor = (() => {
+    const normalized = String(batchInfo?.batchStatus || "")
+      .trim()
+      .toLowerCase();
+    if (normalized === "failed") return "error";
+    if (normalized === "processed") return "success";
+    if (
+      normalized === "queued" ||
+      normalized === "processing" ||
+      normalized === "processing_in_progress"
+    ) {
+      return "processing";
+    }
+    return "default";
+  })();
+  const isBatchAlreadyQueuedOrProcessing =
     batchInfo?.batchStatus != null &&
-    String(batchInfo.batchStatus).trim().toLowerCase() === "pending";
+    ["queued", "processing", "processing_in_progress", "processed"].includes(
+      String(batchInfo.batchStatus).trim().toLowerCase()
+    );
+
+  const handleTriggerBatch = async () => {
+    if (!batchId || triggerBatchLoading || isBatchAlreadyQueuedOrProcessing) {
+      return;
+    }
+    setTriggerBatchLoading(true);
+    try {
+      const token = localStorage.getItem("token");
+      await axios.post(
+        `${process.env.REACT_APP_ACCOUNT_SERVICE_URL}/batch-details/process/${batchId}`,
+        {},
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+      message.success("Batch queued successfully");
+      refreshData();
+    } catch (error) {
+      message.error(
+        error?.response?.data?.message || "Failed to queue batch for processing"
+      );
+    } finally {
+      setTriggerBatchLoading(false);
+    }
+  };
 
   const confirmDeleteBatch = () => {
     const openDeleteModal = () => {
@@ -1228,9 +1290,11 @@ function BatchMemberSummary() {
           <Button
             className="butn primary-btn"
             icon={<ThunderboltFilled />}
-            onClick={() => message.success("Batch Triggered Successfully")}
+            loading={triggerBatchLoading}
+            disabled={triggerBatchLoading || isBatchAlreadyQueuedOrProcessing}
+            onClick={handleTriggerBatch}
           >
-            Trigger Batch
+            {isBatchAlreadyQueuedOrProcessing ? "Batch Queued" : "Trigger Batch"}
           </Button>
         </div>
       </div>
@@ -1537,7 +1601,18 @@ function BatchMemberSummary() {
                   color: "#0f172a",
                 }}
               >
-                {batchInfo.batchStatus}
+                <Tag
+                  color={displayBatchStatusColor}
+                  style={{
+                    margin: 0,
+                    padding: "0px 8px",
+                    borderRadius: 4,
+                    fontSize: "12px",
+                    fontWeight: 600,
+                  }}
+                >
+                  {displayBatchStatus}
+                </Tag>
               </div>
             </div>
             <div
@@ -2149,13 +2224,21 @@ function BatchMemberSummary() {
                   height: "36px",
                   padding: "0 12px",
                 }}
-                onClick={() => setManualPayment(true)}
+                onClick={() => {
+                  if (!isBatchEditable) {
+                    message.warning("Batch can only be edited while status is pending");
+                    return;
+                  }
+                  setManualPayment(true);
+                }}
+                disabled={!isBatchEditable}
               >
                 Add Members
               </Button>
               <CommonPopConfirm
                 title="Do you want to exclude member?"
                 onConfirm={() => message.info("Member excluded")}
+                disabled={!isBatchEditable}
               >
                 <Button
                   danger
@@ -2169,6 +2252,7 @@ function BatchMemberSummary() {
                     borderColor: "#fee2e2",
                     color: "#ef4444",
                   }}
+                  disabled={!isBatchEditable}
                 >
                   Exclude Members
                 </Button>

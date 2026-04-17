@@ -301,6 +301,13 @@ const CreateBatchPayment = forwardRef((props, ref) => {
     }
 
     if (editBatchId) {
+      const editStatus = String(editSource?.batchStatus || "")
+        .trim()
+        .toLowerCase();
+      if (editStatus && editStatus !== "pending") {
+        message.error("Batch can only be edited while status is pending");
+        return null;
+      }
       try {
         const formData = buildBatchDetailsFormData();
         await dispatch(
@@ -393,13 +400,15 @@ const CreateBatchPayment = forwardRef((props, ref) => {
 
   // Add a reset function that can be called from parent
   const resetForm = () => {
+    form.resetFields();
     setFormValues({
-      batchType: "",
+      batchType: isSpecialPath ? autoBatchType : "",
       batchDate: "",
       paymentDate: "",
       batchRef: "",
       description: "",
       comments: "",
+      workLocation: "",
     });
     setFormErrors({});
     setExcelData([]);

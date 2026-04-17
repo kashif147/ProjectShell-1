@@ -1876,6 +1876,17 @@ table tbody tr:nth-child(odd):hover td {
   stroke-width: 1.5;
 }
 
+.notification-bell-icon {
+  margin-right: 0 !important;
+}
+
+.notification-bell-wrap {
+  display: inline-flex;
+  align-items: center;
+  margin-right: 1.25rem;
+  cursor: pointer;
+}
+
 .top-icon:hover {
   color: rgba(255, 255, 255, 0.85) !important;
   transform: scale(1.1);
