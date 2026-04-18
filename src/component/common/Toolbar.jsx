@@ -31,6 +31,7 @@ const Toolbar = () => {
     updateFilter,
     resetFilters,
     applyTemplateFilters,
+    bumpMembershipDashboardApply,
   } = useFilters();
 
   const { columns, updateSelectedTemplate, selectedTemplates } = useTableColumns();
@@ -51,7 +52,11 @@ const Toolbar = () => {
       "/Members": "Members",
       "/CommunicationBatchDetail": "Communication",
       "/EventsSummary": "Events",
+      "/EventsDashboard": "Events",
+      "/CorrespondenceDashboard": "Communication",
+      "/IssuesManagementDashboard": "Cases",
       "/Attendees": "Attendees",
+      "/MembershipDashboard": "MembershipDashboard",
     };
     return pathMap[location.pathname] || "";
   };
@@ -60,6 +65,14 @@ const Toolbar = () => {
 
   // Reactively update screen change state based on deep equality
   React.useEffect(() => {
+    if (
+      location.pathname === "/MembershipDashboard" ||
+      location.pathname === "/EventsDashboard" ||
+      location.pathname === "/CorrespondenceDashboard" ||
+      location.pathname === "/IssuesManagementDashboard"
+    ) {
+      return;
+    }
     if (!selectedView || !activeTemplateId || selectedView._id !== activeTemplateId) {
       if (hasChanges) {
         dispatch(resetScreenChanged({ screen: activeScreen.toLowerCase() }));
@@ -75,7 +88,7 @@ const Toolbar = () => {
     } else if (!isEqual && !hasChanges) {
       dispatch(markScreenChanged({ screen: activeScreen }));
     }
-  }, [filtersState, selectedView, activeScreen, columns, dispatch, hasChanges]);
+  }, [filtersState, selectedView, activeScreen, columns, dispatch, hasChanges, location.pathname]);
 
   const [batchName, setBatchName] = useState("");
   const handleFilterApply = (filterData) => {
@@ -102,10 +115,25 @@ const Toolbar = () => {
     console.log("🔍 Dispatching with cleaned filters:", cleanedFilters);
 
     const isApplicationsPage = location.pathname.toLowerCase() === "/applications";
+    const isMembershipDashboard =
+      location.pathname === "/MembershipDashboard";
+    const isEventsDashboard = location.pathname === "/EventsDashboard";
+    const isCorrespondenceDashboard =
+      location.pathname === "/CorrespondenceDashboard";
+    const isIssuesManagementDashboard =
+      location.pathname === "/IssuesManagementDashboard";
 
     if (isApplicationsPage) {
       // MembershipApplication will react to filtersState changes
       console.log("🔍 Filters updated, MembershipApplication should re-fetch");
+    } else if (isMembershipDashboard) {
+      bumpMembershipDashboardApply();
+    } else if (
+      isEventsDashboard ||
+      isCorrespondenceDashboard ||
+      isIssuesManagementDashboard
+    ) {
+      // Summary dashboards: no grid fetch
     } else {
       if (Object.keys(cleanedFilters).length > 0) {
         dispatch(getAllApplications(cleanedFilters));
@@ -144,6 +172,14 @@ const Toolbar = () => {
     if (location.pathname.toLowerCase() === "/applications") {
       // MembershipApplication will react to filtersState reset
       dispatch(setTemplateId("")); // Also reset template ID on full reset
+    } else if (location.pathname === "/MembershipDashboard") {
+      bumpMembershipDashboardApply();
+    } else if (
+      location.pathname === "/EventsDashboard" ||
+      location.pathname === "/CorrespondenceDashboard" ||
+      location.pathname === "/IssuesManagementDashboard"
+    ) {
+      // no-op
     } else {
       dispatch(getAllApplications({}));
     }
@@ -256,25 +292,30 @@ const Toolbar = () => {
     >
       <div className="d-flex align-items-center flex-wrap gap-2">
         {/* Search input */}
-        <div style={{ flex: "0 0 250px" }}>
-          <Input
-            className="my-input-field"
-            placeholder={
-              location.pathname === "/CasesSummary"
-                ? "Search Case ID, team, or stakeholder"
-                : location.pathname === "/EventsSummary"
-                  ? "Search Event ID or Name"
-                  : location.pathname === "/Attendees"
-                    ? "Search Attendee ID or Name"
-                  : "Membership No or Surname"
-            }
-            style={{
-              height: "30px",
-              borderRadius: "4px",
-              color: "gray",
-            }}
-          />
-        </div>
+        {location.pathname !== "/MembershipDashboard" &&
+          location.pathname !== "/EventsDashboard" &&
+          location.pathname !== "/CorrespondenceDashboard" &&
+          location.pathname !== "/IssuesManagementDashboard" && (
+          <div style={{ flex: "0 0 250px" }}>
+            <Input
+              className="my-input-field"
+              placeholder={
+                location.pathname === "/CasesSummary"
+                  ? "Search Case ID, team, or stakeholder"
+                  : location.pathname === "/EventsSummary"
+                    ? "Search Event ID or Name"
+                    : location.pathname === "/Attendees"
+                      ? "Search Attendee ID or Name"
+                    : "Membership No or Surname"
+              }
+              style={{
+                height: "30px",
+                borderRadius: "4px",
+                color: "gray",
+              }}
+            />
+          </div>
+        )}
 
         {/* Dynamic filters */}
         {visibleFilters.map((label) => {
@@ -334,9 +375,15 @@ const Toolbar = () => {
             color: "white",
           }}
         >
-          Search
+          Filter
         </Button>
-        {hasChanges && !templatesLoading && !viewLoading && (
+        {location.pathname !== "/MembershipDashboard" &&
+          location.pathname !== "/EventsDashboard" &&
+          location.pathname !== "/CorrespondenceDashboard" &&
+          location.pathname !== "/IssuesManagementDashboard" &&
+          hasChanges &&
+          !templatesLoading &&
+          !viewLoading && (
           <Button
             onClick={handleSave}
             loading={isSaving}

@@ -101,6 +101,10 @@ export const FilterProvider = ({ children }) => {
     Attendees: {
       visibleFilters: [],
       filtersState: {}
+    },
+    MembershipDashboard: {
+      visibleFilters: [],
+      filtersState: {}
     }
   });
 
@@ -108,6 +112,8 @@ export const FilterProvider = ({ children }) => {
   const [activePage, setActivePage] = useState("Applications");
   const [visibleFilters, setVisibleFilters] = useState([]);
   const [filtersState, setFiltersState] = useState({});
+  const [membershipDashboardApplyTick, setMembershipDashboardApplyTick] =
+    useState(0);
 
   const location = useLocation();
   const activeScreenName = location?.pathname;
@@ -233,55 +239,135 @@ export const FilterProvider = ({ children }) => {
     setFilteredRegionOptions(finalRegions);
     setFilteredBranchOptions(finalBranches);
 
-    // 🛡️ AUTO-CLEAR: If current selection is no longer in valid options, clear it
+    // Sync geo filters: prune invalid + auto-select Region/Branch when WL leaves only one choice
     let needsStateSync = false;
     const syncedFiltersState = { ...filtersState };
 
-    // Helper to extract labels from lookup options
-    const getLookupOptions = (options) => options.map(opt => opt.label);
+    const labelListFromOpts = (options) =>
+      (options || []).map((opt) => opt.label);
+
+    if (selectedWL.length > 0) {
+      const dataUnderWL = allHierarchicalData.filter((item) => {
+        const itemWLs = getNamesForItem(item, "Work Location");
+        return itemWLs.some((wl) => selectedWL.includes(wl));
+      });
+      const regionsUnderWL = new Set();
+      const branchesUnderWL = new Set();
+      dataUnderWL.forEach((item) => {
+        getNamesForItem(item, "Region").forEach((n) => regionsUnderWL.add(n));
+        getNamesForItem(item, "Branch").forEach((n) => branchesUnderWL.add(n));
+      });
+      const ru = Array.from(regionsUnderWL).sort();
+      const bu = Array.from(branchesUnderWL).sort();
+
+      const sameValues = (cur, next) =>
+        Array.isArray(cur) &&
+        Array.isArray(next) &&
+        cur.length === next.length &&
+        cur.every(
+          (v, i) =>
+            String(v).toLowerCase() === String(next[i]).toLowerCase(),
+        );
+
+      if (ru.length === 1) {
+        const next = [ru[0]];
+        const cur = syncedFiltersState["Region"]?.selectedValues || [];
+        if (!sameValues(cur, next)) {
+          syncedFiltersState["Region"] = {
+            operator: syncedFiltersState["Region"]?.operator || "==",
+            selectedValues: next,
+          };
+          needsStateSync = true;
+        }
+      }
+      if (bu.length === 1) {
+        const next = [bu[0]];
+        const cur = syncedFiltersState["Branch"]?.selectedValues || [];
+        if (!sameValues(cur, next)) {
+          syncedFiltersState["Branch"] = {
+            operator: syncedFiltersState["Branch"]?.operator || "==",
+            selectedValues: next,
+          };
+          needsStateSync = true;
+        }
+      }
+    }
+
+    const effWL = syncedFiltersState["Work Location"]?.selectedValues || [];
+    const effReg = syncedFiltersState["Region"]?.selectedValues || [];
+    const effBr = syncedFiltersState["Branch"]?.selectedValues || [];
 
     const checkAndPrune = (type, validOptions, baseOptions) => {
-      const current = filtersState[type]?.selectedValues || [];
+      const current = syncedFiltersState[type]?.selectedValues || [];
       if (current.length === 0) return;
 
-      // Determine the true "valid" set based on current filter context
-      // If no OTHER filters are active, use base Redux lookups as the validity source
-      const otherWL = type !== "Work Location" && selectedWL.length > 0;
-      const otherReg = type !== "Region" && selectedRegion.length > 0;
-      const otherBr = type !== "Branch" && selectedBranch.length > 0;
+      const otherWL = type !== "Work Location" && effWL.length > 0;
+      const otherReg = type !== "Region" && effReg.length > 0;
+      const otherBr = type !== "Branch" && effBr.length > 0;
 
-      const isRestricted = (type === "Work Location" && (otherReg || otherBr)) ||
+      const isRestricted =
+        (type === "Work Location" && (otherReg || otherBr)) ||
         (type === "Region" && (otherWL || otherBr)) ||
         (type === "Branch" && (otherWL || otherReg));
 
       const sourceOfTruth = isRestricted ? validOptions : baseOptions;
 
-      // If sourceOfTruth is empty (e.g. data still loading), don't prune yet
       if (!sourceOfTruth || sourceOfTruth.length === 0) return;
 
-      const stillValid = current.filter(val => {
+      const stillValid = current.filter((val) => {
         const stringVal = String(val).toLowerCase();
-        return sourceOfTruth.some(opt => String(opt).toLowerCase() === stringVal);
+        return sourceOfTruth.some(
+          (opt) => String(opt).toLowerCase() === stringVal,
+        );
       });
       if (stillValid.length !== current.length) {
-        syncedFiltersState[type] = { ...filtersState[type], selectedValues: stillValid };
+        syncedFiltersState[type] = {
+          ...syncedFiltersState[type],
+          selectedValues: stillValid,
+        };
         needsStateSync = true;
       }
     };
 
-    // We only auto-prune if some selections actually exist
-    if (selectedWL.length > 0 || selectedRegion.length > 0 || selectedBranch.length > 0) {
-      checkAndPrune("Work Location", finalWLs, getLookupOptions(workLocationOptions || []));
-      checkAndPrune("Region", finalRegions, getLookupOptions(regionOptions || []));
-      checkAndPrune("Branch", finalBranches, getLookupOptions(branchOptions || []));
+    if (effWL.length > 0 || effReg.length > 0 || effBr.length > 0) {
+      checkAndPrune(
+        "Work Location",
+        finalWLs,
+        labelListFromOpts(workLocationOptions || []),
+      );
+      checkAndPrune(
+        "Region",
+        finalRegions,
+        labelListFromOpts(regionOptions || []),
+      );
+      checkAndPrune(
+        "Branch",
+        finalBranches,
+        labelListFromOpts(branchOptions || []),
+      );
     }
 
     if (needsStateSync) {
-      console.log("🛡️ FilterContext: Auto-cleared invalid selections for integrity (synced with dropdown context)");
+      console.log(
+        "🛡️ FilterContext: Synced geo filters (singleton auto-select and/or prune)",
+      );
       setFiltersState(syncedFiltersState);
+      setScreenFilterStates((prev) => ({
+        ...prev,
+        [activePage]: {
+          ...prev[activePage],
+          filtersState: syncedFiltersState,
+        },
+      }));
     }
-
-  }, [filtersState, allHierarchicalData, regionOptions, branchOptions, workLocationOptions]);
+  }, [
+    filtersState,
+    allHierarchicalData,
+    regionOptions,
+    branchOptions,
+    workLocationOptions,
+    activePage,
+  ]);
 
   // 🛡️ EFFECT: Periodically prune junk from filtersState (null, undefined, non-strings, etc.)
   useEffect(() => {
@@ -291,13 +377,14 @@ export const FilterProvider = ({ children }) => {
     Object.keys(newState).forEach(key => {
       const filter = newState[key];
       if (filter?.selectedValues) {
-        // Only allow non-empty strings
-        const cleaned = filter.selectedValues.filter(v =>
-          v !== null &&
-          v !== undefined &&
-          typeof v === 'string' &&
-          v.trim() !== ""
-        );
+        const isDateFilter = key.toLowerCase().includes("date");
+        const cleaned = filter.selectedValues.filter((v) => {
+          if (v === null || v === undefined) return false;
+          if (isDateFilter && typeof v === "number" && Number.isFinite(v)) {
+            return true;
+          }
+          return typeof v === "string" && v.trim() !== "";
+        });
 
         if (cleaned.length !== filter.selectedValues.length) {
           newState[key] = { ...filter, selectedValues: cleaned };
@@ -323,7 +410,11 @@ export const FilterProvider = ({ children }) => {
       "/CommunicationBatchDetail": "Communication",
       "/CasesSummary": "Cases",
       "/EventsSummary": "Events",
-      "/Attendees": "Attendees"
+      "/EventsDashboard": "Events",
+      "/CorrespondenceDashboard": "Communication",
+      "/IssuesManagementDashboard": "Cases",
+      "/Attendees": "Attendees",
+      "/MembershipDashboard": "MembershipDashboard",
     };
     return pathMap[activeScreenName] || 'Applications';
   };
@@ -456,6 +547,14 @@ export const FilterProvider = ({ children }) => {
         "Event Type",
         "Event Date",
       ],
+      MembershipDashboard: [
+        "Membership Category",
+        "Grade",
+        "Section (Primary Section)",
+        "Region",
+        "Branch",
+        "Work Location",
+      ],
       Attendees: [
         "Event",
         "Event Type",
@@ -480,6 +579,10 @@ export const FilterProvider = ({ children }) => {
     Cases: ["Incident Date", "Case Type", "Stakeholder", "Priority"],
     Events: ["Event", "Event Type", "Event Date"],
     Attendees: ["Event", "Event Type", "Registration Status", "Event Date", "Payment Status"],
+    MembershipDashboard: [
+      "Membership Category",
+      "Section (Primary Section)",
+    ],
   };
 
   // 🔹 Helper to get default visible filters for a screen
@@ -499,8 +602,10 @@ export const FilterProvider = ({ children }) => {
     Members: getDefaultVisibleFilters("Members"),
     OnlinePayment: getDefaultVisibleFilters("OnlinePayment"),
     Communication: getDefaultVisibleFilters("Communication"),
+    Cases: getDefaultVisibleFilters("Cases"),
     Events: getDefaultVisibleFilters("Events"),
     Attendees: getDefaultVisibleFilters("Attendees"),
+    MembershipDashboard: getDefaultVisibleFilters("MembershipDashboard"),
   }), [],);
 
   // 🔹 Default filter VALUES for each screen
@@ -655,7 +760,7 @@ export const FilterProvider = ({ children }) => {
     },
     Cases: {
       "Incident Date": {
-        operator: "==",
+        operator: "between",
         selectedValues: []
       },
       "Case Type": {
@@ -681,9 +786,35 @@ export const FilterProvider = ({ children }) => {
         selectedValues: []
       },
       "Event Date": {
-        operator: "==",
+        operator: "between",
         selectedValues: []
       }
+    },
+    MembershipDashboard: {
+      "Membership Category": {
+        operator: "==",
+        selectedValues: []
+      },
+      "Grade": {
+        operator: "==",
+        selectedValues: []
+      },
+      "Section (Primary Section)": {
+        operator: "==",
+        selectedValues: []
+      },
+      "Region": {
+        operator: "==",
+        selectedValues: []
+      },
+      "Branch": {
+        operator: "==",
+        selectedValues: []
+      },
+      "Work Location": {
+        operator: "==",
+        selectedValues: []
+      },
     },
     Attendees: {
       "Event": {
@@ -711,7 +842,7 @@ export const FilterProvider = ({ children }) => {
         selectedValues: []
       },
       "Event Date": {
-        operator: "==",
+        operator: "between",
         selectedValues: []
       }
     }
@@ -764,53 +895,59 @@ export const FilterProvider = ({ children }) => {
 
   // 🔹 Helper to get hierarchical region options
   const getHierarchicalRegionOptions = () => {
+    const full = getLookupOptions(regionOptions || []);
+    if (!allHierarchicalData?.length) {
+      return full;
+    }
     const selectedWL = filtersState["Work Location"]?.selectedValues || [];
     const selectedBranch = filtersState["Branch"]?.selectedValues || [];
 
-    // ONLY show filtered subset if OTHER dependent filters are active
     if (selectedWL.length === 0 && selectedBranch.length === 0) {
-      return getLookupOptions(regionOptions || []);
+      return full;
     }
 
-    if (!filteredRegionOptions || filteredRegionOptions.length === 0) {
-      return ["⚠️ No regions matching current selections"];
+    if (filteredRegionOptions?.length > 0) {
+      return filteredRegionOptions;
     }
-
-    return filteredRegionOptions;
+    return full;
   };
 
   // 🔹 Helper to get hierarchical branch options
   const getHierarchicalBranchOptions = () => {
+    const full = getLookupOptions(branchOptions || []);
+    if (!allHierarchicalData?.length) {
+      return full;
+    }
     const selectedWL = filtersState["Work Location"]?.selectedValues || [];
     const selectedRegion = filtersState["Region"]?.selectedValues || [];
 
-    // ONLY show filtered subset if OTHER dependent filters are active
     if (selectedWL.length === 0 && selectedRegion.length === 0) {
-      return getLookupOptions(branchOptions || []);
+      return full;
     }
 
-    if (!filteredBranchOptions || filteredBranchOptions.length === 0) {
-      return ["⚠️ No branches matching current selections"];
+    if (filteredBranchOptions?.length > 0) {
+      return filteredBranchOptions;
     }
-
-    return filteredBranchOptions;
+    return full;
   };
 
   // 🔹 Helper to get hierarchical work location options
   const getHierarchicalWLOptions = () => {
+    const full = getLookupOptions(workLocationOptions || []);
+    if (!allHierarchicalData?.length) {
+      return full;
+    }
     const selectedRegion = filtersState["Region"]?.selectedValues || [];
     const selectedBranch = filtersState["Branch"]?.selectedValues || [];
 
-    // ONLY show filtered subset if OTHER dependent filters are active
     if (selectedRegion.length === 0 && selectedBranch.length === 0) {
-      return getLookupOptions(workLocationOptions || []);
+      return full;
     }
 
-    if (!filteredWLOptions || filteredWLOptions.length === 0) {
-      return ["⚠️ No locations matching current selections"];
+    if (filteredWLOptions?.length > 0) {
+      return filteredWLOptions;
     }
-
-    return filteredWLOptions;
+    return full;
   };
 
   // 🔹 Helper to get category options (Unique & Sorted)
@@ -959,6 +1096,10 @@ export const FilterProvider = ({ children }) => {
     filteredWLOptions,
     filteredRegionOptions,
     filteredBranchOptions,
+    filtersState,
+    allHierarchicalData,
+    regionOptions,
+    branchOptions,
   ]);
 
   // 🔹 Helper functions
@@ -995,6 +1136,10 @@ export const FilterProvider = ({ children }) => {
     }));
   };
 
+  const bumpMembershipDashboardApply = useCallback(() => {
+    setMembershipDashboardApplyTick((t) => t + 1);
+  }, []);
+
   // 🔹 Combined update function
   const updateFilter = (filter, operator, selectedValues, customFiltersState = null) => {
     const currentState = customFiltersState || filtersState;
@@ -1020,16 +1165,6 @@ export const FilterProvider = ({ children }) => {
       },
     };
 
-    // If Work Location is being cleared, also clear Region and Branch
-    if (filter === "Work Location" && (!selectedValues || selectedValues.length === 0)) {
-      newFilterState["Region"] = { operator: "==", selectedValues: [] };
-      newFilterState["Branch"] = { operator: "==", selectedValues: [] };
-    }
-
-    // If Region is being cleared, also clear Branch
-    if (filter === "Region" && (!selectedValues || selectedValues.length === 0)) {
-      newFilterState["Branch"] = { operator: "==", selectedValues: [] };
-    }
     // Only update state if we're not using a custom filters state
     if (!customFiltersState) {
       setFiltersState(newFilterState);
@@ -1129,6 +1264,8 @@ export const FilterProvider = ({ children }) => {
         filteredWLOptions,
         filteredRegionOptions,
         filteredBranchOptions,
+        membershipDashboardApplyTick,
+        bumpMembershipDashboardApply,
       }}
     >
       {children}

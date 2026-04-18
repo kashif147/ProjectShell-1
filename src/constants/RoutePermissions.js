@@ -55,6 +55,7 @@ export const RoutePermissions = {
 
   // Cases & Issues
   "CasesSummary": "portal:read",
+  "IssuesManagementDashboard": "portal:read",
   "CasesById": "portal:read",
   "CasesDetails": "portal:read",
   "ClaimSummary": "portal:read",

@@ -10,7 +10,7 @@ import {
   Drawer,
   Switch,
 } from "antd";
-import { Link, useLocation, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import { useView } from "../../context/ViewContext";
 import {
   RightOutlined,
@@ -24,10 +24,10 @@ import { BsSliders, BsThreeDots } from "react-icons/bs";
 import dayjs from "dayjs";
 import { FaAngleRight } from "react-icons/fa";
 import {
-  SearchOutlined,
   LoadingOutlined,
   UploadOutlined,
   EditOutlined,
+  ReloadOutlined,
 } from "@ant-design/icons";
 import ContactDrawer from "./ContactDrawer";
 import JiraLikeMenu from "./JiraLikeMenu";
@@ -90,6 +90,18 @@ import { getAllLookups } from "../../features/LookupsSlice";
 import { baseURL } from "../../utils/Utilities";
 import "../../styles/CreateCasesDrawer.css";
 
+const HEADER_DASHBOARD_RANGE_KEYS = ["1M", "3M", "YTD", "ALL"];
+
+const HEADER_DASHBOARD_RANGE_NAVS = new Set([
+  "/EventsDashboard",
+  "/CorrespondenceDashboard",
+  "/IssuesManagementDashboard",
+]);
+
+function isHeaderDashboardRangeNav(pathname) {
+  return HEADER_DASHBOARD_RANGE_NAVS.has(pathname);
+}
+
 function HeaderDetails({
   hideBreadcrumb = false,
   setcontactDrawer: setExternalContactDrawer,
@@ -97,11 +109,16 @@ function HeaderDetails({
 }) {
   const { Search } = Input;
   const { TextArea } = Input;
-  const { filtersState } = useFilters();
+  const { filtersState, bumpMembershipDashboardApply } = useFilters();
   const { toPDF, targetRef } = usePDF({ filename: "page.pdf" });
   const location = useLocation();
+  const [searchParams, setSearchParams] = useSearchParams();
   const currentURL = `${location?.pathname}`;
   const nav = location?.pathname || "";
+  const headerDashboardRange = useMemo(() => {
+    const r = searchParams.get("range");
+    return HEADER_DASHBOARD_RANGE_KEYS.includes(r) ? r : "YTD";
+  }, [searchParams]);
   const { hasPermission } = useAuthorization();
   const formattedNav = nav.replace(/^\//, " ");
   const [isSideNav, setisSideNav] = useState(true);
@@ -898,6 +915,9 @@ function HeaderDetails({
           location?.pathname === "/Transfers" ||
           location?.pathname === "/RosterSummary" ||
           location?.pathname === "/EventsDashboard" ||
+          location?.pathname === "/CorrespondenceDashboard" ||
+          location?.pathname === "/IssuesManagementDashboard" ||
+          location?.pathname === "/MembershipDashboard" ||
           location?.pathname === "/EventsSummary" ||
           location?.pathname === "/Attendees" ||
           location?.pathname === "/CasesSummary") && (
@@ -1036,6 +1056,9 @@ function HeaderDetails({
             location?.pathname == "/Reports" ||
             location?.pathname == "/RosterSummary" ||
             location?.pathname == "/EventsDashboard" ||
+            location?.pathname == "/CorrespondenceDashboard" ||
+            location?.pathname == "/IssuesManagementDashboard" ||
+            location?.pathname == "/MembershipDashboard" ||
             location?.pathname == "/EventsSummary" ||
             location?.pathname == "/Attendees" ||
             location?.pathname == "/ChangCateSumm" ||
@@ -1103,6 +1126,8 @@ function HeaderDetails({
                     <h2 className="title-main">
                       {nav == "/" && location?.state == null
                         ? `Profile`
+                        : nav === "/MembershipDashboard"
+                          ? "Membership Dashboard"
                         : location?.state?.search ||
                           (nav === "/DirectDebitAuthorization"
                             ? "Direct Debit Authorization"
@@ -1116,10 +1141,12 @@ function HeaderDetails({
                                     ? "Write-offs"
                                     : nav === "/onlinePayment"
                                       ? "Finance"
-                                      : nav === "/MembershipDashboard"
-                                        ? "Subscriptions & Rewards"
                                       : nav === "/EventsDashboard"
                                         ? "Events Dashboard"
+                                      : nav === "/CorrespondenceDashboard"
+                                        ? "Campaign Dashboard"
+                                      : nav === "/IssuesManagementDashboard"
+                                        ? "Issues Management Dashboard"
                                       : nav === "/EventsSummary"
                                         ? "Events"
                                         : nav === "/Attendees"
@@ -1158,7 +1185,11 @@ function HeaderDetails({
                         </div>
                       ) : nav === "/ClaimSummary" ? (
                         <CreateClaim />
-                      ) : nav === "/Reconciliation" ||
+                      ) : nav === "/MembershipDashboard" ||
+                        nav === "/EventsDashboard" ||
+                        nav === "/CorrespondenceDashboard" ||
+                        nav === "/IssuesManagementDashboard" ||
+                        nav === "/Reconciliation" ||
                         ([
                           "/Batches",
                           "/Import",
@@ -1434,11 +1465,59 @@ function HeaderDetails({
                         <Toolbar />
                       </div>
                     )}
-                    <div className="d-flex flex-shrink-0">
+                    <div className="d-flex flex-shrink-0 align-items-center gap-2">
                       {location?.pathname === "/worklocation" ||
                       location?.pathname === "/region" ||
                       location?.pathname === "/branch" ? null : (
-                        <SaveViewMenu className="ms-3" />
+                        <>
+                          {nav !== "/MembershipDashboard" &&
+                            !isHeaderDashboardRangeNav(nav) && (
+                            <SaveViewMenu className="ms-3" />
+                          )}
+                          {nav === "/MembershipDashboard" && (
+                            <Button
+                              type="default"
+                              icon={<ReloadOutlined />}
+                              onClick={() => bumpMembershipDashboardApply()}
+                              className="me-1 gray-btn butn"
+                            >
+                              Refresh
+                            </Button>
+                          )}
+                          {isHeaderDashboardRangeNav(nav) && (
+                            <div
+                              className="events-header-range ms-3 flex-shrink-0"
+                              role="group"
+                              aria-label="Time range"
+                            >
+                              {HEADER_DASHBOARD_RANGE_KEYS.map((k) => (
+                                <button
+                                  key={k}
+                                  type="button"
+                                  className={
+                                    headerDashboardRange === k
+                                      ? "is-active"
+                                      : ""
+                                  }
+                                  onClick={() =>
+                                    setSearchParams(
+                                      (prev) => {
+                                        const next = new URLSearchParams(
+                                          prev,
+                                        );
+                                        next.set("range", k);
+                                        return next;
+                                      },
+                                      { replace: true },
+                                    )
+                                  }
+                                >
+                                  {k}
+                                </button>
+                              ))}
+                            </div>
+                          )}
+                        </>
                       )}
                     </div>
                   </div>

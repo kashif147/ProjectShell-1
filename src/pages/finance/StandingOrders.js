@@ -10,6 +10,8 @@ import { getNotificationSocketConfig } from "../../context/NotificationContext";
 import { formatCurrency } from "../../utils/Utilities";
 import dayjs from "dayjs";
 
+const STANDING_ORDER_BATCH_TYPE_QUERY = { batchType: "standing order" };
+
 // Single ordered list of column keys for Standing Orders (no duplicates)
 const STANDING_ORDERS_COLUMN_ORDER = [
   "batchName",
@@ -98,7 +100,7 @@ const StandingOrders = () => {
 
   useEffect(() => {
     if (!hasFetchedRef.current) {
-      dispatch(getAllBatchDetails());
+      dispatch(getAllBatchDetails(STANDING_ORDER_BATCH_TYPE_QUERY));
       hasFetchedRef.current = true;
     }
   }, [dispatch]);
@@ -139,7 +141,7 @@ const StandingOrders = () => {
           totalTransactions: Number(payload.totalTransactions || 0),
         },
       }));
-      dispatch(getAllBatchDetails());
+      dispatch(getAllBatchDetails(STANDING_ORDER_BATCH_TYPE_QUERY));
     };
 
     socket.on("batchProcessProgress", handleProgress);
@@ -153,12 +155,7 @@ const StandingOrders = () => {
   }, [dispatch]);
 
   const formattedData = useMemo(() => {
-    // Filter for Standing Order batches
-    const standingOrderBatches = allBatches.filter(
-      (item) => String(item.type || "").trim().toLowerCase() === "standing order"
-    );
-
-    return standingOrderBatches.map((item) => {
+    return allBatches.map((item) => {
       const payments = item.batchPayments || [];
       const totalArrears = 0;
       const totalCurrent = payments.reduce(
@@ -321,7 +318,7 @@ const StandingOrders = () => {
                   borderRadius: 4,
                   cursor: "pointer",
                 }}
-                onClick={() => dispatch(getAllBatchDetails())}
+                onClick={() => dispatch(getAllBatchDetails(STANDING_ORDER_BATCH_TYPE_QUERY))}
                 title="Refresh"
               >
                 <ReloadOutlined style={{ fontSize: 12, color: "#4B5563" }} />

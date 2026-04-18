@@ -1,0 +1,6 @@
+/* Campaign dashboard (Correspondence route) — shares Events shell classes. */
+
+.events-dashboard__status--danger {
+  background: #fee2e2;
+  color: #b91c1c;
+}

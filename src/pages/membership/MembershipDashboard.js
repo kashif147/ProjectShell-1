@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import {
   Card,
   Row,
@@ -7,7 +7,6 @@ import {
   Button,
   Spin,
   Table,
-  Space,
   Tooltip,
 } from "antd";
 import {
@@ -42,7 +41,29 @@ import {
   RadialBar,
 } from "recharts";
 import membershipDashboardAPI from "../../services/membershipDashboardAPI";
+import { useFilters } from "../../context/FilterContext";
 import "../../styles/MembershipDashboard.css";
+
+const MEMBERSHIP_DASHBOARD_FILTER_KEYS = [
+  "Membership Category",
+  "Grade",
+  "Section (Primary Section)",
+  "Region",
+  "Branch",
+  "Work Location",
+];
+
+function buildMembershipDashboardFilters(filtersState) {
+  const out = {};
+  MEMBERSHIP_DASHBOARD_FILTER_KEYS.forEach((label) => {
+    const raw = filtersState?.[label]?.selectedValues;
+    const sel = Array.isArray(raw)
+      ? raw.map((v) => String(v).trim()).filter(Boolean)
+      : [];
+    if (sel.length) out[label] = sel;
+  });
+  return out;
+}
 
 /** KPI tiles: thousands separators, no decimals (en-IE). */
 function formatTileCount(value) {
@@ -56,6 +77,11 @@ function formatTileCount(value) {
 }
 
 const MembershipDashboard = () => {
+  const { membershipDashboardApplyTick, filtersState } = useFilters();
+  const filtersStateRef = useRef(filtersState);
+  filtersStateRef.current = filtersState;
+  const lastDashboardFiltersRef = useRef({});
+
   const [loading, setLoading] = useState(true);
   const [expandedChart, setExpandedChart] = useState(null);
   const [dashboardData, setDashboardData] = useState({});
@@ -65,35 +91,6 @@ const MembershipDashboard = () => {
     title: "",
     loading: false,
   });
-
-  const exportDashboardData = () => {
-    const rows = [
-      ["Metric", "Value"],
-      ["Total Active Members", formatTileCount(dashboardData.totalActive)],
-      ["New Joiners", formatTileCount(dashboardData.newJoiners)],
-      ["Leavers", formatTileCount(dashboardData.leavers)],
-      [
-        "Net Growth",
-        formatTileCount(
-          (dashboardData.newJoiners || 0) - (dashboardData.leavers || 0)
-        ),
-      ],
-      ["Paid Members", formatTileCount(dashboardData.paidMembers)],
-      ["Honorary Members", formatTileCount(dashboardData.honoraryMembers)],
-      ["Student Members", formatTileCount(dashboardData.studentMembers)],
-    ];
-
-    const csvContent = rows.map((row) => row.join(",")).join("\n");
-    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
-    const link = document.createElement("a");
-    const url = URL.createObjectURL(blob);
-    link.setAttribute("href", url);
-    link.setAttribute("download", "membership_dashboard_summary.csv");
-    link.style.visibility = "hidden";
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-  };
 
   // Helper function to calculate percentage change
   const calculatePercentageChange = (current, previous) => {
@@ -288,8 +285,9 @@ const MembershipDashboard = () => {
     return csvRows.join("\n");
   };
 
-  // Fetch dashboard data from API
-  const fetchDashboardData = useCallback(async () => {
+  // Fetch dashboard data from API (filterPayload forwarded for future real APIs)
+  const fetchDashboardData = useCallback(async (filterPayload = {}) => {
+    lastDashboardFiltersRef.current = filterPayload;
     setLoading(true);
     try {
       const [
@@ -301,13 +299,13 @@ const MembershipDashboard = () => {
         regionData,
         workLocationData,
       ] = await Promise.all([
-        membershipDashboardAPI.getDashboardStats(),
-        membershipDashboardAPI.getMembershipByCategory(),
-        membershipDashboardAPI.getMembershipByGrade(),
-        membershipDashboardAPI.getMembershipBySection(),
-        membershipDashboardAPI.getMembershipByBranch(),
-        membershipDashboardAPI.getMembershipByRegion(),
-        membershipDashboardAPI.getMembershipByWorkLocation(),
+        membershipDashboardAPI.getDashboardStats(filterPayload),
+        membershipDashboardAPI.getMembershipByCategory(filterPayload),
+        membershipDashboardAPI.getMembershipByGrade(filterPayload),
+        membershipDashboardAPI.getMembershipBySection(filterPayload),
+        membershipDashboardAPI.getMembershipByBranch(filterPayload),
+        membershipDashboardAPI.getMembershipByRegion(filterPayload),
+        membershipDashboardAPI.getMembershipByWorkLocation(filterPayload),
       ]);
 
       setDashboardData({
@@ -327,8 +325,15 @@ const MembershipDashboard = () => {
   }, []);
 
   useEffect(() => {
-    fetchDashboardData();
+    fetchDashboardData({});
   }, [fetchDashboardData]);
+
+  useEffect(() => {
+    if (membershipDashboardApplyTick === 0) return;
+    fetchDashboardData(
+      buildMembershipDashboardFilters(filtersStateRef.current)
+    );
+  }, [membershipDashboardApplyTick, fetchDashboardData]);
 
   const handleChartExpand = (chartType) => {
     setExpandedChart(chartType);
@@ -525,25 +530,6 @@ const MembershipDashboard = () => {
       {/* Breadcrumb */}
 
       <div className="membership-dashboard-content">
-        <div className="membership-dashboard-header">
-          <h1 className="membership-dashboard-title">Membership Dashboard</h1>
-          <Space>
-            <Button
-              icon={<DownloadOutlined />}
-              onClick={exportDashboardData}
-              className="dashboard-action-btn"
-            >
-              Export Data
-            </Button>
-            <Button
-              onClick={fetchDashboardData}
-              className="dashboard-action-btn dashboard-action-btn-primary"
-            >
-              Refresh
-            </Button>
-          </Space>
-        </div>
-
         {/* Main Statistics Row */}
         <Row gutter={[24, 24]} style={{ marginBottom: "32px" }}>
           <Col xs={24} sm={12} md={6}>

@@ -78,6 +78,15 @@ const Sidebar = () => {
       dispatch(updateMenuLbl({ key: "Correspondence", value: true }));
     }
 
+    const issuesManagementPaths = ["/IssuesManagementDashboard"];
+    const isIssuesManagementRoute = issuesManagementPaths.some((p) =>
+      path.startsWith(p)
+    );
+    if (isIssuesManagementRoute && activeKey !== "Issues Management") {
+      dispatch(updateMenuLbl({ key: "Issues Management", value: true }));
+      return;
+    }
+
     const eventsPaths = [
       "/EventsDashboard",
       "/EventsSummary",
@@ -166,6 +175,11 @@ const Sidebar = () => {
       case "Dashboard":
         if (activeKey === "Cases") {
           return { path: "/CasesSummary", state: { search: "" } };
+        } else if (activeKey === "Issues Management") {
+          return {
+            path: "/IssuesManagementDashboard",
+            state: { search: "Dashboard" },
+          };
         } else if (activeKey === "Events") {
           return { path: "/EventsDashboard", state: { search: "Dashboard" } };
         } else {
@@ -450,6 +464,7 @@ const Sidebar = () => {
       "/LeaversReport": "Leavers Report",
       "/JoinersReport": "Joiners Report",
       "/CorrespondenceDashboard": "Dashboard",
+      "/IssuesManagementDashboard": "Dashboard",
       "/ReportsSettings": "Reports setting",
     };
 

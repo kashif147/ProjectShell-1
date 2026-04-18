@@ -74,6 +74,9 @@ const ClaimsDetails = lazyWithRetry(
 );
 const ClaimsById = lazyWithRetry(() => import("./pages/Claims/ClaimsById"));
 const CasesById = lazyWithRetry(() => import("./pages/Cases/CasesById"));
+const IssuesManagementDashboard = lazyWithRetry(() =>
+  import("./pages/Cases/IssuesManagementDashboard"),
+);
 const Filter = lazyWithRetry(() => import("./pages/Filters/Filter"));
 const TransferSummary = lazyWithRetry(
   () => import("./pages/Transfers/TransferSummary"),
@@ -417,6 +420,19 @@ function Entry() {
                         element={
                           <ProtectedRoute requiredPermission={RoutePermissions["/CasesSummary"]}>
                             <CasesSummary />
+                          </ProtectedRoute>
+                        }
+                      />
+
+                      <Route
+                        path="IssuesManagementDashboard"
+                        element={
+                          <ProtectedRoute
+                            requiredPermission={
+                              RoutePermissions["IssuesManagementDashboard"]
+                            }
+                          >
+                            <IssuesManagementDashboard />
                           </ProtectedRoute>
                         }
                       />

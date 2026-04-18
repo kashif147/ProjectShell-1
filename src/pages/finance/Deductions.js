@@ -10,6 +10,8 @@ import { getNotificationSocketConfig } from "../../context/NotificationContext";
 import { formatCurrency } from "../../utils/Utilities";
 import dayjs from "dayjs";
 
+const DEDUCTIONS_BATCH_TYPE_QUERY = { batchType: "Deductions" };
+
 // Single ordered list of column keys for Deductions (no duplicates)
 const DEDUCTIONS_COLUMN_ORDER = [
   "batchName",
@@ -99,7 +101,7 @@ const Deductions = () => {
 
   useEffect(() => {
     if (!hasFetchedRef.current) {
-      dispatch(getAllBatchDetails());
+      dispatch(getAllBatchDetails(DEDUCTIONS_BATCH_TYPE_QUERY));
       hasFetchedRef.current = true;
     }
   }, [dispatch]);
@@ -140,7 +142,7 @@ const Deductions = () => {
           totalTransactions: Number(payload.totalTransactions || 0),
         },
       }));
-      dispatch(getAllBatchDetails());
+      dispatch(getAllBatchDetails(DEDUCTIONS_BATCH_TYPE_QUERY));
     };
 
     socket.on("batchProcessProgress", handleProgress);
@@ -320,7 +322,7 @@ const Deductions = () => {
                   borderRadius: 4,
                   cursor: "pointer",
                 }}
-                onClick={() => dispatch(getAllBatchDetails())}
+                onClick={() => dispatch(getAllBatchDetails(DEDUCTIONS_BATCH_TYPE_QUERY))}
                 title="Refresh"
               >
                 <ReloadOutlined style={{ fontSize: 12, color: "#4B5563" }} />

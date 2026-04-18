@@ -101,6 +101,11 @@ const Breadcrumb = () => {
       page: "Issues Summary",
       icon: "📋",
     },
+    "/IssuesManagementDashboard": {
+      module: "Issues Management",
+      page: "Issues Dashboard",
+      icon: "📋",
+    },
     "/CasesById": {
       module: "Issues Management",
       page: "Issue Details",
@@ -767,7 +772,7 @@ const Breadcrumb = () => {
     const moduleRoutes = {
       Configuration: "/Configuratin",
       "Subscriptions & Rewards": "/Summary",
-      "Issues Management": "/CasesSummary",
+      "Issues Management": "/IssuesManagementDashboard",
       Correspondence: "/CorrespondencesSummary",
       Finance: "/Import",
       Reports: "/Reports",

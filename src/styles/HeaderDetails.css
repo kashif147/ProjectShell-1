@@ -1,3 +1,41 @@
 .bred-cram-main p, .bred-cram-main div {
     display: inline-block;
   }
+
+.events-header-range {
+  display: inline-flex;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid #e2e8f0;
+  background: #fff;
+}
+
+.events-header-range button {
+  border: none;
+  background: #fff;
+  color: #475569;
+  font-size: 13px;
+  font-weight: 600;
+  padding: 8px 14px;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+
+.events-header-range button + button {
+  border-left: 1px solid #e2e8f0;
+}
+
+.events-header-range button:hover {
+  background: #f8fafc;
+  color: #0f172a;
+}
+
+.events-header-range button.is-active {
+  background: #215e97;
+  color: #fff;
+}
+
+.events-header-range button.is-active:hover {
+  background: #1a4d7a;
+  color: #fff;
+}

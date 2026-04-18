@@ -1,14 +1,11 @@
 import React, { useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import { Card, Col, Row, Tag, Button } from "antd";
+import { Card, Col, Row, Tag, Button, Table } from "antd";
 import {
-  MailOutlined,
-  MessageOutlined,
-  FileTextOutlined,
-  BellOutlined,
+  ExclamationCircleOutlined,
+  WarningOutlined,
   MoreOutlined,
 } from "@ant-design/icons";
-import MyTable from "../../component/common/MyTable";
 import {
   Area,
   AreaChart,
@@ -24,65 +21,63 @@ import {
   YAxis,
 } from "recharts";
 import "../../styles/EventsDashboard.css";
-import "../../styles/CorrespondenceDashboard.css";
 
-const CHANNEL_MIX = [
-  { name: "Email", value: 52, color: "#215e97" },
-  { name: "SMS", value: 24, color: "#7c3aed" },
-  { name: "Letter", value: 16, color: "#14b8a6" },
-  { name: "Push", value: 8, color: "#ea580c" },
+const PRIORITY_MIX = [
+  { name: "Critical", value: 8, color: "#dc2626" },
+  { name: "High", value: 22, color: "#ea580c" },
+  { name: "Medium", value: 45, color: "#215e97" },
+  { name: "Low", value: 25, color: "#94a3b8" },
 ];
 
-const VOLUME_TREND = [
-  { month: "Jan", sent: 38200, failed: 380, bounced: 260 },
-  { month: "Feb", sent: 42100, failed: 410, bounced: 290 },
-  { month: "Mar", sent: 46800, failed: 395, bounced: 305 },
-  { month: "Apr", sent: 51200, failed: 420, bounced: 318 },
+const ISSUE_TREND = [
+  { month: "Jan", opened: 42, closed: 38, escalated: 4 },
+  { month: "Feb", opened: 48, closed: 44, escalated: 5 },
+  { month: "Mar", opened: 55, closed: 50, escalated: 6 },
+  { month: "Apr", opened: 51, closed: 47, escalated: 3 },
 ];
 
-const CAMPAIGNS = [
+const RECENT_ISSUES = [
   {
     key: "1",
-    campaignId: "#CMP-9832",
-    channel: "Email",
-    name: "Marketing_Q4_Email",
-    status: "SENT",
-    sentDate: "Oct 24, 2025 10:45",
-    successRate: 98,
+    issueId: "ISS-24081",
+    title: "Payroll deduction mismatch — March cycle",
+    priority: "High",
+    status: "Open",
+    assignee: "Legal Team",
+    updated: "Apr 16, 2026 14:20",
   },
   {
     key: "2",
-    campaignId: "#CMP-9831",
-    channel: "SMS",
-    name: "Alert_System_Maintenance",
-    status: "PROCESSING",
-    sentDate: "Oct 24, 2025 09:12",
-    successRate: 45,
+    issueId: "ISS-24076",
+    title: "Member portal timeout on Safari",
+    priority: "Medium",
+    status: "In review",
+    assignee: "IT Team",
+    updated: "Apr 15, 2026 09:05",
   },
   {
     key: "3",
-    campaignId: "#CMP-9830",
-    channel: "Letter",
-    name: "Policy_Renewal_Letters",
-    status: "QUEUED",
-    sentDate: "Oct 23, 2025 16:30",
-    successRate: 0,
+    issueId: "ISS-24070",
+    title: "GDPR data export request overdue",
+    priority: "Critical",
+    status: "Open",
+    assignee: "Compliance",
+    updated: "Apr 14, 2026 16:40",
   },
   {
     key: "4",
-    campaignId: "#CMP-9829",
-    channel: "Push",
-    name: "Security_Breach_Push",
-    status: "FAILED",
-    sentDate: "Oct 23, 2025 11:20",
-    successRate: 12,
+    issueId: "ISS-24065",
+    title: "Duplicate correspondence to retired member",
+    priority: "Low",
+    status: "Pending",
+    assignee: "Support Team",
+    updated: "Apr 12, 2026 11:15",
   },
 ];
 
-function formatVolumeShort(n) {
+function formatCountShort(n) {
   const x = Number(n);
   if (!Number.isFinite(x)) return "0";
-  if (x >= 1_000_000) return `${(x / 1_000_000).toFixed(2)}M`;
   if (x >= 1000) {
     const k = x / 1000;
     const s = Number.isInteger(k) ? String(Math.round(k)) : k.toFixed(1).replace(/\.0$/, "");
@@ -91,66 +86,72 @@ function formatVolumeShort(n) {
   return String(Math.round(x));
 }
 
-function channelIcon(channel) {
-  switch (channel) {
-    case "Email":
-      return <MailOutlined style={{ color: "#215e97", fontSize: 14 }} />;
-    case "SMS":
-      return <MessageOutlined style={{ color: "#7c3aed", fontSize: 14 }} />;
-    case "Letter":
-      return <FileTextOutlined style={{ color: "#14b8a6", fontSize: 14 }} />;
-    case "Push":
-      return <BellOutlined style={{ color: "#ea580c", fontSize: 14 }} />;
-    default:
-      return <MailOutlined style={{ fontSize: 14 }} />;
-  }
+function priorityTag(priority) {
+  const map = {
+    Critical: "error",
+    High: "warning",
+    Medium: "processing",
+    Low: "default",
+  };
+  return <Tag color={map[priority] || "default"}>{priority}</Tag>;
 }
 
 function statusTag(status) {
   let color = "default";
-  if (status === "SENT") color = "success";
-  if (status === "PROCESSING") color = "processing";
-  if (status === "QUEUED") color = "default";
-  if (status === "FAILED") color = "error";
+  if (status === "Open") color = "processing";
+  if (status === "In review") color = "warning";
+  if (status === "Pending") color = "default";
+  if (status === "Closed") color = "success";
   return <Tag color={color}>{status}</Tag>;
 }
 
-const CorrespondenceDashboard = () => {
+function issueIcon(priority) {
+  const sz = 16;
+  if (priority === "Critical") {
+    return <WarningOutlined style={{ color: "#dc2626", fontSize: sz }} />;
+  }
+  if (priority === "High") {
+    return <ExclamationCircleOutlined style={{ color: "#ea580c", fontSize: sz }} />;
+  }
+  return <ExclamationCircleOutlined style={{ color: "#215e97", fontSize: sz }} />;
+}
+
+function IssuesManagementDashboard() {
   const navigate = useNavigate();
 
   const kpis = useMemo(
     () => [
       {
-        label: "Campaign sends (YTD)",
-        value: "128k",
-        trend: "↗ 5.2%",
-        trendMuted: false,
+        label: "Open issues",
+        value: "186",
+        trend: "↘ 6 vs last week",
+        trendMuted: true,
         barColor: "#215e97",
-        barPercent: 72,
+        barPercent: 62,
       },
       {
-        label: "Delivered rate",
-        value: "98.2%",
-        trend: "↗ 0.4%",
+        label: "Resolved (30d)",
+        value: "214",
+        trend: "↗ 12%",
         trendMuted: false,
         barColor: "#10b981",
-        barPercent: 98,
+        barPercent: 78,
       },
       {
-        label: "Opened / read",
-        value: "46.0%",
-        trend: "↘ 1.2%",
+        label: "Avg. age (open)",
+        value: "4.2d",
+        trend: "Within SLA",
         trendMuted: true,
         barColor: "#7c3aed",
-        barPercent: 46,
+        barPercent: 44,
       },
       {
-        label: "Failed",
-        value: "0.8%",
-        trend: "Under 1% target",
+        label: "SLA at risk",
+        value: "11",
+        trend: "Needs attention",
         trendMuted: true,
         barColor: "#dc2626",
-        barPercent: 8,
+        barPercent: 18,
       },
     ],
     [],
@@ -159,94 +160,66 @@ const CorrespondenceDashboard = () => {
   const columns = useMemo(
     () => [
       {
-        dataIndex: "name",
-        title: "Campaign",
-        width: 320,
+        dataIndex: "title",
+        title: "ISSUE",
+        width: 340,
         render: (text, record) => (
-          <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
             <div
               style={{
-                width: "40px",
-                height: "40px",
-                borderRadius: "8px",
+                width: 40,
+                height: 40,
+                borderRadius: 8,
                 backgroundColor: "#e6f7ff",
-                color: "#1890ff",
+                color: "#215e97",
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
-                fontSize: "20px",
+                flexShrink: 0,
               }}
             >
-              {channelIcon(record.channel)}
+              {issueIcon(record.priority)}
             </div>
             <div>
-              <div
-                style={{ fontWeight: 600, color: "#1890ff", cursor: "pointer" }}
-              >
-                {text}
-              </div>
-              <div style={{ fontSize: "12px", color: "#8c8c8c" }}>
-                {record.campaignId} · {record.channel}
+              <div className="events-dashboard__event-name">{text}</div>
+              <div className="events-dashboard__event-loc">
+                {record.issueId} · {record.assignee}
               </div>
             </div>
           </div>
         ),
       },
       {
-        dataIndex: "sentDate",
-        title: "Sent",
-        width: 200,
-        render: (text) => (
-          <span style={{ color: "#64748b", fontSize: 13 }}>{text}</span>
-        ),
+        dataIndex: "priority",
+        title: "PRIORITY",
+        width: 112,
+        render: (p) => priorityTag(p),
       },
       {
         dataIndex: "status",
-        title: "Status",
-        width: 150,
-        render: (status) => statusTag(status),
+        title: "STATUS",
+        width: 120,
+        render: (s) => statusTag(s),
       },
       {
-        dataIndex: "successRate",
-        title: "Delivery",
-        width: 160,
-        render: (pct) => {
-          const n = Math.min(100, Math.max(0, Number(pct) || 0));
-          const stroke =
-            n > 90 ? "#10b981" : n > 40 ? "#f59e0b" : "#dc2626";
-          return (
-            <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-              <span style={{ fontWeight: 500, minWidth: 36 }}>{n}%</span>
-              <div
-                style={{
-                  flex: 1,
-                  maxWidth: 100,
-                  height: 6,
-                  borderRadius: 3,
-                  background: "#e2e8f0",
-                  overflow: "hidden",
-                }}
-              >
-                <div
-                  style={{
-                    width: `${n}%`,
-                    height: "100%",
-                    background: stroke,
-                    borderRadius: 3,
-                  }}
-                />
-              </div>
-            </div>
-          );
-        },
+        dataIndex: "updated",
+        title: "UPDATED",
+        width: 168,
+        render: (text) => (
+          <span className="events-dashboard__count-cell" style={{ fontWeight: 500 }}>
+            {text}
+          </span>
+        ),
       },
       {
-        title: "Actions",
+        title: "",
         key: "actions",
-        width: 100,
+        width: 48,
+        align: "right",
         render: () => (
           <Button
             type="text"
+            size="small"
             icon={<MoreOutlined />}
             onClick={(e) => e.stopPropagation()}
           />
@@ -301,14 +274,16 @@ const CorrespondenceDashboard = () => {
         <Col xs={24} lg={14}>
           <Card className="events-dashboard__card" bordered={false}>
             <p className="events-dashboard__section-title">
-              CAMPAIGN SEND VOLUME ({new Date().getFullYear()})
+              ISSUE FLOW ({new Date().getFullYear()})
             </p>
-            <div className="events-dashboard__section-note">↗ Peak day Thu (+18% vs avg)</div>
+            <div className="events-dashboard__section-note">
+              ↗ Closures outpacing opens in April
+            </div>
             <div style={{ height: 196 }}>
               <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={VOLUME_TREND} margin={{ top: 4, right: 8, left: 0, bottom: 4 }}>
+                <AreaChart data={ISSUE_TREND} margin={{ top: 4, right: 8, left: 0, bottom: 4 }}>
                   <defs>
-                    <linearGradient id="corrSentFill" x1="0" y1="0" x2="0" y2="1">
+                    <linearGradient id="issuesOpenedFill" x1="0" y1="0" x2="0" y2="1">
                       <stop offset="0%" stopColor="#215e97" stopOpacity={0.35} />
                       <stop offset="100%" stopColor="#215e97" stopOpacity={0.02} />
                     </linearGradient>
@@ -316,14 +291,14 @@ const CorrespondenceDashboard = () => {
                   <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" vertical={false} />
                   <XAxis dataKey="month" tick={{ fill: "#64748b", fontSize: 11 }} axisLine={false} tickLine={false} />
                   <YAxis
-                    tickFormatter={(v) => formatVolumeShort(v)}
-                    domain={[0, 60000]}
+                    tickFormatter={(v) => formatCountShort(v)}
+                    domain={[0, 80]}
                     tick={{ fill: "#64748b", fontSize: 11 }}
                     axisLine={false}
                     tickLine={false}
                   />
                   <Tooltip
-                    formatter={(v, name) => [formatVolumeShort(v), name]}
+                    formatter={(v, name) => [formatCountShort(v), name]}
                     contentStyle={{ borderRadius: 8, border: "1px solid #e2e8f0" }}
                   />
                   <Legend
@@ -334,26 +309,26 @@ const CorrespondenceDashboard = () => {
                   />
                   <Area
                     type="monotone"
-                    dataKey="sent"
-                    name="Sent"
+                    dataKey="opened"
+                    name="Opened"
                     stroke="#215e97"
                     strokeWidth={2}
-                    fill="url(#corrSentFill)"
+                    fill="url(#issuesOpenedFill)"
                   />
                   <Line
                     type="monotone"
-                    dataKey="failed"
-                    name="Failed"
-                    stroke="#dc2626"
+                    dataKey="closed"
+                    name="Closed"
+                    stroke="#10b981"
                     strokeWidth={2}
                     dot={{ r: 3, strokeWidth: 1, fill: "#fff" }}
                     activeDot={{ r: 4 }}
                   />
                   <Line
                     type="monotone"
-                    dataKey="bounced"
-                    name="Bounced"
-                    stroke="#64748b"
+                    dataKey="escalated"
+                    name="Escalated"
+                    stroke="#dc2626"
                     strokeWidth={2}
                     dot={{ r: 3, strokeWidth: 1, fill: "#fff" }}
                     activeDot={{ r: 4 }}
@@ -365,12 +340,12 @@ const CorrespondenceDashboard = () => {
         </Col>
         <Col xs={24} lg={10}>
           <Card className="events-dashboard__card" bordered={false}>
-            <p className="events-dashboard__section-title">CHANNEL MIX (COUNT)</p>
+            <p className="events-dashboard__section-title">OPEN ISSUES BY PRIORITY</p>
             <div style={{ height: 168 }}>
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
                   <Pie
-                    data={CHANNEL_MIX}
+                    data={PRIORITY_MIX}
                     dataKey="value"
                     nameKey="name"
                     cx="40%"
@@ -379,7 +354,7 @@ const CorrespondenceDashboard = () => {
                     outerRadius={72}
                     paddingAngle={2}
                   >
-                    {CHANNEL_MIX.map((entry) => (
+                    {PRIORITY_MIX.map((entry) => (
                       <Cell key={entry.name} fill={entry.color} />
                     ))}
                   </Pie>
@@ -396,7 +371,7 @@ const CorrespondenceDashboard = () => {
                       </span>
                     )}
                   />
-                  <Tooltip formatter={(v) => `${v}% of sends`} />
+                  <Tooltip formatter={(v) => `${v}% of open`} />
                 </PieChart>
               </ResponsiveContainer>
             </div>
@@ -409,81 +384,86 @@ const CorrespondenceDashboard = () => {
           <Card className="events-dashboard__card" bordered={false}>
             <div className="events-dashboard__table-head">
               <p className="events-dashboard__section-title" style={{ margin: 0 }}>
-                RECENT CAMPAIGNS
+                RECENT ISSUES
               </p>
-              <button type="button" className="events-dashboard__link">
+              <button
+                type="button"
+                className="events-dashboard__link"
+                onClick={() => navigate("/CasesSummary", { state: { search: "All Issues" } })}
+              >
                 View all &gt;
               </button>
             </div>
-            <MyTable
-              columns={columns}
-              dataSource={CAMPAIGNS}
-              loading={false}
-              tablePadding={{
-                paddingLeft: "12px",
-                paddingRight: "12px",
-                paddingTop: "4px",
-                paddingBottom: "24px",
-              }}
-              onRowClick={(record) => {
-                navigate("/CommunicationBatchDetail", {
-                  state: {
-                    batchId: record.campaignId,
-                    batchName: record.name,
-                    campaignId: record.campaignId,
-                    ...record,
-                  },
-                });
-              }}
-            />
+            <div className="events-dashboard__dash-table-wrap">
+              <Table
+                columns={columns}
+                dataSource={RECENT_ISSUES}
+                pagination={false}
+                size="small"
+                rowKey="key"
+                showHeader
+                onRow={(record) => ({
+                  onClick: () =>
+                    navigate("/CasesDetails", {
+                      state: { caseId: record.issueId },
+                    }),
+                })}
+              />
+            </div>
           </Card>
         </Col>
         <Col xs={24} lg={10}>
           <Card className="events-dashboard__card" bordered={false}>
             <p className="events-dashboard__drill-title">
-              FOCUS CAMPAIGN: MARKETING_Q4_EMAIL
+              FOCUS ISSUE: ISS-24070
             </p>
             <div className="events-dashboard__metric-grid">
               <div className="events-dashboard__metric-box">
-                <div className="events-dashboard__metric-label">DELIVERY SCORE</div>
-                <div className="events-dashboard__metric-value">98%</div>
+                <div className="events-dashboard__metric-label">DAYS OPEN</div>
+                <div className="events-dashboard__metric-value">6</div>
               </div>
               <div className="events-dashboard__metric-box">
-                <div className="events-dashboard__metric-label">READ RATE</div>
-                <div className="events-dashboard__metric-value">44%</div>
+                <div className="events-dashboard__metric-label">RESPONSES</div>
+                <div className="events-dashboard__metric-value">14</div>
               </div>
             </div>
-            <div className="events-dashboard__sentiment-label">QUEUE HEALTH</div>
-            <div className="events-dashboard__sentiment-score">Low backlog</div>
+            <div className="events-dashboard__sentiment-label">SLA CLOCK</div>
+            <div className="events-dashboard__sentiment-score">18h remaining</div>
             <div className="events-dashboard__sentiment-bar">
-              <span style={{ width: "22%" }} />
+              <span style={{ width: "72%", background: "#f59e0b" }} />
             </div>
             <p className="events-dashboard__sentiment-caption">
-              Most campaigns clear within SLA; letter campaigns skew slower.
+              Escalation path engaged; compliance owner notified.
             </p>
-            <div className="events-dashboard__ticket-label">DIGITAL VS PHYSICAL</div>
-            <div className="events-dashboard__ticket-bars" title="Email, SMS & push vs letter">
-              <span aria-label="Digital channels" style={{ flex: 78, background: "#215e97" }} />
-              <span aria-label="Physical mail" style={{ flex: 22, background: "#94a3b8" }} />
+            <div className="events-dashboard__ticket-label">BACKLOG VS NEW</div>
+            <div className="events-dashboard__ticket-bars" title="Existing backlog vs new intakes">
+              <span aria-label="Backlog" style={{ flex: 58, background: "#215e97" }} />
+              <span aria-label="New" style={{ flex: 42, background: "#94a3b8" }} />
             </div>
             <div className="events-dashboard__ticket-legend">
               <span>
                 <i className="events-dashboard__ticket-swatch events-dashboard__ticket-swatch--members" />
-                Digital 78%
+                Backlog 58%
               </span>
               <span>
                 <i className="events-dashboard__ticket-swatch events-dashboard__ticket-swatch--nonmembers" />
-                Letter 22%
+                New 42%
               </span>
             </div>
-            <button type="button" className="events-dashboard__report-btn">
-              Open campaign
+            <button
+              type="button"
+              className="events-dashboard__report-btn"
+              onClick={() =>
+                navigate("/CasesDetails", { state: { caseId: "ISS-24070" } })
+              }
+            >
+              Open issue
             </button>
           </Card>
         </Col>
       </Row>
     </div>
   );
-};
+}
 
-export default CorrespondenceDashboard;
+export default IssuesManagementDashboard;

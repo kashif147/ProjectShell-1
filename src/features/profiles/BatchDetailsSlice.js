@@ -29,13 +29,22 @@ export const getBatchDetailsById = createAsyncThunk(
 // ===============================
 export const getAllBatchDetails = createAsyncThunk(
     "batchDetails/getAll",
-    async (_, { rejectWithValue }) => {
+    async (queryParams = {}, { rejectWithValue }) => {
         try {
             const token = localStorage.getItem("token");
+            const params =
+                queryParams && typeof queryParams === "object"
+                    ? Object.fromEntries(
+                          Object.entries(queryParams).filter(
+                              ([, v]) => v !== undefined && v !== null && v !== ""
+                          )
+                      )
+                    : {};
             const response = await axios.get(
                 `${process.env.REACT_APP_ACCOUNT_SERVICE_URL}/batch-details`,
                 {
                     headers: { Authorization: `Bearer ${token}` },
+                    ...(Object.keys(params).length ? { params } : {}),
                 }
             );
             return response?.data;

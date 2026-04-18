@@ -1,0 +1,442 @@
+.events-dashboard {
+  min-height: calc(100vh - 120px);
+  background: #f1f5f9;
+  padding: 12px 20px 16px;
+  font-family: var(--font-family, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif);
+}
+
+.events-dashboard__header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.events-dashboard__title {
+  margin: 0;
+  font-size: 26px;
+  font-weight: 700;
+  color: #0f172a;
+  letter-spacing: -0.02em;
+}
+
+.events-dashboard__subtitle {
+  margin: 6px 0 0;
+  font-size: 14px;
+  color: #64748b;
+  font-weight: 400;
+}
+
+.events-dashboard__controls {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.events-dashboard__range {
+  display: inline-flex;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid #e2e8f0;
+  background: #fff;
+}
+
+.events-dashboard__range button {
+  border: none;
+  background: #fff;
+  color: #475569;
+  font-size: 13px;
+  font-weight: 600;
+  padding: 8px 14px;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+
+.events-dashboard__range button + button {
+  border-left: 1px solid #e2e8f0;
+}
+
+.events-dashboard__range button:hover {
+  background: #f8fafc;
+  color: #0f172a;
+}
+
+.events-dashboard__range button.is-active {
+  background: #215e97;
+  color: #fff;
+}
+
+.events-dashboard__range button.is-active:hover {
+  background: #1a4d7a;
+  color: #fff;
+}
+
+.events-dashboard__search-btn {
+  width: 40px;
+  height: 40px;
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
+  background: #fff;
+  color: #475569;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.events-dashboard__search-btn:hover {
+  background: #f8fafc;
+  border-color: #cbd5e1;
+}
+
+.events-dashboard__card {
+  border-radius: 10px;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.06);
+  background: #fff;
+  height: 100%;
+}
+
+.events-dashboard__card .ant-card-body {
+  padding: 12px 16px;
+}
+
+.events-dashboard__kpi {
+  position: relative;
+}
+
+.events-dashboard__kpi-label {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  color: #94a3b8;
+  text-transform: uppercase;
+}
+
+.events-dashboard__kpi-value {
+  font-size: 28px;
+  font-weight: 700;
+  color: #0f172a;
+  margin-top: 6px;
+  line-height: 1.1;
+}
+
+.events-dashboard__kpi-trend {
+  position: absolute;
+  top: 16px;
+  right: 20px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #16a34a;
+}
+
+.events-dashboard__kpi-trend--muted {
+  color: #64748b;
+  font-weight: 500;
+}
+
+.events-dashboard__kpi-bar {
+  margin-top: 14px;
+}
+
+.events-dashboard__section-title {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: #94a3b8;
+  margin: 0 0 4px;
+}
+
+.events-dashboard__section-note {
+  font-size: 12px;
+  color: #16a34a;
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+.events-dashboard__table-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.events-dashboard__link {
+  color: #215e97;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+  background: none;
+  padding: 0;
+}
+
+.events-dashboard__link:hover {
+  text-decoration: underline;
+}
+
+.events-dashboard__event-name {
+  font-weight: 600;
+  color: #0f172a;
+  font-size: 14px;
+}
+
+.events-dashboard__event-loc {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  color: #64748b;
+  margin-top: 2px;
+}
+
+.events-dashboard__status {
+  display: inline-block;
+  padding: 2px 10px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+.events-dashboard__status--active {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.events-dashboard__status--upcoming {
+  background: #ffedd5;
+  color: #c2410c;
+}
+
+.events-dashboard__status--past {
+  background: #f1f5f9;
+  color: #64748b;
+}
+
+.events-dashboard__attendee-bar {
+  height: 4px;
+  border-radius: 2px;
+  background: #e2e8f0;
+  margin-top: 6px;
+  overflow: hidden;
+}
+
+.events-dashboard__attendee-bar > span {
+  display: block;
+  height: 100%;
+  border-radius: 2px;
+  background: #215e97;
+}
+
+.events-dashboard__count-cell {
+  font-weight: 600;
+  font-size: 13px;
+  color: #0f172a;
+  font-variant-numeric: tabular-nums;
+}
+
+.events-dashboard__rev-main {
+  font-size: 18px;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.events-dashboard__rev-sub {
+  font-size: 11px;
+  color: #94a3b8;
+  margin-top: 2px;
+}
+
+.events-dashboard__drill-title {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  color: #475569;
+  margin: 0 0 10px;
+  line-height: 1.35;
+}
+
+.events-dashboard__metric-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.events-dashboard__metric-box {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 12px 14px;
+}
+
+.events-dashboard__metric-label {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: #94a3b8;
+}
+
+.events-dashboard__metric-value {
+  font-size: 22px;
+  font-weight: 700;
+  color: #0f172a;
+  margin-top: 4px;
+}
+
+.events-dashboard__sentiment-label {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: #94a3b8;
+  margin-bottom: 6px;
+}
+
+.events-dashboard__sentiment-score {
+  font-size: 14px;
+  font-weight: 700;
+  color: #0f172a;
+  margin-bottom: 6px;
+}
+
+.events-dashboard__sentiment-bar {
+  height: 8px;
+  border-radius: 4px;
+  background: #e2e8f0;
+  overflow: hidden;
+}
+
+.events-dashboard__sentiment-bar > span {
+  display: block;
+  height: 100%;
+  width: 96%;
+  border-radius: 4px;
+  background: #10b981;
+}
+
+.events-dashboard__sentiment-caption {
+  font-size: 11px;
+  color: #94a3b8;
+  margin-top: 8px;
+  line-height: 1.4;
+}
+
+.events-dashboard__ticket-label {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: #94a3b8;
+  margin: 10px 0 6px;
+}
+
+.events-dashboard__ticket-bars {
+  display: flex;
+  gap: 6px;
+  height: 10px;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.events-dashboard__ticket-bars span:nth-child(1) {
+  flex: 72;
+  background: #215e97;
+}
+.events-dashboard__ticket-bars span:nth-child(2) {
+  flex: 28;
+  background: #94a3b8;
+}
+
+.events-dashboard__ticket-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px 16px;
+  margin-top: 8px;
+  font-size: 11px;
+  font-weight: 600;
+  color: #475569;
+}
+
+.events-dashboard__ticket-legend span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.events-dashboard__ticket-swatch {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 2px;
+  flex-shrink: 0;
+  font-style: normal;
+}
+
+.events-dashboard__ticket-swatch--members {
+  background: #215e97;
+}
+
+.events-dashboard__ticket-swatch--nonmembers {
+  background: #94a3b8;
+}
+
+.events-dashboard__report-btn {
+  margin-top: 12px;
+  width: 100%;
+  height: 38px;
+  border-radius: 8px;
+  border: none;
+  background: #215e97;
+  color: #fff;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.events-dashboard__report-btn:hover {
+  background: #1a4d7a;
+  color: #fff;
+}
+
+/* Dashboard “recent” tables — compact, no app chrome (aligns Events + Issues routes) */
+.events-dashboard__dash-table-wrap {
+  margin: 0 -4px;
+  padding-bottom: 4px;
+}
+
+.events-dashboard__dash-table-wrap .ant-table {
+  background: transparent;
+}
+
+.events-dashboard__dash-table-wrap .ant-table-thead > tr > th {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: #94a3b8;
+  text-transform: uppercase;
+  background: transparent !important;
+  border-bottom: 1px solid #e2e8f0;
+  padding: 8px 8px 6px;
+}
+
+.events-dashboard__dash-table-wrap .ant-table-tbody > tr > td {
+  border-bottom: 1px solid #f1f5f9;
+  padding: 10px 8px;
+  vertical-align: middle;
+}
+
+.events-dashboard__dash-table-wrap .ant-table-tbody > tr:last-child > td {
+  border-bottom: none;
+}
+
+.events-dashboard__dash-table-wrap .ant-table-tbody > tr:hover > td {
+  background: #f8fafc;
+}
+
+.events-dashboard__dash-table-wrap .ant-table-tbody > tr {
+  cursor: pointer;
+}

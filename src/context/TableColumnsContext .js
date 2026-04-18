@@ -8,12 +8,17 @@ import React, {
 } from "react";
 import { Tag } from "antd";
 import { tableData } from "../Data";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useLocation, useNavigate, Link } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchRegions } from "../features/RegionSlice";
 import { getAllLookups } from "../features/LookupsSlice";
 import { getContactTypes } from "../features/ContactTypeSlice";
-import { convertToLocalTime, formatDateOnly, formatCurrency, formatMobileNumber } from "../utils/Utilities";
+import {
+  convertToLocalTime,
+  formatDateOnly,
+  formatCurrency,
+  formatMobileNumber,
+} from "../utils/Utilities";
 import { getProfileDetailsById } from "../features/profiles/ProfileDetailsSlice";
 import {
   getSubscriptionByProfileId,
@@ -82,8 +87,7 @@ function profileDetailsBreadcrumbState(record) {
     record.membershipNo ??
     record.memberNo ??
     "";
-  const regNo =
-    record.regNo ?? record.personalDetails?.regNo ?? "";
+  const regNo = record.regNo ?? record.personalDetails?.regNo ?? "";
   const regOrMember = regNo || membershipDisplay;
   const name =
     record.personalDetails?.fullName ??
@@ -177,7 +181,7 @@ const staticColumns = {
       render: (entries) => {
         if (!Array.isArray(entries)) return formatCurrency(0);
         const bankEntry = entries.find(
-          (e) => e.accountCode === "1220" && e.dc === "D"
+          (e) => e.accountCode === "1220" && e.dc === "D",
         );
         const amountInEuros = bankEntry ? bankEntry.amount / 100 : 0;
         return formatCurrency(amountInEuros);
@@ -190,7 +194,7 @@ const staticColumns = {
       isGride: true,
       isVisible: true,
       width: 150,
-      render: (date) => formatDateOnly(date)
+      render: (date) => formatDateOnly(date),
     },
     {
       title: "Payment Method",
@@ -499,7 +503,8 @@ const staticColumns = {
       isGride: true,
       isVisible: true,
       width: 90,
-      render: (value) => (value === true ? "Yes" : value === false ? "No" : "—"),
+      render: (value) =>
+        value === true ? "Yes" : value === false ? "No" : "—",
     },
     {
       dataIndex: "fullName",
@@ -510,7 +515,6 @@ const staticColumns = {
       isVisible: true,
       width: 200,
     },
-
 
     {
       // dataIndex: ["contactInfo", "normalizedEmail"],
@@ -2662,6 +2666,24 @@ const staticColumns = {
       isGride: true,
       isVisible: true,
       width: 220,
+      render: (text, record) => {
+        const name = text ?? record?.eventName ?? "";
+        const eventId = record?.eventId;
+        if (!eventId) return name || "-";
+        return (
+          <Link
+            to="/EventDetails"
+            state={{ eventId }}
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              color: "#0000FF",
+              textDecoration: "underline",
+            }}
+          >
+            {name}
+          </Link>
+        );
+      },
     },
     {
       dataIndex: "eventType",
@@ -2702,7 +2724,8 @@ const staticColumns = {
         if (statusLower === "active") color = "green";
         else if (statusLower === "planning") color = "blue";
         else if (statusLower === "review") color = "gold";
-        else if (statusLower === "canceled" || statusLower === "cancelled") color = "default";
+        else if (statusLower === "canceled" || statusLower === "cancelled")
+          color = "default";
         return <Tag color={color}>{status}</Tag>;
       },
     },
@@ -2801,7 +2824,11 @@ const staticColumns = {
       render: (status) => {
         if (!status) return "-";
         const statusLower = String(status).toLowerCase();
-        return <Tag color={statusLower === "registered" ? "green" : "default"}>{status}</Tag>;
+        return (
+          <Tag color={statusLower === "registered" ? "green" : "default"}>
+            {status}
+          </Tag>
+        );
       },
     },
     {
@@ -3209,20 +3236,96 @@ const staticColumns = {
 
 const staticSearchFilters = {
   onlinePayment: [
-    { titleColumn: "Member ID", isSearch: true, isCheck: false, comp: "!=", lookups: {} },
-    { titleColumn: "Full Name", isSearch: true, isCheck: false, comp: "!=", lookups: {} },
-    { titleColumn: "Email", isSearch: true, isCheck: false, comp: "!=", lookups: {} },
-    { titleColumn: "Phone", isSearch: true, isCheck: false, comp: "!=", lookups: {} },
+    {
+      titleColumn: "Member ID",
+      isSearch: true,
+      isCheck: false,
+      comp: "!=",
+      lookups: {},
+    },
+    {
+      titleColumn: "Full Name",
+      isSearch: true,
+      isCheck: false,
+      comp: "!=",
+      lookups: {},
+    },
+    {
+      titleColumn: "Email",
+      isSearch: true,
+      isCheck: false,
+      comp: "!=",
+      lookups: {},
+    },
+    {
+      titleColumn: "Phone",
+      isSearch: true,
+      isCheck: false,
+      comp: "!=",
+      lookups: {},
+    },
     { titleColumn: "Join Date", isSearch: false, isCheck: false, lookups: {} },
-    { titleColumn: "Category", isSearch: true, isCheck: false, comp: "!=", lookups: {} },
-    { titleColumn: "Membership Status", isSearch: true, isCheck: false, comp: "!=", lookups: {} },
-    { titleColumn: "Renewal Date", isSearch: false, isCheck: false, lookups: {} },
-    { titleColumn: "Transaction ID", isSearch: true, isCheck: false, comp: "!=", lookups: {} },
-    { titleColumn: "Paid Amount", isSearch: true, isCheck: false, comp: "!=", lookups: {} },
-    { titleColumn: "Payment Date", isSearch: false, isCheck: false, lookups: {} },
-    { titleColumn: "Payment Method", isSearch: true, isCheck: false, comp: "!=", lookups: {} },
-    { titleColumn: "Payment Status", isSearch: true, isCheck: false, comp: "!=", lookups: {} },
-    { titleColumn: "Billing Cycle", isSearch: true, isCheck: false, comp: "!=", lookups: {} },
+    {
+      titleColumn: "Category",
+      isSearch: true,
+      isCheck: false,
+      comp: "!=",
+      lookups: {},
+    },
+    {
+      titleColumn: "Membership Status",
+      isSearch: true,
+      isCheck: false,
+      comp: "!=",
+      lookups: {},
+    },
+    {
+      titleColumn: "Renewal Date",
+      isSearch: false,
+      isCheck: false,
+      lookups: {},
+    },
+    {
+      titleColumn: "Transaction ID",
+      isSearch: true,
+      isCheck: false,
+      comp: "!=",
+      lookups: {},
+    },
+    {
+      titleColumn: "Paid Amount",
+      isSearch: true,
+      isCheck: false,
+      comp: "!=",
+      lookups: {},
+    },
+    {
+      titleColumn: "Payment Date",
+      isSearch: false,
+      isCheck: false,
+      lookups: {},
+    },
+    {
+      titleColumn: "Payment Method",
+      isSearch: true,
+      isCheck: false,
+      comp: "!=",
+      lookups: {},
+    },
+    {
+      titleColumn: "Payment Status",
+      isSearch: true,
+      isCheck: false,
+      comp: "!=",
+      lookups: {},
+    },
+    {
+      titleColumn: "Billing Cycle",
+      isSearch: true,
+      isCheck: false,
+      comp: "!=",
+      lookups: {},
+    },
   ],
   Profile: [
     {
@@ -4649,28 +4752,148 @@ const staticSearchFilters = {
     },
   ],
   Attendees: [
-    { titleColumn: "Attendee ID", isSearch: true, isCheck: false, lookups: {}, comp: "==" },
-    { titleColumn: "Attendee Name", isSearch: true, isCheck: false, lookups: {}, comp: "==" },
-    { titleColumn: "Email", isSearch: true, isCheck: false, lookups: {}, comp: "==" },
-    { titleColumn: "Mobile Number", isSearch: true, isCheck: false, lookups: {}, comp: "==" },
-    { titleColumn: "Full Address", isSearch: true, isCheck: false, lookups: {}, comp: "==" },
-    { titleColumn: "Work Location", isSearch: true, isCheck: false, lookups: {}, comp: "==" },
-    { titleColumn: "Grade", isSearch: true, isCheck: false, lookups: {}, comp: "==" },
-    { titleColumn: "Type", isSearch: true, isCheck: false, lookups: {}, comp: "==" },
-    { titleColumn: "Event", isSearch: true, isCheck: false, lookups: {}, comp: "==" },
-    { titleColumn: "Event Type", isSearch: true, isCheck: false, lookups: {}, comp: "==" },
-    { titleColumn: "Date", isSearch: true, isCheck: false, lookups: {}, comp: "==" },
-    { titleColumn: "Total Fee", isSearch: false, isCheck: false, lookups: {}, comp: "==" },
-    { titleColumn: "Payment Status", isSearch: true, isCheck: false, lookups: {}, comp: "==" },
-    { titleColumn: "Registration Status", isSearch: true, isCheck: false, lookups: {}, comp: "==" },
+    {
+      titleColumn: "Attendee ID",
+      isSearch: true,
+      isCheck: false,
+      lookups: {},
+      comp: "==",
+    },
+    {
+      titleColumn: "Attendee Name",
+      isSearch: true,
+      isCheck: false,
+      lookups: {},
+      comp: "==",
+    },
+    {
+      titleColumn: "Email",
+      isSearch: true,
+      isCheck: false,
+      lookups: {},
+      comp: "==",
+    },
+    {
+      titleColumn: "Mobile Number",
+      isSearch: true,
+      isCheck: false,
+      lookups: {},
+      comp: "==",
+    },
+    {
+      titleColumn: "Full Address",
+      isSearch: true,
+      isCheck: false,
+      lookups: {},
+      comp: "==",
+    },
+    {
+      titleColumn: "Work Location",
+      isSearch: true,
+      isCheck: false,
+      lookups: {},
+      comp: "==",
+    },
+    {
+      titleColumn: "Grade",
+      isSearch: true,
+      isCheck: false,
+      lookups: {},
+      comp: "==",
+    },
+    {
+      titleColumn: "Type",
+      isSearch: true,
+      isCheck: false,
+      lookups: {},
+      comp: "==",
+    },
+    {
+      titleColumn: "Event",
+      isSearch: true,
+      isCheck: false,
+      lookups: {},
+      comp: "==",
+    },
+    {
+      titleColumn: "Event Type",
+      isSearch: true,
+      isCheck: false,
+      lookups: {},
+      comp: "==",
+    },
+    {
+      titleColumn: "Date",
+      isSearch: true,
+      isCheck: false,
+      lookups: {},
+      comp: "==",
+    },
+    {
+      titleColumn: "Total Fee",
+      isSearch: false,
+      isCheck: false,
+      lookups: {},
+      comp: "==",
+    },
+    {
+      titleColumn: "Payment Status",
+      isSearch: true,
+      isCheck: false,
+      lookups: {},
+      comp: "==",
+    },
+    {
+      titleColumn: "Registration Status",
+      isSearch: true,
+      isCheck: false,
+      lookups: {},
+      comp: "==",
+    },
   ],
   Events: [
-    { titleColumn: "Event ID", isSearch: true, isCheck: false, lookups: {}, comp: "==" },
-    { titleColumn: "Event Name", isSearch: true, isCheck: false, lookups: {}, comp: "==" },
-    { titleColumn: "Event Type", isSearch: true, isCheck: false, lookups: {}, comp: "==" },
-    { titleColumn: "Created By", isSearch: true, isCheck: false, lookups: {}, comp: "==" },
-    { titleColumn: "Created At", isSearch: true, isCheck: false, lookups: {}, comp: "==" },
-    { titleColumn: "Status", isSearch: true, isCheck: false, lookups: {}, comp: "==" },
+    {
+      titleColumn: "Event ID",
+      isSearch: true,
+      isCheck: false,
+      lookups: {},
+      comp: "==",
+    },
+    {
+      titleColumn: "Event Name",
+      isSearch: true,
+      isCheck: false,
+      lookups: {},
+      comp: "==",
+    },
+    {
+      titleColumn: "Event Type",
+      isSearch: true,
+      isCheck: false,
+      lookups: {},
+      comp: "==",
+    },
+    {
+      titleColumn: "Created By",
+      isSearch: true,
+      isCheck: false,
+      lookups: {},
+      comp: "==",
+    },
+    {
+      titleColumn: "Created At",
+      isSearch: true,
+      isCheck: false,
+      lookups: {},
+      comp: "==",
+    },
+    {
+      titleColumn: "Status",
+      isSearch: true,
+      isCheck: false,
+      lookups: {},
+      comp: "==",
+    },
   ],
   ChangCateSumm: [
     {
@@ -4951,9 +5174,7 @@ export const TableColumnsProvider = ({ children }) => {
     "/Attendees": "Attendees",
   };
   const screenName =
-    location?.state?.search ||
-    pathScreenMap[location?.pathname] ||
-    "";
+    location?.state?.search || pathScreenMap[location?.pathname] || "";
   const [claimsDrawer, setClaimsDrawer] = useState(false);
   const [isDisable, setIsDisable] = useState(true);
   const [lookupsData, setLookupsData] = useState({
@@ -5000,7 +5221,7 @@ export const TableColumnsProvider = ({ children }) => {
   const { regions, loading } = useSelector((state) => state.regions);
   const { lookups, lookupsloading } = useSelector((state) => state.lookups);
   const { contactTypes, contactTypesloading, error } = useSelector(
-    (state) => state.contactType
+    (state) => state.contactType,
   );
 
   // Derived state
@@ -5096,7 +5317,7 @@ export const TableColumnsProvider = ({ children }) => {
       { titleColumn: "Partner Consent", isCheck: false },
       { titleColumn: "Partner Consent", isCheck: false },
     ],
-    []
+    [],
   );
 
   const resetFtn = () => {
@@ -5144,7 +5365,7 @@ export const TableColumnsProvider = ({ children }) => {
         })),
       }));
     },
-    [screenName, searchFilters]
+    [screenName, searchFilters],
   );
 
   const updateCompByTitleColumn = useCallback(
@@ -5165,7 +5386,7 @@ export const TableColumnsProvider = ({ children }) => {
         };
       });
     },
-    [screenName]
+    [screenName],
   );
 
   const handleCheckboxFilterChange = useCallback(
@@ -5175,18 +5396,18 @@ export const TableColumnsProvider = ({ children }) => {
         [screenName]: prevColumns[screenName].map((column) =>
           column.title === key
             ? { ...column, isGride: isChecked, width }
-            : column
+            : column,
         ),
       }));
     },
-    []
+    [],
   );
 
   const updateSelectedTitles = useCallback((title, isChecked) => {
     setGlobleFilters((prevFilters) =>
       prevFilters.map((item) =>
-        item.titleColumn === title ? { ...item, isCheck: isChecked } : item
-      )
+        item.titleColumn === title ? { ...item, isCheck: isChecked } : item,
+      ),
     );
   }, []);
 
@@ -5214,7 +5435,7 @@ export const TableColumnsProvider = ({ children }) => {
         };
       });
     },
-    [screenName]
+    [screenName],
   );
 
   const filterGridDataFtn = useCallback((columnName, value, comp) => {
@@ -5246,12 +5467,12 @@ export const TableColumnsProvider = ({ children }) => {
     (title, value) => {
       setSearchFilters((prevProfile) =>
         prevProfile.map((item) =>
-          item?.titleColumn === title ? { ...item, comp: value } : item
-        )
+          item?.titleColumn === title ? { ...item, comp: value } : item,
+        ),
       );
       filterGridDataFtn();
     },
-    [filterGridDataFtn]
+    [filterGridDataFtn],
   );
 
   const getProfile = useCallback((row, index) => {
@@ -5261,7 +5482,7 @@ export const TableColumnsProvider = ({ children }) => {
 
   const navigationRowIndex = useMemo(
     () => resolveGridNavigationIndex(gridData, ProfileDetails),
-    [gridData, ProfileDetails]
+    [gridData, ProfileDetails],
   );
 
   const profilNextBtnFtn = useCallback(() => {
@@ -5281,15 +5502,14 @@ export const TableColumnsProvider = ({ children }) => {
         record?.id;
       if (idToUse) {
         dispatch(getProfileDetailsById(idToUse));
-        if (
-          screenName === "Members" &&
-          profileId &&
-          subscriptionRowId
-        ) {
+        if (screenName === "Members" && profileId && subscriptionRowId) {
           dispatch(getSubscriptionById(subscriptionRowId));
         } else {
           dispatch(
-            getSubscriptionByProfileId({ profileId: idToUse, isCurrent: "true" })
+            getSubscriptionByProfileId({
+              profileId: idToUse,
+              isCurrent: "true",
+            }),
           );
         }
       }
@@ -5312,10 +5532,18 @@ export const TableColumnsProvider = ({ children }) => {
       const searchStr = buildDetailsSearch(pid, sid);
       navigate(
         { pathname: location.pathname, search: searchStr },
-        { replace: true, state: nextNavState }
+        { replace: true, state: nextNavState },
       );
     }
-  }, [gridData, ProfileDetails, dispatch, screenName, location.pathname, location.state, navigate]);
+  }, [
+    gridData,
+    ProfileDetails,
+    dispatch,
+    screenName,
+    location.pathname,
+    location.state,
+    navigate,
+  ]);
 
   const profilPrevBtnFtn = useCallback(() => {
     if (!gridData?.length) return;
@@ -5334,15 +5562,14 @@ export const TableColumnsProvider = ({ children }) => {
         record?.id;
       if (idToUse) {
         dispatch(getProfileDetailsById(idToUse));
-        if (
-          screenName === "Members" &&
-          profileId &&
-          subscriptionRowId
-        ) {
+        if (screenName === "Members" && profileId && subscriptionRowId) {
           dispatch(getSubscriptionById(subscriptionRowId));
         } else {
           dispatch(
-            getSubscriptionByProfileId({ profileId: idToUse, isCurrent: "true" })
+            getSubscriptionByProfileId({
+              profileId: idToUse,
+              isCurrent: "true",
+            }),
           );
         }
       }
@@ -5365,17 +5592,25 @@ export const TableColumnsProvider = ({ children }) => {
       const searchStr = buildDetailsSearch(pid, sid);
       navigate(
         { pathname: location.pathname, search: searchStr },
-        { replace: true, state: nextNavState }
+        { replace: true, state: nextNavState },
       );
     }
-  }, [gridData, ProfileDetails, dispatch, screenName, location.pathname, location.state, navigate]);
+  }, [
+    gridData,
+    ProfileDetails,
+    dispatch,
+    screenName,
+    location.pathname,
+    location.state,
+    navigate,
+  ]);
 
   const filterByRegNo = useCallback(
     async (regNo) => {
       const data = gridData?.filter((item) => item.regNo === regNo);
       await getProfile(data);
     },
-    [gridData, getProfile]
+    [gridData, getProfile],
   );
 
   const resetFilters = useCallback(() => {
@@ -5436,9 +5671,10 @@ export const TableColumnsProvider = ({ children }) => {
     (key, value, parentKey = null, parentValue = null) =>
       regions?.filter(
         (item) =>
-          item[key] === value && (!parentKey || item[parentKey] === parentValue)
+          item[key] === value &&
+          (!parentKey || item[parentKey] === parentValue),
       ) || [],
-    [regions]
+    [regions],
   );
 
   const transformLookupData = useCallback(
@@ -5447,7 +5683,7 @@ export const TableColumnsProvider = ({ children }) => {
         key: item?._id,
         label: item?.RegionName,
       })) || [],
-    []
+    [],
   );
 
   useEffect(() => {
@@ -5460,7 +5696,7 @@ export const TableColumnsProvider = ({ children }) => {
         "lookuptypeId?._id",
         "67f5971f17f0ecf3dbf79df6",
         "ParentRegion",
-        ""
+        "",
       ),
       Divisions: filterRegions("lookuptypeId?._id", "67f5990b17f0ecf3dbf79e35"),
       Districts: filterRegions("lookuptypeId?._id", "67f626ed17f0ecf3dbf79ed1"),
@@ -5493,7 +5729,7 @@ export const TableColumnsProvider = ({ children }) => {
 
       const updatedLookups = Object.keys(lookupTypes).reduce((acc, key) => {
         acc[key] = lookups.filter(
-          (item) => item?.lookuptypeId?._id === lookupTypes[key]
+          (item) => item?.lookuptypeId?._id === lookupTypes[key],
         );
         return acc;
       }, {});
@@ -5514,7 +5750,7 @@ export const TableColumnsProvider = ({ children }) => {
           }
           return acc;
         },
-        {}
+        {},
       );
       setLookupsForSelect((prevState) => ({
         ...prevState,
@@ -5543,7 +5779,7 @@ export const TableColumnsProvider = ({ children }) => {
       const relevantFilters = filters[screenName] || [];
       return relevantFilters
         .filter((filter) =>
-          Object.values(filter.lookups).some((value) => value === true)
+          Object.values(filter.lookups).some((value) => value === true),
         )
         .map((filter) => ({
           titleColumn: filter.titleColumn,
@@ -5553,7 +5789,7 @@ export const TableColumnsProvider = ({ children }) => {
           comp: filter.comp,
         }));
     },
-    [screenName]
+    [screenName],
   );
 
   const filterData = useCallback(() => {
@@ -5588,17 +5824,17 @@ export const TableColumnsProvider = ({ children }) => {
         Profile: prevState.Profile.map((item) =>
           item.titleColumn === titleColumn
             ? {
-              ...item,
-              lookups: lookupsForSelect[lookupKey].reduce((acc, entry) => {
-                acc[entry.label] = false;
-                return acc;
-              }, {}),
-            }
-            : item
+                ...item,
+                lookups: lookupsForSelect[lookupKey].reduce((acc, entry) => {
+                  acc[entry.label] = false;
+                  return acc;
+                }, {}),
+              }
+            : item,
         ),
       }));
     },
-    [lookupsForSelect]
+    [lookupsForSelect],
   );
 
   const applyTemplate = useCallback((screenName, templateColumns) => {
@@ -5614,10 +5850,13 @@ export const TableColumnsProvider = ({ children }) => {
         ? profileTemplateKeys || []
         : templateColumns.map((k) => String(k));
 
-    const templateOrderMap = normalizedTemplateKeys.reduce((acc, key, index) => {
-      acc[key] = index;
-      return acc;
-    }, {});
+    const templateOrderMap = normalizedTemplateKeys.reduce(
+      (acc, key, index) => {
+        acc[key] = index;
+        return acc;
+      },
+      {},
+    );
 
     const profileColumnInTemplate = (dataIndexString) => {
       if (!profileTemplateKeys) return false;
@@ -5635,29 +5874,31 @@ export const TableColumnsProvider = ({ children }) => {
       const currentScreenColumns = prevColumns[screenName];
       if (!currentScreenColumns) return prevColumns;
 
-      const updatedScreenColumns = currentScreenColumns.map((col, originalIndex) => {
-        // Handle dataIndex as array or string
-        const dataIndexString = Array.isArray(col.dataIndex)
-          ? col.dataIndex.join(".")
-          : col.dataIndex;
+      const updatedScreenColumns = currentScreenColumns.map(
+        (col, originalIndex) => {
+          // Handle dataIndex as array or string
+          const dataIndexString = Array.isArray(col.dataIndex)
+            ? col.dataIndex.join(".")
+            : col.dataIndex;
 
-        const isGride =
-          screenName === "Profile"
-            ? profileColumnInTemplate(dataIndexString)
-            : templateColumns.includes(dataIndexString);
+          const isGride =
+            screenName === "Profile"
+              ? profileColumnInTemplate(dataIndexString)
+              : templateColumns.includes(dataIndexString);
 
-        return {
-          ...col,
-          isGride: isGride,
-          // 🛡️ Keep isVisible: true so other columns remain in the "add/remove" menu
-          isVisible: true,
-          __templateOrderIndex:
-            templateOrderMap[dataIndexString] !== undefined
-              ? templateOrderMap[dataIndexString]
-              : Number.MAX_SAFE_INTEGER,
-          __originalIndex: originalIndex,
-        };
-      });
+          return {
+            ...col,
+            isGride: isGride,
+            // 🛡️ Keep isVisible: true so other columns remain in the "add/remove" menu
+            isVisible: true,
+            __templateOrderIndex:
+              templateOrderMap[dataIndexString] !== undefined
+                ? templateOrderMap[dataIndexString]
+                : Number.MAX_SAFE_INTEGER,
+            __originalIndex: originalIndex,
+          };
+        },
+      );
 
       const reorderedScreenColumns = [...updatedScreenColumns]
         .sort((a, b) => {
@@ -5690,13 +5931,13 @@ export const TableColumnsProvider = ({ children }) => {
       Profile: prevState.Profile.map((item) =>
         item.titleColumn === "Division"
           ? {
-            ...item,
-            lookups: selectLokups.Divisions.reduce((acc, division) => {
-              acc[division.label] = false;
-              return acc;
-            }, {}),
-          }
-          : item
+              ...item,
+              lookups: selectLokups.Divisions.reduce((acc, division) => {
+                acc[division.label] = false;
+                return acc;
+              }, {}),
+            }
+          : item,
       ),
     }));
   }, [selectLokups?.Divisions]);
@@ -5706,10 +5947,10 @@ export const TableColumnsProvider = ({ children }) => {
     () => ({
       columns,
       applyTemplate,
-      updateColumns: () => { },
+      updateColumns: () => {},
       state: { selectedOption: "!=", checkboxes: {} },
-      setState: () => { },
-      updateState: () => { },
+      setState: () => {},
+      updateState: () => {},
       gridData,
       handleCheckboxFilterChange,
       addColumnToSection,
@@ -5788,7 +6029,7 @@ export const TableColumnsProvider = ({ children }) => {
       selectedTemplates,
       updateSelectedTemplate,
       addColumnToSection,
-    ]
+    ],
   );
 
   return (
