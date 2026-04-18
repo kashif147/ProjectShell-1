@@ -393,6 +393,7 @@ const TransactionHistory = () => {
   const [refundSubmitting, setRefundSubmitting] = useState(false);
   const [writeOffDrawerOpen, setWriteOffDrawerOpen] = useState(false);
   const [writeOffLedgerRows, setWriteOffLedgerRows] = useState([]);
+  const [writeOffSubmitting, setWriteOffSubmitting] = useState(false);
   const [reallocationDrawerOpen, setReallocationDrawerOpen] = useState(false);
   const [reallocationSourceRow, setReallocationSourceRow] = useState(null);
   const [ledgerView, setLedgerView] = useState("simple");
@@ -544,6 +545,7 @@ const TransactionHistory = () => {
   const closeWriteOffDrawer = useCallback(() => {
     setWriteOffDrawerOpen(false);
     setWriteOffLedgerRows([]);
+    setWriteOffSubmitting(false);
   }, []);
 
   const closeReallocationDrawer = useCallback(() => {
@@ -752,6 +754,111 @@ const TransactionHistory = () => {
       }
     );
   }, []);
+
+  const buildWriteOffPayload = useCallback(
+    (formValues) => {
+      const amountEuros = Number(formValues?.amountEuros);
+      const amount = Number.isFinite(amountEuros)
+        ? Math.round(amountEuros * 100)
+        : NaN;
+      if (!Number.isFinite(amount) || amount <= 0) {
+        const e = new Error("Write-off amount must be greater than 0.");
+        e.code = "INVALID_AMOUNT";
+        throw e;
+      }
+
+      const memberIdValue = String(memberId || "").trim();
+      if (!memberIdValue) {
+        const e = new Error("Member ID is required for write-off.");
+        e.code = "MISSING_MEMBER_ID";
+        throw e;
+      }
+
+      const date = formValues?.date || null;
+      if (!date || !dayjs(date).isValid()) {
+        const e = new Error("Write-off date is required.");
+        e.code = "INVALID_DATE";
+        throw e;
+      }
+
+      const periodBucket = String(formValues?.periodBucket || "").trim();
+      if (!periodBucket) {
+        const e = new Error("Period is required.");
+        e.code = "MISSING_PERIOD_BUCKET";
+        throw e;
+      }
+
+      const docNo = String(formValues?.docNo || "").trim();
+      const memo = String(formValues?.memo || "").trim();
+
+      return {
+        date,
+        docNo,
+        memberId: memberIdValue,
+        amount,
+        periodBucket,
+        memo,
+      };
+    },
+    [memberId]
+  );
+
+  const submitWriteOffRequest = useCallback(async (payload) => {
+    const token = localStorage.getItem("token");
+    return axios.post(`${process.env.REACT_APP_ACCOUNT_SERVICE_URL}/journal/writeoff`, payload, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+    });
+  }, []);
+
+  const handleWriteOffSubmit = useCallback(
+    async (values) => {
+      if (writeOffSubmitting) return false;
+      try {
+        setWriteOffSubmitting(true);
+        const payload = buildWriteOffPayload(values);
+        await submitWriteOffRequest(payload);
+        notification.success({
+          message: "Write-off",
+          description: "Write-off request submitted.",
+          placement: "topRight",
+        });
+        window.dispatchEvent(
+          new CustomEvent("member-finance-updated", {
+            detail: { memberId: String(memberId || "").trim() },
+          })
+        );
+        setSelectedRowKeys([]);
+        await fetchLedgerData();
+        closeWriteOffDrawer();
+        return true;
+      } catch (error) {
+        const backendMessage =
+          error?.response?.data?.message ||
+          error?.response?.data?.error ||
+          error?.message;
+        notification.error({
+          message: "Write-off failed",
+          description:
+            backendMessage || "Unable to submit write-off request.",
+          placement: "topRight",
+        });
+        return false;
+      } finally {
+        setWriteOffSubmitting(false);
+      }
+    },
+    [
+      buildWriteOffPayload,
+      closeWriteOffDrawer,
+      fetchLedgerData,
+      memberId,
+      submitWriteOffRequest,
+      writeOffSubmitting,
+    ]
+  );
 
   const handleRefundSubmit = useCallback(
     async (values) => {
@@ -1025,6 +1132,46 @@ const TransactionHistory = () => {
     [data, selectedRowKeys]
   );
 
+  const writeOffInvoiceSummary = useMemo(() => {
+    const rows = writeOffLedgerRows;
+    if (!rows?.length) return null;
+    const totalDebitCents = rows.reduce(
+      (s, r) => s + (Number(r.debit) || 0),
+      0
+    );
+    const euroStr = centsToEuro(totalDebitCents).toLocaleString("en-IE", {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    });
+    const refs = rows
+      .map((r) =>
+        pickFirstNonEmptyString(
+          r.docNo,
+          r.reference,
+          r.doc_no,
+          r.documentNo
+        )
+      )
+      .filter(Boolean);
+    const unique = [...new Set(refs)];
+    const refPart =
+      unique.length <= 3
+        ? unique.join(", ")
+        : `${unique.slice(0, 3).join(", ")}…`;
+    return `${rows.length} invoice(s) selected — row debits total: €${euroStr}. Doc ref(s): ${refPart || "—"}`;
+  }, [writeOffLedgerRows]);
+
+  const prefillWriteOffAmountEuro = useMemo(() => {
+    const rows = writeOffLedgerRows;
+    if (!rows?.length) return null;
+    const totalDebitCents = rows.reduce(
+      (s, r) => s + (Number(r.debit) || 0),
+      0
+    );
+    if (totalDebitCents <= 0) return null;
+    return Math.round(centsToEuro(totalDebitCents) * 100) / 100;
+  }, [writeOffLedgerRows]);
+
   const writeOffMenuEnabled =
     selectedLedgerRows.length > 0 &&
     selectedLedgerRows.every((r) => isInvoiceDocType(r));
@@ -1138,15 +1285,10 @@ const TransactionHistory = () => {
         open={writeOffDrawerOpen}
         onClose={closeWriteOffDrawer}
         hideMemberSearch
-        onSubmit={(values) => {
-          console.log("Write-off submit", values, writeOffLedgerRows);
-          notification.success({
-            message: "Write-off",
-            description: "Write-off request submitted.",
-            placement: "topRight",
-          });
-          setSelectedRowKeys([]);
-        }}
+        invoiceSummary={writeOffInvoiceSummary}
+        prefillWriteOffAmountEuro={prefillWriteOffAmountEuro}
+        submitLoading={writeOffSubmitting}
+        onSubmit={handleWriteOffSubmit}
       />
 
       <ReallocationDrawer

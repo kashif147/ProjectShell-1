@@ -1955,6 +1955,10 @@ function HeaderDetails({
       <WriteOffDrawer
         open={writeOffDrawerOpen}
         onClose={() => setWriteOffDrawerOpen(false)}
+        submitLoading={false}
+        onSubmit={async () => {
+          return true;
+        }}
       />
       <CreateCasesDrawer
         open={casesDrawerOpen}
