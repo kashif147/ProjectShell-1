@@ -1,9 +1,10 @@
-import React, { useState } from 'react';
+import React, { useId, useState } from 'react';
 import '../../styles/MySelect.css';
 import { AiOutlineExclamationCircle } from 'react-icons/ai';
 
 const CustomSelect = ({
   label,
+  id,
   name,
   value,
   onChange,
@@ -19,6 +20,8 @@ const CustomSelect = ({
   isObjectValue = false,
 }) => {
   const [isFocused, setIsFocused] = useState(false);
+  const autoId = useId().replace(/:/g, '');
+  const selectId = id ?? (name ? String(name) : `select-${autoId}`);
 
   const handleSelectChange = (e) => {
     const selectedValue = e.target.value;
@@ -56,7 +59,7 @@ const CustomSelect = ({
       <div className="d-flex justify-content-between align-items-center">
         <div className="d-flex align-items-center gap-1">
           <label
-            htmlFor={name}
+            htmlFor={selectId}
             className={`my-input-label ${hasError ? 'error' : ''} mb-0`}
           >
             {label}
@@ -77,6 +80,7 @@ const CustomSelect = ({
           } ${disabled ? 'disabled' : ''}`}
       >
         <select
+          id={selectId}
           name={name || 'Select'}
           value={normalizedValue}
           onChange={handleSelectChange}

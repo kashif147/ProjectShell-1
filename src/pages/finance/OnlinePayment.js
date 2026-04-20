@@ -5,6 +5,7 @@ import { useTableColumns } from "../../context/TableColumnsContext ";
 import { useDispatch, useSelector } from "react-redux";
 import axios from "axios";
 import { fetchStripePayments } from "../../features/AccountSlice";
+import { getAccountServiceBaseUrl } from "../../config/serviceUrls";
 import RefundDrawer from "../../component/finanace/RefundDrawer";
 import AssociateMemberModal from "../../component/finanace/AssociateMemberModal";
 import { formatCurrency } from "../../utils/Utilities";
@@ -233,7 +234,7 @@ const OnlinePayment = () => {
       const payload = buildRefundPayload(refundData, selectedRecord);
       const token = localStorage.getItem("token");
       await axios.post(
-        `${process.env.REACT_APP_ACCOUNT_SERVICE_URL}/payments/refunds`,
+        `${getAccountServiceBaseUrl()}/payments/refunds`,
         payload,
         {
           headers: {

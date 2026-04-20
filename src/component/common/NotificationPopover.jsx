@@ -8,10 +8,12 @@ import {
   ClockCircleOutlined,
 } from "@ant-design/icons";
 import axios from "axios";
+import { useNavigate } from "react-router-dom";
 import {
   useNotifications,
   getNotificationServiceUrl,
 } from "../../context/NotificationContext";
+import { LIFECYCLE_TYPES } from "../../utils/lifecycleBatchNotifications";
 
 const { Text, Title } = Typography;
 
@@ -23,9 +25,47 @@ const iconMap = {
 };
 
 const isBatchProcessNotification = (type) =>
-  type === "BATCH_PROCESS_COMPLETED" || type === "BATCH_PROCESS_QUEUED";
+  type === "BATCH_PROCESS_COMPLETED" ||
+  type === "BATCH_PROCESS_QUEUED" ||
+  type === LIFECYCLE_TYPES.REMINDER_GENERATING ||
+  type === LIFECYCLE_TYPES.REMINDER_READY ||
+  type === LIFECYCLE_TYPES.CANCELLATION_GENERATING ||
+  type === LIFECYCLE_TYPES.CANCELLATION_READY;
+
+function navigateForLifecycleNotification(navigate, item) {
+  const t = item?.metadata?.type;
+  if (
+    t !== LIFECYCLE_TYPES.REMINDER_READY &&
+    t !== LIFECYCLE_TYPES.REMINDER_GENERATING &&
+    t !== LIFECYCLE_TYPES.CANCELLATION_READY &&
+    t !== LIFECYCLE_TYPES.CANCELLATION_GENERATING
+  ) {
+    return;
+  }
+  const id = item?.metadata?.batchDetailId;
+  const desc = item?.metadata?.description;
+  if (!id || !navigate) return;
+  if (
+    t === LIFECYCLE_TYPES.REMINDER_READY ||
+    t === LIFECYCLE_TYPES.REMINDER_GENERATING
+  ) {
+    navigate("/RemindersDetails", {
+      state: { reminderBatchTitle: desc, reminderBatchId: id },
+    });
+    return;
+  }
+  if (
+    t === LIFECYCLE_TYPES.CANCELLATION_READY ||
+    t === LIFECYCLE_TYPES.CANCELLATION_GENERATING
+  ) {
+    navigate("/CancellationDetail", {
+      state: { cancellationBatchTitle: desc, cancellationBatchId: id },
+    });
+  }
+}
 
 const NotificationPopover = ({ isOpen }) => {
+  const navigate = useNavigate();
   const { notifications, setNotifications, setBadge, markAsRead, markAllAsRead } =
     useNotifications();
   const [clearLoading, setClearLoading] = React.useState(false);
@@ -43,6 +83,10 @@ const NotificationPopover = ({ isOpen }) => {
       )
     );
     setBadge((prev) => Math.max((Number(prev) || 0) - 1, 0));
+
+    if (String(notificationId).startsWith("local-")) {
+      return;
+    }
 
     try {
       await axios.post(
@@ -145,7 +189,10 @@ const NotificationPopover = ({ isOpen }) => {
         locale={{ emptyText: "No notifications" }}
         renderItem={(item) => (
           <List.Item
-            onClick={() => handleMarkAsRead(item._id)}
+            onClick={() => {
+              handleMarkAsRead(item._id);
+              navigateForLifecycleNotification(navigate, item);
+            }}
             style={{
               padding: "16px 24px",
               backgroundColor: item.isRead ? "#fff" : "#f6faff",

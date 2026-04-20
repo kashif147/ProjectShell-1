@@ -36,7 +36,7 @@ const Breadcrumb = () => {
   const appLauncherItems = {
     Membership: { icon: "👤", route: "/Summary" },
     Finance: { icon: "💰", route: "/Import" },
-    Correspondence: { icon: "📧", route: "/CorrespondencesSummary" },
+    Correspondence: { icon: "📧", route: "/CorrespondenceDashboard" },
     Events: { icon: "📅", route: "/EventsDashboard" },
     Configuration: { icon: "⚙️", route: "/Configuratin" },
     Reports: { icon: "📊", route: "/Reports" },
@@ -773,7 +773,7 @@ const Breadcrumb = () => {
       Configuration: "/Configuratin",
       "Subscriptions & Rewards": "/Summary",
       "Issues Management": "/IssuesManagementDashboard",
-      Correspondence: "/CorrespondencesSummary",
+      Correspondence: "/CorrespondenceDashboard",
       Finance: "/Import",
       Reports: "/Reports",
       Events: "/EventsDashboard",

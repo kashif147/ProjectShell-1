@@ -86,6 +86,7 @@ function MyDrawer({
   extra,
   className,
   rootClassName,
+  antdDrawerStyles,
   isDisable: isDisableProp, // Added prop override
 }) {
   const {
@@ -698,6 +699,7 @@ function MyDrawer({
       open={open}
       className={className}
       rootClassName={rootClassName}
+      {...(antdDrawerStyles ? { styles: antdDrawerStyles } : {})}
       extra={
         extra || (
           <div className="d-flex flex-wrap align-items-center gap-3">

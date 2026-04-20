@@ -19,6 +19,7 @@ import {
 import { useSelector, useDispatch } from "react-redux";
 import { useParams, useNavigate } from "react-router-dom";
 import axios from "axios";
+import { getAccountServiceBaseUrl } from "../../config/serviceUrls";
 import TrigerBatchMemberDrawer from "../../component/finanace/TrigerBatchMemberDrawer";
 import "../../styles/ManualEntry.css";
 import "../../styles/BatchMemberSummary.css";
@@ -126,12 +127,12 @@ const MembershipNoResolver = ({
     if (!memberData?.membershipNumber) return;
     setLoading(true);
     try {
-      const baseUrl = process.env.REACT_APP_ACCOUNT_SERVICE_URL;
+      const baseUrl = getAccountServiceBaseUrl();
       const token = localStorage.getItem("token");
 
       // Resolve the exception directly with selected member info
       await axios.post(
-        `${process.env.REACT_APP_ACCOUNT_SERVICE_URL}/batch-details/resolve-exception/${batchId}`,
+        `${getAccountServiceBaseUrl()}/batch-details/resolve-exception/${batchId}`,
         {
           membershipNumber: memberData.membershipNumber,
           exceptionMembershipNumber: exceptionMembershipNumber,
@@ -1094,7 +1095,7 @@ function BatchMemberSummary() {
     try {
       const token = localStorage.getItem("token");
       await axios.post(
-        `${process.env.REACT_APP_ACCOUNT_SERVICE_URL}/batch-details/process/${batchId}`,
+        `${getAccountServiceBaseUrl()}/batch-details/process/${batchId}`,
         {},
         {
           headers: { Authorization: `Bearer ${token}` },

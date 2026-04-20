@@ -10,7 +10,12 @@ import {
   Drawer,
   Switch,
 } from "antd";
-import { Link, useLocation, useNavigate, useSearchParams } from "react-router-dom";
+import {
+  Link,
+  useLocation,
+  useNavigate,
+  useSearchParams,
+} from "react-router-dom";
 import { useView } from "../../context/ViewContext";
 import {
   RightOutlined,
@@ -48,6 +53,7 @@ import { LuArrowLeftRight } from "react-icons/lu";
 import { FaMoneyCheckAlt } from "react-icons/fa";
 import DateRang from "./DateRang";
 import CreateBatchPayment from "./CreateBatchPayment";
+import CreateLifecycleBatchForm from "./CreateLifecycleBatchForm";
 import "../../styles/HeaderDetails.css";
 import { useDispatch, useSelector, shallowEqual } from "react-redux";
 import { fetchRegions } from "../../features/RegionSlice";
@@ -132,6 +138,7 @@ function HeaderDetails({
   const [rosterDrawer, setrosterDrawer] = useState(false);
   const [isBatchOpen, setIsBatchOpen] = useState(false);
   const batchFormRef = useRef(null);
+  const lifecycleBatchFormRef = useRef(null);
   const [isSimpleBatchOpen, setIsSimpleBatchOpen] = useState(false);
   const [aprove, setaprove] = useState("001");
   const [isDrawerOpen, setisDrawerOpen] = useState(false);
@@ -1128,30 +1135,31 @@ function HeaderDetails({
                         ? `Profile`
                         : nav === "/MembershipDashboard"
                           ? "Membership Dashboard"
-                        : location?.state?.search ||
-                          (nav === "/DirectDebitAuthorization"
-                            ? "Direct Debit Authorization"
-                            : nav === "/DirectDebit"
-                              ? "Direct Debit"
-                              : nav === "/DirectDebitBatchDetails"
-                                ? "Direct Debit Batch Details"
-                                : nav === "/Refunds"
-                                  ? "Refunds"
-                                  : nav === "/write-offs"
-                                    ? "Write-offs"
-                                    : nav === "/onlinePayment"
-                                      ? "Finance"
-                                      : nav === "/EventsDashboard"
-                                        ? "Events Dashboard"
-                                      : nav === "/CorrespondenceDashboard"
-                                        ? "Campaign Dashboard"
-                                      : nav === "/IssuesManagementDashboard"
-                                        ? "Issues Management Dashboard"
-                                      : nav === "/EventsSummary"
-                                        ? "Events"
-                                        : nav === "/Attendees"
-                                          ? "Attendees"
-                                        : "")}
+                          : location?.state?.search ||
+                            (nav === "/DirectDebitAuthorization"
+                              ? "Direct Debit Authorization"
+                              : nav === "/DirectDebit"
+                                ? "Direct Debit"
+                                : nav === "/DirectDebitBatchDetails"
+                                  ? "Direct Debit Batch Details"
+                                  : nav === "/Refunds"
+                                    ? "Refunds"
+                                    : nav === "/write-offs"
+                                      ? "Write-offs"
+                                      : nav === "/onlinePayment"
+                                        ? "Finance"
+                                        : nav === "/EventsDashboard"
+                                          ? "Events Dashboard"
+                                          : nav === "/CorrespondenceDashboard"
+                                            ? "Campaign Dashboard"
+                                            : nav ===
+                                                "/IssuesManagementDashboard"
+                                              ? "Issues Management Dashboard"
+                                              : nav === "/EventsSummary"
+                                                ? "Events"
+                                                : nav === "/Attendees"
+                                                  ? "Attendees"
+                                                  : "")}
                     </h2>
                   )}
                 </div>
@@ -1202,13 +1210,13 @@ function HeaderDetails({
                           "/DirectDebit",
                         ].includes(nav) &&
                           !hasPermission("payments:create")) ||
-                        (["/Applications", "/Summary"].includes(nav) &&
+                        (["/Applications", "/Summary", "/members", "/Members"].includes(nav) &&
                           !hasPermission("application:create")) ||
-                        (([
+                        ([
                           "/EventsDashboard",
                           "/EventsSummary",
                           "/Attendees",
-                        ].includes(nav)) &&
+                        ].includes(nav) &&
                           !hasPermission("events:create")) ||
                         (nav === "/ChangCateSumm" &&
                           !hasPermission("changeOfCategory:create")) ||
@@ -1221,6 +1229,8 @@ function HeaderDetails({
                         <Button
                           onClick={() => {
                             if (nav == "/Applications") {
+                              navigate("/applicationMgt");
+                            } else if (nav === "/members" || nav === "/Members") {
                               navigate("/applicationMgt");
                             } else if (nav == "/ClaimSummary") {
                               handlClaimDrawerChng();
@@ -1252,6 +1262,18 @@ function HeaderDetails({
                                 typeof batchFormRef.current.reset === "function"
                               ) {
                                 batchFormRef.current.reset();
+                              }
+                              setIsBatchOpen(true);
+                            } else if (
+                              nav === "/RemindersSummary" ||
+                              nav === "/Cancallation"
+                            ) {
+                              if (
+                                lifecycleBatchFormRef?.current &&
+                                typeof lifecycleBatchFormRef.current.reset ===
+                                  "function"
+                              ) {
+                                lifecycleBatchFormRef.current.reset();
                               }
                               setIsBatchOpen(true);
                             } else if (nav === "/ChangCateSumm") {
@@ -1472,8 +1494,8 @@ function HeaderDetails({
                         <>
                           {nav !== "/MembershipDashboard" &&
                             !isHeaderDashboardRangeNav(nav) && (
-                            <SaveViewMenu className="ms-3" />
-                          )}
+                              <SaveViewMenu className="ms-3" />
+                            )}
                           {nav === "/MembershipDashboard" && (
                             <Button
                               type="default"
@@ -1502,9 +1524,7 @@ function HeaderDetails({
                                   onClick={() =>
                                     setSearchParams(
                                       (prev) => {
-                                        const next = new URLSearchParams(
-                                          prev,
-                                        );
+                                        const next = new URLSearchParams(prev);
                                         next.set("range", k);
                                         return next;
                                       },
@@ -1814,25 +1834,27 @@ function HeaderDetails({
       </MyDrawer>
       <MyDrawer
         isPagination={false}
-        width="1300px"
+        width="33%"
         title={`${
           nav === "/RemindersSummary"
-            ? "Batch"
-            : nav === "/Batches"
-              ? ""
-              : nav === "/onlinePayment"
+            ? "Create Reminder Batch"
+            : nav === "/Cancallation"
+              ? "Create Cancellation Batch"
+              : nav === "/Batches"
                 ? ""
-                : nav === "/Import"
+                : nav === "/onlinePayment"
                   ? ""
-                  : nav === "/Cheque"
+                  : nav === "/Import"
                     ? ""
-                    : nav === "/CancellationBatch"
-                      ? "Cancellation Batch"
-                      : nav === "/CornMarket"
-                        ? "Corn Market Batch"
-                        : nav === "/StandingOrders"
-                          ? "Standing Orders Batch"
-                          : ""
+                    : nav === "/Cheque"
+                      ? ""
+                      : nav === "/CancellationBatch"
+                        ? "Cancellation Batch"
+                        : nav === "/CornMarket"
+                          ? "Corn Market Batch"
+                          : nav === "/StandingOrders"
+                            ? "Standing Orders Batch"
+                            : ""
         }`}
         open={isBatchOpen}
         isDisable={false}
@@ -1844,42 +1866,73 @@ function HeaderDetails({
           ) {
             batchFormRef.current.reset();
           }
+          if (
+            lifecycleBatchFormRef?.current &&
+            typeof lifecycleBatchFormRef.current.reset === "function"
+          ) {
+            lifecycleBatchFormRef.current.reset();
+          }
         }}
         add={async () => {
-          // Try to submit the batch form inside drawer first
+          const isLifecycleNav =
+            nav === "/RemindersSummary" || nav === "/Cancallation";
+          const activeRef = isLifecycleNav
+            ? lifecycleBatchFormRef
+            : batchFormRef;
           if (
-            batchFormRef &&
-            batchFormRef.current &&
-            typeof batchFormRef.current.submit === "function"
+            !activeRef ||
+            !activeRef.current ||
+            typeof activeRef.current.submit !== "function"
           ) {
-            const result = await batchFormRef.current.submit();
-            if (!result) return; // validation failed or API failed
+            return;
+          }
+          const result = await activeRef.current.submit();
+          if (!result) return;
 
-            navigate(`/BatchMemberSummary/${result._id || result.id}`, {
+          if (nav === "/RemindersSummary") {
+            navigate("/RemindersDetails", {
               state: {
-                batchName: result.description,
-                sidebarMenu:
-                  nav === "/Deductions"
-                    ? "Deductions"
-                    : nav === "/StandingOrders"
-                      ? "Standing Orders"
-                      : nav === "/onlinePayment"
-                        ? "Online Payments"
-                        : "",
+                reminderBatchTitle: result.description,
+                reminderBatchId: result._id || result.id,
               },
             });
             setIsBatchOpen(false);
+            lifecycleBatchFormRef.current?.reset?.();
+            return;
           }
+          if (nav === "/Cancallation") {
+            navigate("/CancellationDetail", {
+              state: {
+                cancellationBatchTitle: result.description,
+                cancellationBatchId: result._id || result.id,
+              },
+            });
+            setIsBatchOpen(false);
+            lifecycleBatchFormRef.current?.reset?.();
+            return;
+          }
+
+          navigate(`/BatchMemberSummary/${result._id || result.id}`, {
+            state: {
+              batchName: result.description,
+              sidebarMenu:
+                nav === "/Deductions"
+                  ? "Deductions"
+                  : nav === "/StandingOrders"
+                    ? "Standing Orders"
+                    : nav === "/onlinePayment"
+                      ? "Online Payments"
+                      : "",
+            },
+          });
+          setIsBatchOpen(false);
         }}
       >
-        {nav === "/Batches" ||
-        nav === "/Import" ||
-        nav === "/Import" ||
-        nav === "/Deductions" ||
-        nav === "/StandingOrders" ||
-        nav === "/Cheque" ||
-        nav === "/onlinePayment" ? (
-          <CreateBatchPayment ref={batchFormRef} />
+        {nav === "/RemindersSummary" || nav === "/Cancallation" ? (
+          <CreateLifecycleBatchForm
+            ref={lifecycleBatchFormRef}
+            variant={nav === "/RemindersSummary" ? "reminder" : "cancellation"}
+          />
         ) : (
           <CreateBatchPayment ref={batchFormRef} />
         )}
@@ -1938,7 +1991,11 @@ function HeaderDetails({
         title="Direct Debit Authorization"
         open={ddDrawerOpen}
         onClose={() => setDdDrawerOpen(false)}
-        width={1000}
+        width="40%"
+        antdDrawerStyles={{
+          body: { padding: "8px 10px 12px" },
+          header: { padding: "10px 14px", minHeight: 48 },
+        }}
         isPagination={false}
       >
         <DirectDebitForm

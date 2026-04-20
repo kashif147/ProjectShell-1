@@ -996,7 +996,7 @@ const MembershipForm = ({
                 border: "1px solid #e8e8e8",
                 borderRadius: "8px",
               }}
-              bodyStyle={{ padding: "16px" }}
+              styles={{ body: { padding: "16px" } }}
             >
               <div
                 style={{
@@ -1113,7 +1113,7 @@ const MembershipForm = ({
                 border: "1px solid #e8e8e8",
                 borderRadius: "8px",
               }}
-              bodyStyle={{ padding: "16px" }}
+              styles={{ body: { padding: "16px" } }}
             >
               <h3
                 style={{
@@ -1209,7 +1209,7 @@ const MembershipForm = ({
                 border: "1px solid #e8e8e8",
                 borderRadius: "8px",
               }}
-              bodyStyle={{ padding: "16px" }}
+              styles={{ body: { padding: "16px" } }}
             >
               <h3
                 style={{
@@ -1279,7 +1279,7 @@ const MembershipForm = ({
                 border: "1px solid #e8e8e8",
                 borderRadius: "8px",
               }}
-              bodyStyle={{ padding: "16px" }}
+              styles={{ body: { padding: "16px" } }}
             >
               <h3
                 style={{
@@ -1422,7 +1422,7 @@ const MembershipForm = ({
                 border: "1px solid #e8e8e8",
                 borderRadius: "8px",
               }}
-              bodyStyle={{ padding: "16px" }}
+              styles={{ body: { padding: "16px" } }}
             >
               <h3
                 style={{
@@ -1497,7 +1497,7 @@ const MembershipForm = ({
                 border: "1px solid #e8e8e8",
                 borderRadius: "8px",
               }}
-              bodyStyle={{ padding: "16px" }}
+              styles={{ body: { padding: "16px" } }}
             >
               <h3
                 style={{
@@ -1553,7 +1553,7 @@ const MembershipForm = ({
                 border: "1px solid #e8e8e8",
                 borderRadius: "8px",
               }}
-              bodyStyle={{ padding: "16px" }}
+              styles={{ body: { padding: "16px" } }}
             >
               <h3
                 style={{
@@ -1632,7 +1632,7 @@ const MembershipForm = ({
                 border: "1px solid #e8e8e8",
                 borderRadius: "8px",
               }}
-              bodyStyle={{ padding: "16px" }}
+              styles={{ body: { padding: "16px" } }}
             >
               <h3
                 style={{
@@ -1691,7 +1691,7 @@ const MembershipForm = ({
                 border: "1px solid #e8e8e8",
                 borderRadius: "8px",
               }}
-              bodyStyle={{ padding: "16px" }}
+              styles={{ body: { padding: "16px" } }}
             >
               <h3
                 style={{
@@ -1735,7 +1735,7 @@ const MembershipForm = ({
                 border: "1px solid #e8e8e8",
                 borderRadius: "8px",
               }}
-              bodyStyle={{ padding: "16px" }}
+              styles={{ body: { padding: "16px" } }}
             >
               <h3
                 style={{
@@ -1864,7 +1864,7 @@ const MembershipForm = ({
                 border: "1px solid #e8e8e8",
                 borderRadius: "8px",
               }}
-              bodyStyle={{ padding: "16px" }}
+              styles={{ body: { padding: "16px" } }}
             >
               <h3
                 style={{
@@ -1924,7 +1924,7 @@ const MembershipForm = ({
                 border: "1px solid #e8e8e8",
                 borderRadius: "8px",
               }}
-              bodyStyle={{ padding: "16px" }}
+              styles={{ body: { padding: "16px" } }}
             >
               <h3
                 style={{
@@ -1968,7 +1968,7 @@ const MembershipForm = ({
                 border: "1px solid #e8e8e8",
                 borderRadius: "8px",
               }}
-              bodyStyle={{ padding: "16px" }}
+              styles={{ body: { padding: "16px" } }}
             >
               <h3
                 style={{
@@ -2011,7 +2011,7 @@ const MembershipForm = ({
                 border: "1px solid #e8e8e8",
                 borderRadius: "8px",
               }}
-              bodyStyle={{ padding: "16px" }}
+              styles={{ body: { padding: "16px" } }}
             >
               <h3
                 style={{
@@ -2071,7 +2071,7 @@ const MembershipForm = ({
                 border: "1px solid #e8e8e8",
                 borderRadius: "8px",
               }}
-              bodyStyle={{ padding: "16px" }}
+              styles={{ body: { padding: "16px" } }}
             >
               <h3
                 style={{

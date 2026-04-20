@@ -466,7 +466,10 @@ function CancellationDetail() {
         }
       `}</style>
       <div className="p-3">
-        <Card style={{ marginBottom: 16 }} bodyStyle={{ padding: 20 }}>
+        <Card
+          style={{ marginBottom: 16 }}
+          styles={{ body: { padding: 20 } }}
+        >
           <Row gutter={[16, 16]} align="top">
             <Col xs={24} lg={14}>
               <h2
@@ -676,11 +679,13 @@ function CancellationDetail() {
                   Payment method analysis
                 </span>
               }
-              bodyStyle={{
-                paddingTop: 12,
-                display: "flex",
-                flexDirection: "column",
-                flex: 1,
+              styles={{
+                body: {
+                  paddingTop: 12,
+                  display: "flex",
+                  flexDirection: "column",
+                  flex: 1,
+                },
               }}
             >
               <div style={{ flex: 1, width: "100%", minWidth: 0 }}>
@@ -862,12 +867,14 @@ function CancellationDetail() {
                   Delivery notifications
                 </span>
               }
-              bodyStyle={{
-                paddingTop: 12,
-                display: "flex",
-                flexDirection: "column",
-                flex: 1,
-                minHeight: 0,
+              styles={{
+                body: {
+                  paddingTop: 12,
+                  display: "flex",
+                  flexDirection: "column",
+                  flex: 1,
+                  minHeight: 0,
+                },
               }}
             >
               <div
@@ -973,7 +980,7 @@ function CancellationDetail() {
         </Row>
 
         <Card
-          bodyStyle={{ paddingTop: 0 }}
+          styles={{ body: { paddingTop: 0 } }}
           title={
             <span
               style={{

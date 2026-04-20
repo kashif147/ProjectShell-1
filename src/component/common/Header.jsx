@@ -47,7 +47,7 @@ const AppLauncherMenu = ({ closeDropdown }) => {
     const routeMap = {
       Membership: "/MembershipDashboard",
       Finance: "/onlinePayment",
-      Correspondence: "/Email",
+      Correspondence: "/CorrespondenceDashboard",
       Configuration: "/Configuratin",
       Events: "/EventsDashboard",
       Reports: "/Reports",
@@ -84,7 +84,7 @@ const AppLauncherMenu = ({ closeDropdown }) => {
       icon: FaRegClipboard,
       bgColor: "#FF7043",
       permissions: ["menu:correspondence:access"],
-      route: "/Email",
+      route: "/CorrespondenceDashboard",
     },
     {
       name: "Events",

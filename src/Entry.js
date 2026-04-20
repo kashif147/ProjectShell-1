@@ -345,7 +345,7 @@ function Entry() {
                     location.pathname === "/CancellationDetail"
                       ? "enable-vertical-scroll"
                       : ""
-                  }`}
+                  } ${location.pathname === "/templeteConfig" ? "main-main--template-config" : ""}`}
                 >
                   <Suspense
                     fallback={

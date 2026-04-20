@@ -1,6 +1,7 @@
 // profileSubscriptionSlice.js
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import axios from "axios";
+import { getSubscriptionServiceBaseUrl } from "../../config/serviceUrls";
 
 /**
  * Unwraps list/detail responses so ProfileSubData is always { data: Subscription[] }.
@@ -56,7 +57,7 @@ export const getSubscriptionByProfileId = createAsyncThunk(
     try {
       const token = localStorage.getItem("token");
       const res = await axios.get(
-        `${process.env.REACT_APP_SUBSCRIPTION}/subscriptions?profileId=${profileId}&isCurrent=${isCurrent}`,
+        `${getSubscriptionServiceBaseUrl()}/subscriptions?profileId=${profileId}&isCurrent=${isCurrent}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -80,7 +81,7 @@ export const getSubscriptionById = createAsyncThunk(
     try {
       const token = localStorage.getItem("token");
       const res = await axios.get(
-        `${process.env.REACT_APP_SUBSCRIPTION}/subscriptions/${subscriptionId}`,
+        `${getSubscriptionServiceBaseUrl()}/subscriptions/${subscriptionId}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -102,7 +103,7 @@ export const updateSubscriptionById = createAsyncThunk(
     try {
       const token = localStorage.getItem("token");
       const res = await axios.put(
-        `${process.env.REACT_APP_SUBSCRIPTION}/subscriptions/${subscriptionId}`,
+        `${getSubscriptionServiceBaseUrl()}/subscriptions/${subscriptionId}`,
         body,
         {
           headers: {
@@ -129,7 +130,7 @@ export const getSubscriptionHistoryByProfileId = createAsyncThunk(
     try {
       const token = localStorage.getItem("token");
       const res = await axios.get(
-        `${process.env.REACT_APP_SUBSCRIPTION}/subscriptions?profileId=${profileId}&isCurrent=false`,
+        `${getSubscriptionServiceBaseUrl()}/subscriptions?profileId=${profileId}&isCurrent=false`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -153,7 +154,7 @@ export const getProfileSubscriptionsForActivateEligibility = createAsyncThunk(
   async ({ profileId }, { rejectWithValue }) => {
     try {
       const token = localStorage.getItem("token");
-      const base = `${process.env.REACT_APP_SUBSCRIPTION}/subscriptions?profileId=${profileId}`;
+      const base = `${getSubscriptionServiceBaseUrl()}/subscriptions?profileId=${profileId}`;
       const headers = { Authorization: `Bearer ${token}` };
       const [resCurrent, resPast] = await Promise.all([
         axios.get(`${base}&isCurrent=true`, { headers }),
