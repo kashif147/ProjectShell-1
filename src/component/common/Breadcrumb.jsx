@@ -174,6 +174,11 @@ const Breadcrumb = () => {
       page: "In-App Notifications",
       icon: "🔔",
     },
+    "/UserNotifications": {
+      module: "Portal",
+      page: "Notifications",
+      icon: "🔔",
+    },
     // Finance Pages
     "/DirectDebit": {
       module: "Finance",

@@ -93,6 +93,9 @@ const CommunicationBatchDetail = lazy(
 const InAppNotifications = lazy(
   () => import("./pages/Correspondences/InAppNotifications"),
 );
+const UserNotifications = lazy(
+  () => import("./pages/notifications/UserNotifications"),
+);
 const AddNewProfile = lazyWithRetry(
   () => import("./pages/Profiles/AddNewProfile"),
 );
@@ -557,6 +560,16 @@ function Entry() {
                         element={
                           <ProtectedRoute requiredPermission={RoutePermissions["/InAppNotifications"]}>
                             <InAppNotifications />
+                          </ProtectedRoute>
+                        }
+                      />
+                      <Route
+                        path="UserNotifications"
+                        element={
+                          <ProtectedRoute
+                            requiredPermission={RoutePermissions["UserNotifications"]}
+                          >
+                            <UserNotifications />
                           </ProtectedRoute>
                         }
                       />

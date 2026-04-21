@@ -29,6 +29,8 @@ export const RoutePermissions = {
   // Correspondence
   "CorrespondenceDashboard": "dashboard:read",
   "InAppNotifications": "notifications:read",
+  "UserNotifications": "notifications:read",
+  "/UserNotifications": "notifications:read",
   "Email": "communication:write",
   "Sms": "communication:write",
   "Notes": "communication:read",
