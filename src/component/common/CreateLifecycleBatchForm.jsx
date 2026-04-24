@@ -13,7 +13,10 @@ import {
   notifyBatchGenerating,
   watchBatchUntilPopulated,
 } from "../../utils/lifecycleBatchNotifications";
-import { getAccountServiceBaseUrl } from "../../config/serviceUrls";
+import {
+  getAccountServiceBaseUrl,
+  getSubscriptionServiceBaseUrl,
+} from "../../config/serviceUrls";
 
 /**
  * BatchDetail.type must match the account-service Mongoose enum exactly.
@@ -48,6 +51,15 @@ function buildFormData({ variant, batchName, batchDateDayjs }) {
   return { formData, referenceNumber };
 }
 
+function buildReminderPayload({ batchName, batchDateDayjs }) {
+  return {
+    name: batchName.trim(),
+    kind: "REMINDER",
+    batchDate: batchDateDayjs.toISOString(),
+    referencePeriod: batchDateDayjs.format("YYYY-MM"),
+  };
+}
+
 const CreateLifecycleBatchForm = forwardRef(function CreateLifecycleBatchForm(
   { variant },
   ref,
@@ -80,26 +92,54 @@ const CreateLifecycleBatchForm = forwardRef(function CreateLifecycleBatchForm(
 
     const batchName = form.getFieldValue("batchName");
     const dateVal = form.getFieldValue("batchDate") || dayjs();
-    const { formData, referenceNumber } = buildFormData({
-      variant,
-      batchName,
-      batchDateDayjs: dateVal,
-    });
-
     const token = localStorage.getItem("token");
-    const url = getAccountServiceBaseUrl();
-    if (!token || !url) {
+    const accountUrl = getAccountServiceBaseUrl();
+    const subscriptionUrl = getSubscriptionServiceBaseUrl();
+    if (!token) {
       message.error("Missing API configuration or session.");
       return null;
     }
 
     try {
-      const response = await axios.post(`${url}/batch-details`, formData, {
-        headers: {
-          "Content-Type": "multipart/form-data",
-          Authorization: `Bearer ${token}`,
-        },
-      });
+      let response;
+      let fallbackRefNo = "";
+      if (variant === "reminder") {
+        if (!subscriptionUrl) {
+          message.error("Missing API configuration or session.");
+          return null;
+        }
+        const payload = buildReminderPayload({
+          batchName,
+          batchDateDayjs: dateVal,
+        });
+        response = await axios.post(
+          `${subscriptionUrl}/reminder-batches`,
+          payload,
+          {
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+          },
+        );
+      } else {
+        if (!accountUrl) {
+          message.error("Missing API configuration or session.");
+          return null;
+        }
+        const { formData, referenceNumber } = buildFormData({
+          variant,
+          batchName,
+          batchDateDayjs: dateVal,
+        });
+        fallbackRefNo = referenceNumber;
+        response = await axios.post(`${accountUrl}/batch-details`, formData, {
+          headers: {
+            "Content-Type": "multipart/form-data",
+            Authorization: `Bearer ${token}`,
+          },
+        });
+      }
 
       if (response.status !== 200 && response.status !== 201) {
         message.error("Failed to create batch.");
@@ -109,9 +149,18 @@ const CreateLifecycleBatchForm = forwardRef(function CreateLifecycleBatchForm(
       const batchId =
         response?.data?.data?._id ??
         response?.data?.data?.id ??
-        response?.data?._id;
-      const desc = response?.data?.data?.description ?? batchName.trim();
-      const refNo = response?.data?.data?.referenceNumber ?? referenceNumber;
+        response?.data?._id ??
+        response?.data?.id;
+      const desc =
+        response?.data?.data?.description ??
+        response?.data?.data?.name ??
+        response?.data?.description ??
+        response?.data?.name ??
+        batchName.trim();
+      const refNo =
+        response?.data?.data?.referenceNumber ??
+        response?.data?.referenceNumber ??
+        fallbackRefNo;
 
       message.success("Batch created successfully.");
 
