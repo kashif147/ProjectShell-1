@@ -5,14 +5,12 @@ import { MoreOutlined } from "@ant-design/icons";
 import MyTable from "../../component/common/MyTable";
 import { useTableColumns } from "../../context/TableColumnsContext ";
 import AssociateMemberModal from "../../component/finanace/AssociateMemberModal";
+import { getAccountServiceBaseUrl } from "../../config/serviceUrls";
 
 const REFUNDS_ENDPOINT = "/reports/refunds";
 
 const buildRefundsUrl = () => {
-    const accountServiceBase = (
-        process.env.REACT_APP_ACCOUNT_SERVICE_URL ||
-        ""
-    ).replace(/\/$/, "");
+    const accountServiceBase = getAccountServiceBaseUrl();
     if (!accountServiceBase) return REFUNDS_ENDPOINT;
     return `${accountServiceBase}${REFUNDS_ENDPOINT}`;
 };

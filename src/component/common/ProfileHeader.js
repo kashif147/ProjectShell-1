@@ -23,6 +23,10 @@ import CustomSelect from "./CustomSelect";
 import "../../styles/ProfileHeader.css";
 import { useSelector, useDispatch } from "react-redux";
 import axios from "axios";
+import {
+  getAccountServiceBaseUrl,
+  getSubscriptionServiceBaseUrl,
+} from "../../config/serviceUrls";
 import MyAlert from "./MyAlert"; // Assuming you have this component
 import UndoCancellationModal from "./UndoCancellationModal";
 import { centsToEuro, formatMobileNumber } from "../../utils/Utilities";
@@ -201,7 +205,7 @@ function ProfileHeader({
     setLedgerLoading(true);
     try {
       const response = await axios.get(
-        `${process.env.REACT_APP_ACCOUNT_SERVICE_URL}/reports/member/${memberIdForLedger}/summary`,
+        `${getAccountServiceBaseUrl()}/reports/member/${memberIdForLedger}/summary`,
         // /reports/member/B00002/summary?year=2026
         {
           headers: {
@@ -557,7 +561,7 @@ function ProfileHeader({
 
     try {
       const response = await axios.put(
-        `${process.env.REACT_APP_SUBSCRIPTION}/subscriptions/resign/${profileId}`,
+        `${getSubscriptionServiceBaseUrl()}/subscriptions/resign/${profileId}`,
         payload,
         {
           headers: {

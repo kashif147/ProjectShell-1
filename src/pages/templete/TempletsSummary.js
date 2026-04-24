@@ -10,7 +10,6 @@ import timezone from "dayjs/plugin/timezone";
 import { getTemplates } from "../../features/templete/GetTemplateSlice";
 import MyConfirm from "../../component/common/MyConfirm";
 import MyAlert from "../../component/common/MyAlert";
-import { loadtempletedetails } from "../../features/templete/templeteDetailsSlice";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { getUnifiedPaginationConfig } from "../../component/common/UnifiedPagination";
@@ -206,14 +205,8 @@ const TempletsSummary = () => {
         },
     ];
 
-    const handleEdit = async (record) => {
-        try {
-            await dispatch(loadtempletedetails(record?.key)).unwrap();
-            navigate('/templeteConfig');
-        } catch (error) {
-            // Handle error if needed
-            console.error('Failed to load template:', error);
-        }
+    const handleEdit = (record) => {
+        navigate(`/templeteConfig?id=${encodeURIComponent(record?.key)}`);
     };
     const handlePreview = (record) => console.log("Preview:", record);
 

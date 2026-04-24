@@ -1,6 +1,7 @@
 import React, { useEffect } from "react";
 import { List, Typography, Button } from "antd";
 import axios from "axios";
+import { useNavigate } from "react-router-dom";
 import {
   useNotifications,
   getNotificationServiceUrl,
@@ -27,6 +28,10 @@ const NotificationPopover = ({ isOpen, onNavigateToAll }) => {
       )
     );
     setBadge((prev) => Math.max((Number(prev) || 0) - 1, 0));
+
+    if (String(notificationId).startsWith("local-")) {
+      return;
+    }
 
     try {
       await axios.post(

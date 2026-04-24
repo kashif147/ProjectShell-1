@@ -20,8 +20,10 @@ REACT_APP_POLICY_SERVICE_URL=http://projectshell-vm.northeurope.cloudapp.azure.c
 # Profile Service
 REACT_APP_PROFILE_SERVICE_URL=http://projectshell-vm.northeurope.cloudapp.azure.com/profile-service/api
 
-# Subscription Service
-REACT_APP_SUBSCRIPTION=http://projectshell-vm.northeurope.cloudapp.azure.com/subscription-service/api
+# Subscription Service (preferred — used by `src/config/serviceUrls.js`)
+REACT_APP_SUBSCRIPTION_SERVICE_URL=http://projectshell-vm.northeurope.cloudapp.azure.com/subscription-service/api/v1
+# Legacy: still read if REACT_APP_SUBSCRIPTION_SERVICE_URL is unset
+REACT_APP_SUBSCRIPTION=http://projectshell-vm.northeurope.cloudapp.azure.com/subscription-service/api/v1
 
 # Communication Service
 REACT_APP_CUMM=http://projectshell-vm.northeurope.cloudapp.azure.com/communication-service/api
@@ -48,7 +50,7 @@ Based on `default.conf`, the gateway routes are:
 | User Service Auth | `/user-service/auth/` | `REACT_APP_BASE_URL_DEV` |
 | User Service API | `/user-service/api/` | `REACT_APP_POLICY_SERVICE_URL` |
 | Portal Service | `/portal-service/api/` | `REACT_APP_PORTAL_SERVICE_URL` |
-| Subscription Service | `/subscription-service/api/` | `REACT_APP_SUBSCRIPTION` |
+| Subscription Service | `/subscription-service/api/` | `REACT_APP_SUBSCRIPTION_SERVICE_URL` (fallback: `REACT_APP_SUBSCRIPTION`) |
 | Profile Service | `/profile-service/api/` | `REACT_APP_PROFILE_SERVICE_URL` |
 | Account Service | `/account-service/api/` | `REACT_APP_ACCOUNT_SERVICE_URL` |
 | Communication Service | `/communication-service/api/` | `REACT_APP_CUMM` |
@@ -79,7 +81,8 @@ The following files have been updated to use the correct environment variables:
 - `src/utils/Utilities.js` - Uses `REACT_APP_POLICY_SERVICE_URL` as baseURL
 - `src/services/AuthorizationAPI.js` - Uses `REACT_APP_BASE_URL_DEV` for policy endpoints
 - `src/features/profiles/*` - Uses `REACT_APP_PROFILE_SERVICE_URL`
-- `src/features/subscription/*` - Uses `REACT_APP_SUBSCRIPTION`
+- `src/config/serviceUrls.js` - `getAccountServiceBaseUrl()` → `REACT_APP_ACCOUNT_SERVICE_URL`; `getSubscriptionServiceBaseUrl()` → `REACT_APP_SUBSCRIPTION_SERVICE_URL` or `REACT_APP_SUBSCRIPTION`
+- `src/features/subscription/*`, finance components, etc. - import the helpers above (not `process.env` directly)
 - `src/features/templete/*` - Uses `REACT_APP_CUMM`
 - `src/features/shared/services/reportService.js` - Uses `REACT_APP_POLICY_SERVICE_URL` for reporting
 

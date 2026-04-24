@@ -43,6 +43,17 @@
   /* margin-top: 5px !important; */
 }
 
+.template-preview-modal .ant-modal-body {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.template-preview-modal .ant-modal-body::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+  background: transparent;
+}
+
 /* ant-modal {
     display: block !important;
     position: fixed !important;

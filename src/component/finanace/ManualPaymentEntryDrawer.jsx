@@ -1,6 +1,7 @@
 import { useState, useContext, useEffect } from "react";
 import { Form, Row, Col, Typography, Drawer, Button, message } from "antd";
 import axios from "axios";
+import { getAccountServiceBaseUrl } from "../../config/serviceUrls";
 import "../../styles/CreateBatchPayment.css";
 import { useTableColumns } from "../../context/TableColumnsContext ";
 import { ExcelContext } from "../../context/ExcelContext";
@@ -104,7 +105,7 @@ const ManualPaymentEntry = ({ open, onClose, batchSummryData, batchId, onSuccess
 
       const token = localStorage.getItem("token");
       await axios.post(
-        `${process.env.REACT_APP_ACCOUNT_SERVICE_URL}/batch-details/add-profile/${batchId}`,
+        `${getAccountServiceBaseUrl()}/batch-details/add-profile/${batchId}`,
         payload,
         {
           headers: {

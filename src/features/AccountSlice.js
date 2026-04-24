@@ -1,11 +1,12 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
+import { getAccountServiceBaseUrl } from "../config/serviceUrls";
 
 export const fetchStripePayments = createAsyncThunk(
     "account/fetchStripePayments",
     async (_, { rejectWithValue }) => {
         try {
             const response = await fetch(
-                `${process.env.REACT_APP_ACCOUNT_SERVICE_URL}/journal/stripe-payments`,
+                `${getAccountServiceBaseUrl()}/journal/stripe-payments`,
                 {
                     headers: {
                         "Content-Type": "application/json",

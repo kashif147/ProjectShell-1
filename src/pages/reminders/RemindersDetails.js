@@ -247,8 +247,13 @@ function sanitizeDocxFileBase(name) {
 
 function RemindersDetails() {
     const location = useLocation();
-    const { selectedId } = useReminders();
+    const { selectedId, getRemindersById } = useReminders();
     const { isDisable } = useTableColumns();
+
+    useEffect(() => {
+        const id = location.state?.reminderBatchId;
+        if (id != null) getRemindersById(id);
+    }, [location.state?.reminderBatchId, getRemindersById]);
 
     const pageTitle =
         location.state?.reminderBatchTitle ||
@@ -881,7 +886,10 @@ table { border-collapse: collapse; width: 100%; }
         }
       `}</style>
             <div className="p-3">
-                <Card style={{ marginBottom: 16 }} bodyStyle={{ padding: 20 }}>
+                <Card
+                  style={{ marginBottom: 16 }}
+                  styles={{ body: { padding: 20 } }}
+                >
                     <Row gutter={[16, 16]} align="top">
                         <Col xs={24} lg={14}>
                             <h2
@@ -1035,11 +1043,13 @@ table { border-collapse: collapse; width: 100%; }
                                     Payment method analysis
                                 </span>
                             }
-                            bodyStyle={{
-                                paddingTop: 12,
-                                display: "flex",
-                                flexDirection: "column",
-                                flex: 1,
+                            styles={{
+                                body: {
+                                    paddingTop: 12,
+                                    display: "flex",
+                                    flexDirection: "column",
+                                    flex: 1,
+                                },
                             }}
                         >
                             <div
@@ -1290,12 +1300,14 @@ table { border-collapse: collapse; width: 100%; }
                                     Delivery notifications
                                 </span>
                             }
-                            bodyStyle={{
-                                paddingTop: 12,
-                                display: "flex",
-                                flexDirection: "column",
-                                flex: 1,
-                                minHeight: 0,
+                            styles={{
+                                body: {
+                                    paddingTop: 12,
+                                    display: "flex",
+                                    flexDirection: "column",
+                                    flex: 1,
+                                    minHeight: 0,
+                                },
                             }}
                         >
                             <div
@@ -1406,7 +1418,7 @@ table { border-collapse: collapse; width: 100%; }
                 </Row>
 
                 <Card
-                    bodyStyle={{ paddingTop: 0 }}
+                    styles={{ body: { paddingTop: 0 } }}
                     title={
                         <span
                             style={{

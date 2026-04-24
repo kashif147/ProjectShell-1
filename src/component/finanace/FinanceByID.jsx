@@ -8,6 +8,7 @@ import dayjs from "dayjs";
 import { useLocation, useSearchParams } from "react-router-dom";
 import axios from "axios";
 import { useSelector } from "react-redux";
+import { getAccountServiceBaseUrl } from "../../config/serviceUrls";
 import MyTable from "../common/MyTable";
 import { centsToEuro, formatDateOnly } from "../../utils/Utilities";
 // import axios from "axios";
@@ -430,7 +431,7 @@ const TransactionHistory = () => {
     try {
       const token = localStorage.getItem("token");
       const response = await axios.get(
-        `${process.env.REACT_APP_ACCOUNT_SERVICE_URL}/reports/member/${memberId}/ledger`,
+        `${getAccountServiceBaseUrl()}/reports/member/${memberId}/ledger`,
         {
           params: { view: ledgerView },
           headers: {
@@ -744,7 +745,7 @@ const TransactionHistory = () => {
   const submitRefundRequest = useCallback(async (payload) => {
     const token = localStorage.getItem("token");
     return axios.post(
-      `${process.env.REACT_APP_ACCOUNT_SERVICE_URL}/payments/refunds`,
+      `${getAccountServiceBaseUrl()}/payments/refunds`,
       payload,
       {
         headers: {

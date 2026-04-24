@@ -170,7 +170,7 @@ function ContactDrawer({ open, onClose, title = "Contacts", onAssign, onUnassign
       <Card
         bordered={false}
         className="drawer-main-cntainer"
-        bodyStyle={{ padding: "10px" }}
+        styles={{ body: { padding: "10px" } }}
       >
         {/* Selection Indication */}
         {selectedWorkLocations && selectedWorkLocations.length > 0 && (

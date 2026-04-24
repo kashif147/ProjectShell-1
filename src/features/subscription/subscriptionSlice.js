@@ -1,5 +1,6 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import axios from "axios";
+import { getSubscriptionServiceBaseUrl } from "../../config/serviceUrls";
 
 /* ===========================
    API
@@ -15,7 +16,7 @@ export const getAllSubscription = createAsyncThunk(
 const token = localStorage.getItem("token")
 
       const res = await axios.get(
-        `${process.env.REACT_APP_SUBSCRIPTION}/subscriptions`, // ✅ NO extra /subscriptions
+        `${getSubscriptionServiceBaseUrl()}/subscriptions`, // ✅ NO extra /subscriptions
         {
           headers: {
             Authorization: `Bearer ${token}`,

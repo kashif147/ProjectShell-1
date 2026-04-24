@@ -3,6 +3,7 @@ import { Modal, Button } from "antd";
 import CustomSelect from "./CustomSelect";
 import MyAlert from "./MyAlert";
 import axios from "axios";
+import { getSubscriptionServiceBaseUrl } from "../../config/serviceUrls";
 
 const UndoCancellationModal = ({
   visible,
@@ -35,7 +36,7 @@ const UndoCancellationModal = ({
 
     try {
       const response = await axios.put(
-        `${process.env.REACT_APP_SUBSCRIPTION}/subscriptions/undo-resign/${record._id}`,
+        `${getSubscriptionServiceBaseUrl()}/subscriptions/undo-resign/${record._id}`,
         { reason },
         {
           headers: {

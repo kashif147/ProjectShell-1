@@ -7,6 +7,7 @@ import {
 } from "react";
 import axios from "axios";
 import { useSelector, useDispatch } from "react-redux";
+import { getAccountServiceBaseUrl } from "../../config/serviceUrls";
 import {
   Form,
   Input,
@@ -358,7 +359,7 @@ const CreateBatchPayment = forwardRef((props, ref) => {
 
         const token = localStorage.getItem("token");
         const response = await axios.post(
-          `${process.env.REACT_APP_ACCOUNT_SERVICE_URL}/batch-details`,
+          `${getAccountServiceBaseUrl()}/batch-details`,
           formData,
           {
             headers: {

@@ -31,11 +31,13 @@ const RemindersCard = () => {
                 borderRadius: "8px",                    // optional rounded corners
               }}
               bordered
-              headStyle={{
-                padding: "8px 12px",
-                backgroundColor: item.triggered ? "#adf368ff" : "#f5f5f5", // 👈 header bg only
+              styles={{
+                header: {
+                  padding: "8px 12px",
+                  backgroundColor: item.triggered ? "#adf368ff" : "#f5f5f5", // 👈 header bg only
+                },
+                body: { padding: "12px" },
               }}
-              bodyStyle={{ padding: "12px" }}
               title={
                 <div>
                   <div className="d-flex justify-content-between align-items-center">

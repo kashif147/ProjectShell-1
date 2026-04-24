@@ -9,9 +9,10 @@ import {
   searchProfilesByQuery,
 } from "../../services/profileSearchApi";
 import MemberSearchOptionLabel from "../profile/MemberSearchOptionLabel";
+import { getAccountServiceBaseUrl } from "../../config/serviceUrls";
 
 const buildAssociateMemberUrl = () => {
-  const base = (process.env.REACT_APP_ACCOUNT_SERVICE_URL || "").replace(/\/$/, "");
+  const base = getAccountServiceBaseUrl();
   return base ? `${base}/payments/associate-member` : "";
 };
 
@@ -241,7 +242,7 @@ export default function AssociateMemberModal({
   const handleSubmit = async () => {
     const url = buildAssociateMemberUrl();
     if (!url) {
-      message.error("REACT_APP_ACCOUNT_SERVICE_URL is not configured.");
+      message.error("Account service URL is not configured (REACT_APP_ACCOUNT_SERVICE_URL).");
       return;
     }
     const mid = String(memberId || "").trim();
