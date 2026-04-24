@@ -28,18 +28,25 @@ const WriteOffsSummary = () => {
 
             const items = response?.data?.data?.items;
             const safeItems = Array.isArray(items) ? items : [];
-            const mappedRows = safeItems.map((item, index) => ({
-                key: item?._id || `writeoff-${index}`,
-                _id: item?._id,
-                writeOff: item?.docNo || "-",
-                writeOffDate: item?.date || item?.createdAt || null,
-                ref: item?._id || item?.docNo || "-",
-                type: item?.txType?.description || item?.docType || "-",
-                createdBy: item?.createdBy || "System",
-                createdAt: item?.createdAt || "-",
-                updatedBy: item?.updatedBy || "System",
-                updatedAt: item?.updatedAt || "-",
-            }));
+            const mappedRows = safeItems.map((item, index) => {
+                const memberEntry = Array.isArray(item?.entries)
+                    ? item.entries.find((entry) => entry?.memberId)
+                    : null;
+
+                return {
+                    key: item?._id || `writeoff-${index}`,
+                    _id: item?._id,
+                    writeOff: item?.docNo || "-",
+                    writeOffDate: item?.date || item?.createdAt || null,
+                    ref: item?._id || item?.docNo || "-",
+                    amount: memberEntry?.amount ?? "-",
+                    type: item?.txType?.description || item?.docType || "-",
+                    createdBy: item?.createdBy || "System",
+                    createdAt: item?.createdAt || "-",
+                    updatedBy: item?.updatedBy || "System",
+                    updatedAt: item?.updatedAt || "-",
+                };
+            });
 
             setRows(mappedRows);
         } catch (error) {
