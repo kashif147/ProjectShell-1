@@ -1,10 +1,17 @@
 export const getLabelToKeyMap = (screenCols) => {
     const mapping = {};
+    const hasSubscriptionStatusColumn = Array.isArray(screenCols)
+        ? screenCols.some((col) => {
+            const key = Array.isArray(col.dataIndex) ? col.dataIndex.join('.') : col.dataIndex;
+            return key === 'subscriptionStatus';
+        })
+        : false;
 
     // Default manual overrides for common mismatches across screens
     const overrides = {
         'Application Status': 'applicationStatus',
-        'Membership Status': 'membershipStatus',
+        'Status': 'applicationStatus',
+        'Membership Status': hasSubscriptionStatusColumn ? 'subscriptionStatus' : 'membershipStatus',
         'Membership Category': 'membershipCategory',
         'Work Location': 'workLocation',
         'Grade': 'grade',
@@ -19,10 +26,13 @@ export const getLabelToKeyMap = (screenCols) => {
         'Surname': 'lastName',
         'Membership No': 'membershipNumber',
         'Membership Number': 'membershipNumber',
-        'Section (Primary)': 'nurseType',
-        'Section (Primary Section)': 'nurseType',
+        'Section (Primary)': 'primarySection',
+        'Section (Primary Section)': 'primarySection',
         'Category': 'category',
         'Payment Type': 'paymentType',
+        'Payment Frequency': 'paymentFrequency',
+        'Subscription Year': 'subscriptionYear',
+        'Membership Movement': 'membershipMovement',
         'Country of Qualification': 'countryPrimaryQualification',
         'Preferred Address': 'preferredAddress',
         'Personal Email': 'personalEmail',
@@ -42,14 +52,20 @@ export const getLabelToKeyMap = (screenCols) => {
 
 export const transformFiltersForApi = (filters, screenCols) => {
     const labelMap = getLabelToKeyMap(screenCols);
+    const normalizedLabelMap = Object.entries(labelMap).reduce((acc, [label, key]) => {
+        acc[String(label).trim().toLowerCase()] = key;
+        return acc;
+    }, {});
     const transformed = {};
 
     Object.keys(filters).forEach(label => {
         const filter = filters[label];
         if (filter?.selectedValues?.length > 0) {
-            const key = labelMap[label] || label.replace(/\s+/g, ''); // fallback to stripped spaces
+            const normalizedLabel = String(label).trim().toLowerCase();
+            const key = labelMap[label] || normalizedLabelMap[normalizedLabel];
+            if (!key) return; // Ignore unknown labels to avoid backend validation errors
             transformed[key] = {
-                operator: filter.operator === '==' ? 'equal_to' : 'not_equal',
+                operator: filter.operator === '==' ? 'equal_to' : 'not_equal_to',
                 values: filter.selectedValues
             };
         }

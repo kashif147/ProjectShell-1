@@ -1,9 +1,9 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import axios from "axios";
-import { getSubscriptionServiceBaseUrl } from "../../config/serviceUrls";
+import { getSubscriptionFilterTemplatesBaseUrl } from "../../config/serviceUrls";
 
 const PROFILE_TEMPLATES_API_URL = `${process.env.REACT_APP_PROFILE_SERVICE_URL}/templates`;
-const SUBSCRIPTION_TEMPLATES_API_URL = `${getSubscriptionServiceBaseUrl().replace(/\/v1$/, "")}/templates`;
+const SUBSCRIPTION_TEMPLATES_API_URL = getSubscriptionFilterTemplatesBaseUrl();
 
 const resolveTemplatesApiUrl = (type) => {
     const normalizedType = String(type || "").trim().toLowerCase();
@@ -84,10 +84,11 @@ export const saveGridTemplate = createAsyncThunk(
 // Async thunk to update a template
 export const updateGridTemplate = createAsyncThunk(
     "templetefiltrsclumnapi/updateGridTemplate",
-    async ({ id, payload }, { rejectWithValue, dispatch }) => {
+    async ({ id, payload, type }, { rejectWithValue, dispatch }) => {
         try {
             const token = localStorage.getItem("token");
-            const apiUrl = resolveTemplatesApiUrl(payload?.templateType);
+            const resolvedType = type || payload?.templateType;
+            const apiUrl = resolveTemplatesApiUrl(resolvedType);
             const URL = `${apiUrl}/${id}`;
             const response = await axios.put(URL, payload, {
                 headers: {
@@ -96,7 +97,7 @@ export const updateGridTemplate = createAsyncThunk(
             });
             dispatch(
                 getGridTemplates(
-                    payload?.templateType ? { type: payload.templateType } : {}
+                    resolvedType ? { type: resolvedType } : {}
                 )
             ); // Refresh list
             return response.data;

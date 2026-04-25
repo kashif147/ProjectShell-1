@@ -82,7 +82,7 @@ const profileDetailsSlice = createSlice({
       .addCase(getProfileDetailsById.pending, (state) => {
         state.loading = true;
         state.error = null;
-        state.profileDetails = null; // reset before fetch
+        // Keep current profile data during refetch to avoid header flicker/blank state.
       })
       .addCase(getProfileDetailsById.fulfilled, (state, action) => {
         state.loading = false;

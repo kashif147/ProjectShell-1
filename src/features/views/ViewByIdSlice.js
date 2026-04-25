@@ -1,9 +1,9 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import axios from 'axios';
-import { getSubscriptionServiceBaseUrl } from "../../config/serviceUrls";
+import { getSubscriptionFilterTemplatesBaseUrl } from "../../config/serviceUrls";
 
 const PROFILE_TEMPLATES_API_URL = `${process.env.REACT_APP_PROFILE_SERVICE_URL}/templates`;
-const SUBSCRIPTION_TEMPLATES_API_URL = `${getSubscriptionServiceBaseUrl().replace(/\/v1$/, "")}/templates`;
+const SUBSCRIPTION_TEMPLATES_API_URL = getSubscriptionFilterTemplatesBaseUrl();
 
 const resolveTemplatesApiUrl = (type) => {
     const normalizedType = String(type || "").trim().toLowerCase();

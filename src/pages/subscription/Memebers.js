@@ -22,9 +22,10 @@ function Members() {
 
     useEffect(() => {
         if (!isInitialized) return;
+        if (!activeTemplateId) return;
         dispatch(
             getSubscriptionsWithTemplate({
-                templateId: activeTemplateId || undefined,
+                templateId: activeTemplateId,
                 page: 1,
                 limit: 10,
             }),

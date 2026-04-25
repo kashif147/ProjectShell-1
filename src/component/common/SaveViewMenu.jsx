@@ -36,7 +36,7 @@ import { useLocation } from "react-router-dom";
 import axios from "axios";
 import MyAlert from "./MyAlert";
 import MyInput from "./MyInput";
-import { getSubscriptionServiceBaseUrl } from "../../config/serviceUrls";
+import { getSubscriptionFilterTemplatesBaseUrl } from "../../config/serviceUrls";
 import {
   getLabelToKeyMap,
   transformFiltersForApi,
@@ -76,8 +76,8 @@ const SaveViewMenu = ({ className, style }) => {
     const pathMap = {
       "/applications": "Applications",
       "/Summary": "Profile",
-      "/membership": "members",
-      "/members": "members",
+      "/membership": "Members",
+      "/members": "Members",
       "/onlinePayment": "onlinePayment",
       "/CommunicationBatchDetail": "Correspondence",
       "/CasesSummary": "Cases",
@@ -94,7 +94,8 @@ const SaveViewMenu = ({ className, style }) => {
   // Application screens map to 'application' templateType
   const screenMapping = {
     applications: "application",
-    members: "member",
+    members: "members",
+    membership: "members",
     summary: "profile",
     eventsdashboard: "eventsdashboard",
   };
@@ -111,11 +112,21 @@ const SaveViewMenu = ({ className, style }) => {
     normalizeTemplateType(targetTemplateType) === "members";
   const isTemplateForCurrentType = (template) =>
     normalizeTemplateType(template?.templateType) ===
-    normalizeTemplateType(targetTemplateType);
+      normalizeTemplateType(targetTemplateType) ||
+    (normalizeTemplateType(targetTemplateType) === "members" &&
+      normalizeTemplateType(template?.templateType) === "subscription");
 
   const transformFiltersForApply = (apiFilters) => {
     return transformFiltersFromApi(apiFilters, columns[activeScreen] || []);
   };
+  const buildColumnLabelsMap = (screenColumns = []) =>
+    screenColumns.reduce((acc, col) => {
+      const key = Array.isArray(col?.dataIndex)
+        ? col.dataIndex.join(".")
+        : col?.dataIndex;
+      if (key) acc[String(key)] = String(col?.title || key);
+      return acc;
+    }, {});
 
   useEffect(() => {
     dispatch(getGridTemplates({ type: targetTemplateType }));
@@ -180,14 +191,6 @@ const SaveViewMenu = ({ className, style }) => {
       dispatch(setActiveTemplateId(null));
       // Always initialize data loading even if no explicitly saved view exists
       dispatch(initializeWithTemplate(""));
-      if (isMembersTemplateType) {
-        dispatch(
-          getSubscriptionsWithTemplate({
-            page: 1,
-            limit: 10,
-          }),
-        );
-      }
     }
   }, [dispatch, targetTemplateType, templates, loading, isMembersTemplateType]);
 
@@ -210,7 +213,13 @@ const SaveViewMenu = ({ className, style }) => {
         selectedView.filters || {},
       );
 
-      applyTemplate(colScreen, selectedView.columns);
+      applyTemplate(
+        colScreen,
+        selectedView.columns,
+        templates?.systemDefault?.columns || [],
+        selectedView.columnLabels || {},
+        templates?.systemDefault?.columnLabels || {},
+      );
       applyTemplateFilters(transformedFilters);
       setActiveView(selectedView.name);
 
@@ -239,7 +248,9 @@ const SaveViewMenu = ({ className, style }) => {
   };
 
   const handleSetDefaultView = (id, isDefault) => {
-    dispatch(setDefaultGridTemplate({ id, isDefault, type: targetTemplateType }))
+    dispatch(
+      setDefaultGridTemplate({ id, isDefault, type: targetTemplateType }),
+    )
       .unwrap()
       .then(() => {
         MyAlert(
@@ -309,12 +320,13 @@ const SaveViewMenu = ({ className, style }) => {
         templateType: targetTemplateType,
         filters: activeFilters,
         columns: visibleColumns,
+        columnLabels: buildColumnLabelsMap(screenColumns),
         isDefault: false,
       };
 
       const token = localStorage.getItem("token");
       const API_URL = isMembersTemplateType
-        ? `${getSubscriptionServiceBaseUrl().replace(/\/v1$/, "")}/templates`
+        ? getSubscriptionFilterTemplatesBaseUrl()
         : `${process.env.REACT_APP_PROFILE_SERVICE_URL}/templates`;
 
       await axios.post(API_URL, payload, {

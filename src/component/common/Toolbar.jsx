@@ -8,6 +8,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { getApplicationsWithFilter, setTemplateId } from "../../features/applicationwithfilterslice";
 import { getAllApplications } from "../../features/ApplicationSlice";
 import { getSubscriptionsWithTemplate } from "../../features/subscription/subscriptionSlice";
+import { getProfilesWithFilter } from "../../features/profiles/ProfileSlice";
 import { fetchBatchesByType } from "../../features/profiles/batchMemberSlice";
 import { useTableColumns } from "../../context/TableColumnsContext ";
 import { transformFiltersForApi, transformFiltersFromApi, areFiltersEqual } from "../../utils/filterUtils";
@@ -50,6 +51,7 @@ const Toolbar = () => {
       "/Applications": "Applications",
       "/Summary": "Profile",
       "/membership": "Membership",
+      "/members": "Members",
       "/Members": "Members",
       "/CommunicationBatchDetail": "Communication",
       "/EventsSummary": "Events",
@@ -63,7 +65,15 @@ const Toolbar = () => {
   };
   const activeScreen = getScreenFromPath();
   const isMembersScreen =
-    location.pathname === "/members" || location.pathname === "/Members";
+    location.pathname === "/members" ||
+    location.pathname === "/Members" ||
+    location.pathname === "/membership";
+  const isProfileScreen =
+    location.pathname === "/Summary" || location.pathname === "/summary";
+  const isSystemDefaultTemplateActive =
+    !!selectedView &&
+    selectedView._id === activeTemplateId &&
+    !!selectedView.systemDefault;
   const hasChanges = screenChanges[activeScreen.toLowerCase()] === true;
 
   // Reactively update screen change state based on deep equality
@@ -127,8 +137,37 @@ const Toolbar = () => {
       location.pathname === "/IssuesManagementDashboard";
 
     if (isApplicationsPage) {
-      // MembershipApplication will react to filtersState changes
-      console.log("🔍 Filters updated, MembershipApplication should re-fetch");
+      const apiFilters = transformFiltersForApi(
+        cleanedFilters,
+        columns[activeScreen] || [],
+      );
+      const visibleColumns = (columns[activeScreen] || [])
+        .filter((col) => col.isGride === true)
+        .map((col) =>
+          Array.isArray(col.dataIndex) ? col.dataIndex.join(".") : col.dataIndex,
+        );
+      dispatch(
+        getApplicationsWithFilter({
+          templateId: activeTemplateId || currentTemplateId || undefined,
+          page: 1,
+          limit: 10,
+          filters: apiFilters,
+          columns: visibleColumns,
+        }),
+      );
+    } else if (isProfileScreen) {
+      const apiFilters = transformFiltersForApi(
+        cleanedFilters,
+        columns[activeScreen] || [],
+      );
+      dispatch(
+        getProfilesWithFilter({
+          templateId: activeTemplateId || currentTemplateId || undefined,
+          page: 1,
+          limit: 100,
+          filters: apiFilters,
+        }),
+      );
     } else if (isMembershipDashboard) {
       bumpMembershipDashboardApply();
     } else if (
@@ -137,6 +176,25 @@ const Toolbar = () => {
       isIssuesManagementDashboard
     ) {
       // Summary dashboards: no grid fetch
+    } else if (isMembersScreen) {
+      const apiFilters = transformFiltersForApi(
+        cleanedFilters,
+        columns[activeScreen] || [],
+      );
+      const visibleColumns = (columns[activeScreen] || [])
+        .filter((col) => col.isGride === true)
+        .map((col) =>
+          Array.isArray(col.dataIndex) ? col.dataIndex.join(".") : col.dataIndex,
+        );
+      dispatch(
+        getSubscriptionsWithTemplate({
+          templateId: activeTemplateId || currentTemplateId || undefined,
+          page: 1,
+          limit: 10,
+          filters: apiFilters,
+          columns: visibleColumns,
+        }),
+      );
     } else {
       if (Object.keys(cleanedFilters).length > 0) {
         dispatch(getAllApplications(cleanedFilters));
@@ -173,8 +231,21 @@ const Toolbar = () => {
   const handleReset = () => {
     resetFilters();
     if (location.pathname.toLowerCase() === "/applications") {
-      // MembershipApplication will react to filtersState reset
-      dispatch(setTemplateId("")); // Also reset template ID on full reset
+      dispatch(
+        getApplicationsWithFilter({
+          templateId: activeTemplateId || currentTemplateId || undefined,
+          page: 1,
+          limit: 10,
+        }),
+      );
+    } else if (isProfileScreen) {
+      dispatch(
+        getProfilesWithFilter({
+          templateId: activeTemplateId || currentTemplateId || undefined,
+          page: 1,
+          limit: 100,
+        }),
+      );
     } else if (location.pathname === "/MembershipDashboard") {
       bumpMembershipDashboardApply();
     } else if (
@@ -183,6 +254,14 @@ const Toolbar = () => {
       location.pathname === "/IssuesManagementDashboard"
     ) {
       // no-op
+    } else if (isMembersScreen) {
+      dispatch(
+        getSubscriptionsWithTemplate({
+          templateId: activeTemplateId || currentTemplateId || undefined,
+          page: 1,
+          limit: 10,
+        }),
+      );
     } else {
       dispatch(getAllApplications({}));
     }
@@ -197,9 +276,20 @@ const Toolbar = () => {
     try {
       const activeScreenName = getScreenFromPath();
       const currentApiFilters = transformFiltersForApi(filtersState, columns[activeScreenName] || []);
+      const currentColumnLabels = (columns[activeScreenName] || []).reduce(
+        (acc, col) => {
+          const key = Array.isArray(col?.dataIndex)
+            ? col.dataIndex.join(".")
+            : col?.dataIndex;
+          if (key) acc[String(key)] = String(col?.title || key);
+          return acc;
+        },
+        {},
+      );
 
       const payload = {
-        filters: currentApiFilters
+        filters: currentApiFilters,
+        columnLabels: currentColumnLabels,
       };
 
       await dispatch(
@@ -240,6 +330,14 @@ const Toolbar = () => {
           page: 1,
           limit: 10
         }));
+      } else if (isProfileScreen) {
+        dispatch(
+          getProfilesWithFilter({
+            templateId: currentTemplateId,
+            page: 1,
+            limit: 100,
+          }),
+        );
       } else if (isMembersScreen) {
         dispatch(
           getSubscriptionsWithTemplate({
@@ -408,6 +506,7 @@ const Toolbar = () => {
           location.pathname !== "/CorrespondenceDashboard" &&
           location.pathname !== "/IssuesManagementDashboard" &&
           hasChanges &&
+          !isSystemDefaultTemplateActive &&
           !templatesLoading &&
           !viewLoading && (
           <Button

@@ -490,7 +490,7 @@ export const FilterProvider = ({ children }) => {
         "Cancellation Flag",
       ],
       Members: [
-        "Subscription Status",
+        "Membership Status",
         "Membership Category",
         "Payment Type",
         "Payment Frequency",
@@ -573,7 +573,7 @@ export const FilterProvider = ({ children }) => {
     Applications: ["Application Status", "Membership Category"],
     Profile: ["Email", "Membership Category"],
     Membership: ["Membership Status", "Membership Category"],
-    Members: ["Subscription Status", "Membership Category"],
+    Members: ["Membership Status", "Membership Category"],
     OnlinePayment: ["Membership Status", "Payment Status"],
     Communication: ["Grade", "Work Location"],
     Cases: ["Incident Date", "Case Type", "Stakeholder", "Priority"],
@@ -689,7 +689,7 @@ export const FilterProvider = ({ children }) => {
       }
     },
     Members: {
-      "Subscription Status": {
+      "Membership Status": {
         operator: "==",
         selectedValues: []
       },
@@ -1002,7 +1002,6 @@ export const FilterProvider = ({ children }) => {
       // 🔹 CUSTOM FILTERS
       "Application Status": ["", "In-Progress", "Approved", "Rejected", "Submitted"],
       "Membership Status": ["", "Active", "Inactive", "Pending", "Cancelled"],
-      "Subscription Status": ["", "Active", "Cancelled", "Expired", "Pending"],
 
       // 🔹 CATEGORY FILTER
       "Membership Category": getCategoryOptions(),
