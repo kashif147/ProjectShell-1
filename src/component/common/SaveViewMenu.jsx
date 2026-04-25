@@ -29,12 +29,14 @@ import {
 } from "../../features/views/ActiveTemplateSlice";
 import { getApplicationsWithFilter } from "../../features/applicationwithfilterslice";
 import { getAllApplications } from "../../features/ApplicationSlice";
+import { getSubscriptionsWithTemplate } from "../../features/subscription/subscriptionSlice";
 import { useTableColumns } from "../../context/TableColumnsContext ";
 import { useFilters } from "../../context/FilterContext";
 import { useLocation } from "react-router-dom";
 import axios from "axios";
 import MyAlert from "./MyAlert";
 import MyInput from "./MyInput";
+import { getSubscriptionServiceBaseUrl } from "../../config/serviceUrls";
 import {
   getLabelToKeyMap,
   transformFiltersForApi,
@@ -98,12 +100,15 @@ const SaveViewMenu = ({ className, style }) => {
   };
 
   const activeScreen = getScreenFromPath();
-  const targetTemplateType =
-    screenMapping[screenNameForApi] || screenNameForApi;
   const normalizeTemplateType = (type) =>
     String(type || "")
       .trim()
       .toLowerCase();
+  const targetTemplateType =
+    screenMapping[screenNameForApi] || screenNameForApi;
+  const isMembersTemplateType =
+    normalizeTemplateType(targetTemplateType) === "member" ||
+    normalizeTemplateType(targetTemplateType) === "members";
   const isTemplateForCurrentType = (template) =>
     normalizeTemplateType(template?.templateType) ===
     normalizeTemplateType(targetTemplateType);
@@ -175,14 +180,22 @@ const SaveViewMenu = ({ className, style }) => {
       dispatch(setActiveTemplateId(null));
       // Always initialize data loading even if no explicitly saved view exists
       dispatch(initializeWithTemplate(""));
+      if (isMembersTemplateType) {
+        dispatch(
+          getSubscriptionsWithTemplate({
+            page: 1,
+            limit: 10,
+          }),
+        );
+      }
     }
-  }, [dispatch, targetTemplateType, templates, loading]);
+  }, [dispatch, targetTemplateType, templates, loading, isMembersTemplateType]);
 
   useEffect(() => {
     if (activeTemplateId) {
-      dispatch(getViewById(activeTemplateId));
+      dispatch(getViewById({ id: activeTemplateId, type: targetTemplateType }));
     }
-  }, [dispatch, activeTemplateId]);
+  }, [dispatch, activeTemplateId, targetTemplateType]);
 
   // Apply template settings when view details are fetched
   useEffect(() => {
@@ -203,8 +216,17 @@ const SaveViewMenu = ({ className, style }) => {
 
       // Initialize data loading with the template
       dispatch(initializeWithTemplate(selectedView._id || ""));
+      if (isMembersTemplateType) {
+        dispatch(
+          getSubscriptionsWithTemplate({
+            templateId: selectedView._id || "",
+            page: 1,
+            limit: 10,
+          }),
+        );
+      }
     }
-  }, [selectedView, activeTemplateId]);
+  }, [selectedView, activeTemplateId, isMembersTemplateType, dispatch]);
 
   const handleApplyView = (template, shouldPersist = true) => {
     // Just set the active ID; the useEffect above will handle the application of details
@@ -217,7 +239,7 @@ const SaveViewMenu = ({ className, style }) => {
   };
 
   const handleSetDefaultView = (id, isDefault) => {
-    dispatch(setDefaultGridTemplate({ id, isDefault }))
+    dispatch(setDefaultGridTemplate({ id, isDefault, type: targetTemplateType }))
       .unwrap()
       .then(() => {
         MyAlert(
@@ -238,7 +260,7 @@ const SaveViewMenu = ({ className, style }) => {
   };
 
   const handleDeleteView = (id) => {
-    dispatch(deleteGridTemplate(id))
+    dispatch(deleteGridTemplate({ id, type: targetTemplateType }))
       .unwrap()
       .then(() => {
         MyAlert("success", "Success", "View deleted successfully");
@@ -291,7 +313,9 @@ const SaveViewMenu = ({ className, style }) => {
       };
 
       const token = localStorage.getItem("token");
-      const API_URL = `${process.env.REACT_APP_PROFILE_SERVICE_URL}/templates`;
+      const API_URL = isMembersTemplateType
+        ? `${getSubscriptionServiceBaseUrl().replace(/\/v1$/, "")}/templates`
+        : `${process.env.REACT_APP_PROFILE_SERVICE_URL}/templates`;
 
       await axios.post(API_URL, payload, {
         headers: {
@@ -321,6 +345,14 @@ const SaveViewMenu = ({ className, style }) => {
       if (location.pathname.toLowerCase() === "/applications") {
         dispatch(
           getApplicationsWithFilter({
+            templateId: savedTemplate?._id || currentTemplateId || "",
+            page: 1,
+            limit: 10,
+          }),
+        );
+      } else if (isMembersTemplateType) {
+        dispatch(
+          getSubscriptionsWithTemplate({
             templateId: savedTemplate?._id || currentTemplateId || "",
             page: 1,
             limit: 10,

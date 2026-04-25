@@ -498,7 +498,7 @@ const staticColumns = {
     },
     {
       dataIndex: "isActive",
-      title: "Active",
+      title: "Status",
       ellipsis: true,
       isGride: true,
       isVisible: true,

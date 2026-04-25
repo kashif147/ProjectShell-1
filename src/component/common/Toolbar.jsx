@@ -7,6 +7,7 @@ import { Button, Input } from "antd";
 import { useDispatch, useSelector } from "react-redux";
 import { getApplicationsWithFilter, setTemplateId } from "../../features/applicationwithfilterslice";
 import { getAllApplications } from "../../features/ApplicationSlice";
+import { getSubscriptionsWithTemplate } from "../../features/subscription/subscriptionSlice";
 import { fetchBatchesByType } from "../../features/profiles/batchMemberSlice";
 import { useTableColumns } from "../../context/TableColumnsContext ";
 import { transformFiltersForApi, transformFiltersFromApi, areFiltersEqual } from "../../utils/filterUtils";
@@ -61,6 +62,8 @@ const Toolbar = () => {
     return pathMap[location.pathname] || "";
   };
   const activeScreen = getScreenFromPath();
+  const isMembersScreen =
+    location.pathname === "/members" || location.pathname === "/Members";
   const hasChanges = screenChanges[activeScreen.toLowerCase()] === true;
 
   // Reactively update screen change state based on deep equality
@@ -199,7 +202,15 @@ const Toolbar = () => {
         filters: currentApiFilters
       };
 
-      await dispatch(updateGridTemplate({ id: currentTemplateId, payload })).unwrap();
+      await dispatch(
+        updateGridTemplate({
+          id: currentTemplateId,
+          payload: {
+            ...payload,
+            templateType: isMembersScreen ? "members" : undefined,
+          },
+        }),
+      ).unwrap();
       MyAlert("success", "Success", "Template updated successfully");
 
       console.log("✅ Update successful, resetting change state and re-fetching details...");
@@ -209,10 +220,17 @@ const Toolbar = () => {
 
       // 2. Refresh the specific view details in Redux
       // This will trigger the useEffect in SaveViewMenu.jsx to re-apply filters if needed
-      dispatch(getViewById(currentTemplateId));
+      dispatch(
+        getViewById({
+          id: currentTemplateId,
+          type: isMembersScreen ? "members" : undefined,
+        }),
+      );
 
       // 3. Refresh the template list to ensure anything else using it (like the dropdown) is current
-      dispatch(getGridTemplates());
+      dispatch(
+        getGridTemplates(isMembersScreen ? { type: "members" } : {}),
+      );
 
       // 4. Reload the filtered applications if on the applications page
       if (location.pathname.toLowerCase() === "/applications") {
@@ -222,6 +240,14 @@ const Toolbar = () => {
           page: 1,
           limit: 10
         }));
+      } else if (isMembersScreen) {
+        dispatch(
+          getSubscriptionsWithTemplate({
+            templateId: currentTemplateId,
+            page: 1,
+            limit: 10,
+          }),
+        );
       }
 
     } catch (error) {

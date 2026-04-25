@@ -1,7 +1,7 @@
 import { useEffect, useMemo } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import TableComponent from "../../component/common/TableComponent";
-import { getAllSubscription } from "../../features/subscription/subscriptionSlice";
+import { getSubscriptionsWithTemplate } from "../../features/subscription/subscriptionSlice";
 import dayjs from "dayjs";
 import utc from "dayjs/plugin/utc";
 
@@ -17,10 +17,19 @@ function Members() {
         subscriptionsData,
         subscriptionLoading,
     } = useSelector((state) => state.subscription);
+    const { activeTemplateId } = useSelector((state) => state.activeTemplate);
+    const { isInitialized } = useSelector((state) => state.applicationWithFilter);
 
     useEffect(() => {
-        dispatch(getAllSubscription());
-    }, [dispatch]);
+        if (!isInitialized) return;
+        dispatch(
+            getSubscriptionsWithTemplate({
+                templateId: activeTemplateId || undefined,
+                page: 1,
+                limit: 10,
+            }),
+        );
+    }, [dispatch, activeTemplateId, isInitialized]);
 
     const data = useMemo(() => {
         if (!subscriptionsData?.data) return [];

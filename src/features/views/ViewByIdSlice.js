@@ -1,15 +1,28 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import axios from 'axios';
+import { getSubscriptionServiceBaseUrl } from "../../config/serviceUrls";
 
-const API_URL = `${process.env.REACT_APP_PROFILE_SERVICE_URL}/templates`;
+const PROFILE_TEMPLATES_API_URL = `${process.env.REACT_APP_PROFILE_SERVICE_URL}/templates`;
+const SUBSCRIPTION_TEMPLATES_API_URL = `${getSubscriptionServiceBaseUrl().replace(/\/v1$/, "")}/templates`;
+
+const resolveTemplatesApiUrl = (type) => {
+    const normalizedType = String(type || "").trim().toLowerCase();
+    if (normalizedType === "member" || normalizedType === "members") {
+        return SUBSCRIPTION_TEMPLATES_API_URL;
+    }
+    return PROFILE_TEMPLATES_API_URL;
+};
 
 // Async thunk to fetch a specific template by ID
 export const getViewById = createAsyncThunk(
     'viewById/getViewById',
-    async (id, { rejectWithValue }) => {
+    async (arg, { rejectWithValue }) => {
         try {
+            const id = typeof arg === "object" ? arg?.id : arg;
+            const type = typeof arg === "object" ? arg?.type : undefined;
             const token = localStorage.getItem('token');
-            const response = await axios.get(`${API_URL}/${id}`, {
+            const apiUrl = resolveTemplatesApiUrl(type);
+            const response = await axios.get(`${apiUrl}/${id}`, {
                 headers: {
                     Authorization: `Bearer ${token}`,
                 },
