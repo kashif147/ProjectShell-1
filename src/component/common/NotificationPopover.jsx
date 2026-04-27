@@ -6,6 +6,7 @@ import {
   UserOutlined,
   MailOutlined,
   ClockCircleOutlined,
+  DownloadOutlined,
 } from "@ant-design/icons";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
@@ -31,6 +32,48 @@ const isBatchProcessNotification = (type) =>
   type === LIFECYCLE_TYPES.REMINDER_READY ||
   type === LIFECYCLE_TYPES.CANCELLATION_GENERATING ||
   type === LIFECYCLE_TYPES.CANCELLATION_READY;
+
+function notificationHasPdfAttachment(metadata) {
+  const a = metadata?.attachments?.[0];
+  if (!a) return false;
+  return Boolean(a.dataBase64 || a.hasData);
+}
+
+function downloadBase64Pdf(base64, filename) {
+  const byteChars = atob(base64);
+  const bytes = new Uint8Array(byteChars.length);
+  for (let i = 0; i < byteChars.length; i += 1) {
+    bytes[i] = byteChars.charCodeAt(i);
+  }
+  const blob = new Blob([bytes], { type: "application/pdf" });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = filename || "document.pdf";
+  link.click();
+  URL.revokeObjectURL(url);
+}
+
+async function downloadNotificationPdf(item) {
+  const token = localStorage.getItem("token");
+  let meta = item?.metadata;
+  let b64 = meta?.attachments?.[0]?.dataBase64;
+  let filename = meta?.attachments?.[0]?.filename || "membership-form.pdf";
+
+  if (!b64 && item?._id && !String(item._id).startsWith("local-")) {
+    const res = await axios.get(
+      `${getNotificationServiceUrl().replace(/\/$/, "")}/notifications/${item._id}`,
+      {
+        headers: { Authorization: `Bearer ${token}` },
+      },
+    );
+    const n = res.data?.data?.notification;
+    b64 = n?.metadata?.attachments?.[0]?.dataBase64;
+    filename = n?.metadata?.attachments?.[0]?.filename || filename;
+  }
+  if (!b64) return;
+  downloadBase64Pdf(b64, filename);
+}
 
 function navigateForLifecycleNotification(navigate, item) {
   const t = item?.metadata?.type;
@@ -260,6 +303,24 @@ const NotificationPopover = ({ isOpen }) => {
                       }}
                     >
                       {item.body}
+                    </div>
+                  )}
+                  {notificationHasPdfAttachment(item?.metadata) && (
+                    <div style={{ marginTop: 8 }} onClick={(e) => e.stopPropagation()}>
+                      <Button
+                        type="link"
+                        size="small"
+                        icon={<DownloadOutlined />}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          downloadNotificationPdf(item).catch((err) =>
+                            console.error("Download PDF failed:", err),
+                          );
+                        }}
+                        style={{ paddingLeft: 0, height: "auto" }}
+                      >
+                        Download PDF
+                      </Button>
                     </div>
                   )}
                   <Text

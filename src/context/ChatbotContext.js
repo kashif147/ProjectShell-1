@@ -35,6 +35,12 @@ export const useChatbot = () => {
 };
 
 export const ChatbotProvider = ({ children }) => {
+  const CHATBOT_WEBHOOK_URL =
+    process.env.REACT_APP_CHATBOT_WEBHOOK_URL ||
+    "http://localhost:5678/webhook/5e3aba19-8555-4071-ab52-5120492708a7/chat";
+  const CHATBOT_USE_WEBHOOK =
+    String(process.env.REACT_APP_CHATBOT_USE_WEBHOOK || "true").toLowerCase() ===
+    "true";
   const [chatVisible, setChatVisible] = useState(false);
   const [chatMessages, setChatMessages] = useState([
     {
@@ -49,6 +55,18 @@ export const ChatbotProvider = ({ children }) => {
   const [chatLoading, setChatLoading] = useState(false);
   const chatEndRef = useRef(null);
   const location = useLocation();
+  const sessionIdRef = useRef(
+    (() => {
+      const storageKey = "chatbotSessionId";
+      const existing = localStorage.getItem(storageKey);
+      if (existing) return existing;
+      const generated = `chat_${Date.now()}_${Math.random()
+        .toString(36)
+        .slice(2, 10)}`;
+      localStorage.setItem(storageKey, generated);
+      return generated;
+    })(),
+  );
 
   // Auto-scroll to bottom when new messages arrive
   useEffect(() => {
@@ -229,6 +247,63 @@ export const ChatbotProvider = ({ children }) => {
     };
   };
 
+  const extractWebhookReply = (responseBody) => {
+    if (!responseBody) return null;
+    if (typeof responseBody === "string") return responseBody.trim() || null;
+
+    if (Array.isArray(responseBody)) {
+      for (const item of responseBody) {
+        const nested =
+          item?.reply ||
+          item?.response ||
+          item?.message ||
+          item?.output ||
+          item?.text;
+        if (typeof nested === "string" && nested.trim()) {
+          return nested.trim();
+        }
+      }
+      return null;
+    }
+
+    const direct =
+      responseBody?.reply ||
+      responseBody?.response ||
+      responseBody?.message ||
+      responseBody?.output ||
+      responseBody?.text ||
+      responseBody?.data;
+
+    if (typeof direct === "string" && direct.trim()) {
+      return direct.trim();
+    }
+
+    return null;
+  };
+
+  const callWebhook = async (payload) => {
+    const res = await fetch(CHATBOT_WEBHOOK_URL, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(payload),
+    });
+
+    const rawResponse = await res.text();
+    let parsedResponse = rawResponse;
+    try {
+      parsedResponse = JSON.parse(rawResponse);
+    } catch (_) {}
+
+    return {
+      ok: res.ok,
+      status: res.status,
+      body: parsedResponse,
+      raw: rawResponse,
+    };
+  };
+
   // Generate AI response based on context and user message
   const generateAIResponse = (userMessage) => {
     const context = getContextualData();
@@ -376,12 +451,13 @@ export const ChatbotProvider = ({ children }) => {
 
   // Handle sending messages
   const handleSendMessage = async () => {
-    if (!chatInput.trim()) return;
+    const userInput = chatInput.trim();
+    if (!userInput) return;
 
     const userMessage = {
       id: Date.now(),
       type: "user",
-      content: chatInput,
+      content: userInput,
       timestamp: new Date(),
     };
 
@@ -389,17 +465,77 @@ export const ChatbotProvider = ({ children }) => {
     setChatInput("");
     setChatLoading(true);
 
-    // Simulate AI processing time
-    setTimeout(() => {
+    try {
+      if (!CHATBOT_USE_WEBHOOK) {
+        const localResponse = {
+          id: Date.now() + 1,
+          type: "bot",
+          content: generateAIResponse(userInput),
+          timestamp: new Date(),
+        };
+        setChatMessages((prev) => [...prev, localResponse]);
+        return;
+      }
+
+      const contextData = getContextualData();
+      const fullPayload = {
+        message: userInput,
+        chatInput: userInput,
+        query: userInput,
+        prompt: userInput,
+        sessionId: sessionIdRef.current,
+        context: contextData,
+        currentPath: location.pathname,
+        history: chatMessages,
+      };
+
+      let webhookResult = await callWebhook(fullPayload);
+
+      // Retry with a minimal payload for workflows that only expect one field
+      if (!webhookResult.ok) {
+        webhookResult = await callWebhook({
+          message: userInput,
+          chatInput: userInput,
+          query: userInput,
+          text: userInput,
+          sessionId: sessionIdRef.current,
+        });
+      }
+
+      if (!webhookResult.ok) {
+        throw new Error(
+          `Webhook request failed: ${webhookResult.status} ${String(
+            webhookResult.raw || "",
+          ).slice(0, 250)}`,
+        );
+      }
+
+      const botContent = extractWebhookReply(webhookResult.body);
+
+      if (!botContent) {
+        throw new Error("Invalid webhook response format");
+      }
+
       const aiResponse = {
         id: Date.now() + 1,
         type: "bot",
-        content: generateAIResponse(chatInput),
+        content: botContent,
         timestamp: new Date(),
       };
       setChatMessages((prev) => [...prev, aiResponse]);
+    } catch (error) {
+      console.error("Chatbot webhook error:", error);
+      const fallbackResponse = {
+        id: Date.now() + 1,
+        type: "bot",
+        content: generateAIResponse(userInput),
+        timestamp: new Date(),
+      };
+      setChatMessages((prev) => [...prev, fallbackResponse]);
+      message.warning("Webhook failed. Showing local assistant response.");
+    } finally {
       setChatLoading(false);
-    }, 1000);
+    }
   };
 
   // Handle key press
@@ -494,12 +630,12 @@ const GlobalChatbot = () => {
         <div
           style={{
             position: "fixed",
-            right: "24px",
-            bottom: "100px",
-            width: "380px",
-            height: "500px",
+            right: "0",
+            bottom: "0",
+            width: "420px",
+            height: "50vh",
             background: "white",
-            borderRadius: "16px",
+            borderRadius: "0",
             boxShadow: "0 20px 60px rgba(0, 0, 0, 0.15)",
             border: "1px solid #e2e8f0",
             zIndex: 1000,

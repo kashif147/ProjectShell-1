@@ -25,6 +25,19 @@
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
 }
 
+/* Single bottom spacing for the paired fields (was per-field from .my-input-wrapper) */
+.create-batch-type-month-row {
+  margin-bottom: 0.97rem;
+}
+
+/* Comments: 2 lines default; MyInput.css global textarea min-height 100px would force ~4 lines */
+.create-batch-container
+  .my-input-wrapper:has(textarea[name="comments"])
+  textarea.my-input-field {
+  min-height: 52px;
+  height: auto;
+}
+
 .custom-input,
 .custom-input .ant-select-selector,
 .custom-input .ant-picker {

@@ -209,6 +209,7 @@ const TableComponent = ({
     profilNextBtnFtn,
     ColumnProp,
     disableFtn,
+    reorderGridColumns,
   } = useTableColumns();
   const [dataSource, setdataSource] = useState(data);
   // Internal state for row selection when not provided via props
@@ -446,7 +447,15 @@ const TableComponent = ({
         const overIndex = prevColumns.findIndex(
           (column) => column.key === over.id
         );
-        return arrayMove(prevColumns, activeIndex, overIndex);
+        const next = arrayMove(prevColumns, activeIndex, overIndex);
+        if (reorderGridColumns) {
+          const keys = next.map((col) => {
+            const di = col?.dataIndex;
+            return Array.isArray(di) ? di.join(".") : String(di);
+          });
+          reorderGridColumns(screenName, keys);
+        }
+        return next;
       });
     }
     setDragIndex({ active: null, over: null });

@@ -46,7 +46,9 @@ const lazyWithRetry = (componentImport) => {
                 height: "100vh",
               }}
             >
-              <Spin size="large" tip="Reloading application..." />
+              <Spin size="large" tip="Reloading application...">
+                <div style={{ minHeight: 120, width: "100%" }} />
+              </Spin>
             </div>
           ),
         };

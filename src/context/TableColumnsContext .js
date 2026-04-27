@@ -19,6 +19,7 @@ import {
   formatCurrency,
   formatMobileNumber,
 } from "../utils/Utilities";
+import { markScreenChanged } from "../features/views/ScreenFilterChangSlice";
 import { getProfileDetailsById } from "../features/profiles/ProfileDetailsSlice";
 import {
   getSubscriptionByProfileId,
@@ -76,6 +77,27 @@ function resolveGridNavigationIndex(gridData, profileDetails) {
   if (!Array.isArray(gridData) || gridData.length === 0) return -1;
   const row = normalizeProfileDetailsRow(profileDetails);
   return findRecordIndexInGrid(gridData, row);
+}
+
+function parseOutstandingBalance(value) {
+  if (value == null) return 0;
+  if (typeof value === "number") return Number.isFinite(value) ? value : 0;
+  const parsed = parseFloat(String(value).replace(/[^\d.-]/g, ""));
+  return Number.isFinite(parsed) ? parsed : 0;
+}
+
+function getOutstandingBalanceColor(value) {
+  return parseOutstandingBalance(value) > 0 ? "#cf1322" : "#389e0d";
+}
+
+function formatOutstandingBalanceLikeHeader(value) {
+  const amount = parseOutstandingBalance(value);
+  const amountText = `€${Math.abs(amount).toLocaleString("en-IE", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  })}`;
+  const indicator = amount > 0 ? "Dr" : amount < 0 ? "Cr" : "";
+  return indicator ? `${amountText} (${indicator})` : amountText;
 }
 
 /** Sync location.state fields Breadcrumb.jsx uses for /Details (regNo, membership, name). */
@@ -768,7 +790,11 @@ const staticColumns = {
       isVisible: true,
       width: 150,
       align: "right",
-      render: (value) => formatCurrency(Number(value) || 0),
+      render: (value) => (
+        <span style={{ color: getOutstandingBalanceColor(value), fontWeight: 600 }}>
+          {formatOutstandingBalanceLikeHeader(value)}
+        </span>
+      ),
     },
     {
       dataIndex: "reminderNo",
@@ -3195,7 +3221,11 @@ const staticColumns = {
       width: 200,
       editable: false,
       align: "right",
-      render: (value) => formatCurrency(Number(value) || 0),
+      render: (value) => (
+        <span style={{ color: getOutstandingBalanceColor(value), fontWeight: 600 }}>
+          {formatOutstandingBalanceLikeHeader(value)}
+        </span>
+      ),
     },
     {
       dataIndex: "reminderNo",
@@ -5411,9 +5441,36 @@ export const TableColumnsProvider = ({ children }) => {
             : column,
         ),
       }));
+      if (screenName) {
+        dispatch(markScreenChanged({ screen: screenName }));
+      }
     },
-    [],
+    [dispatch],
   );
+
+  /** Keeps `columns[screenName]` order in sync with the grid for save / dirty state. */
+  const reorderGridColumns = useCallback((targetScreenName, orderedVisibleDataIndexKeys) => {
+    if (!targetScreenName || !Array.isArray(orderedVisibleDataIndexKeys)) return;
+    setColumns((prev) => {
+      const list = prev[targetScreenName];
+      if (!list || !Array.isArray(list)) return prev;
+      const toKey = (col) => {
+        if (!col) return "";
+        const di = col.dataIndex;
+        return Array.isArray(di) ? di.join(".") : String(di);
+      };
+      const byKey = new Map(list.map((c) => [toKey(c), c]));
+      const hidden = list.filter((c) => !c.isGride);
+      const visibleOrdered = orderedVisibleDataIndexKeys
+        .map((k) => byKey.get(String(k)))
+        .filter(Boolean);
+      return {
+        ...prev,
+        [targetScreenName]: [...visibleOrdered, ...hidden],
+      };
+    });
+    dispatch(markScreenChanged({ screen: targetScreenName }));
+  }, [dispatch]);
 
   const updateSelectedTitles = useCallback((title, isChecked) => {
     setGlobleFilters((prevFilters) =>
@@ -6299,6 +6356,7 @@ export const TableColumnsProvider = ({ children }) => {
     () => ({
       columns,
       applyTemplate,
+      reorderGridColumns,
       updateColumns: () => {},
       state: { selectedOption: "!=", checkboxes: {} },
       setState: () => {},
@@ -6345,6 +6403,8 @@ export const TableColumnsProvider = ({ children }) => {
     [
       columns,
       gridData,
+      applyTemplate,
+      reorderGridColumns,
       handleCheckboxFilterChange,
       searchFilters,
       updateSelectedTitles,

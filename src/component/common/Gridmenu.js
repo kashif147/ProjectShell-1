@@ -8,9 +8,11 @@ import { getGridTemplates, updateGridTemplate } from "../../features/templete/te
 import { getViewById } from "../../features/views/ViewByIdSlice";
 import { getApplicationsWithFilter } from "../../features/applicationwithfilterslice";
 import { getAllApplications } from "../../features/ApplicationSlice";
+import { getSubscriptionsWithTemplate } from "../../features/subscription/subscriptionSlice";
 import { useFilters } from "../../context/FilterContext";
 import { transformFiltersForApi } from "../../utils/filterUtils";
 import MyAlert from "./MyAlert";
+import { useAuthorization } from "../../context/AuthorizationContext";
 
 function Gridmenu({ title, screenName, setColumnsDragbe, columnsForFilter, setColumnsForFilter }) {
   const dispatch = useDispatch();
@@ -19,7 +21,15 @@ function Gridmenu({ title, screenName, setColumnsDragbe, columnsForFilter, setCo
     location.pathname === "/members" ||
     location.pathname === "/Members" ||
     location.pathname === "/membership";
-  const { columns, updateColumns, handleCheckboxFilterChange, updateSelectedTemplate } = useTableColumns();
+  const isApplicationsScreen =
+    (location.pathname || "").toLowerCase() === "/applications";
+  const { hasAnyRole } = useAuthorization();
+  const canEditGridTemplates = hasAnyRole(["SU", "ASU"]);
+  const screenChanges = useSelector(
+    (state) => state.screenFilter?.screenFilterChanged || {},
+  );
+  const hasUnsavedViewChanges = !!screenChanges[String(screenName || "").toLowerCase()];
+  const { columns, updateColumns, handleCheckboxFilterChange, updateSelectedTemplate, reorderGridColumns } = useTableColumns();
   const { filtersState, applyTemplateFilters } = useFilters();
   const { currentTemplateId } = useSelector((state) => state.applicationWithFilter);
   const [isUpdating, setIsUpdating] = useState(false);
@@ -27,9 +37,19 @@ function Gridmenu({ title, screenName, setColumnsDragbe, columnsForFilter, setCo
   const [menuOpen, setMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
 
+  const gridTemplateType = isMembersScreen
+    ? "members"
+    : isApplicationsScreen
+      ? "application"
+      : undefined;
+
   const handleUpdateTemplate = async () => {
     if (!currentTemplateId) {
       message.warning("No active template selected to update.");
+      return;
+    }
+    if (!canEditGridTemplates) {
+      message.warning("You do not have permission to update templates.");
       return;
     }
 
@@ -60,9 +80,9 @@ function Gridmenu({ title, screenName, setColumnsDragbe, columnsForFilter, setCo
           id: currentTemplateId,
           payload: {
             ...payload,
-            templateType: isMembersScreen ? "members" : undefined,
+            ...(gridTemplateType ? { templateType: gridTemplateType } : {}),
           },
-          type: isMembersScreen ? "members" : undefined,
+          type: gridTemplateType,
         })
       ).unwrap();
 
@@ -75,13 +95,32 @@ function Gridmenu({ title, screenName, setColumnsDragbe, columnsForFilter, setCo
       dispatch(
         getViewById({
           id: currentTemplateId,
-          type: isMembersScreen ? "members" : undefined,
+          type: gridTemplateType,
         })
       );
 
       // 2. Refresh the overall list
-      dispatch(getGridTemplates(isMembersScreen ? { type: "members" } : {}));
+      dispatch(
+        getGridTemplates(gridTemplateType ? { type: gridTemplateType } : {}),
+      );
 
+      if (isApplicationsScreen) {
+        await dispatch(
+          getApplicationsWithFilter({
+            templateId: currentTemplateId,
+            page: 1,
+            limit: 10,
+          }),
+        );
+      } else if (isMembersScreen) {
+        await dispatch(
+          getSubscriptionsWithTemplate({
+            templateId: currentTemplateId,
+            page: 1,
+            limit: 10,
+          }),
+        );
+      }
     } catch (error) {
       console.error("Error updating template:", error);
       MyAlert("error", "Error", error?.message || "Failed to update template");
@@ -124,7 +163,14 @@ function Gridmenu({ title, screenName, setColumnsDragbe, columnsForFilter, setCo
     setColumnsForFilter(reordered);
     const newData = reordered.filter(col => col.isGride);
     setColumnsDragbe(newData);
-
+    if (reorderGridColumns) {
+      const keys = reordered
+        .filter((c) => c.isGride)
+        .map((c) =>
+          Array.isArray(c.dataIndex) ? c.dataIndex.join(".") : c.dataIndex,
+        );
+      reorderGridColumns(screenName, keys);
+    }
     // Update global context
     handleCheckboxFilterChange(title, checked, screen, width);
   };
@@ -187,6 +233,14 @@ function Gridmenu({ title, screenName, setColumnsDragbe, columnsForFilter, setCo
 
     setColumnsForFilter(reorderedColumns);
     setColumnsDragbe(reorderedColumns.filter((col) => col.isGride));
+    if (reorderGridColumns) {
+      const keys = reorderedColumns
+        .filter((c) => c.isGride)
+        .map((c) =>
+          Array.isArray(c.dataIndex) ? c.dataIndex.join(".") : c.dataIndex,
+        );
+      reorderGridColumns(screenName, keys);
+    }
     setDraggingIndex(null);
   };
 
@@ -251,6 +305,8 @@ function Gridmenu({ title, screenName, setColumnsDragbe, columnsForFilter, setCo
             ))}
         </Row>
       </div>
+      {canEditGridTemplates && hasUnsavedViewChanges && (
+        <>
       <Divider style={{ margin: "4px 0" }} />
       <div style={{ padding: '12px' }}>
         <Button
@@ -267,11 +323,13 @@ function Gridmenu({ title, screenName, setColumnsDragbe, columnsForFilter, setCo
           Update Template
         </Button>
       </div>
+        </>
+      )}
     </Menu>
   );
   return (
     <Dropdown
-      overlay={menu}
+      dropdownRender={() => menu}
       trigger={["click"]}
       placement="bottomRight"
       open={menuOpen}

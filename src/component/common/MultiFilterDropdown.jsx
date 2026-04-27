@@ -229,7 +229,7 @@ const MultiFilterDropdown = ({
   return (
     <div>
       <Dropdown
-        overlay={getMenuContent()}
+        dropdownRender={getMenuContent}
         open={open}
         onOpenChange={setOpen}
         placement="bottomLeft"

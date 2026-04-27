@@ -1307,13 +1307,8 @@ function HeaderDetails({
                         </Button>
                       )}
                       <SimpleMenu
-                        title={
-                          <>
-                            <Button className="me-1 gray-btn butn">
-                              Export
-                            </Button>
-                          </>
-                        }
+                        title="Export"
+                        triggerClassName="me-1 gray-btn butn"
                         data={exportbtn}
                         isSearched={true}
                         isCheckBox={false}
@@ -1493,6 +1488,7 @@ function HeaderDetails({
                       location?.pathname === "/branch" ? null : (
                         <>
                           {nav !== "/MembershipDashboard" &&
+                            nav !== "/templeteConfig" &&
                             !isHeaderDashboardRangeNav(nav) && (
                               <SaveViewMenu className="ms-3" />
                             )}

@@ -1,6 +1,7 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import axios from 'axios';
 import { getSubscriptionFilterTemplatesBaseUrl } from "../../config/serviceUrls";
+import { normalizeViewTemplatePayload } from "../../utils/filterUtils";
 
 const PROFILE_TEMPLATES_API_URL = `${process.env.REACT_APP_PROFILE_SERVICE_URL}/templates`;
 const SUBSCRIPTION_TEMPLATES_API_URL = getSubscriptionFilterTemplatesBaseUrl();
@@ -27,7 +28,8 @@ export const getViewById = createAsyncThunk(
                     Authorization: `Bearer ${token}`,
                 },
             });
-            return response.data?.data || response.data;
+            const body = response.data?.data ?? response.data;
+            return normalizeViewTemplatePayload(body);
         } catch (error) {
             return rejectWithValue(
                 error.response?.data?.message || 'Failed to fetch template by ID'
@@ -57,7 +59,7 @@ const viewByIdSlice = createSlice({
             })
             .addCase(getViewById.fulfilled, (state, action) => {
                 state.loading = false;
-                state.selectedView = action.payload;
+                state.selectedView = normalizeViewTemplatePayload(action.payload);
             })
             .addCase(getViewById.rejected, (state, action) => {
                 state.loading = false;

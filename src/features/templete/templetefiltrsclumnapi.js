@@ -30,10 +30,6 @@ export const getGridTemplates = createAsyncThunk(
         } catch (error) {
             return rejectWithValue(error.response?.data || error.message);
         }
-    },
-    {
-        condition: (_, { getState }) =>
-            !getState().templetefiltrsclumnapi.templatesFetching,
     }
 );
 
@@ -124,8 +120,12 @@ export const setDefaultGridTemplate = createAsyncThunk(
                     },
                 }
             );
-            dispatch(getGridTemplates(type ? { type } : {})); // Refresh list
-            return { id, isDefault };
+            // Await so callers do not run a second getGridTemplates while this is in flight
+            // (a duplicate + condition used to fail with "aborted due to condition").
+            const templates = await dispatch(
+                getGridTemplates(type ? { type } : {}),
+            ).unwrap();
+            return { id, isDefault, templates };
         } catch (error) {
             return rejectWithValue(error.response?.data || error.message);
         }
@@ -182,8 +182,11 @@ const templetefiltrsclumnapi = createSlice({
             .addCase(setDefaultGridTemplate.pending, (state) => {
                 state.loading = true;
             })
-            .addCase(setDefaultGridTemplate.fulfilled, (state) => {
+            .addCase(setDefaultGridTemplate.fulfilled, (state, action) => {
                 state.loading = false;
+                if (action.payload?.templates) {
+                    state.templates = action.payload.templates;
+                }
             })
             .addCase(setDefaultGridTemplate.rejected, (state, action) => {
                 state.loading = false;

@@ -11,7 +11,8 @@ import { getSubscriptionsWithTemplate } from "../../features/subscription/subscr
 import { getProfilesWithFilter } from "../../features/profiles/ProfileSlice";
 import { fetchBatchesByType } from "../../features/profiles/batchMemberSlice";
 import { useTableColumns } from "../../context/TableColumnsContext ";
-import { transformFiltersForApi, transformFiltersFromApi, areFiltersEqual } from "../../utils/filterUtils";
+import { transformFiltersForApi, transformFiltersFromApi } from "../../utils/filterUtils";
+import { useAuthorization } from "../../context/AuthorizationContext";
 import { updateGridTemplate, getGridTemplates } from "../../features/templete/templetefiltrsclumnapi";
 import { getViewById } from "../../features/views/ViewByIdSlice";
 import { setActiveTemplateId } from "../../features/views/ActiveTemplateSlice";
@@ -27,41 +28,49 @@ const Toolbar = () => {
 
 
   const {
+    activePage,
     visibleFilters,
     filterOptions,
     filtersState,
     updateFilter,
     resetFilters,
     applyTemplateFilters,
+    getFiltersStateForSave,
     bumpMembershipDashboardApply,
   } = useFilters();
+  /** TableColumnsContext keys use "Members"; FilterContext uses "Membership" for /membership */
+  const tableColumnScreen =
+    activePage === "Membership" ? "Members" : activePage;
 
-  const { columns, updateSelectedTemplate, selectedTemplates } = useTableColumns();
+  const { columns } = useTableColumns();
+  const { hasAnyRole } = useAuthorization();
+  const canEditGridTemplates = hasAnyRole(["SU", "ASU"]);
   const { currentTemplateId } = useSelector((state) => state.applicationWithFilter);
   const { activeTemplateId } = useSelector((state) => state.activeTemplate);
-  const { templates, loading: templatesLoading } = useSelector((state) => state.templetefiltrsclumnapi);
-  const { selectedView, loading: viewLoading } = useSelector((state) => state.viewById);
   const [isSaving, setIsSaving] = useState(false);
-  const screenChanges = useSelector(state => state.screenFilter.screenFilterChanged);
+  const screenChanges = useSelector(
+    (state) => state.screenFilter.screenFilterChanged,
+  );
   // const activeScreen = getScreenFromPath();
 
   const getScreenFromPath = () => {
+    const key = (location.pathname || "")
+      .replace(/\/$/, "")
+      .toLowerCase();
     const pathMap = {
       "/applications": "Applications",
-      "/Applications": "Applications",
-      "/Summary": "Profile",
+      "/summary": "Profile",
       "/membership": "Membership",
       "/members": "Members",
-      "/Members": "Members",
-      "/CommunicationBatchDetail": "Communication",
-      "/EventsSummary": "Events",
-      "/EventsDashboard": "Events",
-      "/CorrespondenceDashboard": "Communication",
-      "/IssuesManagementDashboard": "Cases",
-      "/Attendees": "Attendees",
-      "/MembershipDashboard": "MembershipDashboard",
+      "/communicationbatchdetail": "Communication",
+      "/eventssummary": "Events",
+      "/eventsdashboard": "Events",
+      "/correspondencedashboard": "Communication",
+      "/issuesmanagementdashboard": "Cases",
+      "/attendees": "Attendees",
+      "/membershipdashboard": "MembershipDashboard",
     };
-    return pathMap[location.pathname] || "";
+    return pathMap[key] || "";
   };
   const activeScreen = getScreenFromPath();
   const isMembersScreen =
@@ -70,64 +79,55 @@ const Toolbar = () => {
     location.pathname === "/membership";
   const isProfileScreen =
     location.pathname === "/Summary" || location.pathname === "/summary";
-  const isSystemDefaultTemplateActive =
-    !!selectedView &&
-    selectedView._id === activeTemplateId &&
-    !!selectedView.systemDefault;
-  const hasChanges = screenChanges[activeScreen.toLowerCase()] === true;
+  const hasChanges = activeScreen
+    ? screenChanges[activeScreen.toLowerCase()] === true
+    : false;
 
-  // Reactively update screen change state based on deep equality
-  React.useEffect(() => {
-    if (
-      location.pathname === "/MembershipDashboard" ||
-      location.pathname === "/EventsDashboard" ||
-      location.pathname === "/CorrespondenceDashboard" ||
-      location.pathname === "/IssuesManagementDashboard"
-    ) {
-      return;
-    }
-    if (!selectedView || !activeTemplateId || selectedView._id !== activeTemplateId) {
-      if (hasChanges) {
-        dispatch(resetScreenChanged({ screen: activeScreen.toLowerCase() }));
-      }
-      return;
-    }
-
-    const originalFilters = transformFiltersFromApi(selectedView.filters || {}, columns[activeScreen] || []);
-    const isEqual = areFiltersEqual(filtersState, originalFilters);
-
-    if (isEqual && hasChanges) {
-      dispatch(resetScreenChanged({ screen: activeScreen.toLowerCase() }));
-    } else if (!isEqual && !hasChanges) {
-      dispatch(markScreenChanged({ screen: activeScreen }));
-    }
-  }, [filtersState, selectedView, activeScreen, columns, dispatch, hasChanges, location.pathname]);
+  const resolvedGridTemplateId =
+    activeTemplateId || currentTemplateId || "";
+  const normalizedPath = (location.pathname || "")
+    .replace(/\/$/, "")
+    .toLowerCase();
+  const isApplicationsPage = normalizedPath === "/applications";
+  const gridTemplateType = isMembersScreen
+    ? "members"
+    : isApplicationsPage
+      ? "application"
+      : isProfileScreen
+        ? "profile"
+        : undefined;
 
   const [batchName, setBatchName] = useState("");
+  const markTemplateScreenDirty = () => {
+    const screen =
+      getScreenFromPath() ||
+      (isApplicationsPage
+        ? "Applications"
+        : isProfileScreen
+          ? "Profile"
+          : isMembersScreen
+            ? "Members"
+            : "");
+    if (screen) {
+      dispatch(markScreenChanged({ screen }));
+    }
+  };
+
   const handleFilterApply = (filterData) => {
     const { label, operator, selectedValues } = filterData;
-    console.log("🔄 Applying filter:", {
-      filter: label,
-      values: selectedValues,
-      operator: operator,
-      count: selectedValues.length,
-    });
-
     updateFilter(label, operator, selectedValues);
-    // Manual markScreenChanged removed - handled by useEffect above
+    markTemplateScreenDirty();
   };
 
   const handleSearch = () => {
+    const filterSnapshot = getFiltersStateForSave();
     const cleanedFilters = {};
-    Object.keys(filtersState).forEach((key) => {
-      if (filtersState[key]?.selectedValues?.length > 0) {
-        cleanedFilters[key] = filtersState[key];
+    Object.keys(filterSnapshot).forEach((key) => {
+      if (filterSnapshot[key]?.selectedValues?.length > 0) {
+        cleanedFilters[key] = filterSnapshot[key];
       }
     });
 
-    console.log("🔍 Dispatching with cleaned filters:", cleanedFilters);
-
-    const isApplicationsPage = location.pathname.toLowerCase() === "/applications";
     const isMembershipDashboard =
       location.pathname === "/MembershipDashboard";
     const isEventsDashboard = location.pathname === "/EventsDashboard";
@@ -139,9 +139,9 @@ const Toolbar = () => {
     if (isApplicationsPage) {
       const apiFilters = transformFiltersForApi(
         cleanedFilters,
-        columns[activeScreen] || [],
+        columns[tableColumnScreen] || [],
       );
-      const visibleColumns = (columns[activeScreen] || [])
+      const visibleColumns = (columns[tableColumnScreen] || [])
         .filter((col) => col.isGride === true)
         .map((col) =>
           Array.isArray(col.dataIndex) ? col.dataIndex.join(".") : col.dataIndex,
@@ -158,7 +158,7 @@ const Toolbar = () => {
     } else if (isProfileScreen) {
       const apiFilters = transformFiltersForApi(
         cleanedFilters,
-        columns[activeScreen] || [],
+        columns[tableColumnScreen] || [],
       );
       dispatch(
         getProfilesWithFilter({
@@ -179,9 +179,9 @@ const Toolbar = () => {
     } else if (isMembersScreen) {
       const apiFilters = transformFiltersForApi(
         cleanedFilters,
-        columns[activeScreen] || [],
+        columns[tableColumnScreen] || [],
       );
-      const visibleColumns = (columns[activeScreen] || [])
+      const visibleColumns = (columns[tableColumnScreen] || [])
         .filter((col) => col.isGride === true)
         .map((col) =>
           Array.isArray(col.dataIndex) ? col.dataIndex.join(".") : col.dataIndex,
@@ -199,7 +199,6 @@ const Toolbar = () => {
       if (Object.keys(cleanedFilters).length > 0) {
         dispatch(getAllApplications(cleanedFilters));
       } else {
-        console.log("⚠️ No filters selected, fetching all applications");
         dispatch(getAllApplications({}));
       }
     }
@@ -230,7 +229,19 @@ const Toolbar = () => {
 
   const handleReset = () => {
     resetFilters();
-    if (location.pathname.toLowerCase() === "/applications") {
+    if (isApplicationsPage || isProfileScreen || isMembersScreen) {
+      const screen =
+        getScreenFromPath() ||
+        (isApplicationsPage
+          ? "Applications"
+          : isProfileScreen
+            ? "Profile"
+            : "Members");
+      if (screen) {
+        dispatch(resetScreenChanged({ screen }));
+      }
+    }
+    if (isApplicationsPage) {
       dispatch(
         getApplicationsWithFilter({
           templateId: activeTemplateId || currentTemplateId || undefined,
@@ -270,13 +281,23 @@ const Toolbar = () => {
 
 
   const handleSave = async () => {
-    if (!currentTemplateId) return;
+    const id = String(resolvedGridTemplateId || "").trim();
+    if (!id) {
+      message.warning(
+        "No view is selected. Choose a template from the view menu, then try again.",
+      );
+      return;
+    }
 
     setIsSaving(true);
     try {
-      const activeScreenName = getScreenFromPath();
-      const currentApiFilters = transformFiltersForApi(filtersState, columns[activeScreenName] || []);
-      const currentColumnLabels = (columns[activeScreenName] || []).reduce(
+      const filterSnapshot = getFiltersStateForSave();
+      const currentApiFilters = transformFiltersForApi(
+        filterSnapshot,
+        columns[tableColumnScreen] || [],
+      );
+      const screenColumns = columns[tableColumnScreen] || [];
+      const currentColumnLabels = screenColumns.reduce(
         (acc, col) => {
           const key = Array.isArray(col?.dataIndex)
             ? col.dataIndex.join(".")
@@ -286,54 +307,62 @@ const Toolbar = () => {
         },
         {},
       );
+      const visibleColumnKeys = screenColumns
+        .filter((col) => col.isGride === true)
+        .map((col) =>
+          Array.isArray(col.dataIndex) ? col.dataIndex.join(".") : col.dataIndex,
+        );
 
       const payload = {
         filters: currentApiFilters,
         columnLabels: currentColumnLabels,
+        columns: visibleColumnKeys,
+        ...(gridTemplateType ? { templateType: gridTemplateType } : {}),
       };
 
       await dispatch(
         updateGridTemplate({
-          id: currentTemplateId,
-          payload: {
-            ...payload,
-            templateType: isMembersScreen ? "members" : undefined,
-          },
+          id,
+          type: gridTemplateType,
+          payload,
         }),
       ).unwrap();
       MyAlert("success", "Success", "Template updated successfully");
 
-      console.log("✅ Update successful, resetting change state and re-fetching details...");
+      const freshView = await dispatch(
+        getViewById({
+          id,
+          type: gridTemplateType,
+        }),
+      ).unwrap();
 
-      // 1. Reset the "dirty" state for this screen
+      const nextFilters = transformFiltersFromApi(
+        freshView?.filters || {},
+        columns[tableColumnScreen] || [],
+      );
+      applyTemplateFilters(nextFilters);
+
+      dispatch(setTemplateId(id));
       dispatch(resetScreenChanged({ screen: activeScreen.toLowerCase() }));
 
-      // 2. Refresh the specific view details in Redux
-      // This will trigger the useEffect in SaveViewMenu.jsx to re-apply filters if needed
       dispatch(
-        getViewById({
-          id: currentTemplateId,
-          type: isMembersScreen ? "members" : undefined,
-        }),
+        getGridTemplates(
+          gridTemplateType ? { type: gridTemplateType } : {},
+        ),
       );
 
-      // 3. Refresh the template list to ensure anything else using it (like the dropdown) is current
-      dispatch(
-        getGridTemplates(isMembersScreen ? { type: "members" } : {}),
-      );
-
-      // 4. Reload the filtered applications if on the applications page
-      if (location.pathname.toLowerCase() === "/applications") {
-        console.log("🔄 Reloading applications after save with templateId:", currentTemplateId);
-        dispatch(getApplicationsWithFilter({
-          templateId: currentTemplateId,
-          page: 1,
-          limit: 10
-        }));
+      if (isApplicationsPage) {
+        dispatch(
+          getApplicationsWithFilter({
+            templateId: id,
+            page: 1,
+            limit: 10,
+          }),
+        );
       } else if (isProfileScreen) {
         dispatch(
           getProfilesWithFilter({
-            templateId: currentTemplateId,
+            templateId: id,
             page: 1,
             limit: 100,
           }),
@@ -341,13 +370,12 @@ const Toolbar = () => {
       } else if (isMembersScreen) {
         dispatch(
           getSubscriptionsWithTemplate({
-            templateId: currentTemplateId,
+            templateId: id,
             page: 1,
             limit: 10,
           }),
         );
       }
-
     } catch (error) {
       console.error("Error updating template:", error);
       MyAlert("error", "Error", error?.message || "Failed to update template");
@@ -453,7 +481,7 @@ const Toolbar = () => {
           if (isDateField) {
             return (
               <DateRang
-                key={label}
+                key={`${resolvedGridTemplateId || "default"}-${label}`}
                 label={label}
                 selectedValues={selectedValues}
                 operator={operator}
@@ -465,7 +493,7 @@ const Toolbar = () => {
           // Show all filters that are in visibleFilters
           return (
             <MultiFilterDropdown
-              key={label}
+              key={`${resolvedGridTemplateId || "default"}-${label}`}
               label={label}
               options={options}
               selectedValues={selectedValues}
@@ -505,10 +533,8 @@ const Toolbar = () => {
           location.pathname !== "/EventsDashboard" &&
           location.pathname !== "/CorrespondenceDashboard" &&
           location.pathname !== "/IssuesManagementDashboard" &&
-          hasChanges &&
-          !isSystemDefaultTemplateActive &&
-          !templatesLoading &&
-          !viewLoading && (
+          canEditGridTemplates &&
+          hasChanges && (
           <Button
             onClick={handleSave}
             loading={isSaving}

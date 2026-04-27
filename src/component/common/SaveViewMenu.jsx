@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo, useCallback } from "react";
 import {
   Dropdown,
   Button,
@@ -22,7 +22,8 @@ import {
   deleteGridTemplate,
   setDefaultGridTemplate,
 } from "../../features/templete/templetefiltrsclumnapi";
-import { getViewById } from "../../features/views/ViewByIdSlice";
+import { useAuthorization } from "../../context/AuthorizationContext";
+import { getViewById, clearSelectedView } from "../../features/views/ViewByIdSlice";
 import {
   setActiveTemplateId,
   clearActiveTemplateId,
@@ -39,6 +40,7 @@ import MyInput from "./MyInput";
 import { getSubscriptionFilterTemplatesBaseUrl } from "../../config/serviceUrls";
 import {
   getLabelToKeyMap,
+  normalizeViewTemplatePayload,
   transformFiltersForApi,
   transformFiltersFromApi,
 } from "../../utils/filterUtils";
@@ -48,13 +50,38 @@ import {
   initializeWithTemplate,
   resetInitialization,
 } from "../../features/applicationwithfilterslice";
+import { resetScreenChanged } from "../../features/views/ScreenFilterChangSlice";
 
 const SaveViewMenu = ({ className, style }) => {
   const dispatch = useDispatch();
   const location = useLocation();
+  const { hasAnyRole } = useAuthorization();
+  const canEditGridTemplates = hasAnyRole(["SU", "ASU"]);
   const { templates, loading } = useSelector(
     (state) => state.templetefiltrsclumnapi,
   );
+
+  /** Bust Dropdown cache + drive re-render when any template’s isDefault changes after API refresh */
+  const templateListRenderKey = useMemo(() => {
+    if (!templates) return "none";
+    const sys = templates.systemDefault
+      ? `${String(templates.systemDefault._id)}:${
+          templates.systemDefault.isDefault ? 1 : 0
+        }`
+      : "nosys";
+    const user =
+      (templates.userTemplates || [])
+        .map(
+          (t) =>
+            `${String(t._id)}:${
+              t && (t.isDefault === true || t.isDefault === "true")
+                ? 1
+                : 0
+            }`,
+        )
+        .join(",") || "";
+    return `${sys}|${user}`;
+  }, [templates]);
   const { currentTemplateId } = useSelector(
     (state) => state.applicationWithFilter,
   );
@@ -62,30 +89,39 @@ const SaveViewMenu = ({ className, style }) => {
   const { selectedView, loading: viewLoading } = useSelector(
     (state) => state.viewById,
   );
+  /** Re-run apply when getViewById content changes (application templates often need full detail for filters). */
+  const keyForView = (v) =>
+    v
+      ? `${String(v._id)}|${JSON.stringify(v?.filters)}|${JSON.stringify(
+          v?.columns,
+        )}`
+      : "";
+  const viewTemplateDetailKey = useMemo(
+    () => keyForView(selectedView),
+    [selectedView],
+  );
   const { columns, applyTemplate, selectedTemplates, updateSelectedTemplate } =
     useTableColumns();
-  const { filtersState, applyTemplateFilters } = useFilters();
+  const {
+    activePage,
+    filtersState,
+    applyTemplateFilters,
+    acknowledgeUserChoseNewTemplate,
+    hasUserOverriddenTemplateFilters,
+  } = useFilters();
+  /**
+   * TableColumnsContext uses "Members" for the grid; FilterContext activePage for /membership
+   * is "Membership". Column defs must use "Members" for transforms + applyTemplate.
+   */
+  const tableColumnScreen =
+    activePage === "Membership" ? "Members" : activePage;
   const [activeView, setActiveView] = useState("Default View");
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [viewName, setViewName] = useState("");
   const [saving, setSaving] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
 
-  // Helper to get screen from path (consistent with FilterContext and Toolbar)
-  const getScreenFromPath = () => {
-    const pathMap = {
-      "/applications": "Applications",
-      "/Summary": "Profile",
-      "/membership": "Members",
-      "/members": "Members",
-      "/onlinePayment": "onlinePayment",
-      "/CommunicationBatchDetail": "Correspondence",
-      "/CasesSummary": "Cases",
-      "/EventsSummary": "Events",
-      "/EventsDashboard": "Events",
-    };
-    return pathMap[location.pathname] || "Applications";
-  };
+  // Screen key for columns/filters must match FilterContext `activePage` (not a separate path map).
 
   // Determine screen name for filtering templates
   const rawScreenName = location.pathname.split("/").pop() || "application";
@@ -100,7 +136,6 @@ const SaveViewMenu = ({ className, style }) => {
     eventsdashboard: "eventsdashboard",
   };
 
-  const activeScreen = getScreenFromPath();
   const normalizeTemplateType = (type) =>
     String(type || "")
       .trim()
@@ -116,9 +151,75 @@ const SaveViewMenu = ({ className, style }) => {
     (normalizeTemplateType(targetTemplateType) === "members" &&
       normalizeTemplateType(template?.templateType) === "subscription");
 
-  const transformFiltersForApply = (apiFilters) => {
-    return transformFiltersFromApi(apiFilters, columns[activeScreen] || []);
-  };
+  const transformFiltersForApply = useCallback(
+    (apiFilters) => {
+      return transformFiltersFromApi(
+        apiFilters,
+        columns[tableColumnScreen] || [],
+      );
+    },
+    [columns, tableColumnScreen],
+  );
+
+  /** Apply a template (list item or getViewById detail) to columns + filter chips + fetches. */
+  const applyViewPayloadToState = useCallback(
+    (t) => {
+      t = normalizeViewTemplatePayload(t);
+      if (!t) return;
+      const colScreen = tableColumnScreen;
+      let rawFilters = t.filters || {};
+      if (typeof rawFilters === "string") {
+        try {
+          rawFilters = JSON.parse(rawFilters);
+        } catch {
+          rawFilters = {};
+        }
+      }
+      const transformedFilters = transformFiltersForApply(rawFilters);
+
+      applyTemplate(
+        colScreen,
+        t.columns || [],
+        templates?.systemDefault?.columns || [],
+        t.columnLabels || {},
+        templates?.systemDefault?.columnLabels || {},
+      );
+      applyTemplateFilters(transformedFilters);
+      setActiveView(t.name);
+      dispatch(initializeWithTemplate(t._id || ""));
+
+      if (isMembersTemplateType) {
+        dispatch(
+          getSubscriptionsWithTemplate({
+            templateId: t._id || "",
+            page: 1,
+            limit: 10,
+          }),
+        );
+      } else if (activePage === "Applications" && t._id) {
+        dispatch(
+          getApplicationsWithFilter({
+            templateId: t._id,
+            page: 1,
+            limit: 10,
+          }),
+        );
+      }
+      dispatch(resetScreenChanged({ screen: activePage }));
+    },
+    [
+      tableColumnScreen,
+      applyTemplate,
+      applyTemplateFilters,
+      activePage,
+      columns,
+      dispatch,
+      isMembersTemplateType,
+      templates,
+      transformFiltersForApply,
+    ],
+  );
+
   const buildColumnLabelsMap = (screenColumns = []) =>
     screenColumns.reduce((acc, col) => {
       const key = Array.isArray(col?.dataIndex)
@@ -134,31 +235,23 @@ const SaveViewMenu = ({ className, style }) => {
 
   // Consolidate Initialization Logic: Reset and Apply Template on Screen Change
   const lastScreen = React.useRef(null);
+  /** Only run full applyTemplate/applyTemplateFilters when switching to a new template id — not on getViewById refetch of the same view (that was stomping user edits and hiding Save). */
+  const lastAppliedTemplateIdRef = React.useRef(null);
+  /** When user picks a view from the menu, allow one effect run even if hasUserOverridden is true (races with other updates). */
+  const viewMenuPickForceApplyRef = React.useRef(false);
   useEffect(() => {
     // 🛡️ Always reset immediately IF AND ONLY IF the screen actually changed
     if (lastScreen.current !== targetTemplateType) {
-      console.log(
-        "🔄 SaveViewMenu: Screen change detected, resetting initialization:",
-        targetTemplateType,
-      );
+      lastAppliedTemplateIdRef.current = null;
+      dispatch(resetScreenChanged({}));
       dispatch(resetInitialization());
-      dispatch(clearActiveTemplateId()); // 🛡️ Clear any active template from the previous screen
+      dispatch(clearActiveTemplateId());
       lastScreen.current = targetTemplateType;
     }
 
-    // 🛡️ Guard: Wait until templates are loaded and ready
     if (loading || !templates) {
-      console.log(
-        "⏳ SaveViewMenu: Waiting for templates to load for screen:",
-        targetTemplateType,
-      );
       return;
     }
-
-    console.log(
-      "🚀 SaveViewMenu: Initializing view for screen:",
-      targetTemplateType,
-    );
 
     // 1. Check if we have a persisted view in context for this screen
     const persistedTemplate = selectedTemplates[targetTemplateType];
@@ -189,10 +282,10 @@ const SaveViewMenu = ({ className, style }) => {
     } else {
       setActiveView("System Template");
       dispatch(setActiveTemplateId(null));
-      // Always initialize data loading even if no explicitly saved view exists
       dispatch(initializeWithTemplate(""));
+      dispatch(resetScreenChanged({ screen: activePage }));
     }
-  }, [dispatch, targetTemplateType, templates, loading, isMembersTemplateType]);
+  }, [dispatch, targetTemplateType, templates, loading, isMembersTemplateType, activePage]);
 
   useEffect(() => {
     if (activeTemplateId) {
@@ -200,45 +293,56 @@ const SaveViewMenu = ({ className, style }) => {
     }
   }, [dispatch, activeTemplateId, targetTemplateType]);
 
-  // Apply template settings when view details are fetched
+  // Apply template settings when view details are fetched (once per active template id)
   useEffect(() => {
-    if (selectedView && selectedView._id === activeTemplateId) {
-      console.log(
-        "✅ SaveViewMenu: Applying view details from viewById slice:",
-        selectedView.name,
-      );
-
-      const colScreen = activeScreen;
-      const transformedFilters = transformFiltersForApply(
-        selectedView.filters || {},
-      );
-
-      applyTemplate(
-        colScreen,
-        selectedView.columns,
-        templates?.systemDefault?.columns || [],
-        selectedView.columnLabels || {},
-        templates?.systemDefault?.columnLabels || {},
-      );
-      applyTemplateFilters(transformedFilters);
-      setActiveView(selectedView.name);
-
-      // Initialize data loading with the template
-      dispatch(initializeWithTemplate(selectedView._id || ""));
-      if (isMembersTemplateType) {
-        dispatch(
-          getSubscriptionsWithTemplate({
-            templateId: selectedView._id || "",
-            page: 1,
-            limit: 10,
-          }),
-        );
+    if (!activeTemplateId) {
+      lastAppliedTemplateIdRef.current = null;
+      return;
+    }
+    if (!selectedView || String(selectedView._id) !== String(activeTemplateId)) {
+      return;
+    }
+    if (viewTemplateDetailKey) {
+      if (lastAppliedTemplateIdRef.current === viewTemplateDetailKey) {
+        viewMenuPickForceApplyRef.current = false;
+        return;
       }
     }
-  }, [selectedView, activeTemplateId, isMembersTemplateType, dispatch]);
+    const forceFromViewMenu = viewMenuPickForceApplyRef.current;
+    viewMenuPickForceApplyRef.current = false;
+    if (hasUserOverriddenTemplateFilters() && !forceFromViewMenu) {
+      // Do not set lastAppliedTemplateIdRef — we did not apply; a later run or save flow may apply
+      return;
+    }
+    lastAppliedTemplateIdRef.current = viewTemplateDetailKey;
 
-  const handleApplyView = (template, shouldPersist = true) => {
-    // Just set the active ID; the useEffect above will handle the application of details
+    applyViewPayloadToState(
+      normalizeViewTemplatePayload(selectedView),
+    );
+  }, [
+    viewTemplateDetailKey,
+    activeTemplateId,
+    applyViewPayloadToState,
+    hasUserOverriddenTemplateFilters,
+  ]);
+
+  const handleApplyView = (
+    template,
+    shouldPersist = true,
+    { userPickedView = false } = {},
+  ) => {
+    if (userPickedView) {
+      acknowledgeUserChoseNewTemplate();
+      viewMenuPickForceApplyRef.current = true;
+      // Reset so the getViewById follow-up is allowed to run (list payloads often
+      // omit or shallow-copy filters; the detail response is the source of truth).
+      lastAppliedTemplateIdRef.current = null;
+      dispatch(clearSelectedView());
+      // Best-effort UI while the detail request is in flight (if list has columns/filters).
+      applyViewPayloadToState(template);
+      // Do NOT set lastAppliedTemplateIdRef to the new id here — if we did, the
+      // effect would hit lastApplied===id and skip applying selectedView from the API.
+    }
     dispatch(setActiveTemplateId(template._id || null));
 
     // Update context persistence
@@ -247,18 +351,45 @@ const SaveViewMenu = ({ className, style }) => {
     }
   };
 
-  const handleSetDefaultView = (id, isDefault) => {
+  /** Star sets this view as the default. It is not a toggle: the filled star is informational only. */
+  const handleSetAsDefaultView = (id) => {
     dispatch(
-      setDefaultGridTemplate({ id, isDefault, type: targetTemplateType }),
+      setDefaultGridTemplate({ id, isDefault: true, type: targetTemplateType }),
     )
       .unwrap()
-      .then(() => {
-        MyAlert(
-          "success",
-          "Success",
-          `Default view ${isDefault ? "set" : "removed"} successfully`,
-        );
-        dispatch(getGridTemplates({ type: targetTemplateType })); // Refresh the list to show new default star
+      .then((result) => {
+        const templatesData = result?.templates;
+        MyAlert("success", "Success", "Default view set successfully");
+        acknowledgeUserChoseNewTemplate();
+        const t =
+          templatesData?.userTemplates?.find(
+            (x) => String(x._id) === String(id),
+          ) ||
+          (templatesData?.systemDefault &&
+          String(templatesData.systemDefault._id) === String(id)
+            ? templatesData.systemDefault
+            : null);
+        if (t) {
+          updateSelectedTemplate(targetTemplateType, t);
+        }
+        dispatch(setActiveTemplateId(id));
+        if (activePage === "Applications") {
+          dispatch(
+            getApplicationsWithFilter({
+              templateId: id,
+              page: 1,
+              limit: 10,
+            }),
+          );
+        } else if (isMembersTemplateType) {
+          dispatch(
+            getSubscriptionsWithTemplate({
+              templateId: id,
+              page: 1,
+              limit: 10,
+            }),
+          );
+        }
       })
       .catch((error) => {
         console.error("Error setting default view:", error);
@@ -296,16 +427,17 @@ const SaveViewMenu = ({ className, style }) => {
       return;
     }
 
+    const savedViewName = viewName.trim();
     setSaving(true);
     try {
       // 1. Gather and transform filters
       const activeFilters = transformFiltersForApi(
         filtersState,
-        columns[activeScreen] || [],
+        columns[tableColumnScreen] || [],
       );
 
       // 2. Gather visible columns
-      const screenColumns = columns[activeScreen] || [];
+      const screenColumns = columns[tableColumnScreen] || [];
       const visibleColumns = screenColumns
         .filter((col) => col.isGride === true)
         .map((col) =>
@@ -316,7 +448,7 @@ const SaveViewMenu = ({ className, style }) => {
 
       // 3. Construct payload
       const payload = {
-        name: viewName,
+        name: savedViewName,
         templateType: targetTemplateType,
         filters: activeFilters,
         columns: visibleColumns,
@@ -335,7 +467,7 @@ const SaveViewMenu = ({ className, style }) => {
         },
       });
 
-      MyAlert("success", "Success", `View "${viewName}" saved successfully`);
+      MyAlert("success", "Success", `View "${savedViewName}" saved successfully`);
       setIsModalVisible(false);
       setViewName("");
 
@@ -346,15 +478,31 @@ const SaveViewMenu = ({ className, style }) => {
 
       // 2. Find the newly saved template in the refreshed list
       const savedTemplate = templatesResponse.userTemplates?.find(
-        (t) => t.name === viewName && isTemplateForCurrentType(t),
+        (t) => t.name === savedViewName && isTemplateForCurrentType(t),
       );
 
       if (savedTemplate) {
-        handleApplyView(savedTemplate); // This will update context and filters
+        handleApplyView(savedTemplate, true, { userPickedView: true });
+        // Re-apply from the template payload: getViewById effect can skip when
+        // hasUserOverriddenTemplateFilters is still true, leaving the chip UI out of sync.
+        const tFilters = transformFiltersForApply(savedTemplate.filters || {});
+        const colScreen = tableColumnScreen;
+        applyTemplate(
+          colScreen,
+          savedTemplate.columns || [],
+          templatesResponse?.systemDefault?.columns || [],
+          savedTemplate.columnLabels || {},
+          templatesResponse?.systemDefault?.columnLabels || {},
+        );
+        applyTemplateFilters(tFilters);
+        setActiveView(savedViewName);
+        lastAppliedTemplateIdRef.current = keyForView(savedTemplate);
+        dispatch(initializeWithTemplate(savedTemplate._id || ""));
+        dispatch(resetScreenChanged({ screen: activePage }));
       }
 
       // 3. Refresh the grid data
-      if (location.pathname.toLowerCase() === "/applications") {
+      if (activePage === "Applications") {
         dispatch(
           getApplicationsWithFilter({
             templateId: savedTemplate?._id || currentTemplateId || "",
@@ -396,7 +544,7 @@ const SaveViewMenu = ({ className, style }) => {
         cursor: "pointer",
         background: activeView === template.name ? "#f0f7ff" : "transparent",
       }}
-      onClick={() => handleApplyView(template)}
+      onClick={() => handleApplyView(template, true, { userPickedView: true })}
     >
       <span style={{ fontSize: 14, color: "#333" }}>{template.name}</span>
       <div
@@ -405,16 +553,21 @@ const SaveViewMenu = ({ className, style }) => {
       >
         {isPinned ? (
           <StarFilled
-            style={{ color: "#1890ff", fontSize: 16, cursor: "pointer" }}
-            onClick={() => handleSetDefaultView(template._id, false)}
+            style={{ color: "#1890ff", fontSize: 16, cursor: "default" }}
+            title="This is your default view. Star another view to change it."
+            aria-label="This is your default view"
+            role="img"
           />
         ) : (
           <StarOutlined
             style={{ color: "#555", fontSize: 16, cursor: "pointer" }}
-            onClick={() => handleSetDefaultView(template._id, true)}
+            title="Set as default view"
+            onClick={() => handleSetAsDefaultView(template._id)}
+            aria-label="Set as default view"
+            role="button"
           />
         )}
-        {!template.systemDefault && (
+        {canEditGridTemplates && !template.systemDefault && (
           <Popconfirm
             title="Delete this view?"
             onConfirm={() => handleDeleteView(template._id)}
@@ -445,74 +598,85 @@ const SaveViewMenu = ({ className, style }) => {
           <Spin size="small" />
         </div>
       ) : (
-        <>
-          {/* Select View Header */}
-          <div
-            style={{
-              padding: "8px 12px",
-              fontSize: 13,
-              color: "#999",
-              fontWeight: 500,
-            }}
-          >
-            Select View
-          </div>
+        (() => {
+          const userViews =
+            templates?.userTemplates?.filter((t) =>
+              isTemplateForCurrentType(t),
+            ) || [];
+          const hasUserDefault = userViews.some(
+            (t) => t.isDefault === true || t.isDefault === "true",
+          );
+          /** Only one filled star: user default wins over system; first user default wins if API returns duplicates */
+          const defaultUserTemplate = userViews.find(
+            (t) => t.isDefault === true || t.isDefault === "true",
+          );
+          const isSystemDefaultPinned = !hasUserDefault;
 
-          {/* System Default */}
-          {(() => {
-            const userViews =
-              templates?.userTemplates?.filter((t) =>
-                isTemplateForCurrentType(t),
-              ) || [];
-            const hasUserDefault = userViews.some((t) => t.isDefault);
+          return (
+            <>
+              {/* Select View Header */}
+              <div
+                style={{
+                  padding: "8px 12px",
+                  fontSize: 13,
+                  color: "#999",
+                  fontWeight: 500,
+                }}
+              >
+                Select View
+              </div>
 
-            return (
-              templates?.systemDefault &&
-              isTemplateForCurrentType(templates.systemDefault) &&
-              renderTemplateItem(
-                templates.systemDefault,
-                templates.systemDefault.isDefault || !hasUserDefault,
-              )
-            );
-          })()}
+              {templates?.systemDefault &&
+                isTemplateForCurrentType(templates.systemDefault) &&
+                renderTemplateItem(
+                  templates.systemDefault,
+                  isSystemDefaultPinned,
+                )}
 
-          <Divider style={{ margin: "4px 0" }} />
+              <Divider style={{ margin: "4px 0" }} />
 
-          {/* Manage Views Header */}
-          <div
-            style={{
-              padding: "8px 12px",
-              fontSize: 13,
-              color: "#999",
-              fontWeight: 500,
-            }}
-          >
-            Manage Views
-          </div>
+              {/* Manage Views Header */}
+              <div
+                style={{
+                  padding: "8px 12px",
+                  fontSize: 13,
+                  color: "#999",
+                  fontWeight: 500,
+                }}
+              >
+                Manage Views
+              </div>
 
-          {/* Save Current View Action */}
-          <div
-            style={{
-              padding: "6px 12px",
-              display: "flex",
-              alignItems: "center",
-              cursor: "pointer",
-              color: "#555",
-              fontSize: 14,
-            }}
-            onClick={() => setIsModalVisible(true)}
-          >
-            <PlusOutlined style={{ marginRight: 8, fontSize: 16 }} /> Save
-            Current View
-          </div>
+              {canEditGridTemplates && (
+                <div
+                  style={{
+                    padding: "6px 12px",
+                    display: "flex",
+                    alignItems: "center",
+                    cursor: "pointer",
+                    color: "#555",
+                    fontSize: 14,
+                  }}
+                  onClick={() => setIsModalVisible(true)}
+                >
+                  <PlusOutlined style={{ marginRight: 8, fontSize: 16 }} /> Save
+                  Current View
+                </div>
+              )}
 
-          {/* User Templates */}
-          {templates?.userTemplates
-            ?.filter((t) => isTemplateForCurrentType(t))
-            .map((template) =>
-              renderTemplateItem(template, template.isDefault),
-            )}
-        </>
+              {userViews.map((template) =>
+                renderTemplateItem(
+                  template,
+                  !!(
+                    defaultUserTemplate &&
+                    String(template._id) ===
+                      String(defaultUserTemplate._id)
+                  ),
+                ),
+              )}
+            </>
+          );
+        })()
       )}
     </div>
   );
@@ -523,11 +687,12 @@ const SaveViewMenu = ({ className, style }) => {
       style={{ display: "flex", alignItems: "center", gap: "8px", ...style }}
     >
       <Dropdown
-        overlay={menu}
+        key={templateListRenderKey}
         trigger={["click"]}
         placement="bottomLeft"
         open={menuOpen}
         onOpenChange={setMenuOpen}
+        dropdownRender={() => menu}
       >
         <Button
           onClick={(e) => e.preventDefault()}

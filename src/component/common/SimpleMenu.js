@@ -49,7 +49,8 @@ function SimpleMenu({
   vertical,
   attachedFtn,
   record,
-  index
+  index,
+  triggerClassName,
 }) {
   const [checkboxes, setCheckboxes] = useState([]);
   const [transferreq, settransferreq] = useState(false);
@@ -496,12 +497,13 @@ function SimpleMenu({
   return (
     <>
       <Dropdown
-        overlay={menu}
+        dropdownRender={() => menu}
         trigger={["hover"]}
         placement="bottomLeft"
         overlayStyle={{ width: 220, padding: "0px" }}
       >
         <Button
+          className={triggerClassName}
           style={
             isCheckBox
               ? {
@@ -513,7 +515,9 @@ function SimpleMenu({
                 marginLeft: '8px'
               }
               : {
-                backgroundColor: 'transparent',
+                ...(triggerClassName
+                  ? {}
+                  : { backgroundColor: 'transparent' }),
                 borderRadius: '4px',
                 height: '32px',
                 border: 'none',
