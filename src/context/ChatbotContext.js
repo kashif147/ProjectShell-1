@@ -21,6 +21,7 @@ import {
   SendOutlined,
   ReloadOutlined,
   CloseOutlined,
+  MinusOutlined,
 } from "@ant-design/icons";
 import moment from "moment";
 
@@ -42,6 +43,7 @@ export const ChatbotProvider = ({ children }) => {
     String(process.env.REACT_APP_CHATBOT_USE_WEBHOOK || "true").toLowerCase() ===
     "true";
   const [chatVisible, setChatVisible] = useState(false);
+  const [chatMinimized, setChatMinimized] = useState(false);
   const [chatMessages, setChatMessages] = useState([
     {
       id: 1,
@@ -562,15 +564,22 @@ export const ChatbotProvider = ({ children }) => {
   // Show chatbot
   const showChatbot = () => {
     setChatVisible(true);
+    setChatMinimized(false);
   };
 
   // Hide chatbot
   const hideChatbot = () => {
     setChatVisible(false);
+    setChatMinimized(false);
+  };
+
+  const toggleChatMinimize = () => {
+    setChatMinimized((prev) => !prev);
   };
 
   const value = {
     chatVisible,
+    chatMinimized,
     chatMessages,
     chatInput,
     chatLoading,
@@ -582,6 +591,7 @@ export const ChatbotProvider = ({ children }) => {
     clearChat,
     showChatbot,
     hideChatbot,
+    toggleChatMinimize,
     getCurrentPageContext,
   };
 
@@ -597,6 +607,7 @@ export const ChatbotProvider = ({ children }) => {
 const GlobalChatbot = () => {
   const {
     chatVisible,
+    chatMinimized,
     chatMessages,
     chatInput,
     chatLoading,
@@ -607,6 +618,7 @@ const GlobalChatbot = () => {
     handleKeyPress,
     clearChat,
     hideChatbot,
+    toggleChatMinimize,
     getCurrentPageContext,
   } = useChatbot();
 
@@ -630,12 +642,12 @@ const GlobalChatbot = () => {
         <div
           style={{
             position: "fixed",
-            right: "0",
-            bottom: "0",
-            width: "420px",
-            height: "50vh",
+            right: "24px",
+            bottom: "100px",
+            width: "380px",
+            height: chatMinimized ? "76px" : "500px",
             background: "white",
-            borderRadius: "0",
+            borderRadius: "16px",
             boxShadow: "0 20px 60px rgba(0, 0, 0, 0.15)",
             border: "1px solid #e2e8f0",
             zIndex: 1000,
@@ -676,11 +688,20 @@ const GlobalChatbot = () => {
             <Space>
               <Button
                 type="text"
+                icon={<MinusOutlined />}
+                onClick={toggleChatMinimize}
+                size="small"
+                style={{ color: "white" }}
+                title={chatMinimized ? "Expand chat" : "Minimize chat"}
+              />
+              <Button
+                type="text"
                 icon={<ReloadOutlined />}
                 onClick={clearChat}
                 size="small"
                 style={{ color: "white" }}
                 title="Clear chat"
+                disabled={chatMinimized}
               />
               <Button
                 type="text"
@@ -693,157 +714,161 @@ const GlobalChatbot = () => {
             </Space>
           </div>
 
-          {/* Chat Messages */}
-          <div
-            style={{
-              flex: 1,
-              overflowY: "auto",
-              padding: "16px",
-              background: "#fafafa",
-            }}
-          >
-            <List
-              dataSource={chatMessages}
-              renderItem={(message) => (
-                <List.Item style={{ border: "none", padding: "8px 0" }}>
+          {!chatMinimized && (
+            <>
+              {/* Chat Messages */}
+              <div
+                style={{
+                  flex: 1,
+                  overflowY: "auto",
+                  padding: "16px",
+                  background: "#fafafa",
+                }}
+              >
+                <List
+                  dataSource={chatMessages}
+                  renderItem={(message) => (
+                    <List.Item style={{ border: "none", padding: "8px 0" }}>
+                      <div
+                        style={{
+                          width: "100%",
+                          display: "flex",
+                          flexDirection:
+                            message.type === "user" ? "row-reverse" : "row",
+                          alignItems: "flex-start",
+                          gap: "8px",
+                        }}
+                      >
+                        <Avatar
+                          size="small"
+                          style={{
+                            background:
+                              message.type === "user"
+                                ? "linear-gradient(135deg, #215e97 0%, #1a4d7a 100%)"
+                                : "linear-gradient(135deg, #e2e8f0 0%, #cbd5e1 100%)",
+                            color: message.type === "user" ? "white" : "#374151",
+                            flexShrink: 0,
+                          }}
+                        >
+                          {message.type === "user" ? "U" : <RobotOutlined />}
+                        </Avatar>
+                        <div
+                          style={{
+                            maxWidth: "80%",
+                            background:
+                              message.type === "user"
+                                ? "linear-gradient(135deg, #215e97 0%, #1a4d7a 100%)"
+                                : "white",
+                            color: message.type === "user" ? "white" : "#374151",
+                            padding: "12px 16px",
+                            borderRadius: "16px",
+                            border:
+                              message.type === "user"
+                                ? "none"
+                                : "1px solid #e2e8f0",
+                            fontSize: "14px",
+                            lineHeight: "1.5",
+                            whiteSpace: "pre-wrap",
+                            wordBreak: "break-word",
+                            boxShadow:
+                              message.type === "user"
+                                ? "0 2px 8px rgba(33, 94, 151, 0.2)"
+                                : "0 1px 3px rgba(0, 0, 0, 0.1)",
+                          }}
+                        >
+                          {message.content}
+                        </div>
+                      </div>
+                    </List.Item>
+                  )}
+                />
+                {chatLoading && (
                   <div
                     style={{
-                      width: "100%",
                       display: "flex",
-                      flexDirection:
-                        message.type === "user" ? "row-reverse" : "row",
-                      alignItems: "flex-start",
+                      alignItems: "center",
                       gap: "8px",
+                      padding: "8px 0",
+                      color: "#666",
                     }}
                   >
                     <Avatar
                       size="small"
                       style={{
                         background:
-                          message.type === "user"
-                            ? "linear-gradient(135deg, #215e97 0%, #1a4d7a 100%)"
-                            : "linear-gradient(135deg, #e2e8f0 0%, #cbd5e1 100%)",
-                        color: message.type === "user" ? "white" : "#374151",
-                        flexShrink: 0,
+                          "linear-gradient(135deg, #e2e8f0 0%, #cbd5e1 100%)",
+                        color: "#374151",
                       }}
                     >
-                      {message.type === "user" ? "U" : <RobotOutlined />}
+                      <RobotOutlined />
                     </Avatar>
                     <div
                       style={{
-                        maxWidth: "80%",
-                        background:
-                          message.type === "user"
-                            ? "linear-gradient(135deg, #215e97 0%, #1a4d7a 100%)"
-                            : "white",
-                        color: message.type === "user" ? "white" : "#374151",
+                        background: "white",
                         padding: "12px 16px",
                         borderRadius: "16px",
-                        border:
-                          message.type === "user"
-                            ? "none"
-                            : "1px solid #e2e8f0",
+                        border: "1px solid #e2e8f0",
                         fontSize: "14px",
-                        lineHeight: "1.5",
-                        whiteSpace: "pre-wrap",
-                        wordBreak: "break-word",
-                        boxShadow:
-                          message.type === "user"
-                            ? "0 2px 8px rgba(33, 94, 151, 0.2)"
-                            : "0 1px 3px rgba(0, 0, 0, 0.1)",
+                        boxShadow: "0 1px 3px rgba(0, 0, 0, 0.1)",
                       }}
                     >
-                      {message.content}
+                      <Spin size="small" /> Analyzing page context...
                     </div>
                   </div>
-                </List.Item>
-              )}
-            />
-            {chatLoading && (
+                )}
+                <div ref={chatEndRef} />
+              </div>
+
+              {/* Chat Input */}
               <div
                 style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "8px",
-                  padding: "8px 0",
-                  color: "#666",
+                  padding: "16px",
+                  borderTop: "1px solid #e2e8f0",
+                  background: "white",
                 }}
               >
-                <Avatar
-                  size="small"
-                  style={{
-                    background:
-                      "linear-gradient(135deg, #e2e8f0 0%, #cbd5e1 100%)",
-                    color: "#374151",
-                  }}
-                >
-                  <RobotOutlined />
-                </Avatar>
+                <div style={{ display: "flex", gap: "8px" }}>
+                  <Input.TextArea
+                    value={chatInput}
+                    onChange={(e) => setChatInput(e.target.value)}
+                    onKeyPress={handleKeyPress}
+                    placeholder={`Ask about ${currentContext.name.toLowerCase()}...`}
+                    autoSize={{ minRows: 1, maxRows: 3 }}
+                    style={{
+                      flex: 1,
+                      borderRadius: "20px",
+                      border: "1px solid #e2e8f0",
+                    }}
+                  />
+                  <Button
+                    type="primary"
+                    icon={<SendOutlined />}
+                    onClick={handleSendMessage}
+                    disabled={!chatInput.trim() || chatLoading}
+                    style={{
+                      background:
+                        "linear-gradient(135deg, #215e97 0%, #1a4d7a 100%)",
+                      border: "none",
+                      alignSelf: "flex-end",
+                      borderRadius: "50%",
+                      width: "40px",
+                      height: "40px",
+                    }}
+                  />
+                </div>
                 <div
                   style={{
-                    background: "white",
-                    padding: "12px 16px",
-                    borderRadius: "16px",
-                    border: "1px solid #e2e8f0",
-                    fontSize: "14px",
-                    boxShadow: "0 1px 3px rgba(0, 0, 0, 0.1)",
+                    fontSize: "11px",
+                    color: "#999",
+                    marginTop: "8px",
+                    textAlign: "center",
                   }}
                 >
-                  <Spin size="small" /> Analyzing page context...
+                  Press Enter to send, Shift+Enter for new line
                 </div>
               </div>
-            )}
-            <div ref={chatEndRef} />
-          </div>
-
-          {/* Chat Input */}
-          <div
-            style={{
-              padding: "16px",
-              borderTop: "1px solid #e2e8f0",
-              background: "white",
-            }}
-          >
-            <div style={{ display: "flex", gap: "8px" }}>
-              <Input.TextArea
-                value={chatInput}
-                onChange={(e) => setChatInput(e.target.value)}
-                onKeyPress={handleKeyPress}
-                placeholder={`Ask about ${currentContext.name.toLowerCase()}...`}
-                autoSize={{ minRows: 1, maxRows: 3 }}
-                style={{
-                  flex: 1,
-                  borderRadius: "20px",
-                  border: "1px solid #e2e8f0",
-                }}
-              />
-              <Button
-                type="primary"
-                icon={<SendOutlined />}
-                onClick={handleSendMessage}
-                disabled={!chatInput.trim() || chatLoading}
-                style={{
-                  background:
-                    "linear-gradient(135deg, #215e97 0%, #1a4d7a 100%)",
-                  border: "none",
-                  alignSelf: "flex-end",
-                  borderRadius: "50%",
-                  width: "40px",
-                  height: "40px",
-                }}
-              />
-            </div>
-            <div
-              style={{
-                fontSize: "11px",
-                color: "#999",
-                marginTop: "8px",
-                textAlign: "center",
-              }}
-            >
-              Press Enter to send, Shift+Enter for new line
-            </div>
-          </div>
+            </>
+          )}
         </div>
       )}
     </>
