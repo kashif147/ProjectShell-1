@@ -15,8 +15,9 @@ import {
   getNotificationServiceUrl,
 } from "../../context/NotificationContext";
 import { NotificationRow } from "../notifications/notificationPresentation";
+import { LIFECYCLE_TYPES } from "../../utils/lifecycleBatchNotifications";
 
-const { Title } = Typography;
+const { Title, Text } = Typography;
 
 const NotificationPopover = ({ isOpen, onNavigateToAll }) => {
   const iconMap = {
@@ -108,18 +109,12 @@ const NotificationPopover = ({ isOpen, onNavigateToAll }) => {
     }
   }
 
-  const NotificationPopover = ({ isOpen }) => {
-    const navigate = useNavigate();
-    const {
-      notifications,
-      setNotifications,
-      setBadge,
-      markAsRead,
-      markAllAsRead,
-    } = useNotifications();
-    const [clearLoading, setClearLoading] = React.useState(false);
+  const navigate = useNavigate();
+  const { notifications, setNotifications, setBadge, markAsRead, markAllAsRead } =
+    useNotifications();
+  const [clearLoading, setClearLoading] = React.useState(false);
 
-    const handleMarkAsRead = async (notificationId) => {
+  const handleMarkAsRead = async (notificationId) => {
       if (!notificationId) return;
 
       const target = notifications.find(
@@ -158,9 +153,9 @@ const NotificationPopover = ({ isOpen, onNavigateToAll }) => {
         fetchNotifications();
         console.error("Failed to mark notification as read:", error);
       }
-    };
+  };
 
-    const fetchNotifications = async () => {
+  const fetchNotifications = async () => {
       try {
         const res = await axios.get(
           `${getNotificationServiceUrl()}/notifications?limit=20`,
@@ -177,9 +172,9 @@ const NotificationPopover = ({ isOpen, onNavigateToAll }) => {
       } catch (error) {
         console.error("Failed to fetch notifications:", error);
       }
-    };
+  };
 
-    const handleClearNotifications = async () => {
+  const handleClearNotifications = async () => {
       if (clearLoading) return;
       setClearLoading(true);
       try {
@@ -199,16 +194,16 @@ const NotificationPopover = ({ isOpen, onNavigateToAll }) => {
       } finally {
         setClearLoading(false);
       }
-    };
+  };
 
-    // 🔹 Auto-refresh when popover opens
-    useEffect(() => {
-      if (isOpen) {
-        fetchNotifications();
-      }
-    }, [isOpen]);
+  // Auto-refresh when popover opens.
+  useEffect(() => {
+    if (isOpen) {
+      fetchNotifications();
+    }
+  }, [isOpen]);
 
-    return (
+  return (
       <div style={{ width: 400, padding: 0 }}>
         <div
           style={{
@@ -387,8 +382,7 @@ const NotificationPopover = ({ isOpen, onNavigateToAll }) => {
         `}
         </style>
       </div>
-    );
-  };
+  );
 };
 
 export default NotificationPopover;
