@@ -76,7 +76,7 @@ function statusTextToTagColor(statusText, hasTriggeredDate) {
   if (s === "draft" || s === "pending") return "warning";
   return hasTriggeredDate ? "success" : "default";
 }
-
+// helper function to get the tag color based on the status text
 function ReminderBatchesTable({
   dataSource,
   onOpenBatch,
@@ -140,7 +140,8 @@ function ReminderBatchesTable({
             record.statusLabel || (completed ? "completed" : "pending"),
           );
           const prettyStatus =
-            statusLabel.charAt(0).toUpperCase() + statusLabel.slice(1).toLowerCase();
+            statusLabel.charAt(0).toUpperCase() +
+            statusLabel.slice(1).toLowerCase();
           const tagColor = statusTextToTagColor(statusLabel, completed);
           return (
             <div>
