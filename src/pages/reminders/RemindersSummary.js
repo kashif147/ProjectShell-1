@@ -1,31 +1,49 @@
 import React, { useEffect, useMemo, useState } from "react";
+import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import { useReminders } from "../../context/CampaignDetailsProvider";
 import { useTableColumns } from "../../context/TableColumnsContext ";
 import { useReminderBatchesFilter } from "../../context/ReminderBatchesFilterContext";
-import { campaigns } from "../../Data";
 import ReminderBatchesTable from "../../component/reminders/ReminderBatchesTable";
 import { parseReminderDateToMs } from "../../utils/Utilities";
+import { getSubscriptionServiceBaseUrl } from "../../config/serviceUrls";
 
-function enrichCampaign(item) {
-  const parts = String(item.date || "").split("/");
-  const month = parts[0] ? parseInt(parts[0], 10) : 0;
-  const year = parts[2] ? parseInt(parts[2], 10) : null;
-  const batchCode =
-    item.batchCode ||
-    (year && month
+function enrichReminderBatch(item) {
+  const id = item?.id || item?._id || "";
+  const date = item?.batchDate || item?.createdAt || "";
+  const d = date ? new Date(date) : null;
+  const month = d && !Number.isNaN(d.getTime()) ? d.getUTCMonth() + 1 : 0;
+  const year = d && !Number.isNaN(d.getTime()) ? d.getUTCFullYear() : null;
+  const batchCode = item?.referencePeriod
+    ? `BATCH-${item.referencePeriod}`
+    : year && month
       ? `BATCH-${year}-${String(month).padStart(2, "0")}`
-      : `BATCH-${item.id}`);
-  const hash = Number(item.id) * 17;
+      : `BATCH-${String(id).slice(-6) || "UNKNOWN"}`;
+  const hash = Number(String(id).replace(/\D/g, "").slice(-6) || 1) * 17;
   const perf = (i) => {
     const positive = (hash + i) % 3 !== 0;
     const pct = Math.round((((hash + i * 11) % 250) / 10) * 10) / 10;
     return { positive, pct };
   };
   return {
-    ...item,
+    id,
+    title: item?.name || "Untitled Batch",
     batchCode,
-    performance: item.performance || {
+    date,
+    user: item?.userFullName || "—",
+    stats: {
+      R1: Number(item?.countsByTier?.r1 ?? 0),
+      R2: Number(item?.countsByTier?.r2 ?? 0),
+      R3: Number(item?.countsByTier?.r3 ?? 0),
+    },
+    statusLabel: String(item?.status || "draft"),
+    triggered:
+      item?.executeCompletedAt ||
+      item?.buildCompletedAt ||
+      item?.executeStartedAt ||
+      null,
+    isSelected: false,
+    performance: {
       R1: perf(1),
       R2: perf(2),
       R3: perf(3),
@@ -52,24 +70,63 @@ function RemindersSummary() {
   const { disableFtn } = useTableColumns();
   const { applied } = useReminderBatchesFilter();
   const [currentPage, setCurrentPage] = useState(1);
-  const [pageSize, setPageSize] = useState(500);
+  const [pageSize, setPageSize] = useState(20);
   const [sortState, setSortState] = useState({
     columnKey: null,
     order: null,
   });
+  const [rows, setRows] = useState([]);
+  const [totalRows, setTotalRows] = useState(0);
+
+  useEffect(() => {
+    const controller = new AbortController();
+    const fetchReminderBatches = async () => {
+      try {
+        const token = localStorage.getItem("token");
+        const subscriptionBaseUrl = getSubscriptionServiceBaseUrl();
+        if (!token || !subscriptionBaseUrl) {
+          setRows([]);
+          setTotalRows(0);
+          return;
+        }
+        const response = await axios.get(
+          `${subscriptionBaseUrl}/reminder-batches`,
+          {
+            params: {
+              page: currentPage,
+              limit: pageSize,
+              kind: "REMINDER",
+            },
+            headers: { Authorization: `Bearer ${token}` },
+            signal: controller.signal,
+          },
+        );
+        const payload = response?.data?.data || {};
+        const items = Array.isArray(payload?.items) ? payload.items : [];
+        setRows(items.map(enrichReminderBatch));
+        setTotalRows(Number(payload?.total || 0));
+      } catch (error) {
+        if (error?.name === "CanceledError" || error?.code === "ERR_CANCELED") {
+          return;
+        }
+        setRows([]);
+        setTotalRows(0);
+      }
+    };
+    fetchReminderBatches();
+    return () => controller.abort();
+  }, [currentPage, pageSize]);
 
   const filteredData = useMemo(() => {
-    const enriched = campaigns.map(enrichCampaign);
-    return enriched.filter((c) => {
+    return rows.filter((c) => {
       const titleOk =
         !applied.title ||
         (c.title || "").toLowerCase().includes(applied.title);
       if (applied.year == null) return titleOk;
-      const p = String(c.date || "").split("/");
-      const y = p[2] ? parseInt(p[2], 10) : NaN;
+      const y = c.date ? new Date(c.date).getFullYear() : NaN;
       return titleOk && y === applied.year;
     });
-  }, [applied]);
+  }, [rows, applied]);
 
   useEffect(() => {
     setCurrentPage(1);
@@ -107,14 +164,8 @@ function RemindersSummary() {
     return arr;
   }, [filteredData, sortState]);
 
-  const paginatedData = sortedFilteredData.slice(
-    (currentPage - 1) * pageSize,
-    currentPage * pageSize,
-  );
-
   const handleSortChange = (columnKey, order) => {
     setSortState({ columnKey, order });
-    setCurrentPage(1);
   };
 
   const openBatch = (item) => {
@@ -142,9 +193,9 @@ function RemindersSummary() {
   return (
     <div style={{ width: "100%" }}>
       <ReminderBatchesTable
-        dataSource={paginatedData}
+        dataSource={sortedFilteredData}
         onOpenBatch={openBatch}
-        total={sortedFilteredData.length}
+        total={totalRows}
         sortColumnKey={sortState.columnKey}
         sortOrder={sortState.order}
         onSortChange={handleSortChange}

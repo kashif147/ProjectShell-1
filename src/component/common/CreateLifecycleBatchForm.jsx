@@ -14,47 +14,13 @@ import {
   watchBatchUntilPopulated,
 } from "../../utils/lifecycleBatchNotifications";
 import {
-  getAccountServiceBaseUrl,
   getSubscriptionServiceBaseUrl,
 } from "../../config/serviceUrls";
 
-/**
- * BatchDetail.type must match the account-service Mongoose enum exactly.
- * `REMINDER` / `CANCELLATION` are rejected by the API; common values are
- * plural title case (like list filters: batchType=Deductions) or lowercase
- * (like POST deduction). Defaults use plural title case; override via env
- * if your schema differs, e.g. REACT_APP_BATCH_DETAIL_TYPE_REMINDER=reminder
- */
-const API_TYPE = {
-  reminder:
-    (process.env.REACT_APP_BATCH_DETAIL_TYPE_REMINDER || "").trim() ||
-    "REMINDER",
-  cancellation:
-    (process.env.REACT_APP_BATCH_DETAIL_TYPE_CANCELLATION || "").trim() ||
-    "CANCELLATION",
-};
-
-function buildFormData({ variant, batchName, batchDateDayjs }) {
-  const formData = new FormData();
-  const batchDate = batchDateDayjs.format("YYYY-MM-DD");
-  const refPrefix = variant === "reminder" ? "REM" : "CAN";
-  const referenceNumber = `${refPrefix}-${Date.now()}`;
-
-  formData.append("type", API_TYPE[variant] || API_TYPE.reminder);
-  formData.append("date", batchDate);
-  formData.append("batchDate", batchDate);
-  formData.append("paymentDate", batchDate);
-  formData.append("workLocation", "All");
-  formData.append("referenceNumber", referenceNumber);
-  formData.append("description", batchName.trim());
-  formData.append("comments", "");
-  return { formData, referenceNumber };
-}
-
-function buildReminderPayload({ batchName, batchDateDayjs }) {
+function buildLifecyclePayload({ batchName, batchDateDayjs, kind }) {
   return {
     name: batchName.trim(),
-    kind: "REMINDER",
+    kind,
     batchDate: batchDateDayjs.toISOString(),
     referencePeriod: batchDateDayjs.format("YYYY-MM"),
   };
@@ -93,7 +59,6 @@ const CreateLifecycleBatchForm = forwardRef(function CreateLifecycleBatchForm(
     const batchName = form.getFieldValue("batchName");
     const dateVal = form.getFieldValue("batchDate") || dayjs();
     const token = localStorage.getItem("token");
-    const accountUrl = getAccountServiceBaseUrl();
     const subscriptionUrl = getSubscriptionServiceBaseUrl();
     if (!token) {
       message.error("Missing API configuration or session.");
@@ -102,44 +67,27 @@ const CreateLifecycleBatchForm = forwardRef(function CreateLifecycleBatchForm(
 
     try {
       let response;
-      let fallbackRefNo = "";
-      if (variant === "reminder") {
-        if (!subscriptionUrl) {
-          message.error("Missing API configuration or session.");
-          return null;
-        }
-        const payload = buildReminderPayload({
-          batchName,
-          batchDateDayjs: dateVal,
-        });
-        response = await axios.post(
-          `${subscriptionUrl}/reminder-batches`,
-          payload,
-          {
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${token}`,
-            },
-          },
-        );
-      } else {
-        if (!accountUrl) {
-          message.error("Missing API configuration or session.");
-          return null;
-        }
-        const { formData, referenceNumber } = buildFormData({
-          variant,
-          batchName,
-          batchDateDayjs: dateVal,
-        });
-        fallbackRefNo = referenceNumber;
-        response = await axios.post(`${accountUrl}/batch-details`, formData, {
+      let fallbackRefNo = `LIFE-${Date.now()}`;
+      if (!subscriptionUrl) {
+        message.error("Missing API configuration or session.");
+        return null;
+      }
+      const kind = variant === "cancellation" ? "CANCELLATION" : "REMINDER";
+      const payload = buildLifecyclePayload({
+        batchName,
+        batchDateDayjs: dateVal,
+        kind,
+      });
+      response = await axios.post(
+        `${subscriptionUrl}/reminder-batches`,
+        payload,
+        {
           headers: {
-            "Content-Type": "multipart/form-data",
+            "Content-Type": "application/json",
             Authorization: `Bearer ${token}`,
           },
-        });
-      }
+        },
+      );
 
       if (response.status !== 200 && response.status !== 201) {
         message.error("Failed to create batch.");

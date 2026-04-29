@@ -1,52 +1,43 @@
 import React, { useEffect, useMemo, useState } from "react";
+import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import { useReminders } from "../../context/CampaignDetailsProvider";
 import { useTableColumns } from "../../context/TableColumnsContext ";
 import { useCancellationBatchesFilter } from "../../context/CancellationBatchesFilterContext";
-import { cancellations, cancellationDetail } from "../../Data";
 import CancellationBatchesTable from "../../component/cancellations/CancellationBatchesTable";
 import { parseReminderDateToMs } from "../../utils/Utilities";
-
-function parseMemberCount(m) {
-  if (m == null) return 0;
-  const digits = String(m).replace(/\D/g, "");
-  if (digits) return parseInt(digits, 10) || 0;
-  const n = Number(m);
-  return Number.isFinite(n) ? n : 0;
-}
-
-function countReminder3(members) {
-  let r3Count = 0;
-  if (!members?.length) return r3Count;
-  for (const m of members) {
-    if (m == null || typeof m !== "object") continue;
-    const rn = String(m.reminderNo || "")
-      .trim()
-      .toUpperCase();
-    if (rn === "R3") r3Count++;
-  }
-  return r3Count;
-}
+import { getSubscriptionServiceBaseUrl } from "../../config/serviceUrls";
 
 function enrichCancellation(item) {
-  const parts = String(item.date || "").split("/");
-  const month = parts[0] ? parseInt(parts[0], 10) : 0;
-  const year = parts[2] ? parseInt(parts[2], 10) : null;
-  const batchCode =
-    year && month
+  const id = item?.id || item?._id || "";
+  const date = item?.batchDate || item?.createdAt || "";
+  const d = date ? new Date(date) : null;
+  const month = d && !Number.isNaN(d.getTime()) ? d.getUTCMonth() + 1 : 0;
+  const year = d && !Number.isNaN(d.getTime()) ? d.getUTCFullYear() : null;
+  const batchCode = item?.referencePeriod
+    ? `CBATCH-${item.referencePeriod}`
+    : year && month
       ? `CBATCH-${year}-${String(month).padStart(2, "0")}`
-      : `CBATCH-${item.id}`;
-  const detail = cancellationDetail.find(
-    (d) => String(d.id) === String(item.id),
-  );
-  const r3Count = countReminder3(detail?.members);
-  const batchTotal = parseMemberCount(item.members);
+      : `CBATCH-${String(id).slice(-6) || "UNKNOWN"}`;
+  const r3Count = Number(item?.countsByTier?.r3 ?? 0);
+  const cancelCount = Number(item?.countsByTier?.cancel ?? 0);
+  const fallbackTotal = Number(item?.countsByTier?.r1 ?? 0) + Number(item?.countsByTier?.r2 ?? 0) + r3Count + cancelCount;
+  const batchTotal = cancelCount || fallbackTotal;
   return {
-    ...item,
+    id,
+    title: item?.name || "Untitled Batch",
+    date,
+    user: item?.userFullName || "—",
     batchCode,
     batchTotal,
     r3Count,
-    hasCancellationDetail: detail != null,
+    processed:
+      item?.executeCompletedAt ||
+      item?.buildCompletedAt ||
+      (String(item?.status || "").toLowerCase() === "completed"
+        ? item?.updatedAt || item?.createdAt || true
+        : null),
+    hasCancellationDetail: false,
   };
 }
 
@@ -56,24 +47,63 @@ function CancellationSummary() {
   const { disableFtn } = useTableColumns();
   const { applied } = useCancellationBatchesFilter();
   const [currentPage, setCurrentPage] = useState(1);
-  const [pageSize, setPageSize] = useState(500);
+  const [pageSize, setPageSize] = useState(20);
   const [sortState, setSortState] = useState({
     columnKey: null,
     order: null,
   });
+  const [rows, setRows] = useState([]);
+  const [totalRows, setTotalRows] = useState(0);
+
+  useEffect(() => {
+    const controller = new AbortController();
+    const fetchCancellationBatches = async () => {
+      try {
+        const token = localStorage.getItem("token");
+        const subscriptionBaseUrl = getSubscriptionServiceBaseUrl();
+        if (!token || !subscriptionBaseUrl) {
+          setRows([]);
+          setTotalRows(0);
+          return;
+        }
+        const response = await axios.get(
+          `${subscriptionBaseUrl}/reminder-batches`,
+          {
+            params: {
+              page: currentPage,
+              limit: pageSize,
+              kind: "CANCELLATION",
+            },
+            headers: { Authorization: `Bearer ${token}` },
+            signal: controller.signal,
+          },
+        );
+        const payload = response?.data?.data || {};
+        const items = Array.isArray(payload?.items) ? payload.items : [];
+        setRows(items.map(enrichCancellation));
+        setTotalRows(Number(payload?.total || 0));
+      } catch (error) {
+        if (error?.name === "CanceledError" || error?.code === "ERR_CANCELED") {
+          return;
+        }
+        setRows([]);
+        setTotalRows(0);
+      }
+    };
+    fetchCancellationBatches();
+    return () => controller.abort();
+  }, [currentPage, pageSize]);
 
   const filteredData = useMemo(() => {
-    const enriched = cancellations.map(enrichCancellation);
-    return enriched.filter((c) => {
+    return rows.filter((c) => {
       const titleOk =
         !applied.title ||
         (c.title || "").toLowerCase().includes(applied.title);
       if (applied.year == null) return titleOk;
-      const p = String(c.date || "").split("/");
-      const y = p[2] ? parseInt(p[2], 10) : NaN;
+      const y = c.date ? new Date(c.date).getFullYear() : NaN;
       return titleOk && y === applied.year;
     });
-  }, [applied]);
+  }, [rows, applied]);
 
   useEffect(() => {
     setCurrentPage(1);
@@ -106,14 +136,8 @@ function CancellationSummary() {
     return arr;
   }, [filteredData, sortState]);
 
-  const paginatedData = sortedFilteredData.slice(
-    (currentPage - 1) * pageSize,
-    currentPage * pageSize,
-  );
-
   const handleSortChange = (columnKey, order) => {
     setSortState({ columnKey, order });
-    setCurrentPage(1);
   };
 
   const openBatch = (item) => {
@@ -141,9 +165,9 @@ function CancellationSummary() {
   return (
     <div style={{ width: "100%" }}>
       <CancellationBatchesTable
-        dataSource={paginatedData}
+        dataSource={sortedFilteredData}
         onOpenBatch={openBatch}
-        total={sortedFilteredData.length}
+        total={totalRows}
         sortColumnKey={sortState.columnKey}
         sortOrder={sortState.order}
         onSortChange={handleSortChange}
