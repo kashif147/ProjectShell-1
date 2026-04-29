@@ -1,15 +1,27 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import axios from "axios";
+import { getSubscriptionFilterTemplatesBaseUrl } from "../../config/serviceUrls";
 
-const API_URL = `${process.env.REACT_APP_PROFILE_SERVICE_URL}/templates`;
+const PROFILE_TEMPLATES_API_URL = `${process.env.REACT_APP_PROFILE_SERVICE_URL}/templates`;
+const SUBSCRIPTION_TEMPLATES_API_URL = getSubscriptionFilterTemplatesBaseUrl();
+
+const resolveTemplatesApiUrl = (type) => {
+    const normalizedType = String(type || "").trim().toLowerCase();
+    if (normalizedType === "member" || normalizedType === "members") {
+        return SUBSCRIPTION_TEMPLATES_API_URL;
+    }
+    return PROFILE_TEMPLATES_API_URL;
+};
 
 // Async thunk to fetch templates
 export const getGridTemplates = createAsyncThunk(
     "templetefiltrsclumnapi/getGridTemplates",
-    async (_, { rejectWithValue }) => {
+    async (params = {}, { rejectWithValue }) => {
         try {
             const token = localStorage.getItem("token");
-            const response = await axios.get(API_URL, {
+            const apiUrl = resolveTemplatesApiUrl(params?.type);
+            const response = await axios.get(apiUrl, {
+                params: params?.type ? { type: params.type } : undefined,
                 headers: {
                     Authorization: `Bearer ${token}`,
                 },
@@ -18,25 +30,22 @@ export const getGridTemplates = createAsyncThunk(
         } catch (error) {
             return rejectWithValue(error.response?.data || error.message);
         }
-    },
-    {
-        condition: (_, { getState }) =>
-            !getState().templetefiltrsclumnapi.templatesFetching,
     }
 );
 
 // Async thunk to delete a template
 export const deleteGridTemplate = createAsyncThunk(
     "templetefiltrsclumnapi/deleteGridTemplate",
-    async (id, { rejectWithValue, dispatch }) => {
+    async ({ id, type }, { rejectWithValue, dispatch }) => {
         try {
             const token = localStorage.getItem("token");
-            await axios.delete(`${API_URL}/${id}`, {
+            const apiUrl = resolveTemplatesApiUrl(type);
+            await axios.delete(`${apiUrl}/${id}`, {
                 headers: {
                     Authorization: `Bearer ${token}`,
                 },
             });
-            dispatch(getGridTemplates()); // Refresh list
+            dispatch(getGridTemplates(type ? { type } : {})); // Refresh list
             return id;
         } catch (error) {
             return rejectWithValue(error.response?.data || error.message);
@@ -50,12 +59,17 @@ export const saveGridTemplate = createAsyncThunk(
     async (payload, { rejectWithValue, dispatch }) => {
         try {
             const token = localStorage.getItem("token");
-            const response = await axios.post(API_URL, payload, {
+            const apiUrl = resolveTemplatesApiUrl(payload?.templateType);
+            const response = await axios.post(apiUrl, payload, {
                 headers: {
                     Authorization: `Bearer ${token}`,
                 },
             });
-            dispatch(getGridTemplates()); // Refresh list
+            dispatch(
+                getGridTemplates(
+                    payload?.templateType ? { type: payload.templateType } : {}
+                )
+            ); // Refresh list
             return response.data;
         } catch (error) {
             return rejectWithValue(error.response?.data || error.message);
@@ -66,16 +80,22 @@ export const saveGridTemplate = createAsyncThunk(
 // Async thunk to update a template
 export const updateGridTemplate = createAsyncThunk(
     "templetefiltrsclumnapi/updateGridTemplate",
-    async ({ id, payload }, { rejectWithValue, dispatch }) => {
+    async ({ id, payload, type }, { rejectWithValue, dispatch }) => {
         try {
             const token = localStorage.getItem("token");
-            const URL = `${process.env.REACT_APP_PROFILE_SERVICE_URL}/templates/${id}`;
+            const resolvedType = type || payload?.templateType;
+            const apiUrl = resolveTemplatesApiUrl(resolvedType);
+            const URL = `${apiUrl}/${id}`;
             const response = await axios.put(URL, payload, {
                 headers: {
                     Authorization: `Bearer ${token}`,
                 },
             });
-            dispatch(getGridTemplates()); // Refresh list
+            dispatch(
+                getGridTemplates(
+                    resolvedType ? { type: resolvedType } : {}
+                )
+            ); // Refresh list
             return response.data;
         } catch (error) {
             return rejectWithValue(error.response?.data || error.message);
@@ -86,10 +106,11 @@ export const updateGridTemplate = createAsyncThunk(
 // Async thunk to set a template as default
 export const setDefaultGridTemplate = createAsyncThunk(
     "templetefiltrsclumnapi/setDefaultGridTemplate",
-    async ({ id, isDefault }, { rejectWithValue, dispatch }) => {
+    async ({ id, isDefault, type }, { rejectWithValue, dispatch }) => {
         try {
             const token = localStorage.getItem("token");
-            const URL = `${process.env.REACT_APP_PROFILE_SERVICE_URL}/templates/${id}`;
+            const apiUrl = resolveTemplatesApiUrl(type);
+            const URL = `${apiUrl}/${id}`;
             await axios.put(
                 URL,
                 { isDefault },
@@ -99,8 +120,12 @@ export const setDefaultGridTemplate = createAsyncThunk(
                     },
                 }
             );
-            dispatch(getGridTemplates()); // Refresh list
-            return { id, isDefault };
+            // Await so callers do not run a second getGridTemplates while this is in flight
+            // (a duplicate + condition used to fail with "aborted due to condition").
+            const templates = await dispatch(
+                getGridTemplates(type ? { type } : {}),
+            ).unwrap();
+            return { id, isDefault, templates };
         } catch (error) {
             return rejectWithValue(error.response?.data || error.message);
         }
@@ -157,8 +182,11 @@ const templetefiltrsclumnapi = createSlice({
             .addCase(setDefaultGridTemplate.pending, (state) => {
                 state.loading = true;
             })
-            .addCase(setDefaultGridTemplate.fulfilled, (state) => {
+            .addCase(setDefaultGridTemplate.fulfilled, (state, action) => {
                 state.loading = false;
+                if (action.payload?.templates) {
+                    state.templates = action.payload.templates;
+                }
             })
             .addCase(setDefaultGridTemplate.rejected, (state, action) => {
                 state.loading = false;

@@ -28,20 +28,20 @@ const MyDatePicker = ({
 
   return (
     <div className={`${isMarginBtm ? 'my-input-wrapper' : ''}`}>
-      <div className="d-flex justify-content-between">
-        <div>
+      <div className="d-flex justify-content-between align-items-center">
+        <div className="d-flex align-items-center gap-1 flex-wrap">
           <label
             htmlFor={name}
-            className={`my-input-label ${hasError ? 'error' : ''}`}
+            className={`my-input-label ${hasError ? 'error' : ''} mb-0`}
           >
             {label}
-            {required && <span className="required-star">*</span>}
-            {hasError && !disabled && (
-              <span className="error-message"> ({errorMessage})</span>
-            )}
           </label>
+          {required && <span className="required-star">*</span>}
+          {hasError && !disabled && (
+            <span className="error-message">({errorMessage})</span>
+          )}
         </div>
-        {extra && <div>{extra}</div>}
+        {extra && <div className="label-extra me-2">{extra}</div>}
       </div>
 
       <div

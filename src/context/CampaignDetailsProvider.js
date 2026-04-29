@@ -18,7 +18,9 @@ export const RemindersProvider = ({ children }) => {
     };
 
     const getCancellationById = (id) => {
-        const data = cancellationDetail.find(item => item.id === id) || null;
+        const data =
+            cancellationDetail.find((item) => String(item.id) === String(id)) ||
+            null;
         setcancallationbyId(data);
         return data;
     }

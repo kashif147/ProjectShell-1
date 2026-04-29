@@ -1,507 +1,1553 @@
-import React, { useState } from "react";
+import React, { useMemo, useState, useEffect, useCallback } from "react";
+import { useLocation } from "react-router-dom";
 import {
-    Drawer,
     Button,
-    Tabs,
     Card,
     Row,
     Col,
-    Progress,
     Tag,
-    Modal
+    Modal,
+    Table,
+    message,
+    Checkbox,
 } from "antd";
 import {
     CalendarOutlined,
     UserOutlined,
+    ClockCircleOutlined,
+    ExportOutlined,
+    PlayCircleOutlined,
+    CreditCardOutlined,
+    BellOutlined,
+    TeamOutlined,
+    MailOutlined,
+    FileTextOutlined,
+    MessageOutlined,
+    MobileOutlined,
 } from "@ant-design/icons";
-import Checkbox from "antd/es/checkbox/Checkbox";
-import ReminderSubCard from "../../component/reminders/ReminderSubCard";
-import MyMenu from "../../component/common/MyMenu";
-import { BsFiletypeXls } from "react-icons/bs";
+import {
+    Bar,
+    BarChart,
+    ResponsiveContainer,
+    Tooltip,
+    XAxis,
+    YAxis,
+} from "recharts";
 import CustomSelect from "../../component/common/CustomSelect";
 import { useReminders } from "../../context/CampaignDetailsProvider";
 import { useTableColumns } from "../../context/TableColumnsContext ";
-const { TabPane } = Tabs;
+import { formatDateDdMmYyyy } from "../../utils/Utilities";
+import htmlDocx from "html-docx-js/dist/html-docx";
 
+const AMBER_BG = "#fff7e6";
+const AMBER_BORDER = "#ffd591";
+const AMBER_TEXT = "#d48806";
+const INACTIVE_BORDER = "#d9d9d9";
+const INACTIVE_LABEL = "#8c8c8c";
+
+function parseMoney(s) {
+    if (s == null) return 0;
+    const n = parseFloat(String(s).replace(/[^\d.-]/g, ""));
+    return Number.isFinite(n) ? n : 0;
+}
+
+function sumMemberFees(members) {
+    if (!members?.length) return 0;
+    return members.reduce(
+        (acc, m) => acc + parseMoney(m.membershipFee ?? m.lastPaymentAmount),
+        0,
+    );
+}
+
+function formatCurrencyAmount(n) {
+    return `€${Math.round(n).toLocaleString()}`;
+}
+
+function formatOutstandingBalanceLikeHeader(value) {
+    const amount = parseMoney(value);
+    const amountText = `€${Math.abs(amount).toLocaleString("en-IE", {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+    })}`;
+    const indicator = amount > 0 ? "Dr" : amount < 0 ? "Cr" : "";
+    return {
+        text: indicator ? `${amountText} (${indicator})` : amountText,
+        color: amount > 0 ? "#cf1322" : "#389e0d",
+    };
+}
+
+function formatPercentDisplay(pct) {
+    if (pct == null || Number.isNaN(Number(pct))) return "—";
+    const n = Number(pct);
+    const text = n % 1 === 0 ? String(Math.round(n)) : n.toFixed(1);
+    return `${text}%`;
+}
+
+/** Deduplicated members across R1–R3 (first occurrence wins). */
+function buildComprehensiveMembers(members) {
+    if (!members) return [];
+    const seen = new Set();
+    const list = [];
+    let idx = 0;
+    for (const wave of ["R1", "R2", "R3"]) {
+        for (const row of members[wave] || []) {
+            if (row == null || typeof row !== "object") continue;
+            const k = `${row.membershipNo}|${row.fullName}`;
+            if (seen.has(k)) continue;
+            seen.add(k);
+            list.push({ ...row, _rowKey: `m-${idx++}` });
+        }
+    }
+    return list;
+}
+
+/** All rows for one reminder wave (table needs stable keys). */
+function buildWaveMembers(members, wave) {
+    const arr = members?.[wave] || [];
+    return arr
+        .filter((row) => row != null && typeof row === "object")
+        .map((row, i) => ({ ...row, _rowKey: `${wave}-${i}` }));
+}
+
+const PAYMENT_METHOD_ROWS = [
+    {
+        label: "Deductions",
+        dataKey: "deductions",
+        color: "#215e97",
+        pct: 42,
+        amount: 18500,
+    },
+    {
+        label: "Standing Orders",
+        dataKey: "standingOrders",
+        color: "#389e0d",
+        pct: 28,
+        amount: 12300,
+    },
+    {
+        label: "Direct Debit",
+        dataKey: "directDebit",
+        color: "#722ed1",
+        pct: 18,
+        amount: 7900,
+    },
+    {
+        label: "Credit Card",
+        dataKey: "creditCard",
+        color: "#d48806",
+        pct: 8,
+        amount: 3500,
+    },
+    {
+        label: "Cheque",
+        dataKey: "cheque",
+        color: "#13c2c2",
+        pct: 3,
+        amount: 1300,
+    },
+    {
+        label: "Cash",
+        dataKey: "cash",
+        color: "#8c8c8c",
+        pct: 1,
+        amount: 500,
+    },
+];
+
+const DELIVERY_CHANNELS = [
+    {
+        key: "email",
+        label: "Email",
+        icon: MailOutlined,
+        status: "Pending",
+    },
+    {
+        key: "inapp",
+        label: "In-app",
+        icon: MobileOutlined,
+        status: "Pending",
+    },
+    {
+        key: "letters",
+        label: "Letters",
+        icon: FileTextOutlined,
+        status: "Pending",
+    },
+    {
+        key: "sms",
+        label: "SMS",
+        icon: MessageOutlined,
+        status: "Pending",
+    },
+];
+
+function scalePaymentAmounts(baseRows, targetTotal) {
+    const baseSum = baseRows.reduce((a, r) => a + r.amount, 0);
+    if (!baseSum || targetTotal <= 0) {
+        return baseRows.map((r) => ({ ...r, amount: 0, pct: 0 }));
+    }
+    return baseRows.map((r) => ({
+        ...r,
+        amount: Math.round((r.amount / baseSum) * targetTotal),
+    }));
+}
+
+const WAVE_ORDER = ["R1", "R2", "R3"];
+
+function sortWaves(waves) {
+    return [...new Set(waves)].sort(
+        (a, b) => WAVE_ORDER.indexOf(a) - WAVE_ORDER.indexOf(b),
+    );
+}
+
+function buildMultiWaveMembers(members, waves) {
+    if (!members || !waves?.length) return [];
+    const sorted = sortWaves(waves);
+    const out = [];
+    for (const wave of sorted) {
+        out.push(...buildWaveMembers(members, wave));
+    }
+    return out;
+}
+
+function reminderWaveNums(waves) {
+    return sortWaves(waves)
+        .map((w) => parseInt(String(w).replace(/^R/i, ""), 10))
+        .filter((n) => !Number.isNaN(n));
+}
+
+/** includedWaves = R1–R3 not excluded from batch trigger. */
+function formatTriggerButtonLabel(includedWaves) {
+    if (includedWaves.length === WAVE_ORDER.length) {
+        return "Trigger all reminders";
+    }
+    const nums = reminderWaveNums(includedWaves);
+    if (nums.length === 0) return "Select reminders to trigger";
+    if (nums.length === 1) return `Trigger reminder ${nums[0]}`;
+    if (nums.length === 2) return `Trigger reminder ${nums[0]} & ${nums[1]}`;
+    return `Trigger reminder ${nums[0]}, ${nums[1]} & ${nums[2]}`;
+}
+
+function formatMemberListTitle(includedWaves) {
+    if (includedWaves.length === WAVE_ORDER.length) {
+        return "Member listings (batch)";
+    }
+    if (includedWaves.length === 0) return "Member listings";
+    const sorted = sortWaves(includedWaves);
+    if (sorted.length === 1) return `Member listings (${sorted[0]})`;
+    return `Member listings (${sorted.join(", ")})`;
+}
+
+function memberListHeading(activeView, includedWaves) {
+    if (activeView !== "batch") {
+        return `Member listings (${activeView})`;
+    }
+    return formatMemberListTitle(includedWaves);
+}
+
+function escapeHtmlDocx(s) {
+    return String(s ?? "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;");
+}
+
+function sanitizeDocxFileBase(name) {
+    const base = String(name || "batch").replace(/[^a-zA-Z0-9-_]+/g, "-");
+    return base.slice(0, 80) || "batch";
+}
 
 function RemindersDetails() {
-    const { selectedId } = useReminders()
-    const { isDisable } = useTableColumns()
-    const [activeTab, setActiveTab] = useState("summary");
-    const [tabChecks, setTabChecks] = useState({
-        summary: false,
-        reminder1: false,
-        reminder2: false,
-        reminder3: false,
-    });
-    const totalR1 = selectedId?.members?.R1.length
-    const totalR2 = selectedId?.members?.R2.length
-    const totalR3 = selectedId?.members?.R3.length
-    const total = totalR1 + totalR2 + totalR3
-    const date = selectedId?.date
-    const user = selectedId?.user
-    const btchsmry = [{
-        sent: selectedId?.stats?.sent,
-        pending: selectedId?.stats?.pending,
-        failed: selectedId?.stats?.failed,
-        total: selectedId?.stats?.total
-    }]
+    const location = useLocation();
+    const { selectedId, getRemindersById } = useReminders();
+    const { isDisable } = useTableColumns();
 
-    const handleTabCheck = (key, e) => {
-        setTabChecks((prev) => ({
-            ...prev,
-            [key]: e.target.checked,
-        }));
+    useEffect(() => {
+        const id = location.state?.reminderBatchId;
+        if (id != null) getRemindersById(id);
+    }, [location.state?.reminderBatchId, getRemindersById]);
+
+    const pageTitle =
+        location.state?.reminderBatchTitle ||
+        selectedId?.title ||
+        "Reminders batch";
+
+    /** Waves excluded from trigger (unchecked). Default none = all included. */
+    const [excludedWaves, setExcludedWaves] = useState([]);
+    /** Which reminder the list & chart below follow: whole batch vs one wave. */
+    const [activeView, setActiveView] = useState("batch");
+    const [selectedRowKeys, setSelectedRowKeys] = useState([]);
+    const [isModalOpen, setIsModalOpen] = useState(false);
+
+    const includedWaves = useMemo(
+        () => WAVE_ORDER.filter((w) => !excludedWaves.includes(w)),
+        [excludedWaves],
+    );
+    const allWavesIncluded = includedWaves.length === WAVE_ORDER.length;
+
+    const toggleWaveExcluded = useCallback((wave) => {
+        setExcludedWaves((prev) =>
+            prev.includes(wave)
+                ? prev.filter((w) => w !== wave)
+                : [...prev, wave],
+        );
+    }, []);
+
+    const clearWaveExclusions = useCallback(() => {
+        setExcludedWaves([]);
+    }, []);
+
+    useEffect(() => {
+        setExcludedWaves([]);
+        setActiveView("batch");
+        setSelectedRowKeys([]);
+    }, [selectedId?.id]);
+
+    const selectionKey = `${[...excludedWaves].sort().join(",")}|${activeView}`;
+
+    useEffect(() => {
+        setSelectedRowKeys([]);
+    }, [selectionKey]);
+
+    const totalR1 = selectedId?.members?.R1?.length ?? 0;
+    const totalR2 = selectedId?.members?.R2?.length ?? 0;
+    const totalR3 = selectedId?.members?.R3?.length ?? 0;
+
+    const feeR1 = sumMemberFees(selectedId?.members?.R1);
+    const feeR2 = sumMemberFees(selectedId?.members?.R2);
+    const feeR3 = sumMemberFees(selectedId?.members?.R3);
+
+    const comprehensiveMembers = useMemo(
+        () => buildComprehensiveMembers(selectedId?.members),
+        [selectedId],
+    );
+    const totalBatchCount = comprehensiveMembers.length;
+    const feeBatchTotal = sumMemberFees(comprehensiveMembers);
+
+    const tableMembers = useMemo(() => {
+        if (!selectedId?.members) return [];
+        if (activeView !== "batch") {
+            return buildWaveMembers(selectedId.members, activeView);
+        }
+        if (allWavesIncluded) {
+            return comprehensiveMembers;
+        }
+        return buildMultiWaveMembers(selectedId.members, includedWaves);
+    }, [
+        selectedId,
+        activeView,
+        allWavesIncluded,
+        includedWaves,
+        comprehensiveMembers,
+    ]);
+
+    const selectedFeeTotal = useMemo(() => {
+        if (activeView === "R1") return feeR1;
+        if (activeView === "R2") return feeR2;
+        if (activeView === "R3") return feeR3;
+        if (allWavesIncluded) return feeBatchTotal;
+        let sum = 0;
+        if (includedWaves.includes("R1")) sum += feeR1;
+        if (includedWaves.includes("R2")) sum += feeR2;
+        if (includedWaves.includes("R3")) sum += feeR3;
+        return sum;
+    }, [
+        activeView,
+        allWavesIncluded,
+        includedWaves,
+        feeR1,
+        feeR2,
+        feeR3,
+        feeBatchTotal,
+    ]);
+
+    const paymentRowsScaled = useMemo(
+        () => scalePaymentAmounts(PAYMENT_METHOD_ROWS, selectedFeeTotal),
+        [selectedFeeTotal],
+    );
+
+    const paymentStackChartData = useMemo(() => {
+        const row = { name: "mix" };
+        paymentRowsScaled.forEach((r) => {
+            row[r.dataKey] = Number(r.pct) || 0;
+        });
+        return [row];
+    }, [paymentRowsScaled]);
+
+    const memberListTitle = memberListHeading(activeView, includedWaves);
+
+    const triggerButtonLabel = formatTriggerButtonLabel(includedWaves);
+
+    const handleTriggerSelected = () => {
+        if (isDisable) return;
+        if (includedWaves.length === 0) return;
+        if (allWavesIncluded) {
+            message.success("Triggered all reminders in batch (demo).");
+            return;
+        }
+        const labels = sortWaves(includedWaves).join(", ");
+        message.success(`Triggered ${labels} (demo).`);
+    };
+
+    const addressText = (row) => {
+        const parts = [row.workLocation, row.branch].filter(Boolean);
+        return parts.length ? parts.join(", ") : "—";
     };
 
     const columns = [
         {
-            title: "Membership No",
-            dataIndex: "membershipNo",
-            key: "membershipNo",
-        },
-        {
-            title: "Full Name",
+            title: "Full name",
             dataIndex: "fullName",
             key: "fullName",
+            ellipsis: true,
         },
         {
             title: "Email",
             dataIndex: "email",
             key: "email",
+            ellipsis: true,
         },
         {
-            title: "Mobile No",
-            dataIndex: "mobileNo",
-            key: "mobileNo",
+            title: "Address",
+            key: "address",
+            ellipsis: true,
+            render: (_, row) => {
+                const full = addressText(row);
+                const max = 42;
+                const short =
+                    full.length > max ? `${full.slice(0, max)}…` : full;
+                return <span title={full}>{short}</span>;
+            },
         },
         {
-            title: "Membership Status",
-            dataIndex: "membershipStatus",
-            key: "membershipStatus",
+            title: "Membership no",
+            dataIndex: "membershipNo",
+            key: "membershipNo",
         },
         {
-            title: "Membership Category",
+            title: "Category",
             dataIndex: "membershipCategory",
             key: "membershipCategory",
         },
         {
-            title: "Work Location",
-            dataIndex: "workLocation",
-            key: "workLocation",
+            title: "Status",
+            dataIndex: "membershipStatus",
+            key: "membershipStatus",
+            render: (v) => {
+                const active = String(v).toLowerCase() === "active";
+                return (
+                    <Tag color={active ? "success" : "default"}>{v}</Tag>
+                );
+            },
         },
         {
-            title: "Branch",
-            dataIndex: "branch",
-            key: "branch",
-        },
-        {
-            title: "Region",
-            dataIndex: "region",
-            key: "region",
-        },
-        {
-            title: "Grade",
-            dataIndex: "grade",
-            key: "grade",
-        },
-        {
-            title: "Section (Primary)",
-            dataIndex: "section",
-            key: "section",
-        },
-        {
-            title: "Joining Date",
+            title: "Start date",
             dataIndex: "joiningDate",
             key: "joiningDate",
+            render: (v) => formatDateDdMmYyyy(v),
         },
         {
-            title: "Expiry Date",
-            dataIndex: "expiryDate",
-            key: "expiryDate",
-        },
-        {
-            title: "Last Payment Amount",
-            dataIndex: "lastPaymentAmount",
-            key: "lastPaymentAmount",
-        },
-        {
-            title: "Last Payment Date",
-            dataIndex: "lastPaymentDate",
-            key: "lastPaymentDate",
-        },
-        {
-            title: "Membership Fee",
-            dataIndex: "membershipFee",
-            key: "membershipFee",
-        },
-        {
-            title: "Outstanding Balance",
+            title: "Balance",
             dataIndex: "outstandingBalance",
             key: "outstandingBalance",
+            render: (v) => {
+                const { text, color } = formatOutstandingBalanceLikeHeader(v);
+                return <span style={{ color, fontWeight: 600 }}>{text}</span>;
+            },
         },
         {
-            title: "Reminder No",
-            dataIndex: "reminderNo",
-            key: "reminderNo",
-        },
-        {
-            title: "Reminder Date",
-            dataIndex: "reminderDate",
-            key: "reminderDate",
-        },
-        {
-            title: "Cancellation Flag",
-            dataIndex: "cancellationFlag",
-            key: "cancellationFlag",
-            render: (value) => (value ? "Yes" : "No"), // optional display
+            title: "Last payment",
+            dataIndex: "lastPaymentDate",
+            key: "lastPaymentDate",
+            render: (v) => formatDateDdMmYyyy(v),
         },
     ];
 
-    const data = [
-        {
-            key: 1,
-            membershipNo: "IR-001",
-            fullName: "Patrick O'Connor",
-            email: "patrick.oconnor@example.ie",
-            mobileNo: "+353 85 123 4567",
-            membershipStatus: "Active",
-            membershipCategory: "Gold",
-            workLocation: "Garda HQ",
-            branch: "Dublin Metropolitan",
-            region: "Eastern",
-            grade: "A",
-            section: "Finance",
-            joiningDate: "12/05/2021",   // DD/MM/YYYY
-            expiryDate: "12/05/2026",
-            lastPaymentAmount: "€250",
-            lastPaymentDate: "01/06/2025",
-            membershipFee: "€500",
-            outstandingBalance: "€250",
-            reminderNo: 2,
-            reminderDate: "15/07/2025",
-            cancellationFlag: false,
-        },
-        {
-            key: 2,
-            membershipNo: "IR-002",
-            fullName: "Siobhán Murphy",
-            email: "siobhan.murphy@example.ie",
-            mobileNo: "+353 86 987 6543",
-            membershipStatus: "Pending",
-            membershipCategory: "Silver",
-            workLocation: "Garda HQ",
-            branch: "DMR South",
-            region: "Eastern",
-            grade: "B",
-            section: "HR",
-            joiningDate: "01/03/2022",
-            expiryDate: "01/03/2025",
-            lastPaymentAmount: "€150",
-            lastPaymentDate: "15/05/2025",
-            membershipFee: "€300",
-            outstandingBalance: "€150",
-            reminderNo: 1,
-            reminderDate: "10/08/2025",
-            cancellationFlag: false,
-        },
-        {
-            key: 3,
-            membershipNo: "IR-003",
-            fullName: "Eoin Gallagher",
-            email: "eoin.gallagher@example.ie",
-            mobileNo: "+353 87 765 4321",
-            membershipStatus: "Cancelled",
-            membershipCategory: "Platinum",
-            workLocation: "Galway",
-            branch: "Connacht Division",
-            region: "Western",
-            grade: "C",
-            section: "IT",
-            joiningDate: "20/11/2020",
-            expiryDate: "20/11/2023",
-            lastPaymentAmount: "€600",
-            lastPaymentDate: "10/10/2023",
-            membershipFee: "€750",
-            outstandingBalance: "€150",
-            reminderNo: 3,
-            reminderDate: "05/01/2024",
-            cancellationFlag: true,
-        },
-    ];
-
-    const [selectedKeysMap, setSelectedKeysMap] = useState({
-        R1: [],
-        R2: [],
-        R3: [],
-    });
-
-    const getRowSelection = (reminderKey) => ({
-        selectedRowKeys: selectedKeysMap[reminderKey],
+    const rowSelection = {
+        selectedRowKeys,
         onChange: (keys) => {
-            if (!isDisable) {
-                setSelectedKeysMap((prev) => ({
-                    ...prev,
-                    [reminderKey]: keys,
-                }));
-            }
+            if (!isDisable) setSelectedRowKeys(keys);
         },
-        getCheckboxProps: () => ({ disabled: isDisable }), // ✅ disable row checkboxes
-    });
+        getCheckboxProps: () => ({ disabled: isDisable }),
+    };
 
-    const handleExecute = (reminderKey, selectedRows) => {
-        if (!isDisable) {
-            console.log("Executing for", reminderKey, selectedRows);
+    const handleDownloadCsv = () => {
+        if (!tableMembers.length) {
+            message.info("No rows to export.");
+            return;
+        }
+        const header = [
+            "Full name",
+            "Email",
+            "Address",
+            "Membership no",
+            "Category",
+            "Status",
+            "Start date",
+            "Balance",
+            "Last payment",
+        ];
+        const lines = tableMembers.map((row) =>
+            [
+                row.fullName,
+                row.email,
+                addressText(row),
+                row.membershipNo,
+                row.membershipCategory,
+                row.membershipStatus,
+                formatDateDdMmYyyy(row.joiningDate),
+                row.outstandingBalance,
+                formatDateDdMmYyyy(row.lastPaymentDate),
+            ]
+                .map((cell) => {
+                    const s = String(cell ?? "").replace(/"/g, '""');
+                    return `"${s}"`;
+                })
+                .join(","),
+        );
+        const blob = new Blob([[header.join(","), ...lines].join("\n")], {
+            type: "text/csv;charset=utf-8;",
+        });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `reminder-members-${
+            activeView !== "batch"
+                ? activeView
+                : allWavesIncluded
+                  ? "batch"
+                  : sortWaves(includedWaves).join("-") || "none"
+        }.csv`;
+        a.click();
+        URL.revokeObjectURL(url);
+    };
+
+    const handleDownloadReminder3Word = () => {
+        if (isDisable) return;
+        if (activeView !== "R3") return;
+        if (!tableMembers.length) {
+            message.info("No members to export.");
+            return;
+        }
+        try {
+            const headerCells = [
+                "Full name",
+                "Email",
+                "Address",
+                "Membership no",
+                "Category",
+                "Status",
+                "Start date",
+                "Balance",
+                "Last payment",
+            ]
+                .map(
+                    (h) =>
+                        `<th style="border:1px solid #ccc;padding:6px;text-align:left;font-size:10pt;">${escapeHtmlDocx(
+                            h,
+                        )}</th>`,
+                )
+                .join("");
+            const bodyRows = tableMembers
+                .map((row) => {
+                    const cells = [
+                        row.fullName,
+                        row.email,
+                        addressText(row),
+                        row.membershipNo,
+                        row.membershipCategory,
+                        row.membershipStatus,
+                        formatDateDdMmYyyy(row.joiningDate),
+                        row.outstandingBalance,
+                        formatDateDdMmYyyy(row.lastPaymentDate),
+                    ]
+                        .map(
+                            (c) =>
+                                `<td style="border:1px solid #ccc;padding:6px;font-size:9pt;">${escapeHtmlDocx(
+                                    c,
+                                )}</td>`,
+                        )
+                        .join("");
+                    return `<tr>${cells}</tr>`;
+                })
+                .join("");
+            const completeHtml = `<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8" />
+<style>
+body { font-family: Calibri, Arial, sans-serif; color: #000; margin: 12pt; }
+h1 { font-size: 18pt; margin: 0 0 8pt 0; }
+.meta { font-size: 11pt; color: #333; margin-bottom: 14pt; }
+table { border-collapse: collapse; width: 100%; }
+</style>
+</head>
+<body>
+<h1>Reminder 3 — ${escapeHtmlDocx(pageTitle)}</h1>
+<p class="meta">Members: ${tableMembers.length.toLocaleString()} · Total fees (R3): ${escapeHtmlDocx(
+                formatCurrencyAmount(feeR3),
+            )}</p>
+<table>
+<thead><tr>${headerCells}</tr></thead>
+<tbody>${bodyRows}</tbody>
+</table>
+</body>
+</html>`;
+            const docxBlob = htmlDocx.asBlob(completeHtml, {
+                orientation: "portrait",
+                margins: {
+                    top: 1440,
+                    right: 1440,
+                    bottom: 1440,
+                    left: 1440,
+                },
+            });
+            const url = URL.createObjectURL(docxBlob);
+            const a = document.createElement("a");
+            a.href = url;
+            a.download = `reminder-3-${sanitizeDocxFileBase(
+                pageTitle,
+            )}.docx`;
+            a.click();
+            URL.revokeObjectURL(url);
+            message.success("Word document downloaded.");
+        } catch (err) {
+            console.error(err);
+            message.error("Could not create Word document.");
         }
     };
 
-    const handleExport = (reminderKey) => {
-        if (!isDisable) {
-            console.log("Exporting for", reminderKey);
+    const handleExcludeMember = () => {
+        if (isDisable) return;
+        if (!selectedRowKeys.length) {
+            message.warning("Select one or more members to exclude.");
+            return;
         }
+        message.success(`Excluded ${selectedRowKeys.length} member(s) (demo).`);
+        setSelectedRowKeys([]);
     };
-    const [isModalOpen, setIsModalOpen] = useState(false);
 
+    const renderReminderTile = (wave, label, count, feeAmount) => {
+        const included = !excludedWaves.includes(wave);
+        const focused = activeView === wave;
+        const navHighlight = focused;
+        return (
+            <div
+                onClick={() => setActiveView(wave)}
+                title={`View ${label} members`}
+                style={{
+                    position: "relative",
+                    borderRadius: 8,
+                    padding: "12px 32px 12px 12px",
+                    background: "#fff",
+                    border: navHighlight
+                        ? "2px solid var(--mainBlue)"
+                        : included
+                          ? `1px solid #bfbfbf`
+                          : `1px solid ${INACTIVE_BORDER}`,
+                    borderBottom: navHighlight
+                        ? "4px solid var(--mainBlue)"
+                        : included
+                          ? "2px solid var(--mainBlue)"
+                          : `1px solid ${INACTIVE_BORDER}`,
+                    boxShadow: navHighlight
+                        ? "0 2px 10px rgba(33, 94, 151, 0.16)"
+                        : "0 1px 3px rgba(0,0,0,0.06)",
+                    height: "100%",
+                    cursor: "pointer",
+                    outline: "none",
+                }}
+            >
+                <ClockCircleOutlined
+                    style={{
+                        position: "absolute",
+                        top: 10,
+                        right: 10,
+                        color: navHighlight
+                            ? "var(--mainBlue)"
+                            : included
+                              ? "var(--mainBlue)"
+                              : "#bfbfbf",
+                        fontSize: 15,
+                        opacity: included ? 1 : 0.65,
+                    }}
+                />
+                <div
+                    style={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 8,
+                        marginBottom: 6,
+                        minHeight: 22,
+                    }}
+                >
+                    <span
+                        onClick={(e) => e.stopPropagation()}
+                        onMouseDown={(e) => e.stopPropagation()}
+                    >
+                        <Checkbox
+                            checked={included}
+                            disabled={isDisable}
+                            onChange={() => toggleWaveExcluded(wave)}
+                        />
+                    </span>
+                    <div
+                        style={{
+                            fontSize: 11,
+                            fontWeight: 700,
+                            letterSpacing: "0.04em",
+                            color: included
+                                ? "var(--mainBlue)"
+                                : INACTIVE_LABEL,
+                            flex: 1,
+                        }}
+                    >
+                        {label}
+                    </div>
+                </div>
+                <div
+                    style={{
+                        display: "flex",
+                        flexWrap: "wrap",
+                        alignItems: "center",
+                        justifyContent: "space-between",
+                        gap: "4px 10px",
+                        lineHeight: 1.25,
+                    }}
+                >
+                    <span
+                        style={{
+                            fontSize: 14,
+                            fontWeight: 700,
+                            fontVariantNumeric: "tabular-nums",
+                            color: included ? "#262626" : "#8c8c8c",
+                        }}
+                    >
+                        {count.toLocaleString()}{" "}
+                        <span
+                            style={{
+                                fontSize: 11,
+                                fontWeight: 500,
+                                color: included ? "#8c8c8c" : "#bfbfbf",
+                            }}
+                        >
+                            members
+                        </span>
+                    </span>
+                    <span
+                        style={{
+                            fontSize: 13,
+                            fontWeight: 600,
+                            fontVariantNumeric: "tabular-nums",
+                            color: included ? "var(--mainBlue)" : "#8c8c8c",
+                            whiteSpace: "nowrap",
+                        }}
+                    >
+                        {formatCurrencyAmount(feeAmount)}
+                    </span>
+                </div>
+            </div>
+        );
+    };
 
-    const reminders = [
-        {
-            key: "reminder1",
-            reminderKey: "R1",
-            title: "Reminder 1 Details",
-            count: totalR1,
-            stats: { sent: 73, pending: 77, failed: 95, total: "€135,957" },
-            data: selectedId?.members?.R1
-        },
-        {
-            key: "reminder2",
-            reminderKey: "R2",
-            title: "Reminder 2 Details",
-            count: totalR2,
-            stats: { sent: 50, pending: 30, failed: 20, total: "€99,000" },
-            data: selectedId?.members?.R2
-        },
-        {
-            key: "reminder3",
-            reminderKey: "R3",
-            title: "Reminder 3 Details",
-            count: totalR3,
-            stats: { sent: 20, pending: 10, failed: 15, total: "€55,000" },
-            data: selectedId?.members?.R3
-        },
-    ];
+    const renderTotalTile = () => {
+        const focused = activeView === "batch";
+        const allIn = allWavesIncluded;
+        return (
+            <div
+                role="button"
+                tabIndex={0}
+                onClick={() => {
+                    setActiveView("batch");
+                    clearWaveExclusions();
+                }}
+                onKeyDown={(e) => {
+                    if (e.key === "Enter" || e.key === " ") {
+                        e.preventDefault();
+                        setActiveView("batch");
+                        clearWaveExclusions();
+                    }
+                }}
+                title="View full batch and include all reminders again"
+                style={{
+                    position: "relative",
+                    borderRadius: 8,
+                    padding: "12px 32px 12px 12px",
+                    background: "#fff",
+                    border: focused
+                        ? "2px solid var(--mainBlue)"
+                        : allIn
+                          ? `1px solid #bfbfbf`
+                          : `1px solid ${INACTIVE_BORDER}`,
+                    borderBottom: focused
+                        ? "4px solid var(--mainBlue)"
+                        : allIn
+                          ? "2px solid var(--mainBlue)"
+                          : `1px solid ${INACTIVE_BORDER}`,
+                    boxShadow: focused
+                        ? "0 2px 10px rgba(33, 94, 151, 0.16)"
+                        : "0 1px 3px rgba(0,0,0,0.06)",
+                    height: "100%",
+                    cursor: "pointer",
+                    outline: "none",
+                }}
+            >
+                <ClockCircleOutlined
+                    style={{
+                        position: "absolute",
+                        top: 10,
+                        right: 10,
+                        color: focused
+                            ? "var(--mainBlue)"
+                            : allIn
+                              ? "var(--mainBlue)"
+                              : "#bfbfbf",
+                        fontSize: 15,
+                        opacity: allIn ? 1 : 0.65,
+                    }}
+                />
+                <div
+                    style={{
+                        fontSize: 11,
+                        fontWeight: 700,
+                        letterSpacing: "0.04em",
+                        color: focused
+                            ? "var(--mainBlue)"
+                            : allIn
+                              ? "var(--mainBlue)"
+                              : INACTIVE_LABEL,
+                        marginBottom: 6,
+                        minHeight: 22,
+                        display: "flex",
+                        alignItems: "center",
+                    }}
+                >
+                    Total batch
+                </div>
+                <div
+                    style={{
+                        display: "flex",
+                        flexWrap: "wrap",
+                        alignItems: "center",
+                        justifyContent: "space-between",
+                        gap: "4px 10px",
+                        lineHeight: 1.25,
+                    }}
+                >
+                    <span
+                        style={{
+                            fontSize: 14,
+                            fontWeight: 700,
+                            fontVariantNumeric: "tabular-nums",
+                            color: allIn ? "#262626" : "#8c8c8c",
+                        }}
+                    >
+                        {totalBatchCount.toLocaleString()}{" "}
+                        <span
+                            style={{
+                                fontSize: 11,
+                                fontWeight: 500,
+                                color: allIn ? "#8c8c8c" : "#bfbfbf",
+                            }}
+                        >
+                            members
+                        </span>
+                    </span>
+                    <span
+                        style={{
+                            fontSize: 13,
+                            fontWeight: 600,
+                            fontVariantNumeric: "tabular-nums",
+                            color: allIn ? "var(--mainBlue)" : "#8c8c8c",
+                            whiteSpace: "nowrap",
+                        }}
+                    >
+                        {formatCurrencyAmount(feeBatchTotal)}
+                    </span>
+                </div>
+            </div>
+        );
+    };
 
     return (
         <div>
             <style>{`
-        .ant-table-cell {
-          white-space: nowrap !important;
+        .reminder-details-payment-stack {
+          width: 100%;
+          min-width: 0;
+        }
+        .reminder-details-payment-stack .recharts-responsive-container {
+          width: 100% !important;
+        }
+        .reminder-details-analysis-row > .ant-col {
+          display: flex;
+        }
+        .reminder-details-analysis-row .reminder-details-twin-card.ant-card {
+          flex: 1;
+          width: 100%;
+          display: flex;
+          flex-direction: column;
+        }
+        .reminder-details-analysis-row .reminder-details-twin-card .ant-card-head {
+          flex-shrink: 0;
+        }
+        .reminder-details-analysis-row .reminder-details-twin-card .ant-card-body {
+          flex: 1;
+          display: flex;
+          flex-direction: column;
+          min-height: 0;
         }
       `}</style>
             <div className="p-3">
-                <Card style={{ marginBottom: 16 }}>
-                    <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
-                        {/* Left section (info) */}
-                        <div style={{ display: "flex", alignItems: "center", gap: 8, flexShrink: 0 }}>
-                            <Checkbox disabled={isDisable} />
-                            <CalendarOutlined />
-                            <span>{date}</span>
-                            <UserOutlined />
-                            <span>Created by {user}</span>
-                        </div>
-
-                        {/* Right section (stats) */}
-                        <div style={{ flex: 1 }}>
-                            {btchsmry.map((stats, idx) => (
-                                <Row key={idx} gutter={16} style={{ textAlign: "center" }}>
-                                    <Col span={6}>
-                                        <div
-                                            style={{
-                                                background: "#f6ffed",
-                                                border: "1px solid #b7eb8f",
-                                                borderRadius: "8px",
-                                                padding: "16px",
-                                                boxShadow: "0 2px 6px rgba(0,0,0,0.08)",
-                                            }}
-                                        >
-                                            <div style={{ fontSize: "22px", fontWeight: "bold", color: "green" }}>
-                                                {stats.sent}
-                                            </div>
-                                            <div style={{ fontSize: "14px", color: "green" }}>Sent</div>
-                                        </div>
-                                    </Col>
-
-                                    <Col span={6}>
-                                        <div
-                                            style={{
-                                                background: "#fff7e6",
-                                                border: "1px solid #ffd591",
-                                                borderRadius: "8px",
-                                                padding: "16px",
-                                                boxShadow: "0 2px 6px rgba(0,0,0,0.08)",
-                                            }}
-                                        >
-                                            <div style={{ fontSize: "22px", fontWeight: "bold", color: "orange" }}>
-                                                {stats.pending}
-                                            </div>
-                                            <div style={{ fontSize: "14px", color: "orange" }}>Pending</div>
-                                        </div>
-                                    </Col>
-
-                                    <Col span={6}>
-                                        <div
-                                            style={{
-                                                background: "#fff1f0",
-                                                border: "1px solid #ffa39e",
-                                                borderRadius: "8px",
-                                                padding: "16px",
-                                                boxShadow: "0 2px 6px rgba(0,0,0,0.08)",
-                                            }}
-                                        >
-                                            <div style={{ fontSize: "22px", fontWeight: "bold", color: "red" }}>
-                                                {stats.failed}
-                                            </div>
-                                            <div style={{ fontSize: "14px", color: "red" }}>Failed</div>
-                                        </div>
-                                    </Col>
-
-                                    <Col span={6}>
-                                        <div
-                                            style={{
-                                                background: "#f0f5ff",
-                                                border: "1px solid #adc6ff",
-                                                borderRadius: "8px",
-                                                padding: "16px",
-                                                boxShadow: "0 2px 6px rgba(0,0,0,0.08)",
-                                            }}
-                                        >
-                                            <div style={{ fontSize: "22px", fontWeight: "bold", color: "#001529" }}>
-                                                {stats.total}
-                                            </div>
-                                            <div style={{ fontSize: "14px", color: "#001529" }}>Total</div>
-                                        </div>
-                                    </Col>
-                                </Row>
-                            ))}
-                        </div>
-                    </div>
+                <Card
+                  style={{ marginBottom: 16 }}
+                  styles={{ body: { padding: 20 } }}
+                >
+                    <Row gutter={[16, 16]} align="top">
+                        <Col xs={24} lg={14}>
+                            <h2
+                                style={{
+                                    margin: 0,
+                                    fontSize: 22,
+                                    fontWeight: 700,
+                                    color: "#262626",
+                                }}
+                            >
+                                {pageTitle}
+                            </h2>
+                            <div
+                                style={{
+                                    marginTop: 10,
+                                    display: "flex",
+                                    flexWrap: "wrap",
+                                    gap: "16px 24px",
+                                    color: "#595959",
+                                    fontSize: 14,
+                                }}
+                            >
+                                <span>
+                                    <UserOutlined style={{ marginRight: 8 }} />
+                                    {selectedId?.user ?? "—"}
+                                </span>
+                                <span>
+                                    <CalendarOutlined
+                                        style={{ marginRight: 8 }}
+                                    />
+                                    {formatDateDdMmYyyy(selectedId?.date)}
+                                </span>
+                            </div>
+                        </Col>
+                        <Col xs={24} lg={10}>
+                            <div
+                                style={{
+                                    display: "flex",
+                                    flexDirection: "column",
+                                    alignItems: "flex-end",
+                                    gap: 12,
+                                }}
+                            >
+                                <div
+                                    style={{
+                                        display: "flex",
+                                        alignItems: "center",
+                                        gap: 10,
+                                        flexWrap: "wrap",
+                                        justifyContent: "flex-end",
+                                    }}
+                                >
+                                    <span
+                                        style={{
+                                            fontSize: 11,
+                                            fontWeight: 700,
+                                            color: INACTIVE_LABEL,
+                                            letterSpacing: "0.06em",
+                                        }}
+                                    >
+                                        Global status
+                                    </span>
+                                    <span
+                                        style={{
+                                            margin: 0,
+                                            padding: "2px 10px",
+                                            borderRadius: 6,
+                                            fontSize: 12,
+                                            fontWeight: 700,
+                                            background: AMBER_BG,
+                                            border: `1px solid ${AMBER_BORDER}`,
+                                            color: AMBER_TEXT,
+                                        }}
+                                    >
+                                        Pending
+                                    </span>
+                                </div>
+                                <div
+                                    style={{
+                                        display: "flex",
+                                        flexWrap: "wrap",
+                                        gap: 8,
+                                        justifyContent: "flex-end",
+                                    }}
+                                >
+                                    <Button
+                                        className="butn secoundry-btn"
+                                        icon={<ExportOutlined />}
+                                        disabled={isDisable}
+                                        onClick={() =>
+                                            message.info("Export batch (demo)")
+                                        }
+                                    >
+                                        Export
+                                    </Button>
+                                    <Button
+                                        type="primary"
+                                        className="butn primary-btn"
+                                        icon={<PlayCircleOutlined />}
+                                        disabled={
+                                            isDisable ||
+                                            includedWaves.length === 0
+                                        }
+                                        onClick={handleTriggerSelected}
+                                    >
+                                        {triggerButtonLabel}
+                                    </Button>
+                                </div>
+                            </div>
+                        </Col>
+                    </Row>
                 </Card>
 
-                <Tabs
-                    activeKey={activeTab}
-                    onChange={setActiveTab}
-                    className="pt-2"
-                    tabBarExtraContent={
-                        activeTab !== "summary" && (
-                            <>
-                                <Button className="butn secoundry-btn me-2 mb-2" disabled={isDisable} onClick={() => setIsModalOpen(true)}>
-                                    + Add Member
-                                </Button>
-                                <Button className="butn secoundry-btn me-2 mb-2" disabled={isDisable}>
-                                    Exclude Member
-                                </Button>
-                                <MyMenu
-                                    items={[
-                                        {
-                                            key: '2',
-                                            label: 'Export as CSV',
-                                            icon: <BsFiletypeXls style={{
-                                                fontSize: "12px",
-                                                marginRight: "10px",
-                                                color: "#45669d",
-                                            }} />,
-                                            onClick: () => {
-                                                // downloadCSV()
-                                            }
-                                        },
-                                        {
-                                            key: '1',
-                                            label: 'Export as CSV',
-                                            icon: <BsFiletypeXls style={{
-                                                fontSize: "12px",
-                                                marginRight: "10px",
-                                                color: "#45669d",
-                                            }} />,
-                                        }
-                                    ]} />
-                            </>
-                        )
-                    }
-                >
-                    <TabPane key="summary" tab={<span>Summary</span>}>
-                        <Row className="pt-2" gutter={16}>
-                            <Col span={6}>
-                                <Card>Reminder 1 <h3>0{totalR1}</h3></Card>
-                            </Col>
-                            <Col span={6}>
-                                <Card>Reminder 2 <h3>0{totalR2}</h3></Card>
-                            </Col>
-                            <Col span={6}>
-                                <Card>Reminder 3 <h3>0{totalR3}</h3></Card>
-                            </Col>
-                            <Col span={6}>
-                                <Card>Total Items <h3>{total}</h3></Card>
-                            </Col>
-                        </Row>
+                <Row gutter={[16, 16]} style={{ marginBottom: 16 }}>
+                    <Col xs={24} sm={12} xl={6}>
+                        {renderReminderTile("R1", "Reminder 1", totalR1, feeR1)}
+                    </Col>
+                    <Col xs={24} sm={12} xl={6}>
+                        {renderReminderTile("R2", "Reminder 2", totalR2, feeR2)}
+                    </Col>
+                    <Col xs={24} sm={12} xl={6}>
+                        {renderReminderTile("R3", "Reminder 3", totalR3, feeR3)}
+                    </Col>
+                    <Col xs={24} sm={12} xl={6}>
+                        {renderTotalTile()}
+                    </Col>
+                </Row>
 
-                        <Row gutter={16} className="pt-2" style={{ marginTop: 16 }}>
-                            <Col span={12}>
-                                <Card title="Payment Methods Distribution">
-                                    <Progress type="circle" percent={41} />
-                                </Card>
-                            </Col>
-                            <Col span={12}>
-                                <Card title="Payment Breakdown">
-                                    <p>Credit Card: 180 (40.9%)</p>
-                                    <p>Debit Card: 145 (33.0%)</p>
-                                    <p>Bank Card: 95 (21.6%)</p>
-                                    <p>Cash: 20 (4.5%)</p>
-                                </Card>
-                            </Col>
-                        </Row>
-                    </TabPane>
-                    {reminders.map((rem) => (
-                        <TabPane
-                            key={rem.key}
-                            tab={
-                                <span>
-                                    <Checkbox
-                                        checked={tabChecks[rem.key]}
-                                        onChange={(e) => handleTabCheck(rem.key, e)}
-                                        style={{ marginRight: 8 }}
-                                        disabled={isDisable}
+                <Row
+                    gutter={[16, 16]}
+                    className="reminder-details-analysis-row"
+                    style={{ marginBottom: 16 }}
+                    align="stretch"
+                >
+                    <Col xs={24} lg={12}>
+                        <Card
+                            className="reminder-details-twin-card"
+                            title={
+                                <span
+                                    style={{
+                                        fontSize: 15,
+                                        fontWeight: 700,
+                                        display: "inline-flex",
+                                        alignItems: "center",
+                                        gap: 8,
+                                    }}
+                                >
+                                    <CreditCardOutlined
+                                        style={{ color: "var(--mainBlue)" }}
                                     />
-                                    {rem.title.split(" ").slice(0, 2).join(" ")}
+                                    Payment method analysis
                                 </span>
                             }
+                            styles={{
+                                body: {
+                                    paddingTop: 12,
+                                    display: "flex",
+                                    flexDirection: "column",
+                                    flex: 1,
+                                },
+                            }}
                         >
-                            <ReminderSubCard
-                                reminderKey={rem.reminderKey}
-                                title={rem.title}
-                                totalItems={rem.count}
-                                stats={rem.stats}
-                                columns={columns}
-                                data={rem?.data}
-                                getRowSelection={getRowSelection}
-                                selectedKeysMap={selectedKeysMap}
-                                onExecute={handleExecute}
-                                onExport={handleExport}
-                                isDisable={isDisable}
-                            />
-                        </TabPane>
-                    ))}
-                </Tabs>
+                            <div
+                                style={{
+                                    flex: 1,
+                                    width: "100%",
+                                    minWidth: 0,
+                                }}
+                            >
+                                <div
+                                    className="reminder-details-payment-stack"
+                                    style={{ height: 52, width: "100%" }}
+                                >
+                                    <ResponsiveContainer
+                                        width="100%"
+                                        height="100%"
+                                    >
+                                        <BarChart
+                                            data={paymentStackChartData}
+                                            layout="vertical"
+                                            margin={{
+                                                top: 2,
+                                                right: 4,
+                                                left: 4,
+                                                bottom: 2,
+                                            }}
+                                            barCategoryGap={0}
+                                            barGap={0}
+                                        >
+                                            <XAxis
+                                                type="number"
+                                                domain={[0, 100]}
+                                                hide
+                                            />
+                                            <YAxis
+                                                type="category"
+                                                dataKey="name"
+                                                width={0}
+                                                hide
+                                            />
+                                            <Tooltip
+                                                cursor={false}
+                                                content={({
+                                                    active,
+                                                    payload,
+                                                }) => {
+                                                    if (
+                                                        !active ||
+                                                        !payload?.length
+                                                    ) {
+                                                        return null;
+                                                    }
+                                                    const item = payload[0];
+                                                    const label = item.name;
+                                                    const row =
+                                                        paymentRowsScaled.find(
+                                                            (x) =>
+                                                                x.label ===
+                                                                label,
+                                                        );
+                                                    const pct = item.value;
+                                                    const m =
+                                                        tableMembers.length;
+                                                    const cnt =
+                                                        row && m > 0
+                                                            ? Math.round(
+                                                                  (Number(
+                                                                      pct,
+                                                                  ) /
+                                                                      100) *
+                                                                      m,
+                                                              )
+                                                            : null;
+                                                    return (
+                                                        <div
+                                                            style={{
+                                                                padding:
+                                                                    "8px 10px",
+                                                                background:
+                                                                    "#fff",
+                                                                border: "1px solid #f0f0f0",
+                                                                borderRadius: 6,
+                                                                boxShadow:
+                                                                    "0 2px 8px rgba(0,0,0,0.08)",
+                                                            }}
+                                                        >
+                                                            <div
+                                                                style={{
+                                                                    fontWeight: 700,
+                                                                    marginBottom: 4,
+                                                                    color: "#262626",
+                                                                }}
+                                                            >
+                                                                {label}
+                                                            </div>
+                                                            {cnt != null && (
+                                                                <div
+                                                                    style={{
+                                                                        fontSize: 12,
+                                                                        color: "#595959",
+                                                                    }}
+                                                                >
+                                                                    ~
+                                                                    {cnt.toLocaleString()}{" "}
+                                                                    members
+                                                                </div>
+                                                            )}
+                                                            <div
+                                                                style={{
+                                                                    fontSize: 12,
+                                                                    fontWeight: 600,
+                                                                    color: "var(--mainBlue)",
+                                                                }}
+                                                            >
+                                                                {formatPercentDisplay(
+                                                                    pct,
+                                                                )}
+                                                            </div>
+                                                            {row && (
+                                                                <div
+                                                                    style={{
+                                                                        fontSize: 12,
+                                                                        color: "#8c8c8c",
+                                                                        marginTop: 2,
+                                                                    }}
+                                                                >
+                                                                    {formatCurrencyAmount(
+                                                                        row.amount,
+                                                                    )}
+                                                                </div>
+                                                            )}
+                                                        </div>
+                                                    );
+                                                }}
+                                            />
+                                            {paymentRowsScaled.map((r) => (
+                                                <Bar
+                                                    key={r.dataKey}
+                                                    stackId="payment"
+                                                    dataKey={r.dataKey}
+                                                    fill={r.color}
+                                                    name={r.label}
+                                                    isAnimationActive={false}
+                                                />
+                                            ))}
+                                        </BarChart>
+                                    </ResponsiveContainer>
+                                </div>
+                                <div
+                                    style={{
+                                        display: "flex",
+                                        flexDirection: "row",
+                                        flexWrap: "wrap",
+                                        alignItems: "center",
+                                        justifyContent: "space-between",
+                                        gap: "8px 10px",
+                                        marginTop: 14,
+                                    }}
+                                >
+                                    {paymentRowsScaled.map((r) => {
+                                        const m = tableMembers.length;
+                                        const cnt =
+                                            m > 0
+                                                ? Math.round(
+                                                      (Number(r.pct) / 100) *
+                                                          m,
+                                                  )
+                                                : null;
+                                        return (
+                                            <span
+                                                key={r.dataKey}
+                                                style={{
+                                                    display: "inline-flex",
+                                                    alignItems: "center",
+                                                    gap: 6,
+                                                    fontSize: 12,
+                                                    color: "#595959",
+                                                    whiteSpace: "nowrap",
+                                                }}
+                                            >
+                                                <span
+                                                    style={{
+                                                        width: 10,
+                                                        height: 10,
+                                                        borderRadius: 2,
+                                                        backgroundColor:
+                                                            r.color,
+                                                        flexShrink: 0,
+                                                    }}
+                                                    aria-hidden
+                                                />
+                                                <span
+                                                    style={{
+                                                        fontWeight: 600,
+                                                        color: "#262626",
+                                                    }}
+                                                >
+                                                    {r.label}
+                                                </span>
+                                                <span
+                                                    style={{
+                                                        fontWeight: 600,
+                                                        fontVariantNumeric:
+                                                            "tabular-nums",
+                                                        color: "#595959",
+                                                    }}
+                                                >
+                                                    {cnt != null
+                                                        ? cnt.toLocaleString()
+                                                        : "—"}
+                                                </span>
+                                                <span
+                                                    style={{
+                                                        fontWeight: 700,
+                                                        fontSize: 11,
+                                                        fontVariantNumeric:
+                                                            "tabular-nums",
+                                                        color: "var(--mainBlue)",
+                                                    }}
+                                                >
+                                                    {formatPercentDisplay(
+                                                        r.pct,
+                                                    )}
+                                                </span>
+                                            </span>
+                                        );
+                                    })}
+                                </div>
+                            </div>
+                        </Card>
+                    </Col>
+                    <Col xs={24} lg={12}>
+                        <Card
+                            className="reminder-details-twin-card"
+                            title={
+                                <span
+                                    style={{
+                                        fontSize: 15,
+                                        fontWeight: 700,
+                                        display: "inline-flex",
+                                        alignItems: "center",
+                                        gap: 8,
+                                    }}
+                                >
+                                    <BellOutlined
+                                        style={{ color: "var(--mainBlue)" }}
+                                    />
+                                    Delivery notifications
+                                </span>
+                            }
+                            styles={{
+                                body: {
+                                    paddingTop: 12,
+                                    display: "flex",
+                                    flexDirection: "column",
+                                    flex: 1,
+                                    minHeight: 0,
+                                },
+                            }}
+                        >
+                            <div
+                                style={{
+                                    flex: 1,
+                                    display: "flex",
+                                    flexDirection: "column",
+                                    minHeight: 0,
+                                    width: "100%",
+                                }}
+                            >
+                                <div
+                                    style={{
+                                        display: "flex",
+                                        flexDirection: "row",
+                                        alignItems: "flex-start",
+                                        justifyContent: "space-between",
+                                        gap: 6,
+                                        width: "100%",
+                                        flexWrap: "nowrap",
+                                    }}
+                                >
+                                    {DELIVERY_CHANNELS.map(
+                                        ({
+                                            key,
+                                            label,
+                                            icon: Icon,
+                                            status,
+                                        }) => (
+                                            <div
+                                                key={key}
+                                                style={{
+                                                    flex: 1,
+                                                    display: "flex",
+                                                    flexDirection: "column",
+                                                    alignItems: "center",
+                                                    gap: 6,
+                                                    minWidth: 0,
+                                                    textAlign: "center",
+                                                }}
+                                            >
+                                                <Icon
+                                                    style={{
+                                                        fontSize: 22,
+                                                        color: "var(--mainBlue)",
+                                                    }}
+                                                    aria-hidden
+                                                />
+                                                <span
+                                                    style={{
+                                                        fontSize: 11,
+                                                        fontWeight: 700,
+                                                        color: "#595959",
+                                                        lineHeight: 1.2,
+                                                    }}
+                                                >
+                                                    {label}
+                                                </span>
+                                                <Tag
+                                                    color="gold"
+                                                    style={{
+                                                        margin: 0,
+                                                        fontSize: 10,
+                                                        padding: "0 6px",
+                                                        lineHeight: 1.6,
+                                                    }}
+                                                >
+                                                    {status}
+                                                </Tag>
+                                            </div>
+                                        ),
+                                    )}
+                                </div>
+                                <div style={{ flex: 1, minHeight: 8 }} />
+                                <div
+                                    style={{
+                                        borderTop: "1px solid #f0f0f0",
+                                        paddingTop: 16,
+                                        marginTop: "auto",
+                                    }}
+                                >
+                                    <div
+                                        style={{
+                                            fontSize: 11,
+                                            fontWeight: 700,
+                                            color: INACTIVE_LABEL,
+                                            letterSpacing: "0.05em",
+                                            marginBottom: 8,
+                                        }}
+                                    >
+                                        Last action
+                                    </div>
+                                    <div
+                                        style={{
+                                            display: "flex",
+                                            alignItems: "center",
+                                            gap: 8,
+                                            color: "#595959",
+                                        }}
+                                    >
+                                        <ClockCircleOutlined />
+                                        Awaiting manual trigger
+                                    </div>
+                                </div>
+                            </div>
+                        </Card>
+                    </Col>
+                </Row>
+
+                <Card
+                    styles={{ body: { paddingTop: 0 } }}
+                    title={
+                        <span
+                            style={{
+                                fontSize: 16,
+                                fontWeight: 700,
+                                display: "inline-flex",
+                                alignItems: "center",
+                                gap: 8,
+                            }}
+                        >
+                            <TeamOutlined style={{ color: "var(--mainBlue)" }} />
+                            {memberListTitle}
+                        </span>
+                    }
+                    extra={
+                        <div
+                            style={{
+                                display: "flex",
+                                flexWrap: "wrap",
+                                alignItems: "center",
+                                gap: 10,
+                            }}
+                        >
+                            <span
+                                style={{
+                                    fontSize: 13,
+                                    fontWeight: 600,
+                                    color: "#595959",
+                                }}
+                            >
+                                Total: {tableMembers.length} members
+                            </span>
+                            <Button
+                                className="butn secoundry-btn"
+                                disabled={isDisable}
+                                onClick={() => setIsModalOpen(true)}
+                            >
+                                Add member
+                            </Button>
+                            <Button
+                                className="butn secoundry-btn"
+                                disabled={isDisable}
+                                onClick={handleExcludeMember}
+                            >
+                                Exclude member
+                            </Button>
+                            <Button
+                                type="link"
+                                disabled={isDisable}
+                                onClick={handleDownloadCsv}
+                                style={{
+                                    color: "var(--mainBlue)",
+                                    fontWeight: 600,
+                                    padding: "0 4px",
+                                }}
+                            >
+                                Download CSV
+                            </Button>
+                            {activeView === "R3" && (
+                                <Button
+                                    type="link"
+                                    disabled={isDisable}
+                                    icon={<FileTextOutlined />}
+                                    onClick={handleDownloadReminder3Word}
+                                    style={{
+                                        color: "var(--mainBlue)",
+                                        fontWeight: 600,
+                                        padding: "0 4px",
+                                    }}
+                                >
+                                    Download Word
+                                </Button>
+                            )}
+                        </div>
+                    }
+                >
+                    <div
+                        className="common-table reminder-cancellation-members-wrap"
+                        style={{
+                            width: "100%",
+                            overflowX: "auto",
+                            paddingBottom: "16px",
+                        }}
+                    >
+                        <Table
+                            rowKey="_rowKey"
+                            rowSelection={rowSelection}
+                            columns={columns}
+                            dataSource={tableMembers}
+                            pagination={false}
+                            bordered
+                            tableLayout="fixed"
+                            sticky
+                            scroll={{ x: "max-content", y: 590 }}
+                            size="middle"
+                            locale={{
+                                emptyText: selectedId
+                                    ? "No members for this selection"
+                                    : "Open a batch from reminders to view details",
+                            }}
+                        />
+                    </div>
+                </Card>
             </div>
             <Modal
                 className="right-modal"
                 open={isModalOpen}
-                title="Add Member"
+                title="Add member"
                 onOk={() => setIsModalOpen(false)}
                 onCancel={() => setIsModalOpen(false)}
             >
                 <CustomSelect placeholder="Select a memeber" />
             </Modal>
         </div>
-    )
+    );
 }
 
-export default RemindersDetails
+export default RemindersDetails;

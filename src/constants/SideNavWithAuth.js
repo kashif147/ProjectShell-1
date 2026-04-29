@@ -33,7 +33,6 @@ import {
   FaChartLine,
   FaChartPie,
   FaReceipt,
-  FaGlobe,
   FaServer,
   FaKey,
   FaUserCog,
@@ -157,12 +156,6 @@ export const financeItems = [
     ["payments:read"]
   ),
   createMenuItem(
-    "Batches",
-    <FaFileInvoiceDollar />,
-    "Batches",
-    ["payments:read"]
-  ),
-  createMenuItem(
     "Reconciliations",
     <FaExchangeAlt />,
     "Reconciliations",
@@ -278,12 +271,6 @@ export const subscriptionItems = [
     <FaUserFriends />,
     "Recruit a Friend",
     ["recruit:friend:read"]
-  ),
-  createMenuItem(
-    "LandingPage",
-    <FaGlobe />,
-    "LandingPage",
-    ["landing:page:read"]
   ),
 ];
 

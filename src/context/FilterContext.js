@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useMemo, useEffect, useCallback } from "react";
+import { createContext, useContext, useState, useMemo, useEffect, useCallback, useRef } from "react";
 import { useLocation } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
 import { getAllLookups } from "../features/LookupsSlice";
@@ -64,6 +64,8 @@ export const FilterProvider = ({ children }) => {
     }
   }, []);
 
+  const screenFilterStatesRef = useRef({});
+
   // 🔹 Store filter states for each screen
   const [screenFilterStates, setScreenFilterStates] = useState({
     Applications: {
@@ -97,6 +99,14 @@ export const FilterProvider = ({ children }) => {
     Events: {
       visibleFilters: [],
       filtersState: {}
+    },
+    Attendees: {
+      visibleFilters: [],
+      filtersState: {}
+    },
+    MembershipDashboard: {
+      visibleFilters: [],
+      filtersState: {}
     }
   });
 
@@ -104,9 +114,36 @@ export const FilterProvider = ({ children }) => {
   const [activePage, setActivePage] = useState("Applications");
   const [visibleFilters, setVisibleFilters] = useState([]);
   const [filtersState, setFiltersState] = useState({});
+  /** Ref mirrors filtersState for save/serialize so payloads always use the latest in-memory values. */
+  const filtersStateRef = useRef({});
+  /**
+   * True after the user changes any filter or reset; false after a server/template apply.
+   * SaveViewMenu uses this to avoid stomping in-progress edits when getViewById completes late.
+   */
+  const userOverrodeTemplateFiltersRef = useRef(false);
+  const activePageRef = useRef("Applications");
+  const [membershipDashboardApplyTick, setMembershipDashboardApplyTick] =
+    useState(0);
 
   const location = useLocation();
   const activeScreenName = location?.pathname;
+
+  useEffect(() => {
+    filtersStateRef.current = filtersState;
+  }, [filtersState]);
+
+  useEffect(() => {
+    activePageRef.current = activePage;
+  }, [activePage]);
+
+  useEffect(() => {
+    screenFilterStatesRef.current = screenFilterStates;
+  }, [screenFilterStates]);
+
+  /** Always use live filter state. Falling back to `screenFilterStates` when live was empty caused stale template values and broken Save / dirty behavior. */
+  const getFiltersStateForSave = useCallback(() => {
+    return { ...(filtersStateRef.current || {}) };
+  }, []);
 
   // 🔹 Fetch lookups and categories when missing (avoids duplicating App.js bootstrap)
   useEffect(() => {
@@ -229,55 +266,135 @@ export const FilterProvider = ({ children }) => {
     setFilteredRegionOptions(finalRegions);
     setFilteredBranchOptions(finalBranches);
 
-    // 🛡️ AUTO-CLEAR: If current selection is no longer in valid options, clear it
+    // Sync geo filters: prune invalid + auto-select Region/Branch when WL leaves only one choice
     let needsStateSync = false;
     const syncedFiltersState = { ...filtersState };
 
-    // Helper to extract labels from lookup options
-    const getLookupOptions = (options) => options.map(opt => opt.label);
+    const labelListFromOpts = (options) =>
+      (options || []).map((opt) => opt.label);
+
+    if (selectedWL.length > 0) {
+      const dataUnderWL = allHierarchicalData.filter((item) => {
+        const itemWLs = getNamesForItem(item, "Work Location");
+        return itemWLs.some((wl) => selectedWL.includes(wl));
+      });
+      const regionsUnderWL = new Set();
+      const branchesUnderWL = new Set();
+      dataUnderWL.forEach((item) => {
+        getNamesForItem(item, "Region").forEach((n) => regionsUnderWL.add(n));
+        getNamesForItem(item, "Branch").forEach((n) => branchesUnderWL.add(n));
+      });
+      const ru = Array.from(regionsUnderWL).sort();
+      const bu = Array.from(branchesUnderWL).sort();
+
+      const sameValues = (cur, next) =>
+        Array.isArray(cur) &&
+        Array.isArray(next) &&
+        cur.length === next.length &&
+        cur.every(
+          (v, i) =>
+            String(v).toLowerCase() === String(next[i]).toLowerCase(),
+        );
+
+      if (ru.length === 1) {
+        const next = [ru[0]];
+        const cur = syncedFiltersState["Region"]?.selectedValues || [];
+        if (!sameValues(cur, next)) {
+          syncedFiltersState["Region"] = {
+            operator: syncedFiltersState["Region"]?.operator || "==",
+            selectedValues: next,
+          };
+          needsStateSync = true;
+        }
+      }
+      if (bu.length === 1) {
+        const next = [bu[0]];
+        const cur = syncedFiltersState["Branch"]?.selectedValues || [];
+        if (!sameValues(cur, next)) {
+          syncedFiltersState["Branch"] = {
+            operator: syncedFiltersState["Branch"]?.operator || "==",
+            selectedValues: next,
+          };
+          needsStateSync = true;
+        }
+      }
+    }
+
+    const effWL = syncedFiltersState["Work Location"]?.selectedValues || [];
+    const effReg = syncedFiltersState["Region"]?.selectedValues || [];
+    const effBr = syncedFiltersState["Branch"]?.selectedValues || [];
 
     const checkAndPrune = (type, validOptions, baseOptions) => {
-      const current = filtersState[type]?.selectedValues || [];
+      const current = syncedFiltersState[type]?.selectedValues || [];
       if (current.length === 0) return;
 
-      // Determine the true "valid" set based on current filter context
-      // If no OTHER filters are active, use base Redux lookups as the validity source
-      const otherWL = type !== "Work Location" && selectedWL.length > 0;
-      const otherReg = type !== "Region" && selectedRegion.length > 0;
-      const otherBr = type !== "Branch" && selectedBranch.length > 0;
+      const otherWL = type !== "Work Location" && effWL.length > 0;
+      const otherReg = type !== "Region" && effReg.length > 0;
+      const otherBr = type !== "Branch" && effBr.length > 0;
 
-      const isRestricted = (type === "Work Location" && (otherReg || otherBr)) ||
+      const isRestricted =
+        (type === "Work Location" && (otherReg || otherBr)) ||
         (type === "Region" && (otherWL || otherBr)) ||
         (type === "Branch" && (otherWL || otherReg));
 
       const sourceOfTruth = isRestricted ? validOptions : baseOptions;
 
-      // If sourceOfTruth is empty (e.g. data still loading), don't prune yet
       if (!sourceOfTruth || sourceOfTruth.length === 0) return;
 
-      const stillValid = current.filter(val => {
+      const stillValid = current.filter((val) => {
         const stringVal = String(val).toLowerCase();
-        return sourceOfTruth.some(opt => String(opt).toLowerCase() === stringVal);
+        return sourceOfTruth.some(
+          (opt) => String(opt).toLowerCase() === stringVal,
+        );
       });
       if (stillValid.length !== current.length) {
-        syncedFiltersState[type] = { ...filtersState[type], selectedValues: stillValid };
+        syncedFiltersState[type] = {
+          ...syncedFiltersState[type],
+          selectedValues: stillValid,
+        };
         needsStateSync = true;
       }
     };
 
-    // We only auto-prune if some selections actually exist
-    if (selectedWL.length > 0 || selectedRegion.length > 0 || selectedBranch.length > 0) {
-      checkAndPrune("Work Location", finalWLs, getLookupOptions(workLocationOptions || []));
-      checkAndPrune("Region", finalRegions, getLookupOptions(regionOptions || []));
-      checkAndPrune("Branch", finalBranches, getLookupOptions(branchOptions || []));
+    if (effWL.length > 0 || effReg.length > 0 || effBr.length > 0) {
+      checkAndPrune(
+        "Work Location",
+        finalWLs,
+        labelListFromOpts(workLocationOptions || []),
+      );
+      checkAndPrune(
+        "Region",
+        finalRegions,
+        labelListFromOpts(regionOptions || []),
+      );
+      checkAndPrune(
+        "Branch",
+        finalBranches,
+        labelListFromOpts(branchOptions || []),
+      );
     }
 
     if (needsStateSync) {
-      console.log("🛡️ FilterContext: Auto-cleared invalid selections for integrity (synced with dropdown context)");
+      console.log(
+        "🛡️ FilterContext: Synced geo filters (singleton auto-select and/or prune)",
+      );
       setFiltersState(syncedFiltersState);
+      setScreenFilterStates((prev) => ({
+        ...prev,
+        [activePage]: {
+          ...prev[activePage],
+          filtersState: syncedFiltersState,
+        },
+      }));
     }
-
-  }, [filtersState, allHierarchicalData, regionOptions, branchOptions, workLocationOptions]);
+  }, [
+    filtersState,
+    allHierarchicalData,
+    regionOptions,
+    branchOptions,
+    workLocationOptions,
+    activePage,
+  ]);
 
   // 🛡️ EFFECT: Periodically prune junk from filtersState (null, undefined, non-strings, etc.)
   useEffect(() => {
@@ -287,13 +404,14 @@ export const FilterProvider = ({ children }) => {
     Object.keys(newState).forEach(key => {
       const filter = newState[key];
       if (filter?.selectedValues) {
-        // Only allow non-empty strings
-        const cleaned = filter.selectedValues.filter(v =>
-          v !== null &&
-          v !== undefined &&
-          typeof v === 'string' &&
-          v.trim() !== ""
-        );
+        const isDateFilter = key.toLowerCase().includes("date");
+        const cleaned = filter.selectedValues.filter((v) => {
+          if (v === null || v === undefined) return false;
+          if (isDateFilter && typeof v === "number" && Number.isFinite(v)) {
+            return true;
+          }
+          return typeof v === "string" && v.trim() !== "";
+        });
 
         if (cleaned.length !== filter.selectedValues.length) {
           newState[key] = { ...filter, selectedValues: cleaned };
@@ -308,19 +426,25 @@ export const FilterProvider = ({ children }) => {
     }
   }, [filtersState]);
 
-  // 🔹 Helper to get screen from path
+  // 🔹 Helper to get screen from path (keys lowercased so /Applications and /applications match)
   const getScreenFromPath = () => {
     const pathMap = {
-      '/applications': 'Applications',
-      '/Summary': 'Profile',
-      '/membership': 'Membership',
+      "/applications": "Applications",
+      "/summary": "Profile",
+      "/membership": "Membership",
       "/members": "Members",
-      "/onlinePayment": "OnlinePayment",
-      "/CommunicationBatchDetail": "Communication",
-      "/CasesSummary": "Cases",
-      "/EventsSummary": "Events"
+      "/onlinepayment": "OnlinePayment",
+      "/communicationbatchdetail": "Communication",
+      "/casessummary": "Cases",
+      "/eventssummary": "Events",
+      "/eventsdashboard": "Events",
+      "/correspondencedashboard": "Communication",
+      "/issuesmanagementdashboard": "Cases",
+      "/attendees": "Attendees",
+      "/membershipdashboard": "MembershipDashboard",
     };
-    return pathMap[activeScreenName] || 'Applications';
+    const key = (activeScreenName || "").toLowerCase();
+    return pathMap[key] || "Applications";
   };
 
   const activeScreen = getScreenFromPath();
@@ -394,7 +518,7 @@ export const FilterProvider = ({ children }) => {
         "Cancellation Flag",
       ],
       Members: [
-        "Subscription Status",
+        "Membership Status",
         "Membership Category",
         "Payment Type",
         "Payment Frequency",
@@ -447,10 +571,26 @@ export const FilterProvider = ({ children }) => {
         "Priority",
       ],
       Events: [
-        "Search",
+        "Event",
         "Event Type",
-        "Status",
-        "Created At",
+        "Event Date",
+      ],
+      MembershipDashboard: [
+        "Membership Category",
+        "Grade",
+        "Section (Primary Section)",
+        "Region",
+        "Branch",
+        "Work Location",
+      ],
+      Attendees: [
+        "Event",
+        "Event Type",
+        "Registration Status",
+        "Event Date",
+        "Payment Status",
+        "Grade",
+        "Work Location",
       ],
     }),
     []
@@ -461,11 +601,16 @@ export const FilterProvider = ({ children }) => {
     Applications: ["Application Status", "Membership Category"],
     Profile: ["Email", "Membership Category"],
     Membership: ["Membership Status", "Membership Category"],
-    Members: ["Subscription Status", "Membership Category"],
+    Members: ["Membership Status", "Membership Category"],
     OnlinePayment: ["Membership Status", "Payment Status"],
     Communication: ["Grade", "Work Location"],
     Cases: ["Incident Date", "Case Type", "Stakeholder", "Priority"],
-    Events: ["Event Type", "Status"],
+    Events: ["Event", "Event Type", "Event Date"],
+    Attendees: ["Event", "Event Type", "Registration Status", "Event Date", "Payment Status"],
+    MembershipDashboard: [
+      "Membership Category",
+      "Section (Primary Section)",
+    ],
   };
 
   // 🔹 Helper to get default visible filters for a screen
@@ -485,6 +630,10 @@ export const FilterProvider = ({ children }) => {
     Members: getDefaultVisibleFilters("Members"),
     OnlinePayment: getDefaultVisibleFilters("OnlinePayment"),
     Communication: getDefaultVisibleFilters("Communication"),
+    Cases: getDefaultVisibleFilters("Cases"),
+    Events: getDefaultVisibleFilters("Events"),
+    Attendees: getDefaultVisibleFilters("Attendees"),
+    MembershipDashboard: getDefaultVisibleFilters("MembershipDashboard"),
   }), [],);
 
   // 🔹 Default filter VALUES for each screen
@@ -568,7 +717,7 @@ export const FilterProvider = ({ children }) => {
       }
     },
     Members: {
-      "Subscription Status": {
+      "Membership Status": {
         operator: "==",
         selectedValues: []
       },
@@ -639,7 +788,7 @@ export const FilterProvider = ({ children }) => {
     },
     Cases: {
       "Incident Date": {
-        operator: "==",
+        operator: "between",
         selectedValues: []
       },
       "Case Type": {
@@ -656,16 +805,72 @@ export const FilterProvider = ({ children }) => {
       }
     },
     Events: {
+      "Event": {
+        operator: "==",
+        selectedValues: []
+      },
       "Event Type": {
         operator: "==",
         selectedValues: []
       },
-      "Status": {
+      "Event Date": {
+        operator: "between",
+        selectedValues: []
+      }
+    },
+    MembershipDashboard: {
+      "Membership Category": {
         operator: "==",
         selectedValues: []
       },
-      "Created At": {
+      "Grade": {
         operator: "==",
+        selectedValues: []
+      },
+      "Section (Primary Section)": {
+        operator: "==",
+        selectedValues: []
+      },
+      "Region": {
+        operator: "==",
+        selectedValues: []
+      },
+      "Branch": {
+        operator: "==",
+        selectedValues: []
+      },
+      "Work Location": {
+        operator: "==",
+        selectedValues: []
+      },
+    },
+    Attendees: {
+      "Event": {
+        operator: "==",
+        selectedValues: []
+      },
+      "Event Type": {
+        operator: "==",
+        selectedValues: []
+      },
+      "Registration Status": {
+        operator: "==",
+        selectedValues: []
+      },
+      "Payment Status": {
+        operator: "==",
+        selectedValues: []
+      },
+      "Work Location": {
+        operator: "==",
+        selectedValues: []
+      },
+      "Grade": {
+        operator: "==",
+        selectedValues: []
+      },
+      "Event Date": {
+        operator: "between",
         selectedValues: []
       }
     }
@@ -718,53 +923,59 @@ export const FilterProvider = ({ children }) => {
 
   // 🔹 Helper to get hierarchical region options
   const getHierarchicalRegionOptions = () => {
+    const full = getLookupOptions(regionOptions || []);
+    if (!allHierarchicalData?.length) {
+      return full;
+    }
     const selectedWL = filtersState["Work Location"]?.selectedValues || [];
     const selectedBranch = filtersState["Branch"]?.selectedValues || [];
 
-    // ONLY show filtered subset if OTHER dependent filters are active
     if (selectedWL.length === 0 && selectedBranch.length === 0) {
-      return getLookupOptions(regionOptions || []);
+      return full;
     }
 
-    if (!filteredRegionOptions || filteredRegionOptions.length === 0) {
-      return ["⚠️ No regions matching current selections"];
+    if (filteredRegionOptions?.length > 0) {
+      return filteredRegionOptions;
     }
-
-    return filteredRegionOptions;
+    return full;
   };
 
   // 🔹 Helper to get hierarchical branch options
   const getHierarchicalBranchOptions = () => {
+    const full = getLookupOptions(branchOptions || []);
+    if (!allHierarchicalData?.length) {
+      return full;
+    }
     const selectedWL = filtersState["Work Location"]?.selectedValues || [];
     const selectedRegion = filtersState["Region"]?.selectedValues || [];
 
-    // ONLY show filtered subset if OTHER dependent filters are active
     if (selectedWL.length === 0 && selectedRegion.length === 0) {
-      return getLookupOptions(branchOptions || []);
+      return full;
     }
 
-    if (!filteredBranchOptions || filteredBranchOptions.length === 0) {
-      return ["⚠️ No branches matching current selections"];
+    if (filteredBranchOptions?.length > 0) {
+      return filteredBranchOptions;
     }
-
-    return filteredBranchOptions;
+    return full;
   };
 
   // 🔹 Helper to get hierarchical work location options
   const getHierarchicalWLOptions = () => {
+    const full = getLookupOptions(workLocationOptions || []);
+    if (!allHierarchicalData?.length) {
+      return full;
+    }
     const selectedRegion = filtersState["Region"]?.selectedValues || [];
     const selectedBranch = filtersState["Branch"]?.selectedValues || [];
 
-    // ONLY show filtered subset if OTHER dependent filters are active
     if (selectedRegion.length === 0 && selectedBranch.length === 0) {
-      return getLookupOptions(workLocationOptions || []);
+      return full;
     }
 
-    if (!filteredWLOptions || filteredWLOptions.length === 0) {
-      return ["⚠️ No locations matching current selections"];
+    if (filteredWLOptions?.length > 0) {
+      return filteredWLOptions;
     }
-
-    return filteredWLOptions;
+    return full;
   };
 
   // 🔹 Helper to get category options (Unique & Sorted)
@@ -819,7 +1030,6 @@ export const FilterProvider = ({ children }) => {
       // 🔹 CUSTOM FILTERS
       "Application Status": ["", "In-Progress", "Approved", "Rejected", "Submitted"],
       "Membership Status": ["", "Active", "Inactive", "Pending", "Cancelled"],
-      "Subscription Status": ["", "Active", "Cancelled", "Expired", "Pending"],
 
       // 🔹 CATEGORY FILTER
       "Membership Category": getCategoryOptions(),
@@ -858,6 +1068,14 @@ export const FilterProvider = ({ children }) => {
       "Stakeholder": ["", "Internal", "External", "Partner"],
       "Event Type": ["", "Internal", "Workshop", "External"],
       "Status": ["", "Active", "Planning", "Review", "Canceled"],
+      "Event": [
+        "",
+        "Annual Nursing Conference",
+        "Advanced Clinical Skills",
+        "Infection Control Essentials",
+        "Leadership Forum",
+      ],
+      "Registration Status": ["", "Registered", "Cancelled", "Pending", "Waitlisted"],
 
       // 🔹 Text input filters
       "Email": [],
@@ -893,6 +1111,7 @@ export const FilterProvider = ({ children }) => {
       "Created At": [],
       "Updated At": [],
       "Incident Date": [],
+      "Event Date": [],
     };
   }, [
     workLocationOptions,
@@ -904,6 +1123,10 @@ export const FilterProvider = ({ children }) => {
     filteredWLOptions,
     filteredRegionOptions,
     filteredBranchOptions,
+    filtersState,
+    allHierarchicalData,
+    regionOptions,
+    branchOptions,
   ]);
 
   // 🔹 Helper functions
@@ -924,12 +1147,13 @@ export const FilterProvider = ({ children }) => {
   };
 
   const resetFilters = () => {
-    console.log("Resetting filters for:", activePage);
     const resetVisibleFilters = getDefaultVisibleFilters(activePage);
     const resetFilterValues = defaultFilterValues[activePage] || {};
+    userOverrodeTemplateFiltersRef.current = false;
 
     setVisibleFilters(resetVisibleFilters);
     setFiltersState(resetFilterValues);
+    filtersStateRef.current = resetFilterValues;
 
     setScreenFilterStates(prev => ({
       ...prev,
@@ -940,15 +1164,13 @@ export const FilterProvider = ({ children }) => {
     }));
   };
 
+  const bumpMembershipDashboardApply = useCallback(() => {
+    setMembershipDashboardApplyTick((t) => t + 1);
+  }, []);
+
   // 🔹 Combined update function
   const updateFilter = (filter, operator, selectedValues, customFiltersState = null) => {
     const currentState = customFiltersState || filtersState;
-
-    console.log(`🎯 Updating filter "${filter}":`, {
-      operator,
-      selectedValues,
-      currentFilters: currentState
-    });
 
     // 🛡️ Sanitize selectedValues (strictly non-empty strings)
     const sanitize = (values) => (values || [])
@@ -965,19 +1187,11 @@ export const FilterProvider = ({ children }) => {
       },
     };
 
-    // If Work Location is being cleared, also clear Region and Branch
-    if (filter === "Work Location" && (!selectedValues || selectedValues.length === 0)) {
-      newFilterState["Region"] = { operator: "==", selectedValues: [] };
-      newFilterState["Branch"] = { operator: "==", selectedValues: [] };
-    }
-
-    // If Region is being cleared, also clear Branch
-    if (filter === "Region" && (!selectedValues || selectedValues.length === 0)) {
-      newFilterState["Branch"] = { operator: "==", selectedValues: [] };
-    }
     // Only update state if we're not using a custom filters state
     if (!customFiltersState) {
+      userOverrodeTemplateFiltersRef.current = true;
       setFiltersState(newFilterState);
+      filtersStateRef.current = newFilterState;
 
       setScreenFilterStates(prev => ({
         ...prev,
@@ -990,6 +1204,14 @@ export const FilterProvider = ({ children }) => {
 
     return newFilterState;
   };
+
+  const acknowledgeUserChoseNewTemplate = useCallback(() => {
+    userOverrodeTemplateFiltersRef.current = false;
+  }, []);
+
+  const hasUserOverriddenTemplateFilters = useCallback(() => {
+    return userOverrodeTemplateFiltersRef.current;
+  }, []);
 
   // 🔹 Individual update functions for backward compatibility
   const updateFilterValues = (filter, values) => {
@@ -1023,8 +1245,18 @@ export const FilterProvider = ({ children }) => {
       .map(v => String(v))
       .filter(v => v !== null && v !== undefined && v.trim() !== "");
 
-    // We merge with default values for the current screen to ensure consistency
-    const baseFilters = defaultFilterValues[activePage] || {};
+    // Use structural defaults with all selections empty — not product defaults like
+    // "Submitted" for Application Status. Merging with full `defaultFilterValues` here
+    // re-injected those defaults when the server returned an empty `filters: {}` and
+    // the next save persisted them, undoing a cleared template.
+    const baseFiltersRaw = defaultFilterValues[activePage] || {};
+    const baseFilters = {};
+    Object.keys(baseFiltersRaw).forEach((key) => {
+      baseFilters[key] = {
+        operator: baseFiltersRaw[key]?.operator || "==",
+        selectedValues: [],
+      };
+    });
 
     // Sanitize incoming template filters
     const sanitizedTemplateFilters = {};
@@ -1038,6 +1270,7 @@ export const FilterProvider = ({ children }) => {
     const newFiltersState = { ...baseFilters, ...sanitizedTemplateFilters };
 
     setFiltersState(newFiltersState);
+    filtersStateRef.current = newFiltersState;
     setScreenFilterStates(prev => ({
       ...prev,
       [activePage]: {
@@ -1049,6 +1282,8 @@ export const FilterProvider = ({ children }) => {
     // Also ensure all filters in the template are visible
     const newVisible = [...new Set([...visibleFilters, ...Object.keys(templateFilters)])];
     setVisibleFilters(newVisible);
+
+    userOverrodeTemplateFiltersRef.current = false;
   };
 
   return (
@@ -1067,6 +1302,9 @@ export const FilterProvider = ({ children }) => {
         updateFilterValues,
         updateFilterOperator,
         applyTemplateFilters,
+        acknowledgeUserChoseNewTemplate,
+        hasUserOverriddenTemplateFilters,
+        getFiltersStateForSave,
         COMMON_FILTERS,
         getDefaultVisibleFilters,
         screenSpecificDefaultFilters,
@@ -1074,6 +1312,8 @@ export const FilterProvider = ({ children }) => {
         filteredWLOptions,
         filteredRegionOptions,
         filteredBranchOptions,
+        membershipDashboardApplyTick,
+        bumpMembershipDashboardApply,
       }}
     >
       {children}

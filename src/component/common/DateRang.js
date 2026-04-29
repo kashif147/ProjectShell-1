@@ -12,6 +12,7 @@ import {
   Space,
   InputNumber,
   Select,
+  Badge,
 } from "antd";
 import MySelect from "./MySelect";
 import { DownOutlined } from "@ant-design/icons";
@@ -28,6 +29,22 @@ const units = [
   { label: "years", value: "years" },
 ];
 
+const DATE_RANGE_OPS = new Set(["between", "within", "more_than"]);
+
+function effectiveDateOperator(operator) {
+  return DATE_RANGE_OPS.has(String(operator)) ? operator : "between";
+}
+
+function selectedValuesAreMeaningful(selectedValues) {
+  if (!Array.isArray(selectedValues)) return false;
+  return selectedValues.some((x) => {
+    if (x === null || x === undefined) return false;
+    if (typeof x === "number" && Number.isFinite(x)) return true;
+    const s = String(x).trim();
+    return s !== "" && s !== "null" && s !== "undefined";
+  });
+}
+
 function DateRang({ label, selectedValues = [], operator = "between", onApply }) {
   const [open, setOpen] = useState(false);
   const [mode, setMode] = useState("between"); // 'within', 'more_than', 'between'
@@ -36,18 +53,25 @@ function DateRang({ label, selectedValues = [], operator = "between", onApply })
   const [relativeUnit, setRelativeUnit] = useState("minutes");
 
   useEffect(() => {
-    if (Array.isArray(selectedValues) && selectedValues.length > 0) {
-      if (operator === "between") {
+    const effOp = effectiveDateOperator(operator);
+    if (Array.isArray(selectedValues) && selectedValuesAreMeaningful(selectedValues)) {
+      if (effOp === "between") {
         setMode("between");
         const start = selectedValues[0] ? dayjs(selectedValues[0]) : null;
         const end = selectedValues[1] ? dayjs(selectedValues[1]) : null;
         setDateRange([start, end]);
-      } else if (operator === "within" || operator === "more_than") {
-        setMode(operator);
-        setRelativeValue(selectedValues[0]);
+      } else if (effOp === "within" || effOp === "more_than") {
+        setMode(effOp);
+        const raw = selectedValues[0];
+        const num =
+          raw !== null && raw !== undefined && raw !== ""
+            ? Number(raw)
+            : null;
+        setRelativeValue(Number.isFinite(num) ? num : null);
         setRelativeUnit(selectedValues[1] || "minutes");
       }
     } else {
+      setMode("between");
       setDateRange([null, null]);
       setRelativeValue(null);
       setRelativeUnit("minutes");
@@ -226,23 +250,21 @@ function DateRang({ label, selectedValues = [], operator = "between", onApply })
     </Menu>
   );
 
-  const badgeCount = (Array.isArray(selectedValues) && selectedValues.length > 0) ? 1 : 0;
+  const badgeCount = selectedValuesAreMeaningful(selectedValues) ? 1 : 0;
 
   return (
     <Dropdown
-      overlay={menu}
+      dropdownRender={() => menu}
       trigger={["click"]}
-      visible={open}
-      onVisibleChange={setOpen}
+      open={open}
+      onOpenChange={setOpen}
       placement="bottomLeft"
     >
       <div className={`filter-button1 ${badgeCount > 0 ? "active" : ""}`}>
-        <Space size={4}>
+        <Space size={6} className="filter-button1__inner">
           <span className="filter-label">{label}</span>
           {badgeCount > 0 && (
-            <div className="ant-badge red-badge">
-              <span className="ant-badge-count" style={{ backgroundColor: '#ff4d4f' }}>1</span>
-            </div>
+            <Badge count={badgeCount} className="red-badge" />
           )}
           <DownOutlined className="dropdown-icon" />
         </Space>

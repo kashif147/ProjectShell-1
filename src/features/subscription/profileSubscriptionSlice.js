@@ -1,6 +1,7 @@
 // profileSubscriptionSlice.js
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import axios from "axios";
+import { getSubscriptionServiceBaseUrl } from "../../config/serviceUrls";
 
 /**
  * Unwraps list/detail responses so ProfileSubData is always { data: Subscription[] }.
@@ -54,9 +55,13 @@ export const getSubscriptionByProfileId = createAsyncThunk(
   "profileSubscription/getByProfileId",
   async ({ profileId, isCurrent = "true" }, { rejectWithValue }) => {
     try {
+      const safeProfileId = String(profileId ?? "").trim();
+      if (!safeProfileId || safeProfileId.toLowerCase() === "undefined") {
+        return rejectWithValue("Invalid profileId");
+      }
       const token = localStorage.getItem("token");
       const res = await axios.get(
-        `${process.env.REACT_APP_SUBSCRIPTION}/subscriptions?profileId=${profileId}&isCurrent=${isCurrent}`,
+        `${getSubscriptionServiceBaseUrl()}/subscriptions?profileId=${safeProfileId}&isCurrent=${isCurrent}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -80,7 +85,7 @@ export const getSubscriptionById = createAsyncThunk(
     try {
       const token = localStorage.getItem("token");
       const res = await axios.get(
-        `${process.env.REACT_APP_SUBSCRIPTION}/subscriptions/${subscriptionId}`,
+        `${getSubscriptionServiceBaseUrl()}/subscriptions/${subscriptionId}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -96,6 +101,32 @@ export const getSubscriptionById = createAsyncThunk(
   }
 );
 
+export const updateSubscriptionById = createAsyncThunk(
+  "profileSubscription/updateById",
+  async ({ subscriptionId, body }, { rejectWithValue }) => {
+    try {
+      const token = localStorage.getItem("token");
+      const res = await axios.put(
+        `${getSubscriptionServiceBaseUrl()}/subscriptions/${subscriptionId}`,
+        body,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+      return normalizeSubscriptionResponse(res);
+    } catch (err) {
+      return rejectWithValue(
+        err.response?.data?.message ||
+          err.response?.data ||
+          "Failed to update subscription"
+      );
+    }
+  }
+);
+
 // ✅ Fetch subscription history by profileId
 export const getSubscriptionHistoryByProfileId = createAsyncThunk(
   "profileSubscription/getHistoryByProfileId",
@@ -103,7 +134,7 @@ export const getSubscriptionHistoryByProfileId = createAsyncThunk(
     try {
       const token = localStorage.getItem("token");
       const res = await axios.get(
-        `${process.env.REACT_APP_SUBSCRIPTION}/subscriptions?profileId=${profileId}&isCurrent=false`,
+        `${getSubscriptionServiceBaseUrl()}/subscriptions?profileId=${profileId}&isCurrent=false`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -127,7 +158,7 @@ export const getProfileSubscriptionsForActivateEligibility = createAsyncThunk(
   async ({ profileId }, { rejectWithValue }) => {
     try {
       const token = localStorage.getItem("token");
-      const base = `${process.env.REACT_APP_SUBSCRIPTION}/subscriptions?profileId=${profileId}`;
+      const base = `${getSubscriptionServiceBaseUrl()}/subscriptions?profileId=${profileId}`;
       const headers = { Authorization: `Bearer ${token}` };
       const [resCurrent, resPast] = await Promise.all([
         axios.get(`${base}&isCurrent=true`, { headers }),

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useId, useState } from "react";
 import "../../styles/MyInput.css";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchCountries } from "../../features/CountriesSlice";
@@ -112,6 +112,7 @@ function parseMobileValue(value, countriesData) {
 
 const MyInput = ({
   label,
+  id,
   placeholder = "Enter...",
   value,
   onChange,
@@ -127,6 +128,8 @@ const MyInput = ({
   maxLength,
   prefix,
 }) => {
+  const uid = useId().replace(/:/g, "");
+  const inputId = id ?? (name ? String(name) : `myinput-${uid}`);
   const dispatch = useDispatch();
   const { countriesData, loadingC } = useSelector((state) => state.countries);
 
@@ -175,7 +178,7 @@ const MyInput = ({
   };
 
   const commonProps = {
-    id: name,
+    id: inputId,
     name,
     value,
     onChange: handleChange,
@@ -186,6 +189,13 @@ const MyInput = ({
     disabled,
     maxLength,
   };
+  if (
+    !(label || name) &&
+    placeholder &&
+    placeholder !== "Enter..."
+  ) {
+    commonProps["aria-label"] = String(placeholder);
+  }
 
   const showError = hasError || internalError;
 
@@ -200,23 +210,33 @@ const MyInput = ({
     setMobileNumber(formatNationalDisplay(national));
   }, [type, value, countriesData]);
 
+  const showLabelRow = Boolean(label) || required || showError;
+
   return (
     <div className="my-input-wrapper">
-      <div className="d-flex justify-content-between">
-        <label
-          htmlFor={name}
-          className={`my-input-label ${showError ? "error" : ""}`}
-        >
-          {label}
-          {required && <span className="required-star"> *</span>}
-          {showError && (
-            <span className="error-message">
-              ({internalError || errorMessage})
-            </span>
-          )}
-        </label>
-        {extra && <div className="ml-2">{extra}</div>}
-      </div>
+      {showLabelRow ? (
+        <div className="d-flex justify-content-between">
+          <label
+            htmlFor={inputId}
+            className={`my-input-label ${showError ? "error" : ""}`}
+          >
+            {label}
+            {required && <span className="required-star"> *</span>}
+            {showError && (
+              <span className="error-message">
+                ({internalError || errorMessage})
+              </span>
+            )}
+          </label>
+          {extra && <div className="ml-2">{extra}</div>}
+        </div>
+      ) : (
+        extra && (
+          <div className="d-flex justify-content-end mb-1">
+            <div className="ml-2">{extra}</div>
+          </div>
+        )
+      )}
 
       <div
         className={`my-input-container ${showError ? "error" : ""} ${isFocused ? "focused" : ""
@@ -228,6 +248,8 @@ const MyInput = ({
         ) : type === "mobile" ? (
           <div className="mobile-input-group">
             <select
+              id={`${inputId}-calling-code`}
+              aria-label="Country calling code"
               className={`country-code-select ${showError ? "error" : ""}`}
               value={countryCode}
               onChange={(e) => {
@@ -257,6 +279,8 @@ const MyInput = ({
             </select>
 
             <input
+              id={inputId}
+              name={name}
               type="text"
               className={`mobile-number-input ${showError ? "error" : ""}`}
               placeholder="345 049 1493"

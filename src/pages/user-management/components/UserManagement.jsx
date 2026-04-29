@@ -232,7 +232,6 @@ const UserManagement = ({ onClose }) => {
       width: 120,
       // render: (tenantId) => {
       //   const tenant = getTenantsList().find((t) => t.id === tenantId);
-      //   debugger
       //   return (
       //     <Tag color="blue" className="tenant-tag">
       //       {tenant ? tenant.tenantName : tenantId}

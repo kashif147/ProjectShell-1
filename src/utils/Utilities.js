@@ -254,41 +254,111 @@ export function formatDateOnly(dateString) {
   return date.isValid() ? date.format("DD/MM/YYYY") : "";
 }
 
+const REMINDER_DATE_PARSE_FORMATS = [
+  "DD/MM/YYYY",
+  "D/M/YYYY",
+  "MM/DD/YYYY",
+  "M/D/YYYY",
+  "YYYY-MM-DD",
+];
+
+/** Display-only: parses common slash/ISO date strings, outputs DD-MM-YYYY */
+export function formatDateDdMmYyyy(dateInput) {
+  if (dateInput == null || dateInput === "") return "—";
+  const s = String(dateInput).trim();
+  const datePart = s.split(/\s+/)[0];
+  let m = moment(datePart, REMINDER_DATE_PARSE_FORMATS, true);
+  if (!m.isValid()) {
+    m = moment(datePart);
+  }
+  return m.isValid() ? m.format("DD-MM-YYYY") : datePart;
+}
+
+/** For sorting / comparisons; invalid or missing dates sort as 0 (epoch-relative tie-break). */
+export function parseReminderDateToMs(dateInput) {
+  if (dateInput == null || dateInput === "") return 0;
+  const datePart = String(dateInput).trim().split(/\s+/)[0];
+  let m = moment(datePart, REMINDER_DATE_PARSE_FORMATS, true);
+  if (!m.isValid()) {
+    m = moment(datePart);
+  }
+  return m.isValid() ? m.valueOf() : 0;
+}
+
 export function formatMobileNumber(value) {
   if (!value) return "-";
 
-  // Clean the string - keep only digits and +
   let cleaned = value.toString().replace(/[^\d+]/g, "");
 
-  // Normalize international format
   if (cleaned.startsWith("00")) {
     cleaned = "+" + cleaned.substring(2);
   }
 
-  // If it's a local Irish number starting with 0 followed by 2 digits then more
-  // (e.g., 0871234567 or 0761234567)
   if (cleaned.startsWith("0") && !cleaned.startsWith("00")) {
     cleaned = "+353" + cleaned.substring(1);
   }
 
-  // If it starts with 353 but no +, add one
   if (cleaned.startsWith("353")) {
     cleaned = "+" + cleaned;
   }
 
-  // Handle +3530... cases (strip the extra 0)
   if (cleaned.startsWith("+3530")) {
     cleaned = "+353" + cleaned.substring(5);
   }
 
-  // Check if it matches the expected Irish format: +353 followed by 9 digits
-  const irishMatch = cleaned.match(/^\+353(\d{2})(\d{3})(\d{4})$/);
-  if (irishMatch) {
-    return `+353 ${irishMatch[1]} ${irishMatch[2]} ${irishMatch[3]}`;
+  if (!cleaned.startsWith("+")) {
+    const digitsOnly = cleaned.replace(/\D/g, "");
+    if (!digitsOnly) return value;
+    cleaned = `+${digitsOnly}`;
   }
 
-  // If no match, return cleaned or original if it's already mostly okay
-  return cleaned.startsWith("+") ? cleaned : value;
+  const digits = cleaned.slice(1).replace(/\D/g, "");
+  if (!digits) return cleaned;
+
+  let countryLen = 0;
+  // We support 2- or 3-digit country codes only.
+  // If both can fit, use known prefix heuristics first.
+  const fit2 = (() => {
+    const localLen = digits.length - 2;
+    return localLen === 9 || localLen === 10;
+  })();
+  const fit3 = (() => {
+    const localLen = digits.length - 3;
+    return localLen === 9 || localLen === 10;
+  })();
+
+  if (fit2 && fit3) {
+    // Keep known 3-digit country prefixes, else default to 2-digit split.
+    countryLen = digits.startsWith("353") ? 3 : 2;
+  } else if (fit3) {
+    countryLen = 3;
+  } else if (fit2) {
+    countryLen = 2;
+  }
+
+  if (!countryLen) {
+    countryLen = digits.length >= 12 ? 3 : 2;
+    if (countryLen >= digits.length) {
+      countryLen = Math.max(1, digits.length - 1);
+    }
+  }
+
+  const countryCode = `+${digits.slice(0, countryLen)}`;
+  const local = digits.slice(countryLen);
+
+  if (!local) return countryCode;
+
+  if (local.length === 9) {
+    return `${countryCode} ${local.slice(0, 2)} ${local.slice(2, 5)} ${local.slice(5, 9)}`;
+  }
+
+  if (local.length === 10) {
+    return `${countryCode} ${local.slice(0, 3)} ${local.slice(3, 6)} ${local.slice(6, 10)}`;
+  }
+
+  if (local.length <= 3) return `${countryCode} ${local}`;
+  if (local.length <= 6) return `${countryCode} ${local.slice(0, 3)} ${local.slice(3)}`;
+  return `${countryCode} ${local.slice(0, 3)} ${local.slice(3, 6)} ${local.slice(6)}`;
 }
 
 function base64URLEncode(buffer) {

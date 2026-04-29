@@ -153,6 +153,25 @@ function CancelledMembersReport() {
     },
   ];
 
+  const parseBalanceAmount = (value) => {
+    if (value == null) return 0;
+    const parsed = parseFloat(String(value).replace(/[^\d.-]/g, ""));
+    return Number.isFinite(parsed) ? parsed : 0;
+  };
+
+  const formatOutstandingBalanceLikeHeader = (value) => {
+    const amount = parseBalanceAmount(value);
+    const amountText = `€${Math.abs(amount).toLocaleString("en-IE", {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    })}`;
+    const indicator = amount > 0 ? "Dr" : amount < 0 ? "Cr" : "";
+    return {
+      text: indicator ? `${amountText} (${indicator})` : amountText,
+      color: amount > 0 ? "#cf1322" : "#389e0d",
+    };
+  };
+
   // Initialize data
   useEffect(() => {
     setData(sampleData);
@@ -364,16 +383,10 @@ function CancelledMembersReport() {
       dataIndex: "outstandingBalance",
       key: "outstandingBalance",
       width: 140,
-      render: (balance) => (
-        <span
-          style={{
-            color: balance === "€0.00" ? "#52c41a" : "#ff4d4f",
-            fontWeight: "bold",
-          }}
-        >
-          {balance}
-        </span>
-      ),
+      render: (balance) => {
+        const { text, color } = formatOutstandingBalanceLikeHeader(balance);
+        return <span style={{ color, fontWeight: "bold" }}>{text}</span>;
+      },
     },
     {
       title: "Reminder No",

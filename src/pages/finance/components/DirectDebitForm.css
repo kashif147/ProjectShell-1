@@ -1,0 +1,65 @@
+/**
+ * Direct Debit form — vertical spacing, padding, margin per card/section.
+ * Adjust the values below; component uses these class names only.
+ */
+
+.dd-form {
+  padding: 12px;
+  max-width: 1024px;
+  margin: 0;
+  font-family: "Inter", system-ui, sans-serif;
+  color: #1f2937;
+}
+
+/* Gap between stacked sections (space before the next card) */
+.dd-form__section--member {
+  margin-top: 0;
+  margin-bottom: 12px;
+}
+
+.dd-form__section--account {
+  margin-top: 0;
+  margin-bottom: 12px;
+}
+
+.dd-form__section--beneficiary {
+  margin-top: 0;
+  margin-bottom: 0;
+}
+
+/* Shared card chrome */
+.dd-form__card {
+  background-color: #ffffff;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+}
+
+/* Member search card — inner padding + outer margin if needed */
+.dd-form__card--member {
+  padding: 16px;
+  margin: 0;
+}
+
+/* Your account details card */
+.dd-form__card--account {
+  padding: 12px;
+  margin: 0;
+}
+
+/* Beneficiary card (includes decorative circle; keep overflow hidden if you keep the circle) */
+.dd-form__card--beneficiary {
+  padding: 12px;
+  margin: 0;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Footer line under all cards */
+.dd-form__footer {
+  text-align: center;
+  font-size: 12px;
+  color: #6b7280;
+  margin-top: 12px;
+  margin-bottom: 0;
+}

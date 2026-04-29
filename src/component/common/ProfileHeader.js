@@ -23,9 +23,13 @@ import CustomSelect from "./CustomSelect";
 import "../../styles/ProfileHeader.css";
 import { useSelector, useDispatch } from "react-redux";
 import axios from "axios";
+import {
+  getAccountServiceBaseUrl,
+  getSubscriptionServiceBaseUrl,
+} from "../../config/serviceUrls";
 import MyAlert from "./MyAlert"; // Assuming you have this component
 import UndoCancellationModal from "./UndoCancellationModal";
-import { centsToEuro } from "../../utils/Utilities";
+import { centsToEuro, formatMobileNumber } from "../../utils/Utilities";
 import { getProfileDetailsById } from "../../features/profiles/ProfileDetailsSlice";
 import {
   getSubscriptionByProfileId,
@@ -53,6 +57,7 @@ function ProfileHeader({
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [ledgerBalance, setLedgerBalance] = useState(0);
+  const [ledgerBalanceIsCents, setLedgerBalanceIsCents] = useState(true);
   const [lastPaymentAmount, setLastPaymentAmount] = useState(0);
   const [lastPaymentDate, setLastPaymentDate] = useState(null);
   const [paymentCode, setPaymentCode] = useState("");
@@ -186,14 +191,45 @@ function ProfileHeader({
   }, [ProfileSubData]);
 
   const memberIdForLedger = useMemo(() => {
-    return (
-      location.state?.memberId ||
+    const fromSearch = searchParams.get("memberId");
+    const fromSource =
       source?.membershipNumber ||
+      source?.membershipNo ||
+      source?.personalDetails?.membershipNo ||
+      source?.personalInfo?.membershipNumber;
+    const fromSubscription =
+      subscriptionData?.membershipNumber ||
+      subscriptionData?.membershipNo ||
+      subscriptionData?.personalDetails?.membershipNo;
+    const fromAnySubscription = (
+      Array.isArray(profileSubscriptionsForActivateEligibility)
+        ? profileSubscriptionsForActivateEligibility
+        : []
+    )
+      .map(
+        (sub) =>
+          sub?.membershipNumber ||
+          sub?.membershipNo ||
+          sub?.personalDetails?.membershipNo ||
+          sub?.profile?.membershipNumber
+      )
+      .find(Boolean);
+    return (
+      fromSearch ||
+      location.state?.memberId ||
+      fromSource ||
       source?.regNo ||
-      source?.id ||
-      source?._id
+      fromSubscription ||
+      fromAnySubscription ||
+      ""
     );
-  }, [source, location]);
+  }, [
+    source,
+    subscriptionData,
+    profileSubscriptionsForActivateEligibility,
+    location,
+    searchParams,
+  ]);
 
   const fetchAccountSummary = useCallback(async () => {
     if (!memberIdForLedger || !token) return;
@@ -201,7 +237,7 @@ function ProfileHeader({
     setLedgerLoading(true);
     try {
       const response = await axios.get(
-        `${process.env.REACT_APP_ACCOUNT_SERVICE_URL}/reports/member/${memberIdForLedger}/summary`,
+        `${getAccountServiceBaseUrl()}/reports/member/${memberIdForLedger}/summary`,
         // /reports/member/B00002/summary?year=2026
         {
           headers: {
@@ -211,18 +247,34 @@ function ProfileHeader({
       );
 
       const summaryData = response.data?.data || response.data;
+      const normalizedNet =
+        summaryData?.net ??
+        summaryData?.balance ??
+        summaryData?.ledgerBalance ??
+        0;
+      // account-service summary can return euros (decimal) while legacy flows use cents (integer).
+      const isCents = Number.isInteger(normalizedNet);
+      setLedgerBalance(normalizedNet || 0);
+      setLedgerBalanceIsCents(isCents);
 
-      // Update states based on the new API response
-      // User's example: "net": 120.5 (Decimal suggests Euros)
-      setLedgerBalance(summaryData.net || 0);
-
-      if (summaryData.lastPayment) {
-        // User's example: "amount": 32600 (Integer suggests cents)
-        setLastPaymentAmount(summaryData.lastPayment.amount || 0);
-        setLastPaymentDate(summaryData.lastPayment.date);
-      }
+      const normalizedLastPaymentAmount =
+        summaryData?.lastPayment?.amount ??
+        summaryData?.lastPaymentAmount ??
+        summaryData?.payment?.amount ??
+        0;
+      const normalizedLastPaymentDate =
+        summaryData?.lastPayment?.date ??
+        summaryData?.lastPaymentDate ??
+        summaryData?.paymentDate ??
+        null;
+      setLastPaymentAmount(normalizedLastPaymentAmount || 0);
+      setLastPaymentDate(normalizedLastPaymentDate);
     } catch (error) {
       console.error("Error fetching account summary in ProfileHeader:", error);
+      setLedgerBalance(0);
+      setLedgerBalanceIsCents(true);
+      setLastPaymentAmount(0);
+      setLastPaymentDate(null);
     } finally {
       setLedgerLoading(false);
     }
@@ -252,6 +304,29 @@ function ProfileHeader({
   useEffect(() => {
     fetchAccountSummary();
   }, [fetchAccountSummary]);
+
+  useEffect(() => {
+    const handleMemberFinanceUpdated = (event) => {
+      const eventMemberId = String(event?.detail?.memberId || "")
+        .trim()
+        .toLowerCase();
+      const currentMemberId = String(memberIdForLedger || "")
+        .trim()
+        .toLowerCase();
+
+      // Refresh only when event is for the currently visible member.
+      if (eventMemberId && eventMemberId !== currentMemberId) return;
+      fetchAccountSummary();
+    };
+
+    window.addEventListener("member-finance-updated", handleMemberFinanceUpdated);
+    return () => {
+      window.removeEventListener(
+        "member-finance-updated",
+        handleMemberFinanceUpdated
+      );
+    };
+  }, [fetchAccountSummary, memberIdForLedger]);
 
   const isSubscriptionEmpty = useMemo(() => {
     if (!ProfileSubData) return false;
@@ -337,7 +412,7 @@ function ProfileHeader({
         ? getSafe(source, "contactInfo.workEmail")
         : getSafe(source, "contactInfo.personalEmail", "");
 
-    const phone = getSafe(source, "contactInfo.mobileNumber", "");
+    const phone = formatMobileNumber(getSafe(source, "contactInfo.mobileNumber", ""));
 
     // Professional Info
     const grade = getSafe(source, "professionalDetails.grade", " ");
@@ -352,7 +427,22 @@ function ProfileHeader({
     // let's check if we should still use centsToEuro. 
     // Actually, historical code used centsToEuro. If the API changed units, we should adjust.
     // Given the example "net": 120.5, it looks like Euros.
-    const balance = `€${Math.abs(centsToEuro(ledgerBalance || 0)).toLocaleString('en-IE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+    const numericLedgerBalance = Number(ledgerBalance || 0);
+    const balanceInEuro = ledgerBalanceIsCents
+      ? centsToEuro(numericLedgerBalance)
+      : numericLedgerBalance;
+    const balanceAmount = `€${Math.abs(balanceInEuro).toLocaleString("en-IE", {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    })}`;
+    const balanceIndicator =
+      numericLedgerBalance > 0 ? "Dr" : numericLedgerBalance < 0 ? "Cr" : "";
+    const balanceColor =
+      balanceIndicator === "Dr"
+        ? "#cf1322"
+        : balanceIndicator === "Cr"
+          ? "#389e0d"
+          : "#faad14";
     const lastPayment = `€${centsToEuro(lastPaymentAmount || 0).toLocaleString('en-IE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 
     // Use latest ledger date for payment date if available, fallback to subscription/submission
@@ -395,7 +485,9 @@ function ProfileHeader({
       subscriptionYear,
 
       // Financial Info
-      balance,
+      balance: balanceAmount,
+      balanceIndicator,
+      balanceColor,
       lastPayment,
       paymentDate,
       paymentCode: paymentCodeToUse,
@@ -407,6 +499,7 @@ function ProfileHeader({
     isSubscriptionEmpty,
     ProfileSubLoading,
     ledgerBalance,
+    ledgerBalanceIsCents,
     lastPaymentAmount,
     lastPaymentDate,
     paymentCode,
@@ -520,7 +613,7 @@ function ProfileHeader({
 
     try {
       const response = await axios.put(
-        `${process.env.REACT_APP_SUBSCRIPTION}/subscriptions/resign/${profileId}`,
+        `${getSubscriptionServiceBaseUrl()}/subscriptions/resign/${profileId}`,
         payload,
         {
           headers: {
@@ -662,16 +755,16 @@ function ProfileHeader({
           {/* Contact Information Section - on blue background */}
           <div className="member-contact-section-blue">
             <div className="contact-item-blue">
-              <FaMapMarkerAlt className="contact-icon-blue" />
-              <span>{memberData.address}</span>
-            </div>
-            <div className="contact-item-blue">
               <FaEnvelope className="contact-icon-blue" />
               <span>{memberData.email}</span>
             </div>
             <div className="contact-item-blue">
               <FaPhone className="contact-icon-blue" />
               <span>Cell: {memberData.phone}</span>
+            </div>
+            <div className="contact-item-blue">
+              <FaMapMarkerAlt className="contact-icon-blue" />
+              <span>{memberData.address}</span>
             </div>
           </div>
         </div>
@@ -711,9 +804,24 @@ function ProfileHeader({
               <span className="detail-label">Balance:</span>
               <span
                 className="detail-value"
-                style={{ color: "#faad14", fontWeight: 700, fontSize: "18px" }}
+                style={{
+                  color: memberData.balanceColor || "#faad14",
+                  fontWeight: 700,
+                  fontSize: "18px",
+                }}
               >
                 {memberData.balance}
+                {memberData.balanceIndicator && (
+                  <span
+                    style={{
+                      fontSize: "12px",
+                      marginLeft: 4,
+                      fontWeight: 600,
+                    }}
+                  >
+                    ({memberData.balanceIndicator})
+                  </span>
+                )}
               </span>
             </div>
           </div>

@@ -45,7 +45,6 @@ export const getTransferRequest = createAsyncThunk(
 export const getTransferRequestById = createAsyncThunk(
   "transferRequest/getById",
   async (transferRequestId, { rejectWithValue }) => {
-    debugger
     try {
       const token = localStorage.getItem("token");
 
@@ -55,7 +54,6 @@ export const getTransferRequestById = createAsyncThunk(
           headers: { Authorization: `Bearer ${token}` },
         }
       );
-debugger
       console.log("API RESPONSE by ID", response.data);
       return response.data;
     } catch (error) {

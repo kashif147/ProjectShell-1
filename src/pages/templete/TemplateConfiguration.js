@@ -15,22 +15,42 @@ import {
   Modal,
   message,
   notification,
+  Tooltip,
 } from "antd";
-import ReactQuill from "react-quill";
-import { useNavigate } from "react-router-dom";
-import "quill/dist/quill.snow.css";
+import { useNavigate, useSearchParams } from "react-router-dom";
+import "./TemplateConfiguration.css";
+import ReactQuill from "react-quill-new";
+import Quill from "quill";
+import "react-quill-new/dist/quill.snow.css";
+import TableUp, {
+  defaultCustomSelect,
+  TableAlign,
+  TableMenuSelect,
+  TableResizeScale,
+  TableSelection,
+  TableVirtualScrollbar,
+} from "quill-table-up";
+import "quill-table-up/index.css";
+import "quill-table-up/table-creator.css";
 import {
+  ArrowLeftOutlined,
   CloseOutlined,
   EyeOutlined,
   FileTextOutlined,
+  InfoCircleOutlined,
   SaveOutlined,
 } from "@ant-design/icons";
 import MyInput from "../../component/common/MyInput";
 import CustomSelect from "../../component/common/CustomSelect";
-import { resetTemplateDetails } from "../../features/templete/templeteDetailsSlice";
+import {
+  resetTemplateDetails,
+  loadtempletedetails,
+} from "../../features/templete/templeteDetailsSlice";
 import { useDispatch, useSelector } from "react-redux";
 import { getBookmarks } from "../../features/templete/BookmarkActions";
 import htmlDocx from "html-docx-js/dist/html-docx";
+
+Quill.register({ [`modules/${TableUp.moduleName}`]: TableUp }, true);
 
 const { Text } = Typography;
 
@@ -141,6 +161,335 @@ const replacePlaceholdersWithData = (htmlContent) => {
     );
 };
 
+/** Merge Quill class-based presentation into inline styles so html-docx / Word keep alignment, indent, colors. */
+const parseStyleObject = (styleStr) => {
+  const out = {};
+  if (!styleStr || typeof styleStr !== "string") return out;
+  styleStr.split(";").forEach((part) => {
+    const idx = part.indexOf(":");
+    if (idx === -1) return;
+    const k = part.slice(0, idx).trim().toLowerCase();
+    const v = part.slice(idx + 1).trim();
+    if (k && v) out[k] = v;
+  });
+  return out;
+};
+
+const stringifyStyleObject = (obj) =>
+  Object.entries(obj)
+    .map(([k, v]) => `${k}: ${v}`)
+    .join("; ");
+
+const mergeInlineStyles = (el, additions) => {
+  const cur = parseStyleObject(el.getAttribute("style"));
+  Object.assign(cur, additions);
+  const s = stringifyStyleObject(cur);
+  if (s) el.setAttribute("style", s);
+  else el.removeAttribute("style");
+};
+
+const indentPaddingForQuill = (level, tagName) => {
+  if (!level || level < 1) return null;
+  if (tagName === "LI") return `${1.5 + level * 3}em`;
+  return `${level * 3}em`;
+};
+
+/** quill-table-up: row wrapParentTag() maps only thead|tbody|tfoot — anything else → wrap(undefined) crash. */
+const TABLE_UP_VALID_WRAP_TAGS = new Set(["thead", "tbody", "tfoot"]);
+
+const sanitizeTableUpWrapTagAttrValue = (raw) => {
+  const s = String(raw ?? "")
+    .replace(/\u00a0/g, " ")
+    .trim()
+    .toLowerCase();
+  return TABLE_UP_VALID_WRAP_TAGS.has(s) ? s : "tbody";
+};
+
+const normalizeTableUpDataWrapTagsOnRoot = (rootEl) => {
+  if (!rootEl?.querySelectorAll) return;
+  // Rows: invalid/missing data-wrap-tag → wrap(undefined). Infer thead|tfoot from parent when Word strips attrs.
+  rootEl.querySelectorAll("table.ql-table tr").forEach((tr) => {
+    const rawAttr = tr.getAttribute("data-wrap-tag");
+    const cleaned = rawAttr
+      ? String(rawAttr).replace(/\u00a0/g, " ").trim().toLowerCase()
+      : "";
+    let candidate = cleaned;
+    if (!TABLE_UP_VALID_WRAP_TAGS.has(cleaned)) {
+      const section = tr.parentElement?.tagName?.toLowerCase();
+      if (section === "thead") candidate = "thead";
+      else if (section === "tfoot") candidate = "tfoot";
+      else candidate = "tbody";
+    }
+    tr.setAttribute("data-wrap-tag", sanitizeTableUpWrapTagAttrValue(candidate));
+  });
+  rootEl.querySelectorAll("[data-wrap-tag]").forEach((el) => {
+    if (typeof el.matches === "function" && el.matches("table.ql-table tr")) {
+      return;
+    }
+    el.setAttribute(
+      "data-wrap-tag",
+      sanitizeTableUpWrapTagAttrValue(el.getAttribute("data-wrap-tag"))
+    );
+  });
+};
+
+const normalizeTableUpWrapTagsInHtmlString = (html) => {
+  if (typeof html !== "string" || !html) return html || "<p></p>";
+  if (typeof window === "undefined") return html;
+  const lower = html.toLowerCase();
+  const needsWrapFix = lower.includes("data-wrap-tag");
+  const needsTableLayout =
+    lower.includes("ql-table") || lower.includes("ql-table-wrapper");
+  if (!needsWrapFix && !needsTableLayout) return html;
+  try {
+    const doc = new DOMParser().parseFromString(
+      `<div id="template-wraptag-root">${html}</div>`,
+      "text/html"
+    );
+    const root = doc.getElementById("template-wraptag-root");
+    if (!root) return html;
+    normalizeTableUpDataWrapTagsOnRoot(root);
+    if (needsTableLayout) rehydrateQuillTableUpLayoutOnRoot(root);
+    return root.innerHTML;
+  } catch {
+    return html;
+  }
+};
+
+const parsePxWidthToken = (raw) => {
+  if (raw == null) return null;
+  const s = String(raw).trim();
+  if (!s || /%$/.test(s)) return null;
+  const n = parseFloat(s);
+  return Number.isNaN(n) ? null : n;
+};
+
+/** Read quill-table-up column widths (px) from <col>; Word often keeps style when width="" is lost. */
+const getTableUpColWidthsPx = (table) => {
+  const cg = table.querySelector("colgroup");
+  if (!cg) return null;
+  const cols = [...cg.querySelectorAll("col")];
+  if (!cols.length) return null;
+  const out = [];
+  for (const col of cols) {
+    let raw = (col.getAttribute("width") || "").trim();
+    if (!raw) {
+      const st = parseStyleObject(col.getAttribute("style")).width;
+      raw = (st || "").trim();
+    }
+    const px = parsePxWidthToken(raw);
+    if (px == null) {
+      if (/%$/.test(String(raw).trim())) return null;
+      out.push(100);
+    } else {
+      out.push(px);
+    }
+  }
+  return out;
+};
+
+/**
+ * After DOCX round-trip: restore table width from cols, col styles, table inline width, or first-row cell widths.
+ */
+const rehydrateQuillTableUpLayoutOnRoot = (rootEl) => {
+  if (!rootEl?.querySelectorAll) return;
+  rootEl.querySelectorAll("table.ql-table").forEach((table) => {
+    table.style.borderCollapse = "collapse";
+    table.style.tableLayout = "fixed";
+    if (table.hasAttribute("data-full")) {
+      table.style.width = "100%";
+      return;
+    }
+    const widths = getTableUpColWidthsPx(table);
+    let sumPx = 0;
+    let hasPx = false;
+    if (widths) {
+      sumPx = widths.reduce((a, b) => a + b, 0);
+      hasPx = sumPx > 0;
+    }
+    if (!hasPx) {
+      const tw = parseStyleObject(table.getAttribute("style")).width;
+      const tn = parsePxWidthToken(tw);
+      if (tn != null && tn > 0) {
+        sumPx = tn;
+        hasPx = true;
+      }
+    }
+    if (!hasPx) {
+      const tr0 = table.querySelector("tr");
+      if (tr0) {
+        let s = 0;
+        const cells = [...tr0.children].filter((n) =>
+          ["TD", "TH"].includes(n.tagName)
+        );
+        for (const td of cells) {
+          const stw = parseStyleObject(td.getAttribute("style")).width;
+          const aw = (td.getAttribute("width") || "").trim();
+          const raw = (stw || aw || "").trim();
+          const px = parsePxWidthToken(raw);
+          if (px != null && px > 0) {
+            s += px;
+          }
+        }
+        if (s > 0) {
+          sumPx = s;
+          hasPx = true;
+        }
+      }
+    }
+    if (hasPx && sumPx > 0) {
+      table.style.width = `${sumPx}px`;
+    }
+  });
+};
+
+/**
+ * Before DOCX: mirror column widths onto <col style>, <table style>, and every row's cells so Word/html-docx keep them.
+ */
+const materializeTableUpWidthsForDocxRoundTripOnRoot = (rootEl) => {
+  if (!rootEl?.querySelectorAll) return;
+  rootEl.querySelectorAll("table.ql-table").forEach((table) => {
+    if (table.hasAttribute("data-full")) return;
+    const widths = getTableUpColWidthsPx(table);
+    if (!widths || !widths.length) return;
+    const sum = widths.reduce((a, b) => a + b, 0);
+    if (sum <= 0) return;
+    mergeInlineStyles(table, {
+      width: `${sum}px`,
+      "table-layout": "fixed",
+      "border-collapse": "collapse",
+    });
+    const cg = table.querySelector("colgroup");
+    if (cg) {
+      [...cg.querySelectorAll("col")].forEach((col, i) => {
+        const px = widths[i];
+        if (px == null || px <= 0) return;
+        const token = `${px}px`;
+        col.setAttribute("width", token);
+        mergeInlineStyles(col, { width: token, "min-width": token });
+      });
+    }
+    table.querySelectorAll("tr").forEach((tr) => {
+      let colIndex = 0;
+      [...tr.children].forEach((node) => {
+        if (!["TD", "TH"].includes(node.tagName)) return;
+        const cs = Math.max(1, parseInt(node.getAttribute("colspan") || "1", 10));
+        let w = 0;
+        for (let j = 0; j < cs && colIndex + j < widths.length; j += 1) {
+          w += widths[colIndex + j];
+        }
+        if (w > 0) {
+          mergeInlineStyles(node, {
+            width: `${w}px`,
+            "min-width": `${w}px`,
+            "box-sizing": "border-box",
+          });
+        }
+        colIndex += cs;
+      });
+    });
+  });
+};
+
+const solidifyQuillHtmlForDocx = (html) => {
+  if (typeof window === "undefined" || !html) return html || "<p></p>";
+  const QL_COLOR = {
+    white: "#fff",
+    red: "#e60000",
+    orange: "#f90",
+    yellow: "#ff0",
+    green: "#008a00",
+    blue: "#06c",
+    purple: "#93f",
+    black: "#000",
+  };
+  const QL_BG = {
+    black: "#000",
+    red: "#e60000",
+    orange: "#f90",
+    yellow: "#ff0",
+    green: "#008a00",
+    blue: "#06c",
+    purple: "#93f",
+  };
+  const QL_FONT = {
+    serif: "Georgia, 'Times New Roman', serif",
+    monospace: "Monaco, 'Courier New', monospace",
+  };
+  try {
+    const doc = new DOMParser().parseFromString(
+      `<div id="template-solidify-root">${html}</div>`,
+      "text/html"
+    );
+    const root = doc.getElementById("template-solidify-root");
+    if (!root) return html;
+
+    normalizeTableUpDataWrapTagsOnRoot(root);
+
+    root.querySelectorAll("*").forEach((el) => {
+      const cls = el.getAttribute("class");
+      if (!cls) return;
+      const classes = cls.split(/\s+/).filter(Boolean);
+      const additions = {};
+
+      if (classes.includes("ql-align-center")) additions["text-align"] = "center";
+      else if (classes.includes("ql-align-right")) additions["text-align"] = "right";
+      else if (classes.includes("ql-align-justify")) additions["text-align"] = "justify";
+
+      const indentCl = classes.find((c) => /^ql-indent-\d+$/.test(c));
+      if (indentCl) {
+        const level = parseInt(indentCl.replace("ql-indent-", ""), 10);
+        const pad = indentPaddingForQuill(level, el.tagName);
+        if (pad) {
+          const rtl = classes.includes("ql-direction-rtl");
+          const alignRight = classes.includes("ql-align-right");
+          if (rtl && alignRight) additions["padding-right"] = pad;
+          else additions["padding-left"] = pad;
+        }
+      }
+
+      if (classes.includes("ql-direction-rtl")) additions.direction = "rtl";
+
+      classes.forEach((c) => {
+        if (c.startsWith("ql-color-")) {
+          const key = c.slice("ql-color-".length);
+          if (QL_COLOR[key]) additions.color = QL_COLOR[key];
+        }
+        if (c.startsWith("ql-bg-")) {
+          const key = c.slice("ql-bg-".length);
+          if (QL_BG[key]) additions["background-color"] = QL_BG[key];
+        }
+        if (c.startsWith("ql-font-")) {
+          const key = c.slice("ql-font-".length);
+          if (QL_FONT[key]) additions["font-family"] = QL_FONT[key];
+        }
+      });
+
+      if (Object.keys(additions).length) mergeInlineStyles(el, additions);
+
+      const remaining = classes.filter(
+        (c) =>
+          !/^ql-align-(center|right|justify)$/.test(c) &&
+          !/^ql-indent-\d+$/.test(c) &&
+          !/^ql-color-/.test(c) &&
+          !/^ql-bg-/.test(c) &&
+          !/^ql-font-/.test(c) &&
+          c !== "ql-direction-rtl"
+      );
+      if (remaining.length) el.setAttribute("class", remaining.join(" "));
+      else el.removeAttribute("class");
+    });
+
+    materializeTableUpWidthsForDocxRoundTripOnRoot(root);
+    rehydrateQuillTableUpLayoutOnRoot(root);
+
+    return root.innerHTML;
+  } catch (e) {
+    console.warn("solidifyQuillHtmlForDocx:", e);
+    return html;
+  }
+};
+
 // Enhanced DOCX file creator with proper HTML preservation
 const createDocxFile = async ({
   name,
@@ -155,8 +504,8 @@ const createDocxFile = async ({
     console.log("📊 Content length:", content?.length);
     console.log("📋 Variables:", variables);
 
-    // Create a clean HTML structure for DOCX
-    const cleanHtmlContent = content || "<p></p>";
+    // Inline Quill classes before DOCX — Word/html-docx drop ql-* classes otherwise.
+    const cleanHtmlContent = solidifyQuillHtmlForDocx(content || "<p></p>");
 
     // Create complete HTML document with proper DOCX-compatible styling
     const completeHtml = `
@@ -198,6 +547,32 @@ const createDocxFile = async ({
           h1 { font-size: 24pt; margin: 24pt 0 12pt 0; }
           h2 { font-size: 18pt; margin: 18pt 0 9pt 0; }
           h3 { font-size: 14pt; margin: 14pt 0 7pt 0; }
+          figure.table, table { border-collapse: collapse; }
+          /* quill-table-up: width is driven by <col width>; forcing 100% breaks save/reopen */
+          div.ql-table-wrapper {
+            max-width: 100%;
+            overflow-x: auto;
+          }
+          table.ql-table {
+            table-layout: fixed;
+            border-collapse: collapse;
+          }
+          table.ql-table[data-full] {
+            width: 100%;
+          }
+          figure.table table:not(.ql-table),
+          table:not(.ql-table) {
+            width: 100%;
+          }
+          figure.table td, figure.table th, table td, table th {
+            border: 1px solid #bfbfbf;
+            padding: 4pt 6pt;
+            vertical-align: top;
+          }
+          table.ql-table .ql-table-cell-inner p {
+            margin-top: 0.2em;
+            margin-bottom: 0.2em;
+          }
         </style>
       </head>
       <body>
@@ -249,7 +624,156 @@ const createDocxFile = async ({
   }
 };
 
-// Function to extract content from DOCX base64 for ReactQuill
+// Quill Size is class-based; Word/DOCX often round-trips as inline font-size only.
+const mapFontSizeToQuillSizeClass = (raw) => {
+  const s = String(raw).trim().toLowerCase();
+  if (/smaller|x-small|xx-small/.test(s)) return "ql-size-small";
+  if (/larger|x-large/.test(s)) return "ql-size-large";
+
+  const m = s.match(/^([\d.]+)\s*(pt|px|em|rem|%)?$/);
+  if (!m) return null;
+  const n = parseFloat(m[1]);
+  if (Number.isNaN(n)) return null;
+  const unit = m[2] || "pt";
+
+  let pxApprox = n;
+  if (unit === "pt") pxApprox = n * (96 / 72);
+  else if (unit === "em" || unit === "rem") pxApprox = n * 16;
+  else if (unit === "%") pxApprox = (n / 100) * 16;
+
+  if (pxApprox <= 11) return "ql-size-small";
+  if (pxApprox <= 15) return null;
+  if (pxApprox <= 24) return "ql-size-large";
+  return "ql-size-huge";
+};
+
+const coerceInlineFontSizeToQuillSizeClasses = (html) => {
+  if (typeof window === "undefined" || !html) return html;
+  const inlineTags = new Set([
+    "SPAN",
+    "STRONG",
+    "EM",
+    "S",
+    "U",
+    "A",
+    "B",
+    "I",
+    "CODE",
+    "SUB",
+    "SUP",
+  ]);
+
+  try {
+    const doc = new DOMParser().parseFromString(
+      `<div id="template-coerce-root">${html}</div>`,
+      "text/html"
+    );
+    const root = doc.getElementById("template-coerce-root");
+    if (!root) return html;
+
+    root.querySelectorAll("[style]").forEach((el) => {
+      if (!inlineTags.has(el.tagName)) return;
+      const existingClass = el.getAttribute("class") || "";
+      if (/\bql-size-(small|large|huge)\b/.test(existingClass)) return;
+
+      const style = el.getAttribute("style") || "";
+      const fsMatch = style.match(/font-size\s*:\s*([^;]+)/i);
+      if (!fsMatch) return;
+
+      const ql = mapFontSizeToQuillSizeClass(fsMatch[1]);
+      if (!ql) return;
+
+      el.classList.add(ql);
+      const rest = style
+        .split(";")
+        .map((x) => x.trim())
+        .filter(Boolean)
+        .filter((x) => !/^font-size\s*:/i.test(x))
+        .join("; ");
+      if (rest) el.setAttribute("style", rest);
+      else el.removeAttribute("style");
+    });
+
+    return root.innerHTML;
+  } catch {
+    return html;
+  }
+};
+
+// Toolbar must be listed before `table-up`: theme init walks `Object.keys(modules)` in
+// insertion order; TableUp's constructor calls getToolbarPicker() and needs toolbar ready.
+const TEMPLATE_QUILL_MODULES = {
+  toolbar: {
+    container: [
+      [{ header: [1, 2, 3, 4, 5, 6, false] }],
+      [{ font: [] }],
+      [{ size: ["small", false, "large", "huge"] }],
+      ["bold", "italic", "underline", "strike"],
+      [{ color: [] }, { background: [] }],
+      [{ script: "sub" }, { script: "super" }],
+      [
+        { list: "ordered" },
+        { list: "bullet" },
+        { indent: "-1" },
+        { indent: "+1" },
+      ],
+      [{ align: [] }],
+      [{ direction: "rtl" }],
+      [{ [TableUp.toolName]: [] }],
+      ["blockquote", "code-block"],
+      ["link", "image", "video"],
+      ["clean"],
+    ],
+  },
+  [TableUp.moduleName]: {
+    customSelect: defaultCustomSelect,
+    customBtn: true,
+    modules: [
+      { module: TableVirtualScrollbar },
+      { module: TableAlign },
+      { module: TableResizeScale },
+      { module: TableSelection },
+      { module: TableMenuSelect },
+    ],
+  },
+};
+
+const TEMPLATE_QUILL_FORMATS = [
+  "header",
+  "font",
+  "size",
+  "bold",
+  "italic",
+  "underline",
+  "strike",
+  "color",
+  "background",
+  "script",
+  "list",
+  "indent",
+  "align",
+  "direction",
+  // quill-table-up: every structure blot must be whitelisted or inserts throw Parchment errors.
+  "table-up-container",
+  "table-up-caption",
+  "table-up",
+  "table-up-main",
+  "table-up-colgroup",
+  "table-up-col",
+  "table-up-head",
+  "table-up-body",
+  "table-up-foot",
+  "table-up-row",
+  "table-up-cell",
+  "table-up-cell-inner",
+  "blockquote",
+  "code-block",
+  "link",
+  "image",
+  "video",
+];
+
+// Function to extract content from DOCX base64 for the rich-text editor
 const extractContentFromDocxBase64 = async (base64Content) => {
   try {
     console.log("📥 Extracting HTML content from DOCX base64...");
@@ -294,13 +818,21 @@ const extractContentFromDocxBase64 = async (base64Content) => {
           if (htmlMatch && htmlMatch.length > 0) {
             console.log("✅ Found HTML tags in DOCX");
 
-            // Try to extract from div with class ql-editor (our saved format)
-            const editorMatch = textContent.match(
-              /<div[^>]*class\s*=\s*["']?ql-editor["']?[^>]*>([\s\S]*?)<\/div>/i
+            // Saved templates: ql-editor wrapper (current) or legacy ck-content
+            const qlMatch = textContent.match(
+              /<div[^>]*class\s*=\s*["'][^"']*\bql-editor\b[^"']*["'][^>]*>([\s\S]*?)<\/div>/i
             );
+            const ckMatch = textContent.match(
+              /<div[^>]*class\s*=\s*["'][^"']*\bck-content\b[^"']*["'][^>]*>([\s\S]*?)<\/div>/i
+            );
+            const editorMatch = qlMatch || ckMatch;
             if (editorMatch) {
               htmlContent = editorMatch[1];
-              console.log("🔍 Found ql-editor content");
+              console.log(
+                qlMatch
+                  ? "🔍 Found ql-editor body"
+                  : "🔍 Found ck-content (legacy CKEditor) body"
+              );
             } else {
               // Try to extract from body
               const bodyMatch = textContent.match(
@@ -364,22 +896,62 @@ const extractContentFromDocxBase64 = async (base64Content) => {
               .join("");
           }
 
-          // Clean up HTML for Quill - be more conservative
+          // Clean up HTML for editor: drop noisy Word classes; keep typography-related inline styles
+          const keepStyleDeclaration = (decl) => {
+            const name = (decl.split(":")[0]?.trim() || "").toLowerCase();
+            if (/^mso-/i.test(name)) return false;
+            return (
+              /^(margin-left|margin-right|padding-left|padding-right|padding-top|padding-bottom|padding|text-indent|font-size|font-family|font-weight|font-style|color|background-color|text-decoration(?:-line|-color|-style)?|letter-spacing|line-height|text-align|direction|border-left|border-right|border-top|border-bottom|border|border-width|border-style|border-color|width|min-width|max-width|height|min-height|max-height|vertical-align|table-layout|border-collapse|border-spacing|box-sizing|overflow|white-space)$/i.test(
+                name
+              )
+            );
+          };
+
           htmlContent = htmlContent
-            // Remove Office-specific tags
             .replace(/<\/?o:p>/g, "")
             .replace(/<\/?w:[^>]+>/g, "")
-            // Remove styles and classes that might affect line height
-            .replace(/style\s*=\s*["'][^"']*["']/g, "")
-            .replace(/class\s*=\s*["'][^"']*["']/g, "")
-            // Clean up paragraph tags - remove any inline styles
-            .replace(/<p[^>]*>/g, "<p>")
-            // Remove empty paragraphs
+            .replace(/\sstyle\s*=\s*(["'])((?:(?!\1).)*)\1/gi, (m, quote, styleValue) => {
+              const parts = styleValue.split(";").map((s) => s.trim()).filter(Boolean);
+              const keep = parts.filter(keepStyleDeclaration);
+              return keep.length ? ` style=${quote}${keep.join("; ")}${quote}` : "";
+            })
+            .replace(/\sclass\s*=\s*(["'])((?:(?!\1).)*)\1/gi, (m, quote, classNames) => {
+              const keep = classNames
+                .split(/\s+/)
+                .filter(Boolean)
+                .filter(
+                  (c) =>
+                    !/^Mso/i.test(c) &&
+                    !/^WordSection/i.test(c) &&
+                    !/^msonormal$/i.test(c)
+                );
+              return keep.length ? ` class=${quote}${keep.join(" ")}${quote}` : "";
+            })
             .replace(/<p>\s*<\/p>/g, "")
-            // Remove extra whitespace between tags
             .replace(/>\s+</g, "><")
-            // Remove leading/trailing whitespace
             .trim();
+
+          htmlContent = coerceInlineFontSizeToQuillSizeClasses(htmlContent);
+
+          if (
+            typeof window !== "undefined" &&
+            htmlContent.includes("ql-table")
+          ) {
+            try {
+              const doc = new DOMParser().parseFromString(
+                `<div id="template-extract-table-root">${htmlContent}</div>`,
+                "text/html"
+              );
+              const r = doc.getElementById("template-extract-table-root");
+              if (r) {
+                normalizeTableUpDataWrapTagsOnRoot(r);
+                rehydrateQuillTableUpLayoutOnRoot(r);
+                htmlContent = r.innerHTML;
+              }
+            } catch (e) {
+              console.warn("template DOCX table layout fix:", e);
+            }
+          }
 
           // Ensure proper paragraph structure
           // If we have content but no tags, wrap in <p>
@@ -653,10 +1225,10 @@ const TemplateConfiguration = () => {
     getValues,
     trigger,
     reset,
-    formState: { errors },
+    formState: { errors, isDirty },
   } = useForm({
     defaultValues: {
-      emailContent: "",
+      emailContent: "<p></p>",
       templateName: "",
       description: "",
       category: "",
@@ -681,17 +1253,24 @@ const TemplateConfiguration = () => {
   const [originalContent, setOriginalContent] = useState("");
   const [originalFormData, setOriginalFormData] = useState(null);
   const quillRef = useRef(null);
+  /** HTML seeded on each Quill remount; avoids controlled `value` HTML↔Delta churn that strips indent/align/color. */
+  const pendingEditorHtmlRef = useRef("<p></p>");
+  const [editorSessionKey, setEditorSessionKey] = useState(0);
   const isProcessingRef = useRef(false);
   const previousContentRef = useRef("");
   const [isEditMode, setIsEditMode] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
-  const [editorHeight] = useState("400px");
-
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const templateIdFromUrl = searchParams.get("id");
 
   // Watch template type for conditional rendering
   const watchedTemplateType = watch("tempolateType");
+  const watchedTemplateName = watch("templateName");
+  const watchedDescription = watch("description");
+  const watchedCategory = watch("category");
+  const watchedEmailContent = watch("emailContent");
 
   // Helper function to check if content has changed
   const hasContentChanged = (newContent) => {
@@ -736,6 +1315,47 @@ const TemplateConfiguration = () => {
     return changed;
   };
 
+  const hasActualTemplateChanges = useMemo(() => {
+    if (isLoadingContent) return false;
+
+    const currentData = {
+      templateName: watchedTemplateName || "",
+      description: watchedDescription || "",
+      category: watchedCategory || "",
+      tempolateType: watchedTemplateType || "",
+      emailContent: watchedEmailContent || "",
+    };
+
+    if (isEditMode) {
+      return (
+        hasContentChanged(currentData.emailContent) || hasMetadataChanged(currentData)
+      );
+    }
+
+    const hasMetadataInput =
+      currentData.templateName.trim() !== "" ||
+      currentData.description.trim() !== "" ||
+      currentData.category.trim() !== "" ||
+      currentData.tempolateType.trim() !== "";
+    const hasContentInput =
+      currentData.emailContent.replace(/<[^>]*>/g, "").trim() !== "";
+
+    return hasMetadataInput || hasContentInput;
+  }, [
+    isLoadingContent,
+    isEditMode,
+    watchedTemplateName,
+    watchedDescription,
+    watchedCategory,
+    watchedTemplateType,
+    watchedEmailContent,
+    originalContent,
+    originalFormData,
+  ]);
+
+  const canSaveTemplate =
+    hasActualTemplateChanges && isDirty && !saving && !isLoadingContent;
+
   const [templeteId, setTempleteId] = useState(null);
 
   // Populate form with template data from API response (base64 DOCX)
@@ -764,6 +1384,8 @@ const TemplateConfiguration = () => {
 
       setIsLoadingContent(true);
 
+      let nextEditorHtml = "<p></p>";
+
       try {
         // Check for fileContent (base64 DOCX) in the response
         if (data.fileContent) {
@@ -778,16 +1400,14 @@ const TemplateConfiguration = () => {
           );
 
           console.log(
-            "✅ Extracted HTML for ReactQuill:",
+            "✅ Extracted HTML for editor:",
             content.substring(0, 200)
           );
           console.log("🔍 Found variables in content:", variables);
 
           // Store original content for change detection
           setOriginalContent(content);
-
-          // Set the HTML content in the form
-          setValue("emailContent", content);
+          nextEditorHtml = normalizeTableUpWrapTagsInHtmlString(content);
 
           // Map variables to bookmark IDs
           const variableIds = variables
@@ -804,15 +1424,13 @@ const TemplateConfiguration = () => {
           setSelectedVariables(new Set(variableIds));
         } else {
           console.warn("⚠️ No fileContent found in API response");
-          setValue("emailContent", "<p></p>");
           setOriginalContent("<p></p>");
         }
       } catch (error) {
         console.error("❌ Error loading template content:", error);
-        const errorContent =
+        nextEditorHtml =
           "<p>Error loading template content. Please check console for details.</p>";
-        setValue("emailContent", errorContent);
-        setOriginalContent(errorContent);
+        setOriginalContent(nextEditorHtml);
 
         notification.error({
           message: "Content Load Error",
@@ -820,6 +1438,10 @@ const TemplateConfiguration = () => {
           duration: 5,
         });
       } finally {
+        const safeHtml = normalizeTableUpWrapTagsInHtmlString(nextEditorHtml);
+        pendingEditorHtmlRef.current = safeHtml;
+        setValue("emailContent", safeHtml);
+        setEditorSessionKey((k) => k + 1);
         setIsLoadingContent(false);
         setIsEditMode(true);
         console.log("✅ Form population complete");
@@ -879,6 +1501,30 @@ const TemplateConfiguration = () => {
     dispatch(getBookmarks());
   }, [dispatch]);
 
+  // Refetch template after refresh: Redux is empty but `?id=` survives in the URL.
+  useEffect(() => {
+    if (templateIdFromUrl) {
+      dispatch(loadtempletedetails(templateIdFromUrl));
+    } else {
+      dispatch(resetTemplateDetails());
+      reset({
+        emailContent: "<p></p>",
+        templateName: "",
+        description: "",
+        category: "",
+        tempolateType: "",
+      });
+      setOriginalContent("");
+      setOriginalFormData(null);
+      setSelectedVariables(new Set());
+      setIsEditMode(false);
+      setTempleteId(null);
+      setGeneratedFile(null);
+      pendingEditorHtmlRef.current = "<p></p>";
+      setEditorSessionKey((k) => k + 1);
+    }
+  }, [templateIdFromUrl, dispatch, reset]);
+
   useEffect(() => {
     if (templeteData && !templetedetailsloading) {
       console.log("📥 Template data received from API, populating form");
@@ -891,7 +1537,8 @@ const TemplateConfiguration = () => {
       reset();
       dispatch(resetTemplateDetails());
     };
-  }, [reset, dispatch]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- clear Redux only when leaving this page
+  }, []);
 
   // Validation rules
   const validationRules = {
@@ -1065,11 +1712,6 @@ const TemplateConfiguration = () => {
           ? "Template updated successfully!"
           : "Template created successfully!"
       );
-
-      // Navigate to template summary after successful save
-      setTimeout(() => {
-        navigate("/templeteSummary");
-      }, 1500);
     } catch (error) {
       console.error("❌ Template operation error:", error);
       message.destroy();
@@ -1088,6 +1730,10 @@ const TemplateConfiguration = () => {
     } finally {
       setSaving(false);
     }
+  };
+
+  const handleBackToSummary = () => {
+    navigate("/templeteSummary");
   };
 
   // Handle save button click
@@ -1134,72 +1780,29 @@ const TemplateConfiguration = () => {
     return foundVariables;
   };
 
-  // Quill config
-  const modules = {
-    toolbar: [
-      [{ header: [1, 2, 3, 4, 5, 6, false] }],
-      ["bold", "italic", "underline", "strike"],
-      [{ list: "ordered" }, { list: "bullet" }],
-      [{ indent: "-1" }, { indent: "+1" }],
-      [{ color: [] }, { background: [] }],
-      [{ align: [] }],
-      ["link", "image"],
-      ["clean"],
-    ],
-    clipboard: {
-      matchVisual: false,
-    },
-  };
-
-  const formats = [
-    "header",
-    "font",
-    "size",
-    "bold",
-    "italic",
-    "underline",
-    "strike",
-    "blockquote",
-    "list",
-    "bullet",
-    "indent",
-    "link",
-    "image",
-  ];
-
-  // Insert variable into editor with {{variable}} format
+  // Insert variable into editor with {{variable}} format (ReactQuill / Quill)
   const insertVariable = (variableName, variableId) => {
-    if (quillRef.current && !isProcessingRef.current) {
-      isProcessingRef.current = true;
-      try {
-        const editor = quillRef.current.getEditor();
-        editor.focus();
-        const range = editor.getSelection();
+    const quill = quillRef.current?.getEditor?.();
+    if (!quill || isProcessingRef.current) return;
+    isProcessingRef.current = true;
+    try {
+      quill.focus();
+      const formattedVariable = `{{${variableName}}}`;
+      const range = quill.getSelection(true);
+      const index = range ? range.index : quill.getLength();
+      quill.insertText(index, formattedVariable, "user");
+      quill.setSelection(index + formattedVariable.length, 0, "silent");
 
-        // Format variable as {{variable}} with double curly braces
-        const formattedVariable = `{{${variableName}}}`;
+      const html = quill.root.innerHTML;
+      setSelectedVariables((prev) => new Set([...prev, variableId]));
+      previousContentRef.current = html;
+      setValue("emailContent", html);
 
-        if (range) {
-          editor.insertText(range.index, formattedVariable);
-          setSelectedVariables((prev) => new Set([...prev, variableId]));
-          editor.setSelection(range.index + formattedVariable.length, 0);
-        } else {
-          const length = editor.getLength();
-          editor.insertText(length - 1, formattedVariable);
-          setSelectedVariables((prev) => new Set([...prev, variableId]));
-          editor.setSelection(length + formattedVariable.length - 1, 0);
-        }
-        previousContentRef.current = editor.getText();
-
-        // Update form value
-        setValue("emailContent", editor.root.innerHTML);
-
-        console.log("✅ Variable inserted:", variableName);
-      } catch (error) {
-        console.error("❌ Error inserting variable:", error);
-      } finally {
-        isProcessingRef.current = false;
-      }
+      console.log("✅ Variable inserted:", variableName);
+    } catch (error) {
+      console.error("❌ Error inserting variable:", error);
+    } finally {
+      isProcessingRef.current = false;
     }
   };
 
@@ -1242,14 +1845,9 @@ const TemplateConfiguration = () => {
     insertVariable(variableName, variableId);
   };
 
-  // Email content change handler
+  // Email content change handler (RHF value is updated via field.onChange; keep bookmark chips in sync)
   const handleEmailContentChange = (htmlContent) => {
-    setValue("emailContent", htmlContent);
-
-    // Convert HTML to plain text for variable detection
     const plainText = htmlToPlainText(htmlContent);
-
-    // Update variables from content
     const currentlyPresentVariables = findVariablesInText(plainText);
     setSelectedVariables(currentlyPresentVariables);
   };
@@ -1270,7 +1868,7 @@ const TemplateConfiguration = () => {
   };
 
   return (
-    <div className="px-4" style={{ minHeight: "100vh" }}>
+    <div className="px-4 template-configuration-root">
       {/* Header with Save Button */}
       <div
         style={{
@@ -1279,14 +1877,23 @@ const TemplateConfiguration = () => {
           display: "flex",
           gap: "12px",
           justifyContent: "flex-end",
+          flexShrink: 0,
         }}
       >
+        <Button
+          onClick={handleBackToSummary}
+          className="butn secoundry-btn"
+          icon={<ArrowLeftOutlined />}
+          disabled={saving}
+        >
+          Back to summary
+        </Button>
         <Button
           onClick={handleSaveOrUpdateTemplate}
           className="butn primary-btn"
           icon={<SaveOutlined />}
           loading={saving}
-          disabled={saving}
+          disabled={!canSaveTemplate}
           type="primary"
         >
           {saving
@@ -1309,6 +1916,7 @@ const TemplateConfiguration = () => {
             border: "1px solid #91d5ff",
             borderRadius: "6px",
             textAlign: "center",
+            flexShrink: 0,
           }}
         >
           <Text strong style={{ color: "#1890ff" }}>
@@ -1333,6 +1941,7 @@ const TemplateConfiguration = () => {
                 ? "1px solid #d9d9d9"
                 : "1px solid #b7eb8f",
             borderRadius: "6px",
+            flexShrink: 0,
           }}
         >
           <Text
@@ -1375,22 +1984,52 @@ const TemplateConfiguration = () => {
         </div>
       )}
 
-      {/* Three Column Layout */}
-      <Row gutter={24} style={{ minHeight: "80vh" }}>
-        {/* Left Column - Template Information (20%) */}
-        <Col span={5}>
+      {/* Three columns: fill remaining viewport; scroll only inside cards / editor */}
+      <Row
+        gutter={24}
+        align="stretch"
+        style={{
+          flex: 1,
+          minHeight: 0,
+          height: "100%",
+          overflow: "hidden",
+        }}
+      >
+        {/* Left Column - Template Information */}
+        <Col
+          span={5}
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            height: "100%",
+            minHeight: 0,
+          }}
+        >
           <Card
             title="Template Information"
-            headStyle={{
-              backgroundColor: "#eef4ff",
-              color: "#215e97",
+            styles={{
+              header: {
+                backgroundColor: "#eef4ff",
+                color: "#215e97",
+                minHeight: "36px",
+                padding: "6px 16px",
+              },
+              body: {
+                flex: 1,
+                minHeight: 0,
+                overflow: "auto",
+              },
             }}
             style={{
-              height: "100%",
+              flex: 1,
+              width: "100%",
+              minHeight: 0,
+              display: "flex",
+              flexDirection: "column",
+              overflow: "hidden",
               borderRadius: "8px",
               boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
             }}
-            bodyStyle={{ height: "calc(100% - 57px)" }}
           >
             <div style={{ marginBottom: "16px" }}>
               <Controller
@@ -1495,8 +2134,18 @@ const TemplateConfiguration = () => {
           </Card>
         </Col>
 
-        {/* Middle Column - Email Content Builder (60%) */}
-        <Col span={14}>
+        {/* Middle column = A4 width (210mm); remaining space goes to bookmark fields */}
+        <Col
+          flex="0 0 210mm"
+          style={{
+            maxWidth: "100%",
+            height: "100%",
+            display: "flex",
+            flexDirection: "column",
+            minHeight: 0,
+            minWidth: 0,
+          }}
+        >
           <Card
             title={
               <div
@@ -1525,47 +2174,54 @@ const TemplateConfiguration = () => {
                 </div>
               </div>
             }
-            headStyle={{
-              backgroundColor: "#eef4ff",
-              color: "#215e97",
-              borderBottom: "1px solid #f0f0f0",
-            }}
-            style={{
-              height: "100%",
-              borderRadius: "8px",
-              boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
-            }}
-            bodyStyle={{
-              height: "calc(100% - 57px)",
-              padding: "0",
-              display: "flex",
-              flexDirection: "column",
-            }}
-          >
-            {/* Body Section */}
-            <div
-              style={{
+            styles={{
+              header: {
+                backgroundColor: "#eef4ff",
+                color: "#215e97",
+                borderBottom: "1px solid #f0f0f0",
+                minHeight: "36px",
+                padding: "6px 16px",
+              },
+              body: {
+                padding: "0",
                 flex: 1,
-                padding: "16px",
+                minHeight: 0,
                 display: "flex",
                 flexDirection: "column",
+                overflow: "hidden",
+              },
+            }}
+            style={{
+              flex: 1,
+              width: "100%",
+              minHeight: 0,
+              borderRadius: "8px",
+              boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
+              display: "flex",
+              flexDirection: "column",
+              overflow: "hidden",
+            }}
+          >
+            <div
+              style={{
+                padding: "0 0 16px",
+                flex: 1,
                 minHeight: 0,
-                overflow: "hidden", // Added to prevent card from scrolling
+                display: "flex",
+                flexDirection: "column",
+                overflow: "hidden",
               }}
             >
-              <Text
-                strong
-                style={{ color: "#000", display: "block", marginBottom: "8px" }}
-              >
-                Body
-              </Text>
               {errors.emailContent && (
                 <Text
                   type="danger"
                   style={{
                     display: "block",
                     marginBottom: "8px",
+                    marginLeft: "12px",
+                    marginRight: "12px",
                     fontSize: "12px",
+                    flexShrink: 0,
                   }}
                 >
                   {errors.emailContent.message}
@@ -1582,19 +2238,12 @@ const TemplateConfiguration = () => {
                     onDragOver={handleDragOver}
                     onDrop={handleDrop}
                     onBlur={field.onBlur}
+                    className="template-config-quill-wrap"
                     style={{
-                      flex: 1,
-                      border: errors.emailContent
-                        ? "1px solid #ff4d4f"
-                        : "1px solid #d9d9d9",
-                      borderRadius: "6px",
-                      display: "flex",
-                      flexDirection: "column",
-                      marginBottom: "5px",
-                      minHeight: 0,
-                      overflow: "hidden",
+                      border: errors.emailContent ? "2px solid #ff4d4f" : "none",
+                      borderRadius: errors.emailContent ? "6px" : 0,
+                      marginBottom: 0,
                       opacity: isLoadingContent ? 0.5 : 1,
-                      height: "100%",
                     }}
                   >
                     {isLoadingContent ? (
@@ -1603,7 +2252,9 @@ const TemplateConfiguration = () => {
                           display: "flex",
                           justifyContent: "center",
                           alignItems: "center",
-                          height: "100%",
+                          flex: 1,
+                          minHeight: "200px",
+                          background: "#fff",
                           color: "#666",
                         }}
                       >
@@ -1611,22 +2262,18 @@ const TemplateConfiguration = () => {
                       </div>
                     ) : (
                       <ReactQuill
+                        key={editorSessionKey}
                         ref={quillRef}
-                        value={field.value}
-                        onChange={(content) => {
-                          field.onChange(content);
-                          handleEmailContentChange(content);
-                        }}
-                        modules={modules}
-                        formats={formats}
                         theme="snow"
-                        style={{
-                          border: "none",
-                          display: "flex",
-                          flexDirection: "column",
-                          height: editorHeight, // Use dynamic or fixed height
-                          minHeight: 0,
+                        defaultValue={pendingEditorHtmlRef.current}
+                        useSemanticHTML={false}
+                        onChange={(html) => {
+                          field.onChange(html);
+                          handleEmailContentChange(html);
                         }}
+                        onBlur={() => field.onBlur()}
+                        modules={TEMPLATE_QUILL_MODULES}
+                        formats={TEMPLATE_QUILL_FORMATS}
                       />
                     )}
                   </div>
@@ -1636,25 +2283,44 @@ const TemplateConfiguration = () => {
           </Card>
         </Col>
 
-        {/* Right Column - Draggable Variables (20%) */}
-        <Col span={5} style={{ height: "calc(100vh - 200px)" }}>
+        {/* Right column fills remaining row width */}
+        <Col
+          flex="1 1 0"
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            height: "100%",
+            minHeight: 0,
+            minWidth: 0,
+          }}
+        >
           <Card
-            title="Draggable Variables"
-            headStyle={{
-              backgroundColor: "#eef4ff",
-              color: "#215e97",
-              minHeight: "56px",
+            title="Bookmark Fields"
+            styles={{
+              header: {
+                backgroundColor: "#eef4ff",
+                color: "#215e97",
+                minHeight: "36px",
+                padding: "6px 16px",
+              },
+              body: {
+                flex: 1,
+                minHeight: 0,
+                padding: "0",
+                display: "flex",
+                flexDirection: "column",
+                overflow: "hidden",
+              },
             }}
             style={{
-              height: "100%",
-              borderRadius: "8px",
-              boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
-            }}
-            bodyStyle={{
-              height: "calc(100% - 56px)",
-              padding: "0",
+              flex: 1,
+              width: "100%",
+              minHeight: 0,
               display: "flex",
               flexDirection: "column",
+              overflow: "hidden",
+              borderRadius: "8px",
+              boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
             }}
           >
             {/* Search Section - Fixed height */}
@@ -1668,18 +2334,16 @@ const TemplateConfiguration = () => {
               <div style={{ marginBottom: "8px" }}>
                 <MyInput
                   label=""
+                  name="bookmarkFieldSearch"
                   type="search"
-                  placeholder="Search variables..."
+                  placeholder="Search bookmark fields..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                 />
               </div>
-              <Text style={{ fontSize: "12px", color: "#666" }}>
-                Drag and drop these tags into the email body.
-              </Text>
             </div>
 
-            {/* Variables Content - Takes remaining space */}
+            {/* Bookmark fields list — takes remaining space */}
             <div
               style={{
                 flex: 1,
@@ -1688,7 +2352,7 @@ const TemplateConfiguration = () => {
                 overflow: "hidden",
               }}
             >
-              {/* Selected Variables - Auto height */}
+              {/* Selected bookmark fields — compact strip */}
               {selectedVariables.size > 0 && (
                 <div
                   style={{
@@ -1706,14 +2370,16 @@ const TemplateConfiguration = () => {
                       display: "block",
                     }}
                   >
-                    Selected Variables ({selectedVariables.size})
+                    Selected bookmark fields ({selectedVariables.size})
                   </Text>
                   <div
                     style={{
                       display: "flex",
                       flexWrap: "wrap",
                       gap: "6px",
-                      maxHeight: "60px",
+                      alignContent: "flex-start",
+                      /* ~28px/row + 6px gap; cap allows ~3 full rows before scroll */
+                      maxHeight: "104px",
                       overflowY: "auto",
                     }}
                   >
@@ -1752,7 +2418,7 @@ const TemplateConfiguration = () => {
                 </div>
               )}
 
-              {/* Available Variables - Scrollable area */}
+              {/* Available bookmark fields — scrollable */}
               <div
                 style={{
                   flex: 1,
@@ -1773,7 +2439,7 @@ const TemplateConfiguration = () => {
                       color: "#666",
                     }}
                   >
-                    Loading variables...
+                    Loading bookmark fields...
                   </div>
                 )}
 
@@ -1787,11 +2453,11 @@ const TemplateConfiguration = () => {
                       color: "#ff4d4f",
                     }}
                   >
-                    Error loading variables
+                    Error loading bookmark fields
                   </div>
                 )}
 
-                {/* Available Variables List */}
+                {/* Available bookmark fields list */}
                 {bookmarks && !bookmarksLoading && !bookmarksError && (
                   <>
                     <div
@@ -1801,13 +2467,29 @@ const TemplateConfiguration = () => {
                         flexShrink: 0,
                       }}
                     >
-                      <Text
-                        strong
-                        style={{ fontSize: "12px", color: "#215e97" }}
+                      <div
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: "6px",
+                        }}
                       >
-                        Available Variables ({filteredAvailableVariables.length}
-                        )
-                      </Text>
+                        <Text
+                          strong
+                          style={{ fontSize: "12px", color: "#215e97" }}
+                        >
+                          Bookmark fields ({filteredAvailableVariables.length})
+                        </Text>
+                        <Tooltip title="Drag or click bookmark fields to insert them into the template.">
+                          <InfoCircleOutlined
+                            style={{
+                              color: "#215e97",
+                              cursor: "default",
+                              fontSize: "14px",
+                            }}
+                          />
+                        </Tooltip>
+                      </div>
                     </div>
 
                     <div
@@ -1821,7 +2503,7 @@ const TemplateConfiguration = () => {
                       <div
                         style={{
                           display: "grid",
-                          gridTemplateColumns: "1fr 1fr",
+                          gridTemplateColumns: "repeat(3, minmax(0, 1fr))",
                           gap: "8px",
                         }}
                       >
@@ -1854,7 +2536,7 @@ const TemplateConfiguration = () => {
                               alignItems: "center",
                               justifyContent: "center",
                             }}
-                            title={`Click or drag to insert ${variable.name}`}
+                            title={`Click or drag to insert bookmark field ${variable.name}`}
                           >
                             {variable.label}
                           </div>
@@ -1894,7 +2576,6 @@ const TemplateConfiguration = () => {
         footer={null}
         width={"45%"}
         style={{ top: 5 }}
-        bodyStyle={{ padding: "0" }}
         styles={{
           header: {
             background: "#2f6bff",
@@ -1902,23 +2583,30 @@ const TemplateConfiguration = () => {
             padding: "16px 24px",
             borderRadius: "8px 8px 0 0",
           },
+          body: {
+            padding: "0",
+            maxHeight: "calc(100vh - 120px)",
+            overflowY: "auto",
+            overflowX: "auto",
+          },
         }}
       >
         <div
           style={{
             background:
               "linear-gradient(45deg, #f8f9fa 25%, transparent 25%), linear-gradient(-45deg, #f8f9fa 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #f8f9fa 75%), linear-gradient(-45deg, transparent 75%, #f8f9fa 75%)",
-            // backgroundSize: '20px 20px',
             backgroundPosition: "0 0, 0 10px, 10px -10px, -10px 0px",
             padding: "20px",
             display: "flex",
             justifyContent: "center",
-            minHeight: "40vh",
+            alignItems: "flex-start",
+            boxSizing: "border-box",
           }}
         >
           <div
             style={{
               width: "210mm",
+              maxWidth: "100%",
               minHeight: "297mm",
               backgroundColor: "white",
               padding: "25mm",
@@ -1928,68 +2616,13 @@ const TemplateConfiguration = () => {
               fontFamily: "'Times New Roman', Times, serif",
               lineHeight: "1.2",
               fontSize: "12pt",
+              boxSizing: "border-box",
+              flexShrink: 0,
             }}
           >
-            {/* Letter Header */}
+            {/* Template body only — no synthetic letterhead */}
             <div
-              style={{
-                borderBottom: "2px solid #2f6bff",
-                paddingBottom: "20px",
-                marginBottom: "25px",
-              }}
-            >
-              <div
-                style={{
-                  display: "flex",
-                  justifyContent: "space-between",
-                  alignItems: "flex-start",
-                  marginBottom: "10px",
-                }}
-              >
-                <div>
-                  <Text strong style={{ fontSize: "16pt", color: "#2f6bff" }}>
-                    {getValues("templateName") || "Company Name"}
-                  </Text>
-                  <div
-                    style={{
-                      fontSize: "10pt",
-                      color: "#666",
-                      marginTop: "4px",
-                    }}
-                  >
-                    123 Business Street, City, State 12345
-                    <br />
-                    Phone: (555) 123-4567 | Email: info@company.com
-                  </div>
-                </div>
-                <div style={{ textAlign: "right" }}>
-                  <div style={{ fontSize: "10pt", color: "#666" }}>
-                    Date: {new Date().toLocaleDateString()}
-                    <br />
-                    Ref: {getValues("tempolateType") || "TEMPLATE-001"}
-                  </div>
-                </div>
-              </div>
-
-              <div style={{ marginTop: "15px" }}>
-                <Text
-                  strong
-                  style={{
-                    fontSize: "14pt",
-                    display: "block",
-                    marginBottom: "5px",
-                  }}
-                >
-                  {getValues("tempolateType") === "letter"
-                    ? "TITLE"
-                    : "SUBJECT"}
-                  : {getValues("templateName")}
-                </Text>
-              </div>
-            </div>
-
-            {/* Content Area with placeholder replacement */}
-            <div
+              className="template-preview-body"
               style={{
                 lineHeight: "1.5", // VERY TIGHT line height
                 textAlign: "justify",

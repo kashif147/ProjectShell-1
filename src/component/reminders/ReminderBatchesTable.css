@@ -1,0 +1,27 @@
+/* Tighter rows + top alignment for reminder batches listing only */
+.reminder-batches-table-wrap .ant-table-thead > tr > th {
+  padding: 6px 8px !important;
+  font-size: 12px;
+  line-height: 1.3;
+  vertical-align: top !important;
+}
+
+.reminder-batches-table-wrap .ant-table-tbody > tr > td,
+.reminder-batches-table-wrap .ant-table-tbody > tr > td.ant-table-cell,
+.reminder-batches-table-wrap .ant-table-cell-fix-left,
+.reminder-batches-table-wrap .ant-table-cell-fix-right {
+  padding: 4px 8px !important;
+  vertical-align: top !important;
+  font-size: 12px;
+  line-height: 1.35;
+}
+
+/* Stack columns (batch name, status, created by, batch totals): same top edge as first line */
+.reminder-batches-table-wrap .ant-table-tbody > tr > td.reminder-batches-table__cell-stack {
+  vertical-align: top !important;
+}
+
+/* Override global App.css `.ant-table-cell { vertical-align: middle }` for this table only */
+.reminder-batches-table-wrap .ant-table-cell {
+  vertical-align: top !important;
+}

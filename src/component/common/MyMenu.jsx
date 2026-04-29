@@ -48,19 +48,22 @@ const CustomMenu = styled(Menu)`
 `;
 
 const MyMenu = ({ items, disabled }) => {
-  const menu = (
-    <CustomMenu>
-      {items?.map((item) => (
-        <Menu.Item key={item.key} icon={item.icon} onClick={item.onClick}>
-          {item.label}
-        </Menu.Item>
-      ))}
-    </CustomMenu>
-  );
-
   return (
     <MenuContainer>
-      <Dropdown overlay={menu} trigger={["click"]} disabled={disabled}>
+      <Dropdown
+        dropdownRender={() => (
+          <CustomMenu
+            items={items?.map((item) => ({
+              key: item.key,
+              label: item.label,
+              icon: item.icon,
+              onClick: item.onClick,
+            }))}
+          />
+        )}
+        trigger={["click"]}
+        disabled={disabled}
+      >
         <DropdownIcon />
       </Dropdown>
     </MenuContainer>

@@ -43,6 +43,17 @@
   /* margin-top: 5px !important; */
 }
 
+.template-preview-modal .ant-modal-body {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.template-preview-modal .ant-modal-body::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+  background: transparent;
+}
+
 /* ant-modal {
     display: block !important;
     position: fixed !important;
@@ -1876,6 +1887,17 @@ table tbody tr:nth-child(odd):hover td {
   stroke-width: 1.5;
 }
 
+.notification-bell-icon {
+  margin-right: 0 !important;
+}
+
+.notification-bell-wrap {
+  display: inline-flex;
+  align-items: center;
+  margin-right: 1.25rem;
+  cursor: pointer;
+}
+
 .top-icon:hover {
   color: rgba(255, 255, 255, 0.85) !important;
   transform: scale(1.1);
@@ -1911,4 +1933,25 @@ table tbody tr:nth-child(odd):hover td {
   /* Ensures it spans the drawer width */
   background-color: #f0f0f0;
   /* Optional: Add a background */
+}
+
+/* Reminders / cancellation batch member tables — same shell as membership TableComponent (.common-table) */
+.common-table.reminder-cancellation-members-wrap {
+  width: 100%;
+}
+
+.common-table.reminder-cancellation-members-wrap .ant-table-cell {
+  white-space: nowrap !important;
+}
+
+.common-table.reminder-cancellation-members-wrap .membership-table-balance-cell {
+  font-weight: 600;
+}
+
+.common-table.reminder-cancellation-members-wrap .membership-table-balance-credit {
+  color: #52c41a !important;
+}
+
+.common-table.reminder-cancellation-members-wrap .membership-table-balance-debit {
+  color: #ff4d4f !important;
 }

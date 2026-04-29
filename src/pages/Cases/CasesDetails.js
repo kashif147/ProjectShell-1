@@ -30,8 +30,8 @@ import {
   EyeOutlined,
 } from "@ant-design/icons";
 import "../../styles/CasesDetails.css";
-import ReactQuill from "react-quill";
-import "quill/dist/quill.snow.css";
+import ReactQuill from "react-quill-new";
+import "react-quill-new/dist/quill.snow.css";
 
 import MySearchInput from "../../component/common/MySearchInput";
 

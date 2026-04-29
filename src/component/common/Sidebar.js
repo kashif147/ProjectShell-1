@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import React, { useMemo, useState, useEffect } from "react";
 import { Menu, Tooltip, Button } from "antd";
 import {
   subscriptionItems,
@@ -11,15 +11,17 @@ import {
   issuesItems,
   eventsItems,
 } from "../../constants/SideNavWithAuth.js";
-import { useSelector } from "react-redux";
+import { useSelector, useDispatch } from "react-redux";
 import "../../styles/Sidebar.css";
 import { useNavigate, useLocation, Link } from "react-router-dom";
 import { useAuthorization } from "../../context/AuthorizationContext";
 import { PushpinOutlined, PushpinFilled } from "@ant-design/icons";
+import { updateMenuLbl } from "../../features/MenuLblSlice";
 // import policy from "../../utils/react-policy-client";
 
 const Sidebar = () => {
   // state
+  const dispatch = useDispatch();
   const menuLblState = useSelector((state) => state.menuLbl);
   const location = useLocation();
   const navigate = useNavigate();
@@ -33,6 +35,88 @@ const Sidebar = () => {
 
   // Used to determine which module is currently active.
   const activeKey = Object.keys(menuLblState).find((key) => menuLblState[key]);
+
+  useEffect(() => {
+    const path = location.pathname;
+    const financePaths = [
+      "/onlinePayment",
+      "/Deductions",
+      "/StandingOrders",
+      "/Cheque",
+      "/Import",
+      "/Refunds",
+      "/write-offs",
+      "/DirectDebitAuthorization",
+      "/DirectDebit",
+      "/DirectDebitBatchDetails",
+      "/Reconciliation",
+      "/BatchMemberSummary",
+    ];
+
+    const isFinanceRoute = financePaths.some((p) => path.startsWith(p));
+    if (isFinanceRoute && activeKey !== "Finance") {
+      dispatch(updateMenuLbl({ key: "Finance", value: true }));
+      return;
+    }
+
+    const correspondencePaths = [
+      "/CorrespondenceDashboard",
+      "/Email",
+      "/InAppNotifications",
+      "/Sms",
+      "/Notes",
+      "/Letters",
+      "/CorspndncDetail",
+      "/CorrespondencesSummary",
+      "/CommunicationBatchDetail",
+    ];
+
+    const isCorrespondenceRoute = correspondencePaths.some((p) =>
+      path.startsWith(p)
+    );
+    if (isCorrespondenceRoute && activeKey !== "Correspondence") {
+      dispatch(updateMenuLbl({ key: "Correspondence", value: true }));
+    }
+
+    const issuesManagementPaths = ["/IssuesManagementDashboard"];
+    const isIssuesManagementRoute = issuesManagementPaths.some((p) =>
+      path.startsWith(p)
+    );
+    if (isIssuesManagementRoute && activeKey !== "Issues Management") {
+      dispatch(updateMenuLbl({ key: "Issues Management", value: true }));
+      return;
+    }
+
+    const eventsPaths = [
+      "/EventsDashboard",
+      "/EventsSummary",
+      "/EventDetails",
+      "/Attendees",
+      "/Reporting",
+      "/EventsSettings",
+      "/RosterSummary",
+      "/Roster",
+    ];
+    const isEventsRoute = eventsPaths.some((p) => path.startsWith(p));
+    if (isEventsRoute && activeKey !== "Events") {
+      dispatch(updateMenuLbl({ key: "Events", value: true }));
+      return;
+    }
+
+    const subscriptionsRewardsPaths = [
+      "/RemindersSummary",
+      "/RemindersDetails",
+      "/Cancallation",
+      "/CancellationDetail",
+    ];
+    const isSubscriptionsRewardsRoute = subscriptionsRewardsPaths.includes(path);
+    if (
+      isSubscriptionsRewardsRoute &&
+      activeKey !== "Subscriptions & Rewards"
+    ) {
+      dispatch(updateMenuLbl({ key: "Subscriptions & Rewards", value: true }));
+    }
+  }, [location.pathname, activeKey, dispatch]);
 
   // These are the menu links for various modules, imported from a constants file
   const itemsMap = useMemo(
@@ -91,8 +175,13 @@ const Sidebar = () => {
       case "Dashboard":
         if (activeKey === "Cases") {
           return { path: "/CasesSummary", state: { search: "" } };
+        } else if (activeKey === "Issues Management") {
+          return {
+            path: "/IssuesManagementDashboard",
+            state: { search: "Dashboard" },
+          };
         } else if (activeKey === "Events") {
-          return { path: "/EventsSummary", state: { search: "" } };
+          return { path: "/EventsDashboard", state: { search: "Dashboard" } };
         } else {
           return { path: "/CorrespondenceDashboard", state: { search: "" } };
         }
@@ -114,8 +203,6 @@ const Sidebar = () => {
         return { path: "/RosterSummary", state: { search: "Rosters" } };
       case "Events":
         return { path: "/EventsSummary", state: { search: "Events" } };
-      case "Batches":
-        return { path: "/Batches", state: { search: "Batches" } };
       case "Applications":
         return { path: "/Applications", state: { search: "Applications" } };
       case "Membership":
@@ -330,13 +417,16 @@ const Sidebar = () => {
       "/Configuratin": "System Configuration",
       "/RosterSummary": "Roster",
       "/EventsSummary": "Events",
+      "/EventDetails": "Events",
+      "/EventsDashboard": "Dashboard",
       "/Attendees": "Attendees",
       "/Reporting": "Reporting",
       "/EventsSettings": "Settings",
-      "/Batches": "Batches",
       "/Applications": "Applications",
       "/RemindersSummary": "Reminders",
+      "/RemindersDetails": "Reminders",
       "/Cancallation": "Cancellations",
+      "/CancellationDetail": "Cancellations",
       "/ChangCateSumm": "Change Category",
       "/Import": "Imports",
       "/Deductions": "Deductions",
@@ -374,6 +464,7 @@ const Sidebar = () => {
       "/LeaversReport": "Leavers Report",
       "/JoinersReport": "Joiners Report",
       "/CorrespondenceDashboard": "Dashboard",
+      "/IssuesManagementDashboard": "Dashboard",
       "/ReportsSettings": "Reports setting",
     };
 
@@ -381,12 +472,18 @@ const Sidebar = () => {
       location.pathname.startsWith(route)
     );
 
+    if (location.pathname.startsWith("/BatchMemberSummary")) {
+      const batchMenuFromState =
+        location.state?.sidebarMenu || location.state?.search || "";
+      if (batchMenuFromState === "Online Payments") return "Online Payments";
+      if (batchMenuFromState === "Deductions") return "Deductions";
+      if (batchMenuFromState === "Standing Orders") return "Standing Orders";
+      return "";
+    }
+
     if (!currentPath) return "";
 
     // Handle context-specific mappings
-    if (currentPath === "/EventsSummary" && activeKey === "Events") {
-      return "Dashboard";
-    }
     if (currentPath === "/CasesSummary" && activeKey === "Cases") {
       return "Dashboard";
     }

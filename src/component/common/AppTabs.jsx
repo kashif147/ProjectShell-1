@@ -32,8 +32,8 @@ const CasesById = lazy(() => import("../../pages/Cases/CasesById"));
 const ClaimsById = lazy(() => import("../../pages/Claims/ClaimsById"));
 const FinanceByID = lazy(() => import("../finanace/FinanceByID"));
 const DoucmentsById = lazy(() => import("../corespondence/DoucmentsById"));
-const CommunicationHistory = lazy(() =>
-  import("../corespondence/CommunicationHistory")
+const CommunicationHistory = lazy(
+  () => import("../corespondence/CommunicationHistory"),
 );
 const ThreeDotsMenu = lazy(() => import("../common/ThreeDotsMenu"));
 const Roster = lazy(() => import("../../pages/roster/RosterDetails"));
@@ -48,8 +48,11 @@ function AppTabs() {
   const navigate = useNavigate();
   const location = useLocation();
   const [searchParams] = useSearchParams();
-  const profileIdParam = searchParams.get("profileId") || "";
-  const subscriptionIdParam = searchParams.get("subscriptionId") || "";
+  const profileIdParam = normalizeRouteId(searchParams.get("profileId"));
+  const subscriptionIdParam = normalizeRouteId(searchParams.get("subscriptionId"));
+  const activeTabParam = String(searchParams.get("activeTab") || "")
+    .trim()
+    .toLowerCase();
 
   useEffect(() => {
     if (!profileIdParam) return;
@@ -61,7 +64,7 @@ function AppTabs() {
         getSubscriptionByProfileId({
           profileId: profileIdParam,
           isCurrent: "true",
-        })
+        }),
       );
     }
   }, [dispatch, profileIdParam, subscriptionIdParam]);
@@ -77,49 +80,74 @@ function AppTabs() {
   const [isDeceased, setIsDeceased] = useState(false);
   const [isDuplicateDrawerOpen, setIsDuplicateDrawerOpen] = useState(false);
   const [isApplicationDrawerOpen, setIsApplicationDrawerOpen] = useState(false);
-  const [isSubscriptionDrawerOpen, setIsSubscriptionDrawerOpen] = useState(false);
+  const [isSubscriptionDrawerOpen, setIsSubscriptionDrawerOpen] =
+    useState(false);
 
   const { columns } = useTableColumns();
-  const userApplications = useSelector((state) => state.userApplications?.applications || []);
-  const { ProfileSubHistory, ProfileSubHistoryLoading } = useSelector((state) => state.profileSubscription || {});
-  const { profileApplications, loading: profileApplicationsLoading } = useSelector((state) => state.profileApplications || {});
+  const userApplications = useSelector(
+    (state) => state.userApplications?.applications || [],
+  );
+  const { ProfileSubHistory, ProfileSubHistoryLoading } = useSelector(
+    (state) => state.profileSubscription || {},
+  );
+  const { profileApplications, loading: profileApplicationsLoading } =
+    useSelector((state) => state.profileApplications || {});
 
-  const applicationColumns = columns?.Applications?.map((col) => {
-    // Correctly check if it's the Membership Category column
-    const isCategoryColumn = Array.isArray(col.dataIndex)
-      ? col.dataIndex.includes("membershipCategory")
-      : col.dataIndex === "membershipCategory";
-
-    if (isCategoryColumn) {
-      return {
-        ...col,
-        render: (text, record) => (
-          <a
-            style={{ color: "#1890ff", fontWeight: "500" }}
-            onClick={() => {
-              const appId = record._id || record.id;
-              dispatch(getApplicationById({ id: appId }));
-              navigate({
-                pathname: "/applicationMgt",
-                search: buildApplicationMgtSearch({
-                  applicationId: appId,
-                  edit: true,
-                }),
-              });
-              setIsApplicationDrawerOpen(false);
-            }}
-          >
-            {text || "View Application"}
-          </a>
-        ),
-      };
+  useEffect(() => {
+    const requestedTab = String(location.state?.activeTab || "")
+      .trim()
+      .toLowerCase();
+    const resolvedTab = requestedTab || activeTabParam;
+    if (resolvedTab === "2" || resolvedTab === "finance") {
+      setActiveKey("2");
     }
-    return col;
-  }) || [];
+  }, [location.state, activeTabParam]);
+
+  const applicationColumns =
+    columns?.Applications?.map((col) => {
+      // Correctly check if it's the Membership Category column
+      const isCategoryColumn = Array.isArray(col.dataIndex)
+        ? col.dataIndex.includes("membershipCategory")
+        : col.dataIndex === "membershipCategory";
+
+      if (isCategoryColumn) {
+        return {
+          ...col,
+          render: (text, record) => (
+            <a
+              style={{ color: "#1890ff", fontWeight: "500" }}
+              onClick={() => {
+                const appId = record._id || record.id;
+                dispatch(getApplicationById({ id: appId }));
+                navigate({
+                  pathname: "/applicationMgt",
+                  search: buildApplicationMgtSearch({
+                    applicationId: appId,
+                    edit: true,
+                  }),
+                });
+                setIsApplicationDrawerOpen(false);
+              }}
+            >
+              {text || "View Application"}
+            </a>
+          ),
+        };
+      }
+      return col;
+    }) || [];
 
   const subscriptionHistoryColumns = [
-    { title: "Category", dataIndex: "membershipCategory", key: "membershipCategory" },
-    { title: "Status", dataIndex: "subscriptionStatus", key: "subscriptionStatus" },
+    {
+      title: "Category",
+      dataIndex: "membershipCategory",
+      key: "membershipCategory",
+    },
+    {
+      title: "Status",
+      dataIndex: "subscriptionStatus",
+      key: "subscriptionStatus",
+    },
     { title: "Year", dataIndex: "subscriptionYear", key: "subscriptionYear" },
     {
       title: "Start Date",
@@ -133,8 +161,16 @@ function AppTabs() {
       key: "endDate",
       render: (date) => formatDateOnly(date),
     },
-    { title: "Frequency", dataIndex: "paymentFrequency", key: "paymentFrequency" },
-    { title: "Movement", dataIndex: "membershipMovement", key: "membershipMovement" },
+    {
+      title: "Frequency",
+      dataIndex: "paymentFrequency",
+      key: "paymentFrequency",
+    },
+    {
+      title: "Movement",
+      dataIndex: "membershipMovement",
+      key: "membershipMovement",
+    },
   ];
 
   const profileApplicationColumns = [
@@ -173,15 +209,32 @@ function AppTabs() {
       key: "approvalDate",
       render: (date) => formatDateOnly(date),
     },
+    {
+      title: "Join Date",
+      dataIndex: "joinDate",
+      key: "joinDate",
+      render: (date) => formatDateOnly(date),
+    },
     { title: "Approved By", dataIndex: "approvedBy", key: "approvedBy" },
-    { title: "Status", dataIndex: "applicationStatus", key: "applicationStatus" },
+    {
+      title: "Status",
+      dataIndex: "applicationStatus",
+      key: "applicationStatus",
+    },
   ];
 
   const allItems = [
     {
       key: "1",
       label: "Membership",
-      children: <MyDeatails isEditMode={isEditMode} setIsEditMode={setIsEditMode} isDeceased={isDeceased} setIsDeceased={setIsDeceased} />,
+      children: (
+        <MyDeatails
+          isEditMode={isEditMode}
+          setIsEditMode={setIsEditMode}
+          isDeceased={isDeceased}
+          setIsDeceased={setIsDeceased}
+        />
+      ),
     },
     // { key: "15", label: "Duplicate Members", children: <DuplicateMembers /> },
     { key: "2", label: "Finance", children: <FinanceByID /> },
@@ -196,7 +249,7 @@ function AppTabs() {
     { key: "8", label: "Roster", children: <Roster /> },
     { key: "11", label: "Audit History", children: <HistoryByID /> },
     { key: "9", label: "Projects", children: <div>Projects</div> },
-    { key: "10", label: "Trainings", children: <div >Trainings</div> },
+    { key: "10", label: "Trainings", children: <div>Trainings</div> },
   ];
 
   const handleMenuClick = (key) => {
@@ -207,7 +260,7 @@ function AppTabs() {
 
       // Remove existing dynamic (non-static) tabs
       const updatedTabs = newTabs.filter((tabKey) =>
-        staticTabKeys.includes(tabKey)
+        staticTabKeys.includes(tabKey),
       );
 
       // Add new tab if it's not already in the list
@@ -226,14 +279,14 @@ function AppTabs() {
     if (isStatic) {
       // Remove all dynamic tabs
       setVisibleTabs((prev) =>
-        prev.filter((tabKey) => staticTabKeys.includes(tabKey))
+        prev.filter((tabKey) => staticTabKeys.includes(tabKey)),
       );
     }
 
     setActiveKey(key);
   };
   const filteredItems = allItems.filter((item) =>
-    visibleTabs.includes(item.key)
+    visibleTabs.includes(item.key),
   );
   const Menuitems = [
     {
@@ -296,7 +349,11 @@ function AppTabs() {
       icon: <FaHistory />,
       onClick: () => {
         if (profileDetails?._id) {
-          dispatch(getSubscriptionHistoryByProfileId({ profileId: profileDetails._id }));
+          dispatch(
+            getSubscriptionHistoryByProfileId({
+              profileId: profileDetails._id,
+            }),
+          );
         }
         setIsSubscriptionDrawerOpen(true);
       },
@@ -461,3 +518,11 @@ function AppTabs() {
 }
 
 export default AppTabs;
+
+function normalizeRouteId(value) {
+  const raw = String(value ?? "").trim();
+  if (!raw) return "";
+  const lowered = raw.toLowerCase();
+  if (lowered === "undefined" || lowered === "null") return "";
+  return raw;
+}

@@ -1,48 +1,72 @@
-import React, { useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
+import axios from "axios";
+import { message } from "antd";
 import TableComponent from "../../component/common/TableComponent";
 
 const WriteOffsSummary = () => {
-    // Mock data for Write-offs Summary
-    const [mockData] = useState([
-        {
-            key: "1",
-            writeOff: "WO-001",
-            writeOffDate: "2023-11-15",
-            ref: "TRX-1001",
-            type: "Direct Debit",
-            createdBy: "Admin User",
-            createdAt: "2023-11-15 10:00:00",
-            updatedBy: "Admin User",
-            updatedAt: "2023-11-15 10:00:00",
-        },
-        {
-            key: "2",
-            writeOff: "WO-002",
-            writeOffDate: "2023-11-16",
-            ref: "TRX-1002",
-            type: "Credit Card",
-            createdBy: "Finance Manager",
-            createdAt: "2023-11-16 11:30:00",
-            updatedBy: "Finance Manager",
-            updatedAt: "2023-11-16 11:30:00",
-        },
-        {
-            key: "3",
-            writeOff: "WO-003",
-            writeOffDate: "2023-11-17",
-            ref: "TRX-1003",
-            type: "Bank Transfer",
-            createdBy: "Admin User",
-            createdAt: "2023-11-17 09:15:00",
-            updatedBy: "Admin User",
-            updatedAt: "2023-11-17 09:15:00",
-        },
-    ]);
+    const [rows, setRows] = useState([]);
+    const [loading, setLoading] = useState(false);
+
+    const fetchWriteOffs = useCallback(async () => {
+        setLoading(true);
+        try {
+            const token = localStorage.getItem("token");
+            const response = await axios.get(
+                `${process.env.REACT_APP_ACCOUNT_SERVICE_URL}/journal`,
+                {
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                        "Content-Type": "application/json",
+                    },
+                    params: {
+                        docType: "WriteOff",
+                        skip: 0,
+                        limit: 50,
+                    },
+                }
+            );
+
+            const items = response?.data?.data?.items;
+            const safeItems = Array.isArray(items) ? items : [];
+            const mappedRows = safeItems.map((item, index) => {
+                const memberEntry = Array.isArray(item?.entries)
+                    ? item.entries.find((entry) => entry?.memberId)
+                    : null;
+
+                return {
+                    key: item?._id || `writeoff-${index}`,
+                    _id: item?._id,
+                    writeOff: item?.docNo || "-",
+                    writeOffDate: item?.date || item?.createdAt || null,
+                    ref: item?._id || item?.docNo || "-",
+                    amount: memberEntry?.amount ?? "-",
+                    type: item?.txType?.description || item?.docType || "-",
+                    createdBy: item?.createdBy || "System",
+                    createdAt: item?.createdAt || "-",
+                    updatedBy: item?.updatedBy || "System",
+                    updatedAt: item?.updatedAt || "-",
+                };
+            });
+
+            setRows(mappedRows);
+        } catch (error) {
+            console.error("Failed to fetch write-offs:", error);
+            message.error("Failed to load write-offs");
+            setRows([]);
+        } finally {
+            setLoading(false);
+        }
+    }, []);
+
+    useEffect(() => {
+        fetchWriteOffs();
+    }, [fetchWriteOffs]);
 
     return (
         <div style={{ width: "100%", padding: "0" }}>
             <TableComponent
-                data={mockData}
+                data={rows}
+                isGrideLoading={loading}
                 screenName="WriteOffs"
             />
         </div>

@@ -3,11 +3,11 @@ import { AutoComplete, Input, Button, message, Spin } from "antd";
 import { SearchOutlined, LoadingOutlined, UserAddOutlined } from "@ant-design/icons";
 import { useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
-import dayjs from "dayjs";
 import axios from "axios";
 import { getSubscriptionByProfileId } from "../../features/subscription/profileSubscriptionSlice";
 import { searchProfiles } from "../../features/profiles/SearchProfile";
 import { buildDetailsSearch } from "../../utils/detailsRoute";
+import MemberSearchOptionLabel from "./MemberSearchOptionLabel";
 
 // Debounce hook
 const useDebounce = (value, delay) => {
@@ -171,30 +171,7 @@ const MemberSearch = ({
                 searchTerm: debouncedSearchValue,
                 memberData: member
               }),
-              label: (
-                <div style={{ padding: "8px 0" }}>
-                  {/* Row 1: Name, Membership Number, Email */}
-                  <div style={{ fontWeight: "600" }}>
-                    {`${member.personalInfo?.title || ''} ${member.personalInfo?.forename || ''} ${member.personalInfo?.surname || ''}`.trim()}
-                    <span style={{ color: "#555", fontWeight: "normal" }}>
-                      • {member.membershipNumber} • {member.contactInfo?.personalEmail || 'No email'}
-                    </span>
-                  </div>
-
-                  {/* Row 2: Mobile Number, Address */}
-                  <div style={{ fontSize: "13px", color: "#555" }}>
-                    📱 {member.contactInfo?.mobileNumber || 'No phone'} •
-                    📍 {member.contactInfo?.fullAddress || 'No address'}
-                  </div>
-
-                  {/* Row 3: Additional Info */}
-                  <div style={{ fontSize: "13px", marginTop: "2px" }}>
-                    <span>👤 {member.additionalInformation?.membershipStatus || 'Unknown'}</span> •{" "}
-                    <span>🎂 {member.personalInfo?.dateOfBirth ? dayjs(member.personalInfo.dateOfBirth).format("DD/MM/YYYY") : 'No DOB'}</span> •{" "}
-                    <span>💼 {member.professionalDetails?.grade || 'No grade'}</span>
-                  </div>
-                </div>
-              ),
+              label: <MemberSearchOptionLabel member={member} />,
               memberId: member._id,
               membershipNumber: member.membershipNumber,
               memberData: member

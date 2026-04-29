@@ -8,6 +8,25 @@ import { useReminders } from "../../context/CampaignDetailsProvider";
 
 const { TabPane } = Tabs;
 
+function parseBalanceAmount(value) {
+    if (value == null) return 0;
+    const parsed = parseFloat(String(value).replace(/[^\d.-]/g, ""));
+    return Number.isFinite(parsed) ? parsed : 0;
+}
+
+function formatOutstandingBalanceLikeHeader(value) {
+    const amount = parseBalanceAmount(value);
+    const amountText = `€${Math.abs(amount).toLocaleString("en-IE", {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+    })}`;
+    const indicator = amount > 0 ? "Dr" : amount < 0 ? "Cr" : "";
+    return {
+        text: indicator ? `${amountText} (${indicator})` : amountText,
+        color: amount > 0 ? "#cf1322" : "#389e0d",
+    };
+}
+
 const CancellationDrawer = ({ open, onClose }) => {
 
     const { cancallationbyId, getCancellationById } = useReminders()
@@ -127,7 +146,20 @@ const CancellationDrawer = ({ open, onClose }) => {
             title: "Outstanding Balance",
             dataIndex: "outstandingBalance",
             key: "outstandingBalance",
-            render: (text) => <span style={{ whiteSpace: "nowrap" }}>{text}</span>,
+            render: (text) => {
+                const { text: displayText, color } = formatOutstandingBalanceLikeHeader(text);
+                return (
+                    <span
+                        style={{
+                            whiteSpace: "nowrap",
+                            color,
+                            fontWeight: 600,
+                        }}
+                    >
+                        {displayText}
+                    </span>
+                );
+            },
         },
         {
             title: "Reminder No",

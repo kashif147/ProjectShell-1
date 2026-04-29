@@ -18,8 +18,6 @@ import {
   FaCogs,
 } from "react-icons/fa";
 import { TbReportAnalytics } from "react-icons/tb";
-import { LuCalendarClock } from "react-icons/lu";
-import { IoSettingsOutline } from "react-icons/io5";
 import { MdOutlineWork } from "react-icons/md";
 import { useTableColumns } from "../../context/TableColumnsContext ";
 import { Link, useLocation } from "react-router-dom";
@@ -41,7 +39,6 @@ const AppLauncherMenu = ({ closeDropdown }) => {
   const navigate = useNavigate();
   const { permissions, roles } = useAuthorization();
   const menuLbl = useSelector((state) => state.menuLbl);
-  const [searchTerm, setSearchTerm] = useState("");
   let userdata = localStorage.getItem("userdata");
   userdata = JSON.parse(userdata);
   const permission = userdata?.permissions;
@@ -50,9 +47,9 @@ const AppLauncherMenu = ({ closeDropdown }) => {
     const routeMap = {
       Membership: "/MembershipDashboard",
       Finance: "/onlinePayment",
-      Correspondence: "/Email",
+      Correspondence: "/CorrespondenceDashboard",
       Configuration: "/Configuratin",
-      Events: "/EventsSummary",
+      Events: "/EventsDashboard",
       Reports: "/Reports",
       Settings: "/Settings",
       "Issues Management": "/CasesSummary",
@@ -87,21 +84,14 @@ const AppLauncherMenu = ({ closeDropdown }) => {
       icon: FaRegClipboard,
       bgColor: "#FF7043",
       permissions: ["menu:correspondence:access"],
-      route: "/Email",
+      route: "/CorrespondenceDashboard",
     },
     {
       name: "Events",
       icon: FaCalendarAlt,
       bgColor: "#EF5350",
       permissions: ["menu:events:access"],
-      route: "/Events",
-    },
-    {
-      name: "Courses",
-      icon: LuCalendarClock,
-      bgColor: "#7E57C2",
-      permissions: ["menu:courses:access"],
-      route: "/Courses",
+      route: "/EventsDashboard",
     },
     {
       name: "Issues Management",
@@ -109,13 +99,6 @@ const AppLauncherMenu = ({ closeDropdown }) => {
       bgColor: "#3F51B5",
       permissions: ["menu:issues_management:access"],
       route: "/CasesSummary",
-    },
-    {
-      name: "Settings",
-      icon: IoSettingsOutline,
-      bgColor: "#3F51B5",
-      permissions: ["menu:settings:access"],
-      route: "/Settings",
     },
     {
       name: "Configuration",
@@ -143,28 +126,16 @@ const AppLauncherMenu = ({ closeDropdown }) => {
     return app.permissions.some((perm) => hasPermission(perm));
   });
 
-  const filteredItems = accessibleApps.filter((app) =>
-    app.name.toLowerCase().includes(searchTerm.toLowerCase()),
-  );
-
   return (
     <div className="lancher-div">
-      <input
-        className="app-launcher-search"
-        placeholder="Search applications..."
-        value={searchTerm}
-        onChange={(e) => setSearchTerm(e.target.value)}
-      />
       <div className="app-launcher-menu">
-        {filteredItems.map((app) => {
+        {accessibleApps.map((app) => {
           const menuLabelMap = {
             Membership: "Subscriptions & Rewards",
             Finance: "Finance",
             Correspondence: "Correspondence",
             Events: "Events",
-            Courses: "",
             "Issues Management": "Issues Management",
-            Settings: "",
             Configuration: "Configuration",
             Reports: "Reports",
           };
@@ -408,16 +379,26 @@ function Header() {
           />
 
           <Popover
-            content={<NotificationPopover isOpen={notificationOpen} />}
+            content={
+              <NotificationPopover
+                isOpen={notificationOpen}
+                onNavigateToAll={() => {
+                  setNotificationOpen(false);
+                  navigate("/UserNotifications");
+                }}
+              />
+            }
             trigger="click"
             placement="bottomRight"
             open={notificationOpen}
             onOpenChange={(open) => setNotificationOpen(open)}
             styles={{ body: { padding: 0 } }}
           >
-            <Badge count={badge} size="small">
-              <BellOutlined className="top-icon" />
-            </Badge>
+            <span className="notification-bell-wrap">
+              <Badge count={badge} size="small" offset={[-2, 4]}>
+                <BellOutlined className="top-icon notification-bell-icon" />
+              </Badge>
+            </span>
           </Popover>
 
           <QuestionCircleOutlined className="top-icon" />

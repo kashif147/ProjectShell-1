@@ -7,9 +7,12 @@ import { Button, Input } from "antd";
 import { useDispatch, useSelector } from "react-redux";
 import { getApplicationsWithFilter, setTemplateId } from "../../features/applicationwithfilterslice";
 import { getAllApplications } from "../../features/ApplicationSlice";
+import { getSubscriptionsWithTemplate } from "../../features/subscription/subscriptionSlice";
+import { getProfilesWithFilter } from "../../features/profiles/ProfileSlice";
 import { fetchBatchesByType } from "../../features/profiles/batchMemberSlice";
 import { useTableColumns } from "../../context/TableColumnsContext ";
-import { transformFiltersForApi, transformFiltersFromApi, areFiltersEqual } from "../../utils/filterUtils";
+import { transformFiltersForApi, transformFiltersFromApi } from "../../utils/filterUtils";
+import { useAuthorization } from "../../context/AuthorizationContext";
 import { updateGridTemplate, getGridTemplates } from "../../features/templete/templetefiltrsclumnapi";
 import { getViewById } from "../../features/views/ViewByIdSlice";
 import { setActiveTemplateId } from "../../features/views/ActiveTemplateSlice";
@@ -25,90 +28,177 @@ const Toolbar = () => {
 
 
   const {
+    activePage,
     visibleFilters,
     filterOptions,
     filtersState,
     updateFilter,
     resetFilters,
     applyTemplateFilters,
+    getFiltersStateForSave,
+    bumpMembershipDashboardApply,
   } = useFilters();
+  /** TableColumnsContext keys use "Members"; FilterContext uses "Membership" for /membership */
+  const tableColumnScreen =
+    activePage === "Membership" ? "Members" : activePage;
 
-  const { columns, updateSelectedTemplate, selectedTemplates } = useTableColumns();
+  const { columns } = useTableColumns();
+  const { hasAnyRole } = useAuthorization();
+  const canEditGridTemplates = hasAnyRole(["SU", "ASU"]);
   const { currentTemplateId } = useSelector((state) => state.applicationWithFilter);
   const { activeTemplateId } = useSelector((state) => state.activeTemplate);
-  const { templates, loading: templatesLoading } = useSelector((state) => state.templetefiltrsclumnapi);
-  const { selectedView, loading: viewLoading } = useSelector((state) => state.viewById);
   const [isSaving, setIsSaving] = useState(false);
-  const screenChanges = useSelector(state => state.screenFilter.screenFilterChanged);
+  const screenChanges = useSelector(
+    (state) => state.screenFilter.screenFilterChanged,
+  );
   // const activeScreen = getScreenFromPath();
 
   const getScreenFromPath = () => {
+    const key = (location.pathname || "")
+      .replace(/\/$/, "")
+      .toLowerCase();
     const pathMap = {
       "/applications": "Applications",
-      "/Applications": "Applications",
-      "/Summary": "Profile",
+      "/summary": "Profile",
       "/membership": "Membership",
-      "/Members": "Members",
-      "/CommunicationBatchDetail": "Communication",
+      "/members": "Members",
+      "/communicationbatchdetail": "Communication",
+      "/eventssummary": "Events",
+      "/eventsdashboard": "Events",
+      "/correspondencedashboard": "Communication",
+      "/issuesmanagementdashboard": "Cases",
+      "/attendees": "Attendees",
+      "/membershipdashboard": "MembershipDashboard",
     };
-    return pathMap[location.pathname] || "";
+    return pathMap[key] || "";
   };
   const activeScreen = getScreenFromPath();
-  const hasChanges = screenChanges[activeScreen.toLowerCase()] === true;
+  const isMembersScreen =
+    location.pathname === "/members" ||
+    location.pathname === "/Members" ||
+    location.pathname === "/membership";
+  const isProfileScreen =
+    location.pathname === "/Summary" || location.pathname === "/summary";
+  const hasChanges = activeScreen
+    ? screenChanges[activeScreen.toLowerCase()] === true
+    : false;
 
-  // Reactively update screen change state based on deep equality
-  React.useEffect(() => {
-    if (!selectedView || !activeTemplateId || selectedView._id !== activeTemplateId) {
-      if (hasChanges) {
-        dispatch(resetScreenChanged({ screen: activeScreen.toLowerCase() }));
-      }
-      return;
-    }
-
-    const originalFilters = transformFiltersFromApi(selectedView.filters || {}, columns[activeScreen] || []);
-    const isEqual = areFiltersEqual(filtersState, originalFilters);
-
-    if (isEqual && hasChanges) {
-      dispatch(resetScreenChanged({ screen: activeScreen.toLowerCase() }));
-    } else if (!isEqual && !hasChanges) {
-      dispatch(markScreenChanged({ screen: activeScreen }));
-    }
-  }, [filtersState, selectedView, activeScreen, columns, dispatch, hasChanges]);
+  const resolvedGridTemplateId =
+    activeTemplateId || currentTemplateId || "";
+  const normalizedPath = (location.pathname || "")
+    .replace(/\/$/, "")
+    .toLowerCase();
+  const isApplicationsPage = normalizedPath === "/applications";
+  const gridTemplateType = isMembersScreen
+    ? "members"
+    : isApplicationsPage
+      ? "application"
+      : isProfileScreen
+        ? "profile"
+        : undefined;
 
   const [batchName, setBatchName] = useState("");
+  const markTemplateScreenDirty = () => {
+    const screen =
+      getScreenFromPath() ||
+      (isApplicationsPage
+        ? "Applications"
+        : isProfileScreen
+          ? "Profile"
+          : isMembersScreen
+            ? "Members"
+            : "");
+    if (screen) {
+      dispatch(markScreenChanged({ screen }));
+    }
+  };
+
   const handleFilterApply = (filterData) => {
     const { label, operator, selectedValues } = filterData;
-    console.log("🔄 Applying filter:", {
-      filter: label,
-      values: selectedValues,
-      operator: operator,
-      count: selectedValues.length,
-    });
-
     updateFilter(label, operator, selectedValues);
-    // Manual markScreenChanged removed - handled by useEffect above
+    markTemplateScreenDirty();
   };
 
   const handleSearch = () => {
+    const filterSnapshot = getFiltersStateForSave();
     const cleanedFilters = {};
-    Object.keys(filtersState).forEach((key) => {
-      if (filtersState[key]?.selectedValues?.length > 0) {
-        cleanedFilters[key] = filtersState[key];
+    Object.keys(filterSnapshot).forEach((key) => {
+      if (filterSnapshot[key]?.selectedValues?.length > 0) {
+        cleanedFilters[key] = filterSnapshot[key];
       }
     });
 
-    console.log("🔍 Dispatching with cleaned filters:", cleanedFilters);
-
-    const isApplicationsPage = location.pathname.toLowerCase() === "/applications";
+    const isMembershipDashboard =
+      location.pathname === "/MembershipDashboard";
+    const isEventsDashboard = location.pathname === "/EventsDashboard";
+    const isCorrespondenceDashboard =
+      location.pathname === "/CorrespondenceDashboard";
+    const isIssuesManagementDashboard =
+      location.pathname === "/IssuesManagementDashboard";
 
     if (isApplicationsPage) {
-      // MembershipApplication will react to filtersState changes
-      console.log("🔍 Filters updated, MembershipApplication should re-fetch");
+      const apiFilters = transformFiltersForApi(
+        cleanedFilters,
+        columns[tableColumnScreen] || [],
+      );
+      const visibleColumns = (columns[tableColumnScreen] || [])
+        .filter((col) => col.isGride === true)
+        .map((col) =>
+          Array.isArray(col.dataIndex) ? col.dataIndex.join(".") : col.dataIndex,
+        );
+      dispatch(
+        getApplicationsWithFilter({
+          templateId: activeTemplateId || currentTemplateId || undefined,
+          page: 1,
+          limit: 10,
+          filters: apiFilters,
+          columns: visibleColumns,
+        }),
+      );
+    } else if (isProfileScreen) {
+      const apiFilters = transformFiltersForApi(
+        cleanedFilters,
+        columns[tableColumnScreen] || [],
+      );
+      dispatch(
+        getProfilesWithFilter({
+          templateId: activeTemplateId || currentTemplateId || undefined,
+          page: 1,
+          limit: 100,
+          filters: apiFilters,
+        }),
+      );
+    } else if (isMembershipDashboard) {
+      bumpMembershipDashboardApply();
+    } else if (
+      isEventsDashboard ||
+      isCorrespondenceDashboard ||
+      isIssuesManagementDashboard
+    ) {
+      // Summary dashboards: no grid fetch
+    } else if (isMembersScreen) {
+      const apiFilters = transformFiltersForApi(
+        cleanedFilters,
+        columns[tableColumnScreen] || [],
+      );
+      const visibleColumns = (columns[tableColumnScreen] || [])
+        .filter((col) => col.isGride === true)
+        .map((col) =>
+          Array.isArray(col.dataIndex) ? col.dataIndex.join(".") : col.dataIndex,
+        );
+      dispatch(
+        getSubscriptionsWithTemplate({
+          templateId: activeTemplateId || currentTemplateId || undefined,
+          page: 1,
+          limit: 10,
+          filters: apiFilters,
+          columns: visibleColumns,
+        }),
+      );
     } else {
       if (Object.keys(cleanedFilters).length > 0) {
         dispatch(getAllApplications(cleanedFilters));
       } else {
-        console.log("⚠️ No filters selected, fetching all applications");
         dispatch(getAllApplications({}));
       }
     }
@@ -139,9 +229,50 @@ const Toolbar = () => {
 
   const handleReset = () => {
     resetFilters();
-    if (location.pathname.toLowerCase() === "/applications") {
-      // MembershipApplication will react to filtersState reset
-      dispatch(setTemplateId("")); // Also reset template ID on full reset
+    if (isApplicationsPage || isProfileScreen || isMembersScreen) {
+      const screen =
+        getScreenFromPath() ||
+        (isApplicationsPage
+          ? "Applications"
+          : isProfileScreen
+            ? "Profile"
+            : "Members");
+      if (screen) {
+        dispatch(resetScreenChanged({ screen }));
+      }
+    }
+    if (isApplicationsPage) {
+      dispatch(
+        getApplicationsWithFilter({
+          templateId: activeTemplateId || currentTemplateId || undefined,
+          page: 1,
+          limit: 10,
+        }),
+      );
+    } else if (isProfileScreen) {
+      dispatch(
+        getProfilesWithFilter({
+          templateId: activeTemplateId || currentTemplateId || undefined,
+          page: 1,
+          limit: 100,
+        }),
+      );
+    } else if (location.pathname === "/MembershipDashboard") {
+      bumpMembershipDashboardApply();
+    } else if (
+      location.pathname === "/EventsDashboard" ||
+      location.pathname === "/CorrespondenceDashboard" ||
+      location.pathname === "/IssuesManagementDashboard"
+    ) {
+      // no-op
+    } else if (isMembersScreen) {
+      dispatch(
+        getSubscriptionsWithTemplate({
+          templateId: activeTemplateId || currentTemplateId || undefined,
+          page: 1,
+          limit: 10,
+        }),
+      );
     } else {
       dispatch(getAllApplications({}));
     }
@@ -150,42 +281,101 @@ const Toolbar = () => {
 
 
   const handleSave = async () => {
-    if (!currentTemplateId) return;
+    const id = String(resolvedGridTemplateId || "").trim();
+    if (!id) {
+      message.warning(
+        "No view is selected. Choose a template from the view menu, then try again.",
+      );
+      return;
+    }
 
     setIsSaving(true);
     try {
-      const activeScreenName = getScreenFromPath();
-      const currentApiFilters = transformFiltersForApi(filtersState, columns[activeScreenName] || []);
+      const filterSnapshot = getFiltersStateForSave();
+      const currentApiFilters = transformFiltersForApi(
+        filterSnapshot,
+        columns[tableColumnScreen] || [],
+      );
+      const screenColumns = columns[tableColumnScreen] || [];
+      const currentColumnLabels = screenColumns.reduce(
+        (acc, col) => {
+          const key = Array.isArray(col?.dataIndex)
+            ? col.dataIndex.join(".")
+            : col?.dataIndex;
+          if (key) acc[String(key)] = String(col?.title || key);
+          return acc;
+        },
+        {},
+      );
+      const visibleColumnKeys = screenColumns
+        .filter((col) => col.isGride === true)
+        .map((col) =>
+          Array.isArray(col.dataIndex) ? col.dataIndex.join(".") : col.dataIndex,
+        );
 
       const payload = {
-        filters: currentApiFilters
+        filters: currentApiFilters,
+        columnLabels: currentColumnLabels,
+        columns: visibleColumnKeys,
+        ...(gridTemplateType ? { templateType: gridTemplateType } : {}),
       };
 
-      await dispatch(updateGridTemplate({ id: currentTemplateId, payload })).unwrap();
+      await dispatch(
+        updateGridTemplate({
+          id,
+          type: gridTemplateType,
+          payload,
+        }),
+      ).unwrap();
       MyAlert("success", "Success", "Template updated successfully");
 
-      console.log("✅ Update successful, resetting change state and re-fetching details...");
+      const freshView = await dispatch(
+        getViewById({
+          id,
+          type: gridTemplateType,
+        }),
+      ).unwrap();
 
-      // 1. Reset the "dirty" state for this screen
+      const nextFilters = transformFiltersFromApi(
+        freshView?.filters || {},
+        columns[tableColumnScreen] || [],
+      );
+      applyTemplateFilters(nextFilters);
+
+      dispatch(setTemplateId(id));
       dispatch(resetScreenChanged({ screen: activeScreen.toLowerCase() }));
 
-      // 2. Refresh the specific view details in Redux
-      // This will trigger the useEffect in SaveViewMenu.jsx to re-apply filters if needed
-      dispatch(getViewById(currentTemplateId));
+      dispatch(
+        getGridTemplates(
+          gridTemplateType ? { type: gridTemplateType } : {},
+        ),
+      );
 
-      // 3. Refresh the template list to ensure anything else using it (like the dropdown) is current
-      dispatch(getGridTemplates());
-
-      // 4. Reload the filtered applications if on the applications page
-      if (location.pathname.toLowerCase() === "/applications") {
-        console.log("🔄 Reloading applications after save with templateId:", currentTemplateId);
-        dispatch(getApplicationsWithFilter({
-          templateId: currentTemplateId,
-          page: 1,
-          limit: 10
-        }));
+      if (isApplicationsPage) {
+        dispatch(
+          getApplicationsWithFilter({
+            templateId: id,
+            page: 1,
+            limit: 10,
+          }),
+        );
+      } else if (isProfileScreen) {
+        dispatch(
+          getProfilesWithFilter({
+            templateId: id,
+            page: 1,
+            limit: 100,
+          }),
+        );
+      } else if (isMembersScreen) {
+        dispatch(
+          getSubscriptionsWithTemplate({
+            templateId: id,
+            page: 1,
+            limit: 10,
+          }),
+        );
       }
-
     } catch (error) {
       console.error("Error updating template:", error);
       MyAlert("error", "Error", error?.message || "Failed to update template");
@@ -254,23 +444,30 @@ const Toolbar = () => {
     >
       <div className="d-flex align-items-center flex-wrap gap-2">
         {/* Search input */}
-        <div style={{ flex: "0 0 250px" }}>
-          <Input
-            className="my-input-field"
-            placeholder={
-              location.pathname === "/CasesSummary"
-                ? "Search Case ID, team, or stakeholder"
-                : location.pathname === "/EventsSummary"
-                  ? "Search Event ID or Name"
-                  : "Membership No or Surname"
-            }
-            style={{
-              height: "30px",
-              borderRadius: "4px",
-              color: "gray",
-            }}
-          />
-        </div>
+        {location.pathname !== "/MembershipDashboard" &&
+          location.pathname !== "/EventsDashboard" &&
+          location.pathname !== "/CorrespondenceDashboard" &&
+          location.pathname !== "/IssuesManagementDashboard" && (
+          <div style={{ flex: "0 0 250px" }}>
+            <Input
+              className="my-input-field"
+              placeholder={
+                location.pathname === "/CasesSummary"
+                  ? "Search Case ID, team, or stakeholder"
+                  : location.pathname === "/EventsSummary"
+                    ? "Search Event ID or Name"
+                    : location.pathname === "/Attendees"
+                      ? "Search Attendee ID or Name"
+                    : "Membership No or Surname"
+              }
+              style={{
+                height: "30px",
+                borderRadius: "4px",
+                color: "gray",
+              }}
+            />
+          </div>
+        )}
 
         {/* Dynamic filters */}
         {visibleFilters.map((label) => {
@@ -284,7 +481,7 @@ const Toolbar = () => {
           if (isDateField) {
             return (
               <DateRang
-                key={label}
+                key={`${resolvedGridTemplateId || "default"}-${label}`}
                 label={label}
                 selectedValues={selectedValues}
                 operator={operator}
@@ -296,7 +493,7 @@ const Toolbar = () => {
           // Show all filters that are in visibleFilters
           return (
             <MultiFilterDropdown
-              key={label}
+              key={`${resolvedGridTemplateId || "default"}-${label}`}
               label={label}
               options={options}
               selectedValues={selectedValues}
@@ -330,9 +527,14 @@ const Toolbar = () => {
             color: "white",
           }}
         >
-          Search
+          Filter
         </Button>
-        {hasChanges && !templatesLoading && !viewLoading && (
+        {location.pathname !== "/MembershipDashboard" &&
+          location.pathname !== "/EventsDashboard" &&
+          location.pathname !== "/CorrespondenceDashboard" &&
+          location.pathname !== "/IssuesManagementDashboard" &&
+          canEditGridTemplates &&
+          hasChanges && (
           <Button
             onClick={handleSave}
             loading={isSaving}

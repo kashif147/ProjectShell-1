@@ -17,8 +17,9 @@ import {
   Tooltip,
 } from "antd";
 import { useSelector, useDispatch } from "react-redux";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, Link } from "react-router-dom";
 import axios from "axios";
+import { getAccountServiceBaseUrl } from "../../config/serviceUrls";
 import TrigerBatchMemberDrawer from "../../component/finanace/TrigerBatchMemberDrawer";
 import "../../styles/ManualEntry.css";
 import "../../styles/BatchMemberSummary.css";
@@ -42,6 +43,7 @@ import UnifiedPagination, {
   getDefaultPageSize,
 } from "../../component/common/UnifiedPagination";
 import moment from "moment";
+import { buildDetailsSearch } from "../../utils/detailsRoute";
 import {
   PlusOutlined,
   MinusCircleOutlined,
@@ -59,6 +61,7 @@ import {
   EditOutlined,
   DeleteOutlined,
   ExclamationCircleFilled,
+  InfoCircleOutlined,
 } from "@ant-design/icons";
 import { BsThreeDots } from "react-icons/bs";
 import { AlertCircle } from "lucide-react";
@@ -126,12 +129,12 @@ const MembershipNoResolver = ({
     if (!memberData?.membershipNumber) return;
     setLoading(true);
     try {
-      const baseUrl = process.env.REACT_APP_ACCOUNT_SERVICE_URL;
+      const baseUrl = getAccountServiceBaseUrl();
       const token = localStorage.getItem("token");
 
       // Resolve the exception directly with selected member info
       await axios.post(
-        `${process.env.REACT_APP_ACCOUNT_SERVICE_URL}/batch-details/resolve-exception/${batchId}`,
+        `${getAccountServiceBaseUrl()}/batch-details/resolve-exception/${batchId}`,
         {
           membershipNumber: memberData.membershipNumber,
           exceptionMembershipNumber: exceptionMembershipNumber,
@@ -180,8 +183,115 @@ function isFileRefMembershipMismatch(record) {
   return a.toUpperCase() !== b.toUpperCase();
 }
 
-function BatchMemberSummary() {
+function normalizeComparableName(s) {
+  return String(s || "")
+    .trim()
+    .toLowerCase()
+    .replace(/\s+/g, " ");
+}
+
+/** As stored from the spreadsheet: full name cell or first + last. */
+function batchPaymentNameOnFile(record) {
+  if (record == null) return "";
+  const fr = record.fileRow || {};
+  if (fr.fullName != null && String(fr.fullName).trim() !== "") {
+    return String(fr.fullName).trim();
+  }
+  const parts = [fr.firstName, fr.lastName]
+    .map((p) => String(p || "").trim())
+    .filter(Boolean);
+  return parts.length ? parts.join(" ") : "";
+}
+
+/**
+ * From CRM profile on the payment (forename + surname). Do not use record.fullName
+ * here — it is file-prefixed on the server (fullNameFromFileOrProfile).
+ */
+function batchPaymentCrmFullName(record) {
+  if (record == null) return "";
+  const parts = [record.forename, record.surname]
+    .map((p) => String(p || "").trim())
+    .filter(Boolean);
+  return parts.length ? parts.join(" ") : "";
+}
+
+function isFileVsCrmNameMismatch(record) {
+  const file = normalizeComparableName(batchPaymentNameOnFile(record));
+  const crm = normalizeComparableName(batchPaymentCrmFullName(record));
+  if (!file && !crm) return false;
+  return file !== crm;
+}
+
+/** subscription-service `subscription.subscriptionStatus` (API may expose as subscriptionStatus or membershipStatus) */
+function rowSubscriptionStatus(record) {
+  if (record == null) return null;
+  return record.subscriptionStatus ?? record.membershipStatus ?? null;
+}
+
+/** True when a status is known and it is not active. */
+function isSubscriptionStatusNotActive(record) {
+  const v = rowSubscriptionStatus(record);
+  if (v == null || String(v).trim() === "") return false;
+  return String(v).toLowerCase() !== "active";
+}
+
+/** One left-edge accent per row: ref > name > membership (highest first). */
+function batchPaymentLeftAccentClassName(record) {
+  if (record == null) return "";
+  if (isFileRefMembershipMismatch(record)) return "batch-row-left--ref";
+  if (isFileVsCrmNameMismatch(record)) return "batch-row-left--name";
+  if (isSubscriptionStatusNotActive(record)) return "batch-row-left--membership";
+  return "";
+}
+
+function batchPaymentRowHighlightMessages(record) {
+  const out = [];
+  if (isFileRefMembershipMismatch(record)) {
+    out.push(
+      "File ref. no. and membership no. do not match the resolved member.",
+    );
+  }
+  if (isFileVsCrmNameMismatch(record)) {
+    out.push("Name on file and full name do not match.");
+  }
+  if (isSubscriptionStatusNotActive(record)) {
+    const st = rowSubscriptionStatus(record);
+    out.push(
+      `Membership is not active${st != null && String(st).trim() !== "" ? ` (status: ${String(st).trim()})` : ""}.`,
+    );
+  }
+  return out;
+}
+
+function membershipStatusTagColor(status) {
+  const s = String(status || "").toLowerCase();
+  if (s === "active") return "success";
+  if (s === "cancelled") return "error";
+  if (s === "resigned") return "error";
+  if (s === "suspended" || s === "archived") return "warning";
+  return "default";
+}
+
+function profileIdForDetailsLink(record) {
+  if (record == null) return null;
+  const p = record.profileId;
+  if (p == null) return null;
+  if (typeof p === "object" && p._id != null) return String(p._id);
+  const s = String(p).trim();
+  if (s === "" || s === "null" || s === "undefined") return null;
+  return s;
+}
+
+/** Matches `TableComponent` member name → /Details link styling */
+const MEMBER_FILE_LINK_STYLE = {
+  color: "blue",
+  textDecoration: "underline",
+  cursor: "pointer",
+};
+
+export default function BatchMemberSummary() {
   const [selectedRowKeys, setSelectedRowKeys] = useState([]);
+  const [activeKey, setActiveKey] = useState("1");
   const { batchId } = useParams();
   const dispatch = useDispatch();
   const navigate = useNavigate();
@@ -212,6 +322,62 @@ function BatchMemberSummary() {
 
   // Strict Data Source: Only use data from Redux
   const batchInfo = batchDetails || {};
+  const isPendingBatch =
+    batchInfo?.batchStatus != null &&
+    String(batchInfo.batchStatus).trim().toLowerCase() === "pending";
+  const isBatchEditable = isPendingBatch;
+
+  const [excludeToExceptionsLoading, setExcludeToExceptionsLoading] =
+    useState(false);
+  const handleExcludeMembersToExceptions = useCallback(async () => {
+    if (!isBatchEditable) {
+      message.warning("Batch can only be edited while status is pending");
+      return;
+    }
+    if (activeKey !== "1") {
+      message.warning(
+        "Open the Batch Payments tab, select one or more rows, then exclude.",
+      );
+      return;
+    }
+    if (!selectedRowKeys.length) {
+      message.warning(
+        "Select at least one member in Batch Payments to exclude.",
+      );
+      return;
+    }
+    if (!batchId) return;
+    setExcludeToExceptionsLoading(true);
+    try {
+      const token = localStorage.getItem("token");
+      await axios.post(
+        `${getAccountServiceBaseUrl()}/batch-details/exclude-payments/${batchId}`,
+        { paymentEntryIds: selectedRowKeys },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        },
+      );
+      message.success("Selected member(s) moved to exceptions.");
+      setSelectedRowKeys([]);
+      await dispatch(getBatchDetailsById(batchId));
+    } catch (error) {
+      message.error(
+        error?.response?.data?.message ||
+          "Failed to move members to exceptions",
+      );
+    } finally {
+      setExcludeToExceptionsLoading(false);
+    }
+  }, [
+    isBatchEditable,
+    activeKey,
+    selectedRowKeys,
+    batchId,
+    dispatch,
+  ]);
 
   // Helper function to safely parse dates
   const getSafeDate = (dateValue) => {
@@ -271,15 +437,13 @@ function BatchMemberSummary() {
   };
 
   const [isBatchmemberOpen, setIsBatchmemberOpen] = useState(false);
-  const [activeKey, setActiveKey] = useState("1");
   const paymentTableRowClassName = useCallback(
     (record) =>
-      activeKey === "1" && isFileRefMembershipMismatch(record)
-        ? "batch-file-ref-membership-mismatch"
-        : "",
+      activeKey === "1" ? batchPaymentLeftAccentClassName(record) : "",
     [activeKey],
   );
-  const [fileRefMembershipViewFilter, setFileRefMembershipViewFilter] =
+  /** Single control: file ref/membership × name (3×3 + all). */
+  const [batchRefNameViewFilter, setBatchRefNameViewFilter] =
     useState("all");
   const [manualPayment, setManualPayment] = useState(false);
   const [filteredInfo, setFilteredInfo] = useState({});
@@ -287,6 +451,7 @@ function BatchMemberSummary() {
   const [isBatchDetailsDrawerOpen, setIsBatchDetailsDrawerOpen] =
     useState(false);
   const [isEditBatchDetails, setIsEditBatchDetails] = useState(false);
+  const [triggerBatchLoading, setTriggerBatchLoading] = useState(false);
   const batchFormRef = useRef(null);
 
   // Helper function to get unique filter values
@@ -411,6 +576,59 @@ function BatchMemberSummary() {
     const dataSource = members;
     return [
       {
+        key: "rowHighlightInfo",
+        width: 44,
+        align: "center",
+        title: (
+          <Tooltip title="When a row has a file ref., name, or membership status issue, use the info icon in this column for details.">
+            <InfoCircleOutlined
+              style={{ color: "#94a3b8", fontSize: 14, cursor: "default" }}
+              aria-hidden
+            />
+          </Tooltip>
+        ),
+        className: "batch-member-summary-col-highlight-info",
+        render: (_, record) => {
+          const messages = batchPaymentRowHighlightMessages(record);
+          if (messages.length === 0) return null;
+          return (
+            <Tooltip
+              color="#fff"
+              title={
+                <div
+                  style={{
+                    color: "rgba(0, 0, 0, 0.88)",
+                    maxWidth: 320,
+                  }}
+                >
+                  <div style={{ fontWeight: 600, marginBottom: 8 }}>
+                    Notes for this row:
+                  </div>
+                  <ul
+                    style={{
+                      margin: 0,
+                      paddingLeft: 18,
+                    }}
+                  >
+                    {messages.map((m, i) => (
+                      <li key={i} style={{ marginBottom: 4 }}>
+                        {m}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              }
+            >
+              <InfoCircleOutlined
+                style={{ color: "#1677ff", fontSize: 16, cursor: "default" }}
+                role="img"
+                aria-label="Row issue details"
+              />
+            </Tooltip>
+          );
+        },
+      },
+      {
         title: "FILE REF NO",
         dataIndex: ["fileRow", "membershipNumber"],
         key: "refNo",
@@ -442,45 +660,22 @@ function BatchMemberSummary() {
         }),
       },
       {
-        title: "FULL NAME",
-        dataIndex: "fullName", // Updated to match API field
-        key: "fullName",
+        title: "NAME ON FILE",
+        key: "nameOnFile",
         ellipsis: true,
         width: 180,
-        sorter: (a, b) => {
-          const aVal =
-            a.fullName ||
-            a["Full name"] ||
-            `${a.forename || ""} ${a.surname || ""}`.trim() ||
-            "";
-          const bVal =
-            b.fullName ||
-            b["Full name"] ||
-            `${b.forename || ""} ${b.surname || ""}`.trim() ||
-            "";
-          return aVal.localeCompare(bVal);
-        },
+        sorter: (a, b) =>
+          batchPaymentNameOnFile(a).localeCompare(batchPaymentNameOnFile(b)),
         sortDirections: ["ascend", "descend"],
-        render: (text, record) =>
-          text ||
-          record["Full name"] ||
-          `${record["forename"] || ""} ${record["surname"] || ""}`.trim() ||
-          "-",
-        filterDropdown: createFilterDropdown(dataSource, (record) => {
-          return (
-            record.fullName ||
-            record["Full name"] ||
-            `${record.forename || ""} ${record.surname || ""}`.trim()
-          );
-        }),
-        onFilter: (value, record) => {
-          const recordValue =
-            record.fullName ||
-            record["Full name"] ||
-            `${record.forename || ""} ${record.surname || ""}`.trim() ||
-            "";
-          return recordValue.toString() === value;
+        render: (_, record) => {
+          const v = batchPaymentNameOnFile(record);
+          return v ? v : "—";
         },
+        filterDropdown: createFilterDropdown(dataSource, (record) =>
+          batchPaymentNameOnFile(record),
+        ),
+        onFilter: (value, record) =>
+          String(batchPaymentNameOnFile(record)) === String(value),
         filterIcon: (filtered) => (
           <SearchOutlined style={{ color: filtered ? "#1890ff" : undefined }} />
         ),
@@ -584,7 +779,6 @@ function BatchMemberSummary() {
       },
       {
         title: "MEMBERSHIP NO",
-        dataIndex: "membershipNumber",
         key: "membershipNumber",
         ellipsis: true,
         width: 250,
@@ -594,6 +788,10 @@ function BatchMemberSummary() {
           return aVal.localeCompare(bVal);
         },
         sortDirections: ["ascend", "descend"],
+        render: (_, record) => {
+          const v = record?.membershipNumber;
+          return v != null && String(v).trim() !== "" ? String(v) : "—";
+        },
         filterDropdown: createFilterDropdown(
           dataSource,
           (record) => record.membershipNumber,
@@ -610,6 +808,68 @@ function BatchMemberSummary() {
             ? "batch-file-ref-cell-mismatch"
             : "",
         }),
+      },
+      {
+        title: "FULL NAME",
+        key: "crmFullName",
+        ellipsis: true,
+        width: 200,
+        sorter: (a, b) =>
+          batchPaymentCrmFullName(a).localeCompare(batchPaymentCrmFullName(b)),
+        sortDirections: ["ascend", "descend"],
+        render: (_, record) => {
+          const v = batchPaymentCrmFullName(record);
+          if (!v) return "—";
+          const pid = profileIdForDetailsLink(record);
+          if (!pid) return v;
+          return (
+            <Link
+              to={`/Details${buildDetailsSearch(pid)}`}
+              style={MEMBER_FILE_LINK_STYLE}
+            >
+              {v}
+            </Link>
+          );
+        },
+        filterDropdown: createFilterDropdown(dataSource, (record) =>
+          batchPaymentCrmFullName(record),
+        ),
+        onFilter: (value, record) =>
+          String(batchPaymentCrmFullName(record)) === String(value),
+        filterIcon: (filtered) => (
+          <SearchOutlined style={{ color: filtered ? "#1890ff" : undefined }} />
+        ),
+      },
+      {
+        title: "MEMBERSHIP STATUS",
+        dataIndex: "subscriptionStatus",
+        key: "membershipStatus",
+        ellipsis: true,
+        width: 160,
+        sorter: (a, b) => {
+          const aVal = (rowSubscriptionStatus(a) || "").toString();
+          const bVal = (rowSubscriptionStatus(b) || "").toString();
+          return aVal.localeCompare(bVal);
+        },
+        sortDirections: ["ascend", "descend"],
+        render: (_, record) => {
+          const v = rowSubscriptionStatus(record);
+          if (v == null || String(v).trim() === "") {
+            return <span style={{ color: "#94a3b8" }}>—</span>;
+          }
+          const t = String(v);
+          return <Tag color={membershipStatusTagColor(t)}>{t}</Tag>;
+        },
+        filterDropdown: createFilterDropdown(dataSource, (record) =>
+          rowSubscriptionStatus(record),
+        ),
+        onFilter: (value, record) => {
+          const r = String(rowSubscriptionStatus(record) ?? "");
+          return r === String(value);
+        },
+        filterIcon: (filtered) => (
+          <SearchOutlined style={{ color: filtered ? "#1890ff" : undefined }} />
+        ),
       },
       {
         title: "PAYROLL NO",
@@ -659,14 +919,23 @@ function BatchMemberSummary() {
         title: "MEMBERSHIP NO",
         key: "resolution",
         width: 250,
-        render: (_, record) => (
-          <MembershipNoResolver
-            batchId={batchId}
-            exceptionId={record?._id}
-            exceptionMembershipNumber={record?.membershipNumber}
-            onResolved={refreshData}
-          />
-        ),
+        align: "left",
+        onCell: () => ({ style: { verticalAlign: "middle" } }),
+        render: (_, record) =>
+          isBatchEditable ? (
+            <MembershipNoResolver
+              batchId={batchId}
+              exceptionId={record?._id}
+              exceptionMembershipNumber={
+                record?.fileRow?.membershipNumber ?? record?.membershipNumber
+              }
+              onResolved={refreshData}
+            />
+          ) : (
+            <span style={{ color: "#94a3b8", fontSize: 12 }}>
+              Locked (batch not pending)
+            </span>
+          ),
       },
       {
         title: "FILE REF NO",
@@ -674,31 +943,21 @@ function BatchMemberSummary() {
         ellipsis: true,
         width: 150,
         sorter: (a, b) => {
-          const aVal = String(
-            a.fileRow?.membershipNumber ?? a.membershipNumber ?? "",
-          );
-          const bVal = String(
-            b.fileRow?.membershipNumber ?? b.membershipNumber ?? "",
-          );
+          const aVal = String(a.fileRow?.membershipNumber ?? "");
+          const bVal = String(b.fileRow?.membershipNumber ?? "");
           return aVal.localeCompare(bVal);
         },
         sortDirections: ["ascend", "descend"],
         render: (_, record) => {
-          const v =
-            record?.fileRow?.membershipNumber ?? record?.membershipNumber;
-          return v != null && String(v).trim() !== "" ? String(v) : "-";
+          const v = record?.fileRow?.membershipNumber;
+          return v != null && String(v).trim() !== "" ? String(v) : "—";
         },
-        filterDropdown: createFilterDropdown(dataSource, (record) =>
-          record.fileRow?.membershipNumber != null &&
-          record.fileRow.membershipNumber !== ""
-            ? record.fileRow.membershipNumber
-            : record.membershipNumber,
+        filterDropdown: createFilterDropdown(
+          dataSource,
+          (record) => record.fileRow?.membershipNumber,
         ),
-        onFilter: (value, record) => {
-          const ref =
-            record.fileRow?.membershipNumber ?? record.membershipNumber ?? "";
-          return String(ref) === String(value);
-        },
+        onFilter: (value, record) =>
+          String(record.fileRow?.membershipNumber ?? "") === String(value),
         filterIcon: (filtered) => (
           <SearchOutlined style={{ color: filtered ? "#1890ff" : undefined }} />
         ),
@@ -722,6 +981,53 @@ function BatchMemberSummary() {
         onFilter: (value, record) => {
           const recordValue = (record.fullName || "").toString();
           return recordValue === value;
+        },
+        filterIcon: (filtered) => (
+          <SearchOutlined style={{ color: filtered ? "#1890ff" : undefined }} />
+        ),
+        render: (_, record) => {
+          const v = record?.fullName;
+          if (v == null || String(v).trim() === "")
+            return <span style={{ color: "#94a3b8" }}>—</span>;
+          const text = String(v);
+          const pid = profileIdForDetailsLink(record);
+          if (!pid) return text;
+          return (
+            <Link
+              to={`/Details${buildDetailsSearch(pid)}`}
+              style={MEMBER_FILE_LINK_STYLE}
+            >
+              {text}
+            </Link>
+          );
+        },
+      },
+      {
+        title: "MEMBERSHIP STATUS",
+        dataIndex: "subscriptionStatus",
+        key: "exceptionMembershipStatus",
+        ellipsis: true,
+        width: 160,
+        sorter: (a, b) => {
+          const aVal = (rowSubscriptionStatus(a) || "").toString();
+          const bVal = (rowSubscriptionStatus(b) || "").toString();
+          return aVal.localeCompare(bVal);
+        },
+        sortDirections: ["ascend", "descend"],
+        render: (_, record) => {
+          const v = rowSubscriptionStatus(record);
+          if (v == null || String(v).trim() === "") {
+            return <span style={{ color: "#94a3b8" }}>—</span>;
+          }
+          const t = String(v);
+          return <Tag color={membershipStatusTagColor(t)}>{t}</Tag>;
+        },
+        filterDropdown: createFilterDropdown(dataSource, (record) =>
+          rowSubscriptionStatus(record),
+        ),
+        onFilter: (value, record) => {
+          const r = String(rowSubscriptionStatus(record) ?? "");
+          return r === String(value);
         },
         filterIcon: (filtered) => (
           <SearchOutlined style={{ color: filtered ? "#1890ff" : undefined }} />
@@ -865,6 +1171,7 @@ function BatchMemberSummary() {
     batchInfo.description,
     exceptions,
     refreshData,
+    isBatchEditable,
   ]);
 
   // Pagination state
@@ -896,12 +1203,31 @@ function BatchMemberSummary() {
       }
     });
 
-    if (activeKey === "1") {
-      if (fileRefMembershipViewFilter === "mismatch") {
-        data = data.filter((record) => isFileRefMembershipMismatch(record));
-      } else if (fileRefMembershipViewFilter === "match") {
-        data = data.filter((record) => !isFileRefMembershipMismatch(record));
-      }
+    if (activeKey === "1" && batchRefNameViewFilter !== "all") {
+      const refM = (r) => isFileRefMembershipMismatch(r);
+      const nameM = (r) => isFileVsCrmNameMismatch(r);
+      data = data.filter((record) => {
+        switch (batchRefNameViewFilter) {
+          case "ref_mismatch":
+            return refM(record);
+          case "ref_match":
+            return !refM(record);
+          case "name_mismatch":
+            return nameM(record);
+          case "name_match":
+            return !nameM(record);
+          case "both_mismatch":
+            return refM(record) && nameM(record);
+          case "both_match":
+            return !refM(record) && !nameM(record);
+          case "ref_mismatch_name_match":
+            return refM(record) && !nameM(record);
+          case "ref_match_name_mismatch":
+            return !refM(record) && nameM(record);
+          default:
+            return true;
+        }
+      });
     }
 
     // Apply sorting
@@ -925,7 +1251,7 @@ function BatchMemberSummary() {
     activeKey,
     columns,
     exceptionColumns,
-    fileRefMembershipViewFilter,
+    batchRefNameViewFilter,
   ]);
 
   // Update paginated data when page, pageSize, or processedDataSource changes
@@ -956,7 +1282,7 @@ function BatchMemberSummary() {
     setSelectedRowKeys([]);
     setFilteredInfo({});
     setSortedInfo({});
-    setFileRefMembershipViewFilter("all");
+    setBatchRefNameViewFilter("all");
   }, [activeKey]);
 
   const onChange = (key) => setActiveKey(key);
@@ -1045,9 +1371,60 @@ function BatchMemberSummary() {
   const displayTotal = displayTotalCurrent + displayArrears;
   const displayRecords = members.length;
 
-  const isPendingBatch =
+  const displayBatchStatus = (() => {
+    const raw = String(batchInfo?.batchStatus || "").trim();
+    if (!raw) return "-";
+    const normalized = raw.toLowerCase();
+    if (normalized === "processed") return "Completed";
+    if (normalized === "processing_in_progress") return "In Progress";
+    return raw;
+  })();
+  const displayBatchStatusColor = (() => {
+    const normalized = String(batchInfo?.batchStatus || "")
+      .trim()
+      .toLowerCase();
+    if (normalized === "failed") return "error";
+    if (normalized === "processed") return "success";
+    if (
+      normalized === "queued" ||
+      normalized === "processing" ||
+      normalized === "processing_in_progress"
+    ) {
+      return "processing";
+    }
+    return "default";
+  })();
+  const isBatchAlreadyQueuedOrProcessing =
     batchInfo?.batchStatus != null &&
-    String(batchInfo.batchStatus).trim().toLowerCase() === "pending";
+    ["queued", "processing", "processing_in_progress", "processed"].includes(
+      String(batchInfo.batchStatus).trim().toLowerCase(),
+    );
+
+  const handleTriggerBatch = async () => {
+    if (!batchId || triggerBatchLoading || isBatchAlreadyQueuedOrProcessing) {
+      return;
+    }
+    setTriggerBatchLoading(true);
+    try {
+      const token = localStorage.getItem("token");
+      await axios.post(
+        `${getAccountServiceBaseUrl()}/batch-details/process/${batchId}`,
+        {},
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        },
+      );
+      message.success("Batch queued successfully");
+      refreshData();
+    } catch (error) {
+      message.error(
+        error?.response?.data?.message ||
+          "Failed to queue batch for processing",
+      );
+    } finally {
+      setTriggerBatchLoading(false);
+    }
+  };
 
   const confirmDeleteBatch = () => {
     const openDeleteModal = () => {
@@ -1060,8 +1437,7 @@ function BatchMemberSummary() {
             <div className="batch-member-summary-delete-message">
               <p style={{ margin: 0 }}>
                 Deleting this batch will permanently remove the uploaded file
-                and any changes made to the batch. This action cannot be
-                undone.
+                and any changes made to the batch. This action cannot be undone.
               </p>
               <div style={{ height: "1em" }} aria-hidden />
               <p style={{ margin: 0, fontWeight: 600 }}>
@@ -1228,9 +1604,13 @@ function BatchMemberSummary() {
           <Button
             className="butn primary-btn"
             icon={<ThunderboltFilled />}
-            onClick={() => message.success("Batch Triggered Successfully")}
+            loading={triggerBatchLoading}
+            disabled={triggerBatchLoading || isBatchAlreadyQueuedOrProcessing}
+            onClick={handleTriggerBatch}
           >
-            Trigger Batch
+            {isBatchAlreadyQueuedOrProcessing
+              ? "Batch Queued"
+              : "Trigger Batch"}
           </Button>
         </div>
       </div>
@@ -1537,7 +1917,18 @@ function BatchMemberSummary() {
                   color: "#0f172a",
                 }}
               >
-                {batchInfo.batchStatus}
+                <Tag
+                  color={displayBatchStatusColor}
+                  style={{
+                    margin: 0,
+                    padding: "0px 8px",
+                    borderRadius: 4,
+                    fontSize: "12px",
+                    fontWeight: 600,
+                  }}
+                >
+                  {displayBatchStatus}
+                </Tag>
               </div>
             </div>
             <div
@@ -2099,7 +2490,7 @@ function BatchMemberSummary() {
             />
           </div>
 
-          {/* Center: file ref / membership match filter (batch payments only) */}
+          {/* Center: file ref + name combined filter (batch payments only) */}
           <div
             style={{
               flex: "1 1 auto",
@@ -2112,19 +2503,44 @@ function BatchMemberSummary() {
           >
             {activeKey === "1" && (
               <Select
-                aria-label="Filter by file ref vs membership match"
-                value={fileRefMembershipViewFilter}
-                onChange={setFileRefMembershipViewFilter}
-                style={{ minWidth: 220, height: 36 }}
+                aria-label="Filter by file ref vs membership and name on file vs full name"
+                value={batchRefNameViewFilter}
+                onChange={setBatchRefNameViewFilter}
+                style={{ minWidth: 360, maxWidth: "100%", height: 36 }}
+                popupMatchSelectWidth={false}
                 options={[
                   { value: "all", label: "All rows" },
                   {
-                    value: "mismatch",
-                    label: "Highlighted only (file ref ≠ membership)",
+                    value: "ref_mismatch",
+                    label: "File ref. no. ≠ membership (any name)",
                   },
                   {
-                    value: "match",
-                    label: "Not highlighted (match or no file ref)",
+                    value: "ref_match",
+                    label: "File ref. = membership or n/a (any name)",
+                  },
+                  {
+                    value: "name_mismatch",
+                    label: "Name on file ≠ full name (any file ref.)",
+                  },
+                  {
+                    value: "name_match",
+                    label: "Name on file = full name (or both empty, any file ref.)",
+                  },
+                  {
+                    value: "both_mismatch",
+                    label: "Both: file ref. issue and name issue",
+                  },
+                  {
+                    value: "both_match",
+                    label: "Both ok: no file ref. issue and no name issue",
+                  },
+                  {
+                    value: "ref_mismatch_name_match",
+                    label: "File ref. issue only (names match)",
+                  },
+                  {
+                    value: "ref_match_name_mismatch",
+                    label: "Name issue only (file ref. ok)",
                   },
                 ]}
               />
@@ -2149,17 +2565,29 @@ function BatchMemberSummary() {
                   height: "36px",
                   padding: "0 12px",
                 }}
-                onClick={() => setManualPayment(true)}
+                onClick={() => {
+                  if (!isBatchEditable) {
+                    message.warning(
+                      "Batch can only be edited while status is pending",
+                    );
+                    return;
+                  }
+                  setManualPayment(true);
+                }}
+                disabled={!isBatchEditable}
               >
                 Add Members
               </Button>
               <CommonPopConfirm
-                title="Do you want to exclude member?"
-                onConfirm={() => message.info("Member excluded")}
+                title="Move selected member(s) from Batch Payments to Exceptions?"
+                description="They will be removed from the payment file list and appear under the Exceptions tab."
+                onConfirm={handleExcludeMembersToExceptions}
+                okText="Move to exceptions"
               >
                 <Button
                   danger
                   icon={<MinusCircleOutlined />}
+                  loading={excludeToExceptionsLoading}
                   style={{
                     borderRadius: "8px",
                     fontWeight: "600",
@@ -2169,6 +2597,11 @@ function BatchMemberSummary() {
                     borderColor: "#fee2e2",
                     color: "#ef4444",
                   }}
+                  disabled={
+                    !isBatchEditable ||
+                    activeKey !== "1" ||
+                    selectedRowKeys.length === 0
+                  }
                 >
                   Exclude Members
                 </Button>
@@ -2190,7 +2623,7 @@ function BatchMemberSummary() {
             loading={loading}
             bordered={true}
             rowClassName={paymentTableRowClassName}
-            scroll={{ x: 1200, y: "calc(100vh - 440px)" }}
+            scroll={{ x: 1550, y: "calc(100vh - 440px)" }}
             size="middle"
             sticky
             columns={activeKey === "1" ? columns : exceptionColumns}
@@ -2353,16 +2786,10 @@ function BatchMemberSummary() {
               : "batch-drawer-form"
           }
           ref={batchFormRef}
-          editBatchId={
-            isEditBatchDetails && batchId ? batchId : null
-          }
-          editSource={
-            isEditBatchDetails && batchDetails ? batchDetails : null
-          }
+          editBatchId={isEditBatchDetails && batchId ? batchId : null}
+          editSource={isEditBatchDetails && batchDetails ? batchDetails : null}
         />
       </MyDrawer>
     </div>
   );
 }
-
-export default BatchMemberSummary;

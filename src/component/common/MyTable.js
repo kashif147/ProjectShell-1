@@ -14,10 +14,23 @@ const MyTable = ({
   loading = false,
   onRowClick,
   tablePadding = { paddingLeft: "34px", paddingRight: "34px" },
+  /** When set with defaultSortOrder, table starts sorted (e.g. date latest first). */
+  defaultSortField,
+  defaultSortOrder,
+  /**
+   * When sorting by any other column, compare this column first (then the active sort).
+   * Use with alwaysFirstSortOrder so multi-column sort stays stable (e.g. ledger Created).
+   */
+  alwaysFirstSortField,
+  alwaysFirstSortOrder = "ascend",
 }) => {
   const [internalSelectedRowKeys, setInternalSelectedRowKeys] = useState([]);
   const [filteredInfo, setFilteredInfo] = useState({});
-  const [sortedInfo, setSortedInfo] = useState({});
+  const [sortedInfo, setSortedInfo] = useState(() =>
+    defaultSortField && defaultSortOrder
+      ? { field: defaultSortField, order: defaultSortOrder }
+      : {}
+  );
 
   const isExternallyControlled =
     externalRowSelection !== undefined && onSelectionChange !== undefined;
@@ -73,9 +86,22 @@ const MyTable = ({
 
   const handleTableChange = (pagination, filters, sorter) => {
     setFilteredInfo(filters);
-    setSortedInfo(sorter);
+    const next = Array.isArray(sorter) ? sorter[0] : sorter;
+    setSortedInfo(next && next.field && next.order ? next : {});
     setCurrentPage(1); // Reset to first page on filter/sort change
   };
+
+  /** Active sort: user choice, or defaultSort* when sort cleared. */
+  const effectiveSort = useMemo(() => {
+    if (sortedInfo.field && sortedInfo.order) return sortedInfo;
+    if (defaultSortField && defaultSortOrder) {
+      return { field: defaultSortField, order: defaultSortOrder };
+    }
+    return {};
+  }, [sortedInfo, defaultSortField, defaultSortOrder]);
+
+  const applySortOrderSign = (result, order) =>
+    order === "descend" ? -result : result;
 
   // Process data for filtering and sorting
   const processedData = useMemo(() => {
@@ -103,38 +129,87 @@ const MyTable = ({
     });
 
     // Sort data
-    if (sortedInfo.column && sortedInfo.field) {
-      const { field, order } = sortedInfo;
+    if (effectiveSort.field && effectiveSort.order) {
+      const { field, order } = effectiveSort;
       const column = columns.find(
         (col) => col.dataIndex === field || col.key === field
       );
 
+      const useCompound =
+        alwaysFirstSortField &&
+        field !== alwaysFirstSortField &&
+        (alwaysFirstSortOrder === "ascend" || alwaysFirstSortOrder === "descend");
+
       if (order) {
-        data.sort((a, b) => {
-          let result = 0;
-          if (
-            column &&
-            column.sorter &&
-            typeof column.sorter.compare === "function"
-          ) {
-            result = column.sorter.compare(a, b);
-          } else {
-            // Default sorting
-            const valA = a[field];
-            const valB = b[field];
-            if (typeof valA === "string") {
-              result = valA.localeCompare(valB);
-            } else {
-              result = valA - valB;
+        if (useCompound) {
+          const firstCol = columns.find(
+            (col) =>
+              col.dataIndex === alwaysFirstSortField ||
+              col.key === alwaysFirstSortField
+          );
+          data.sort((a, b) => {
+            let first = 0;
+            if (
+              firstCol?.sorter &&
+              typeof firstCol.sorter.compare === "function"
+            ) {
+              first = firstCol.sorter.compare(a, b);
             }
-          }
-          return order === "descend" ? -result : result;
-        });
+            first = applySortOrderSign(first, alwaysFirstSortOrder);
+            if (first !== 0) return first;
+
+            let result = 0;
+            if (
+              column &&
+              column.sorter &&
+              typeof column.sorter.compare === "function"
+            ) {
+              result = column.sorter.compare(a, b);
+            } else {
+              const valA = a[field];
+              const valB = b[field];
+              if (typeof valA === "string") {
+                result = valA.localeCompare(valB);
+              } else {
+                result = (valA ?? 0) - (valB ?? 0);
+              }
+            }
+            return applySortOrderSign(result, order);
+          });
+        } else {
+          data.sort((a, b) => {
+            let result = 0;
+            if (
+              column &&
+              column.sorter &&
+              typeof column.sorter.compare === "function"
+            ) {
+              result = column.sorter.compare(a, b);
+            } else {
+              // Default sorting
+              const valA = a[field];
+              const valB = b[field];
+              if (typeof valA === "string") {
+                result = valA.localeCompare(valB);
+              } else {
+                result = valA - valB;
+              }
+            }
+            return applySortOrderSign(result, order);
+          });
+        }
       }
     }
 
     return data;
-  }, [dataSource, filteredInfo, sortedInfo, columns]);
+  }, [
+    dataSource,
+    filteredInfo,
+    effectiveSort,
+    columns,
+    alwaysFirstSortField,
+    alwaysFirstSortOrder,
+  ]);
 
   const defaultPageSize = useMemo(
     () => getDefaultPageSize(processedData.length),
@@ -163,8 +238,8 @@ const MyTable = ({
         ...col,
         filteredValue: filteredInfo[col.dataIndex || col.key] || null,
         sortOrder:
-          sortedInfo.field === (col.dataIndex || col.key)
-            ? sortedInfo.order
+          effectiveSort.field === (col.dataIndex || col.key)
+            ? effectiveSort.order
             : null,
       };
 
@@ -193,7 +268,7 @@ const MyTable = ({
 
       return newCol;
     });
-  }, [columns, filteredInfo, sortedInfo]);
+  }, [columns, filteredInfo, effectiveSort]);
 
   return (
     <div

@@ -24,23 +24,28 @@ export const getNotificationServiceUrl = () => {
   return NOTIFICATION_SERVICE_FALLBACK;
 };
 
-/**
- * Socket.io-client ignores path in the URL; it only uses host/port.
- * Must pass path explicitly: io(origin, { path: basePath + "/socket.io" })
- */
-const getSocketOptions = () => {
+export const getNotificationSocketConfig = () => {
   const baseUrl = getNotificationServiceUrl();
   try {
     const url = new URL(baseUrl);
-    const origin = url.origin;
-    const path = `${url.pathname.replace(/\/$/, "")}/socket.io`;
-    return { origin, path };
+    return {
+      origin: url.origin,
+      path: `${url.pathname.replace(/\/$/, "")}/socket.io`,
+    };
   } catch {
     return {
       origin: "https://projectshell-vm.northeurope.cloudapp.azure.com",
       path: "/notification-service/api/socket.io",
     };
   }
+};
+
+/**
+ * Socket.io-client ignores path in the URL; it only uses host/port.
+ * Must pass path explicitly: io(origin, { path: basePath + "/socket.io" })
+ */
+const getSocketOptions = () => {
+  return getNotificationSocketConfig();
 };
 
 let socket = null;
@@ -98,6 +103,11 @@ export const NotificationProvider = ({ children }) => {
     socket.on("notification", (notif) => {
       if (!notif) return;
 
+      const notifId = notif?._id ? String(notif._id) : null;
+      const alreadySeen = notifId
+        ? recentNotificationIds.current.has(notifId)
+        : false;
+
       if (notif?._id) {
         recentNotificationIds.current.add(notif._id);
 
@@ -107,6 +117,9 @@ export const NotificationProvider = ({ children }) => {
       }
 
       setNotifications((prev) => [notif, ...prev]);
+      if (!alreadySeen && notif?.isRead !== true) {
+        setBadge((prev) => prev + 1);
+      }
 
       notification.info({
         message: notif.title || "New Notification",

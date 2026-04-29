@@ -416,7 +416,6 @@ function Configuratin() {
     isCoum,
   ) => {
     const token = localStorage.getItem("token");
-    debugger;
     const baseUrl = isCoum ? process.env.REACT_APP_CUMM : baseURL;
 
     try {
@@ -561,10 +560,8 @@ function Configuratin() {
       const baseUrl = isCoum ? process.env.REACT_APP_CUMM : baseURL;
 
       let finalEndPoint = endPoint;
-      debugger;
       // const { id, ...finalData } = data1;
       // const { id, ...finalData } = data1;
-      debugger;
 
       setButtonLoading((prev) => ({ ...prev, update: true }));
       const response = await axios.put(`${baseUrl}${finalEndPoint}`, data1, {
@@ -1683,7 +1680,6 @@ function Configuratin() {
   };
 
   const IsUpdateFtn = (drawer, value, data) => {
-    debugger;
 
     if (value === false) {
       setisUpdateRec((prev) => ({
@@ -1738,7 +1734,6 @@ function Configuratin() {
         ...filteredData,
       },
     }));
-    debugger;
   };
 
   const transformLookupTypes = (data) => {
@@ -1855,7 +1850,6 @@ function Configuratin() {
         },
       };
     });
-    debugger;
   };
   console.log(drawerIpnuts, "drawerinpt");
   const columnProvince = [

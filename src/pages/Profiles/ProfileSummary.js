@@ -1,23 +1,41 @@
 import { useEffect } from "react";
-import { useTableColumns } from "../../context/TableColumnsContext ";
 import TableComponent from "../../component/common/TableComponent";
 import { useSelector, useDispatch } from "react-redux";
-import { getAllProfiles,searchProfiles } from "../../features/profiles/ProfileSlice";
-import { use } from "react";
+import { Spin } from "antd";
+import { getProfilesWithFilter } from "../../features/profiles/ProfileSlice";
 
 function ProfileSummary() {
-  // const{gridData} = useTableColumns()
   const dispatch = useDispatch();
-  const { results, loading, error } = useSelector((state) => state.profile);
- 
+  const { results, loading } = useSelector((state) => state.profile);
+  const { activeTemplateId } = useSelector((state) => state.activeTemplate);
+  const { loading: templatesLoading } = useSelector((state) => state.templetefiltrsclumnapi);
+  const { isInitialized } = useSelector((state) => state.applicationWithFilter);
+
   useEffect(() => {
-    dispatch(getAllProfiles());
-  }, [dispatch]);
-  console.log("Profiles from Redux Store:", results);
+    if (!activeTemplateId) return;
+    dispatch(
+      getProfilesWithFilter({
+        templateId: activeTemplateId,
+        page: 1,
+        limit: 10,
+      })
+    );
+  }, [dispatch, activeTemplateId]);
+
+  if (!isInitialized || templatesLoading) {
+    return (
+      <div style={{ display: "flex", justifyContent: "center", alignItems: "center", height: "100%", padding: "50px" }}>
+        <Spin tip="Initializing Template...">
+          <div style={{ minHeight: 200, width: "100%" }} />
+        </Spin>
+      </div>
+    );
+  }
+
   return (
     <div className="" style={{ width: "100%" }}>
       <TableComponent
-      isGrideLoading={loading}
+        isGrideLoading={loading}
         data={results}
         screenName="Profile"
         redirect="/Details"

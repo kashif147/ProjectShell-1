@@ -36,7 +36,7 @@ import { fetchBatchesByType } from "../../features/profiles/batchMemberSlice";
 import { getUnifiedPaginationConfig } from "../../component/common/UnifiedPagination";
 import dayjs from "dayjs";
 import Breadcrumb from "../../component/common/Breadcrumb";
-import { formatCurrency } from "../../utils/Utilities";
+import { formatCurrency, formatMobileNumber } from "../../utils/Utilities";
 
 const cardStyle = {
   borderRadius: "12px",
@@ -100,7 +100,6 @@ function SimpleBatchMemberSummary() {
   const { data: apiData, loading, error } = useSelector(
     (state) => state.cornMarketBatchById
   );
-  debugger
   const { batchName, batchId, search } = location.state || {};
   const [activeKey, setActiveKey] = useState("1");
 
@@ -188,6 +187,7 @@ function SimpleBatchMemberSummary() {
         key: "mobileNumber",
         ellipsis: true,
         width: 150,
+        render: (value) => formatMobileNumber(value),
       },
     ];
 

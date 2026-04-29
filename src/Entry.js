@@ -13,6 +13,8 @@ import { Spin } from "antd";
 import RoutePermissionWrapper from "./component/common/RoutePermissionWrapper";
 import OnlinePayment from "./pages/finance/OnlinePayment";
 import RoutePermissions from "./constants/RoutePermissions";
+import { ReminderBatchesFilterProvider } from "./context/ReminderBatchesFilterContext";
+import { CancellationBatchesFilterProvider } from "./context/CancellationBatchesFilterContext";
 
 // Wrapper for lazy loading with retry logic
 const lazyWithRetry = (componentImport) => {
@@ -44,7 +46,9 @@ const lazyWithRetry = (componentImport) => {
                 height: "100vh",
               }}
             >
-              <Spin size="large" tip="Reloading application..." />
+              <Spin size="large" tip="Reloading application...">
+                <div style={{ minHeight: 120, width: "100%" }} />
+              </Spin>
             </div>
           ),
         };
@@ -72,6 +76,9 @@ const ClaimsDetails = lazyWithRetry(
 );
 const ClaimsById = lazyWithRetry(() => import("./pages/Claims/ClaimsById"));
 const CasesById = lazyWithRetry(() => import("./pages/Cases/CasesById"));
+const IssuesManagementDashboard = lazyWithRetry(() =>
+  import("./pages/Cases/IssuesManagementDashboard"),
+);
 const Filter = lazyWithRetry(() => import("./pages/Filters/Filter"));
 const TransferSummary = lazyWithRetry(
   () => import("./pages/Transfers/TransferSummary"),
@@ -87,6 +94,9 @@ const CommunicationBatchDetail = lazy(
 );
 const InAppNotifications = lazy(
   () => import("./pages/Correspondences/InAppNotifications"),
+);
+const UserNotifications = lazy(
+  () => import("./pages/notifications/UserNotifications"),
 );
 const AddNewProfile = lazyWithRetry(
   () => import("./pages/Profiles/AddNewProfile"),
@@ -134,7 +144,6 @@ const Cancallation = lazyWithRetry(() => import("./pages/Cancallation"));
 const CancellationDetail = lazyWithRetry(
   () => import("./pages/cancellation/CancellationDetail"),
 );
-const Batches = lazyWithRetry(() => import("./pages/finance/Batches"));
 const Import = lazyWithRetry(() => import("./pages/finance/Import"));
 const Cheque = lazyWithRetry(() => import("./pages/finance/Cheque"));
 const StandingOrders = lazyWithRetry(
@@ -247,7 +256,13 @@ const DirectDebitBatchDetails = lazyWithRetry(
 const EventsSummary = lazyWithRetry(
   () => import("./pages/events/EventsSummary"),
 );
+const EventsDashboard = lazyWithRetry(
+  () => import("./pages/events/EventsDashboard"),
+);
 const EventDetails = lazyWithRetry(() => import("./pages/events/EventDetails"));
+const AttendeesSummary = lazyWithRetry(
+  () => import("./pages/events/AttendeesSummary"),
+);
 
 function Entry() {
   const location = useLocation();
@@ -277,6 +292,8 @@ function Entry() {
 
   return (
     <AuthorizationProvider>
+      <ReminderBatchesFilterProvider>
+      <CancellationBatchesFilterProvider>
       <div
         style={{
           height: "100vh",
@@ -308,14 +325,32 @@ function Entry() {
               {showHeaderDetails && <HeaderDetails />}
 
               {/* Content area + resizable section */}
-              <div style={{ flex: 1, display: "flex" }}>
+              <div
+                style={{
+                  flex: 1,
+                  display: "flex",
+                  minHeight: 0,
+                  overflow: "hidden",
+                }}
+              >
                 <div
                   style={{
                     flex: 1,
+                    minHeight: 0,
                     scrollbarWidth:
-                      location.pathname === "/CasesDetails" ? "auto" : "none",
+                      location.pathname === "/CasesDetails" ||
+                      location.pathname === "/RemindersDetails" ||
+                      location.pathname === "/CancellationDetail"
+                        ? "auto"
+                        : "none",
                   }}
-                  className={`main-main ${location.pathname === "/CasesDetails" ? "enable-vertical-scroll" : ""}`}
+                  className={`main-main ${
+                    location.pathname === "/CasesDetails" ||
+                    location.pathname === "/RemindersDetails" ||
+                    location.pathname === "/CancellationDetail"
+                      ? "enable-vertical-scroll"
+                      : ""
+                  } ${location.pathname === "/templeteConfig" ? "main-main--template-config" : ""}`}
                 >
                   <Suspense
                     fallback={
@@ -390,6 +425,19 @@ function Entry() {
                         element={
                           <ProtectedRoute requiredPermission={RoutePermissions["/CasesSummary"]}>
                             <CasesSummary />
+                          </ProtectedRoute>
+                        }
+                      />
+
+                      <Route
+                        path="IssuesManagementDashboard"
+                        element={
+                          <ProtectedRoute
+                            requiredPermission={
+                              RoutePermissions["IssuesManagementDashboard"]
+                            }
+                          >
+                            <IssuesManagementDashboard />
                           </ProtectedRoute>
                         }
                       />
@@ -518,6 +566,16 @@ function Entry() {
                         }
                       />
                       <Route
+                        path="UserNotifications"
+                        element={
+                          <ProtectedRoute
+                            requiredPermission={RoutePermissions["UserNotifications"]}
+                          >
+                            <UserNotifications />
+                          </ProtectedRoute>
+                        }
+                      />
+                      <Route
                         path="CorrespondenceDashboard"
                         element={
                           <ProtectedRoute requiredPermission={RoutePermissions["/CorrespondenceDashboard"]}>
@@ -570,6 +628,14 @@ function Entry() {
                       />
 
                       <Route
+                        path="EventsDashboard"
+                        element={
+                          <ProtectedRoute requiredPermission={RoutePermissions["EventsDashboard"]}>
+                            <EventsDashboard />
+                          </ProtectedRoute>
+                        }
+                      />
+                      <Route
                         path="EventsSummary"
                         element={
                           <ProtectedRoute requiredPermission={RoutePermissions["/EventsSummary"]}>
@@ -582,6 +648,14 @@ function Entry() {
                         element={
                           <ProtectedRoute requiredPermission={RoutePermissions["/EventDetails"]}>
                             <EventDetails />
+                          </ProtectedRoute>
+                        }
+                      />
+                      <Route
+                        path="Attendees"
+                        element={
+                          <ProtectedRoute requiredPermission={RoutePermissions["Attendees"]}>
+                            <AttendeesSummary />
                           </ProtectedRoute>
                         }
                       />
@@ -671,15 +745,6 @@ function Entry() {
                         element={
                           <ProtectedRoute requiredPermission={RoutePermissions["Cancallation"]}>
                             <Cancallation />
-                          </ProtectedRoute>
-                        }
-                      />
-
-                      <Route
-                        path="Batches"
-                        element={
-                          <ProtectedRoute requiredPermission={RoutePermissions["Batches"]}>
-                            <Batches />
                           </ProtectedRoute>
                         }
                       />
@@ -1124,6 +1189,8 @@ function Entry() {
         {/* Footer - also hide for noSidebarRoutes */}
         {showSidebar && <MyFooter />}
       </div>
+      </CancellationBatchesFilterProvider>
+      </ReminderBatchesFilterProvider>
     </AuthorizationProvider>
   );
 }

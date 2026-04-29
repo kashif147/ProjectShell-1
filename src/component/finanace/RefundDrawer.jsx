@@ -1,5 +1,5 @@
-import React, { useState } from "react";
-import { Row, Col, message, Checkbox, InputNumber } from "antd";
+import React, { useState, useEffect, useCallback } from "react";
+import { Row, Col, message, Checkbox, InputNumber, Alert, Radio } from "antd";
 import dayjs from "dayjs";
 import MyDrawer from "../common/MyDrawer";
 import MyInput from "../common/MyInput";
@@ -7,15 +7,93 @@ import CustomSelect from "../common/CustomSelect";
 import MyDatePicker1 from "../common/MyDatePicker1";
 import MemberSearch from "../profile/MemberSearch";
 
-const RefundDrawer = ({ open, onClose, onSubmit }) => {
-    const [formValues, setFormValues] = useState({
-        refund: "",
-        refundDate: dayjs(),
-        type: "",
-        refNo: "",
-    });
+const CREDIT_CARD_TYPE = "Credit Card";
+const BANK_TRANSFER_TYPE = "Bank Transfer";
+const CHEQUE_TYPE = "Cheque";
+
+function generateCreditCardRefNo() {
+    const suffix =
+        typeof crypto !== "undefined" && crypto.randomUUID
+            ? crypto.randomUUID().replace(/-/g, "").slice(0, 16).toUpperCase()
+            : `${Date.now()}${Math.random().toString(36).slice(2, 10)}`.toUpperCase();
+    return `CC-${suffix}`;
+}
+
+const initialFormState = () => ({
+    mode: "stripe",
+    refund: "",
+    refundDate: dayjs(),
+    type: CREDIT_CARD_TYPE,
+    refNo: generateCreditCardRefNo(),
+    memo: "",
+});
+
+const RefundDrawer = ({
+    open,
+    onClose,
+    onSubmit,
+    submitLoading = false,
+    /** When set, refund amount field is prefilled (euros). */
+    prefillRefundAmountEuro = null,
+    /** Opening default: online (stripe + Credit Card) vs external (manual type). */
+    initialRefundMode = "stripe",
+    /** Hide member search (e.g. member profile finance tab). */
+    hideMemberSearch = false,
+    /** Optional member summary shown when member search is hidden. */
+    memberSummary = null,
+    /** Optional info banner above the form. */
+    receiptSummary = null,
+}) => {
+    const [formValues, setFormValues] = useState(() => initialFormState());
 
     const [errors, setErrors] = useState({});
+
+    const resetForm = useCallback(() => {
+        setFormValues(initialFormState());
+        setErrors({});
+    }, []);
+
+    useEffect(() => {
+        if (!open) return;
+
+        const prefillRaw =
+            prefillRefundAmountEuro != null &&
+            !Number.isNaN(Number(prefillRefundAmountEuro))
+                ? Number(prefillRefundAmountEuro)
+                : null;
+        const refundAmt =
+            prefillRaw != null && prefillRaw > 0
+                ? Math.round(prefillRaw * 100) / 100
+                : "";
+
+        const useExternal = initialRefundMode === "external";
+
+        if (useExternal) {
+            setFormValues({
+                mode: "external",
+                refund: refundAmt,
+                refundDate: dayjs(),
+                type: BANK_TRANSFER_TYPE,
+                refNo: "",
+                memo: "",
+            });
+        } else {
+            setFormValues({
+                mode: "stripe",
+                refund: refundAmt,
+                refundDate: dayjs(),
+                type: CREDIT_CARD_TYPE,
+                refNo: generateCreditCardRefNo(),
+                memo: "",
+            });
+        }
+        setErrors({});
+    }, [open, initialRefundMode, prefillRefundAmountEuro]);
+
+    const handleDrawerClose = () => {
+        resetForm();
+        onClose();
+    };
 
     const handleChange = (name, value) => {
         setFormValues((prev) => ({ ...prev, [name]: value }));
@@ -23,6 +101,53 @@ const RefundDrawer = ({ open, onClose, onSubmit }) => {
             setErrors((prev) => ({ ...prev, [name]: false }));
         }
     };
+
+    const handleRefundTypeChange = (value) => {
+        if (formValues.mode === "stripe") return;
+        setFormValues((prev) => {
+            const next = { ...prev, type: value };
+            if (value === CREDIT_CARD_TYPE) {
+                next.refNo = generateCreditCardRefNo();
+            }
+            return next;
+        });
+        if (errors.type) {
+            setErrors((prev) => ({ ...prev, type: false }));
+        }
+    };
+
+    const handleModeChange = (mode) => {
+        setFormValues((prev) => {
+            if (mode === "stripe") {
+                return {
+                    ...prev,
+                    mode: "stripe",
+                    type: CREDIT_CARD_TYPE,
+                    refNo: generateCreditCardRefNo(),
+                };
+            }
+            const nextExternalType =
+                prev.type === BANK_TRANSFER_TYPE || prev.type === CHEQUE_TYPE
+                    ? prev.type
+                    : BANK_TRANSFER_TYPE;
+            return {
+                ...prev,
+                mode: "external",
+                type: nextExternalType,
+            };
+        });
+        if (errors.type) {
+            setErrors((prev) => ({ ...prev, type: false }));
+        }
+    };
+
+    const refundTypeOptions =
+        formValues.mode === "stripe"
+            ? [{ label: CREDIT_CARD_TYPE, key: CREDIT_CARD_TYPE }]
+            : [
+                { label: BANK_TRANSFER_TYPE, key: BANK_TRANSFER_TYPE },
+                { label: CHEQUE_TYPE, key: CHEQUE_TYPE },
+            ];
 
     const validate = () => {
         const newErrors = {};
@@ -33,22 +158,28 @@ const RefundDrawer = ({ open, onClose, onSubmit }) => {
         return Object.keys(newErrors).length === 0;
     };
 
-    const handleSubmit = () => {
+    const handleSubmit = async () => {
+        if (submitLoading) return;
         if (validate()) {
+            const refundNum = Number(formValues.refund);
             const formattedValues = {
                 ...formValues,
+                mode: formValues.mode === "external" ? "external" : "stripe",
+                refund: Number.isFinite(refundNum)
+                    ? Math.round(refundNum * 100) / 100
+                    : formValues.refund,
                 refundDate: formValues.refundDate ? formValues.refundDate.format("YYYY-MM-DD") : null,
+                memo: (formValues.memo || "").trim(),
             };
-            if (onSubmit) onSubmit(formattedValues);
-            onClose();
-            // Reset form after submission
-            setFormValues({
-                refund: "",
-                refundDate: dayjs(),
-                type: "",
-                refNo: "",
-            });
-            setErrors({});
+            try {
+                const result = onSubmit ? await onSubmit(formattedValues) : true;
+                if (result !== false) {
+                    handleDrawerClose();
+                }
+            } catch (error) {
+                // Parent handles notifications; keep form open so user can correct and retry.
+                console.error("Refund submit failed:", error);
+            }
         } else {
             message.error("Please fill all required fields");
         }
@@ -67,26 +198,114 @@ const RefundDrawer = ({ open, onClose, onSubmit }) => {
         <MyDrawer
             title={drawerTitle}
             open={open}
-            onClose={onClose}
+            onClose={handleDrawerClose}
             width={700}
             isPagination={false}
             add={handleSubmit}
+            isLoading={submitLoading}
         >
             <div style={{ padding: "10px" }}>
                 <Row gutter={[16, 16]}>
+                    {receiptSummary ? (
+                        <Col span={24}>
+                            <Alert type="info" showIcon message={receiptSummary} />
+                        </Col>
+                    ) : null}
+                    {!hideMemberSearch ? (
+                        <Col span={24}>
+                            <label className="my-input-label">Member Search</label>
+                            <MemberSearch
+                                fullWidth={true}
+                                style={{ width: "100%" }}
+                                onSelectBehavior="none"
+                            />
+                        </Col>
+                    ) : memberSummary ? (
+                        <Col span={24}>
+  <div
+    style={{
+      border: "1px solid #e5e7eb",
+      borderRadius: "10px",
+      padding: "16px",
+      background: "#fafafa",
+      boxShadow: "0 2px 6px rgba(0,0,0,0.05)",
+    }}
+  >
+    <div
+      style={{
+        fontSize: "14px",
+        fontWeight: 600,
+        marginBottom: "10px",
+        color: "#6b7280",
+        textTransform: "uppercase",
+        letterSpacing: "0.5px",
+      }}
+    >
+      Member Details
+    </div>
+
+    <div
+      style={{
+        display: "flex",
+        justifyContent: "space-between",
+        flexWrap: "wrap",
+        gap: "10px",
+      }}
+    >
+      <div>
+        <div style={{ fontSize: "12px", color: "#9ca3af" }}>Name</div>
+        <div style={{ fontSize: "15px", fontWeight: 500 }}>
+          {memberSummary?.fullName || "-"}
+        </div>
+      </div>
+
+      <div>
+        <div style={{ fontSize: "12px", color: "#9ca3af" }}>Category</div>
+        <div style={{ fontSize: "15px", fontWeight: 500 }}>
+          {memberSummary?.membershipCategory || "-"}
+        </div>
+      </div>
+    </div>
+  </div>
+</Col>
+                    ) : null}
                     <Col span={24}>
-                        <label className="my-input-label">Member Search</label>
-                        <MemberSearch
-                            fullWidth={true}
-                            style={{ width: "100%" }}
-                            onSelectBehavior="none"
+                        <div className="my-input-wrapper" style={{ marginBottom: 0 }}>
+                            <label className="my-input-label">Refund Source</label>
+                            <Radio.Group
+                                value={formValues.mode}
+                                onChange={(e) => handleModeChange(e.target.value)}
+                                options={[
+                                    { label: "Online", value: "stripe" },
+                                    { label: "External", value: "external" },
+                                ]}
+                                size="large"
+                            />
+                        </div>
+                    </Col>
+                    <Col span={24}>
+                        <CustomSelect
+                            label="Refund Type"
+                            name="type"
+                            placeholder="Select refund type"
+                            options={refundTypeOptions}
+                            value={formValues.type}
+                            onChange={(e) => handleRefundTypeChange(e.target.value)}
+                            required
+                            hasError={errors.type}
+                            isMarginBtm={false}
+                            disabled={formValues.mode === "stripe"}
                         />
                     </Col>
                     <Col span={24}>
                         <MyInput
                             label="Ref No."
                             name="refNo"
-                            placeholder="Enter Ref No."
+                            placeholder={
+                                formValues.type === CREDIT_CARD_TYPE
+                                    ? "Auto-generated; edit if needed"
+                                    : "Enter Ref No."
+                            }
                             value={formValues.refNo}
                             onChange={(e) => handleChange("refNo", e.target.value)}
                         />
@@ -95,7 +314,7 @@ const RefundDrawer = ({ open, onClose, onSubmit }) => {
                         <div className="my-input-wrapper">
                             <div className="d-flex justify-content-between">
                                 <label htmlFor="refund" className={`my-input-label ${errors.refund ? "error" : ""}`}>
-                                    Refund <span className="star">*</span>
+                                    Refund Amount <span className="star">*</span>
                                     {errors.refund && <span className="error-message">Required</span>}
                                 </label>
                             </div>
@@ -104,15 +323,42 @@ const RefundDrawer = ({ open, onClose, onSubmit }) => {
                                     name="refund"
                                     placeholder="0.00"
                                     value={formValues.refund}
-                                    onChange={(value) => handleChange("refund", value)}
+                                    onChange={(value) => {
+                                        if (value != null && typeof value === "number") {
+                                            handleChange(
+                                                "refund",
+                                                Math.round(value * 100) / 100
+                                            );
+                                        } else {
+                                            handleChange("refund", value);
+                                        }
+                                    }}
                                     precision={2}
                                     min={0}
                                     style={{ width: "100%" }}
                                     controls={false}
                                     size="large"
-                                    formatter={(value) =>
-                                        value ? `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ",") : ""
-                                    }
+                                    formatter={(value, info) => {
+                                        const raw = value ?? "";
+                                        if (raw === "") return "";
+                                        if (info?.userTyping) {
+                                            return String(raw).replace(
+                                                /\B(?=(\d{3})+(?!\d))/g,
+                                                ","
+                                            );
+                                        }
+                                        const n = Number.parseFloat(
+                                            String(raw).replace(/,/g, "")
+                                        );
+                                        if (Number.isNaN(n)) return "";
+                                        const [intPart, decPart] = n
+                                            .toFixed(2)
+                                            .split(".");
+                                        return `${intPart.replace(
+                                            /\B(?=(\d{3})+(?!\d))/g,
+                                            ","
+                                        )}.${decPart}`;
+                                    }}
                                     parser={(value) => value.replace(/[^\d.]/g, "")}
                                     status={errors.refund ? "error" : ""}
                                     addonAfter="€"
@@ -135,21 +381,14 @@ const RefundDrawer = ({ open, onClose, onSubmit }) => {
                         />
                     </Col>
                     <Col span={24}>
-                        <CustomSelect
-                            label="Type"
-                            name="type"
-                            placeholder="Select type"
-                            options={[
-                                { label: "Direct Debit", key: "Direct Debit" },
-                                { label: "Credit Card", key: "Credit Card" },
-                                { label: "Bank Transfer", key: "Bank Transfer" },
-                                { label: "Cheque", key: "Cheque" },
-                            ]}
-                            value={formValues.type}
-                            onChange={(e) => handleChange("type", e.target.value)}
-                            required
-                            hasError={errors.type}
-                            isMarginBtm={false}
+                        <MyInput
+                            label="Memo"
+                            name="memo"
+                            placeholder="Enter memo (optional)"
+                            value={formValues.memo}
+                            onChange={(e) => handleChange("memo", e.target.value)}
+                            type="textarea"
+                            rows={4}
                         />
                     </Col>
                 </Row>

@@ -1,5 +1,6 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import axios from "axios";
+import { getSubscriptionServiceBaseUrl } from "../../config/serviceUrls";
 
 /* ===========================
    API
@@ -15,7 +16,7 @@ export const getAllSubscription = createAsyncThunk(
 const token = localStorage.getItem("token")
 
       const res = await axios.get(
-        `${process.env.REACT_APP_SUBSCRIPTION}/subscriptions`, // ✅ NO extra /subscriptions
+        `${getSubscriptionServiceBaseUrl()}/subscriptions`, // ✅ NO extra /subscriptions
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -37,6 +38,29 @@ const token = localStorage.getItem("token")
   }
 );
 
+export const getSubscriptionsWithTemplate = createAsyncThunk(
+  "subscription/getSubscriptionsWithTemplate",
+  async (payload = {}, { rejectWithValue }) => {
+    try {
+      const token = localStorage.getItem("token");
+      const res = await axios.put(
+        `${getSubscriptionServiceBaseUrl()}/subscriptions/filter`,
+        payload,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+      return res.data?.data || {};
+    } catch (err) {
+      return rejectWithValue(
+        err.response?.data?.message || "Failed to fetch filtered subscriptions"
+      );
+    }
+  }
+);
 
 
 
@@ -47,12 +71,14 @@ const subscriptionSlice = createSlice({
     name: "subscription",
     initialState: {
         subscriptionsData: [],
+        subscriptionsTemplateMeta: null,
         subscriptionLoading: false,
         subscriptionErrors: null,
     },
     reducers: {
         resetSubscriptionState: (state) => {
             state.subscriptionsData = [];
+            state.subscriptionsTemplateMeta = null;
             state.subscriptionLoading = false;
             state.subscriptionErrors = null;
         },
@@ -69,6 +95,23 @@ const subscriptionSlice = createSlice({
                 state.subscriptionsData = action.payload;
             })
             .addCase(getAllSubscription.rejected, (state, action) => {
+                state.subscriptionLoading = false;
+                state.subscriptionErrors = action.payload;
+            })
+            .addCase(getSubscriptionsWithTemplate.pending, (state) => {
+                state.subscriptionLoading = true;
+                state.subscriptionErrors = null;
+            })
+            .addCase(getSubscriptionsWithTemplate.fulfilled, (state, action) => {
+                state.subscriptionLoading = false;
+                state.subscriptionsTemplateMeta = action.payload || null;
+                state.subscriptionsData = {
+                  data: action.payload?.data || [],
+                  count: action.payload?.count || 0,
+                  pagination: action.payload?.pagination || null,
+                };
+            })
+            .addCase(getSubscriptionsWithTemplate.rejected, (state, action) => {
                 state.subscriptionLoading = false;
                 state.subscriptionErrors = action.payload;
             });

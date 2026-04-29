@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { Dropdown, Checkbox, Badge, Space, Select, Divider, Button, Alert } from "antd";
 import { DownOutlined } from "@ant-design/icons";
 
@@ -18,7 +18,6 @@ const MultiFilterDropdown = ({
 }) => {
   const [open, setOpen] = useState(false);
   const [tempSelectedValues, setTempSelectedValues] = useState(selectedValues);
-  const hoverTimer = useRef(null);
 
   // Sync tempSelectedValues when prop selectedValues changes (e.g. on load or reset)
   useEffect(() => {
@@ -71,19 +70,10 @@ const MultiFilterDropdown = ({
     onApply?.({ label, operator: value, selectedValues: tempSelectedValues });
   };
 
-  // 🧭 Hover behavior
-  const handleMouseEnter = () => {
-    clearTimeout(hoverTimer.current);
-    setOpen(true);
-  };
-
-  const handleMouseLeave = () => {
-    hoverTimer.current = setTimeout(() => {
-      setOpen(false);
-    }, 150);
-  };
-
   const badgeCount = Array.isArray(tempSelectedValues) ? tempSelectedValues.length : 0;
+
+  const isGeoFilter =
+    label === "Region" || label === "Branch" || label === "Work Location";
 
   // Warning/Empty Menu Content
   const getMenuContent = () => {
@@ -91,20 +81,18 @@ const MultiFilterDropdown = ({
       return (
         <div
           className="filter-dropdown-menu"
-          onMouseEnter={handleMouseEnter}
-          onMouseLeave={handleMouseLeave}
           style={{ minWidth: "250px", padding: "12px" }}
         >
           <Alert
-            message={label === "Region" || label === "Branch" ? "Action Required" : "No Data Available"}
+            message={isGeoFilter ? "No matching options" : "No Data Available"}
             description={
               <div style={{ marginTop: "8px" }}>
                 <div style={{ marginBottom: "8px" }}>
                   {warningMessage.replace("⚠️ ", "")}
                 </div>
                 <div style={{ fontSize: "12px", color: "#8c8c8c", fontStyle: "italic" }}>
-                  {label === "Region" || label === "Branch"
-                    ? "Please select a Work Location first to see available options."
+                  {isGeoFilter
+                    ? "Try adjusting or clearing other Region, Branch, or Work Location filters."
                     : "No data available for the selected criteria."}
                 </div>
               </div>
@@ -121,8 +109,6 @@ const MultiFilterDropdown = ({
       return (
         <div
           className="filter-dropdown-menu"
-          onMouseEnter={handleMouseEnter}
-          onMouseLeave={handleMouseLeave}
           style={{ minWidth: "250px", padding: "12px" }}
         >
           <Alert
@@ -138,15 +124,12 @@ const MultiFilterDropdown = ({
 
     // Check for empty options (no data from API)
     // This happens when options = [""] and it's Region or Branch filter
-    const isRegionOrBranch = label === "Region" || label === "Branch";
-    const isEmptyApiResponse = isRegionOrBranch && options.length === 1 && options[0] === "";
+    const isEmptyApiResponse = isGeoFilter && options.length === 1 && options[0] === "";
 
     if (isEmptyApiResponse) {
       return (
         <div
           className="filter-dropdown-menu"
-          onMouseEnter={handleMouseEnter}
-          onMouseLeave={handleMouseLeave}
           style={{ minWidth: "250px", padding: "12px" }}
         >
           <Alert
@@ -154,12 +137,10 @@ const MultiFilterDropdown = ({
             description={
               <div style={{ marginTop: "8px" }}>
                 <div style={{ marginBottom: "8px" }}>
-                  {label === "Branch"
-                    ? "No branches available for the selected Work Location and Region."
-                    : "No regions available for the selected Work Location."}
+                  No options returned for {label} with the current filter combination.
                 </div>
                 <div style={{ fontSize: "12px", color: "#8c8c8c", fontStyle: "italic" }}>
-                  Try selecting a different Work Location or Region.
+                  Try adjusting Region, Branch, or Work Location selections.
                 </div>
               </div>
             }
@@ -175,8 +156,6 @@ const MultiFilterDropdown = ({
     return (
       <div
         className="filter-dropdown-menu"
-        onMouseEnter={handleMouseEnter}
-        onMouseLeave={handleMouseLeave}
       >
         <Select
           value={propOperator}
@@ -222,8 +201,10 @@ const MultiFilterDropdown = ({
 
   const renderButtonContent = () => {
     // For empty/warning/loading states, show normal button but with disabled styling
-    const isDisabledState = isEmptyWarning || isLoading ||
-      ((label === "Region" || label === "Branch") && options.length === 1 && options[0] === "");
+    const isDisabledState =
+      isEmptyWarning ||
+      isLoading ||
+      (isGeoFilter && options.length === 1 && options[0] === "");
 
     return (
       <div
@@ -234,7 +215,7 @@ const MultiFilterDropdown = ({
           cursor: "pointer"
         } : {}}
       >
-        <Space size={4}>
+        <Space size={6} className="filter-button1__inner">
           <span className="filter-label">{label}</span>
           {badgeCount > 0 && (
             <Badge count={badgeCount} className="red-badge" />
@@ -246,12 +227,13 @@ const MultiFilterDropdown = ({
   };
 
   return (
-    <div onMouseEnter={handleMouseEnter} onMouseLeave={handleMouseLeave}>
+    <div>
       <Dropdown
-        overlay={getMenuContent()}
+        dropdownRender={getMenuContent}
         open={open}
+        onOpenChange={setOpen}
         placement="bottomLeft"
-        trigger={["hover"]}
+        trigger={["click"]}
       >
         <div>{renderButtonContent()}</div>
       </Dropdown>
@@ -267,7 +249,7 @@ style.innerHTML = `
   .filter-button1 {
     border: none;
     border-radius: 3px;
-    padding: 5px 9px !important;
+    padding: 6px 14px 6px 10px !important;
     cursor: pointer;
     display: inline-flex;
     align-items: center;
@@ -276,6 +258,18 @@ style.innerHTML = `
     font-weight: 600 !important;
     box-shadow: none !important;
     margin-left: 4px;
+    overflow: visible;
+    flex-shrink: 0;
+    min-height: 30px;
+    max-width: 100%;
+  }
+
+  .filter-button1__inner.ant-space {
+    overflow: visible;
+  }
+
+  .filter-button1 .ant-space-item {
+    overflow: visible;
   }
 
   .filter-button1.active {
@@ -290,16 +284,31 @@ style.innerHTML = `
   .filter-label {
     font-weight: 500;
     color: #000000e0;
+    white-space: nowrap;
+    padding-right: 2px;
   }
 
   .filter-button1.disabled-state .filter-label {
     color: #595959;
   }
 
-  .red-badge .ant-badge-count {
-    background-color: #ff4d4f;
-    color: #fff;
-    box-shadow: none;
+  .filter-button1 .red-badge.ant-badge {
+    overflow: visible;
+    font-size: 12px;
+  }
+
+  .red-badge .ant-badge-count,
+  .filter-button1 .red-badge .ant-badge-count {
+    background-color: #ff4d4f !important;
+    color: #fff !important;
+    box-shadow: none !important;
+    min-width: 20px;
+    height: 20px;
+    line-height: 20px;
+    padding: 0 6px;
+    border-radius: 10px;
+    font-size: 12px;
+    font-weight: 600;
   }
 
   .dropdown-icon {

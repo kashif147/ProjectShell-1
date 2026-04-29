@@ -12,7 +12,6 @@ const screenFilterSlice = createSlice({
     // Mark a screen as having unsaved filter changes
     markScreenChanged: (state, action) => {
       const { screen } = action.payload;
-      debugger
       state.screenFilterChanged[screen.toLowerCase()] = true;
     },
 

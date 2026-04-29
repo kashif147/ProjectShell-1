@@ -24,12 +24,13 @@ export const RoutePermissions = {
   "Refunds": "payments:read",
   "write-offs": "payments:read",
   "Import": "payments:read",
-  "Batches": "payments:read",
   "Reconciliation": "payments:read",
 
   // Correspondence
   "CorrespondenceDashboard": "dashboard:read",
   "InAppNotifications": "notifications:read",
+  "UserNotifications": "notifications:read",
+  "/UserNotifications": "notifications:read",
   "Email": "communication:write",
   "Sms": "communication:write",
   "Notes": "communication:read",
@@ -56,6 +57,7 @@ export const RoutePermissions = {
 
   // Cases & Issues
   "CasesSummary": "portal:read",
+  "IssuesManagementDashboard": "portal:read",
   "CasesById": "portal:read",
   "CasesDetails": "portal:read",
   "ClaimSummary": "portal:read",
@@ -63,6 +65,7 @@ export const RoutePermissions = {
   "ClaimsById": "portal:read",
 
   // Events
+  "EventsDashboard": "events:read",
   "EventsSummary": "events:read",
   "EventDetails": "events:read",
   "Attendees": "portal:read",

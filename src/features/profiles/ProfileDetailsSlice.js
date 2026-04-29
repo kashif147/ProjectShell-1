@@ -28,6 +28,33 @@ export const getProfileDetailsById = createAsyncThunk(
   }
 );
 
+export const updateProfileDetails = createAsyncThunk(
+  "profileDetails/updateProfileDetails",
+  async ({ profileId, body }, { rejectWithValue }) => {
+    try {
+      const token = localStorage.getItem("token");
+      const response = await axios.put(
+        `${process.env.REACT_APP_PROFILE_SERVICE_URL}/profile/${profileId}`,
+        body,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+      if (response.data?.status === "success" && response.data?.data != null) {
+        return response.data.data;
+      }
+      return response.data ?? true;
+    } catch (error) {
+      return rejectWithValue(
+        error.response?.data || error.message || "Failed to update profile"
+      );
+    }
+  }
+);
+
 // -----------------------------------------------------
 // Slice
 // -----------------------------------------------------
@@ -55,7 +82,7 @@ const profileDetailsSlice = createSlice({
       .addCase(getProfileDetailsById.pending, (state) => {
         state.loading = true;
         state.error = null;
-        state.profileDetails = null; // reset before fetch
+        // Keep current profile data during refetch to avoid header flicker/blank state.
       })
       .addCase(getProfileDetailsById.fulfilled, (state, action) => {
         state.loading = false;
