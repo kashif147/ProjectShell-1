@@ -40,8 +40,9 @@ export const ChatbotProvider = ({ children }) => {
     process.env.REACT_APP_CHATBOT_WEBHOOK_URL ||
     "http://localhost:5678/webhook/5e3aba19-8555-4071-ab52-5120492708a7/chat";
   const CHATBOT_USE_WEBHOOK =
-    String(process.env.REACT_APP_CHATBOT_USE_WEBHOOK || "true").toLowerCase() ===
-    "true";
+    String(
+      process.env.REACT_APP_CHATBOT_USE_WEBHOOK || "true",
+    ).toLowerCase() === "true";
   const [chatVisible, setChatVisible] = useState(false);
   const [chatMinimized, setChatMinimized] = useState(false);
   const [chatMessages, setChatMessages] = useState([
@@ -333,7 +334,7 @@ export const ChatbotProvider = ({ children }) => {
       }**:\n\n**Available Features:**\n${context.pageContext.capabilities
         .map((cap) => `• ${cap}`)
         .join("\n")}\n\n**Data Types:** ${context.pageContext.dataTypes.join(
-        ", "
+        ", ",
       )}\n\n**Try asking:**\n• "How do I filter the data?"\n• "Show me the export options"\n• "What insights can I get?"\n• "How do I analyze trends?"`;
     }
 
@@ -362,12 +363,12 @@ export const ChatbotProvider = ({ children }) => {
       }**:\n\n**Available Features:**\n${context.pageContext.capabilities
         .map((cap) => `• ${cap}`)
         .join("\n")}\n\n**Data Types:** ${context.pageContext.dataTypes.join(
-        ", "
+        ", ",
       )}\n\n**Try asking:**\n• "How do I create a new ${context.pageContext.name
         .toLowerCase()
         .replace(
           " management",
-          ""
+          "",
         )}?"\n• "What are the current settings?"\n• "How do I manage permissions?"`;
     }
 
@@ -400,7 +401,7 @@ export const ChatbotProvider = ({ children }) => {
       }**:\n\n**Available Features:**\n${context.pageContext.capabilities
         .map((cap) => `• ${cap}`)
         .join(
-          "\n"
+          "\n",
         )}\n\n**Navigation:**\n• Use the sidebar to access different modules\n• Click on cards or widgets for detailed views\n• Check notifications for important updates\n\n**Try asking:**\n• "How do I navigate to reports?"\n• "What modules are available?"\n• "Show me the system overview"`;
     }
 
@@ -423,7 +424,7 @@ export const ChatbotProvider = ({ children }) => {
       }**:\n\n**Available Features:**\n${context.pageContext.capabilities
         .map((cap) => `• ${cap}`)
         .join("\n")}\n\n**Data Types:** ${context.pageContext.dataTypes.join(
-        ", "
+        ", ",
       )}\n\n**Try asking:**\n• "How do I process a payment?"\n• "Show me outstanding balances"\n• "Generate a financial report"`;
     }
 
@@ -746,7 +747,8 @@ const GlobalChatbot = () => {
                               message.type === "user"
                                 ? "linear-gradient(135deg, #215e97 0%, #1a4d7a 100%)"
                                 : "linear-gradient(135deg, #e2e8f0 0%, #cbd5e1 100%)",
-                            color: message.type === "user" ? "white" : "#374151",
+                            color:
+                              message.type === "user" ? "white" : "#374151",
                             flexShrink: 0,
                           }}
                         >
@@ -759,7 +761,8 @@ const GlobalChatbot = () => {
                               message.type === "user"
                                 ? "linear-gradient(135deg, #215e97 0%, #1a4d7a 100%)"
                                 : "white",
-                            color: message.type === "user" ? "white" : "#374151",
+                            color:
+                              message.type === "user" ? "white" : "#374151",
                             padding: "12px 16px",
                             borderRadius: "16px",
                             border:
@@ -812,7 +815,7 @@ const GlobalChatbot = () => {
                         boxShadow: "0 1px 3px rgba(0, 0, 0, 0.1)",
                       }}
                     >
-                      <Spin size="small" /> Analyzing page context...
+                      <Spin size="small" /> Thinking...
                     </div>
                   </div>
                 )}

@@ -5,8 +5,9 @@ import { RightOutlined } from "@ant-design/icons";
 import { LuRefreshCw } from "react-icons/lu";
 import UnifiedPagination from "../common/UnifiedPagination";
 import { formatDateDdMmYyyy } from "../../utils/Utilities";
+import { SOFT_BATCH_STATUS_TAGS } from "../../utils/softTagStyles";
 
-const STACK_ROW1_H = 26;
+const STACK_ROW1_H = 24;
 const stackRow1 = {
   height: STACK_ROW1_H,
   minHeight: STACK_ROW1_H,
@@ -50,7 +51,7 @@ function CancellationBatchesTable({
         ellipsis: true,
         sorter: () => 0,
         sortOrder:
-          sortColumnKey === "batchName" ? sortOrder ?? undefined : undefined,
+          sortColumnKey === "batchName" ? (sortOrder ?? undefined) : undefined,
         onCell: () => ({
           className: "reminder-batches-table__cell-stack",
         }),
@@ -91,13 +92,12 @@ function CancellationBatchesTable({
             <div>
               <div style={stackRow1}>
                 <Tag
-                  color={completed ? "success" : "warning"}
-                  style={{
-                    margin: 0,
-                    fontSize: 11,
-                    lineHeight: "18px",
-                    padding: "0 6px",
-                  }}
+                  bordered={false}
+                  style={
+                    completed
+                      ? SOFT_BATCH_STATUS_TAGS.completed
+                      : SOFT_BATCH_STATUS_TAGS.pending
+                  }
                 >
                   {completed ? "Completed" : "Pending"}
                 </Tag>
@@ -123,7 +123,9 @@ function CancellationBatchesTable({
         width: 168,
         sorter: () => 0,
         sortOrder:
-          sortColumnKey === "createdDate" ? sortOrder ?? undefined : undefined,
+          sortColumnKey === "createdDate"
+            ? (sortOrder ?? undefined)
+            : undefined,
         onCell: () => ({
           className: "reminder-batches-table__cell-stack",
         }),
@@ -157,7 +159,7 @@ function CancellationBatchesTable({
         width: 200,
         sorter: () => 0,
         sortOrder:
-          sortColumnKey === "batchTotal" ? sortOrder ?? undefined : undefined,
+          sortColumnKey === "batchTotal" ? (sortOrder ?? undefined) : undefined,
         onCell: () => ({
           className: "reminder-batches-table__cell-stack",
         }),
@@ -208,7 +210,7 @@ function CancellationBatchesTable({
         sorter: () => 0,
         sortOrder:
           sortColumnKey === "reminder3Totals"
-            ? sortOrder ?? undefined
+            ? (sortOrder ?? undefined)
             : undefined,
         onCell: () => ({
           className: "reminder-batches-table__cell-stack",

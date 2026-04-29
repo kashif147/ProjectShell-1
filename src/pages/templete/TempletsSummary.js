@@ -13,6 +13,7 @@ import MyAlert from "../../component/common/MyAlert";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { getUnifiedPaginationConfig } from "../../component/common/UnifiedPagination";
+import { communicationServicePath } from "../../utils/communicationServiceUrl";
 
 dayjs.extend(utc);
 dayjs.extend(timezone);
@@ -39,7 +40,7 @@ const TempletsSummary = () => {
                 return;
             }
 
-            const response = await axios(`${process.env.REACT_APP_CUMM}/templates/${templateId}`, {
+            const response = await axios(`${communicationServicePath(`templates/${templateId}`)}`, {
                 method: 'DELETE',
                 headers: {
                     'Authorization': `Bearer ${token}`,

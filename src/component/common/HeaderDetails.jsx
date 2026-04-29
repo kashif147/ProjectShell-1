@@ -89,6 +89,7 @@ import { fetchBatchesByType } from "../../features/profiles/batchMemberSlice";
 import CreateCasesDrawer from "../cases/CreateCasesDrawer";
 import CreateEventDrawer from "../event/CreateEventDrawer";
 import CreateAttendeeDrawer from "../event/CreateAttendeeDrawer";
+import CampaignDrawer from "../campaign/CampaignDrawer";
 import { useCasesEdit } from "../../context/CasesEditContext";
 import { useReminderBatchesFilter } from "../../context/ReminderBatchesFilterContext";
 import { useCancellationBatchesFilter } from "../../context/CancellationBatchesFilterContext";
@@ -150,6 +151,7 @@ function HeaderDetails({
   const [casesDrawerOpen, setCasesDrawerOpen] = useState(false);
   const [eventDrawerOpen, setEventDrawerOpen] = useState(false);
   const [attendeeDrawerOpen, setAttendeeDrawerOpen] = useState(false);
+  const [campaignDrawerOpen, setCampaignDrawerOpen] = useState(false);
   const refundFormRef = useRef(null);
 
   const handleDateChange = (val) => {
@@ -317,7 +319,32 @@ function HeaderDetails({
       label: "Generate Bulk NFC Tag",
       onClick: (e) => handleAction("Generate Bulk NFC Tag", e),
     },
-    { label: "Bulk Email", onClick: (e) => handleAction("Bulk Email", e) },
+    {
+      label: "Create Email Campaign",
+      onClick: () => {
+        if (nav !== "/Summary") {
+          handleAction("Bulk Email");
+          return;
+        }
+        if (!hasPermission("communication:write")) {
+          MyAlert(
+            "warning",
+            "Permission required",
+            "You need communication:write to create email campaigns.",
+          );
+          return;
+        }
+        if (!selectedIds || selectedIds.length === 0) {
+          MyAlert(
+            "warning",
+            "Selection required",
+            "Select one or more profiles in the grid first.",
+          );
+          return;
+        }
+        setCampaignDrawerOpen(true);
+      },
+    },
     { label: "Bulk SMS", onClick: (e) => handleAction("Bulk SMS", e) },
     {
       label: `Assign ${nav === "/branch" ? "Branch Manager" : nav === "/region" ? "Region Officer" : "IRO"}`,
@@ -879,6 +906,11 @@ function HeaderDetails({
     navigate(-1);
   };
 
+  /** Refetch detail views (profile, tabs) without full page reload — listeners in AppTabs / tab panels */
+  const refreshCurrentView = () => {
+    window.dispatchEvent(new CustomEvent("projectshell:details-refresh"));
+  };
+
   const handleChange1 = (info) => {
     if (info.file.status === "uploading") {
       setLoading(true);
@@ -1003,6 +1035,15 @@ function HeaderDetails({
                     Create
                   </Button>
                 )}
+                <Button
+                  type="default"
+                  className="me-1 gray-btn butn"
+                  icon={<ReloadOutlined />}
+                  onClick={refreshCurrentView}
+                  aria-label="Refresh current view"
+                >
+                  Refresh
+                </Button>
                 <Button onClick={goBack} className="me-1 gray-btn butn">
                   Return to summary
                 </Button>
@@ -1031,7 +1072,19 @@ function HeaderDetails({
                   {(() => {
                     const total = gridData?.length ?? 0;
                     if (!total) return "—";
-                    if (navigationRowIndex < 0) return `— of ${total}`;
+                    if (navigationRowIndex < 0) {
+                      const openedWithoutSummary = [
+                        "/Details",
+                        "/Doucmnets",
+                        "/ClaimsById",
+                        "/AddClaims",
+                        "/CasesById",
+                        "/AddNewProfile",
+                        "/AproveMembersip",
+                        "/ChangeCatById",
+                      ].includes(location?.pathname);
+                      return openedWithoutSummary ? "1 - 1" : `— of ${total}`;
+                    }
                     return `${navigationRowIndex + 1} of ${total}`;
                   })()}
                 </p>
@@ -2295,6 +2348,21 @@ function HeaderDetails({
           }}
         />
       </MyDrawer> */}
+      {nav === "/Summary" ? (
+        <CampaignDrawer
+          open={campaignDrawerOpen}
+          onClose={(ok) => {
+            setCampaignDrawerOpen(false);
+            if (ok) {
+              setSelectedIds([]);
+            }
+          }}
+          selectedProfileIds={(selectedIds || []).map(String)}
+          previewProfileId={
+            selectedIds?.[0] != null ? String(selectedIds[0]) : null
+          }
+        />
+      ) : null}
     </div>
   );
 }
