@@ -100,7 +100,6 @@ function SimpleBatchMemberSummary() {
   const { data: apiData, loading, error } = useSelector(
     (state) => state.cornMarketBatchById
   );
-  debugger
   const { batchName, batchId, search } = location.state || {};
   const [activeKey, setActiveKey] = useState("1");
 

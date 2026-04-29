@@ -516,6 +516,27 @@ const CreateBatchPayment = forwardRef((props, ref) => {
       return label !== "demand draft" && value !== "demand draft";
     });
 
+  const resolvedBatchType = (
+    formValues.batchType ||
+    editSource?.type ||
+    ""
+  )
+    .toString()
+    .trim()
+    .toLowerCase();
+  const isFinanceDedOrStandingType =
+    resolvedBatchType === "deduction" ||
+    resolvedBatchType === "standing order";
+  const isStandingOrDeductionsForm =
+    location.pathname === "/StandingOrders" ||
+    location.pathname === "/Deductions" ||
+    (location.pathname.startsWith("/BatchMemberSummary") &&
+      isFinanceDedOrStandingType);
+
+  const isStandingOrderContext =
+    location.pathname === "/StandingOrders" ||
+    resolvedBatchType === "standing order";
+
   return (
     <div className="create-batch-container drwer-bg-clr">
       <div className="header">
@@ -532,95 +553,206 @@ const CreateBatchPayment = forwardRef((props, ref) => {
               Batch Details
             </Title>
             <Form layout="vertical" form={form} requiredMark={false}>
-              <div className="d-flex w-100" style={{ gap: "5px" }}>
-                <div className="w-50">
+              {isStandingOrDeductionsForm ? (
+                <>
+                  <Row
+                    gutter={[12, 0]}
+                    align="bottom"
+                    className="create-batch-type-month-row"
+                  >
+                    <Col xs={24} sm={12} style={{ minWidth: 0 }}>
+                      <CustomSelect
+                        label="Batch Type"
+                        name="batchType"
+                        required
+                        disabled={isSpecialPath}
+                        hasError={!!formErrors.batchType}
+                        errorMessage="Please select batch type"
+                        options={batchTypeOptions}
+                        value={formValues.batchType}
+                        onChange={(e) => setField("batchType", e.target.value)}
+                        isMarginBtm={false}
+                      />
+                    </Col>
+                    <Col xs={24} sm={12} style={{ minWidth: 0 }}>
+                      <MyDatePicker
+                        label="Batch Month"
+                        name="batchDate"
+                        required
+                        hasError={!!formErrors.batchDate}
+                        errorMessage="Please select batch month"
+                        value={formValues.batchDate}
+                        onChange={(dateString) =>
+                          setField("batchDate", dateString)
+                        }
+                        picker="month"
+                        format="MM/YYYY"
+                        isMarginBtm={false}
+                      />
+                    </Col>
+                  </Row>
+                  <div className="w-100 mb-3">
+                    <CustomSelect
+                      label={isStandingOrderContext ? "Bank" : "Work Location"}
+                      name="workLocation"
+                      required
+                      hasError={!!formErrors.workLocation}
+                      errorMessage={
+                        isStandingOrderContext
+                          ? "Please select bank"
+                          : "Please select work location"
+                      }
+                      options={
+                        isStandingOrderContext
+                          ? branchOptions
+                          : workLocationOptions
+                      }
+                      value={formValues.workLocation}
+                      onChange={(e) => setField("workLocation", e.target.value)}
+                    />
+                  </div>
+                  <div className="w-100">
+                    <MyInput
+                      label="Batch Name"
+                      name="description"
+                      required
+                      hasError={!!formErrors.description}
+                      errorMessage="Please enter batch name"
+                      value={formValues.description}
+                      onChange={(e) => setField("description", e.target.value)}
+                    />
+                  </div>
+                  <MyInput
+                    label="Batch Ref No."
+                    name="batchRef"
+                    required
+                    hasError={!!formErrors.batchRef}
+                    errorMessage="Please enter batch reference number"
+                    value={formValues.batchRef}
+                    onChange={(e) => setField("batchRef", e.target.value)}
+                  />
+                  <div className="w-100">
+                    <MyDatePicker
+                      label="Payment Date"
+                      name="paymentDate"
+                      required
+                      hasError={!!formErrors.paymentDate}
+                      errorMessage="Please select payment date"
+                      value={formValues.paymentDate}
+                      onChange={(dateString) =>
+                        setField("paymentDate", dateString)
+                      }
+                      format="DD/MM/YYYY"
+                    />
+                  </div>
+                </>
+              ) : (
+                <>
+                  <Row
+                    gutter={[12, 0]}
+                    align="bottom"
+                    className="create-batch-type-month-row"
+                  >
+                    <Col xs={24} sm={12} style={{ minWidth: 0 }}>
+                      <CustomSelect
+                        label="Batch Type"
+                        name="batchType"
+                        required
+                        disabled={isSpecialPath} // Disable if special path
+                        hasError={!!formErrors.batchType}
+                        errorMessage="Please select batch type"
+                        options={batchTypeOptions}
+                        value={formValues.batchType}
+                        onChange={(e) => setField("batchType", e.target.value)}
+                        isMarginBtm={false}
+                      />
+                    </Col>
+                    <Col xs={24} sm={12} style={{ minWidth: 0 }}>
+                      <MyDatePicker
+                        label="Batch Date"
+                        name="batchDate"
+                        required
+                        hasError={!!formErrors.batchDate}
+                        errorMessage="Please select payment date"
+                        value={formValues.batchDate}
+                        onChange={(dateString) =>
+                          setField("batchDate", dateString)
+                        }
+                        picker="month"
+                        format="MM/YYYY"
+                        isMarginBtm={false}
+                      />
+                    </Col>
+                  </Row>
+                  <div className="w-100">
+                    <MyDatePicker
+                      label="Payment Date"
+                      name="paymentDate"
+                      required
+                      hasError={!!formErrors.paymentDate}
+                      errorMessage="Please select payment date"
+                      value={formValues.paymentDate}
+                      onChange={(dateString) =>
+                        setField("paymentDate", dateString)
+                      }
+                      format="DD/MM/YYYY"
+                    />
+                  </div>
+                </>
+              )}
+
+              {!isStandingOrDeductionsForm && (
+                <div className="w-100 mb-3">
                   <CustomSelect
-                    label="Batch Type"
-                    name="batchType"
+                    label={
+                      location.pathname === "/StandingOrders" ? "Bank" : "Work Location"
+                    }
+                    name="workLocation"
                     required
-                    disabled={isSpecialPath} // Disable if special path
-                    hasError={!!formErrors.batchType}
-                    errorMessage="Please select batch type"
-                    options={batchTypeOptions}
-                    value={formValues.batchType}
-                    onChange={(e) => setField("batchType", e.target.value)}
+                    hasError={!!formErrors.workLocation}
+                    errorMessage={`Please select ${location.pathname === "/StandingOrders" ? "bank" : "work location"}`}
+                    options={
+                      location.pathname === "/StandingOrders"
+                        ? branchOptions
+                        : workLocationOptions
+                    }
+                    value={formValues.workLocation}
+                    onChange={(e) => setField("workLocation", e.target.value)}
                   />
                 </div>
-                <div className="w-50">
-                  <MyDatePicker
-                    label="Batch Date"
-                    name="batchDate"
-                    required
-                    hasError={!!formErrors.batchDate}
-                    errorMessage="Please select payment date"
-                    value={formValues.batchDate}
-                    onChange={(dateString) => setField("batchDate", dateString)}
-                    picker="month"
-                    format="MM/YYYY"
-                  />
-                </div>
-              </div>
-              <div className="w-100">
-                <MyDatePicker
-                  label="Payment Date"
-                  name="paymentDate"
+              )}
+
+              {!isStandingOrDeductionsForm && (
+                <MyInput
+                  label="Batch Ref No."
+                  name="batchRef"
                   required
-                  hasError={!!formErrors.paymentDate}
-                  errorMessage="Please select payment date"
-                  value={formValues.paymentDate}
-                  onChange={(dateString) => setField("paymentDate", dateString)}
-                  format="DD/MM/YYYY"
+                  hasError={!!formErrors.batchRef}
+                  errorMessage="Please enter batch reference number"
+                  value={formValues.batchRef}
+                  onChange={(e) => setField("batchRef", e.target.value)}
                 />
-              </div>
+              )}
 
-              <div className="w-100 mb-3">
-                <CustomSelect
-                  label={
-                    location.pathname === "/StandingOrders"
-                      ? "Bank Name"
-                      : "Work Location"
-                  }
-                  name="workLocation"
+              {!isStandingOrDeductionsForm && (
+                <MyInput
+                  label="Description"
+                  name="description"
                   required
-                  hasError={!!formErrors.workLocation}
-                  errorMessage={`Please select ${location.pathname === "/StandingOrders" ? "bank name" : "work location"}`}
-                  options={
-                    location.pathname === "/StandingOrders"
-                      ? branchOptions
-                      : workLocationOptions
-                  }
-                  value={formValues.workLocation}
-                  onChange={(e) => setField("workLocation", e.target.value)}
+                  hasError={!!formErrors.description}
+                  errorMessage="Please enter description"
+                  type="textarea"
+                  rows={3}
+                  value={formValues.description}
+                  onChange={(e) => setField("description", e.target.value)}
                 />
-              </div>
-
-              <MyInput
-                label="Batch Ref No."
-                name="batchRef"
-                required
-                hasError={!!formErrors.batchRef}
-                errorMessage="Please enter batch reference number"
-                value={formValues.batchRef}
-                onChange={(e) => setField("batchRef", e.target.value)}
-              />
-
-              <MyInput
-                label="Description"
-                name="description"
-                required
-                hasError={!!formErrors.description}
-                errorMessage="Please enter description"
-                type="textarea"
-                rows={3}
-                value={formValues.description}
-                onChange={(e) => setField("description", e.target.value)}
-              />
+              )}
 
               <MyInput
                 label="Comments"
                 name="comments"
                 type="textarea"
-                rows={3}
+                rows={2}
                 value={formValues.comments}
                 onChange={(e) => setField("comments", e.target.value)}
               />

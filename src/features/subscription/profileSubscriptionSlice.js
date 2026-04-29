@@ -55,9 +55,13 @@ export const getSubscriptionByProfileId = createAsyncThunk(
   "profileSubscription/getByProfileId",
   async ({ profileId, isCurrent = "true" }, { rejectWithValue }) => {
     try {
+      const safeProfileId = String(profileId ?? "").trim();
+      if (!safeProfileId || safeProfileId.toLowerCase() === "undefined") {
+        return rejectWithValue("Invalid profileId");
+      }
       const token = localStorage.getItem("token");
       const res = await axios.get(
-        `${getSubscriptionServiceBaseUrl()}/subscriptions?profileId=${profileId}&isCurrent=${isCurrent}`,
+        `${getSubscriptionServiceBaseUrl()}/subscriptions?profileId=${safeProfileId}&isCurrent=${isCurrent}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,

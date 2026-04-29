@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useMemo, useEffect, useCallback } from "react";
+import { createContext, useContext, useState, useMemo, useEffect, useCallback, useRef } from "react";
 import { useLocation } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
 import { getAllLookups } from "../features/LookupsSlice";
@@ -64,6 +64,8 @@ export const FilterProvider = ({ children }) => {
     }
   }, []);
 
+  const screenFilterStatesRef = useRef({});
+
   // 🔹 Store filter states for each screen
   const [screenFilterStates, setScreenFilterStates] = useState({
     Applications: {
@@ -112,11 +114,36 @@ export const FilterProvider = ({ children }) => {
   const [activePage, setActivePage] = useState("Applications");
   const [visibleFilters, setVisibleFilters] = useState([]);
   const [filtersState, setFiltersState] = useState({});
+  /** Ref mirrors filtersState for save/serialize so payloads always use the latest in-memory values. */
+  const filtersStateRef = useRef({});
+  /**
+   * True after the user changes any filter or reset; false after a server/template apply.
+   * SaveViewMenu uses this to avoid stomping in-progress edits when getViewById completes late.
+   */
+  const userOverrodeTemplateFiltersRef = useRef(false);
+  const activePageRef = useRef("Applications");
   const [membershipDashboardApplyTick, setMembershipDashboardApplyTick] =
     useState(0);
 
   const location = useLocation();
   const activeScreenName = location?.pathname;
+
+  useEffect(() => {
+    filtersStateRef.current = filtersState;
+  }, [filtersState]);
+
+  useEffect(() => {
+    activePageRef.current = activePage;
+  }, [activePage]);
+
+  useEffect(() => {
+    screenFilterStatesRef.current = screenFilterStates;
+  }, [screenFilterStates]);
+
+  /** Always use live filter state. Falling back to `screenFilterStates` when live was empty caused stale template values and broken Save / dirty behavior. */
+  const getFiltersStateForSave = useCallback(() => {
+    return { ...(filtersStateRef.current || {}) };
+  }, []);
 
   // 🔹 Fetch lookups and categories when missing (avoids duplicating App.js bootstrap)
   useEffect(() => {
@@ -399,24 +426,25 @@ export const FilterProvider = ({ children }) => {
     }
   }, [filtersState]);
 
-  // 🔹 Helper to get screen from path
+  // 🔹 Helper to get screen from path (keys lowercased so /Applications and /applications match)
   const getScreenFromPath = () => {
     const pathMap = {
-      '/applications': 'Applications',
-      '/Summary': 'Profile',
-      '/membership': 'Membership',
+      "/applications": "Applications",
+      "/summary": "Profile",
+      "/membership": "Membership",
       "/members": "Members",
-      "/onlinePayment": "OnlinePayment",
-      "/CommunicationBatchDetail": "Communication",
-      "/CasesSummary": "Cases",
-      "/EventsSummary": "Events",
-      "/EventsDashboard": "Events",
-      "/CorrespondenceDashboard": "Communication",
-      "/IssuesManagementDashboard": "Cases",
-      "/Attendees": "Attendees",
-      "/MembershipDashboard": "MembershipDashboard",
+      "/onlinepayment": "OnlinePayment",
+      "/communicationbatchdetail": "Communication",
+      "/casessummary": "Cases",
+      "/eventssummary": "Events",
+      "/eventsdashboard": "Events",
+      "/correspondencedashboard": "Communication",
+      "/issuesmanagementdashboard": "Cases",
+      "/attendees": "Attendees",
+      "/membershipdashboard": "MembershipDashboard",
     };
-    return pathMap[activeScreenName] || 'Applications';
+    const key = (activeScreenName || "").toLowerCase();
+    return pathMap[key] || "Applications";
   };
 
   const activeScreen = getScreenFromPath();
@@ -490,7 +518,7 @@ export const FilterProvider = ({ children }) => {
         "Cancellation Flag",
       ],
       Members: [
-        "Subscription Status",
+        "Membership Status",
         "Membership Category",
         "Payment Type",
         "Payment Frequency",
@@ -573,7 +601,7 @@ export const FilterProvider = ({ children }) => {
     Applications: ["Application Status", "Membership Category"],
     Profile: ["Email", "Membership Category"],
     Membership: ["Membership Status", "Membership Category"],
-    Members: ["Subscription Status", "Membership Category"],
+    Members: ["Membership Status", "Membership Category"],
     OnlinePayment: ["Membership Status", "Payment Status"],
     Communication: ["Grade", "Work Location"],
     Cases: ["Incident Date", "Case Type", "Stakeholder", "Priority"],
@@ -689,7 +717,7 @@ export const FilterProvider = ({ children }) => {
       }
     },
     Members: {
-      "Subscription Status": {
+      "Membership Status": {
         operator: "==",
         selectedValues: []
       },
@@ -1002,7 +1030,6 @@ export const FilterProvider = ({ children }) => {
       // 🔹 CUSTOM FILTERS
       "Application Status": ["", "In-Progress", "Approved", "Rejected", "Submitted"],
       "Membership Status": ["", "Active", "Inactive", "Pending", "Cancelled"],
-      "Subscription Status": ["", "Active", "Cancelled", "Expired", "Pending"],
 
       // 🔹 CATEGORY FILTER
       "Membership Category": getCategoryOptions(),
@@ -1120,12 +1147,13 @@ export const FilterProvider = ({ children }) => {
   };
 
   const resetFilters = () => {
-    console.log("Resetting filters for:", activePage);
     const resetVisibleFilters = getDefaultVisibleFilters(activePage);
     const resetFilterValues = defaultFilterValues[activePage] || {};
+    userOverrodeTemplateFiltersRef.current = false;
 
     setVisibleFilters(resetVisibleFilters);
     setFiltersState(resetFilterValues);
+    filtersStateRef.current = resetFilterValues;
 
     setScreenFilterStates(prev => ({
       ...prev,
@@ -1144,12 +1172,6 @@ export const FilterProvider = ({ children }) => {
   const updateFilter = (filter, operator, selectedValues, customFiltersState = null) => {
     const currentState = customFiltersState || filtersState;
 
-    console.log(`🎯 Updating filter "${filter}":`, {
-      operator,
-      selectedValues,
-      currentFilters: currentState
-    });
-
     // 🛡️ Sanitize selectedValues (strictly non-empty strings)
     const sanitize = (values) => (values || [])
       .map(v => String(v))
@@ -1167,7 +1189,9 @@ export const FilterProvider = ({ children }) => {
 
     // Only update state if we're not using a custom filters state
     if (!customFiltersState) {
+      userOverrodeTemplateFiltersRef.current = true;
       setFiltersState(newFilterState);
+      filtersStateRef.current = newFilterState;
 
       setScreenFilterStates(prev => ({
         ...prev,
@@ -1180,6 +1204,14 @@ export const FilterProvider = ({ children }) => {
 
     return newFilterState;
   };
+
+  const acknowledgeUserChoseNewTemplate = useCallback(() => {
+    userOverrodeTemplateFiltersRef.current = false;
+  }, []);
+
+  const hasUserOverriddenTemplateFilters = useCallback(() => {
+    return userOverrodeTemplateFiltersRef.current;
+  }, []);
 
   // 🔹 Individual update functions for backward compatibility
   const updateFilterValues = (filter, values) => {
@@ -1213,8 +1245,18 @@ export const FilterProvider = ({ children }) => {
       .map(v => String(v))
       .filter(v => v !== null && v !== undefined && v.trim() !== "");
 
-    // We merge with default values for the current screen to ensure consistency
-    const baseFilters = defaultFilterValues[activePage] || {};
+    // Use structural defaults with all selections empty — not product defaults like
+    // "Submitted" for Application Status. Merging with full `defaultFilterValues` here
+    // re-injected those defaults when the server returned an empty `filters: {}` and
+    // the next save persisted them, undoing a cleared template.
+    const baseFiltersRaw = defaultFilterValues[activePage] || {};
+    const baseFilters = {};
+    Object.keys(baseFiltersRaw).forEach((key) => {
+      baseFilters[key] = {
+        operator: baseFiltersRaw[key]?.operator || "==",
+        selectedValues: [],
+      };
+    });
 
     // Sanitize incoming template filters
     const sanitizedTemplateFilters = {};
@@ -1228,6 +1270,7 @@ export const FilterProvider = ({ children }) => {
     const newFiltersState = { ...baseFilters, ...sanitizedTemplateFilters };
 
     setFiltersState(newFiltersState);
+    filtersStateRef.current = newFiltersState;
     setScreenFilterStates(prev => ({
       ...prev,
       [activePage]: {
@@ -1239,6 +1282,8 @@ export const FilterProvider = ({ children }) => {
     // Also ensure all filters in the template are visible
     const newVisible = [...new Set([...visibleFilters, ...Object.keys(templateFilters)])];
     setVisibleFilters(newVisible);
+
+    userOverrodeTemplateFiltersRef.current = false;
   };
 
   return (
@@ -1257,6 +1302,9 @@ export const FilterProvider = ({ children }) => {
         updateFilterValues,
         updateFilterOperator,
         applyTemplateFilters,
+        acknowledgeUserChoseNewTemplate,
+        hasUserOverriddenTemplateFilters,
+        getFiltersStateForSave,
         COMMON_FILTERS,
         getDefaultVisibleFilters,
         screenSpecificDefaultFilters,

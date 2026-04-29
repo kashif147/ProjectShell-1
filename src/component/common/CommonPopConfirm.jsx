@@ -4,6 +4,7 @@ import { Popconfirm, Button } from 'antd';
 
 const CommonPopConfirm = ({
     title = "Are you sure?",
+    description,
     onConfirm,
     onCancel,
     children,
@@ -14,6 +15,7 @@ const CommonPopConfirm = ({
     return (
         <Popconfirm
             title={title}
+            description={description}
             onConfirm={onConfirm}
             onCancel={onCancel}
             okText={okText}

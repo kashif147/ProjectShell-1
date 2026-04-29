@@ -307,23 +307,40 @@ export function formatMobileNumber(value) {
   }
 
   if (!cleaned.startsWith("+")) {
-    return value;
+    const digitsOnly = cleaned.replace(/\D/g, "");
+    if (!digitsOnly) return value;
+    cleaned = `+${digitsOnly}`;
   }
 
   const digits = cleaned.slice(1).replace(/\D/g, "");
   if (!digits) return cleaned;
 
   let countryLen = 0;
-  for (let i = 1; i <= 4; i += 1) {
-    const localLen = digits.length - i;
-    if (localLen === 9 || localLen === 10) {
-      countryLen = i;
-      break;
-    }
+  // We support 2- or 3-digit country codes only.
+  // If both can fit, use known prefix heuristics first.
+  const fit2 = (() => {
+    const localLen = digits.length - 2;
+    return localLen === 9 || localLen === 10;
+  })();
+  const fit3 = (() => {
+    const localLen = digits.length - 3;
+    return localLen === 9 || localLen === 10;
+  })();
+
+  if (fit2 && fit3) {
+    // Keep known 3-digit country prefixes, else default to 2-digit split.
+    countryLen = digits.startsWith("353") ? 3 : 2;
+  } else if (fit3) {
+    countryLen = 3;
+  } else if (fit2) {
+    countryLen = 2;
   }
 
   if (!countryLen) {
-    countryLen = Math.min(3, Math.max(1, digits.length - 1));
+    countryLen = digits.length >= 12 ? 3 : 2;
+    if (countryLen >= digits.length) {
+      countryLen = Math.max(1, digits.length - 1);
+    }
   }
 
   const countryCode = `+${digits.slice(0, countryLen)}`;

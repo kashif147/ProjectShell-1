@@ -16,12 +16,11 @@ import { useLocation } from "react-router-dom";
 function MembershipApplication() {
   const dispatch = useDispatch();
   const { filtersState } = useFilters();
-  const { applications, loading: applicationsLoading, isInitialized } = useSelector(
+  const { applications, loading: applicationsLoading, isInitialized, currentTemplateId } = useSelector(
     (state) => state.applicationWithFilter
   );
   const { selectedIds, setSelectedIds } = useSelectedIds();
   const location = useLocation();
-  const { currentTemplateId } = useSelector((state) => state.applicationWithFilter);
   const { columns } = useTableColumns();
   const { loading: templatesLoading } = useSelector((state) => state.templetefiltrsclumnapi);
   const [formattedApplications, setFormattedApplications] = useState([]);
@@ -30,15 +29,16 @@ function MembershipApplication() {
   console.log(activeTemplateId, "activeTemplateId activeTemplateId");
 
   useEffect(() => {
-    // Only fetch if initial view determination is complete and templates are NOT currently loading
-    if (!activeTemplateId) return;
-
-    dispatch(getApplicationsWithFilter({
-      templateId: activeTemplateId || "",
-      page: 1,
-      limit: 10
-    }));
-  }, [activeTemplateId]);
+    if (!isInitialized) return;
+    const templateId = activeTemplateId || currentTemplateId || "";
+    dispatch(
+      getApplicationsWithFilter({
+        templateId,
+        page: 1,
+        limit: 10,
+      }),
+    );
+  }, [activeTemplateId, currentTemplateId, isInitialized, dispatch]);
 
   useEffect(() => {
     if (applications && applications.length > 0) {
@@ -79,7 +79,9 @@ function MembershipApplication() {
   if (!isInitialized || templatesLoading) {
     return (
       <div style={{ display: "flex", justifyContent: "center", alignItems: "center", height: "100%", padding: "50px" }}>
-        <Spin tip="Initializing Template..." />
+        <Spin tip="Initializing Template...">
+          <div style={{ minHeight: 200, width: "100%" }} />
+        </Spin>
       </div>
     );
   }

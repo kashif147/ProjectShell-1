@@ -254,10 +254,10 @@ function DateRang({ label, selectedValues = [], operator = "between", onApply })
 
   return (
     <Dropdown
-      overlay={menu}
+      dropdownRender={() => menu}
       trigger={["click"]}
-      visible={open}
-      onVisibleChange={setOpen}
+      open={open}
+      onOpenChange={setOpen}
       placement="bottomLeft"
     >
       <div className={`filter-button1 ${badgeCount > 0 ? "active" : ""}`}>

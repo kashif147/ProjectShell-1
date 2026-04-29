@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { Dropdown, Checkbox, Badge, Space, Select, Divider, Button, Alert } from "antd";
 import { DownOutlined } from "@ant-design/icons";
 
@@ -18,7 +18,6 @@ const MultiFilterDropdown = ({
 }) => {
   const [open, setOpen] = useState(false);
   const [tempSelectedValues, setTempSelectedValues] = useState(selectedValues);
-  const hoverTimer = useRef(null);
 
   // Sync tempSelectedValues when prop selectedValues changes (e.g. on load or reset)
   useEffect(() => {
@@ -71,18 +70,6 @@ const MultiFilterDropdown = ({
     onApply?.({ label, operator: value, selectedValues: tempSelectedValues });
   };
 
-  // 🧭 Hover behavior
-  const handleMouseEnter = () => {
-    clearTimeout(hoverTimer.current);
-    setOpen(true);
-  };
-
-  const handleMouseLeave = () => {
-    hoverTimer.current = setTimeout(() => {
-      setOpen(false);
-    }, 150);
-  };
-
   const badgeCount = Array.isArray(tempSelectedValues) ? tempSelectedValues.length : 0;
 
   const isGeoFilter =
@@ -94,8 +81,6 @@ const MultiFilterDropdown = ({
       return (
         <div
           className="filter-dropdown-menu"
-          onMouseEnter={handleMouseEnter}
-          onMouseLeave={handleMouseLeave}
           style={{ minWidth: "250px", padding: "12px" }}
         >
           <Alert
@@ -124,8 +109,6 @@ const MultiFilterDropdown = ({
       return (
         <div
           className="filter-dropdown-menu"
-          onMouseEnter={handleMouseEnter}
-          onMouseLeave={handleMouseLeave}
           style={{ minWidth: "250px", padding: "12px" }}
         >
           <Alert
@@ -147,8 +130,6 @@ const MultiFilterDropdown = ({
       return (
         <div
           className="filter-dropdown-menu"
-          onMouseEnter={handleMouseEnter}
-          onMouseLeave={handleMouseLeave}
           style={{ minWidth: "250px", padding: "12px" }}
         >
           <Alert
@@ -175,8 +156,6 @@ const MultiFilterDropdown = ({
     return (
       <div
         className="filter-dropdown-menu"
-        onMouseEnter={handleMouseEnter}
-        onMouseLeave={handleMouseLeave}
       >
         <Select
           value={propOperator}
@@ -248,12 +227,13 @@ const MultiFilterDropdown = ({
   };
 
   return (
-    <div onMouseEnter={handleMouseEnter} onMouseLeave={handleMouseLeave}>
+    <div>
       <Dropdown
-        overlay={getMenuContent()}
+        dropdownRender={getMenuContent}
         open={open}
+        onOpenChange={setOpen}
         placement="bottomLeft"
-        trigger={["hover"]}
+        trigger={["click"]}
       >
         <div>{renderButtonContent()}</div>
       </Dropdown>

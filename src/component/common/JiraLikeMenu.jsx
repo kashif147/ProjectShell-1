@@ -117,7 +117,7 @@ const JiraLikeMenu = ({ title, data, isSimple = false }) => {
   return (
     <div className="searchfilter- margin">
       <Dropdown
-        overlay={menu}
+        dropdownRender={() => menu}
         trigger={["click"]}
         placement="bottomLeft"
         overlayStyle={{ width: 300, padding: "0px" }}
@@ -164,7 +164,7 @@ const JiraLikeMenu = ({ title, data, isSimple = false }) => {
   if (item?.titleColumn === title && hasTrueLookup) {
     return (
       <Dropdown
-        overlay={menu}
+        dropdownRender={() => menu}
         trigger={["click"]}
         placement="bottomRight"
         overlayStyle={{ width: 300, padding: "0px" }}

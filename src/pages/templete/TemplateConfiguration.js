@@ -1225,7 +1225,7 @@ const TemplateConfiguration = () => {
     getValues,
     trigger,
     reset,
-    formState: { errors },
+    formState: { errors, isDirty },
   } = useForm({
     defaultValues: {
       emailContent: "<p></p>",
@@ -1267,6 +1267,10 @@ const TemplateConfiguration = () => {
 
   // Watch template type for conditional rendering
   const watchedTemplateType = watch("tempolateType");
+  const watchedTemplateName = watch("templateName");
+  const watchedDescription = watch("description");
+  const watchedCategory = watch("category");
+  const watchedEmailContent = watch("emailContent");
 
   // Helper function to check if content has changed
   const hasContentChanged = (newContent) => {
@@ -1310,6 +1314,47 @@ const TemplateConfiguration = () => {
 
     return changed;
   };
+
+  const hasActualTemplateChanges = useMemo(() => {
+    if (isLoadingContent) return false;
+
+    const currentData = {
+      templateName: watchedTemplateName || "",
+      description: watchedDescription || "",
+      category: watchedCategory || "",
+      tempolateType: watchedTemplateType || "",
+      emailContent: watchedEmailContent || "",
+    };
+
+    if (isEditMode) {
+      return (
+        hasContentChanged(currentData.emailContent) || hasMetadataChanged(currentData)
+      );
+    }
+
+    const hasMetadataInput =
+      currentData.templateName.trim() !== "" ||
+      currentData.description.trim() !== "" ||
+      currentData.category.trim() !== "" ||
+      currentData.tempolateType.trim() !== "";
+    const hasContentInput =
+      currentData.emailContent.replace(/<[^>]*>/g, "").trim() !== "";
+
+    return hasMetadataInput || hasContentInput;
+  }, [
+    isLoadingContent,
+    isEditMode,
+    watchedTemplateName,
+    watchedDescription,
+    watchedCategory,
+    watchedTemplateType,
+    watchedEmailContent,
+    originalContent,
+    originalFormData,
+  ]);
+
+  const canSaveTemplate =
+    hasActualTemplateChanges && isDirty && !saving && !isLoadingContent;
 
   const [templeteId, setTempleteId] = useState(null);
 
@@ -1848,7 +1893,7 @@ const TemplateConfiguration = () => {
           className="butn primary-btn"
           icon={<SaveOutlined />}
           loading={saving}
-          disabled={saving}
+          disabled={!canSaveTemplate}
           type="primary"
         >
           {saving

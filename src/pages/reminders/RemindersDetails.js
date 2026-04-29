@@ -63,6 +63,19 @@ function formatCurrencyAmount(n) {
     return `€${Math.round(n).toLocaleString()}`;
 }
 
+function formatOutstandingBalanceLikeHeader(value) {
+    const amount = parseMoney(value);
+    const amountText = `€${Math.abs(amount).toLocaleString("en-IE", {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+    })}`;
+    const indicator = amount > 0 ? "Dr" : amount < 0 ? "Cr" : "";
+    return {
+        text: indicator ? `${amountText} (${indicator})` : amountText,
+        color: amount > 0 ? "#cf1322" : "#389e0d",
+    };
+}
+
 function formatPercentDisplay(pct) {
     if (pct == null || Number.isNaN(Number(pct))) return "—";
     const n = Number(pct);
@@ -438,9 +451,10 @@ function RemindersDetails() {
             title: "Balance",
             dataIndex: "outstandingBalance",
             key: "outstandingBalance",
-            render: (v) => (
-                <span className="membership-table-balance-cell">{v}</span>
-            ),
+            render: (v) => {
+                const { text, color } = formatOutstandingBalanceLikeHeader(v);
+                return <span style={{ color, fontWeight: 600 }}>{text}</span>;
+            },
         },
         {
             title: "Last payment",

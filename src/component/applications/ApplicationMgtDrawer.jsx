@@ -2358,7 +2358,6 @@ function ApplicationMgtDrawer({
     } else if (InfData?.contactInfo?.preferredEmail === "work") {
       emailToCheck = InfData?.contactInfo?.workEmail;
     }
-    debugger
 
     if (emailToCheck) {
       await checkEmailConflict(emailToCheck);

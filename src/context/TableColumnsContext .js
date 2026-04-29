@@ -19,6 +19,7 @@ import {
   formatCurrency,
   formatMobileNumber,
 } from "../utils/Utilities";
+import { markScreenChanged } from "../features/views/ScreenFilterChangSlice";
 import { getProfileDetailsById } from "../features/profiles/ProfileDetailsSlice";
 import {
   getSubscriptionByProfileId,
@@ -76,6 +77,27 @@ function resolveGridNavigationIndex(gridData, profileDetails) {
   if (!Array.isArray(gridData) || gridData.length === 0) return -1;
   const row = normalizeProfileDetailsRow(profileDetails);
   return findRecordIndexInGrid(gridData, row);
+}
+
+function parseOutstandingBalance(value) {
+  if (value == null) return 0;
+  if (typeof value === "number") return Number.isFinite(value) ? value : 0;
+  const parsed = parseFloat(String(value).replace(/[^\d.-]/g, ""));
+  return Number.isFinite(parsed) ? parsed : 0;
+}
+
+function getOutstandingBalanceColor(value) {
+  return parseOutstandingBalance(value) > 0 ? "#cf1322" : "#389e0d";
+}
+
+function formatOutstandingBalanceLikeHeader(value) {
+  const amount = parseOutstandingBalance(value);
+  const amountText = `€${Math.abs(amount).toLocaleString("en-IE", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  })}`;
+  const indicator = amount > 0 ? "Dr" : amount < 0 ? "Cr" : "";
+  return indicator ? `${amountText} (${indicator})` : amountText;
 }
 
 /** Sync location.state fields Breadcrumb.jsx uses for /Details (regNo, membership, name). */
@@ -526,7 +548,7 @@ const staticColumns = {
     },
     {
       dataIndex: "isActive",
-      title: "Active",
+      title: "Status",
       ellipsis: true,
       isGride: true,
       isVisible: true,
@@ -654,12 +676,14 @@ const staticColumns = {
     },
 
     {
-      dataIndex: ["professionalDetails", "nurseType"],
+      dataIndex: ["professionalDetails", "primarySection"],
       title: "Section (Primary)",
       ellipsis: true,
       isGride: true,
       isVisible: true,
       width: 180,
+      render: (value, record) =>
+        value || record?.professionalDetails?.nurseType || "-",
     },
     {
       dataIndex: ["professionalDetails", "secondarySection"],
@@ -783,6 +807,8 @@ const staticColumns = {
       isGride: true,
       isVisible: true,
       width: 150,
+      align: "right",
+      render: (value) => formatCurrency(Number(value) || 0),
     },
     {
       dataIndex: "outstandingBalance",
@@ -791,6 +817,12 @@ const staticColumns = {
       isGride: true,
       isVisible: true,
       width: 150,
+      align: "right",
+      render: (value) => (
+        <span style={{ color: getOutstandingBalanceColor(value), fontWeight: 600 }}>
+          {formatOutstandingBalanceLikeHeader(value)}
+        </span>
+      ),
     },
     {
       dataIndex: "reminderNo",
@@ -3184,6 +3216,8 @@ const staticColumns = {
       isVisible: true,
       width: 200,
       editable: false,
+      align: "right",
+      render: (value) => formatCurrency(Number(value) || 0),
     },
     {
       dataIndex: ["financialDetails", "lastPaymentDate"],
@@ -3203,6 +3237,8 @@ const staticColumns = {
       isVisible: true,
       width: 200,
       editable: false,
+      align: "right",
+      render: (value) => formatCurrency(Number(value) || 0),
     },
     {
       dataIndex: ["financialDetails", "outstandingBalance"],
@@ -3212,6 +3248,12 @@ const staticColumns = {
       isVisible: true,
       width: 200,
       editable: false,
+      align: "right",
+      render: (value) => (
+        <span style={{ color: getOutstandingBalanceColor(value), fontWeight: 600 }}>
+          {formatOutstandingBalanceLikeHeader(value)}
+        </span>
+      ),
     },
     {
       dataIndex: "reminderNo",
@@ -5427,9 +5469,36 @@ export const TableColumnsProvider = ({ children }) => {
             : column,
         ),
       }));
+      if (screenName) {
+        dispatch(markScreenChanged({ screen: screenName }));
+      }
     },
-    [],
+    [dispatch],
   );
+
+  /** Keeps `columns[screenName]` order in sync with the grid for save / dirty state. */
+  const reorderGridColumns = useCallback((targetScreenName, orderedVisibleDataIndexKeys) => {
+    if (!targetScreenName || !Array.isArray(orderedVisibleDataIndexKeys)) return;
+    setColumns((prev) => {
+      const list = prev[targetScreenName];
+      if (!list || !Array.isArray(list)) return prev;
+      const toKey = (col) => {
+        if (!col) return "";
+        const di = col.dataIndex;
+        return Array.isArray(di) ? di.join(".") : String(di);
+      };
+      const byKey = new Map(list.map((c) => [toKey(c), c]));
+      const hidden = list.filter((c) => !c.isGride);
+      const visibleOrdered = orderedVisibleDataIndexKeys
+        .map((k) => byKey.get(String(k)))
+        .filter(Boolean);
+      return {
+        ...prev,
+        [targetScreenName]: [...visibleOrdered, ...hidden],
+      };
+    });
+    dispatch(markScreenChanged({ screen: targetScreenName }));
+  }, [dispatch]);
 
   const updateSelectedTitles = useCallback((title, isChecked) => {
     setGlobleFilters((prevFilters) =>
@@ -5865,7 +5934,13 @@ export const TableColumnsProvider = ({ children }) => {
     [lookupsForSelect],
   );
 
-  const applyTemplate = useCallback((screenName, templateColumns) => {
+  const applyTemplate = useCallback((
+    screenName,
+    templateColumns,
+    masterColumns = null,
+    templateColumnLabels = {},
+    masterColumnLabels = {},
+  ) => {
     if (!screenName || !templateColumns) return;
 
     const profileTemplateKeys =
@@ -5890,45 +5965,379 @@ export const TableColumnsProvider = ({ children }) => {
       if (!profileTemplateKeys) return false;
       if (profileTemplateKeys.includes(dataIndexString)) return true;
       if (
+        dataIndexString === "personalInfo.fullName" &&
+        profileTemplateKeys.includes("fullName")
+      ) {
+        return true;
+      }
+      if (
         dataIndexString === "fullName" &&
         profileTemplateKeys.includes("personalInfo.fullName")
+      ) {
+        return true;
+      }
+      if (
+        dataIndexString === "fullName" &&
+        profileTemplateKeys.includes("personalDetails.fullName")
+      ) {
+        return true;
+      }
+      if (
+        dataIndexString === "personalDetails.fullName" &&
+        profileTemplateKeys.includes("fullName")
       ) {
         return true;
       }
       return false;
     };
 
+    const toDataIndexString = (dataIndex) =>
+      Array.isArray(dataIndex) ? dataIndex.join(".") : String(dataIndex);
+
+    const canonicalizeKey = (key) => {
+      const normalized = String(key || "").trim();
+      if (!normalized) return "";
+      if (screenName === "Profile") {
+        return normalized.replace(/^profile\./i, "");
+      }
+      return normalized;
+    };
+
+    const formatColumnKeyToLabel = (path) => {
+      const raw = String(path || "").trim();
+      if (!raw) return "";
+      const rightMost = raw.includes(".") ? raw.split(".").pop() : raw;
+      return rightMost
+        .replace(/([a-z0-9])([A-Z])/g, "$1 $2")
+        .replace(/[_-]+/g, " ")
+        .replace(/\s+/g, " ")
+        .trim()
+        .replace(/\b\w/g, (char) => char.toUpperCase());
+    };
+
+    const applyLabelOverrides = (label) => {
+      const normalized = String(label || "")
+        .trim()
+        .toLowerCase()
+        .replace(/\s+/g, " ");
+      const replacements = {
+        "membership number": "Membership No",
+        "country primary qualification": "Primary Qualification",
+        "normalized email": "Email Address",
+        "is active": "Active",
+        "subscription status": "Membership Status",
+      };
+      return replacements[normalized] || label;
+    };
+
+    const getColumnLabel = (path) => {
+      const key = String(path);
+      const resolvedLabel =
+        templateColumnLabels?.[key] ||
+        templateColumnLabels?.[`profile.${key}`] ||
+        masterColumnLabels?.[key] ||
+        masterColumnLabels?.[`profile.${key}`] ||
+        formatColumnKeyToLabel(key);
+      return applyLabelOverrides(resolvedLabel);
+    };
+
+    const makeGeneratedColumn = (path) => {
+      const safePath = String(path);
+      return {
+        title: getColumnLabel(safePath),
+        dataIndex: safePath.includes(".") ? safePath.split(".") : safePath,
+        ellipsis: true,
+        isGride: false,
+        isVisible: true,
+        width: 180,
+        editable: false,
+      };
+    };
+
     setColumns((prevColumns) => {
       const currentScreenColumns = prevColumns[screenName];
       if (!currentScreenColumns) return prevColumns;
 
-      const updatedScreenColumns = currentScreenColumns.map(
+      const normalizedMasterKeys = Array.isArray(masterColumns) && masterColumns.length > 0
+        ? screenName === "Profile"
+          ? masterColumns.map((k) => String(k).replace(/^profile\./i, ""))
+          : masterColumns.map((k) => String(k))
+        : [];
+
+      const existingKeys = new Set(
+        currentScreenColumns.map((col) =>
+          canonicalizeKey(toDataIndexString(col.dataIndex)),
+        ),
+      );
+      const generatedMasterColumns = normalizedMasterKeys
+        .filter((k) => !existingKeys.has(canonicalizeKey(k)))
+        .map((k) => makeGeneratedColumn(k));
+
+      const sourceColumns =
+        generatedMasterColumns.length > 0
+          ? [...currentScreenColumns, ...generatedMasterColumns]
+          : currentScreenColumns;
+
+      const getBusinessFieldKey = (key) => {
+        const normalized = String(key || "").trim();
+        if (!normalized) return "";
+        const leaf = normalized.split(".").pop().toLowerCase();
+        const aliases = {
+          fullname: "fullName",
+          mobilenumber: "mobileNumber",
+          mobileno: "mobileNumber",
+          membershipnumber: "membershipNumber",
+          membershipno: "membershipNumber",
+          membershipcategory: "membershipCategory",
+        };
+        return aliases[leaf] || leaf;
+      };
+
+      const getSourcePriority = (key) => {
+        const normalized = String(key || "").trim().toLowerCase();
+        // Financial fields source-of-truth: prefer enriched financialDetails object.
+        if (
+          normalized.startsWith("financialdetails.membershipfee") ||
+          normalized.startsWith("financialdetails.outstandingbalance") ||
+          normalized.startsWith("financialdetails.lastpaymentamount") ||
+          normalized.startsWith("financialdetails.lastpaymentdate")
+        ) {
+          return -3;
+        }
+        if (
+          normalized === "membershipfee" ||
+          normalized === "outstandingbalance" ||
+          normalized === "lastpaymentamount" ||
+          normalized === "lastpaymentdate"
+        ) {
+          return 2;
+        }
+        // Membership No source-of-truth: profile.membershipNumber.
+        if (normalized === "membershipnumber") return -2;
+        if (normalized.includes("personaldetails.membershipno")) return 2;
+        const subscriptionTopLevelPrefixes = [
+          "subscriptionstatus",
+          "subscriptionyear",
+          "paymenttype",
+          "paymentfrequency",
+          "membershipmovement",
+          "rolloverdate",
+        ];
+        if (
+          normalized.startsWith("subscriptiondetails.") ||
+          normalized.startsWith("subscription.") ||
+          subscriptionTopLevelPrefixes.some((p) => normalized.startsWith(p))
+        ) {
+          return 0; // subscription wins
+        }
+        if (
+          normalized.startsWith("personalinfo.") ||
+          normalized.startsWith("contactinfo.") ||
+          normalized.startsWith("professionaldetails.") ||
+          normalized.startsWith("preferences.") ||
+          normalized.startsWith("additionalinformation.") ||
+          normalized === "membershipnumber" ||
+          normalized === "normalizedemail" ||
+          normalized === "fullname" ||
+          normalized === "mobilenumber"
+        ) {
+          return 1; // profile wins over application section fields
+        }
+        if (
+          normalized.startsWith("personaldetails.") ||
+          normalized.startsWith("approvaldetails.")
+        ) {
+          return 2;
+        }
+        return 3;
+      };
+
+      const mergedColumns =
+        screenName === "Applications"
+          ? sourceColumns
+          : (() => {
+              const groups = new Map();
+              sourceColumns.forEach((col, idx) => {
+                const key = canonicalizeKey(toDataIndexString(col.dataIndex));
+                const businessKey = getBusinessFieldKey(key);
+                if (!groups.has(businessKey)) groups.set(businessKey, []);
+                groups.get(businessKey).push({ col, key, idx });
+              });
+
+              const selected = [];
+              groups.forEach((items) => {
+                if (items.length === 1) {
+                  selected.push(items[0].col);
+                  return;
+                }
+                const winner = [...items].sort((a, b) => {
+                  const byPriority =
+                    getSourcePriority(a.key) - getSourcePriority(b.key);
+                  if (byPriority !== 0) return byPriority;
+                  return a.idx - b.idx;
+                })[0];
+                selected.push(winner.col);
+              });
+              return selected;
+            })();
+
+      const isFullNameKey = (key) => /(^|\.)(fullName|fullname)$/i.test(String(key || ""));
+      const allCandidateKeys = [
+        ...mergedColumns.map((col) => canonicalizeKey(toDataIndexString(col.dataIndex))),
+        ...normalizedTemplateKeys.map((k) => canonicalizeKey(k)),
+        ...normalizedMasterKeys.map((k) => canonicalizeKey(k)),
+      ].filter(Boolean);
+      const pickPreferredKey = (preferredList) =>
+        preferredList.find((candidate) =>
+          allCandidateKeys.some((k) => k.toLowerCase() === candidate.toLowerCase()),
+        );
+      const preferredFullNameKey =
+        screenName === "Applications"
+          ? pickPreferredKey([
+              "personalDetails.personalInfo.fullName",
+              "personalInfo.fullName",
+              "fullName",
+            ])
+          : screenName === "Members"
+            ? pickPreferredKey([
+                "personalDetails.fullName",
+                "personalInfo.fullName",
+                "fullName",
+              ])
+            : screenName === "Profile"
+              ? pickPreferredKey([
+                  "fullName",
+                  "personalInfo.fullName",
+                ])
+              : pickPreferredKey(["fullName", "personalInfo.fullName"]);
+
+      // Dedupe by canonical key to prevent duplicate logical fields in menu/grid.
+      const uniqueSourceColumns = [];
+      const seenCanonicalKeys = new Set();
+      mergedColumns.forEach((col) => {
+        const key = canonicalizeKey(toDataIndexString(col.dataIndex));
+        if (!key || seenCanonicalKeys.has(key)) return;
+        if (
+          isFullNameKey(key) &&
+          preferredFullNameKey &&
+          key.toLowerCase() !== preferredFullNameKey.toLowerCase()
+        ) {
+          return;
+        }
+        seenCanonicalKeys.add(key);
+        uniqueSourceColumns.push(col);
+      });
+
+      const updatedScreenColumns = uniqueSourceColumns.map(
         (col, originalIndex) => {
           // Handle dataIndex as array or string
           const dataIndexString = Array.isArray(col.dataIndex)
             ? col.dataIndex.join(".")
             : col.dataIndex;
+          const canonicalDataIndexString = canonicalizeKey(dataIndexString);
 
           const isGride =
             screenName === "Profile"
-              ? profileColumnInTemplate(dataIndexString)
-              : templateColumns.includes(dataIndexString);
+              ? profileColumnInTemplate(canonicalDataIndexString)
+              : normalizedTemplateKeys.includes(canonicalDataIndexString);
 
           return {
             ...col,
+            title: getColumnLabel(dataIndexString),
             isGride: isGride,
             // 🛡️ Keep isVisible: true so other columns remain in the "add/remove" menu
             isVisible: true,
             __templateOrderIndex:
-              templateOrderMap[dataIndexString] !== undefined
-                ? templateOrderMap[dataIndexString]
+              templateOrderMap[canonicalDataIndexString] !== undefined
+                ? templateOrderMap[canonicalDataIndexString]
                 : Number.MAX_SAFE_INTEGER,
             __originalIndex: originalIndex,
           };
         },
       );
 
-      const reorderedScreenColumns = [...updatedScreenColumns]
+      // Ensure labels stay unique in UI when different keys collapse to same title.
+      const labelCounts = updatedScreenColumns.reduce((acc, col) => {
+        const label = String(col?.title || "").trim();
+        if (!label) return acc;
+        acc[label] = (acc[label] || 0) + 1;
+        return acc;
+      }, {});
+
+      const buildUniqueContextMap = (group) => {
+        const contexts = new Array(group.length).fill("");
+        const segmentLists = group.map((item) => {
+          const fullPath = String(item.keyPath || "");
+          const parts = fullPath.split(".").filter(Boolean);
+          // Use only the context portion before leaf field.
+          return parts.length > 1 ? parts.slice(0, -1) : parts;
+        });
+
+        let depth = 1;
+        while (depth <= 6) {
+          const seenAtDepth = {};
+          for (let i = 0; i < group.length; i += 1) {
+            if (contexts[i]) continue;
+            const segs = segmentLists[i];
+            const candidate = segs.slice(0, depth).join(".") || group[i].keyPath;
+            if (!seenAtDepth[candidate]) seenAtDepth[candidate] = [];
+            seenAtDepth[candidate].push(i);
+          }
+
+          let assigned = 0;
+          Object.entries(seenAtDepth).forEach(([candidate, idxs]) => {
+            if (idxs.length === 1) {
+              const idx = idxs[0];
+              contexts[idx] = candidate;
+              assigned += 1;
+            }
+          });
+
+          if (assigned === 0) {
+            // All still colliding with same prefixes: fall back to full context path.
+            for (let i = 0; i < group.length; i += 1) {
+              if (contexts[i]) continue;
+              const segs = segmentLists[i];
+              contexts[i] = segs.join(".") || group[i].keyPath;
+            }
+            break;
+          }
+          if (contexts.every(Boolean)) break;
+          depth += 1;
+        }
+
+        return contexts;
+      };
+
+      const groupedByLabel = updatedScreenColumns.reduce((acc, col, index) => {
+        const label = String(col?.title || "").trim();
+        if (!label || labelCounts[label] <= 1) return acc;
+        if (!acc[label]) acc[label] = [];
+        acc[label].push({
+          index,
+          keyPath: toDataIndexString(col.dataIndex),
+        });
+        return acc;
+      }, {});
+
+      const contextByIndex = {};
+      Object.values(groupedByLabel).forEach((group) => {
+        const contexts = buildUniqueContextMap(group);
+        group.forEach((item, idx) => {
+          contextByIndex[item.index] = contexts[idx];
+        });
+      });
+
+      const uniquelyLabeledColumns = updatedScreenColumns.map((col, index) => {
+        const label = String(col?.title || "").trim();
+        if (!label || !contextByIndex[index]) return col;
+        return {
+          ...col,
+          title: `${label} (${contextByIndex[index]})`,
+        };
+      });
+
+      const reorderedScreenColumns = [...uniquelyLabeledColumns]
         .sort((a, b) => {
           // Keep selected columns in template order first
           if (a.__templateOrderIndex !== b.__templateOrderIndex) {
@@ -5975,6 +6384,7 @@ export const TableColumnsProvider = ({ children }) => {
     () => ({
       columns,
       applyTemplate,
+      reorderGridColumns,
       updateColumns: () => {},
       state: { selectedOption: "!=", checkboxes: {} },
       setState: () => {},
@@ -6021,6 +6431,8 @@ export const TableColumnsProvider = ({ children }) => {
     [
       columns,
       gridData,
+      applyTemplate,
+      reorderGridColumns,
       handleCheckboxFilterChange,
       searchFilters,
       updateSelectedTitles,

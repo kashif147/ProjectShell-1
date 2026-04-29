@@ -209,6 +209,7 @@ const TableComponent = ({
     profilNextBtnFtn,
     ColumnProp,
     disableFtn,
+    reorderGridColumns,
   } = useTableColumns();
   const [dataSource, setdataSource] = useState(data);
   // Internal state for row selection when not provided via props
@@ -322,33 +323,119 @@ const TableComponent = ({
       })) || []
   );
 
+  const getColumnStableKey = useCallback((col, fallbackIndex = 0) => {
+    if (!col) return `idx:${fallbackIndex}`;
+    if (col.key) return `key:${col.key}`;
+    if (Array.isArray(col.dataIndex)) return `data:${col.dataIndex.join(".")}`;
+    if (col.dataIndex) return `data:${col.dataIndex}`;
+    if (col.title) return `title:${col.title}`;
+    return `idx:${fallbackIndex}`;
+  }, []);
+
+  const sortUnselectedAlphabetically = useCallback((list = []) => {
+    return [...list].sort((a, b) =>
+      String(a?.title || "").localeCompare(String(b?.title || ""), undefined, {
+        sensitivity: "base",
+      }),
+    );
+  }, []);
+
+  const buildMenuOrder = useCallback(
+    (incoming = [], previous = []) => {
+      const incomingByKey = new Map(
+        incoming.map((col, idx) => [getColumnStableKey(col, idx), col]),
+      );
+      const previousSelectedOrder = previous
+        .filter((col) => col?.isGride)
+        .map((col, idx) => getColumnStableKey(col, idx))
+        .filter((key) => incomingByKey.has(key));
+
+      const selected = [];
+      const used = new Set();
+      previousSelectedOrder.forEach((key) => {
+        const col = incomingByKey.get(key);
+        if (col?.isGride && !used.has(key)) {
+          selected.push(col);
+          used.add(key);
+        }
+      });
+
+      incoming.forEach((col, idx) => {
+        const key = getColumnStableKey(col, idx);
+        if (col?.isGride && !used.has(key)) {
+          selected.push(col);
+          used.add(key);
+        }
+      });
+
+      const unselected = sortUnselectedAlphabetically(
+        incoming.filter((col, idx) => {
+          const key = getColumnStableKey(col, idx);
+          return !col?.isGride && !used.has(key);
+        }),
+      );
+
+      return [...selected, ...unselected];
+    },
+    [getColumnStableKey, sortUnselectedAlphabetically],
+  );
+
   // **Sync columns when screenName or global columns change**
   useEffect(() => {
-    // All available columns for the selection menu
-    const menuColumns = (columns?.[screenName] || [])?.map((item, index) => ({
+    const rawMenuColumns = (columns?.[screenName] || []).map((item, index) => ({
       ...item,
       key: `${index}`,
-      isVisible: item.isVisible !== false, // Ensure visibility flag exists
+      isVisible: item.isVisible !== false,
     }));
 
-    // Only visible columns for the actual table grid
-    const gridColumns = (menuColumns || [])
-      ?.filter((item) => item?.isGride)
-      ?.map((item) => ({
-        ...item,
-        onHeaderCell: () => ({ id: item.key }),
-        onCell: () => ({ id: item.key }),
-      }));
-
-    if (menuColumns) {
-      setColumnsForFilter(menuColumns);
-    }
-    if (gridColumns) {
+    setColumnsForFilter((prev) => {
+      const orderedMenu = buildMenuOrder(rawMenuColumns, prev || []);
+      const gridColumns = orderedMenu
+        .filter((item) => item?.isGride)
+        .map((item) => ({
+          ...item,
+          onHeaderCell: () => ({ id: item.key }),
+          onCell: () => ({ id: item.key }),
+        }));
       setColumnsDragbe(gridColumns);
-    }
-  }, [screenName, columns]);
+      return orderedMenu;
+    });
+  }, [screenName, columns, buildMenuOrder]);
 
   const [dragIndex, setDragIndex] = useState({ active: null, over: null });
+
+  const getRenderableCellValue = useCallback((value, col, record) => {
+    if (value == null) return "-";
+    if (typeof value === "string" || typeof value === "number") return value;
+    if (typeof value === "boolean") return value ? "Yes" : "No";
+    if (Array.isArray(value)) {
+      return value
+        .map((item) =>
+          typeof item === "string" || typeof item === "number" ? item : "",
+        )
+        .filter(Boolean)
+        .join(", ") || "-";
+    }
+    if (typeof value === "object") {
+      const colKey = Array.isArray(col?.dataIndex)
+        ? col.dataIndex.join(".")
+        : String(col?.dataIndex || "");
+      if (/(^|\.)(personalDetails|personalInfo)$/i.test(colKey)) {
+        return (
+          value?.fullName ||
+          value?.personalInfo?.fullName ||
+          [value?.personalInfo?.forename, value?.personalInfo?.surname]
+            .filter(Boolean)
+            .join(" ")
+            .trim() ||
+          record?.personalDetails?.fullName ||
+          "-"
+        );
+      }
+      return "-";
+    }
+    return String(value);
+  }, []);
 
   // Handle drag and drop
   const onDragEnd = ({ active, over }) => {
@@ -360,7 +447,15 @@ const TableComponent = ({
         const overIndex = prevColumns.findIndex(
           (column) => column.key === over.id
         );
-        return arrayMove(prevColumns, activeIndex, overIndex);
+        const next = arrayMove(prevColumns, activeIndex, overIndex);
+        if (reorderGridColumns) {
+          const keys = next.map((col) => {
+            const di = col?.dataIndex;
+            return Array.isArray(di) ? di.join(".") : String(di);
+          });
+          reorderGridColumns(screenName, keys);
+        }
+        return next;
       });
     }
     setDragIndex({ active: null, over: null });
@@ -543,22 +638,34 @@ const TableComponent = ({
           const currentPath = location.pathname.toLowerCase();
           const isApplicationsPage = currentPath.includes('/applications');
           const isMembersPage = currentPath.includes('/members');
-          switch (col.title) {
+          const isProfilePage = currentPath.includes('/summary');
+          const safeText = getRenderableCellValue(text, col, record);
+          const normalizedTitle = String(col?.title || "")
+            .replace(/\s*\([^)]*\)\s*$/, "")
+            .trim();
+          switch (normalizedTitle) {
             case "Full Name":
-              const resolvedFullName = isMembersPage
-                ? text ||
+              const resolvedFromDisplayValue =
+                typeof safeText === "string" || typeof safeText === "number"
+                  ? String(safeText)
+                  : "";
+              const resolvedFullName = isApplicationsPage
+                ? resolvedFromDisplayValue ||
+                  record?.personalDetails?.personalInfo?.fullName ||
                   record?.personalDetails?.fullName ||
-                  record?.user?.userFullName ||
-                  record?.fullName ||
-                  record?.fullname ||
-                  record?.personalInfo?.fullName ||
-                  `${record?.personalInfo?.forename || ""} ${record?.personalInfo?.surname || ""}`.trim()
-                : text ||
-                  record?.user?.userFullName ||
-                  record?.fullName ||
-                  record?.fullname ||
-                  record?.personalInfo?.fullName ||
-                  `${record?.personalInfo?.forename || ""} ${record?.personalInfo?.surname || ""}`.trim();
+                  `${record?.personalDetails?.personalInfo?.forename || ""} ${record?.personalDetails?.personalInfo?.surname || ""}`.trim() ||
+                  "-"
+                : (isMembersPage || isProfilePage)
+                  ? resolvedFromDisplayValue ||
+                    record?.personalDetails?.fullName ||
+                    record?.personalInfo?.fullName ||
+                    `${record?.personalInfo?.forename || ""} ${record?.personalInfo?.surname || ""}`.trim() ||
+                    "-"
+                  : resolvedFromDisplayValue ||
+                    record?.personalDetails?.fullName ||
+                    record?.personalInfo?.fullName ||
+                    `${record?.personalInfo?.forename || ""} ${record?.personalInfo?.surname || ""}`.trim() ||
+                    "-";
               // Check for crm:member:read permission on Summary page
               const isFullNameOnSummaryPage = location.pathname.toLowerCase().includes('/summary');
               const hasMemberReadPermission = hasPermission('crm:member:read');
@@ -572,11 +679,16 @@ const TableComponent = ({
               }
 
               // Otherwise show the link (for all other pages or if user has permission)
+              const memberProfileId =
+                record?.profileId ||
+                record?.profile?._id ||
+                record?.personalDetails?.profileId ||
+                record?.user?.profileId;
               const profileIdForUrl = isMembersPage
-                ? record?.profileId || record?._id
+                ? memberProfileId
                 : record?._id;
               const subscriptionIdForUrl =
-                isMembersPage && record?.profileId && record?._id
+                isMembersPage && memberProfileId && record?._id
                   ? record._id
                   : undefined;
 
@@ -593,26 +705,28 @@ const TableComponent = ({
                     memberId: record?.personalDetails?.membershipNo || record?.membershipNumber,
                     applicationId: record?.applicationId || record?.ApplicationId,
                     ...(isMembersPage &&
-                    record?.profileId &&
+                    memberProfileId &&
                     record?._id && {
                       subscriptionId: record._id,
                     }),
                   }}
                   onClick={() => {
                     handleRowClick(record, index);
-                    const profileId = record?.profileId;
+                    const profileId = memberProfileId;
                     const subscriptionRowId = record?._id;
                     const idToUse = isMembersPage
-                      ? profileId || subscriptionRowId
+                      ? profileId
                       : record?._id;
-                    dispatch(getProfileDetailsById(idToUse));
+                    if (idToUse) {
+                      dispatch(getProfileDetailsById(idToUse));
+                    }
                     if (
                       isMembersPage &&
                       profileId &&
                       subscriptionRowId
                     ) {
                       dispatch(getSubscriptionById(subscriptionRowId));
-                    } else {
+                    } else if (idToUse) {
                       dispatch(
                         getSubscriptionByProfileId({
                           profileId: idToUse,
@@ -634,8 +748,18 @@ const TableComponent = ({
                   to={{
                     pathname: "/Details",
                     search: buildDetailsSearch(
-                      record?.profileId || record?._id,
-                      isMembersPage && record?.profileId && record?._id
+                      isMembersPage
+                        ? (record?.profileId ||
+                          record?.profile?._id ||
+                          record?.personalDetails?.profileId ||
+                          record?.user?.profileId)
+                        : record?._id,
+                      isMembersPage &&
+                        (record?.profileId ||
+                          record?.profile?._id ||
+                          record?.personalDetails?.profileId ||
+                          record?.user?.profileId) &&
+                        record?._id
                         ? record._id
                         : undefined
                     ),
@@ -651,16 +775,25 @@ const TableComponent = ({
                     memberId: record?.personalDetails?.membershipNo || record?.membershipNumber || record?.regNo || record?._id,
                     applicationId: record?.applicationId || record?.ApplicationId,
                     ...(isMembersPage &&
-                    record?.profileId &&
+                    (record?.profileId ||
+                      record?.profile?._id ||
+                      record?.personalDetails?.profileId ||
+                      record?.user?.profileId) &&
                     record?._id && {
                       subscriptionId: record._id,
                     }),
                   }}
                   onClick={() => {
                     handleRowClick(record, index);
-                    const profileId = record?.profileId;
+                    const profileId =
+                      record?.profileId ||
+                      record?.profile?._id ||
+                      record?.personalDetails?.profileId ||
+                      record?.user?.profileId;
                     const subscriptionRowId = record?._id;
-                    dispatch(getProfileDetailsById(profileId));
+                    if (profileId) {
+                      dispatch(getProfileDetailsById(profileId));
+                    }
                     if (
                       isMembersPage &&
                       profileId &&
@@ -684,7 +817,7 @@ const TableComponent = ({
                     cursor: "pointer",
                   }}
                 >
-                  <span>{text}</span>
+                  <span>{safeText}</span>
                 </Link>
               );
 
@@ -707,7 +840,7 @@ const TableComponent = ({
                   }}
                   style={{ color: "blue", textDecoration: "underline", cursor: "pointer" }}
                 >
-                  <span style={{ textOverflow: "ellipsis" }}>{text}</span>
+                  <span style={{ textOverflow: "ellipsis" }}>{safeText}</span>
                 </Link>
               );
 
@@ -730,12 +863,14 @@ const TableComponent = ({
                   }}
                   style={{ color: "blue", textDecoration: "underline", cursor: "pointer" }}
                 >
-                  <span style={{ textOverflow: "ellipsis" }}>{text}</span>
+                  <span style={{ textOverflow: "ellipsis" }}>{safeText}</span>
                 </Link>
               );
 
             case "Membership Category":
-              const isPotentialDuplicate = record?.personalDetails?.duplicateDetection?.isPotentialDuplicate;
+              const isPotentialDuplicate =
+                !!record?.isPotentialDuplicate ||
+                !!record?.personalDetails?.duplicateDetection?.isPotentialDuplicate;
               const hasProfileRead =  hasPermission('crm:access')
             
               const isSummaryPage = currentPath.includes("summary");
@@ -777,7 +912,7 @@ const TableComponent = ({
                       }
                     }}
                   >
-                    <span style={{ textOverflow: "ellipsis" }}>{text}</span>
+                    <span style={{ textOverflow: "ellipsis" }}>{safeText}</span>
                   </span>
                 );
               } else if (isSummaryPage && hasProfileRead) {
@@ -798,28 +933,30 @@ const TableComponent = ({
                     onClick={() => {
                       handleRowClick(record, index);
                       const idToUse = record?.profileId || record?._id;
-                      dispatch(getProfileDetailsById(idToUse));
-                      dispatch(
-                        getSubscriptionByProfileId({
-                          profileId: idToUse,
-                          isCurrent: true,
-                        })
-                      );
+                      if (idToUse) {
+                        dispatch(getProfileDetailsById(idToUse));
+                        dispatch(
+                          getSubscriptionByProfileId({
+                            profileId: idToUse,
+                            isCurrent: true,
+                          })
+                        );
+                      }
                       getProfile([record], index);
                     }}
                     style={{ color: "blue", textDecoration: "underline", cursor: "pointer" }}
                   >
-                    <span style={{ textOverflow: "ellipsis" }}>{text}</span>
+                    <span style={{ textOverflow: "ellipsis" }}>{safeText}</span>
                   </Link>
                 );
               } else if (isMembersPage) {
                 content = (
-                  <span style={{ textOverflow: "ellipsis" }}>{text}</span>
+                  <span style={{ textOverflow: "ellipsis" }}>{safeText}</span>
                 );
               } else {
                 content = (
                   <span style={{ textOverflow: "ellipsis" }}>
-                    {text}
+                    {safeText}
                   </span>
                 );
               }
@@ -869,7 +1006,7 @@ const TableComponent = ({
                   }}
                   style={{ color: "blue", textDecoration: "underline", cursor: "pointer" }}
                 >
-                  <span style={{ textOverflow: "ellipsis" }}>{text}</span>
+                  <span style={{ textOverflow: "ellipsis" }}>{safeText}</span>
                 </Link>
               );
 
@@ -909,7 +1046,7 @@ const TableComponent = ({
                   }
                 >
 
-                  {text}
+                  {safeText}
                 </Link>
               );
 
@@ -932,7 +1069,7 @@ const TableComponent = ({
                   }}
                   style={{ color: "blue", textDecoration: "underline", cursor: "pointer" }}
                 >
-                  <span style={{ textOverflow: "ellipsis" }}>{text}</span>
+                  <span style={{ textOverflow: "ellipsis" }}>{safeText}</span>
                 </Link>
               );
 
@@ -970,13 +1107,20 @@ const TableComponent = ({
                   style={{ textOverflow: "ellipsis" }}
                   onClick={() => !disableDefaultRowClick && handleRowClick(record, index)}
                 >
-                  {text}
+                  {safeText}
                 </span>
               );
           }
         },
       sorter:
-        col.title === "Full Name"
+        (String(col?.title || "")
+          .replace(/\s*\([^)]*\)\s*$/, "")
+          .trim() === "Full Name" ||
+          /(^|\.)(fullName|fullname)$/i.test(
+            Array.isArray(col?.dataIndex)
+              ? col.dataIndex.join(".")
+              : String(col?.dataIndex || ""),
+          ))
           ? {
             compare: (a, b) =>
               a[col.dataIndex]?.localeCompare(b[col.dataIndex]),

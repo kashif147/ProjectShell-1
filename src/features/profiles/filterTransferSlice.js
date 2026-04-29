@@ -5,7 +5,6 @@ import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 export const fetchAndFilterTransferById = createAsyncThunk(
   "filterTransfer/fetchAndFilterById",
   async (id, { rejectWithValue, getState }) => {
-    debugger
     try {
       // Get current state
       const state = getState();
@@ -17,7 +16,6 @@ export const fetchAndFilterTransferById = createAsyncThunk(
       
       // Access main data from the state
       const mainData = state.transferRequest?.data?.data || state.transferRequest?.data;
-        debugger
       // Validate main data
       if (!mainData || !Array.isArray(mainData)) {
         throw new Error("Main data not available. Please ensure transfer requests are loaded first.");
@@ -30,7 +28,6 @@ export const fetchAndFilterTransferById = createAsyncThunk(
         item.transferId === id || 
         item.key === id
       );
-        debugger
       if (!filteredItem) {
         throw new Error(`Transfer request with ID ${id} not found in the dataset`);
       }

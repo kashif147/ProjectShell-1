@@ -1,27 +1,28 @@
-/* Batch payments: file row membership ≠ resolved membership */
-.batch-member-summary-table
-  .ant-table-tbody
-  > tr.batch-file-ref-membership-mismatch
-  > td {
-  background-color: rgba(250, 173, 20, 0.14) !important;
-}
-
-.batch-member-summary-table
-  .ant-table-tbody
-  > tr.batch-file-ref-membership-mismatch.ant-table-row-selected
-  > td {
-  background-color: rgba(250, 173, 20, 0.22) !important;
-}
-
-.batch-member-summary-table
-  .ant-table-tbody
-  > tr.batch-file-ref-membership-mismatch:hover
-  > td {
-  background-color: rgba(250, 173, 20, 0.2) !important;
-}
-
+/* File ref / membership: cell text (ref columns) */
 .batch-member-summary-table td.batch-file-ref-cell-mismatch {
   color: #cf1322 !important;
+}
+
+/* Row accent: one color on the left (first cell = selection). Priority is decided in JS. */
+.batch-member-summary-table
+  .ant-table-tbody
+  > tr.batch-row-left--ref
+  > td:first-child {
+  box-shadow: inset 3px 0 0 0 #f59e0b;
+}
+
+.batch-member-summary-table
+  .ant-table-tbody
+  > tr.batch-row-left--name
+  > td:first-child {
+  box-shadow: inset 3px 0 0 0 #f43f5e;
+}
+
+.batch-member-summary-table
+  .ant-table-tbody
+  > tr.batch-row-left--membership
+  > td:first-child {
+  box-shadow: inset 3px 0 0 0 #6366f1;
 }
 
 /* Delete confirm: white shell, warning icon on white chip, tinted message block */

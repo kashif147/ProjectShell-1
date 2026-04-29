@@ -25,7 +25,9 @@ function ProfileSummary() {
   if (!isInitialized || templatesLoading) {
     return (
       <div style={{ display: "flex", justifyContent: "center", alignItems: "center", height: "100%", padding: "50px" }}>
-        <Spin tip="Initializing Template..." />
+        <Spin tip="Initializing Template...">
+          <div style={{ minHeight: 200, width: "100%" }} />
+        </Spin>
       </div>
     );
   }

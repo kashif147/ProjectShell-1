@@ -48,8 +48,8 @@ function AppTabs() {
   const navigate = useNavigate();
   const location = useLocation();
   const [searchParams] = useSearchParams();
-  const profileIdParam = searchParams.get("profileId") || "";
-  const subscriptionIdParam = searchParams.get("subscriptionId") || "";
+  const profileIdParam = normalizeRouteId(searchParams.get("profileId"));
+  const subscriptionIdParam = normalizeRouteId(searchParams.get("subscriptionId"));
   const activeTabParam = String(searchParams.get("activeTab") || "")
     .trim()
     .toLowerCase();
@@ -518,3 +518,11 @@ function AppTabs() {
 }
 
 export default AppTabs;
+
+function normalizeRouteId(value) {
+  const raw = String(value ?? "").trim();
+  if (!raw) return "";
+  const lowered = raw.toLowerCase();
+  if (lowered === "undefined" || lowered === "null") return "";
+  return raw;
+}

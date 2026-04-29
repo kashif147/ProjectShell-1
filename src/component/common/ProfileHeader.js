@@ -57,6 +57,7 @@ function ProfileHeader({
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [ledgerBalance, setLedgerBalance] = useState(0);
+  const [ledgerBalanceIsCents, setLedgerBalanceIsCents] = useState(true);
   const [lastPaymentAmount, setLastPaymentAmount] = useState(0);
   const [lastPaymentDate, setLastPaymentDate] = useState(null);
   const [paymentCode, setPaymentCode] = useState("");
@@ -190,14 +191,45 @@ function ProfileHeader({
   }, [ProfileSubData]);
 
   const memberIdForLedger = useMemo(() => {
-    return (
-      location.state?.memberId ||
+    const fromSearch = searchParams.get("memberId");
+    const fromSource =
       source?.membershipNumber ||
+      source?.membershipNo ||
+      source?.personalDetails?.membershipNo ||
+      source?.personalInfo?.membershipNumber;
+    const fromSubscription =
+      subscriptionData?.membershipNumber ||
+      subscriptionData?.membershipNo ||
+      subscriptionData?.personalDetails?.membershipNo;
+    const fromAnySubscription = (
+      Array.isArray(profileSubscriptionsForActivateEligibility)
+        ? profileSubscriptionsForActivateEligibility
+        : []
+    )
+      .map(
+        (sub) =>
+          sub?.membershipNumber ||
+          sub?.membershipNo ||
+          sub?.personalDetails?.membershipNo ||
+          sub?.profile?.membershipNumber
+      )
+      .find(Boolean);
+    return (
+      fromSearch ||
+      location.state?.memberId ||
+      fromSource ||
       source?.regNo ||
-      source?.id ||
-      source?._id
+      fromSubscription ||
+      fromAnySubscription ||
+      ""
     );
-  }, [source, location]);
+  }, [
+    source,
+    subscriptionData,
+    profileSubscriptionsForActivateEligibility,
+    location,
+    searchParams,
+  ]);
 
   const fetchAccountSummary = useCallback(async () => {
     if (!memberIdForLedger || !token) return;
@@ -215,18 +247,34 @@ function ProfileHeader({
       );
 
       const summaryData = response.data?.data || response.data;
+      const normalizedNet =
+        summaryData?.net ??
+        summaryData?.balance ??
+        summaryData?.ledgerBalance ??
+        0;
+      // account-service summary can return euros (decimal) while legacy flows use cents (integer).
+      const isCents = Number.isInteger(normalizedNet);
+      setLedgerBalance(normalizedNet || 0);
+      setLedgerBalanceIsCents(isCents);
 
-      // Update states based on the new API response
-      // User's example: "net": 120.5 (Decimal suggests Euros)
-      setLedgerBalance(summaryData.net || 0);
-
-      if (summaryData.lastPayment) {
-        // User's example: "amount": 32600 (Integer suggests cents)
-        setLastPaymentAmount(summaryData.lastPayment.amount || 0);
-        setLastPaymentDate(summaryData.lastPayment.date);
-      }
+      const normalizedLastPaymentAmount =
+        summaryData?.lastPayment?.amount ??
+        summaryData?.lastPaymentAmount ??
+        summaryData?.payment?.amount ??
+        0;
+      const normalizedLastPaymentDate =
+        summaryData?.lastPayment?.date ??
+        summaryData?.lastPaymentDate ??
+        summaryData?.paymentDate ??
+        null;
+      setLastPaymentAmount(normalizedLastPaymentAmount || 0);
+      setLastPaymentDate(normalizedLastPaymentDate);
     } catch (error) {
       console.error("Error fetching account summary in ProfileHeader:", error);
+      setLedgerBalance(0);
+      setLedgerBalanceIsCents(true);
+      setLastPaymentAmount(0);
+      setLastPaymentDate(null);
     } finally {
       setLedgerLoading(false);
     }
@@ -380,7 +428,10 @@ function ProfileHeader({
     // Actually, historical code used centsToEuro. If the API changed units, we should adjust.
     // Given the example "net": 120.5, it looks like Euros.
     const numericLedgerBalance = Number(ledgerBalance || 0);
-    const balanceAmount = `€${Math.abs(centsToEuro(numericLedgerBalance)).toLocaleString("en-IE", {
+    const balanceInEuro = ledgerBalanceIsCents
+      ? centsToEuro(numericLedgerBalance)
+      : numericLedgerBalance;
+    const balanceAmount = `€${Math.abs(balanceInEuro).toLocaleString("en-IE", {
       minimumFractionDigits: 2,
       maximumFractionDigits: 2,
     })}`;
@@ -448,6 +499,7 @@ function ProfileHeader({
     isSubscriptionEmpty,
     ProfileSubLoading,
     ledgerBalance,
+    ledgerBalanceIsCents,
     lastPaymentAmount,
     lastPaymentDate,
     paymentCode,

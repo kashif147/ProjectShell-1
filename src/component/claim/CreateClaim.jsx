@@ -248,7 +248,7 @@ function CreateClaim() {
     return (
         <div>
             <Dropdown
-                overlay={menu}
+                dropdownRender={() => menu}
                 trigger={["click"]}
                 placement="bottomLeft"
                 overlayStyle={{ width: 200, padding: "0px" }}

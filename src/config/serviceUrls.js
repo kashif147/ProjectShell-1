@@ -22,3 +22,11 @@ export function getSubscriptionServiceBaseUrl() {
       process.env.REACT_APP_SUBSCRIPTION
   );
 }
+
+/**
+ * CRM filter/column templates for subscriptions (members list).
+ * Express mounts at GET/POST .../api/v1/subscriptions/templates (not .../api/templates).
+ */
+export function getSubscriptionFilterTemplatesBaseUrl() {
+  return `${getSubscriptionServiceBaseUrl()}/subscriptions/templates`;
+}
