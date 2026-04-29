@@ -379,7 +379,15 @@ function Header() {
           />
 
           <Popover
-            content={<NotificationPopover isOpen={notificationOpen} />}
+            content={
+              <NotificationPopover
+                isOpen={notificationOpen}
+                onNavigateToAll={() => {
+                  setNotificationOpen(false);
+                  navigate("/UserNotifications");
+                }}
+              />
+            }
             trigger="click"
             placement="bottomRight"
             open={notificationOpen}

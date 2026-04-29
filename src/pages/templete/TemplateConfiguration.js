@@ -19,7 +19,8 @@ import {
 } from "antd";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import "./TemplateConfiguration.css";
-import ReactQuill, { Quill } from "react-quill-new";
+import ReactQuill from "react-quill-new";
+import Quill from "quill";
 import "react-quill-new/dist/quill.snow.css";
 import TableUp, {
   defaultCustomSelect,

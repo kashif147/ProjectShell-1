@@ -1225,7 +1225,8 @@ function HeaderDetails({
                             screenName === "Assigned to me") &&
                           !hasPermission("queries:create")) ||
                         (nav === "/InAppNotifications" &&
-                          !hasPermission("notifications:create")) ? null : (
+                          !hasPermission("notifications:create")) ||
+                        nav === "/UserNotifications" ? null : (
                         <Button
                           onClick={() => {
                             if (nav == "/Applications") {
@@ -2008,6 +2009,10 @@ function HeaderDetails({
       <WriteOffDrawer
         open={writeOffDrawerOpen}
         onClose={() => setWriteOffDrawerOpen(false)}
+        submitLoading={false}
+        onSubmit={async () => {
+          return true;
+        }}
       />
       <CreateCasesDrawer
         open={casesDrawerOpen}

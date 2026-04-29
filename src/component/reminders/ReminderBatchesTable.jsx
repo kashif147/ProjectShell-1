@@ -68,6 +68,14 @@ function perfSecondaryLabel(k, perf) {
   return `${k} (${arrow}${p}%)`;
 }
 
+function statusTextToTagColor(statusText, hasTriggeredDate) {
+  const s = String(statusText || "").toLowerCase();
+  if (s === "completed" || s === "executed" || s === "done") return "success";
+  if (s === "failed" || s === "error") return "error";
+  if (s === "draft" || s === "pending") return "warning";
+  return hasTriggeredDate ? "success" : "default";
+}
+
 function ReminderBatchesTable({
   dataSource,
   onOpenBatch,
@@ -127,11 +135,17 @@ function ReminderBatchesTable({
         }),
         render: (_, record) => {
           const completed = Boolean(record.triggered);
+          const statusLabel = String(
+            record.statusLabel || (completed ? "completed" : "pending"),
+          );
+          const prettyStatus =
+            statusLabel.charAt(0).toUpperCase() + statusLabel.slice(1).toLowerCase();
+          const tagColor = statusTextToTagColor(statusLabel, completed);
           return (
             <div>
               <div style={stackRow1}>
                 <Tag
-                  color={completed ? "success" : "warning"}
+                  color={tagColor}
                   style={{
                     margin: 0,
                     fontSize: 11,
@@ -139,7 +153,7 @@ function ReminderBatchesTable({
                     padding: "0 6px",
                   }}
                 >
-                  {completed ? "Completed" : "Pending"}
+                  {prettyStatus}
                 </Tag>
               </div>
               <div

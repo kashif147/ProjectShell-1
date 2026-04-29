@@ -396,9 +396,23 @@ const staticColumns = {
       dataIndex: "ref",
       title: "Ref",
       ellipsis: true,
-      isGride: true,
+      isGride: true,  
       isVisible: true,
       width: 150,
+    },
+    {
+      dataIndex: "amount",
+      title: "Amount",
+      ellipsis: true,
+      isGride: true,
+      isVisible: true,
+      width: 120,
+      align: "right",
+      render: (value) => {
+        if (value === "-" || value == null || Number.isNaN(Number(value))) return "—";
+        const amountInEuros = Number(value) / 100;
+        return formatCurrency(amountInEuros);
+      },
     },
     {
       dataIndex: "type",
@@ -466,6 +480,20 @@ const staticColumns = {
       isGride: true,
       isVisible: true,
       width: 150,
+    },
+    {
+      dataIndex: "amount",
+      title: "Amount",
+      ellipsis: true,
+      isGride: true,
+      isVisible: true,
+      width: 120,
+      align: "right",
+      render: (value) => {
+        if (value === "-" || value == null || Number.isNaN(Number(value))) return "—";
+        const amountInEuros = Number(value) / 100;
+        return formatCurrency(amountInEuros);
+      },
     },
     {
       dataIndex: "type",
