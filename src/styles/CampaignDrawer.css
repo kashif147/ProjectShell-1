@@ -1,0 +1,27 @@
+.campaign-drawer-root .ant-drawer-header {
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.campaign-drawer-root .ant-drawer-body {
+  padding: 0;
+  background: #f6f9fc;
+}
+
+.campaign-drawer-body {
+  padding: 16px 20px;
+  min-height: 100%;
+}
+
+.campaign-drawer .ant-form-item {
+  margin-bottom: 14px;
+}
+
+.campaign-preview-frame {
+  margin-top: 12px;
+  border: 1px solid #eee;
+  padding: 8px;
+  max-height: 220px;
+  overflow: auto;
+  border-radius: 4px;
+  background: #fff;
+}

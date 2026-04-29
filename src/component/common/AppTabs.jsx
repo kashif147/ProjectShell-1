@@ -1,4 +1,4 @@
-import { useState, Suspense, lazy, useEffect } from "react";
+import { useState, Suspense, lazy, useEffect, useCallback } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { useNavigate, useLocation, useSearchParams } from "react-router-dom";
 import { getProfileDetailsById } from "../../features/profiles/ProfileDetailsSlice";
@@ -54,7 +54,7 @@ function AppTabs() {
     .trim()
     .toLowerCase();
 
-  useEffect(() => {
+  const refreshDetailsData = useCallback(() => {
     if (!profileIdParam) return;
     dispatch(getProfileDetailsById(profileIdParam));
     if (subscriptionIdParam) {
@@ -68,6 +68,17 @@ function AppTabs() {
       );
     }
   }, [dispatch, profileIdParam, subscriptionIdParam]);
+
+  useEffect(() => {
+    refreshDetailsData();
+  }, [refreshDetailsData]);
+
+  useEffect(() => {
+    const handler = () => refreshDetailsData();
+    window.addEventListener("projectshell:details-refresh", handler);
+    return () =>
+      window.removeEventListener("projectshell:details-refresh", handler);
+  }, [refreshDetailsData]);
 
   const { profileDetails } = useSelector((state) => state.profileDetails || {});
 

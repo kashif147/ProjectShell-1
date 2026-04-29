@@ -5,9 +5,10 @@ import { RightOutlined } from "@ant-design/icons";
 import { LuRefreshCw } from "react-icons/lu";
 import UnifiedPagination from "../common/UnifiedPagination";
 import { formatDateDdMmYyyy } from "../../utils/Utilities";
+import { SOFT_BATCH_STATUS_TAGS } from "../../utils/softTagStyles";
 
 /** Same height for row 1 in stack columns so row 2 (ID / trigger / created date / breakdown) lines up */
-const STACK_ROW1_H = 26;
+const STACK_ROW1_H = 24;
 const stackRow1 = {
   height: STACK_ROW1_H,
   minHeight: STACK_ROW1_H,
@@ -98,7 +99,7 @@ function ReminderBatchesTable({
         ellipsis: true,
         sorter: () => 0,
         sortOrder:
-          sortColumnKey === "batchName" ? sortOrder ?? undefined : undefined,
+          sortColumnKey === "batchName" ? (sortOrder ?? undefined) : undefined,
         onCell: () => ({
           className: "reminder-batches-table__cell-stack",
         }),
@@ -145,7 +146,7 @@ function ReminderBatchesTable({
             <div>
               <div style={stackRow1}>
                 <Tag
-                  color={tagColor}
+                  color={completed ? "success" : "warning"}
                   style={{
                     margin: 0,
                     fontSize: 11,
@@ -177,7 +178,9 @@ function ReminderBatchesTable({
         width: 168,
         sorter: () => 0,
         sortOrder:
-          sortColumnKey === "createdDate" ? sortOrder ?? undefined : undefined,
+          sortColumnKey === "createdDate"
+            ? (sortOrder ?? undefined)
+            : undefined,
         onCell: () => ({
           className: "reminder-batches-table__cell-stack",
         }),
@@ -212,7 +215,7 @@ function ReminderBatchesTable({
         sorter: () => 0,
         sortOrder:
           sortColumnKey === "batchTotals"
-            ? sortOrder ?? undefined
+            ? (sortOrder ?? undefined)
             : undefined,
         onCell: () => ({
           className: "reminder-batches-table__cell-stack",
@@ -269,7 +272,12 @@ function ReminderBatchesTable({
                 }}
               >
                 {keys.map((k, i) => (
-                  <PerfCell key={k} positive={perfs[i].positive} pct={perfs[i].pct} size={13} />
+                  <PerfCell
+                    key={k}
+                    positive={perfs[i].positive}
+                    pct={perfs[i].pct}
+                    size={13}
+                  />
                 ))}
               </div>
               <div style={{ ...stackRow2, color: "#8c8c8c" }}>
@@ -335,24 +343,24 @@ function ReminderBatchesTable({
       }}
     >
       <div className="reminder-batches-table-wrap">
-      <Table
-        rowKey={(r) => r.id}
-        rowClassName={() => ""}
-        columns={columns}
-        dataSource={dataSource}
-        pagination={false}
-        bordered
-        tableLayout="fixed"
-        sticky
-        scroll={{ x: "max-content", y: "calc(100vh - 380px)" }}
-        size="small"
-        locale={{ emptyText: "No Data" }}
-        onChange={handleTableChange}
-        onRow={(record) => ({
-          onClick: () => onOpenBatch(record),
-          style: { cursor: "pointer" },
-        })}
-      />
+        <Table
+          rowKey={(r) => r.id}
+          rowClassName={() => ""}
+          columns={columns}
+          dataSource={dataSource}
+          pagination={false}
+          bordered
+          tableLayout="fixed"
+          sticky
+          scroll={{ x: "max-content", y: "calc(100vh - 380px)" }}
+          size="small"
+          locale={{ emptyText: "No Data" }}
+          onChange={handleTableChange}
+          onRow={(record) => ({
+            onClick: () => onOpenBatch(record),
+            style: { cursor: "pointer" },
+          })}
+        />
       </div>
       <div
         className="d-flex justify-content-center align-items-center tbl-footer"

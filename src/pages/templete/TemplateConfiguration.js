@@ -1034,7 +1034,17 @@ const htmlToPlainText = (html) => {
 // UPDATE TEMPLATE API FUNCTION
 const updateTemplateAPI = async (
   templateId,
-  { file, name, description, category, tempolateType, contentChanged = false }
+  {
+    file,
+    name,
+    description,
+    category,
+    tempolateType,
+    subject,
+    htmlBody,
+    textBody,
+    contentChanged = false,
+  }
 ) => {
   const token = localStorage.getItem("token");
 
@@ -1057,32 +1067,53 @@ const updateTemplateAPI = async (
       hasFile: !!file,
     });
 
-    const formData = new FormData();
+    const isEmailTemplate =
+      String(tempolateType || "").trim().toLowerCase() === "email";
 
-    // Always add the JSON data
-    formData.append("name", name.trim());
-    formData.append("description", description.trim());
-    formData.append("category", category.trim());
-    formData.append("tempolateType", tempolateType.trim());
-
-    // Only add file if content has changed
-    if (contentChanged && file) {
-      formData.append("file", file);
-      console.log("📎 File included in update");
+    let response;
+    if (isEmailTemplate) {
+      response = await fetch(
+        `${process.env.REACT_APP_CUMM || ""}/templates/${templateId}`,
+        {
+          method: "PUT",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            name: name.trim(),
+            description: description.trim(),
+            category: category.trim(),
+            tempolateType: "Email",
+            subject: (subject || "").trim(),
+            htmlBody: htmlBody || "<p></p>",
+            textBody: textBody || "",
+          }),
+        }
+      );
     } else {
-      console.log("📝 No file update needed");
-    }
-
-    const response = await fetch(
-      `${process.env.REACT_APP_CUMM || ""}/templates/${templateId}`,
-      {
-        method: "PUT",
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-        body: formData,
+      const formData = new FormData();
+      formData.append("name", name.trim());
+      formData.append("description", description.trim());
+      formData.append("category", category.trim());
+      formData.append("tempolateType", tempolateType.trim());
+      if (contentChanged && file) {
+        formData.append("file", file);
+        console.log("📎 File included in update");
+      } else {
+        console.log("📝 No file update needed");
       }
-    );
+      response = await fetch(
+        `${process.env.REACT_APP_CUMM || ""}/templates/${templateId}`,
+        {
+          method: "PUT",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+          body: formData,
+        }
+      );
+    }
 
     const responseText = await response.text();
 
@@ -1131,6 +1162,9 @@ const uploadTemplateAPI = async ({
   description,
   category,
   tempolateType,
+  subject,
+  htmlBody,
+  textBody,
 }) => {
   const token = localStorage.getItem("token");
 
@@ -1138,42 +1172,59 @@ const uploadTemplateAPI = async ({
     throw new Error("No authentication token found");
   }
 
-  // Validate file
-  if (!file) {
-    throw new Error("No file provided");
-  }
-
-  if (file.size > MAX_FILE_SIZE) {
-    throw new Error(
-      `File size exceeds limit (${Math.round(MAX_FILE_SIZE / (1024 * 1024))}MB)`
-    );
-  }
-
-  const formData = new FormData();
-  formData.append("file", file);
-  formData.append("name", name.trim());
-  formData.append("description", description.trim());
-  formData.append("category", category.trim());
-  formData.append("tempolateType", tempolateType.trim());
+  const isEmailTemplate =
+    String(tempolateType || "").trim().toLowerCase() === "email";
 
   try {
-    console.log("📤 Uploading DOCX file to API...");
-    console.log("📊 File info:", {
-      name: file.name,
-      size: file.size,
-      type: file.type,
-    });
-
-    const response = await fetch(
-      `${process.env.REACT_APP_CUMM || ""}/templates/upload`,
-      {
+    let response;
+    if (isEmailTemplate) {
+      response = await fetch(`${process.env.REACT_APP_CUMM || ""}/templates/email`, {
         method: "POST",
         headers: {
           Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
         },
-        body: formData,
+        body: JSON.stringify({
+          name: name.trim(),
+          description: description.trim(),
+          category: category.trim(),
+          subject: (subject || "").trim(),
+          htmlBody: htmlBody || "<p></p>",
+          textBody: textBody || "",
+        }),
+      });
+    } else {
+      if (!file) {
+        throw new Error("No file provided");
       }
-    );
+      if (file.size > MAX_FILE_SIZE) {
+        throw new Error(
+          `File size exceeds limit (${Math.round(MAX_FILE_SIZE / (1024 * 1024))}MB)`
+        );
+      }
+      const formData = new FormData();
+      formData.append("file", file);
+      formData.append("name", name.trim());
+      formData.append("description", description.trim());
+      formData.append("category", category.trim());
+      formData.append("tempolateType", tempolateType.trim());
+      console.log("📤 Uploading DOCX file to API...");
+      console.log("📊 File info:", {
+        name: file.name,
+        size: file.size,
+        type: file.type,
+      });
+      response = await fetch(
+        `${process.env.REACT_APP_CUMM || ""}/templates/upload`,
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+          body: formData,
+        }
+      );
+    }
 
     const responseText = await response.text();
 
@@ -1230,6 +1281,7 @@ const TemplateConfiguration = () => {
     defaultValues: {
       emailContent: "<p></p>",
       templateName: "",
+      subject: "",
       description: "",
       category: "",
       tempolateType: "",
@@ -1268,6 +1320,7 @@ const TemplateConfiguration = () => {
   // Watch template type for conditional rendering
   const watchedTemplateType = watch("tempolateType");
   const watchedTemplateName = watch("templateName");
+  const watchedSubject = watch("subject");
   const watchedDescription = watch("description");
   const watchedCategory = watch("category");
   const watchedEmailContent = watch("emailContent");
@@ -1300,12 +1353,14 @@ const TemplateConfiguration = () => {
 
     const changed =
       currentData.templateName !== originalFormData.templateName ||
+      currentData.subject !== originalFormData.subject ||
       currentData.description !== originalFormData.description ||
       currentData.category !== originalFormData.category ||
       currentData.tempolateType !== originalFormData.tempolateType;
 
     console.log("🔍 Metadata changed check:", {
       nameChanged: currentData.templateName !== originalFormData.templateName,
+      subjectChanged: currentData.subject !== originalFormData.subject,
       descChanged: currentData.description !== originalFormData.description,
       categoryChanged: currentData.category !== originalFormData.category,
       typeChanged: currentData.tempolateType !== originalFormData.tempolateType,
@@ -1320,6 +1375,7 @@ const TemplateConfiguration = () => {
 
     const currentData = {
       templateName: watchedTemplateName || "",
+      subject: watchedSubject || "",
       description: watchedDescription || "",
       category: watchedCategory || "",
       tempolateType: watchedTemplateType || "",
@@ -1334,6 +1390,7 @@ const TemplateConfiguration = () => {
 
     const hasMetadataInput =
       currentData.templateName.trim() !== "" ||
+      currentData.subject.trim() !== "" ||
       currentData.description.trim() !== "" ||
       currentData.category.trim() !== "" ||
       currentData.tempolateType.trim() !== "";
@@ -1345,6 +1402,7 @@ const TemplateConfiguration = () => {
     isLoadingContent,
     isEditMode,
     watchedTemplateName,
+    watchedSubject,
     watchedDescription,
     watchedCategory,
     watchedTemplateType,
@@ -1369,6 +1427,7 @@ const TemplateConfiguration = () => {
       // Create form data object
       const formData = {
         templateName: template.name || "",
+        subject: template.subject || "",
         description: template.description || "",
         category: template.category || "",
         tempolateType: template.tempolateType || "",
@@ -1387,8 +1446,18 @@ const TemplateConfiguration = () => {
       let nextEditorHtml = "<p></p>";
 
       try {
-        // Check for fileContent (base64 DOCX) in the response
-        if (data.fileContent) {
+        const isEmailTemplate =
+          String(template.tempolateType || "").trim().toLowerCase() === "email";
+
+        if (isEmailTemplate && template.htmlBody) {
+          const content = template.htmlBody;
+          setOriginalContent(content);
+          nextEditorHtml = normalizeTableUpWrapTagsInHtmlString(content);
+          const variableIds = (template.placeholders || [])
+            .map((key) => bookmarks?.find((b) => b.key === key)?._id)
+            .filter(Boolean);
+          setSelectedVariables(new Set(variableIds));
+        } else if (data.fileContent) {
           console.log(
             "📦 Found base64 DOCX content, length:",
             data.fileContent.length
@@ -1510,6 +1579,7 @@ const TemplateConfiguration = () => {
       reset({
         emailContent: "<p></p>",
         templateName: "",
+        subject: "",
         description: "",
         category: "",
         tempolateType: "",
@@ -1547,6 +1617,19 @@ const TemplateConfiguration = () => {
       maxLength: {
         value: 200,
         message: "Template name must be less than 200 characters",
+      },
+    },
+    subject: {
+      validate: (value) => {
+        const type = String(getValues("tempolateType") || "").toLowerCase();
+        if (type !== "email") return true;
+        if (!value || !String(value).trim()) {
+          return "Subject is required for email templates";
+        }
+        if (String(value).length > 500) {
+          return "Subject must be less than 500 characters";
+        }
+        return true;
       },
     },
     tempolateType: {
@@ -1617,10 +1700,13 @@ const TemplateConfiguration = () => {
         });
       }
 
+      const isEmailTemplate =
+        String(data.tempolateType || "").trim().toLowerCase() === "email";
+
       // Create DOCX file if:
       // 1. Creating new template, OR
       // 2. Updating template AND content has changed
-      if (!isEditMode || contentChanged) {
+      if (!isEmailTemplate && (!isEditMode || contentChanged)) {
         console.log("📄 Creating/updating DOCX file...");
         docResult = await createDocxFile({
           name: data.templateName.trim(),
@@ -1647,9 +1733,12 @@ const TemplateConfiguration = () => {
         await updateTemplateAPI(templateId, {
           file: docResult?.file,
           name: data.templateName.trim(),
+          subject: data.subject?.trim(),
           description: data.description.trim(),
           category: data.category.trim(),
           tempolateType: data.tempolateType,
+          htmlBody: data.emailContent,
+          textBody: data.description.trim(),
           contentChanged: contentChanged || metadataChanged, // Send update if either changed
         });
 
@@ -1680,29 +1769,40 @@ const TemplateConfiguration = () => {
         }
       } else {
         // CREATE NEW TEMPLATE
-        if (!docResult) {
+        if (!isEmailTemplate && !docResult) {
           throw new Error("Failed to create DOCX file for new template");
         }
 
         console.log("🆕 Creating new template");
 
         await uploadTemplateAPI({
-          file: docResult.file,
+          file: docResult?.file,
           name: data.templateName.trim(),
+          subject: data.subject?.trim(),
           description: data.description.trim(),
           category: data.category.trim(),
           tempolateType: data.tempolateType,
+          htmlBody: data.emailContent,
+          textBody: data.description.trim(),
         });
 
-        // Update state with generated file info
-        setGeneratedFile({
-          id: `template_${Date.now()}`,
-          name: docResult.fileName,
-          size: docResult.fileSize,
-          metadata: docResult.metadata,
-          action: "created",
-          fileIncluded: true,
-        });
+        setGeneratedFile(
+          isEmailTemplate
+            ? {
+                id: `template_${Date.now()}`,
+                name: data.templateName.trim(),
+                action: "created",
+                fileIncluded: false,
+              }
+            : {
+                id: `template_${Date.now()}`,
+                name: docResult.fileName,
+                size: docResult.fileSize,
+                metadata: docResult.metadata,
+                action: "created",
+                fileIncluded: true,
+              }
+        );
       }
 
       // Success message
@@ -2098,11 +2198,7 @@ const TemplateConfiguration = () => {
                     value={field.value}
                     onChange={field.onChange}
                     onBlur={field.onBlur}
-                    placeholder={
-                      watchedTemplateType === "letter"
-                        ? "Enter letter title"
-                        : "Enter email subject"
-                    }
+                    placeholder="Enter template name"
                     required={true}
                     hasError={!!errors.templateName}
                     errorMessage={errors.templateName?.message}
@@ -2111,6 +2207,29 @@ const TemplateConfiguration = () => {
               />
             </div>
 
+            {String(watchedTemplateType || "").toLowerCase() === "email" && (
+              <div style={{ marginBottom: "16px" }}>
+                <Controller
+                  name="subject"
+                  control={control}
+                  rules={validationRules.subject}
+                  render={({ field }) => (
+                    <MyInput
+                      label="Subject"
+                      name="subject"
+                      value={field.value}
+                      onChange={field.onChange}
+                      onBlur={field.onBlur}
+                      placeholder="Enter email subject"
+                      required={true}
+                      hasError={!!errors.subject}
+                      errorMessage={errors.subject?.message}
+                    />
+                  )}
+                />
+              </div>
+            )}
+
             <div style={{ marginBottom: "0px" }}>
               <Controller
                 name="description"
@@ -2118,13 +2237,21 @@ const TemplateConfiguration = () => {
                 rules={validationRules.description}
                 render={({ field }) => (
                   <MyInput
-                    label="Description"
+                    label={
+                      String(watchedTemplateType || "").toLowerCase() === "email"
+                        ? "Plain text (optional)"
+                        : "Description"
+                    }
                     name="description"
                     value={field.value}
                     onChange={field.onChange}
                     type="textarea"
                     onBlur={field.onBlur}
-                    placeholder="Enter template description"
+                    placeholder={
+                      String(watchedTemplateType || "").toLowerCase() === "email"
+                        ? "Optional plain text fallback"
+                        : "Enter template description"
+                    }
                     hasError={!!errors.description}
                     errorMessage={errors.description?.message}
                   />
