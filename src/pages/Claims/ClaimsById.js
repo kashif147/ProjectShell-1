@@ -120,7 +120,9 @@ const DragIndexContext = createContext({
         title: 'Description',
         dataIndex: 'Description',
         key: 'Description',
-        width: 150,
+        render: (text) => (
+          <span style={{ whiteSpace: 'nowrap' }}>{text}</span>
+        ),
     },
     
 ];
@@ -249,7 +251,16 @@ function ClaimsById() {
         return <th {...props} ref={setNodeRef} style={style} {...attributes} {...listeners} />;
       };
     return (
-      <div style={{width:'100%'}}>
+      <div
+        className="common-table"
+        style={{
+          paddingLeft: "34px",
+          paddingRight: "34px",
+          width: "100%",
+          overflowX: "auto",
+          paddingBottom: "80px",
+        }}
+      >
         <DndContext
         sensors={sensors}
         modifiers={[restrictToHorizontalAxis]}
@@ -259,13 +270,16 @@ function ClaimsById() {
       >
         <SortableContext items={columns.map((i) => i.key)} strategy={horizontalListSortingStrategy}>
           <DragIndexContext.Provider value={dragIndex}>
-          
             <Table
               rowKey="key"
-              className='claims-table'
               columns={columns}
               bordered
               dataSource={dataSource}
+              scroll={{ x: "max-content", y: 590 }}
+              tableLayout="fixed"
+              sticky
+              size="middle"
+              locale={{ emptyText: "No Data" }}
               components={{
                 header: {
                   cell: TableHeaderCell,
@@ -276,7 +290,6 @@ function ClaimsById() {
               }}
               pagination={false}
             />
-           
           </DragIndexContext.Provider>
         </SortableContext>
         <DragOverlay>

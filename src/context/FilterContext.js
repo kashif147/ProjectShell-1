@@ -107,6 +107,10 @@ export const FilterProvider = ({ children }) => {
     MembershipDashboard: {
       visibleFilters: [],
       filtersState: {}
+    },
+    EmailCampaigns: {
+      visibleFilters: [],
+      filtersState: {}
     }
   });
 
@@ -430,6 +434,7 @@ export const FilterProvider = ({ children }) => {
   const getScreenFromPath = () => {
     const pathMap = {
       "/applications": "Applications",
+      "/paymentforms": "Payment Forms",
       "/summary": "Profile",
       "/membership": "Membership",
       "/members": "Members",
@@ -442,6 +447,8 @@ export const FilterProvider = ({ children }) => {
       "/issuesmanagementdashboard": "Cases",
       "/attendees": "Attendees",
       "/membershipdashboard": "MembershipDashboard",
+      "/email": "EmailCampaigns",
+      "/emailcampaigndetail": "EmailCampaigns",
     };
     const key = (activeScreenName || "").toLowerCase();
     return pathMap[key] || "Applications";
@@ -455,6 +462,20 @@ export const FilterProvider = ({ children }) => {
       Applications: [
         "Membership Category",
         "Application Status",
+        "Submission Date",
+        "Email (Preferred)",
+        "Mobile No",
+        "Grade",
+        "Section (Primary Section)",
+        "Work Location",
+        "Branch",
+        "Region",
+        "Payment Type",
+        "Payroll No",
+      ],
+      "Payment Forms": [
+        "Membership Category",
+        "Form Type",
         "Submission Date",
         "Email (Preferred)",
         "Mobile No",
@@ -583,6 +604,19 @@ export const FilterProvider = ({ children }) => {
         "Branch",
         "Work Location",
       ],
+      EmailCampaigns: [
+        "Membership Category",
+        "Submission Date",
+        "Email (Preferred)",
+        "Mobile No",
+        "Grade",
+        "Section (Primary Section)",
+        "Work Location",
+        "Branch",
+        "Region",
+        "Payment Type",
+        "Payroll No",
+      ],
       Attendees: [
         "Event",
         "Event Type",
@@ -599,6 +633,7 @@ export const FilterProvider = ({ children }) => {
   // 🔹 Screen-specific default filters
   const screenSpecificDefaultFilters = {
     Applications: ["Application Status", "Membership Category"],
+    "Payment Forms": ["Form Type", "Membership Category"],
     Profile: ["Email", "Membership Category"],
     Membership: ["Membership Status", "Membership Category"],
     Members: ["Membership Status", "Membership Category"],
@@ -611,6 +646,7 @@ export const FilterProvider = ({ children }) => {
       "Membership Category",
       "Section (Primary Section)",
     ],
+    EmailCampaigns: ["Membership Category"],
   };
 
   // 🔹 Helper to get default visible filters for a screen
@@ -625,6 +661,7 @@ export const FilterProvider = ({ children }) => {
   // 🔹 Default visible filters for each screen
   const defaultVisibleFilters = useMemo(() => ({
     Applications: getDefaultVisibleFilters("Applications"),
+    "Payment Forms": getDefaultVisibleFilters("Payment Forms"),
     Profile: getDefaultVisibleFilters("Profile"),
     Membership: getDefaultVisibleFilters("Membership"),
     Members: getDefaultVisibleFilters("Members"),
@@ -634,6 +671,7 @@ export const FilterProvider = ({ children }) => {
     Events: getDefaultVisibleFilters("Events"),
     Attendees: getDefaultVisibleFilters("Attendees"),
     MembershipDashboard: getDefaultVisibleFilters("MembershipDashboard"),
+    EmailCampaigns: getDefaultVisibleFilters("EmailCampaigns"),
   }), [],);
 
   // 🔹 Default filter VALUES for each screen
@@ -642,6 +680,32 @@ export const FilterProvider = ({ children }) => {
       "Application Status": {
         operator: "==",
         selectedValues: ["Submitted"]
+      },
+      "Membership Category": {
+        operator: "==",
+        selectedValues: []
+      },
+      "Work Location": {
+        operator: "==",
+        selectedValues: []
+      },
+      "Grade": {
+        operator: "==",
+        selectedValues: []
+      },
+      "Region": {
+        operator: "==",
+        selectedValues: []
+      },
+      "Branch": {
+        operator: "==",
+        selectedValues: []
+      }
+    },
+    "Payment Forms": {
+      "Form Type": {
+        operator: "==",
+        selectedValues: []
       },
       "Membership Category": {
         operator: "==",
@@ -873,6 +937,28 @@ export const FilterProvider = ({ children }) => {
         operator: "between",
         selectedValues: []
       }
+    },
+    EmailCampaigns: {
+      "Membership Category": {
+        operator: "==",
+        selectedValues: []
+      },
+      "Work Location": {
+        operator: "==",
+        selectedValues: []
+      },
+      "Grade": {
+        operator: "==",
+        selectedValues: []
+      },
+      "Region": {
+        operator: "==",
+        selectedValues: []
+      },
+      "Branch": {
+        operator: "==",
+        selectedValues: []
+      }
     }
   }), []);
 
@@ -1029,6 +1115,7 @@ export const FilterProvider = ({ children }) => {
     return {
       // 🔹 CUSTOM FILTERS
       "Application Status": ["", "In-Progress", "Approved", "Rejected", "Submitted"],
+      "Form Type": ["", "Salary Deductions", "Standing Orders"],
       "Membership Status": ["", "Active", "Inactive", "Pending", "Cancelled"],
 
       // 🔹 CATEGORY FILTER

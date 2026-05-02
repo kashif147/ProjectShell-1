@@ -1342,7 +1342,7 @@ const MembershipDashboard = () => {
                 : []
             }
             pagination={{
-              pageSize: 100,
+              pageSize: 500,
               showSizeChanger: true,
               showQuickJumper: false,
               showTotal: (total, range) => {
@@ -1352,7 +1352,7 @@ const MembershipDashboard = () => {
                 return `${start}-${end} of ${totalCount} items`;
               },
               pageSizeOptions: ["50", "100", "200", "500"],
-              defaultPageSize: 100,
+              defaultPageSize: 500,
             }}
             scroll={{ x: 800 }}
             size="small"

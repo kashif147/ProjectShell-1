@@ -118,13 +118,13 @@
 //     label: <div className="sidebar-label">Notes & Letters</div>,
 //   },
 //   {
-//     key: "Communication History",
+//     key: "Correspondence",
 //     icon: (
 //       <div className="icon">
 //         <FaHistory />
 //       </div>
 //     ),
-//     label: <div className="sidebar-label">Communication History</div>,
+//     label: <div className="sidebar-label">Correspondence</div>,
 //   },
 // ];
 

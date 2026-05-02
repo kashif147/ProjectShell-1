@@ -1,6 +1,18 @@
-import React, { useState, useEffect, useMemo, useCallback } from "react";
+import React, {
+  useState,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useCallback,
+} from "react";
 import { Button, Empty, notification, Dropdown, Tooltip, Segmented } from "antd";
-import { MoreOutlined, InfoCircleOutlined } from "@ant-design/icons";
+import {
+  MoreOutlined,
+  InfoCircleOutlined,
+  RollbackOutlined,
+  StopOutlined,
+  SwapOutlined,
+} from "@ant-design/icons";
 import RefundDrawer from "./RefundDrawer";
 import WriteOffDrawer from "./WriteOffDrawer";
 import ReallocationDrawer from "./ReallocationDrawer";
@@ -13,6 +25,7 @@ import MyTable from "../common/MyTable";
 import { centsToEuro, formatDateOnly } from "../../utils/Utilities";
 // import axios from "axios";
 import { useTableColumns } from "../../context/TableColumnsContext ";
+import { useFinanceTabToolbar } from "../../context/FinanceTabToolbarContext";
 
 /** GL doc type values shown with friendlier labels in the Finance grid. */
 function displayDocTypeLabel(raw) {
@@ -367,6 +380,7 @@ function refundInitialModeFromReceiptRows(rows) {
 }
 
 const TransactionHistory = () => {
+  const financeToolbarApi = useFinanceTabToolbar();
   const location = useLocation();
   const [searchParams] = useSearchParams();
   const { profileDetails } = useSelector((state) => state.profileDetails || {});
@@ -1186,26 +1200,15 @@ const TransactionHistory = () => {
     selectedLedgerRows.length === 1 &&
     isClaimDocType(selectedLedgerRows[0]);
 
-  if (!memberId) {
-    return <div className="mt-4"><Empty description="No Member ID provided" /></div>;
-  }
-
-  return (
-    <div
-      className="mt-2 pe-4 pb-4 mb-2"
-      style={{
-        height: "calc(92vh - 120px - 4vh)",
-        maxHeight: "calc(100vh - 120px - 4vh)",
-        overflowY: "auto",
-        overflowX: "hidden",
-        position: "relative",
-        scrollBehavior: "smooth",
-        // paddingRight: "12px",
-        paddingBottom: "200px",
-        width: '100%'
-      }}
-    >
-      <div className="d-flex justify-content-between align-items-center mb-2 flex-wrap gap-2">
+  useLayoutEffect(() => {
+    const setExtras = financeToolbarApi?.setFinanceTabBarExtra;
+    if (!setExtras) return undefined;
+    if (!memberId) {
+      setExtras(null);
+      return undefined;
+    }
+    setExtras(
+      <>
         <Segmented
           aria-label="Ledger detail level"
           options={[
@@ -1221,19 +1224,21 @@ const TransactionHistory = () => {
               {
                 key: "refund",
                 label: "Refund",
+                icon: <RollbackOutlined />,
                 danger: true,
                 disabled: !refundMenuEnabled,
                 onClick: () =>
                   openRefundForRecords(
                     data.filter((r) =>
-                      selectedRowKeys.some((k) => String(k) === String(r.key))
-                    )
+                      selectedRowKeys.some((k) => String(k) === String(r.key)),
+                    ),
                   ),
               },
               { type: "divider" },
               {
                 key: "writeoff",
                 label: "Write off",
+                icon: <StopOutlined />,
                 disabled: !writeOffMenuEnabled,
                 onClick: () => openWriteOffForSelection(),
               },
@@ -1241,6 +1246,7 @@ const TransactionHistory = () => {
               {
                 key: "reallocation",
                 label: "Reallocation",
+                icon: <SwapOutlined />,
                 disabled: !reallocationMenuEnabled,
                 onClick: () => openReallocationForSelection(),
               },
@@ -1249,27 +1255,72 @@ const TransactionHistory = () => {
           trigger={["click"]}
         >
           <Button
-            size="large"
             type="default"
             icon={<MoreOutlined />}
             aria-label="More actions"
           />
         </Dropdown>
-      </div>
+      </>,
+    );
+    return () => setExtras(null);
+  }, [
+    financeToolbarApi,
+    memberId,
+    ledgerView,
+    refundMenuEnabled,
+    writeOffMenuEnabled,
+    reallocationMenuEnabled,
+    selectedRowKeys,
+    data,
+    openRefundForRecords,
+    openWriteOffForSelection,
+    openReallocationForSelection,
+  ]);
 
-      <MyTable
-        columns={columns}
-        dataSource={data}
-        loading={loading}
-        selection
-        rowSelection={{ selectedRowKeys }}
-        onSelectionChange={(keys) => setSelectedRowKeys(keys)}
-        tablePadding={{ paddingLeft: "0", paddingRight: "0" }}
-        defaultSortField="ledgerCreatedAt"
-        defaultSortOrder="descend"
-        alwaysFirstSortField="ledgerCreatedAt"
-        alwaysFirstSortOrder="descend"
-      />
+  if (!memberId) {
+    return <div className="mt-4"><Empty description="No Member ID provided" /></div>;
+  }
+
+  return (
+    <div
+      className="mt-2 pe-3"
+      style={{
+        display: "flex",
+        flexDirection: "column",
+        flex: "1 1 0%",
+        minWidth: 0,
+        minHeight: 0,
+        overflow: "hidden",
+        width: "100%",
+      }}
+    >
+      <div
+        style={{
+          flex: "1 1 0%",
+          minHeight: 0,
+          minWidth: 0,
+          display: "flex",
+          flexDirection: "column",
+          overflow: "hidden",
+        }}
+      >
+        <MyTable
+          columns={columns}
+          dataSource={data}
+          loading={loading}
+          selection
+          rowSelection={{ selectedRowKeys }}
+          onSelectionChange={(keys) => setSelectedRowKeys(keys)}
+          tablePadding={{ paddingLeft: "0", paddingRight: "0" }}
+          defaultSortField="ledgerCreatedAt"
+          defaultSortOrder="descend"
+          alwaysFirstSortField="ledgerCreatedAt"
+          alwaysFirstSortOrder="descend"
+          footerVariant="infinite"
+          infiniteLoadOnScroll={false}
+          scroll={{ x: "max-content" }}
+        />
+      </div>
 
       <RefundDrawer
         open={refundDrawerOpen}

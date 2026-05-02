@@ -7,6 +7,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { getGridTemplates, updateGridTemplate } from "../../features/templete/templetefiltrsclumnapi";
 import { getViewById } from "../../features/views/ViewByIdSlice";
 import { getApplicationsWithFilter } from "../../features/applicationwithfilterslice";
+import { getPaymentFormsWithFilter } from "../../features/paymentFormsWithFilterSlice";
 import { getAllApplications } from "../../features/ApplicationSlice";
 import { getSubscriptionsWithTemplate } from "../../features/subscription/subscriptionSlice";
 import { useFilters } from "../../context/FilterContext";
@@ -23,6 +24,8 @@ function Gridmenu({ title, screenName, setColumnsDragbe, columnsForFilter, setCo
     location.pathname === "/membership";
   const isApplicationsScreen =
     (location.pathname || "").toLowerCase() === "/applications";
+  const isPaymentFormsScreen =
+    (location.pathname || "").toLowerCase() === "/paymentforms";
   const { hasAnyRole } = useAuthorization();
   const canEditGridTemplates = hasAnyRole(["SU", "ASU"]);
   const screenChanges = useSelector(
@@ -31,7 +34,11 @@ function Gridmenu({ title, screenName, setColumnsDragbe, columnsForFilter, setCo
   const hasUnsavedViewChanges = !!screenChanges[String(screenName || "").toLowerCase()];
   const { columns, updateColumns, handleCheckboxFilterChange, updateSelectedTemplate, reorderGridColumns } = useTableColumns();
   const { filtersState, applyTemplateFilters } = useFilters();
-  const { currentTemplateId } = useSelector((state) => state.applicationWithFilter);
+  const { currentTemplateId } = useSelector((state) =>
+    isPaymentFormsScreen
+      ? state.paymentFormsWithFilter || { currentTemplateId: "" }
+      : state.applicationWithFilter,
+  );
   const [isUpdating, setIsUpdating] = useState(false);
   const [draggingIndex, setDraggingIndex] = useState(null);
   const [menuOpen, setMenuOpen] = useState(false);
@@ -39,7 +46,9 @@ function Gridmenu({ title, screenName, setColumnsDragbe, columnsForFilter, setCo
 
   const gridTemplateType = isMembersScreen
     ? "members"
-    : isApplicationsScreen
+    : isPaymentFormsScreen
+      ? "payment forms"
+      : isApplicationsScreen
       ? "application"
       : undefined;
 
@@ -109,7 +118,15 @@ function Gridmenu({ title, screenName, setColumnsDragbe, columnsForFilter, setCo
           getApplicationsWithFilter({
             templateId: currentTemplateId,
             page: 1,
-            limit: 10,
+            limit: 500,
+          }),
+        );
+      } else if (isPaymentFormsScreen) {
+        await dispatch(
+          getPaymentFormsWithFilter({
+            templateId: currentTemplateId,
+            page: 1,
+            limit: 500,
           }),
         );
       } else if (isMembersScreen) {
@@ -117,7 +134,7 @@ function Gridmenu({ title, screenName, setColumnsDragbe, columnsForFilter, setCo
           getSubscriptionsWithTemplate({
             templateId: currentTemplateId,
             page: 1,
-            limit: 10,
+            limit: 500,
           }),
         );
       }

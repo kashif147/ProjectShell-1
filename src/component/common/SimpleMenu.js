@@ -11,9 +11,10 @@ import {
 import { SearchOutlined } from "@ant-design/icons";
 import {
   FaTrashAlt,
-  FaRegArrowAltCircleRight,
   FaUserAltSlash,
-  FaUndo
+  FaUndo,
+  FaExchangeAlt,
+  FaTags,
 } from "react-icons/fa";
 import { ImAttachment } from "react-icons/im";
 import { GrView } from "react-icons/gr";
@@ -88,9 +89,18 @@ function SimpleMenu({
   const { applications: filteredApplications } = useSelector(
     (state) => state.applicationWithFilter
   );
+  const { paymentForms: filteredPaymentForms } = useSelector(
+    (state) => state.paymentFormsWithFilter || {}
+  );
 
-  const isNewApplicationsPage = location.pathname.toLowerCase() === "/applications";
-  const applications = isNewApplicationsPage ? filteredApplications : oldApplications;
+  const isApplicationsPage = location.pathname.toLowerCase() === "/applications";
+  const isPaymentFormsPage = location.pathname.toLowerCase() === "/paymentforms";
+  const isNewApplicationsPage = isApplicationsPage || isPaymentFormsPage;
+  const applications = isPaymentFormsPage
+    ? filteredPaymentForms
+    : isApplicationsPage
+      ? filteredApplications
+      : oldApplications;
 
   // Function to format dates in the application data (matching MembershipApplication.jsx)
   const formatApplicationDates = (applicationData) => {
@@ -145,8 +155,13 @@ function SimpleMenu({
   const prepareDataForExport = (data, screenName) => {
     // Determine the correct mapping key for the screen
     let mappingKey = screenName;
-    if (location.pathname === "/MembershipApplication" || location.pathname === "/Applications") {
+    if (
+      location.pathname === "/MembershipApplication" ||
+      location.pathname === "/Applications"
+    ) {
       mappingKey = "Applications";
+    } else if (location.pathname === "/PaymentForms") {
+      mappingKey = "Payment Forms";
     }
 
     if (!data || !mappingKey || !columns[mappingKey]) return data;
@@ -202,16 +217,29 @@ function SimpleMenu({
 
   useEffect(() => {
     // Redundant: MembershipApplication is now the driver for /applications
-    if (location.pathname === "/Applications" && !record && !isNewApplicationsPage) {
+    if (
+      (location.pathname === "/Applications" ||
+        location.pathname === "/PaymentForms") &&
+      !record &&
+      !isNewApplicationsPage
+    ) {
       dispatch(getAllApplications(filtersState));
     }
   }, [location.pathname, filtersState, dispatch, record, isNewApplicationsPage]);
 
   useEffect(() => {
-    if (location.pathname === "/Applications" && applications && applications.length > 0) {
+    if (
+      (location.pathname === "/Applications" ||
+        location.pathname === "/PaymentForms") &&
+      applications &&
+      applications.length > 0
+    ) {
       const formatted = applications.map(app => formatApplicationDates(app));
       setGridData(formatted);
-    } else if (location.pathname === "/Applications") {
+    } else if (
+      location.pathname === "/Applications" ||
+      location.pathname === "/PaymentForms"
+    ) {
       setGridData([]);
     }
   }, [applications, location.pathname, setGridData]);
@@ -393,14 +421,14 @@ function SimpleMenu({
                     getTransferRequestById(record)
                   }}
                 >
-                  <FaRegArrowAltCircleRight
+                  <FaExchangeAlt
                     style={{
                       fontSize: "12px",
                       marginRight: "10px",
                       color: "#45669d"
                     }}
                   />
-                  Transfer Request
+                  Transfer Requests
                 </div>
               ) : key === "assign IRO" ? (
                 <div
@@ -445,7 +473,7 @@ function SimpleMenu({
                   />
                   Generate NFC tag
                 </div>
-              ) : key === "Change Category" ? (
+              ) : key === "Category Changes" ? (
                 <div
                   className="d-flex align-items-baseline"
                   onClick={async (e) => {
@@ -454,7 +482,14 @@ function SimpleMenu({
                     setisDrawerOpen(true);
                   }}
                 >
-                  Change Category
+                  <FaTags
+                    style={{
+                      fontSize: "12px",
+                      marginRight: "10px",
+                      color: "#45669d"
+                    }}
+                  />
+                  Category Changes
                 </div>
               ) : (
                 key

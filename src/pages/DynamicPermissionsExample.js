@@ -231,7 +231,7 @@ const DynamicPermissionsExample = () => {
             columns={permissionColumns}
             dataSource={permissionDefinitions}
             rowKey="key"
-            pagination={{ pageSize: 10 }}
+            pagination={{ pageSize: 500 }}
             size="small"
           />
         )}
@@ -257,7 +257,7 @@ const DynamicPermissionsExample = () => {
             columns={roleColumns}
             dataSource={roleDefinitions}
             rowKey="key"
-            pagination={{ pageSize: 10 }}
+            pagination={{ pageSize: 500 }}
             size="small"
           />
         )}

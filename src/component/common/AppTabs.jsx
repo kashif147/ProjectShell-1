@@ -1,4 +1,12 @@
-import { useState, Suspense, lazy, useEffect, useCallback } from "react";
+import {
+  useState,
+  Suspense,
+  lazy,
+  useEffect,
+  useCallback,
+  useMemo,
+  useRef,
+} from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { useNavigate, useLocation, useSearchParams } from "react-router-dom";
 import { getProfileDetailsById } from "../../features/profiles/ProfileDetailsSlice";
@@ -10,20 +18,33 @@ import {
 import { getApplicationById } from "../../features/ApplicationDetailsSlice";
 import { buildApplicationMgtSearch } from "../../utils/applicationMgtRoute";
 import { getProfileApplications } from "../../features/profiles/profileApplicationsSlice";
-import { Tabs, Spin, Drawer } from "antd";
+import { Tabs, Spin, Drawer, Button, Dropdown } from "antd";
+import { MoreOutlined } from "@ant-design/icons";
 import MyTable from "./MyTable";
 import {
   FaFolder,
-  FaFileAlt,
   FaProjectDiagram,
   FaBook,
   FaHistory,
+  FaEdit,
+  FaClone,
+  FaUserSlash,
+  FaBan,
+  FaUndo,
+  FaExchangeAlt,
+  FaTags,
+  FaRegClock,
+  FaIdCard,
+  FaCalendarAlt,
+  FaBalanceScale,
 } from "react-icons/fa";
 import { useTableColumns } from "../../context/TableColumnsContext ";
 import TransferRequests from "../TransferRequests";
 import CategoryChangeRequest from "../details/ChangeCategoryDrawer";
 import Reminder from "../profile/Reminder";
 import { formatDateOnly } from "../../utils/Utilities";
+import { FinanceTabToolbarContext } from "../../context/FinanceTabToolbarContext";
+import { MembershipTabToolbarContext } from "../../context/MembershipTabToolbarContext";
 
 const { TabPane } = Tabs;
 
@@ -41,7 +62,28 @@ const HistoryByID = lazy(() => import("../../pages/HistoryByID"));
 const ProfileHeader = lazy(() => import("../common/ProfileHeader"));
 const DuplicateMembers = lazy(() => import("../profile/DuplicateMembers"));
 
-const staticTabKeys = ["1", "15", "2", "4", "5", "6", "7"];
+/** Events ("16") and Claims ("7") are overflow-only, not shown on first load. */
+const staticTabKeys = ["1", "2", "4", "5", "6", "3"];
+
+const MEMBERSHIP_MORE_ICON = {
+  edit: "#1890ff",
+  duplicate: "#722ed1",
+  activate: "#52c41a",
+  activateMuted: "rgba(82, 196, 26, 0.45)",
+  cancel: "#ff4d4f",
+  deceased: "#fa8c16",
+};
+
+function membershipMoreIcon(Icon, color) {
+  return <Icon style={{ color, fontSize: 14 }} aria-hidden />;
+}
+
+const initialMembershipHeaderActionsMeta = {
+  showCancelMembership: false,
+  showActivateMembership: false,
+  activateMembershipDisabled: false,
+  activateMembershipTitle: undefined,
+};
 
 function AppTabs() {
   const dispatch = useDispatch();
@@ -49,7 +91,9 @@ function AppTabs() {
   const location = useLocation();
   const [searchParams] = useSearchParams();
   const profileIdParam = normalizeRouteId(searchParams.get("profileId"));
-  const subscriptionIdParam = normalizeRouteId(searchParams.get("subscriptionId"));
+  const subscriptionIdParam = normalizeRouteId(
+    searchParams.get("subscriptionId"),
+  );
   const activeTabParam = String(searchParams.get("activeTab") || "")
     .trim()
     .toLowerCase();
@@ -81,6 +125,13 @@ function AppTabs() {
   }, [refreshDetailsData]);
 
   const { profileDetails } = useSelector((state) => state.profileDetails || {});
+  const { ProfileSubData } = useSelector(
+    (state) => state.profileSubscription || {},
+  );
+  const currentSubscriptionStatus =
+    ProfileSubData?.data?.[0]?.subscriptionStatus || "";
+  const showResignedProfileBanner =
+    String(currentSubscriptionStatus).trim() === "Resigned";
 
   const [activeKey, setActiveKey] = useState("1");
   const [visibleTabs, setVisibleTabs] = useState(staticTabKeys);
@@ -89,10 +140,55 @@ function AppTabs() {
   const [isDrawerOpen, setisDrawerOpen] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
   const [isDeceased, setIsDeceased] = useState(false);
+
+  const profileIdForDeceased =
+    profileDetails?._id || profileDetails?.id || "";
+  useEffect(() => {
+    if (!profileIdForDeceased) {
+      setIsDeceased(false);
+      return;
+    }
+    const pi = profileDetails?.personalInfo || {};
+    const fromApi =
+      Boolean(pi.deceased) || Boolean(pi.deceasedDate);
+    setIsDeceased(fromApi);
+  }, [
+    profileIdForDeceased,
+    profileDetails?.personalInfo?.deceased,
+    profileDetails?.personalInfo?.deceasedDate,
+  ]);
+
   const [isDuplicateDrawerOpen, setIsDuplicateDrawerOpen] = useState(false);
   const [isApplicationDrawerOpen, setIsApplicationDrawerOpen] = useState(false);
   const [isSubscriptionDrawerOpen, setIsSubscriptionDrawerOpen] =
     useState(false);
+
+  const profileHeaderRef = useRef(null);
+  const [membershipHeaderActionsMeta, setMembershipHeaderActionsMeta] =
+    useState(initialMembershipHeaderActionsMeta);
+  const onMembershipHeaderActionsMetaChange = useCallback((meta) => {
+    setMembershipHeaderActionsMeta(meta);
+  }, []);
+
+  const [financeTabBarExtra, setFinanceTabBarExtra] = useState(null);
+  useEffect(() => {
+    if (activeKey !== "2") setFinanceTabBarExtra(null);
+  }, [activeKey]);
+
+  const financeToolbarApi = useMemo(
+    () => ({ setFinanceTabBarExtra: setFinanceTabBarExtra }),
+    [],
+  );
+
+  const [membershipTabBarExtra, setMembershipTabBarExtra] = useState(null);
+  useEffect(() => {
+    if (activeKey !== "1") setMembershipTabBarExtra(null);
+  }, [activeKey]);
+
+  const membershipToolbarApi = useMemo(
+    () => ({ setMembershipTabBarExtra }),
+    [],
+  );
 
   const { columns } = useTableColumns();
   const userApplications = useSelector(
@@ -103,6 +199,12 @@ function AppTabs() {
   );
   const { profileApplications, loading: profileApplicationsLoading } =
     useSelector((state) => state.profileApplications || {});
+
+  useEffect(() => {
+    if (activeKey === "3" && profileDetails?._id) {
+      dispatch(getProfileApplications({ profileId: profileDetails._id }));
+    }
+  }, [activeKey, profileDetails?._id, dispatch]);
 
   useEffect(() => {
     const requestedTab = String(location.state?.activeTab || "")
@@ -252,15 +354,38 @@ function AppTabs() {
     { key: "4", label: "Documents", children: <DoucmentsById /> },
     {
       key: "5",
-      label: "Communication History",
+      label: "Correspondence",
       children: <CommunicationHistory />,
     },
     { key: "6", label: "Cases", children: <CasesById /> },
+    {
+      key: "3",
+      label: "Applications",
+      children: (
+        <div style={{ padding: 20 }}>
+          <MyTable
+            columns={profileApplicationColumns}
+            dataSource={profileApplications}
+            loading={profileApplicationsLoading}
+            selection={false}
+          />
+        </div>
+      ),
+    },
+    {
+      key: "16",
+      label: "Events",
+      children: <div>Events</div>,
+    },
     { key: "7", label: "Claims", children: <ClaimsById /> },
     { key: "8", label: "Roster", children: <Roster /> },
     { key: "11", label: "Audit History", children: <HistoryByID /> },
     { key: "9", label: "Projects", children: <div>Projects</div> },
-    { key: "10", label: "Trainings", children: <div>Trainings</div> },
+    {
+      key: "10",
+      label: "Trainings (CPD)",
+      children: <div>Trainings (CPD)</div>,
+    },
   ];
 
   const handleMenuClick = (key) => {
@@ -299,65 +424,62 @@ function AppTabs() {
   const filteredItems = allItems.filter((item) =>
     visibleTabs.includes(item.key),
   );
+  /** Alphabetical by label (profile tab overflow ⋮ menu). */
   const Menuitems = [
-    {
-      key: "8",
-      label: "Roster",
-      icon: <FaFolder />,
-      onClick: () => handleMenuClick("8"),
-    },
-    // { key: '4', label: 'Documents', icon: <FaFileAlt />, onClick: () => handleMenuClick('4') },
-    {
-      key: "9",
-      label: "Projects",
-      icon: <FaProjectDiagram />,
-      onClick: () => handleMenuClick("9"),
-    },
-    {
-      key: "10",
-      label: "Trainings",
-      icon: <FaBook />,
-      onClick: () => handleMenuClick("10"),
-    },
     {
       key: "11",
       label: "Audit History",
       icon: <FaHistory />,
+      iconColor: "#722ed1",
       onClick: () => handleMenuClick("11"),
     },
     {
-      key: "12",
-      label: "Transfered History",
-      icon: <FaHistory />,
-      onClick: () => setTransferDrawer(true),
+      key: "13",
+      label: "Category Changes",
+      icon: <FaTags />,
+      iconColor: "#2f54eb",
+      onClick: () => setisDrawerOpen(true),
     },
     {
-      key: "13",
-      label: "Membership Category",
-      icon: <FaHistory />,
-      onClick: () => setisDrawerOpen(true),
+      key: "7",
+      label: "Claims",
+      icon: <FaBalanceScale />,
+      iconColor: "#fa541c",
+      onClick: () => handleMenuClick("7"),
+    },
+    {
+      key: "16",
+      label: "Events",
+      icon: <FaCalendarAlt />,
+      iconColor: "#13c2c2",
+      onClick: () => handleMenuClick("16"),
+    },
+    {
+      key: "9",
+      label: "Projects",
+      icon: <FaProjectDiagram />,
+      iconColor: "#1890ff",
+      onClick: () => handleMenuClick("9"),
     },
     {
       key: "14",
       label: "Reminders",
-      icon: <FaHistory />,
+      icon: <FaRegClock />,
+      iconColor: "#faad14",
       onClick: () => setIsReminder(true),
     },
     {
-      key: "application",
-      label: "Application",
-      icon: <FaFileAlt />,
-      onClick: () => {
-        if (profileDetails?._id) {
-          dispatch(getProfileApplications({ profileId: profileDetails._id }));
-        }
-        setIsApplicationDrawerOpen(true);
-      },
+      key: "8",
+      label: "Roster",
+      icon: <FaFolder />,
+      iconColor: "#13c2c2",
+      onClick: () => handleMenuClick("8"),
     },
     {
       key: "subscriptionhistory",
       label: "Subscription History",
-      icon: <FaHistory />,
+      icon: <FaIdCard />,
+      iconColor: "#597ef7",
       onClick: () => {
         if (profileDetails?._id) {
           dispatch(
@@ -369,7 +491,85 @@ function AppTabs() {
         setIsSubscriptionDrawerOpen(true);
       },
     },
+    {
+      key: "10",
+      label: "Trainings (CPD)",
+      icon: <FaBook />,
+      iconColor: "#eb2f96",
+      onClick: () => handleMenuClick("10"),
+    },
+    {
+      key: "12",
+      label: "Transfer Requests",
+      icon: <FaExchangeAlt />,
+      iconColor: "#fa8c16",
+      onClick: () => setTransferDrawer(true),
+    },
   ];
+
+  /** Ant Design menu items for the tab bar "More actions" button — extend per `activeKey` as needed. */
+  const profileTabMoreActionMenuItems = useMemo(() => {
+    switch (String(activeKey)) {
+      case "1": {
+        const items = [
+          {
+            key: "membership-edit",
+            label: isEditMode ? "Cancel Edit" : "Edit Profile",
+            icon: membershipMoreIcon(FaEdit, MEMBERSHIP_MORE_ICON.edit),
+            onClick: () => setIsEditMode((v) => !v),
+          },
+          {
+            key: "membership-duplicate",
+            label: "Check Duplicate",
+            icon: membershipMoreIcon(FaClone, MEMBERSHIP_MORE_ICON.duplicate),
+            onClick: () => setIsDuplicateDrawerOpen(true),
+          },
+        ];
+        if (membershipHeaderActionsMeta.showActivateMembership) {
+          items.push({
+            key: "membership-activate",
+            label: "Activate Membership",
+            icon: membershipMoreIcon(
+              FaUndo,
+              membershipHeaderActionsMeta.activateMembershipDisabled
+                ? MEMBERSHIP_MORE_ICON.activateMuted
+                : MEMBERSHIP_MORE_ICON.activate,
+            ),
+            disabled: membershipHeaderActionsMeta.activateMembershipDisabled,
+            title: membershipHeaderActionsMeta.activateMembershipTitle,
+            onClick: () =>
+              profileHeaderRef.current?.openActivateMembershipModal?.(),
+          });
+        }
+        if (membershipHeaderActionsMeta.showCancelMembership) {
+          items.push({
+            key: "membership-cancel",
+            label: "Cancel Membership",
+            icon: membershipMoreIcon(FaBan, MEMBERSHIP_MORE_ICON.cancel),
+            danger: true,
+            onClick: () =>
+              profileHeaderRef.current?.openCancelMembershipModal?.(),
+          });
+        }
+        items.push(
+          { type: "divider", key: "membership-divider-deceased" },
+          {
+            key: "membership-deceased",
+            label: isDeceased ? "Unmark as Deceased" : "Mark as Deceased",
+            icon: membershipMoreIcon(
+              FaUserSlash,
+              MEMBERSHIP_MORE_ICON.deceased,
+            ),
+            onClick: () => setIsDeceased((v) => !v),
+          },
+        );
+        return items;
+      }
+      default:
+        return [];
+    }
+  }, [activeKey, isEditMode, isDeceased, membershipHeaderActionsMeta]);
+
   const historyData = [
     {
       key: "1",
@@ -442,35 +642,144 @@ function AppTabs() {
   ];
 
   return (
-    <div className="d-flex">
+    <div
+      className="d-flex"
+      style={{
+        flex: "1 1 0%",
+        minHeight: 0,
+        minWidth: 0,
+        width: "100%",
+        height: "100%",
+        overflow: "hidden",
+      }}
+    >
       <ProfileHeader
-        isEditMode={isEditMode}
-        setIsEditMode={setIsEditMode}
+        ref={profileHeaderRef}
         showButtons={activeKey === "1"}
         isDeceased={isDeceased}
-        onDuplicateClick={() => setIsDuplicateDrawerOpen(true)}
+        onMembershipHeaderActionsMetaChange={
+          onMembershipHeaderActionsMetaChange
+        }
       />
-      <Tabs
-        activeKey={activeKey}
-        onChange={handleTabChange}
-        destroyInactiveTabPane
-        style={{ flex: 1, minWidth: 0 }}
-      >
-        {filteredItems.map((item) => (
-          <TabPane tab={item.label} key={item.key}>
-            <Suspense fallback={<Spin />}>{item.children}</Suspense>
-          </TabPane>
-        ))}
-        <TabPane
-          key="menu"
-          tab={
-            <div style={{ marginLeft: 8 }}>
-              <ThreeDotsMenu items={Menuitems} />
-            </div>
-          }
-          disabled
-        />
-      </Tabs>
+      <MembershipTabToolbarContext.Provider value={membershipToolbarApi}>
+        <FinanceTabToolbarContext.Provider value={financeToolbarApi}>
+          <div
+            style={{
+              flex: "1 1 0%",
+              minWidth: 0,
+              minHeight: 0,
+              height: "100%",
+              display: "flex",
+              flexDirection: "column",
+              overflow: "hidden",
+            }}
+          >
+            {showResignedProfileBanner && (
+              <div
+                style={{
+                  flexShrink: 0,
+                  backgroundColor: "#fff1f0",
+                  border: "1px solid #ffa39e",
+                  borderRadius: "4px",
+                  padding: "12px 16px",
+                  marginBottom: "8px",
+                  marginInline: "0 8px",
+                  marginTop: "4px",
+                  color: "#cf1322",
+                  fontSize: "14px",
+                  fontWeight: 500,
+                }}
+              >
+                ⚠️ Member has resigned. This profile is read-only, and the
+                subscription has been cancelled.
+              </div>
+            )}
+            {isDeceased && (
+              <div
+                style={{
+                  flexShrink: 0,
+                  backgroundColor: "#fff7e6",
+                  border: "1px solid #ffd591",
+                  borderRadius: "4px",
+                  padding: "12px 16px",
+                  marginBottom: "8px",
+                  marginInline: "0 8px",
+                  marginTop: showResignedProfileBanner ? 0 : "4px",
+                  color: "#ad6800",
+                  fontSize: "14px",
+                  fontWeight: 500,
+                }}
+              >
+                ⚠️ Member is marked as deceased. Profile is read-only and
+                subscription has been cancelled.
+              </div>
+            )}
+            <Tabs
+            className="profile-details-tabs"
+            activeKey={activeKey}
+            onChange={handleTabChange}
+            destroyInactiveTabPane
+            tabBarExtraContent={{
+              right: (
+                <div
+                  className="d-flex align-items-center gap-2 flex-wrap"
+                  style={{ marginInlineEnd: 8 }}
+                >
+                  {activeKey === "1" ? membershipTabBarExtra : null}
+                  {activeKey === "2" ? financeTabBarExtra : null}
+                  {activeKey !== "2" &&
+                    (profileTabMoreActionMenuItems.length > 0 ? (
+                      <Dropdown
+                        menu={{ items: profileTabMoreActionMenuItems }}
+                        trigger={["click"]}
+                      >
+                        <Button
+                          type="default"
+                          icon={<MoreOutlined />}
+                          aria-label="More actions"
+                        />
+                      </Dropdown>
+                    ) : (
+                      <Button
+                        type="default"
+                        icon={<MoreOutlined />}
+                        aria-label="More actions"
+                        disabled
+                      />
+                    ))}
+                </div>
+              ),
+            }}
+            style={{
+              flex: "1 1 0%",
+              minWidth: 0,
+              minHeight: 0,
+              height: "100%",
+              display: "flex",
+              flexDirection: "column",
+              overflow: "hidden",
+            }}
+          >
+            {filteredItems.map((item) => (
+              <TabPane tab={item.label} key={item.key}>
+                <Suspense fallback={<Spin />}>{item.children}</Suspense>
+              </TabPane>
+            ))}
+            <TabPane
+              key="menu"
+              tab={
+                <div style={{ marginLeft: 8 }}>
+                  <Suspense fallback={<Spin size="small" />}>
+                    <ThreeDotsMenu items={Menuitems} />
+                  </Suspense>
+                </div>
+              }
+              disabled
+            />
+          </Tabs>
+        </div>
+        </FinanceTabToolbarContext.Provider>
+      </MembershipTabToolbarContext.Provider>
       <TransferRequests
         open={TransferDrawer}
         onClose={() => setTransferDrawer(false)}

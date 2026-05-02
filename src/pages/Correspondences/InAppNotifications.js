@@ -148,7 +148,7 @@ const InAppNotifications = () => {
             <MyTable
                 dataSource={data}
                 columns={columns}
-                pagination={{ pageSize: 10 }}
+                pagination={{ pageSize: 500 }}
                 loading={false}
                 onRowClick={(record) => {
                     navigate("/CommunicationBatchDetail", {

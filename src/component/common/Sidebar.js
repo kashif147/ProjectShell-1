@@ -207,6 +207,8 @@ const Sidebar = () => {
         return { path: "/Applications", state: { search: "Applications" } };
       case "Membership":
         return { path: "/members", state: { search: "Members" } };
+      case "Payment Forms":
+        return { path: "/PaymentForms", state: { search: "Payment Forms" } };
       case "MembershipDashboard":
         return {
           path: "/MembershipDashboard",
@@ -216,7 +218,7 @@ const Sidebar = () => {
         return { path: "/RemindersSummary", state: { search: "Reminders" } };
       case "Cancellations":
         return { path: "/Cancallation", state: { search: "Cancallation" } };
-      case "Change Category":
+      case "Category Changes":
         return {
           path: "/ChangCateSumm",
           state: { search: "Change Category Summary" },
@@ -256,7 +258,7 @@ const Sidebar = () => {
         };
       case "Notes & Letters":
         return { path: "/Notes", state: { search: "Notes" } };
-      case "Communication History":
+      case "Correspondence":
         return {
           path: "/CorrespondencesSummary",
           state: { search: "CorrespondencesSummary" },
@@ -427,7 +429,7 @@ const Sidebar = () => {
       "/RemindersDetails": "Reminders",
       "/Cancallation": "Cancellations",
       "/CancellationDetail": "Cancellations",
-      "/ChangCateSumm": "Change Category",
+      "/ChangCateSumm": "Category Changes",
       "/Import": "Imports",
       "/Deductions": "Deductions",
       "/Reconciliation": "Reconciliations",
@@ -440,8 +442,9 @@ const Sidebar = () => {
       "/InAppNotifications": "InAppNotifications",
       "/Notes": "Notes & Letters",
       "/Letters": "Notes & Letters",
-      "/CorspndncDetail": "Communication History",
+      "/CorspndncDetail": "Correspondence",
       "/members": "Membership",
+      "/PaymentForms": "Payment Forms",
       "/MembershipDashboard": "MembershipDashboard",
       "/TenantManagement": "Tenant Management",
       "/RoleManagement": "Role Management",

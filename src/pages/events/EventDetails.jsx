@@ -406,7 +406,7 @@ const EventDetails = () => {
                         <MyTable
                             dataSource={filteredAttendees}
                             columns={columns}
-                            pagination={{ pageSize: 10 }}
+                            pagination={{ pageSize: 500 }}
                             rowSelection={{
                                 selectedRowKeys,
                                 onChange: handleSelectionChange

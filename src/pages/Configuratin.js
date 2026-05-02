@@ -5220,7 +5220,7 @@ function Configuratin() {
               <Pagination
                 defaultCurrent={1}
                 total={gender.length}
-                pageSize={10}
+                pageSize={500}
               />
             </div>
           )}
@@ -5318,7 +5318,7 @@ function Configuratin() {
               <Pagination
                 defaultCurrent={1}
                 total={gender.length}
-                pageSize={10}
+                pageSize={500}
               />
             </div>
           )}
@@ -5448,7 +5448,7 @@ function Configuratin() {
               <Pagination
                 defaultCurrent={1}
                 total={gender.length}
-                pageSize={10}
+                pageSize={500}
               />
             </div>
           )}
@@ -5636,7 +5636,7 @@ function Configuratin() {
               <Pagination
                 defaultCurrent={1}
                 total={gender.length}
-                pageSize={10}
+                pageSize={500}
               />
             </div>
           )}
@@ -5732,7 +5732,7 @@ function Configuratin() {
               <Pagination
                 defaultCurrent={1}
                 total={RegionTy.length}
-                pageSize={10}
+                pageSize={500}
               />
             </div>
           )}
@@ -5829,7 +5829,7 @@ function Configuratin() {
               <Pagination
                 defaultCurrent={1}
                 total={ContactTy.length}
-                pageSize={10}
+                pageSize={500}
               />
             </div>
           )}
@@ -5953,7 +5953,7 @@ function Configuratin() {
           <div className="mt-4 config-tbl-container">
             <p>History</p>
             <Table
-              pagination={{ pageSize: 10 }}
+              pagination={{ pageSize: 500 }}
               columns={columnCountry}
               loading={lookupsloading}
               dataSource={groupedLookups?.County}
@@ -6935,7 +6935,7 @@ function Configuratin() {
                 </div>
               </div>
               <Table
-                pagination={{ pageSize: 10 }}
+                pagination={{ pageSize: 500 }}
                 columns={columnDivisions}
                 dataSource={filteredRegions}
                 loading={lookupsloading}
@@ -7107,7 +7107,7 @@ function Configuratin() {
               </div>
             </div>
             <Table
-              pagination={{ pageSize: 10 }}
+              pagination={{ pageSize: 500 }}
               columns={columnDivisions}
               dataSource={filteredRegions}
               loading={lookupsloading}

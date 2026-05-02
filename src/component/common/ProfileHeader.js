@@ -1,6 +1,13 @@
-import React, { useState, useMemo, useEffect, useCallback } from "react";
+import React, {
+  useState,
+  useMemo,
+  useEffect,
+  useCallback,
+  forwardRef,
+  useImperativeHandle,
+} from "react";
 import { useLocation, useSearchParams } from "react-router-dom";
-import { Modal, Button, message, Dropdown, Tooltip } from "antd";
+import { Modal, Button, message, Tooltip } from "antd";
 import {
   FaMapMarkerAlt,
   FaEnvelope,
@@ -10,10 +17,7 @@ import {
   FaClock,
   FaShieldAlt,
   FaExclamationTriangle,
-  FaEdit,
   FaUser,
-  FaEllipsisV,
-  FaClone,
   FaCreditCard,
   FaMoneyBillWave,
 } from "react-icons/fa";
@@ -38,13 +42,13 @@ import {
 } from "../../features/subscription/profileSubscriptionSlice";
 import { shouldDisableActivateUnlessLatestSubscriptionByStartDate } from "../../utils/applicationEligibility";
 
-function ProfileHeader({
-  isEditMode = false,
-  setIsEditMode,
-  showButtons = false,
-  isDeceased = false,
-  onDuplicateClick,
-}) {
+const ACTIVATE_MEMBERSHIP_DISABLED_TITLE =
+  "Only the subscription with the latest start date can be reactivated here. This membership is an older subscription line.";
+
+const ProfileHeader = forwardRef(function ProfileHeader(
+  { showButtons = false, isDeceased = false, onMembershipHeaderActionsMetaChange },
+  ref,
+) {
   const [isCancelModalVisible, setIsCancelModalVisible] = useState(false);
   const [isUndoCancelModalVisible, setIsUndoCancelModalVisible] =
     useState(false);
@@ -445,9 +449,8 @@ function ProfileHeader({
           : "#faad14";
     const lastPayment = `€${centsToEuro(lastPaymentAmount || 0).toLocaleString('en-IE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 
-    // Use latest ledger date for payment date if available, fallback to subscription/submission
-    const paymentDateRaw =
-      lastPaymentDate || subscriptionData?.startDate || getSafe(source, "submissionDate") || null;
+    // Payment date only from account summary (cash receipt crediting 2020); not subscription start.
+    const paymentDateRaw = lastPaymentDate || null;
     const paymentDate = paymentDateRaw
       ? formatDate(paymentDateRaw)
       : "N/A";
@@ -564,6 +567,44 @@ function ProfileHeader({
     mergedProfileSubscriptions,
   ]);
 
+  useImperativeHandle(
+    ref,
+    () => ({
+      openCancelMembershipModal: () => setIsCancelModalVisible(true),
+      openActivateMembershipModal: () => {
+        if (shouldDisableActivateMembership) return;
+        setIsUndoCancelModalVisible(true);
+      },
+    }),
+    [shouldDisableActivateMembership],
+  );
+
+  useEffect(() => {
+    if (typeof onMembershipHeaderActionsMetaChange !== "function") return;
+    const showCancelMembership =
+      showButtons &&
+      !isDeceased &&
+      memberData.status !== "Resigned" &&
+      !subscriptionData?.reinstated;
+    const showActivateMembership =
+      showButtons && !isDeceased && memberData.status === "Resigned";
+    onMembershipHeaderActionsMetaChange({
+      showCancelMembership,
+      showActivateMembership,
+      activateMembershipDisabled: shouldDisableActivateMembership,
+      activateMembershipTitle: shouldDisableActivateMembership
+        ? ACTIVATE_MEMBERSHIP_DISABLED_TITLE
+        : undefined,
+    });
+  }, [
+    onMembershipHeaderActionsMetaChange,
+    showButtons,
+    isDeceased,
+    memberData.status,
+    subscriptionData?.reinstated,
+    shouldDisableActivateMembership,
+  ]);
+
   const cancellationReasons = [
     { key: "voluntary", label: "Voluntary Resignation" },
     { key: "retirement", label: "Retirement" },
@@ -573,10 +614,6 @@ function ProfileHeader({
     { key: "other", label: "Other" },
     { key: "deceased", label: "Deceased" },
   ];
-
-  const handleCancelClick = () => {
-    setIsCancelModalVisible(true);
-  };
 
   const handleCancelModalClose = () => {
     setIsCancelModalVisible(false);
@@ -688,40 +725,6 @@ function ProfileHeader({
         <div
           className={`member-header-top ${isDeceased ? "member-deceased" : ""}`}
         >
-          {showButtons && (
-            <Dropdown
-              menu={{
-                items: [
-                  {
-                    key: "edit",
-                    label: isEditMode ? "Cancel Edit" : "Edit Profile",
-                    icon: <FaEdit />,
-                    onClick: () => setIsEditMode && setIsEditMode(!isEditMode),
-                  },
-                  {
-                    key: "duplicate",
-                    label: "Check Duplicate",
-                    icon: <FaClone />,
-                    onClick: onDuplicateClick,
-                  },
-                ],
-              }}
-              trigger={["click"]}
-            >
-              <FaEllipsisV
-                className="menu-icon"
-                style={{
-                  cursor: "pointer",
-                  fontSize: "1rem",
-                  color: "#fff",
-                  position: "absolute",
-                  right: "10px",
-                  top: "10px",
-                }}
-              />
-            </Dropdown>
-          )}
-
           <div className="member-profile-section">
             <div className="member-avatar">
               <FaUser className="avatar-icon" />
@@ -885,41 +888,6 @@ function ProfileHeader({
           </div>
         </div>
 
-        {/* Action Buttons: Activate (Green) if Resigned, Cancel (Red) if Active */}
-        {showButtons && !isDeceased && (
-          <>
-            {memberData.status === "Resigned" ? (
-              <button
-                className="member-cancel-btn"
-                style={{
-                  backgroundColor: "#52c41a",
-                  borderColor: "#52c41a",
-                  color: "#fff",
-                  opacity: shouldDisableActivateMembership ? 0.5 : 1,
-                  cursor: shouldDisableActivateMembership
-                    ? "not-allowed"
-                    : "pointer",
-                }}
-                disabled={shouldDisableActivateMembership}
-                title={
-                  shouldDisableActivateMembership
-                    ? "Only the subscription with the latest start date can be reactivated here. This membership is an older subscription line."
-                    : undefined
-                }
-                onClick={() => {
-                  if (shouldDisableActivateMembership) return;
-                  setIsUndoCancelModalVisible(true);
-                }}
-              >
-                Activate Membership
-              </button>
-            ) : !subscriptionData?.reinstated ? (
-              <button className="member-cancel-btn" onClick={handleCancelClick}>
-                Cancel Membership
-              </button>
-            ) : null}
-          </>
-        )}
       </div>
 
       {/* Cancel Membership Modal */}
@@ -995,6 +963,6 @@ function ProfileHeader({
       />
     </div>
   );
-}
+});
 
 export default ProfileHeader;

@@ -33,10 +33,10 @@ const CancelledMembersReport = () => {
   });
   const [pagination, setPagination] = useState({
     current: 1,
-    pageSize: 20,
+    pageSize: 500,
   });
   const gridApiRef = useRef(null);
-  const lastPaginationRef = useRef({ current: 1, pageSize: 20 });
+  const lastPaginationRef = useRef({ current: 1, pageSize: 500 });
 
   const columnDefs = [
     {
@@ -366,7 +366,7 @@ const CancelledMembersReport = () => {
                 rowData={rowData}
                 pagination={true}
                 paginationPageSize={pagination.pageSize}
-                paginationPageSizeSelector={[10, 20, 50, 100]}
+                paginationPageSizeSelector={[500, 1000, 2000, 5000]}
                 onGridReady={onGridReady}
                 onPaginationChanged={onPaginationChanged}
                 loading={loading}

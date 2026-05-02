@@ -34,7 +34,7 @@ function ProfileSummary() {
       getProfilesWithFilter({
         templateId: activeTemplateId,
         page: 1,
-        limit: 10,
+        limit: 500,
       })
     );
   }, [dispatch, activeTemplateId]);

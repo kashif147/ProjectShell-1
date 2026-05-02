@@ -217,12 +217,6 @@ export const cleanPayload = (obj) => {
       }, {});
 
     if (
-      cleanedObj.subscriptionDetails &&
-      cleanedObj.subscriptionDetails.submissionDate
-    ) {
-      delete cleanedObj.subscriptionDetails.submissionDate;
-    }
-    if (
       cleanedObj.professionalDetails &&
       cleanedObj.professionalDetails.startDate
     ) {
@@ -496,6 +490,7 @@ export const dateUtils = {
 
     if (apiData.subscriptionDetails) {
       convertDateField(apiData.subscriptionDetails, "dateJoined");
+      convertDateField(apiData.subscriptionDetails, "submissionDate");
     }
 
     return apiData;
