@@ -38,6 +38,40 @@ const token = localStorage.getItem("token")
   }
 );
 
+/** Distinct subscription years for Members filters (GET meta/subscription-years). */
+export const fetchSubscriptionYears = createAsyncThunk(
+  "subscription/fetchSubscriptionYears",
+  async (_, { rejectWithValue }) => {
+    try {
+      const token = localStorage.getItem("token");
+      const res = await axios.get(
+        `${getSubscriptionServiceBaseUrl()}/subscriptions/meta/subscription-years`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        },
+      );
+      const years = res.data?.data?.years;
+      return Array.isArray(years) ? years : [];
+    } catch (err) {
+      return rejectWithValue(
+        err.response?.data?.message ||
+          err.response?.data?.data ||
+          "Failed to fetch subscription years",
+      );
+    }
+  },
+  {
+    condition: (_, { getState }) => {
+      const s = getState().subscription;
+      if (!localStorage.getItem("token")) return false;
+      if (s.subscriptionYearsLoading || s.subscriptionYearsLoaded) return false;
+      return true;
+    },
+  },
+);
+
 export const getSubscriptionsWithTemplate = createAsyncThunk(
   "subscription/getSubscriptionsWithTemplate",
   async (payload = {}, { rejectWithValue }) => {
@@ -74,6 +108,10 @@ const subscriptionSlice = createSlice({
         subscriptionsTemplateMeta: null,
         subscriptionLoading: false,
         subscriptionErrors: null,
+        subscriptionYears: [],
+        subscriptionYearsLoaded: false,
+        subscriptionYearsLoading: false,
+        subscriptionYearsError: null,
     },
     reducers: {
         resetSubscriptionState: (state) => {
@@ -81,10 +119,29 @@ const subscriptionSlice = createSlice({
             state.subscriptionsTemplateMeta = null;
             state.subscriptionLoading = false;
             state.subscriptionErrors = null;
+            state.subscriptionYears = [];
+            state.subscriptionYearsLoaded = false;
+            state.subscriptionYearsLoading = false;
+            state.subscriptionYearsError = null;
         },
     },
     extraReducers: (builder) => {
         builder
+            .addCase(fetchSubscriptionYears.pending, (state) => {
+                state.subscriptionYearsLoading = true;
+                state.subscriptionYearsError = null;
+            })
+            .addCase(fetchSubscriptionYears.fulfilled, (state, action) => {
+                state.subscriptionYearsLoading = false;
+                state.subscriptionYearsLoaded = true;
+                state.subscriptionYears = action.payload;
+            })
+            .addCase(fetchSubscriptionYears.rejected, (state, action) => {
+                state.subscriptionYearsLoading = false;
+                state.subscriptionYearsLoaded = true;
+                state.subscriptionYearsError = action.payload;
+                state.subscriptionYears = [];
+            })
             /* FETCH */
             .addCase(getAllSubscription.pending, (state) => {
                 state.subscriptionLoading = true;

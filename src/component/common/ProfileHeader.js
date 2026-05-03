@@ -39,6 +39,8 @@ import {
   getSubscriptionByProfileId,
   getSubscriptionById,
   getProfileSubscriptionsForActivateEligibility,
+  pickPrimarySubscription,
+  profileDetailActiveSubscriptionArgs,
 } from "../../features/subscription/profileSubscriptionSlice";
 import { shouldDisableActivateUnlessLatestSubscriptionByStartDate } from "../../utils/applicationEligibility";
 
@@ -138,60 +140,37 @@ const ProfileHeader = forwardRef(function ProfileHeader(
     return formatDate(dateString, "DD/MM/YYYY");
   };
 
-  // FIXED: Simplified subscription data extraction - now reactive
+  // Prefer current subscription row; otherwise latest period — matches CRM list when multiple rows exist
   const subscriptionData = useMemo(() => {
-    // Check for direct array (existing logic)
-    if (Array.isArray(ProfileSubData?.data) && ProfileSubData.data.length > 0) {
-      return {
-        subscriptionStatus: ProfileSubData.data[0].subscriptionStatus || "",
-        paymentType: ProfileSubData.data[0].paymentType || "",
-        payrollNo: ProfileSubData.data[0].payrollNo || "",
-        paymentFrequency: ProfileSubData.data[0].paymentFrequency || "",
-        subscriptionYear: ProfileSubData.data[0].subscriptionYear || "",
-        isCurrent: ProfileSubData.data[0].isCurrent || false,
-        startDate: ProfileSubData.data[0].startDate || null, // Keep raw value for date-time formatting
-        startDateFormatted: ProfileSubData.data[0].startDate
-          ? formatDate(ProfileSubData.data[0].startDate)
-          : "",
-        endDate: ProfileSubData.data[0].endDate || null, // Keep raw value for date-time formatting
-        endDateFormatted: ProfileSubData.data[0].endDate
-          ? formatDate(ProfileSubData.data[0].endDate)
-          : "",
-        renewalDate: ProfileSubData.data[0].rolloverDate
-          ? formatDate(ProfileSubData.data[0].rolloverDate)
-          : "",
-        membershipMovement: ProfileSubData.data[0].membershipMovement || "",
-        reinstated: ProfileSubData.data[0].cancellation?.reinstated || false,
-        yearendProcessed: ProfileSubData.data[0].yearend?.processed || false,
-        ...ProfileSubData.data[0],
-      };
-    }
-    // Check for nested data structure (from screenshot: data.data)
-    else if (
+    let rows = [];
+    if (Array.isArray(ProfileSubData?.data)) {
+      rows = ProfileSubData.data;
+    } else if (
       ProfileSubData?.data?.data &&
-      Array.isArray(ProfileSubData.data.data) &&
-      ProfileSubData.data.data.length > 0
+      Array.isArray(ProfileSubData.data.data)
     ) {
-      const sub = ProfileSubData.data.data[0];
-      return {
-        subscriptionStatus: sub.subscriptionStatus || "",
-        paymentType: sub.paymentType || "",
-        payrollNo: sub.payrollNo || "",
-        paymentFrequency: sub.paymentFrequency || "",
-        subscriptionYear: sub.subscriptionYear || "",
-        isCurrent: sub.isCurrent || false,
-        startDate: sub.startDate || null, // Keep raw value for date-time formatting
-        startDateFormatted: sub.startDate ? formatDate(sub.startDate) : "",
-        endDate: sub.endDate || null, // Keep raw value for date-time formatting
-        endDateFormatted: sub.endDate ? formatDate(sub.endDate) : "",
-        renewalDate: sub.rolloverDate ? formatDate(sub.rolloverDate) : "",
-        membershipMovement: sub.membershipMovement || "",
-        reinstated: sub.cancellation?.reinstated || false,
-        yearendProcessed: sub.yearend?.processed || false,
-        ...sub,
-      };
+      rows = ProfileSubData.data.data;
     }
-    return null;
+    const sub = pickPrimarySubscription(rows);
+    if (!sub) return null;
+
+    return {
+      subscriptionStatus: sub.subscriptionStatus || "",
+      paymentType: sub.paymentType || "",
+      payrollNo: sub.payrollNo || "",
+      paymentFrequency: sub.paymentFrequency || "",
+      subscriptionYear: sub.subscriptionYear || "",
+      isCurrent: sub.isCurrent === true,
+      startDate: sub.startDate || null,
+      startDateFormatted: sub.startDate ? formatDate(sub.startDate) : "",
+      endDate: sub.endDate || null,
+      endDateFormatted: sub.endDate ? formatDate(sub.endDate) : "",
+      renewalDate: sub.rolloverDate ? formatDate(sub.rolloverDate) : "",
+      membershipMovement: sub.membershipMovement || "",
+      reinstated: sub.cancellation?.reinstated || false,
+      yearendProcessed: sub.yearend?.processed || false,
+      ...sub,
+    };
   }, [ProfileSubData]);
 
   const memberIdForLedger = useMemo(() => {
@@ -293,7 +272,12 @@ const ProfileHeader = forwardRef(function ProfileHeader(
       if (subscriptionId) {
         dispatch(getSubscriptionById(subscriptionId));
       } else {
-        dispatch(getSubscriptionByProfileId({ profileId, isCurrent: "true" }));
+        dispatch(
+          getSubscriptionByProfileId({
+            profileId,
+            ...profileDetailActiveSubscriptionArgs,
+          }),
+        );
       }
     }
     fetchAccountSummary();
@@ -378,7 +362,6 @@ const ProfileHeader = forwardRef(function ProfileHeader(
     const age =
       calculateAge(getSafe(source, "personalInfo.dateOfBirth")) || "36 Yrs";
 
-    // Status - Use subscription status if available, otherwise fall back to profile data
     let status = "";
     if (isDeceased) {
       status = "Deceased";
@@ -535,8 +518,8 @@ const ProfileHeader = forwardRef(function ProfileHeader(
 
   const currentSubscriptionForActivate = useMemo(() => {
     const arr = ProfileSubData?.data;
-    if (Array.isArray(arr) && arr[0]) return arr[0];
-    return null;
+    if (!Array.isArray(arr)) return null;
+    return pickPrimarySubscription(arr);
   }, [ProfileSubData]);
 
   const mergedProfileSubscriptions = useMemo(() => {
@@ -585,6 +568,7 @@ const ProfileHeader = forwardRef(function ProfileHeader(
       showButtons &&
       !isDeceased &&
       memberData.status !== "Resigned" &&
+      memberData.status !== "Lapsed" &&
       !subscriptionData?.reinstated;
     const showActivateMembership =
       showButtons && !isDeceased && memberData.status === "Resigned";
@@ -635,9 +619,15 @@ const ProfileHeader = forwardRef(function ProfileHeader(
       return;
     }
 
-    const profileId = source?.id || source?._id;
-    if (!profileId) {
-      MyAlert("error", "Profile ID not found. Cannot proceed.");
+    const subscriptionId =
+      subscriptionData?._id != null
+        ? String(subscriptionData._id).trim()
+        : "";
+    if (!subscriptionId) {
+      MyAlert(
+        "error",
+        "Active subscription ID not found. Cannot resign until subscription data loads.",
+      );
       return;
     }
 
@@ -650,7 +640,7 @@ const ProfileHeader = forwardRef(function ProfileHeader(
 
     try {
       const response = await axios.put(
-        `${getSubscriptionServiceBaseUrl()}/subscriptions/resign/${profileId}`,
+        `${getSubscriptionServiceBaseUrl()}/subscriptions/${subscriptionId}/resign`,
         payload,
         {
           headers: {
@@ -744,7 +734,9 @@ const ProfileHeader = forwardRef(function ProfileHeader(
                   ? "member-status-deceased"
                   : /resign|cancel/i.test(memberData.status || "")
                     ? "member-status-resigned"
-                    : ""
+                    : /lapsed/i.test(memberData.status || "")
+                      ? "member-status-lapsed"
+                      : ""
                   }`}
                 style={{ cursor: statusBadgeTooltip ? "help" : undefined }}
               >
@@ -956,7 +948,7 @@ const ProfileHeader = forwardRef(function ProfileHeader(
       <UndoCancellationModal
         visible={isUndoCancelModalVisible}
         onClose={() => setIsUndoCancelModalVisible(false)}
-        record={source}
+        subscriptionId={subscriptionData?._id}
         onSuccess={() => {
           refreshAllData();
         }}

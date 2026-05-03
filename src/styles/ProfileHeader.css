@@ -115,11 +115,31 @@
 .member-status-badge.member-status-deceased {
   background-color: #ffd591;
   color: #ad6800;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 500;
+  display: inline-block;
 }
 
 .member-status-badge.member-status-resigned {
   background-color: #ff4d4f;
   color: white;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 500;
+  display: inline-block;
+}
+
+.member-status-badge.member-status-lapsed {
+  background-color: #f7e5c8;
+  color: #ad6800;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 500;
+  display: inline-block;
 }
 
 /* Contact Information Section - on blue background */
@@ -464,7 +484,9 @@
   border-color: #ff4d4f;
 }
 
-.cancel-membership-modal .ant-modal-footer .ant-btn-primary:hover:not(:disabled) {
+.cancel-membership-modal
+  .ant-modal-footer
+  .ant-btn-primary:hover:not(:disabled) {
   background-color: #ff7875;
   border-color: #ff7875;
 }

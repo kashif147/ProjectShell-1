@@ -24,6 +24,7 @@ import { getProfileDetailsById } from "../features/profiles/ProfileDetailsSlice"
 import {
   getSubscriptionByProfileId,
   getSubscriptionById,
+  profileDetailActiveSubscriptionArgs,
 } from "../features/subscription/profileSubscriptionSlice";
 import { buildDetailsSearch } from "../utils/detailsRoute";
 import { Triangle } from "lucide-react";
@@ -5631,7 +5632,7 @@ export const TableColumnsProvider = ({ children }) => {
           dispatch(
             getSubscriptionByProfileId({
               profileId: idToUse,
-              isCurrent: "true",
+              ...profileDetailActiveSubscriptionArgs,
             }),
           );
         }
@@ -5691,7 +5692,7 @@ export const TableColumnsProvider = ({ children }) => {
           dispatch(
             getSubscriptionByProfileId({
               profileId: idToUse,
-              isCurrent: "true",
+              ...profileDetailActiveSubscriptionArgs,
             }),
           );
         }

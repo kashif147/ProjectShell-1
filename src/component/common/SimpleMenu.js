@@ -600,7 +600,7 @@ function SimpleMenu({
       <UndoCancellationModal
         visible={isUndoCancelModalVisible}
         onClose={() => setIsUndoCancelModalVisible(false)}
-        record={record}
+        subscriptionId={record?._id}
         onSuccess={() => {
           // Optionally refresh data here
         }}

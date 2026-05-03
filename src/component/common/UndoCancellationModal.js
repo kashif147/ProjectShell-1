@@ -8,7 +8,7 @@ import { getSubscriptionServiceBaseUrl } from "../../config/serviceUrls";
 const UndoCancellationModal = ({
   visible,
   onClose,
-  record,
+  subscriptionId,
   onSuccess,
 }) => {
   const [reason, setReason] = useState("");
@@ -27,8 +27,10 @@ const UndoCancellationModal = ({
       return;
     }
 
-    if (!record || !record._id) {
-      MyAlert("error", "No record specified.");
+    const sid =
+      subscriptionId != null ? String(subscriptionId).trim() : "";
+    if (!sid) {
+      MyAlert("error", "Subscription ID not found. Cannot undo resignation.");
       return;
     }
 
@@ -36,7 +38,7 @@ const UndoCancellationModal = ({
 
     try {
       const response = await axios.put(
-        `${getSubscriptionServiceBaseUrl()}/subscriptions/undo-resign/${record._id}`,
+        `${getSubscriptionServiceBaseUrl()}/subscriptions/${sid}/undo-resign`,
         { reason },
         {
           headers: {

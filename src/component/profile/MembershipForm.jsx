@@ -24,6 +24,8 @@ import {
   getSubscriptionByProfileId,
   getSubscriptionById,
   updateSubscriptionById,
+  pickPrimarySubscription,
+  profileDetailActiveSubscriptionArgs,
 } from "../../features/subscription/profileSubscriptionSlice";
 import {
   formDataToProfilePutPayload,
@@ -194,15 +196,15 @@ const MembershipForm = ({
 
   // Memoize subscription data to prevent unnecessary recalculations
   const subscriptionData = useMemo(() => {
-    if (ProfileSubData?.data?.length > 0) {
-      const subscription = ProfileSubData.data[0];
+    const subscription = pickPrimarySubscription(ProfileSubData?.data || []);
+    if (subscription) {
       return {
         subscriptionStatus: subscription.subscriptionStatus || "",
         paymentType: subscription.paymentType || "",
         payrollNo: subscription.payrollNo || "",
         paymentFrequency: subscription.paymentFrequency || "",
         subscriptionYear: subscription.subscriptionYear || "",
-        isCurrent: subscription.isCurrent || false,
+        isCurrent: subscription.isCurrent === true,
         startDate: subscription.startDate,
         endDate: subscription.endDate,
         renewalDate: subscription.rolloverDate,
@@ -261,8 +263,7 @@ const MembershipForm = ({
     const source = profileDetails || searchAoiRes;
     if (!source) return;
 
-    const subDoc =
-      ProfileSubData?.data?.length > 0 ? ProfileSubData.data[0] : null;
+    const subDoc = pickPrimarySubscription(ProfileSubData?.data || []);
 
     // Initialize form data from profile API
     const initialFormData = {
@@ -912,11 +913,12 @@ const MembershipForm = ({
         updateProfileDetails({ profileId, body: profileBody }),
       ).unwrap();
 
-      const subId = ProfileSubData?.data?.[0]?._id;
+      const primarySub = pickPrimarySubscription(ProfileSubData?.data || []);
+      const subId = primarySub?._id;
       if (subId) {
         const subBody = formDataToSubscriptionPutPayload(
           formData,
-          ProfileSubData.data[0],
+          primarySub,
         );
         await dispatch(
           updateSubscriptionById({ subscriptionId: subId, body: subBody }),
@@ -930,7 +932,7 @@ const MembershipForm = ({
         await dispatch(
           getSubscriptionByProfileId({
             profileId,
-            isCurrent: "true",
+            ...profileDetailActiveSubscriptionArgs,
           }),
         ).unwrap();
       }

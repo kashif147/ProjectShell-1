@@ -50,26 +50,111 @@ function normalizeSubscriptionResponse(res) {
   return { data: [] };
 }
 
-// ✅ Fetch subscription by profileId
+/**
+ * Prefer `isCurrent` rows; otherwise latest by startDate (then updatedAt, createdAt).
+ * Keeps profile header / membership form aligned when CRM loads all subscription rows.
+ */
+export function pickPrimarySubscription(rows) {
+  if (!Array.isArray(rows) || rows.length === 0) return null;
+
+  const pickLatestByStartDate = (list) =>
+    [...list].sort((a, b) => {
+      const sa = new Date(a?.startDate || 0).getTime();
+      const sb = new Date(b?.startDate || 0).getTime();
+      if (sb !== sa) return sb - sa;
+      const ua = new Date(a?.updatedAt || 0).getTime();
+      const ub = new Date(b?.updatedAt || 0).getTime();
+      if (ub !== ua) return ub - ua;
+      const ca = new Date(a?.createdAt || 0).getTime();
+      const cb = new Date(b?.createdAt || 0).getTime();
+      return cb - ca;
+    })[0];
+
+  const currentRows = rows.filter((s) => s?.isCurrent === true);
+  if (currentRows.length > 0) return pickLatestByStartDate(currentRows);
+  return pickLatestByStartDate(rows);
+}
+
+/** CRM profile/membership UI: load the single current Active subscription; widen if none (e.g. Lapsed-only). */
+export const profileDetailActiveSubscriptionArgs = {
+  isCurrent: "true",
+  subscriptionStatus: "Active",
+  fallbackAllIfEmpty: true,
+};
+
+function buildProfileSubscriptionsUrl(baseUrl, profileId, { isCurrent, subscriptionStatus }) {
+  const qs = new URLSearchParams({ profileId });
+  if (
+    isCurrent !== undefined &&
+    isCurrent !== null &&
+    String(isCurrent).trim() !== ""
+  ) {
+    qs.set("isCurrent", String(isCurrent));
+  }
+  if (
+    subscriptionStatus !== undefined &&
+    subscriptionStatus !== null &&
+    String(subscriptionStatus).trim() !== ""
+  ) {
+    qs.set("subscriptionStatus", String(subscriptionStatus).trim());
+  }
+  return `${baseUrl}/subscriptions?${qs.toString()}`;
+}
+
+// ✅ Fetch subscription by profileId (detail screens: current Active first; fallback all rows for Lapsed-only / edge cases)
 export const getSubscriptionByProfileId = createAsyncThunk(
   "profileSubscription/getByProfileId",
-  async ({ profileId, isCurrent = "true" }, { rejectWithValue }) => {
+  async (
+    {
+      profileId,
+      isCurrent,
+      subscriptionStatus,
+      fallbackAllIfEmpty,
+    } = {},
+    { rejectWithValue }
+  ) => {
     try {
       const safeProfileId = String(profileId ?? "").trim();
       if (!safeProfileId || safeProfileId.toLowerCase() === "undefined") {
         return rejectWithValue("Invalid profileId");
       }
       const token = localStorage.getItem("token");
-      const res = await axios.get(
-        `${getSubscriptionServiceBaseUrl()}/subscriptions?profileId=${safeProfileId}&isCurrent=${isCurrent}`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
+      const baseUrl = getSubscriptionServiceBaseUrl();
+      const headers = { Authorization: `Bearer ${token}` };
 
-      return normalizeSubscriptionResponse(res);
+      const fetchUrl = (extra = {}) =>
+        axios.get(
+          buildProfileSubscriptionsUrl(baseUrl, safeProfileId, {
+            isCurrent: extra.isCurrent !== undefined ? extra.isCurrent : isCurrent,
+            subscriptionStatus:
+              extra.subscriptionStatus !== undefined
+                ? extra.subscriptionStatus
+                : subscriptionStatus,
+          }),
+          { headers }
+        );
+
+      let res = await fetchUrl({});
+      let normalized = normalizeSubscriptionResponse(res);
+
+      const wantsFallback =
+        fallbackAllIfEmpty === true &&
+        String(isCurrent).trim() === "true" &&
+        Array.isArray(normalized.data) &&
+        normalized.data.length === 0;
+
+      if (wantsFallback) {
+        res = await axios.get(
+          buildProfileSubscriptionsUrl(baseUrl, safeProfileId, {
+            isCurrent: undefined,
+            subscriptionStatus: undefined,
+          }),
+          { headers }
+        );
+        normalized = normalizeSubscriptionResponse(res);
+      }
+
+      return normalized;
     } catch (err) {
       return rejectWithValue(
         err.response?.data?.message ||

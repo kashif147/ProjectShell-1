@@ -27,6 +27,12 @@ import { centsToEuro, formatDateOnly } from "../../utils/Utilities";
 import { useTableColumns } from "../../context/TableColumnsContext ";
 import { useFinanceTabToolbar } from "../../context/FinanceTabToolbarContext";
 
+const financeMoreActionsButtonStyle = {
+  backgroundColor: "#45669d",
+  borderColor: "#45669d",
+  color: "#fff",
+};
+
 /** GL doc type values shown with friendlier labels in the Finance grid. */
 function displayDocTypeLabel(raw) {
   if (raw == null || String(raw).trim() === "") return "—";
@@ -1256,6 +1262,7 @@ const TransactionHistory = () => {
         >
           <Button
             type="default"
+            style={financeMoreActionsButtonStyle}
             icon={<MoreOutlined />}
             aria-label="More actions"
           />

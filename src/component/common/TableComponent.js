@@ -20,6 +20,7 @@ import { buildApplicationMgtSearch } from "../../utils/applicationMgtRoute";
 import {
   getSubscriptionByProfileId,
   getSubscriptionById,
+  profileDetailActiveSubscriptionArgs,
 } from "../../features/subscription/profileSubscriptionSlice";
 import { Triangle, AlertCircle } from "lucide-react";
 import { Tooltip } from "antd";
@@ -732,7 +733,7 @@ const TableComponent = ({
                       dispatch(
                         getSubscriptionByProfileId({
                           profileId: idToUse,
-                          isCurrent: true,
+                          ...profileDetailActiveSubscriptionArgs,
                         })
                       );
                     }
@@ -806,7 +807,7 @@ const TableComponent = ({
                       dispatch(
                         getSubscriptionByProfileId({
                           profileId,
-                          isCurrent: true,
+                          ...profileDetailActiveSubscriptionArgs,
                         })
                       );
                     }
@@ -940,7 +941,7 @@ const TableComponent = ({
                         dispatch(
                           getSubscriptionByProfileId({
                             profileId: idToUse,
-                            isCurrent: true,
+                            ...profileDetailActiveSubscriptionArgs,
                           })
                         );
                       }

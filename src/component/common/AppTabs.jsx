@@ -14,6 +14,8 @@ import {
   getSubscriptionByProfileId,
   getSubscriptionById,
   getSubscriptionHistoryByProfileId,
+  pickPrimarySubscription,
+  profileDetailActiveSubscriptionArgs,
 } from "../../features/subscription/profileSubscriptionSlice";
 import { getApplicationById } from "../../features/ApplicationDetailsSlice";
 import { buildApplicationMgtSearch } from "../../utils/applicationMgtRoute";
@@ -65,6 +67,145 @@ const DuplicateMembers = lazy(() => import("../profile/DuplicateMembers"));
 /** Events ("16") and Claims ("7") are overflow-only, not shown on first load. */
 const staticTabKeys = ["1", "2", "4", "5", "6", "3"];
 
+/** Primary subscription row banner copy on profile detail (CRM). Keys match subscriptionStatus from API. */
+const MEMBERSHIP_STATUS_DETAIL_BANNERS = {
+  Resigned:
+    "Member has resigned. This profile is read-only, and the subscription has been cancelled.",
+  Lapsed: "This membership has lapsed. Please renew to restore active status.",
+  Cancelled: "This membership has been cancelled due to non-payment.",
+  Suspended:
+    "This membership is currently suspended. Please reinstate to restore active status.",
+  Archived:
+    "This membership has been archived. Please reinstate to restore active status.",
+};
+
+/** Strong brown for subscription banner copy (readable on light red / amber / gray fills). */
+const SUBSCRIPTION_BANNER_TEXT_BROWN = "#4a3228";
+
+const SUBSCRIPTION_BANNER_THEME_DEFAULT = {
+  backgroundColor: "#fff1f0",
+  borderColor: "#ffa39e",
+  color: SUBSCRIPTION_BANNER_TEXT_BROWN,
+};
+
+/** Distinct banner chrome for non-payment / resign vs lapsed vs suspended vs archived. */
+const SUBSCRIPTION_BANNER_THEME_BY_STATUS = {
+  Lapsed: {
+    backgroundColor: "#E6F0FF",
+    borderColor: "#F59E0B",
+    color: "#1B3A8A",
+    icon: <FaRegClock />,
+    iconColor: "#1B3A8A",
+  },
+  Suspended: {
+    backgroundColor: "#FFF4E5",
+    borderColor: "#F59E0B",
+    color: "#92400E",
+    icon: <FaRegClock />,
+    iconColor: "#F59E0B",
+  },
+  Archived: {
+    backgroundColor: "#F3F4F6",
+    borderColor: "#9CA3AF",
+    color: "#374151",
+    icon: <FaRegClock />,
+    iconColor: "#6B7280",
+  },
+};
+
+const PAYMENT_REMINDER_BANNER_THEME = {
+  backgroundColor: "#fffbe6",
+  borderColor: "#ffe58f",
+  color: SUBSCRIPTION_BANNER_TEXT_BROWN,
+};
+
+const REMINDER_HISTORY_TIER_RANK = { R3: 3, R2: 2, R1: 1 };
+
+function coerceSubscriptionDate(value) {
+  if (value == null || value === "") return null;
+  const d = new Date(value);
+  return Number.isNaN(d.getTime()) ? null : d;
+}
+
+/** Banner for arrears reminder pipeline — CRM profile summary only when subscriptionStatus is Active. */
+function buildPaymentReminderBanner(subscription) {
+  if (!subscription || typeof subscription !== "object") return null;
+
+  if (String(subscription.subscriptionStatus || "").trim() !== "Active") {
+    return null;
+  }
+
+  const rem = subscription.reminders;
+  if (rem && typeof rem === "object" && !Array.isArray(rem) && rem.clearedAt) {
+    return null;
+  }
+
+  let tierKey = null;
+  let dateObj = null;
+
+  if (rem && typeof rem === "object" && !Array.isArray(rem)) {
+    const r3 = coerceSubscriptionDate(rem.reminder3At);
+    const r2 = coerceSubscriptionDate(rem.reminder2At);
+    const r1 = coerceSubscriptionDate(rem.reminder1At);
+    if (r3) {
+      tierKey = "final";
+      dateObj = r3;
+    } else if (r2) {
+      tierKey = "second";
+      dateObj = r2;
+    } else if (r1) {
+      tierKey = "first";
+      dateObj = r1;
+    }
+  }
+
+  if (
+    !tierKey &&
+    Array.isArray(subscription.reminderHistory) &&
+    subscription.reminderHistory.length > 0
+  ) {
+    let best = null;
+    for (const h of subscription.reminderHistory) {
+      const rank = REMINDER_HISTORY_TIER_RANK[h?.type];
+      if (!rank) continue;
+      const d = coerceSubscriptionDate(h.reminderDate);
+      if (!d) continue;
+      if (!best || rank > best.rank) {
+        best = {
+          rank,
+          date: d,
+          tierKey:
+            rank === 3 ? "final" : rank === 2 ? "second" : "first",
+        };
+      } else if (rank === best.rank && d > best.date) {
+        best = { ...best, date: d };
+      }
+    }
+    if (best) {
+      tierKey = best.tierKey;
+      dateObj = best.date;
+    }
+  }
+
+  if (!tierKey || !dateObj) return null;
+
+  const reminderDateStr = formatDateOnly(dateObj);
+  if (!reminderDateStr) return null;
+
+  const templates = {
+    first:
+      "The member is falling behind on payments. The first reminder was issued on {ReminderDate}.",
+    second:
+      "The member is falling behind on payments. The second reminder was issued on {ReminderDate}.",
+    final:
+      "The member is falling behind on payments. The final reminder was issued on {ReminderDate}.",
+  };
+
+  return {
+    message: templates[tierKey].replace("{ReminderDate}", reminderDateStr),
+  };
+}
+
 const MEMBERSHIP_MORE_ICON = {
   edit: "#1890ff",
   duplicate: "#722ed1",
@@ -77,6 +218,12 @@ const MEMBERSHIP_MORE_ICON = {
 function membershipMoreIcon(Icon, color) {
   return <Icon style={{ color, fontSize: 14 }} aria-hidden />;
 }
+
+const profileMoreActionsButtonStyle = {
+  backgroundColor: "#45669d",
+  borderColor: "#45669d",
+  color: "#fff",
+};
 
 const initialMembershipHeaderActionsMeta = {
   showCancelMembership: false,
@@ -107,7 +254,7 @@ function AppTabs() {
       dispatch(
         getSubscriptionByProfileId({
           profileId: profileIdParam,
-          isCurrent: "true",
+          ...profileDetailActiveSubscriptionArgs,
         }),
       );
     }
@@ -129,9 +276,30 @@ function AppTabs() {
     (state) => state.profileSubscription || {},
   );
   const currentSubscriptionStatus =
-    ProfileSubData?.data?.[0]?.subscriptionStatus || "";
-  const showResignedProfileBanner =
-    String(currentSubscriptionStatus).trim() === "Resigned";
+    pickPrimarySubscription(ProfileSubData?.data || [])?.subscriptionStatus ||
+    "";
+  const normalizedPrimarySubscriptionStatus = String(
+    currentSubscriptionStatus,
+  ).trim();
+  const subscriptionStatusBannerMessage =
+    MEMBERSHIP_STATUS_DETAIL_BANNERS[normalizedPrimarySubscriptionStatus] ??
+    null;
+  const showSubscriptionStatusBanner = Boolean(subscriptionStatusBannerMessage);
+  const subscriptionBannerTheme =
+    SUBSCRIPTION_BANNER_THEME_BY_STATUS[normalizedPrimarySubscriptionStatus] ??
+    SUBSCRIPTION_BANNER_THEME_DEFAULT;
+
+  const primarySubscriptionRow = useMemo(
+    () => pickPrimarySubscription(ProfileSubData?.data || []),
+    [ProfileSubData],
+  );
+
+  const paymentReminderBanner = useMemo(
+    () => buildPaymentReminderBanner(primarySubscriptionRow),
+    [primarySubscriptionRow],
+  );
+
+  const showPaymentReminderBanner = Boolean(paymentReminderBanner?.message);
 
   const [activeKey, setActiveKey] = useState("1");
   const [visibleTabs, setVisibleTabs] = useState(staticTabKeys);
@@ -141,16 +309,14 @@ function AppTabs() {
   const [isEditMode, setIsEditMode] = useState(false);
   const [isDeceased, setIsDeceased] = useState(false);
 
-  const profileIdForDeceased =
-    profileDetails?._id || profileDetails?.id || "";
+  const profileIdForDeceased = profileDetails?._id || profileDetails?.id || "";
   useEffect(() => {
     if (!profileIdForDeceased) {
       setIsDeceased(false);
       return;
     }
     const pi = profileDetails?.personalInfo || {};
-    const fromApi =
-      Boolean(pi.deceased) || Boolean(pi.deceasedDate);
+    const fromApi = Boolean(pi.deceased) || Boolean(pi.deceasedDate);
     setIsDeceased(fromApi);
   }, [
     profileIdForDeceased,
@@ -674,24 +840,42 @@ function AppTabs() {
               overflow: "hidden",
             }}
           >
-            {showResignedProfileBanner && (
+            {showSubscriptionStatusBanner && (
               <div
                 style={{
                   flexShrink: 0,
-                  backgroundColor: "#fff1f0",
-                  border: "1px solid #ffa39e",
+                  backgroundColor: subscriptionBannerTheme.backgroundColor,
+                  border: `1px solid ${subscriptionBannerTheme.borderColor}`,
                   borderRadius: "4px",
                   padding: "12px 16px",
                   marginBottom: "8px",
                   marginInline: "0 8px",
                   marginTop: "4px",
-                  color: "#cf1322",
+                  color: subscriptionBannerTheme.color,
                   fontSize: "14px",
                   fontWeight: 500,
                 }}
               >
-                ⚠️ Member has resigned. This profile is read-only, and the
-                subscription has been cancelled.
+                ⚠️ {subscriptionStatusBannerMessage}
+              </div>
+            )}
+            {showPaymentReminderBanner && (
+              <div
+                style={{
+                  flexShrink: 0,
+                  backgroundColor: PAYMENT_REMINDER_BANNER_THEME.backgroundColor,
+                  border: `1px solid ${PAYMENT_REMINDER_BANNER_THEME.borderColor}`,
+                  borderRadius: "4px",
+                  padding: "12px 16px",
+                  marginBottom: "8px",
+                  marginInline: "0 8px",
+                  marginTop: showSubscriptionStatusBanner ? 0 : "4px",
+                  color: PAYMENT_REMINDER_BANNER_THEME.color,
+                  fontSize: "14px",
+                  fontWeight: 500,
+                }}
+              >
+                ⚠️ {paymentReminderBanner.message}
               </div>
             )}
             {isDeceased && (
@@ -704,7 +888,10 @@ function AppTabs() {
                   padding: "12px 16px",
                   marginBottom: "8px",
                   marginInline: "0 8px",
-                  marginTop: showResignedProfileBanner ? 0 : "4px",
+                  marginTop:
+                    showSubscriptionStatusBanner || showPaymentReminderBanner
+                      ? 0
+                      : "4px",
                   color: "#ad6800",
                   fontSize: "14px",
                   fontWeight: 500,
@@ -715,69 +902,74 @@ function AppTabs() {
               </div>
             )}
             <Tabs
-            className="profile-details-tabs"
-            activeKey={activeKey}
-            onChange={handleTabChange}
-            destroyInactiveTabPane
-            tabBarExtraContent={{
-              right: (
-                <div
-                  className="d-flex align-items-center gap-2 flex-wrap"
-                  style={{ marginInlineEnd: 8 }}
-                >
-                  {activeKey === "1" ? membershipTabBarExtra : null}
-                  {activeKey === "2" ? financeTabBarExtra : null}
-                  {activeKey !== "2" &&
-                    (profileTabMoreActionMenuItems.length > 0 ? (
-                      <Dropdown
-                        menu={{ items: profileTabMoreActionMenuItems }}
-                        trigger={["click"]}
-                      >
+              className="profile-details-tabs"
+              activeKey={activeKey}
+              onChange={handleTabChange}
+              destroyInactiveTabPane
+              tabBarExtraContent={{
+                right: (
+                  <div
+                    className="d-flex align-items-center gap-2 flex-wrap"
+                    style={{ marginInlineEnd: 8 }}
+                  >
+                    {activeKey === "1" ? membershipTabBarExtra : null}
+                    {activeKey === "2" ? financeTabBarExtra : null}
+                    {activeKey !== "2" &&
+                      (profileTabMoreActionMenuItems.length > 0 ? (
+                        <Dropdown
+                          menu={{ items: profileTabMoreActionMenuItems }}
+                          trigger={["click"]}
+                        >
+                          <Button
+                            type="default"
+                            style={profileMoreActionsButtonStyle}
+                            icon={<MoreOutlined />}
+                            aria-label="More actions"
+                          />
+                        </Dropdown>
+                      ) : (
                         <Button
                           type="default"
+                          style={{
+                            ...profileMoreActionsButtonStyle,
+                            opacity: 0.45,
+                          }}
                           icon={<MoreOutlined />}
                           aria-label="More actions"
+                          disabled
                         />
-                      </Dropdown>
-                    ) : (
-                      <Button
-                        type="default"
-                        icon={<MoreOutlined />}
-                        aria-label="More actions"
-                        disabled
-                      />
-                    ))}
-                </div>
-              ),
-            }}
-            style={{
-              flex: "1 1 0%",
-              minWidth: 0,
-              minHeight: 0,
-              height: "100%",
-              display: "flex",
-              flexDirection: "column",
-              overflow: "hidden",
-            }}
-          >
-            {filteredItems.map((item) => (
-              <TabPane tab={item.label} key={item.key}>
-                <Suspense fallback={<Spin />}>{item.children}</Suspense>
-              </TabPane>
-            ))}
-            <TabPane
-              key="menu"
-              tab={
-                <div style={{ marginLeft: 8 }}>
-                  <Suspense fallback={<Spin size="small" />}>
-                    <ThreeDotsMenu items={Menuitems} />
-                  </Suspense>
-                </div>
-              }
-              disabled
-            />
-          </Tabs>
-        </div>
+                      ))}
+                  </div>
+                ),
+              }}
+              style={{
+                flex: "1 1 0%",
+                minWidth: 0,
+                minHeight: 0,
+                height: "100%",
+                display: "flex",
+                flexDirection: "column",
+                overflow: "hidden",
+              }}
+            >
+              {filteredItems.map((item) => (
+                <TabPane tab={item.label} key={item.key}>
+                  <Suspense fallback={<Spin />}>{item.children}</Suspense>
+                </TabPane>
+              ))}
+              <TabPane
+                key="menu"
+                tab={
+                  <div style={{ marginLeft: 8 }}>
+                    <Suspense fallback={<Spin size="small" />}>
+                      <ThreeDotsMenu items={Menuitems} />
+                    </Suspense>
+                  </div>
+                }
+                disabled
+              />
+            </Tabs>
+          </div>
         </FinanceTabToolbarContext.Provider>
       </MembershipTabToolbarContext.Provider>
       <TransferRequests
