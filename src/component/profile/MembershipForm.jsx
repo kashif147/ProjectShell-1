@@ -32,6 +32,10 @@ import {
   formDataToSubscriptionPutPayload,
 } from "../../utils/membershipProfileSaveMappers";
 import { useMembershipTabToolbar } from "../../context/MembershipTabToolbarContext";
+import {
+  CRM_PAYMENT_FREQUENCY_OPTIONS,
+  isCreditCardPaymentType,
+} from "../../constants/paymentFrequency";
 import utc from "dayjs/plugin/utc";
 import timezone from "dayjs/plugin/timezone";
 import dayjs from "dayjs";
@@ -737,8 +741,20 @@ const MembershipForm = ({
         updatedData.workLocation = resolved;
       }
     }
-    if (field === "paymentType" && !isPayrollOrSalaryDeduction(value)) {
-      updatedData.payrollNumber = "";
+    if (field === "paymentType") {
+      const wasCard = isCreditCardPaymentType(formData.paymentType);
+      const isCard = isCreditCardPaymentType(value);
+      if (isCard) {
+        updatedData.paymentFrequency = "Annually";
+      } else if (
+        wasCard ||
+        !String(updatedData.paymentFrequency || "").trim()
+      ) {
+        updatedData.paymentFrequency = "Monthly";
+      }
+      if (!isPayrollOrSalaryDeduction(value)) {
+        updatedData.payrollNumber = "";
+      }
     }
     if (
       field === "membershipCategory" &&
@@ -1882,12 +1898,7 @@ const MembershipForm = ({
               <CustomSelect
                 label="Payment Frequency"
                 placeholder="Select Frequency"
-                options={[
-                  { value: "Monthly", label: "Monthly" },
-                  { value: "Annually", label: "Annually" },
-                  { value: "Quarterly", label: "Quarterly" },
-                  { value: "Semi-Annually", label: "Semi-Annually" },
-                ]}
+                options={CRM_PAYMENT_FREQUENCY_OPTIONS}
                 value={formData.paymentFrequency}
                 onChange={(e) =>
                   handleChange("paymentFrequency", e.target.value)

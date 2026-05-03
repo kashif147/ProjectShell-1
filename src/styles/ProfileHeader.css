@@ -1,5 +1,9 @@
 .member-header-container {
-  width: 17.5%;
+  /* Fixed width so the card does not grow/shrink when the sidebar pins/unpins */
+  flex: 0 0 272px;
+  width: 272px;
+  max-width: 272px;
+  box-sizing: border-box;
   display: flex;
   flex-direction: column;
   margin: 0 8px;
@@ -407,7 +411,9 @@
 /* Responsive adjustments */
 @media (max-width: 1200px) {
   .member-header-container {
-    width: 25%;
+    flex: 0 0 248px;
+    width: 248px;
+    max-width: 248px;
   }
 }
 

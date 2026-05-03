@@ -378,11 +378,24 @@ const ProfileHeader = forwardRef(function ProfileHeader(
     // Membership Info - Use subscription end date if available, otherwise fall back
     const memberId = getSafe(source, "membershipNumber", "");
     const joined = formatDate(getSafe(source, "firstJoinedDate")) || "";
-    // Format expires as date only - use formatted endDate from subscription or deactivatedAt from source
-    const expires =
-      subscriptionData?.endDateFormatted ||
-      formatDate(getSafe(source, "deactivatedAt")) ||
-      "";
+    // Expires: resignation / cancellation exit date when applicable; else subscription year end or profile deactivation
+    const cancelBlock = subscriptionData?.cancellation;
+    const dateCancelledRaw =
+      cancelBlock && !cancelBlock.reinstated
+        ? cancelBlock.dateCancelled
+        : null;
+    const dateResignedRaw = subscriptionData?.resignation?.dateResigned;
+    let expires = "";
+    if (dateResignedRaw) {
+      expires = formatDate(dateResignedRaw);
+    } else if (dateCancelledRaw) {
+      expires = formatDate(dateCancelledRaw);
+    } else {
+      expires =
+        subscriptionData?.endDateFormatted ||
+        formatDate(getSafe(source, "deactivatedAt")) ||
+        "";
+    }
 
     // Contact Info
     const address = source?.contactInfo

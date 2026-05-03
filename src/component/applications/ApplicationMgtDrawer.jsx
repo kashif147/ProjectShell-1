@@ -52,6 +52,10 @@ import {
 } from "../profile/IncomeProtectionTooltip";
 import debounce from "lodash.debounce";
 import { confirmRetrospectiveMembershipModal } from "../../utils/retrospectiveMembership";
+import {
+  CRM_PAYMENT_FREQUENCY_OPTIONS,
+  isCreditCardPaymentType,
+} from "../../constants/paymentFrequency";
 
 const baseURL = process.env.REACT_APP_PROFILE_SERVICE_URL;
 const { Search: AntdSearch } = Input;
@@ -424,6 +428,10 @@ function ApplicationMgtDrawer({
       },
       subscriptionDetails: {
         paymentType: searchResult?.professionalDetails?.paymentType || "",
+        paymentFrequency:
+          searchResult?.subscriptionDetails?.paymentFrequency ||
+          searchResult?.subscription?.paymentFrequency ||
+          "Monthly",
         payrollNo: searchResult?.professionalDetails?.payrollNo || "",
         membershipStatus: searchResult?.additionalInformation?.membershipStatus || "",
         otherIrishTradeUnion: searchResult?.additionalInformation?.otherIrishTradeUnion || false,
@@ -671,6 +679,8 @@ function ApplicationMgtDrawer({
       },
       subscriptionDetails: {
         paymentType: apiData?.subscriptionDetails?.paymentType || "",
+        paymentFrequency:
+          apiData?.subscriptionDetails?.paymentFrequency || "Monthly",
         payrollNo: apiData?.subscriptionDetails?.payrollNo || "",
         membershipStatus: apiData?.subscriptionDetails?.membershipStatus || "",
         otherIrishTradeUnion:
@@ -1006,6 +1016,7 @@ function ApplicationMgtDrawer({
     subscriptionDetails: {
       membershipCategory: "",
       paymentType: "",
+      paymentFrequency: "Monthly",
       payrollNo: "",
       membershipStatus: "",
       otherIrishTradeUnion: null,
@@ -1183,6 +1194,20 @@ function ApplicationMgtDrawer({
         missingFieldNames.push(fieldLabels[field] || field);
       }
     });
+
+    const mobileTrimmed =
+      typeof InfData.contactInfo?.mobileNumber === "string"
+        ? InfData.contactInfo.mobileNumber.trim()
+        : "";
+    if (
+      mobileTrimmed &&
+      !mobileTrimmed.startsWith("+") &&
+      /\d/.test(mobileTrimmed)
+    ) {
+      newErrors.mobileNumber =
+        "Select a country calling code for the mobile number";
+      missingFieldNames.push("Mobile country calling code");
+    }
 
     if (InfData.contactInfo.preferredEmail === "personal") {
       if (!InfData.contactInfo.personalEmail?.trim()) {
@@ -1532,6 +1557,8 @@ function ApplicationMgtDrawer({
             // Only preserve these specific fields
             membershipCategory: InfData.subscriptionDetails?.membershipCategory || "",
             paymentType: InfData.subscriptionDetails?.paymentType || "",
+            paymentFrequency:
+              InfData.subscriptionDetails?.paymentFrequency || "Monthly",
             primarySection: InfData.subscriptionDetails?.primarySection || "",
           },
         };
@@ -1834,6 +1861,31 @@ function ApplicationMgtDrawer({
         });
 
         return updated;
+      });
+    } else if (section === "subscriptionDetails" && field === "paymentType") {
+      setInfData((prev) => {
+        const prevType = prev.subscriptionDetails?.paymentType;
+        const nextSub = {
+          ...prev.subscriptionDetails,
+          paymentType: value,
+        };
+        const isCard = isCreditCardPaymentType(value);
+        const wasCard = isCreditCardPaymentType(prevType);
+        if (isCard) {
+          nextSub.paymentFrequency = "Annually";
+        } else if (
+          wasCard ||
+          !String(nextSub.paymentFrequency || "").trim()
+        ) {
+          nextSub.paymentFrequency = "Monthly";
+        }
+        if (value !== "Salary Deduction") {
+          nextSub.payrollNo = "";
+        }
+        return {
+          ...prev,
+          subscriptionDetails: nextSub,
+        };
       });
     } else if (field === "workLocation") {
       if (typeof value === "object" && value !== null) {
@@ -2939,6 +2991,7 @@ function ApplicationMgtDrawer({
                   value={InfData.contactInfo?.mobileNumber}
                   required
                   hasError={!!errors?.mobileNumber}
+                  errorMessage={errors?.mobileNumber || "Required"}
                   disabled={isDisable}
                   onChange={(e) =>
                     handleInputChange(
@@ -3635,6 +3688,22 @@ function ApplicationMgtDrawer({
                     onChange={(e) => handleInputChange("subscriptionDetails", "payrollNo", e.target.value)}
                   />
                 </div>
+              </Col>
+              <Col xs={24} md={12}>
+                <CustomSelect
+                  label="Payment Frequency"
+                  name="paymentFrequency"
+                  options={CRM_PAYMENT_FREQUENCY_OPTIONS}
+                  disabled={isDisable}
+                  onChange={(e) =>
+                    handleInputChange(
+                      "subscriptionDetails",
+                      "paymentFrequency",
+                      e.target.value,
+                    )
+                  }
+                  value={InfData.subscriptionDetails?.paymentFrequency}
+                />
               </Col>
 
               {/* Membership Status - Full Width */}

@@ -36,10 +36,11 @@ function formatNationalDisplay(digits) {
 }
 
 function buildCompactMobile(callingCode, nationalRaw) {
-  const code = ensurePlusCallingCode(callingCode);
   const national = normalizeNationalDigits(nationalRaw);
   if (!national) return "";
-  return `${code}${national}`;
+  const code = String(callingCode ?? "").trim();
+  if (!code) return national;
+  return `${ensurePlusCallingCode(code)}${national}`;
 }
 
 /** Fallback prefixes when /countries has not loaded yet (longest first). */
@@ -75,20 +76,14 @@ function sortedCallingCodes(countriesData) {
 }
 
 /**
- * Parse parent value (compact "+92345…" or legacy "+92 0345…") into code + national digits (normalized).
+ * Parse parent value into calling code + national digits (normalized).
+ * Supports E.164 (+35387…), legacy "+353 087…", and national-only values when portal omits country code.
  */
 function parseMobileValue(value, countriesData) {
   if (!value || !String(value).trim()) {
     return { code: "+353", national: "" };
   }
   const trimmed = String(value).trim();
-
-  if (trimmed.includes(" ")) {
-    const parts = trimmed.split(/\s+/);
-    const code = ensurePlusCallingCode(parts[0]);
-    const nationalJoined = parts.slice(1).join("");
-    return { code, national: normalizeNationalDigits(nationalJoined) };
-  }
 
   if (trimmed.startsWith("+")) {
     const codes = sortedCallingCodes(countriesData);
@@ -105,6 +100,24 @@ function parseMobileValue(value, countriesData) {
         };
       }
     }
+    return { code: "+353", national: "" };
+  }
+
+  if (trimmed.includes(" ")) {
+    const parts = trimmed.split(/\s+/);
+    const head = parts[0];
+    if (head.startsWith("+")) {
+      const code = ensurePlusCallingCode(head);
+      const nationalJoined = parts.slice(1).join("");
+      return { code, national: normalizeNationalDigits(nationalJoined) };
+    }
+    const nationalJoined = parts.join("");
+    return { code: "", national: normalizeNationalDigits(nationalJoined) };
+  }
+
+  const digitsOnly = trimmed.replace(/\D/g, "");
+  if (digitsOnly) {
+    return { code: "", national: normalizeNationalDigits(digitsOnly) };
   }
 
   return { code: "+353", national: "" };
@@ -201,12 +214,13 @@ const MyInput = ({
 
   useEffect(() => {
     if (type !== "mobile") return;
-    if (!value) {
+    if (!value || !String(value).trim()) {
+      setCountryCode("+353");
       setMobileNumber("");
       return;
     }
     const { code, national } = parseMobileValue(value, countriesData);
-    setCountryCode(code);
+    setCountryCode(code || "");
     setMobileNumber(formatNationalDisplay(national));
   }, [type, value, countriesData]);
 
@@ -270,11 +284,14 @@ const MyInput = ({
               {loadingC ? (
                 <option>Loading...</option>
               ) : (
-                countriesData?.map((c) => (
-                  <option key={c._id} value={c.callingCodes?.[0] || ""}>
-                    {c.displayname} {c.callingCodes?.[0]}
-                  </option>
-                ))
+                <>
+                  <option value="">Select country code</option>
+                  {countriesData?.map((c) => (
+                    <option key={c._id} value={c.callingCodes?.[0] || ""}>
+                      {c.displayname} {c.callingCodes?.[0]}
+                    </option>
+                  ))}
+                </>
               )}
             </select>
 
