@@ -1,6 +1,13 @@
-import React, { useState, useMemo, useEffect, useCallback } from "react";
+import React, {
+  useState,
+  useMemo,
+  useEffect,
+  useCallback,
+  forwardRef,
+  useImperativeHandle,
+} from "react";
 import { useLocation, useSearchParams } from "react-router-dom";
-import { Modal, Button, message, Dropdown, Tooltip } from "antd";
+import { Modal, Button, message, Tooltip } from "antd";
 import {
   FaMapMarkerAlt,
   FaEnvelope,
@@ -10,10 +17,7 @@ import {
   FaClock,
   FaShieldAlt,
   FaExclamationTriangle,
-  FaEdit,
   FaUser,
-  FaEllipsisV,
-  FaClone,
   FaCreditCard,
   FaMoneyBillWave,
 } from "react-icons/fa";
@@ -35,16 +39,18 @@ import {
   getSubscriptionByProfileId,
   getSubscriptionById,
   getProfileSubscriptionsForActivateEligibility,
+  pickPrimarySubscription,
+  profileDetailActiveSubscriptionArgs,
 } from "../../features/subscription/profileSubscriptionSlice";
 import { shouldDisableActivateUnlessLatestSubscriptionByStartDate } from "../../utils/applicationEligibility";
 
-function ProfileHeader({
-  isEditMode = false,
-  setIsEditMode,
-  showButtons = false,
-  isDeceased = false,
-  onDuplicateClick,
-}) {
+const ACTIVATE_MEMBERSHIP_DISABLED_TITLE =
+  "Only the subscription with the latest start date can be reactivated here. This membership is an older subscription line.";
+
+const ProfileHeader = forwardRef(function ProfileHeader(
+  { showButtons = false, isDeceased = false, onMembershipHeaderActionsMetaChange },
+  ref,
+) {
   const [isCancelModalVisible, setIsCancelModalVisible] = useState(false);
   const [isUndoCancelModalVisible, setIsUndoCancelModalVisible] =
     useState(false);
@@ -134,60 +140,37 @@ function ProfileHeader({
     return formatDate(dateString, "DD/MM/YYYY");
   };
 
-  // FIXED: Simplified subscription data extraction - now reactive
+  // Prefer current subscription row; otherwise latest period — matches CRM list when multiple rows exist
   const subscriptionData = useMemo(() => {
-    // Check for direct array (existing logic)
-    if (Array.isArray(ProfileSubData?.data) && ProfileSubData.data.length > 0) {
-      return {
-        subscriptionStatus: ProfileSubData.data[0].subscriptionStatus || "",
-        paymentType: ProfileSubData.data[0].paymentType || "",
-        payrollNo: ProfileSubData.data[0].payrollNo || "",
-        paymentFrequency: ProfileSubData.data[0].paymentFrequency || "",
-        subscriptionYear: ProfileSubData.data[0].subscriptionYear || "",
-        isCurrent: ProfileSubData.data[0].isCurrent || false,
-        startDate: ProfileSubData.data[0].startDate || null, // Keep raw value for date-time formatting
-        startDateFormatted: ProfileSubData.data[0].startDate
-          ? formatDate(ProfileSubData.data[0].startDate)
-          : "",
-        endDate: ProfileSubData.data[0].endDate || null, // Keep raw value for date-time formatting
-        endDateFormatted: ProfileSubData.data[0].endDate
-          ? formatDate(ProfileSubData.data[0].endDate)
-          : "",
-        renewalDate: ProfileSubData.data[0].rolloverDate
-          ? formatDate(ProfileSubData.data[0].rolloverDate)
-          : "",
-        membershipMovement: ProfileSubData.data[0].membershipMovement || "",
-        reinstated: ProfileSubData.data[0].cancellation?.reinstated || false,
-        yearendProcessed: ProfileSubData.data[0].yearend?.processed || false,
-        ...ProfileSubData.data[0],
-      };
-    }
-    // Check for nested data structure (from screenshot: data.data)
-    else if (
+    let rows = [];
+    if (Array.isArray(ProfileSubData?.data)) {
+      rows = ProfileSubData.data;
+    } else if (
       ProfileSubData?.data?.data &&
-      Array.isArray(ProfileSubData.data.data) &&
-      ProfileSubData.data.data.length > 0
+      Array.isArray(ProfileSubData.data.data)
     ) {
-      const sub = ProfileSubData.data.data[0];
-      return {
-        subscriptionStatus: sub.subscriptionStatus || "",
-        paymentType: sub.paymentType || "",
-        payrollNo: sub.payrollNo || "",
-        paymentFrequency: sub.paymentFrequency || "",
-        subscriptionYear: sub.subscriptionYear || "",
-        isCurrent: sub.isCurrent || false,
-        startDate: sub.startDate || null, // Keep raw value for date-time formatting
-        startDateFormatted: sub.startDate ? formatDate(sub.startDate) : "",
-        endDate: sub.endDate || null, // Keep raw value for date-time formatting
-        endDateFormatted: sub.endDate ? formatDate(sub.endDate) : "",
-        renewalDate: sub.rolloverDate ? formatDate(sub.rolloverDate) : "",
-        membershipMovement: sub.membershipMovement || "",
-        reinstated: sub.cancellation?.reinstated || false,
-        yearendProcessed: sub.yearend?.processed || false,
-        ...sub,
-      };
+      rows = ProfileSubData.data.data;
     }
-    return null;
+    const sub = pickPrimarySubscription(rows);
+    if (!sub) return null;
+
+    return {
+      subscriptionStatus: sub.subscriptionStatus || "",
+      paymentType: sub.paymentType || "",
+      payrollNo: sub.payrollNo || "",
+      paymentFrequency: sub.paymentFrequency || "",
+      subscriptionYear: sub.subscriptionYear || "",
+      isCurrent: sub.isCurrent === true,
+      startDate: sub.startDate || null,
+      startDateFormatted: sub.startDate ? formatDate(sub.startDate) : "",
+      endDate: sub.endDate || null,
+      endDateFormatted: sub.endDate ? formatDate(sub.endDate) : "",
+      renewalDate: sub.rolloverDate ? formatDate(sub.rolloverDate) : "",
+      membershipMovement: sub.membershipMovement || "",
+      reinstated: sub.cancellation?.reinstated || false,
+      yearendProcessed: sub.yearend?.processed || false,
+      ...sub,
+    };
   }, [ProfileSubData]);
 
   const memberIdForLedger = useMemo(() => {
@@ -289,7 +272,12 @@ function ProfileHeader({
       if (subscriptionId) {
         dispatch(getSubscriptionById(subscriptionId));
       } else {
-        dispatch(getSubscriptionByProfileId({ profileId, isCurrent: "true" }));
+        dispatch(
+          getSubscriptionByProfileId({
+            profileId,
+            ...profileDetailActiveSubscriptionArgs,
+          }),
+        );
       }
     }
     fetchAccountSummary();
@@ -374,7 +362,6 @@ function ProfileHeader({
     const age =
       calculateAge(getSafe(source, "personalInfo.dateOfBirth")) || "36 Yrs";
 
-    // Status - Use subscription status if available, otherwise fall back to profile data
     let status = "";
     if (isDeceased) {
       status = "Deceased";
@@ -391,11 +378,24 @@ function ProfileHeader({
     // Membership Info - Use subscription end date if available, otherwise fall back
     const memberId = getSafe(source, "membershipNumber", "");
     const joined = formatDate(getSafe(source, "firstJoinedDate")) || "";
-    // Format expires as date only - use formatted endDate from subscription or deactivatedAt from source
-    const expires =
-      subscriptionData?.endDateFormatted ||
-      formatDate(getSafe(source, "deactivatedAt")) ||
-      "";
+    // Expires: resignation / cancellation exit date when applicable; else subscription year end or profile deactivation
+    const cancelBlock = subscriptionData?.cancellation;
+    const dateCancelledRaw =
+      cancelBlock && !cancelBlock.reinstated
+        ? cancelBlock.dateCancelled
+        : null;
+    const dateResignedRaw = subscriptionData?.resignation?.dateResigned;
+    let expires = "";
+    if (dateResignedRaw) {
+      expires = formatDate(dateResignedRaw);
+    } else if (dateCancelledRaw) {
+      expires = formatDate(dateCancelledRaw);
+    } else {
+      expires =
+        subscriptionData?.endDateFormatted ||
+        formatDate(getSafe(source, "deactivatedAt")) ||
+        "";
+    }
 
     // Contact Info
     const address = source?.contactInfo
@@ -445,9 +445,8 @@ function ProfileHeader({
           : "#faad14";
     const lastPayment = `€${centsToEuro(lastPaymentAmount || 0).toLocaleString('en-IE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 
-    // Use latest ledger date for payment date if available, fallback to subscription/submission
-    const paymentDateRaw =
-      lastPaymentDate || subscriptionData?.startDate || getSafe(source, "submissionDate") || null;
+    // Payment date only from account summary (cash receipt crediting 2020); not subscription start.
+    const paymentDateRaw = lastPaymentDate || null;
     const paymentDate = paymentDateRaw
       ? formatDate(paymentDateRaw)
       : "N/A";
@@ -532,8 +531,8 @@ function ProfileHeader({
 
   const currentSubscriptionForActivate = useMemo(() => {
     const arr = ProfileSubData?.data;
-    if (Array.isArray(arr) && arr[0]) return arr[0];
-    return null;
+    if (!Array.isArray(arr)) return null;
+    return pickPrimarySubscription(arr);
   }, [ProfileSubData]);
 
   const mergedProfileSubscriptions = useMemo(() => {
@@ -564,6 +563,45 @@ function ProfileHeader({
     mergedProfileSubscriptions,
   ]);
 
+  useImperativeHandle(
+    ref,
+    () => ({
+      openCancelMembershipModal: () => setIsCancelModalVisible(true),
+      openActivateMembershipModal: () => {
+        if (shouldDisableActivateMembership) return;
+        setIsUndoCancelModalVisible(true);
+      },
+    }),
+    [shouldDisableActivateMembership],
+  );
+
+  useEffect(() => {
+    if (typeof onMembershipHeaderActionsMetaChange !== "function") return;
+    const showCancelMembership =
+      showButtons &&
+      !isDeceased &&
+      memberData.status !== "Resigned" &&
+      memberData.status !== "Lapsed" &&
+      !subscriptionData?.reinstated;
+    const showActivateMembership =
+      showButtons && !isDeceased && memberData.status === "Resigned";
+    onMembershipHeaderActionsMetaChange({
+      showCancelMembership,
+      showActivateMembership,
+      activateMembershipDisabled: shouldDisableActivateMembership,
+      activateMembershipTitle: shouldDisableActivateMembership
+        ? ACTIVATE_MEMBERSHIP_DISABLED_TITLE
+        : undefined,
+    });
+  }, [
+    onMembershipHeaderActionsMetaChange,
+    showButtons,
+    isDeceased,
+    memberData.status,
+    subscriptionData?.reinstated,
+    shouldDisableActivateMembership,
+  ]);
+
   const cancellationReasons = [
     { key: "voluntary", label: "Voluntary Resignation" },
     { key: "retirement", label: "Retirement" },
@@ -573,10 +611,6 @@ function ProfileHeader({
     { key: "other", label: "Other" },
     { key: "deceased", label: "Deceased" },
   ];
-
-  const handleCancelClick = () => {
-    setIsCancelModalVisible(true);
-  };
 
   const handleCancelModalClose = () => {
     setIsCancelModalVisible(false);
@@ -598,9 +632,15 @@ function ProfileHeader({
       return;
     }
 
-    const profileId = source?.id || source?._id;
-    if (!profileId) {
-      MyAlert("error", "Profile ID not found. Cannot proceed.");
+    const subscriptionId =
+      subscriptionData?._id != null
+        ? String(subscriptionData._id).trim()
+        : "";
+    if (!subscriptionId) {
+      MyAlert(
+        "error",
+        "Active subscription ID not found. Cannot resign until subscription data loads.",
+      );
       return;
     }
 
@@ -613,7 +653,7 @@ function ProfileHeader({
 
     try {
       const response = await axios.put(
-        `${getSubscriptionServiceBaseUrl()}/subscriptions/resign/${profileId}`,
+        `${getSubscriptionServiceBaseUrl()}/subscriptions/${subscriptionId}/resign`,
         payload,
         {
           headers: {
@@ -688,40 +728,6 @@ function ProfileHeader({
         <div
           className={`member-header-top ${isDeceased ? "member-deceased" : ""}`}
         >
-          {showButtons && (
-            <Dropdown
-              menu={{
-                items: [
-                  {
-                    key: "edit",
-                    label: isEditMode ? "Cancel Edit" : "Edit Profile",
-                    icon: <FaEdit />,
-                    onClick: () => setIsEditMode && setIsEditMode(!isEditMode),
-                  },
-                  {
-                    key: "duplicate",
-                    label: "Check Duplicate",
-                    icon: <FaClone />,
-                    onClick: onDuplicateClick,
-                  },
-                ],
-              }}
-              trigger={["click"]}
-            >
-              <FaEllipsisV
-                className="menu-icon"
-                style={{
-                  cursor: "pointer",
-                  fontSize: "1rem",
-                  color: "#fff",
-                  position: "absolute",
-                  right: "10px",
-                  top: "10px",
-                }}
-              />
-            </Dropdown>
-          )}
-
           <div className="member-profile-section">
             <div className="member-avatar">
               <FaUser className="avatar-icon" />
@@ -741,7 +747,9 @@ function ProfileHeader({
                   ? "member-status-deceased"
                   : /resign|cancel/i.test(memberData.status || "")
                     ? "member-status-resigned"
-                    : ""
+                    : /lapsed/i.test(memberData.status || "")
+                      ? "member-status-lapsed"
+                      : ""
                   }`}
                 style={{ cursor: statusBadgeTooltip ? "help" : undefined }}
               >
@@ -885,41 +893,6 @@ function ProfileHeader({
           </div>
         </div>
 
-        {/* Action Buttons: Activate (Green) if Resigned, Cancel (Red) if Active */}
-        {showButtons && !isDeceased && (
-          <>
-            {memberData.status === "Resigned" ? (
-              <button
-                className="member-cancel-btn"
-                style={{
-                  backgroundColor: "#52c41a",
-                  borderColor: "#52c41a",
-                  color: "#fff",
-                  opacity: shouldDisableActivateMembership ? 0.5 : 1,
-                  cursor: shouldDisableActivateMembership
-                    ? "not-allowed"
-                    : "pointer",
-                }}
-                disabled={shouldDisableActivateMembership}
-                title={
-                  shouldDisableActivateMembership
-                    ? "Only the subscription with the latest start date can be reactivated here. This membership is an older subscription line."
-                    : undefined
-                }
-                onClick={() => {
-                  if (shouldDisableActivateMembership) return;
-                  setIsUndoCancelModalVisible(true);
-                }}
-              >
-                Activate Membership
-              </button>
-            ) : !subscriptionData?.reinstated ? (
-              <button className="member-cancel-btn" onClick={handleCancelClick}>
-                Cancel Membership
-              </button>
-            ) : null}
-          </>
-        )}
       </div>
 
       {/* Cancel Membership Modal */}
@@ -988,13 +961,13 @@ function ProfileHeader({
       <UndoCancellationModal
         visible={isUndoCancelModalVisible}
         onClose={() => setIsUndoCancelModalVisible(false)}
-        record={source}
+        subscriptionId={subscriptionData?._id}
         onSuccess={() => {
           refreshAllData();
         }}
       />
     </div>
   );
-}
+});
 
 export default ProfileHeader;

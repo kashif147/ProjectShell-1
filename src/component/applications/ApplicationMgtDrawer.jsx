@@ -51,6 +51,11 @@ import {
   RewardsScreen
 } from "../profile/IncomeProtectionTooltip";
 import debounce from "lodash.debounce";
+import { confirmRetrospectiveMembershipModal } from "../../utils/retrospectiveMembership";
+import {
+  CRM_PAYMENT_FREQUENCY_OPTIONS,
+  isCreditCardPaymentType,
+} from "../../constants/paymentFrequency";
 
 const baseURL = process.env.REACT_APP_PROFILE_SERVICE_URL;
 const { Search: AntdSearch } = Input;
@@ -423,6 +428,10 @@ function ApplicationMgtDrawer({
       },
       subscriptionDetails: {
         paymentType: searchResult?.professionalDetails?.paymentType || "",
+        paymentFrequency:
+          searchResult?.subscriptionDetails?.paymentFrequency ||
+          searchResult?.subscription?.paymentFrequency ||
+          "Monthly",
         payrollNo: searchResult?.professionalDetails?.payrollNo || "",
         membershipStatus: searchResult?.additionalInformation?.membershipStatus || "",
         otherIrishTradeUnion: searchResult?.additionalInformation?.otherIrishTradeUnion || false,
@@ -670,6 +679,8 @@ function ApplicationMgtDrawer({
       },
       subscriptionDetails: {
         paymentType: apiData?.subscriptionDetails?.paymentType || "",
+        paymentFrequency:
+          apiData?.subscriptionDetails?.paymentFrequency || "Monthly",
         payrollNo: apiData?.subscriptionDetails?.payrollNo || "",
         membershipStatus: apiData?.subscriptionDetails?.membershipStatus || "",
         otherIrishTradeUnion:
@@ -1005,6 +1016,7 @@ function ApplicationMgtDrawer({
     subscriptionDetails: {
       membershipCategory: "",
       paymentType: "",
+      paymentFrequency: "Monthly",
       payrollNo: "",
       membershipStatus: "",
       otherIrishTradeUnion: null,
@@ -1182,6 +1194,20 @@ function ApplicationMgtDrawer({
         missingFieldNames.push(fieldLabels[field] || field);
       }
     });
+
+    const mobileTrimmed =
+      typeof InfData.contactInfo?.mobileNumber === "string"
+        ? InfData.contactInfo.mobileNumber.trim()
+        : "";
+    if (
+      mobileTrimmed &&
+      !mobileTrimmed.startsWith("+") &&
+      /\d/.test(mobileTrimmed)
+    ) {
+      newErrors.mobileNumber =
+        "Select a country calling code for the mobile number";
+      missingFieldNames.push("Mobile country calling code");
+    }
 
     if (InfData.contactInfo.preferredEmail === "personal") {
       if (!InfData.contactInfo.personalEmail?.trim()) {
@@ -1446,42 +1472,51 @@ function ApplicationMgtDrawer({
 
       if (selected.Approve) {
         try {
-          let approvalPayload;
-
-          if (isEdit && originalData) {
-            const apiOriginalData = withMembershipCategoryLabelsForApi(
-              dateUtils.prepareForAPI(originalData)
+          const okRetro = await confirmRetrospectiveMembershipModal(apiData);
+          if (!okRetro) {
+            MyAlert(
+              "info",
+              "Approval cancelled",
+              "The application was saved. Approve from the list when you are ready."
             );
-            const proposedPatch = generatePatch(apiOriginalData, apiData);
-            approvalPayload = {
-              submission: apiData,
-              proposedPatch: proposedPatch,
-              notes: "Auto-approved with changes on submission",
-            };
           } else {
-            const proposedPatch = generateCreatePatch(apiData);
-            approvalPayload = {
-              submission: apiData,
-              proposedPatch: proposedPatch,
-              notes: "Auto-approved on submission",
-            };
-          }
+            let approvalPayload;
 
-          await axios.post(
-            `${process.env.REACT_APP_PROFILE_SERVICE_URL}/applications/${applicationId}/approve`,
-            approvalPayload,
-            {
-              headers: {
-                "Content-Type": "application/json",
-                Authorization: `Bearer ${token}`,
-              },
+            if (isEdit && originalData) {
+              const apiOriginalData = withMembershipCategoryLabelsForApi(
+                dateUtils.prepareForAPI(originalData)
+              );
+              const proposedPatch = generatePatch(apiOriginalData, apiData);
+              approvalPayload = {
+                submission: apiData,
+                proposedPatch: proposedPatch,
+                notes: "Auto-approved with changes on submission",
+              };
+            } else {
+              const proposedPatch = generateCreatePatch(apiData);
+              approvalPayload = {
+                submission: apiData,
+                proposedPatch: proposedPatch,
+                notes: "Auto-approved on submission",
+              };
             }
-          );
 
-          MyAlert(
-            "success",
-            "Application submitted and approved successfully!"
-          );
+            await axios.post(
+              `${process.env.REACT_APP_PROFILE_SERVICE_URL}/applications/${applicationId}/approve`,
+              approvalPayload,
+              {
+                headers: {
+                  "Content-Type": "application/json",
+                  Authorization: `Bearer ${token}`,
+                },
+              }
+            );
+
+            MyAlert(
+              "success",
+              "Application submitted and approved successfully!"
+            );
+          }
         } catch (approveError) {
           console.error("Approval failed:", approveError);
           MyAlert(
@@ -1522,6 +1557,8 @@ function ApplicationMgtDrawer({
             // Only preserve these specific fields
             membershipCategory: InfData.subscriptionDetails?.membershipCategory || "",
             paymentType: InfData.subscriptionDetails?.paymentType || "",
+            paymentFrequency:
+              InfData.subscriptionDetails?.paymentFrequency || "Monthly",
             primarySection: InfData.subscriptionDetails?.primarySection || "",
           },
         };
@@ -1825,6 +1862,31 @@ function ApplicationMgtDrawer({
 
         return updated;
       });
+    } else if (section === "subscriptionDetails" && field === "paymentType") {
+      setInfData((prev) => {
+        const prevType = prev.subscriptionDetails?.paymentType;
+        const nextSub = {
+          ...prev.subscriptionDetails,
+          paymentType: value,
+        };
+        const isCard = isCreditCardPaymentType(value);
+        const wasCard = isCreditCardPaymentType(prevType);
+        if (isCard) {
+          nextSub.paymentFrequency = "Annually";
+        } else if (
+          wasCard ||
+          !String(nextSub.paymentFrequency || "").trim()
+        ) {
+          nextSub.paymentFrequency = "Monthly";
+        }
+        if (value !== "Salary Deduction") {
+          nextSub.payrollNo = "";
+        }
+        return {
+          ...prev,
+          subscriptionDetails: nextSub,
+        };
+      });
     } else if (field === "workLocation") {
       if (typeof value === "object" && value !== null) {
         const locationId = value.key || value.id || value.value;
@@ -2126,6 +2188,28 @@ function ApplicationMgtDrawer({
       const hasChanges = proposedPatch && proposedPatch.length > 0;
 
       if (action === "approved") {
+        const submissionForRetroCheck = {
+          subscriptionDetails: {
+            ...(apiOriginalData?.subscriptionDetails || {}),
+            ...(apiInfData?.subscriptionDetails || {}),
+          },
+          professionalDetails: {
+            ...(apiOriginalData?.professionalDetails || {}),
+            ...(apiInfData?.professionalDetails || {}),
+          },
+        };
+        const okRetro =
+          await confirmRetrospectiveMembershipModal(submissionForRetroCheck);
+        if (!okRetro) {
+          setIsProcessing(false);
+          disableFtn(false);
+          setSelected((prev) => ({
+            ...prev,
+            Approve: false,
+          }));
+          return;
+        }
+
         const approvalPayload = {
           submission: apiOriginalData || {}
         };
@@ -2685,38 +2769,9 @@ function ApplicationMgtDrawer({
             />
 
             <Row gutter={[16, 12]} className="mt-2">
-              {/* Consent and Preferred Address in one row */}
+              {/* Preferred Address and Consent in one row */}
               <Col span={24}>
                 <Row gutter={16}>
-                  <Col xs={24} md={12}>
-                    <div
-                      className="p-3"
-                      style={{
-                        borderRadius: "4px",
-                        backgroundColor: "#fffbeb",
-                        border: "1px solid #fde68a",
-                      }}
-                    >
-                      <Checkbox
-                        style={{ color: "#78350f" }}
-                        value={true}
-                        checked={InfData?.contactInfo?.consent}
-                        onChange={(e) =>
-                          handleInputChange(
-                            "contactInfo",
-                            "consent",
-                            e.target.checked
-                          )
-                        }
-                      >
-                        Consent to receive Correspondence from INMO
-                      </Checkbox>
-                      <p style={{ color: "#78350f" }} className="m-0 !ms-0">
-                        Please un-tick this box if you would not like to receive
-                        correspondence from us to this address.
-                      </p>
-                    </div>
-                  </Col>
                   <Col xs={24} md={12} className="!pb-0 pa">
                     <div
                       className="p-3 bg-lb "
@@ -2754,6 +2809,35 @@ function ApplicationMgtDrawer({
                           className="mt-2"
                         />
                       </div>
+                    </div>
+                  </Col>
+                  <Col xs={24} md={12}>
+                    <div
+                      className="p-3"
+                      style={{
+                        borderRadius: "4px",
+                        backgroundColor: "#fffbeb",
+                        border: "1px solid #fde68a",
+                      }}
+                    >
+                      <Checkbox
+                        style={{ color: "#78350f" }}
+                        value={true}
+                        checked={InfData?.contactInfo?.consent}
+                        onChange={(e) =>
+                          handleInputChange(
+                            "contactInfo",
+                            "consent",
+                            e.target.checked
+                          )
+                        }
+                      >
+                        Consent to receive Correspondence from INMO
+                      </Checkbox>
+                      <p style={{ color: "#78350f" }} className="m-0 !ms-0">
+                        Please un-tick this box if you would not like to receive
+                        correspondence from us to this address.
+                      </p>
                     </div>
                   </Col>
                 </Row>
@@ -2907,6 +2991,7 @@ function ApplicationMgtDrawer({
                   value={InfData.contactInfo?.mobileNumber}
                   required
                   hasError={!!errors?.mobileNumber}
+                  errorMessage={errors?.mobileNumber || "Required"}
                   disabled={isDisable}
                   onChange={(e) =>
                     handleInputChange(
@@ -3603,6 +3688,22 @@ function ApplicationMgtDrawer({
                     onChange={(e) => handleInputChange("subscriptionDetails", "payrollNo", e.target.value)}
                   />
                 </div>
+              </Col>
+              <Col xs={24} md={12}>
+                <CustomSelect
+                  label="Payment Frequency"
+                  name="paymentFrequency"
+                  options={CRM_PAYMENT_FREQUENCY_OPTIONS}
+                  disabled={isDisable}
+                  onChange={(e) =>
+                    handleInputChange(
+                      "subscriptionDetails",
+                      "paymentFrequency",
+                      e.target.value,
+                    )
+                  }
+                  value={InfData.subscriptionDetails?.paymentFrequency}
+                />
               </Col>
 
               {/* Membership Status - Full Width */}

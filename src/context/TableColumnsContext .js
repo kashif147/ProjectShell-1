@@ -24,6 +24,7 @@ import { getProfileDetailsById } from "../features/profiles/ProfileDetailsSlice"
 import {
   getSubscriptionByProfileId,
   getSubscriptionById,
+  profileDetailActiveSubscriptionArgs,
 } from "../features/subscription/profileSubscriptionSlice";
 import { buildDetailsSearch } from "../utils/detailsRoute";
 import { Triangle } from "lucide-react";
@@ -5230,12 +5231,38 @@ const staticSearchFilters = {
   ],
 };
 
+// Payment Forms starts with the same table shell as Applications,
+// but remains its own screen key for template scoping.
+staticColumns["Payment Forms"] = (staticColumns.Applications || []).map((col) => ({
+  ...col,
+}));
+staticSearchFilters["Payment Forms"] = (staticSearchFilters.Applications || []).map(
+  (filter) => ({
+    ...filter,
+    titleColumn:
+      filter?.titleColumn === "Application Status"
+        ? "Form Type"
+        : filter?.titleColumn,
+    lookups: { ...(filter.lookups || {}) },
+  }),
+);
+const paymentFormsFormTypeFilter = staticSearchFilters["Payment Forms"].find(
+  (filter) => filter?.titleColumn === "Form Type",
+);
+if (paymentFormsFormTypeFilter) {
+  paymentFormsFormTypeFilter.lookups = {
+    "Salary Deductions": false,
+    "Standing Orders": false,
+  };
+}
+
 export const TableColumnsProvider = ({ children }) => {
   const location = useLocation();
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const pathScreenMap = {
     "/Applications": "Applications",
+    "/PaymentForms": "Payment Forms",
     "/Summary": "Profile",
     "/members": "Members",
     "/Members": "Members",
@@ -5605,7 +5632,7 @@ export const TableColumnsProvider = ({ children }) => {
           dispatch(
             getSubscriptionByProfileId({
               profileId: idToUse,
-              isCurrent: "true",
+              ...profileDetailActiveSubscriptionArgs,
             }),
           );
         }
@@ -5665,7 +5692,7 @@ export const TableColumnsProvider = ({ children }) => {
           dispatch(
             getSubscriptionByProfileId({
               profileId: idToUse,
-              isCurrent: "true",
+              ...profileDetailActiveSubscriptionArgs,
             }),
           );
         }

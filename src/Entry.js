@@ -168,6 +168,9 @@ const DirectDebitAuthorization = lazyWithRetry(
 const NotDesignedYet = lazyWithRetry(() => import("./pages/NotDesign"));
 const Sms = lazyWithRetry(() => import("./pages/Correspondences/sms"));
 const Email = lazyWithRetry(() => import("./pages/Correspondences/Emails"));
+const EmailCampaignDetail = lazyWithRetry(
+  () => import("./pages/Correspondences/EmailCampaignDetail")
+);
 const Notes = lazyWithRetry(() => import("./pages/Correspondences/Notes"));
 const PopOut = lazyWithRetry(() => import("./component/common/PopOut"));
 const Members = lazyWithRetry(() => import("./pages/membership/Members"));
@@ -696,6 +699,14 @@ function Entry() {
                         }
                       />
                       <Route
+                        path="PaymentForms"
+                        element={
+                          <ProtectedRoute requiredPermission={RoutePermissions["PaymentForms"]}>
+                            <MembershipApplication />
+                          </ProtectedRoute>
+                        }
+                      />
+                      <Route
                         path="applicationMgt"
                         element={
                           <ProtectedRoute>
@@ -890,6 +901,14 @@ function Entry() {
                         element={
                           <ProtectedRoute requiredPermission={RoutePermissions["Email"]}>
                             <Email />
+                          </ProtectedRoute>
+                        }
+                      />
+                      <Route
+                        path="EmailCampaignDetail"
+                        element={
+                          <ProtectedRoute requiredPermission={RoutePermissions["EmailCampaignDetail"]}>
+                            <EmailCampaignDetail />
                           </ProtectedRoute>
                         }
                       />

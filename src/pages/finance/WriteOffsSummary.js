@@ -21,7 +21,7 @@ const WriteOffsSummary = () => {
                     params: {
                         docType: "WriteOff",
                         skip: 0,
-                        limit: 50,
+                        limit: 500,
                     },
                 }
             );

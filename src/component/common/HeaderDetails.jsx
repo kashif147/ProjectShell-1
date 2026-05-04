@@ -73,11 +73,13 @@ import ApplicationMgtDrawer from "../applications/ApplicationMgtDrawer";
 import Breadcrumb from "./Breadcrumb";
 import SimpleBatch from "../../pages/membership/SimpleBatch";
 import { getApplicationsWithFilter } from "../../features/applicationwithfilterslice";
+import { getPaymentFormsWithFilter } from "../../features/paymentFormsWithFilterSlice";
 import { useSelectedIds } from "../../context/SelectedIdsContext";
 import MyDatePicker1 from "./MyDatePicker1";
 import MyConfirm from "./MyConfirm";
 import MyAlert from "./MyAlert";
 import axios from "axios";
+import { bulkSelectionHasRetrospective } from "../../utils/retrospectiveMembership";
 import Toolbar from "./Toolbar";
 import { useFilters } from "../../context/FilterContext";
 import { useAuthorization } from "../../context/AuthorizationContext";
@@ -268,6 +270,13 @@ function HeaderDetails({
   const { currentTemplateId } = useSelector(
     (state) => state.applicationWithFilter,
   );
+  const { currentTemplateId: paymentFormsTemplateId } = useSelector(
+    (state) => state.paymentFormsWithFilter || {},
+  );
+  const resolvedTemplateId =
+    location.pathname === "/PaymentForms"
+      ? paymentFormsTemplateId || ""
+      : currentTemplateId || "";
 
   const plainOptions = ["Approve", "Reject"];
   const screenName = location?.state?.search;
@@ -438,247 +447,311 @@ function HeaderDetails({
       return;
     }
 
-    // State to manage date and processing
-    let selectedDate = null;
-    let isProcessing = false;
-    let modalRef = null;
+    const openBulkApprovalProcessingModal = () => {
+      // State to manage date and processing
+      let selectedDate = null;
+      let isProcessing = false;
+      let modalRef = null;
 
-    // Create the modal
-    modalRef = Modal.confirm({
-      title: "Select Processing Date",
-      icon: null,
-      width: 500,
-      className: "bulk-approval-modal",
-      content: (
-        <div style={{ padding: "10px 0 20px 0" }}>
-          <MyDatePicker1
-            label="Processing Date"
-            name="processingDate"
-            value={tempSelectedDate}
-            onChange={(date) => {
-              setTempSelectedDate(date);
-              selectedDate = date; // Also store in the closure variable
-              if (modalRef) {
-                modalRef.update({
-                  okButtonProps: {
-                    disabled: !date,
-                    style: date
-                      ? {
-                          backgroundColor: "#45669d",
-                          borderColor: "#45669d",
-                        }
-                      : {},
-                  },
-                });
-              }
-            }}
-            required={true}
-            placeholder="Select processing date"
-            format="DD/MM/YYYY"
-          />
-          {isProcessing && (
-            <div
-              style={{
-                textAlign: "center",
-                padding: "30px 0 10px 0",
-                borderTop: "1px solid #f0f0f0",
-                marginTop: "20px",
+      // Create the modal
+      modalRef = Modal.confirm({
+        title: "Select Processing Date",
+        icon: null,
+        width: 500,
+        className: "bulk-approval-modal",
+        content: (
+          <div style={{ padding: "10px 0 20px 0" }}>
+            <MyDatePicker1
+              label="Processing Date"
+              name="processingDate"
+              value={tempSelectedDate}
+              onChange={(date) => {
+                setTempSelectedDate(date);
+                selectedDate = date; // Also store in the closure variable
+                if (modalRef) {
+                  modalRef.update({
+                    okButtonProps: {
+                      disabled: !date,
+                      style: date
+                        ? {
+                            backgroundColor: "#45669d",
+                            borderColor: "#45669d",
+                          }
+                        : {},
+                    },
+                  });
+                }
               }}
-            >
-              <LoadingOutlined
-                style={{ fontSize: 32, color: "#45669d", marginBottom: 15 }}
-              />
-              <div style={{ fontSize: 16, fontWeight: 500, color: "#45669d" }}>
-                Processing {selectedApplications.length} application(s)...
+              required={true}
+              placeholder="Select processing date"
+              format="DD/MM/YYYY"
+            />
+            {isProcessing && (
+              <div
+                style={{
+                  textAlign: "center",
+                  padding: "30px 0 10px 0",
+                  borderTop: "1px solid #f0f0f0",
+                  marginTop: "20px",
+                }}
+              >
+                <LoadingOutlined
+                  style={{ fontSize: 32, color: "#45669d", marginBottom: 15 }}
+                />
+                <div
+                  style={{ fontSize: 16, fontWeight: 500, color: "#45669d" }}
+                >
+                  Processing {selectedApplications.length} application(s)...
+                </div>
+                <div style={{ marginTop: 8, color: "#666", fontSize: 14 }}>
+                  This may take a moment for large batches
+                </div>
               </div>
-              <div style={{ marginTop: 8, color: "#666", fontSize: 14 }}>
-                This may take a moment for large batches
-              </div>
-            </div>
-          )}
-        </div>
-      ),
-      okText: "Approve",
-      cancelText: "Cancel",
-      okButtonProps: {
-        disabled: true,
-        style: {
-          backgroundColor: "#45669d",
-          borderColor: "#45669d",
-          color: "white",
+            )}
+          </div>
+        ),
+        okText: "Approve",
+        cancelText: "Cancel",
+        okButtonProps: {
+          disabled: true,
+          style: {
+            backgroundColor: "#45669d",
+            borderColor: "#45669d",
+            color: "white",
+          },
         },
-      },
-      cancelButtonProps: {
-        style: {
-          borderColor: "#d9d9d9",
-          color: "rgba(0, 0, 0, 0.88)",
+        cancelButtonProps: {
+          style: {
+            borderColor: "#d9d9d9",
+            color: "rgba(0, 0, 0, 0.88)",
+          },
         },
-      },
-      onOk: async () => {
-        if (!selectedDate) {
-          MyAlert("error", "Date Required", "Please select a processing date.");
-          return Promise.reject();
-        }
-
-        // Set processing state
-        isProcessing = true;
-        if (modalRef) {
-          modalRef.update({
-            okButtonProps: {
-              disabled: true,
-              loading: true,
-              style: {
-                backgroundColor: "#45669d",
-                borderColor: "#45669d",
-                opacity: 0.7,
-              },
-            },
-            cancelButtonProps: {
-              disabled: true,
-              style: {
-                opacity: 0.5,
-                pointerEvents: "none",
-              },
-            },
-          });
-        }
-
-        try {
-          const applicationIds = selectedApplications; // It's already an array of IDs
-          const formattedDate = dayjs(selectedDate).format("YYYY-MM-DD");
-
-          const requestData = {
-            applicationIds: applicationIds,
-            processingDate: formattedDate,
-          };
-
-          // Show processing notification
-          const processingKey = "bulk-approval-processing";
-          message.loading({
-            content: `Approving ${selectedApplications.length} application(s)...`,
-            duration: 0,
-            key: processingKey,
-            style: {
-              marginTop: "50vh",
-            },
-          });
-
-          const token = localStorage.getItem("token");
-          const response = await axios.post(
-            `${process.env.REACT_APP_PROFILE_SERVICE_URL}/applications/bulk-approval`,
-            requestData,
-            {
-              headers: {
-                "Content-Type": "application/json",
-                Authorization: `Bearer ${token}`,
-              },
-              timeout: 300000,
-            },
-          );
-
-          // Clear processing notification
-          message.destroy(processingKey);
-
-          if (response.status === 200 || response.status === 204) {
+        onOk: async () => {
+          if (!selectedDate) {
             MyAlert(
-              "success",
-              "Approval Successful",
-              `Successfully approved ${applicationIds.length} application(s) with processing date ${dayjs(selectedDate).format("DD/MM/YYYY")}!`,
+              "error",
+              "Date Required",
+              "Please select a processing date.",
             );
-
-            // Clear selected IDs context
-            setSelectedIds([]);
-
-            // Refresh the grid
-            if (
-              location.pathname === "/applicationMgt" ||
-              location.pathname === "/Applications"
-            ) {
-              dispatch(
-                getApplicationsWithFilter({
-                  templateId: currentTemplateId || "",
-                  page: 1,
-                  limit: 10,
-                }),
-              );
-            } else {
-              dispatch(getAllApplications());
-            }
-
-            Modal.destroyAll();
-            return Promise.resolve();
-          } else {
-            MyAlert(
-              "warning",
-              "Partial Success",
-              `Approval completed but with status: ${response.status}`,
-            );
-            Modal.destroyAll();
-            return Promise.resolve();
+            return Promise.reject();
           }
-        } catch (error) {
-          // Clear any processing notifications
-          message.destroy("bulk-approval-processing");
 
-          // Reset modal state on error
-          isProcessing = false;
+          // Set processing state
+          isProcessing = true;
           if (modalRef) {
             modalRef.update({
               okButtonProps: {
-                disabled: !selectedDate,
-                loading: false,
-                style: selectedDate
-                  ? {
-                      backgroundColor: "#45669d",
-                      borderColor: "#45669d",
-                    }
-                  : {},
+                disabled: true,
+                loading: true,
+                style: {
+                  backgroundColor: "#45669d",
+                  borderColor: "#45669d",
+                  opacity: 0.7,
+                },
               },
               cancelButtonProps: {
-                disabled: false,
+                disabled: true,
                 style: {
-                  borderColor: "#d9d9d9",
-                  color: "rgba(0, 0, 0, 0.88)",
+                  opacity: 0.5,
+                  pointerEvents: "none",
                 },
               },
             });
           }
 
-          if (error.code === "ECONNABORTED") {
-            MyAlert(
-              "error",
-              "Request Timeout",
-              `The approval request is taking too long to process ${selectedApplications.length} applications. ` +
-                `The process may still be running in the background. Please check back later.`,
+          try {
+            const applicationIds = selectedApplications; // It's already an array of IDs
+            const formattedDate = dayjs(selectedDate).format("YYYY-MM-DD");
+
+            if (
+              bulkSelectionHasRetrospective(
+                gridData,
+                selectedApplications,
+                dayjs(formattedDate),
+              )
+            ) {
+              const proceed = await new Promise((resolve) => {
+                Modal.confirm({
+                  title: "Delayed application / membership pricing",
+                  content:
+                    "One or more selected rows have date joined, submission, or application date either more than 90 days before the processing date or in a previous calendar year. Fees may use catalogue pricing for that membership period (including rows marked inactive). Continue?",
+                  okText: "Continue",
+                  cancelText: "Cancel",
+                  centered: true,
+                  onOk: () => resolve(true),
+                  onCancel: () => resolve(false),
+                });
+              });
+              if (!proceed) {
+                isProcessing = false;
+                if (modalRef) {
+                  modalRef.update({
+                    okButtonProps: {
+                      disabled: !selectedDate,
+                      loading: false,
+                      style: selectedDate
+                        ? {
+                            backgroundColor: "#45669d",
+                            borderColor: "#45669d",
+                          }
+                        : {},
+                    },
+                    cancelButtonProps: {
+                      disabled: false,
+                      style: {
+                        borderColor: "#d9d9d9",
+                        color: "rgba(0, 0, 0, 0.88)",
+                      },
+                    },
+                  });
+                }
+                return Promise.reject();
+              }
+            }
+
+            const requestData = {
+              applicationIds: applicationIds,
+              processingDate: formattedDate,
+            };
+
+            // Show processing notification
+            const processingKey = "bulk-approval-processing";
+            message.loading({
+              content: `Approving ${selectedApplications.length} application(s)...`,
+              duration: 0,
+              key: processingKey,
+              style: {
+                marginTop: "50vh",
+              },
+            });
+
+            const token = localStorage.getItem("token");
+            const response = await axios.post(
+              `${process.env.REACT_APP_PROFILE_SERVICE_URL}/applications/bulk-approval`,
+              requestData,
+              {
+                headers: {
+                  "Content-Type": "application/json",
+                  Authorization: `Bearer ${token}`,
+                },
+                timeout: 300000,
+              },
             );
-          } else if (error.response) {
-            MyAlert(
-              "error",
-              "Approval Failed",
-              `Error ${error.response.status}: ${error.response.data?.message || "Failed to approve applications"}`,
-            );
-          } else if (error.request) {
-            MyAlert(
-              "error",
-              "Network Error",
-              "No response from server. Please check your connection.",
-            );
-          } else {
-            MyAlert(
-              "error",
-              "Error",
-              `Failed to approve applications: ${error.message}`,
-            );
+
+            // Clear processing notification
+            message.destroy(processingKey);
+
+            if (response.status === 200 || response.status === 204) {
+              MyAlert(
+                "success",
+                "Approval Successful",
+                `Successfully approved ${applicationIds.length} application(s) with processing date ${dayjs(selectedDate).format("DD/MM/YYYY")}!`,
+              );
+
+              // Clear selected IDs context
+              setSelectedIds([]);
+
+              // Refresh the grid
+              if (
+                location.pathname === "/applicationMgt" ||
+                location.pathname === "/Applications"
+              ) {
+                dispatch(
+                  getApplicationsWithFilter({
+                    templateId: resolvedTemplateId,
+                    page: 1,
+                    limit: 500,
+                  }),
+                );
+              } else if (location.pathname === "/PaymentForms") {
+                dispatch(
+                  getPaymentFormsWithFilter({
+                    templateId: resolvedTemplateId,
+                    page: 1,
+                    limit: 500,
+                  }),
+                );
+              } else {
+                dispatch(getAllApplications());
+              }
+
+              Modal.destroyAll();
+              return Promise.resolve();
+            } else {
+              MyAlert(
+                "warning",
+                "Partial Success",
+                `Approval completed but with status: ${response.status}`,
+              );
+              Modal.destroyAll();
+              return Promise.resolve();
+            }
+          } catch (error) {
+            // Clear any processing notifications
+            message.destroy("bulk-approval-processing");
+
+            // Reset modal state on error
+            isProcessing = false;
+            if (modalRef) {
+              modalRef.update({
+                okButtonProps: {
+                  disabled: !selectedDate,
+                  loading: false,
+                  style: selectedDate
+                    ? {
+                        backgroundColor: "#45669d",
+                        borderColor: "#45669d",
+                      }
+                    : {},
+                },
+                cancelButtonProps: {
+                  disabled: false,
+                  style: {
+                    borderColor: "#d9d9d9",
+                    color: "rgba(0, 0, 0, 0.88)",
+                  },
+                },
+              });
+            }
+
+            if (error.code === "ECONNABORTED") {
+              MyAlert(
+                "error",
+                "Request Timeout",
+                `The approval request is taking too long to process ${selectedApplications.length} applications. ` +
+                  `The process may still be running in the background. Please check back later.`,
+              );
+            } else if (error.response) {
+              MyAlert(
+                "error",
+                "Approval Failed",
+                `Error ${error.response.status}: ${error.response.data?.message || "Failed to approve applications"}`,
+              );
+            } else if (error.request) {
+              MyAlert(
+                "error",
+                "Network Error",
+                "No response from server. Please check your connection.",
+              );
+            } else {
+              MyAlert(
+                "error",
+                "Error",
+                `Failed to approve applications: ${error.message}`,
+              );
+            }
+            return Promise.reject();
           }
-          return Promise.reject();
-        }
-      },
-      onCancel: () => {
-        if (typeof MyAlert === "function") {
-          MyAlert("info", "Cancelled", "Approval process was cancelled.");
-        }
-      },
-    });
+        },
+        onCancel: () => {
+          if (typeof MyAlert === "function") {
+            MyAlert("info", "Cancelled", "Approval process was cancelled.");
+          }
+        },
+      });
+    };
+
+    openBulkApprovalProcessingModal();
   };
 
   const handleAssignIRO = async (selectedUser, selectedWorkLocations) => {
@@ -1106,6 +1179,7 @@ function HeaderDetails({
 
           {(location?.pathname == "/ClaimSummary" ||
             location?.pathname == "/Applications" ||
+            location?.pathname == "/PaymentForms" ||
             location?.pathname == "/members" ||
             location?.pathname == "/" ||
             location?.pathname == "/Summary" ||
@@ -1263,7 +1337,13 @@ function HeaderDetails({
                           "/DirectDebit",
                         ].includes(nav) &&
                           !hasPermission("payments:create")) ||
-                        (["/Applications", "/Summary", "/members", "/Members"].includes(nav) &&
+                        ([
+                          "/Applications",
+                          "/PaymentForms",
+                          "/Summary",
+                          "/members",
+                          "/Members",
+                        ].includes(nav) &&
                           !hasPermission("application:create")) ||
                         ([
                           "/EventsDashboard",
@@ -1282,9 +1362,15 @@ function HeaderDetails({
                         nav === "/UserNotifications" ? null : (
                         <Button
                           onClick={() => {
-                            if (nav == "/Applications") {
+                            if (
+                              nav == "/Applications" ||
+                              nav === "/PaymentForms"
+                            ) {
                               navigate("/applicationMgt");
-                            } else if (nav === "/members" || nav === "/Members") {
+                            } else if (
+                              nav === "/members" ||
+                              nav === "/Members"
+                            ) {
                               navigate("/applicationMgt");
                             } else if (nav == "/ClaimSummary") {
                               handlClaimDrawerChng();

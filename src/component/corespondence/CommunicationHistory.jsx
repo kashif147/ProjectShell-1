@@ -259,7 +259,7 @@ const CommunicationHistory = () => {
       const res = await axios.get(
         `${getNotificationServiceUrl()}/notifications/admin`,
         {
-          params: { userId: memberUserId, page: 1, limit: 100 },
+          params: { userId: memberUserId, page: 1, limit: 500 },
           headers: { Authorization: `Bearer ${token}` },
         },
       );

@@ -1355,7 +1355,8 @@ th.ant-table-cell.ant-table-cell-fix-left.ant-table-cell-fix-left-last {
   z-index: 10;
   top: 0;
   height: 40px !important;
-  line-height: 40px !important;
+  /* normal line-height so filter/sorter controls align; body cells keep numeric line-height in Utilites */
+  line-height: normal !important;
 }
 
 .common-table table tr td {
@@ -1749,6 +1750,24 @@ table tbody tr:nth-child(odd):hover td {
 .claims-table .ant-table-tbody>tr>td {
   height: 40px !important;
   line-height: 40px !important;
+}
+
+/* rc-table measure row — fixed body td height must not expand this hidden row */
+.claims-table .ant-table-tbody > tr.ant-table-measure-row,
+.common-table .ant-table-tbody > tr.ant-table-measure-row {
+  height: 0 !important;
+  font-size: 0 !important;
+}
+
+.claims-table .ant-table-tbody > tr.ant-table-measure-row > td,
+.common-table .ant-table-tbody > tr.ant-table-measure-row > td {
+  height: 0 !important;
+  min-height: 0 !important;
+  padding: 0 !important;
+  line-height: 0 !important;
+  border: none !important;
+  overflow: hidden !important;
+  background: transparent !important;
 }
 
 .heading-tbl .ant-table-thead>tr>th {

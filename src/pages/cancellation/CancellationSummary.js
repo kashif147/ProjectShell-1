@@ -47,7 +47,7 @@ function CancellationSummary() {
   const { disableFtn } = useTableColumns();
   const { applied } = useCancellationBatchesFilter();
   const [currentPage, setCurrentPage] = useState(1);
-  const [pageSize, setPageSize] = useState(20);
+  const [pageSize, setPageSize] = useState(500);
   const [sortState, setSortState] = useState({
     columnKey: null,
     order: null,

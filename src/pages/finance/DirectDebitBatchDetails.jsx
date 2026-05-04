@@ -170,7 +170,7 @@ const DirectDebitBatchDetails = () => {
                     <Table
                         dataSource={members}
                         columns={columns}
-                        pagination={{ pageSize: 10 }}
+                        pagination={{ pageSize: 500 }}
                         className="mt-2"
                         bordered
                         size="middle"

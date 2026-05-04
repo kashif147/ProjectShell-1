@@ -20,6 +20,7 @@ import { buildApplicationMgtSearch } from "../../utils/applicationMgtRoute";
 import {
   getSubscriptionByProfileId,
   getSubscriptionById,
+  profileDetailActiveSubscriptionArgs,
 } from "../../features/subscription/profileSubscriptionSlice";
 import { Triangle, AlertCircle } from "lucide-react";
 import { Tooltip } from "antd";
@@ -600,7 +601,7 @@ const TableComponent = ({
               "Transfer Requests": false,
               "Career Break": false,
               "Generate NFC tag": false,
-              "Change Category": false,
+              "Category Changes": false,
             }}
             isCheckBox={false}
             isSearched={false}
@@ -636,7 +637,9 @@ const TableComponent = ({
         : (text, record, index) => {
 
           const currentPath = location.pathname.toLowerCase();
-          const isApplicationsPage = currentPath.includes('/applications');
+          const isApplicationsPage =
+            currentPath.includes('/applications') ||
+            currentPath.includes('/paymentforms');
           const isMembersPage = currentPath.includes('/members');
           const isProfilePage = currentPath.includes('/summary');
           const safeText = getRenderableCellValue(text, col, record);
@@ -730,7 +733,7 @@ const TableComponent = ({
                       dispatch(
                         getSubscriptionByProfileId({
                           profileId: idToUse,
-                          isCurrent: true,
+                          ...profileDetailActiveSubscriptionArgs,
                         })
                       );
                     }
@@ -804,7 +807,7 @@ const TableComponent = ({
                       dispatch(
                         getSubscriptionByProfileId({
                           profileId,
-                          isCurrent: true,
+                          ...profileDetailActiveSubscriptionArgs,
                         })
                       );
                     }
@@ -938,7 +941,7 @@ const TableComponent = ({
                         dispatch(
                           getSubscriptionByProfileId({
                             profileId: idToUse,
-                            isCurrent: true,
+                            ...profileDetailActiveSubscriptionArgs,
                           })
                         );
                       }

@@ -24,10 +24,10 @@ const ResignedMembersReport = () => {
     });
     const [pagination, setPagination] = useState({
         current: 1,
-        pageSize: 20,
+        pageSize: 500,
     });
     const gridApiRef = useRef(null);
-    const lastPaginationRef = useRef({ current: 1, pageSize: 20 });
+    const lastPaginationRef = useRef({ current: 1, pageSize: 500 });
 
     const columnDefs = [
         { headerName: "ID", field: "id", width: 80, sortable: true, filter: true },
@@ -130,7 +130,7 @@ const ResignedMembersReport = () => {
                         </Col>
                     </Row>
                     <div className="ag-theme-alpine" style={{ height: "600px", width: "100%" }}>
-                        <AgGridReact columnDefs={columnDefs} rowData={rowData} pagination={true} paginationPageSize={pagination.pageSize} paginationPageSizeSelector={[10, 20, 50, 100]} onGridReady={onGridReady} onPaginationChanged={onPaginationChanged} loading={loading} animateRows={true} rowSelection="multiple" suppressRowClickSelection={true} defaultColDef={{ resizable: true, sortable: true, filter: true }} />
+                        <AgGridReact columnDefs={columnDefs} rowData={rowData} pagination={true} paginationPageSize={pagination.pageSize} paginationPageSizeSelector={[500, 1000, 2000, 5000]} onGridReady={onGridReady} onPaginationChanged={onPaginationChanged} loading={loading} animateRows={true} rowSelection="multiple" suppressRowClickSelection={true} defaultColDef={{ resizable: true, sortable: true, filter: true }} />
                     </div>
                 </Card>
             </div>

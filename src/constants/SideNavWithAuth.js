@@ -92,9 +92,9 @@ export const correspondenceItems = [
     ["communication:read"]
   ),
   createMenuItem(
-    "Communication History",
+    "Correspondence",
     <FaHistory />,
-    "Communication History",
+    "Correspondence",
     ["communication:read"]
   ),
 ];
@@ -223,6 +223,12 @@ export const subscriptionItems = [
     ["crm:member:read"]
   ),
   createMenuItem(
+    "Payment Forms",
+    <FaWallet />,
+    "Payment Forms",
+    ["crm:member:read"]
+  ),
+  createMenuItem(
     "Reminders",
     <FaRegClock />,
     "Reminders",
@@ -241,9 +247,9 @@ export const subscriptionItems = [
     ["transferrequests:read"]
   ),
   createMenuItem(
-    "Change Category",
+    "Category Changes",
     <FaTags />,
-    "Change Category",
+    "Category Changes",
     ["changeofcategory:read"]
   ),
   // createMenuItem(

@@ -1,4 +1,4 @@
-/** Soft fills + muted text — Communication History, reminder/cancellation batch status */
+/** Soft fills + muted text — Correspondence / profile comms, reminder/cancellation batch status */
 
 export const SOFT_TAG_BASE = {
   marginInlineEnd: 0,
@@ -57,7 +57,7 @@ export const SOFT_READ_TAG = {
   },
 };
 
-/** Batch Completed / Pending — same chrome as Communication History delivery delivered / pending */
+/** Batch Completed / Pending — same chrome as Correspondence delivery delivered / pending */
 export const SOFT_BATCH_STATUS_TAGS = {
   completed: SOFT_DELIVERY_STYLES.delivered,
   pending: SOFT_DELIVERY_STYLES.pending,

@@ -1,12 +1,17 @@
-import React, { useState, useEffect, useMemo } from "react";
-import { Row, Col, Card, Checkbox, Radio, Dropdown, Button } from "antd";
+import React, {
+  useState,
+  useEffect,
+  useMemo,
+  useLayoutEffect,
+  useRef,
+} from "react";
+import { Row, Col, Card, Checkbox, Radio, Button } from "antd";
 import MyInput from "../common/MyInput";
 import MyDatePicker from "../common/MyDatePicker";
 import CustomSelect from "../common/CustomSelect";
 import MyAlert from "../common/MyAlert";
 import { IoBagRemoveOutline } from "react-icons/io5";
 import { CiCreditCard1 } from "react-icons/ci";
-import { BsThreeDotsVertical } from "react-icons/bs";
 import { useSelector, useDispatch } from "react-redux";
 import { useSearchParams } from "react-router-dom";
 import { getCategoryLookup } from "../../features/CategoryLookupSlice";
@@ -19,11 +24,18 @@ import {
   getSubscriptionByProfileId,
   getSubscriptionById,
   updateSubscriptionById,
+  pickPrimarySubscription,
+  profileDetailActiveSubscriptionArgs,
 } from "../../features/subscription/profileSubscriptionSlice";
 import {
   formDataToProfilePutPayload,
   formDataToSubscriptionPutPayload,
 } from "../../utils/membershipProfileSaveMappers";
+import { useMembershipTabToolbar } from "../../context/MembershipTabToolbarContext";
+import {
+  CRM_PAYMENT_FREQUENCY_OPTIONS,
+  isCreditCardPaymentType,
+} from "../../constants/paymentFrequency";
 import utc from "dayjs/plugin/utc";
 import timezone from "dayjs/plugin/timezone";
 import dayjs from "dayjs";
@@ -39,15 +51,15 @@ function normalizeGenderToSelectLabel(raw, options) {
   if (exact) return exact.label;
 
   const lower = s.toLowerCase();
-  const byLabel = options.find(
-    (o) => (o.label || "").toLowerCase() === lower
-  );
+  const byLabel = options.find((o) => (o.label || "").toLowerCase() === lower);
   if (byLabel) return byLabel.label;
 
   const byKey = options.find((o) => {
     const k = o.key != null ? String(o.key).toLowerCase() : "";
     const v = o.value != null ? String(o.value).toLowerCase() : "";
-    return k === lower || v === lower || String(o.key) === s || String(o.value) === s;
+    return (
+      k === lower || v === lower || String(o.key) === s || String(o.value) === s
+    );
   });
   if (byKey) return byKey.label;
 
@@ -58,7 +70,10 @@ function isPayrollOrSalaryDeduction(paymentType) {
   const s = (paymentType || "").trim().toLowerCase();
   if (!s) return false;
   if (s === "payroll deduction" || s === "salary deduction") return true;
-  if (s.includes("deduction") && (s.includes("payroll") || s.includes("salary")))
+  if (
+    s.includes("deduction") &&
+    (s.includes("payroll") || s.includes("salary"))
+  )
     return true;
   return false;
 }
@@ -102,40 +117,46 @@ function isSameDayValue(a, b) {
   return da.isSame(db, "day");
 }
 
+const membershipSaveButtonStyle = {
+  backgroundColor: "#45669d",
+  borderColor: "#45669d",
+};
+
 const MembershipForm = ({
   isEditMode = false,
   setIsEditMode,
   isDeceased: propIsDeceased = false,
   setIsDeceased,
 }) => {
+  const membershipToolbar = useMembershipTabToolbar();
+
   const { profileDetails, loading, error } = useSelector(
-    (state) => state.profileDetails
+    (state) => state.profileDetails,
   );
   const { countriesOptions, countriesData, loadingC, errorC } = useSelector(
-    (state) => state.countries
+    (state) => state.countries,
   );
 
   const { categoryData, currentCategoryId } = useSelector(
-    (state) => state.categoryLookup
+    (state) => state.categoryLookup,
   );
   const {
     profileSearchData,
     loading: searchLoading,
-    error: searchError
+    error: searchError,
   } = useSelector((state) => state.searchProfile);
 
   // Subscription API data
-  const {
-    ProfileSubData,
-    ProfileSubLoading,
-    ProfileSubError,
-  } = useSelector((state) => state.profileSubscription);
+  const { ProfileSubData, ProfileSubLoading, ProfileSubError } = useSelector(
+    (state) => state.profileSubscription,
+  );
   const dispatch = useDispatch();
   const [searchParams] = useSearchParams();
   const subscriptionIdParam = searchParams.get("subscriptionId") || "";
   const profileIdParam = searchParams.get("profileId") || "";
   const [saveLoading, setSaveLoading] = useState(false);
-  const [initialMembershipCategory, setInitialMembershipCategory] = useState("");
+  const [initialMembershipCategory, setInitialMembershipCategory] =
+    useState("");
   const [initialSubscriptionStartDate, setInitialSubscriptionStartDate] =
     useState(null);
   const {
@@ -179,15 +200,15 @@ const MembershipForm = ({
 
   // Memoize subscription data to prevent unnecessary recalculations
   const subscriptionData = useMemo(() => {
-    if (ProfileSubData?.data?.length > 0) {
-      const subscription = ProfileSubData.data[0];
+    const subscription = pickPrimarySubscription(ProfileSubData?.data || []);
+    if (subscription) {
       return {
         subscriptionStatus: subscription.subscriptionStatus || "",
         paymentType: subscription.paymentType || "",
         payrollNo: subscription.payrollNo || "",
         paymentFrequency: subscription.paymentFrequency || "",
         subscriptionYear: subscription.subscriptionYear || "",
-        isCurrent: subscription.isCurrent || false,
+        isCurrent: subscription.isCurrent === true,
         startDate: subscription.startDate,
         endDate: subscription.endDate,
         renewalDate: subscription.rolloverDate,
@@ -196,7 +217,8 @@ const MembershipForm = ({
         yearendProcessed: subscription.yearend?.processed || false,
         membershipCategory: subscription.membershipCategory || "",
         primarySection: subscription.professionalDetails?.primarySection || "",
-        secondarySection: subscription.professionalDetails?.secondarySection || "",
+        secondarySection:
+          subscription.professionalDetails?.secondarySection || "",
         resignationDate: subscription.resignation?.dateResigned,
         resignationReason: subscription.resignation?.reason || "",
       };
@@ -223,7 +245,8 @@ const MembershipForm = ({
   const memoizedPaymentTypeOptions = useMemo(() => {
     if (!paymentTypeOptions) return [];
     const hasPayrollDeduction = paymentTypeOptions.some(
-      (opt) => opt.label === "Payroll Deduction" || opt.value === "Payroll Deduction"
+      (opt) =>
+        opt.label === "Payroll Deduction" || opt.value === "Payroll Deduction",
     );
     if (hasPayrollDeduction) return paymentTypeOptions;
 
@@ -244,8 +267,7 @@ const MembershipForm = ({
     const source = profileDetails || searchAoiRes;
     if (!source) return;
 
-    const subDoc =
-      ProfileSubData?.data?.length > 0 ? ProfileSubData.data[0] : null;
+    const subDoc = pickPrimarySubscription(ProfileSubData?.data || []);
 
     // Initialize form data from profile API
     const initialFormData = {
@@ -253,14 +275,11 @@ const MembershipForm = ({
       title: source.personalInfo?.title || "",
       surname: source.personalInfo?.surname || "",
       forename: source.personalInfo?.forename || "",
-      gender: normalizeGenderToSelectLabel(
-        source.personalInfo?.gender || "",
-        [
-          { key: "male", label: "Male" },
-          { key: "female", label: "Female" },
-          { key: "other", label: "Other" },
-        ]
-      ),
+      gender: normalizeGenderToSelectLabel(source.personalInfo?.gender || "", [
+        { key: "male", label: "Male" },
+        { key: "female", label: "Female" },
+        { key: "other", label: "Other" },
+      ]),
       dateOfBirth: convertUTCToLocalDate(source.personalInfo?.dateOfBirth),
       countryPrimaryQualification:
         source.personalInfo?.countryPrimaryQualification || "",
@@ -289,7 +308,7 @@ const MembershipForm = ({
       discipline: source.professionalDetails?.discipline || "",
       startDate: convertUTCToLocalDate(source.professionalDetails?.startDate),
       graduationDate: convertUTCToLocalDate(
-        source.professionalDetails?.graduationDate
+        source.professionalDetails?.graduationDate,
       ),
       workLocation: source.professionalDetails?.workLocation || "",
       otherWorkLocation: source.professionalDetails?.otherWorkLocation || "",
@@ -297,11 +316,12 @@ const MembershipForm = ({
       region: source.professionalDetails?.region || "",
       grade: source.professionalDetails?.grade || "",
       otherGrade: source.professionalDetails?.otherGrade || "",
-      otherPrimarySection: source.professionalDetails?.otherPrimarySection || "",
+      otherPrimarySection:
+        source.professionalDetails?.otherPrimarySection || "",
       otherSecondarySection:
         source.professionalDetails?.otherSecondarySection || "",
       retiredDate: convertUTCToLocalDate(
-        source.professionalDetails?.retiredDate
+        source.professionalDetails?.retiredDate,
       ),
       pensionNumber: source.professionalDetails?.pensionNo || "",
       nmbiNumber: source.professionalDetails?.nmbiNumber || "",
@@ -309,7 +329,10 @@ const MembershipForm = ({
         ? "Yes"
         : "No",
       nursingSpecialization: source.professionalDetails?.nurseType || "",
-      primarySection: source.professionalDetails?.primarySection || source.professionalDetails?.nurseType || "",
+      primarySection:
+        source.professionalDetails?.primarySection ||
+        source.professionalDetails?.nurseType ||
+        "",
       secondarySection: source.professionalDetails?.secondarySection || "",
 
       // Membership Info
@@ -335,7 +358,10 @@ const MembershipForm = ({
 
       // Additional Information
       membershipStatus: source.additionalInformation?.membershipStatus || "",
-      memberOfOtherUnion: source.additionalInformation?.otherIrishTradeUnion === true ? "Yes" : "No",
+      memberOfOtherUnion:
+        source.additionalInformation?.otherIrishTradeUnion === true
+          ? "Yes"
+          : "No",
       otherUnionName:
         source.additionalInformation?.otherIrishTradeUnionName || "",
       otherUnionScheme: source.additionalInformation?.otherScheme
@@ -351,22 +377,26 @@ const MembershipForm = ({
     // Override with subscription data if available
     if (subscriptionData) {
       const originalCategory = subscriptionData.membershipCategory || "";
-      const originalStartDate = convertUTCToLocalDate(subscriptionData.startDate);
+      const originalStartDate = convertUTCToLocalDate(
+        subscriptionData.startDate,
+      );
       setInitialMembershipCategory(originalCategory);
       setInitialSubscriptionStartDate(originalStartDate || null);
 
-      setFormData(prev => ({
+      setFormData((prev) => ({
         ...prev,
         ...initialFormData,
 
         // Subscription Details
         subscriptionStatus: subscriptionData.subscriptionStatus || "",
-        membershipCategory: subscriptionData.membershipCategory || prev.membershipCategory || "",
+        membershipCategory:
+          subscriptionData.membershipCategory || prev.membershipCategory || "",
         paymentType: subscriptionData.paymentType,
         payrollNumber: subscriptionData.payrollNo || prev.payrollNumber || "",
 
         membershipNumber:
-          subDoc?.personalDetails?.membershipNo || initialFormData.membershipNumber,
+          subDoc?.personalDetails?.membershipNo ||
+          initialFormData.membershipNumber,
 
         joinINMOIncomeProtection:
           subDoc?.preferences?.incomeProtection ??
@@ -384,10 +414,15 @@ const MembershipForm = ({
           : {}),
 
         // Subscription Dates
-        startDate: convertUTCToLocalDate(subscriptionData.startDate) || prev.startDate,
+        startDate:
+          convertUTCToLocalDate(subscriptionData.startDate) || prev.startDate,
         endDate: convertUTCToLocalDate(subscriptionData.endDate),
-        renewalDate: convertUTCToLocalDate(subscriptionData.renewalDate) || prev.renewalDate,
-        dateCancelled: convertUTCToLocalDate(subscriptionData.resignationDate) || prev.dateCancelled,
+        renewalDate:
+          convertUTCToLocalDate(subscriptionData.renewalDate) ||
+          prev.renewalDate,
+        dateCancelled:
+          convertUTCToLocalDate(subscriptionData.resignationDate) ||
+          prev.dateCancelled,
         cancellationReason:
           subscriptionData.resignationReason || prev.cancellationReason || "",
 
@@ -402,8 +437,10 @@ const MembershipForm = ({
         reinstated: subscriptionData.reinstated || false,
         yearendProcessed: subscriptionData.yearendProcessed || false,
         subscriptionYear: subscriptionData.subscriptionYear || null,
-        primarySection: subscriptionData.primarySection || prev.primarySection || "",
-        secondarySection: subscriptionData.secondarySection || prev.secondarySection || "",
+        primarySection:
+          subscriptionData.primarySection || prev.primarySection || "",
+        secondarySection:
+          subscriptionData.secondarySection || prev.secondarySection || "",
       }));
     } else {
       setInitialMembershipCategory("");
@@ -415,10 +452,10 @@ const MembershipForm = ({
       }
 
       // If no subscription data, just set profile data
-      setFormData(prev => ({
+      setFormData((prev) => ({
         ...prev,
         ...initialFormData,
-        subscriptionStatus: status
+        subscriptionStatus: status,
       }));
     }
   }, [
@@ -604,10 +641,8 @@ const MembershipForm = ({
       const rows = JSON.parse(raw);
       if (!Array.isArray(rows) || rows.length === 0) return null;
 
-      const b =
-        typeof branchLabel === "string" ? branchLabel.trim() : "";
-      const r =
-        typeof regionLabel === "string" ? regionLabel.trim() : "";
+      const b = typeof branchLabel === "string" ? branchLabel.trim() : "";
+      const r = typeof regionLabel === "string" ? regionLabel.trim() : "";
       if (!b && !r) return null;
 
       const branchName = (item) =>
@@ -662,7 +697,7 @@ const MembershipForm = ({
     // Update consentCorrespondence based on individual checkboxes
     if (
       ["consentSMS", "consentEmail", "consentPost", "consentApp"].includes(
-        field
+        field,
       )
     ) {
       const allChecked =
@@ -699,20 +734,27 @@ const MembershipForm = ({
       if (setIsDeceased) setIsDeceased(false);
     }
     if (field === "branch" || field === "region") {
-      const nextBranch =
-        field === "branch" ? value : updatedData.branch;
-      const nextRegion =
-        field === "region" ? value : updatedData.region;
-      const resolved = resolveWorkLocationFromHierarchy(
-        nextBranch,
-        nextRegion
-      );
+      const nextBranch = field === "branch" ? value : updatedData.branch;
+      const nextRegion = field === "region" ? value : updatedData.region;
+      const resolved = resolveWorkLocationFromHierarchy(nextBranch, nextRegion);
       if (resolved) {
         updatedData.workLocation = resolved;
       }
     }
-    if (field === "paymentType" && !isPayrollOrSalaryDeduction(value)) {
-      updatedData.payrollNumber = "";
+    if (field === "paymentType") {
+      const wasCard = isCreditCardPaymentType(formData.paymentType);
+      const isCard = isCreditCardPaymentType(value);
+      if (isCard) {
+        updatedData.paymentFrequency = "Annually";
+      } else if (
+        wasCard ||
+        !String(updatedData.paymentFrequency || "").trim()
+      ) {
+        updatedData.paymentFrequency = "Monthly";
+      }
+      if (!isPayrollOrSalaryDeduction(value)) {
+        updatedData.payrollNumber = "";
+      }
     }
     if (
       field === "membershipCategory" &&
@@ -754,7 +796,7 @@ const MembershipForm = ({
     formData.subscriptionStatus === "Resigned";
 
   const membershipCategorySelected = Boolean(
-    String(formData.membershipCategory || "").trim()
+    String(formData.membershipCategory || "").trim(),
   );
   const membershipCategoryChanged =
     String(formData.membershipCategory || "").trim() !==
@@ -771,16 +813,16 @@ const MembershipForm = ({
 
   const payrollDeductionPayment = useMemo(
     () => isPayrollOrSalaryDeduction(formData.paymentType),
-    [formData.paymentType]
+    [formData.paymentType],
   );
 
   const undergradEducationalActive = useMemo(
     () =>
       isUndergraduateStudentMembershipCategory(
         formData.membershipCategory,
-        categoryData
+        categoryData,
       ),
-    [formData.membershipCategory, categoryData]
+    [formData.membershipCategory, categoryData],
   );
 
   const educationalSectionDisabled =
@@ -830,12 +872,11 @@ const MembershipForm = ({
     if (membershipCategorySelected) {
       const sd = formData.startDate;
       const startOk =
-        sd &&
-        (dayjs.isDayjs(sd) ? sd.isValid() : dayjs(sd).isValid());
+        sd && (dayjs.isDayjs(sd) ? sd.isValid() : dayjs(sd).isValid());
       if (!startOk) {
         MyAlert(
           "error",
-          "Subscription start date is required when a membership category is selected."
+          "Subscription start date is required when a membership category is selected.",
         );
         return;
       }
@@ -845,7 +886,7 @@ const MembershipForm = ({
       if (!String(formData.payrollNumber || "").trim()) {
         MyAlert(
           "error",
-          "Payroll number is required when payment type is payroll or salary deduction."
+          "Payroll number is required when payment type is payroll or salary deduction.",
         );
         return;
       }
@@ -855,25 +896,24 @@ const MembershipForm = ({
       if (!String(formData.studyLocation || "").trim()) {
         MyAlert(
           "error",
-          "Study location is required for undergraduate student membership."
+          "Study location is required for undergraduate student membership.",
         );
         return;
       }
       const gd = formData.graduationDate;
       const gradOk =
-        gd &&
-        (dayjs.isDayjs(gd) ? gd.isValid() : dayjs(gd).isValid());
+        gd && (dayjs.isDayjs(gd) ? gd.isValid() : dayjs(gd).isValid());
       if (!gradOk) {
         MyAlert(
           "error",
-          "Graduation date is required for undergraduate student membership."
+          "Graduation date is required for undergraduate student membership.",
         );
         return;
       }
       if (!String(formData.discipline || "").trim()) {
         MyAlert(
           "error",
-          "Discipline is required for undergraduate student membership."
+          "Discipline is required for undergraduate student membership.",
         );
         return;
       }
@@ -883,20 +923,21 @@ const MembershipForm = ({
     try {
       const profileBody = formDataToProfilePutPayload(
         formData,
-        profileDetails || sourceProfile
+        profileDetails || sourceProfile,
       );
       await dispatch(
-        updateProfileDetails({ profileId, body: profileBody })
+        updateProfileDetails({ profileId, body: profileBody }),
       ).unwrap();
 
-      const subId = ProfileSubData?.data?.[0]?._id;
+      const primarySub = pickPrimarySubscription(ProfileSubData?.data || []);
+      const subId = primarySub?._id;
       if (subId) {
         const subBody = formDataToSubscriptionPutPayload(
           formData,
-          ProfileSubData.data[0]
+          primarySub,
         );
         await dispatch(
-          updateSubscriptionById({ subscriptionId: subId, body: subBody })
+          updateSubscriptionById({ subscriptionId: subId, body: subBody }),
         ).unwrap();
       }
 
@@ -907,23 +948,42 @@ const MembershipForm = ({
         await dispatch(
           getSubscriptionByProfileId({
             profileId,
-            isCurrent: "true",
-          })
+            ...profileDetailActiveSubscriptionArgs,
+          }),
         ).unwrap();
       }
 
       MyAlert("success", "Profile updated successfully");
       if (setIsEditMode) setIsEditMode(false);
     } catch (err) {
-      MyAlert(
-        "error",
-        "Failed to save changes",
-        getSaveErrorMessage(err)
-      );
+      MyAlert("error", "Failed to save changes", getSaveErrorMessage(err));
     } finally {
       setSaveLoading(false);
     }
   };
+
+  const handleSaveChangesRef = useRef(handleSaveChanges);
+  handleSaveChangesRef.current = handleSaveChanges;
+
+  useLayoutEffect(() => {
+    const setExtras = membershipToolbar?.setMembershipTabBarExtra;
+    if (!setExtras) return undefined;
+    if (!isEditMode || isFormReadOnly) {
+      setExtras(null);
+      return undefined;
+    }
+    setExtras(
+      <Button
+        type="primary"
+        style={membershipSaveButtonStyle}
+        loading={saveLoading}
+        onClick={() => handleSaveChangesRef.current()}
+      >
+        Save
+      </Button>,
+    );
+    return () => setExtras(null);
+  }, [membershipToolbar, isEditMode, isFormReadOnly, saveLoading]);
 
   const NursingSpecializationSelectOptn = [
     { label: "General Nursing", value: "generalNursing" },
@@ -951,40 +1011,6 @@ const MembershipForm = ({
         paddingBottom: isEditMode ? "300px" : "200px",
       }}
     >
-      {formData.isDeceased && (
-        <div
-          style={{
-            backgroundColor: "#fff7e6",
-            border: "1px solid #ffd591",
-            borderRadius: "4px",
-            padding: "12px 16px",
-            marginBottom: "16px",
-            color: "#ad6800",
-            fontSize: "14px",
-            fontWeight: 500,
-          }}
-        >
-          ⚠️ Member is marked as deceased. Profile is read-only and subscription
-          has been cancelled.
-        </div>
-      )}
-      {formData.subscriptionStatus === "Resigned" && (
-        <div
-          style={{
-            backgroundColor: "#fff1f0",
-            border: "1px solid #ffa39e",
-            borderRadius: "4px",
-            padding: "12px 16px",
-            marginBottom: "16px",
-            color: "#cf1322",
-            fontSize: "14px",
-            fontWeight: 500,
-          }}
-        >
-          ⚠️ Member is resigned. Profile is read-only and subscription has been
-          cancelled.
-        </div>
-      )}
       <Row gutter={[24, 24]}>
         {/* Column 1: Personal Information */}
         <Col span={8}>
@@ -1000,9 +1026,6 @@ const MembershipForm = ({
             >
               <div
                 style={{
-                  display: "flex",
-                  justifyContent: "space-between",
-                  alignItems: "center",
                   marginBottom: "16px",
                   paddingBottom: "12px",
                   borderBottom: "1px solid #e8e8e8",
@@ -1018,34 +1041,6 @@ const MembershipForm = ({
                 >
                   Personal Information
                 </h3>
-                <Dropdown
-                  menu={{
-                    items: [
-                      {
-                        key: "markDeceased",
-                        label: propIsDeceased
-                          ? "Unmark as Deceased"
-                          : "Mark as Deceased",
-                        onClick: () => {
-                          if (setIsDeceased) {
-                            setIsDeceased(!propIsDeceased);
-                          }
-                        },
-                      },
-                    ],
-                  }}
-                  trigger={["click"]}
-                  placement="bottomRight"
-                >
-                  <BsThreeDotsVertical
-                    style={{
-                      cursor: "pointer",
-                      fontSize: "20px",
-                      color: "#1a1a1a",
-                      padding: "4px",
-                    }}
-                  />
-                </Dropdown>
               </div>
               <CustomSelect
                 label="Title"
@@ -1613,7 +1608,7 @@ const MembershipForm = ({
                             display: "flex",
                             alignItems: "center",
                             height: "100%",
-                            color: "#212529"
+                            color: "#212529",
                           }}
                         >
                           {option.label}
@@ -1792,14 +1787,14 @@ const MembershipForm = ({
                     : undefined
                 }
               >
-              <MyDatePicker
-                label="Subscription Start Date"
-                placeholder="Select start date"
-                value={formData.startDate}
-                onChange={(date) => handleChange("startDate", date)}
-                disabled={isFormReadOnly}
-                required={membershipCategorySelected}
-              />
+                <MyDatePicker
+                  label="Subscription Start Date"
+                  placeholder="Select start date"
+                  value={formData.startDate}
+                  onChange={(date) => handleChange("startDate", date)}
+                  disabled={isFormReadOnly}
+                  required={membershipCategorySelected}
+                />
               </div>
               <MyDatePicker
                 label="Subscription End Date"
@@ -1903,12 +1898,7 @@ const MembershipForm = ({
               <CustomSelect
                 label="Payment Frequency"
                 placeholder="Select Frequency"
-                options={[
-                  { value: "Monthly", label: "Monthly" },
-                  { value: "Annually", label: "Annually" },
-                  { value: "Quarterly", label: "Quarterly" },
-                  { value: "Semi-Annually", label: "Semi-Annually" },
-                ]}
+                options={CRM_PAYMENT_FREQUENCY_OPTIONS}
                 value={formData.paymentFrequency}
                 onChange={(e) =>
                   handleChange("paymentFrequency", e.target.value)
@@ -2147,7 +2137,7 @@ const MembershipForm = ({
           </div>
         </Col>
       </Row>
-      {isEditMode && !isFormReadOnly && (
+      {isEditMode && !isFormReadOnly && !membershipToolbar && (
         <div
           style={{
             position: "sticky",
@@ -2170,10 +2160,11 @@ const MembershipForm = ({
           </Button>
           <Button
             type="primary"
+            style={membershipSaveButtonStyle}
             loading={saveLoading}
             onClick={handleSaveChanges}
           >
-            Save changes
+            Save
           </Button>
         </div>
       )}

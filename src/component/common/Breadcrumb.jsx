@@ -144,7 +144,7 @@ const Breadcrumb = () => {
     },
     "/CorspndncDetail": {
       module: "Correspondence",
-      page: "Communication History",
+      page: "Correspondence",
       icon: "📧",
       recordIdField: "code",
     },
@@ -300,6 +300,11 @@ const Breadcrumb = () => {
     "/Applications": {
       module: "Subscriptions & Rewards",
       page: "Applications",
+      icon: "📋",
+    },
+    "/PaymentForms": {
+      module: "Subscriptions & Rewards",
+      page: "Payment Forms",
       icon: "📋",
     },
     "/applicationMgt": {
@@ -513,6 +518,11 @@ const Breadcrumb = () => {
       pageLabel: "Applications",
       listingPath: "/Applications",
       listingSearch: "Applications",
+    },
+    "/PaymentForms": {
+      pageLabel: "Payment Forms",
+      listingPath: "/PaymentForms",
+      listingSearch: "Payment Forms",
     },
     "/applicationMgt": {
       pageLabel: "Applications",

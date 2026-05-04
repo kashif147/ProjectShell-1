@@ -621,7 +621,7 @@ function CancelledMembersReport() {
             dataSource={filteredData}
             scroll={{ x: 2000, y: 600 }}
             pagination={{
-              pageSize: 100,
+              pageSize: 500,
               showSizeChanger: true,
               showQuickJumper: false,
               showTotal: (total, range) => {
@@ -631,7 +631,7 @@ function CancelledMembersReport() {
                 return `${start}-${end} of ${totalCount} items`;
               },
               pageSizeOptions: ["50", "100", "200", "500"],
-              defaultPageSize: 100,
+              defaultPageSize: 500,
             }}
             bordered
             size="small"

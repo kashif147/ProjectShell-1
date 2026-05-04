@@ -567,7 +567,7 @@ const OnlinePayment = () => {
           rowKey={(record) => record.id || record.transactionId || record._id}
           scroll={{ x: "max-content" }}
           pagination={{
-            pageSize: 10,
+            pageSize: 500,
             showSizeChanger: true,
             showTotal: (total, range) => `${range[0]}-${range[1]} of ${total} items`,
           }}

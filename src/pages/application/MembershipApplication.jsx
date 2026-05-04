@@ -3,6 +3,7 @@ import { useDispatch, useSelector } from "react-redux";
 // import TableComponent from "../../component/common/TableComponent";
 import TableComponent from "../../component/common/TableComponent";
 import { getApplicationsWithFilter } from "../../features/applicationwithfilterslice";
+import { getPaymentFormsWithFilter } from "../../features/paymentFormsWithFilterSlice";
 import MultiFilterDropdown from "../../component/common/MultiFilterDropdown";
 import { Spin } from "antd";
 import { useFilters } from "../../context/FilterContext";
@@ -16,11 +17,22 @@ import { useLocation } from "react-router-dom";
 function MembershipApplication() {
   const dispatch = useDispatch();
   const { filtersState } = useFilters();
-  const { applications, loading: applicationsLoading, isInitialized, currentTemplateId } = useSelector(
-    (state) => state.applicationWithFilter
-  );
-  const { selectedIds, setSelectedIds } = useSelectedIds();
   const location = useLocation();
+  const isPaymentFormsPage =
+    (location?.pathname || "").toLowerCase() === "/paymentforms";
+  const {
+    applications,
+    loading: applicationsLoading,
+    isInitialized,
+    currentTemplateId,
+  } = useSelector((state) => state.applicationWithFilter);
+  const {
+    paymentForms,
+    loading: paymentFormsLoading,
+    isInitialized: isPaymentFormsInitialized,
+    currentTemplateId: paymentFormsTemplateId,
+  } = useSelector((state) => state.paymentFormsWithFilter || {});
+  const { selectedIds, setSelectedIds } = useSelectedIds();
   const { columns } = useTableColumns();
   const { loading: templatesLoading } = useSelector((state) => state.templetefiltrsclumnapi);
   const [formattedApplications, setFormattedApplications] = useState([]);
@@ -29,24 +41,48 @@ function MembershipApplication() {
   console.log(activeTemplateId, "activeTemplateId activeTemplateId");
 
   useEffect(() => {
-    if (!isInitialized) return;
-    const templateId = activeTemplateId || currentTemplateId || "";
+    const pageInitialized = isPaymentFormsPage
+      ? isPaymentFormsInitialized
+      : isInitialized;
+    if (!pageInitialized) return;
+    const templateId = isPaymentFormsPage
+      ? activeTemplateId || paymentFormsTemplateId || ""
+      : activeTemplateId || currentTemplateId || "";
+    if (isPaymentFormsPage) {
+      dispatch(
+        getPaymentFormsWithFilter({
+          templateId,
+          page: 1,
+          limit: 500,
+        }),
+      );
+      return;
+    }
     dispatch(
       getApplicationsWithFilter({
         templateId,
         page: 1,
-        limit: 10,
+        limit: 500,
       }),
     );
-  }, [activeTemplateId, currentTemplateId, isInitialized, dispatch]);
+  }, [
+    activeTemplateId,
+    currentTemplateId,
+    paymentFormsTemplateId,
+    isInitialized,
+    isPaymentFormsInitialized,
+    isPaymentFormsPage,
+    dispatch,
+  ]);
 
   useEffect(() => {
-    if (applications && applications.length > 0) {
-      setFormattedApplications(applications);
+    const sourceData = isPaymentFormsPage ? paymentForms : applications;
+    if (sourceData && sourceData.length > 0) {
+      setFormattedApplications(sourceData);
     } else {
       setFormattedApplications([]);
     }
-  }, [applications]);
+  }, [applications, paymentForms, isPaymentFormsPage]);
 
   const shouldDisableRow = useCallback((record) => {
     const status = record?.applicationStatus;
@@ -76,7 +112,12 @@ function MembershipApplication() {
     }
   }, [selectedIds]);
 
-  if (!isInitialized || templatesLoading) {
+  const pageLoading = isPaymentFormsPage ? paymentFormsLoading : applicationsLoading;
+  const pageInitialized = isPaymentFormsPage
+    ? isPaymentFormsInitialized
+    : isInitialized;
+
+  if (!pageInitialized || templatesLoading) {
     return (
       <div style={{ display: "flex", justifyContent: "center", alignItems: "center", height: "100%", padding: "50px" }}>
         <Spin tip="Initializing Template...">
@@ -90,8 +131,8 @@ function MembershipApplication() {
     <div className="" style={{ width: "100%" }}>
       <TableComponent
         data={formattedApplications}
-        screenName="Applications"
-        isGrideLoading={applicationsLoading}
+        screenName={isPaymentFormsPage ? "Payment Forms" : "Applications"}
+        isGrideLoading={pageLoading}
         selectedRowKeys={selectedKeys}
         onSelectionChange={handleSelectionChange}
         selectionType="checkbox"

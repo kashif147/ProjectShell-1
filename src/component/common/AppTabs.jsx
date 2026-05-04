@@ -1,4 +1,12 @@
-import { useState, Suspense, lazy, useEffect, useCallback } from "react";
+import {
+  useState,
+  Suspense,
+  lazy,
+  useEffect,
+  useCallback,
+  useMemo,
+  useRef,
+} from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { useNavigate, useLocation, useSearchParams } from "react-router-dom";
 import { getProfileDetailsById } from "../../features/profiles/ProfileDetailsSlice";
@@ -6,24 +14,39 @@ import {
   getSubscriptionByProfileId,
   getSubscriptionById,
   getSubscriptionHistoryByProfileId,
+  pickPrimarySubscription,
+  profileDetailActiveSubscriptionArgs,
 } from "../../features/subscription/profileSubscriptionSlice";
 import { getApplicationById } from "../../features/ApplicationDetailsSlice";
 import { buildApplicationMgtSearch } from "../../utils/applicationMgtRoute";
 import { getProfileApplications } from "../../features/profiles/profileApplicationsSlice";
-import { Tabs, Spin, Drawer } from "antd";
+import { Tabs, Spin, Drawer, Button, Dropdown } from "antd";
+import { MoreOutlined } from "@ant-design/icons";
 import MyTable from "./MyTable";
 import {
   FaFolder,
-  FaFileAlt,
   FaProjectDiagram,
   FaBook,
   FaHistory,
+  FaEdit,
+  FaClone,
+  FaUserSlash,
+  FaBan,
+  FaUndo,
+  FaExchangeAlt,
+  FaTags,
+  FaRegClock,
+  FaIdCard,
+  FaCalendarAlt,
+  FaBalanceScale,
 } from "react-icons/fa";
 import { useTableColumns } from "../../context/TableColumnsContext ";
 import TransferRequests from "../TransferRequests";
 import CategoryChangeRequest from "../details/ChangeCategoryDrawer";
 import Reminder from "../profile/Reminder";
 import { formatDateOnly } from "../../utils/Utilities";
+import { FinanceTabToolbarContext } from "../../context/FinanceTabToolbarContext";
+import { MembershipTabToolbarContext } from "../../context/MembershipTabToolbarContext";
 
 const { TabPane } = Tabs;
 
@@ -41,7 +64,173 @@ const HistoryByID = lazy(() => import("../../pages/HistoryByID"));
 const ProfileHeader = lazy(() => import("../common/ProfileHeader"));
 const DuplicateMembers = lazy(() => import("../profile/DuplicateMembers"));
 
-const staticTabKeys = ["1", "15", "2", "4", "5", "6", "7"];
+/** Events ("16") and Claims ("7") are overflow-only, not shown on first load. */
+const staticTabKeys = ["1", "2", "4", "5", "6", "3"];
+
+/** Primary subscription row banner copy on profile detail (CRM). Keys match subscriptionStatus from API. */
+const MEMBERSHIP_STATUS_DETAIL_BANNERS = {
+  Resigned:
+    "Member has resigned. This profile is read-only, and the subscription has been cancelled.",
+  Lapsed: "This membership has lapsed. Please renew to restore active status.",
+  Cancelled: "This membership has been cancelled due to non-payment.",
+  Suspended:
+    "This membership is currently suspended. Please reinstate to restore active status.",
+  Archived:
+    "This membership has been archived. Please reinstate to restore active status.",
+};
+
+/** Strong brown for subscription banner copy (readable on light red / amber / gray fills). */
+const SUBSCRIPTION_BANNER_TEXT_BROWN = "#4a3228";
+
+const SUBSCRIPTION_BANNER_THEME_DEFAULT = {
+  backgroundColor: "#fff1f0",
+  borderColor: "#ffa39e",
+  color: SUBSCRIPTION_BANNER_TEXT_BROWN,
+};
+
+/** Distinct banner chrome for non-payment / resign vs lapsed vs suspended vs archived. */
+const SUBSCRIPTION_BANNER_THEME_BY_STATUS = {
+  Lapsed: {
+    backgroundColor: "#E6F0FF",
+    borderColor: "#F59E0B",
+    color: "#1B3A8A",
+    icon: <FaRegClock />,
+    iconColor: "#1B3A8A",
+  },
+  Suspended: {
+    backgroundColor: "#FFF4E5",
+    borderColor: "#F59E0B",
+    color: "#92400E",
+    icon: <FaRegClock />,
+    iconColor: "#F59E0B",
+  },
+  Archived: {
+    backgroundColor: "#F3F4F6",
+    borderColor: "#9CA3AF",
+    color: "#374151",
+    icon: <FaRegClock />,
+    iconColor: "#6B7280",
+  },
+};
+
+const PAYMENT_REMINDER_BANNER_THEME = {
+  backgroundColor: "#fffbe6",
+  borderColor: "#ffe58f",
+  color: SUBSCRIPTION_BANNER_TEXT_BROWN,
+};
+
+const REMINDER_HISTORY_TIER_RANK = { R3: 3, R2: 2, R1: 1 };
+
+function coerceSubscriptionDate(value) {
+  if (value == null || value === "") return null;
+  const d = new Date(value);
+  return Number.isNaN(d.getTime()) ? null : d;
+}
+
+/** Banner for arrears reminder pipeline — CRM profile summary only when subscriptionStatus is Active. */
+function buildPaymentReminderBanner(subscription) {
+  if (!subscription || typeof subscription !== "object") return null;
+
+  if (String(subscription.subscriptionStatus || "").trim() !== "Active") {
+    return null;
+  }
+
+  const rem = subscription.reminders;
+  if (rem && typeof rem === "object" && !Array.isArray(rem) && rem.clearedAt) {
+    return null;
+  }
+
+  let tierKey = null;
+  let dateObj = null;
+
+  if (rem && typeof rem === "object" && !Array.isArray(rem)) {
+    const r3 = coerceSubscriptionDate(rem.reminder3At);
+    const r2 = coerceSubscriptionDate(rem.reminder2At);
+    const r1 = coerceSubscriptionDate(rem.reminder1At);
+    if (r3) {
+      tierKey = "final";
+      dateObj = r3;
+    } else if (r2) {
+      tierKey = "second";
+      dateObj = r2;
+    } else if (r1) {
+      tierKey = "first";
+      dateObj = r1;
+    }
+  }
+
+  if (
+    !tierKey &&
+    Array.isArray(subscription.reminderHistory) &&
+    subscription.reminderHistory.length > 0
+  ) {
+    let best = null;
+    for (const h of subscription.reminderHistory) {
+      const rank = REMINDER_HISTORY_TIER_RANK[h?.type];
+      if (!rank) continue;
+      const d = coerceSubscriptionDate(h.reminderDate);
+      if (!d) continue;
+      if (!best || rank > best.rank) {
+        best = {
+          rank,
+          date: d,
+          tierKey:
+            rank === 3 ? "final" : rank === 2 ? "second" : "first",
+        };
+      } else if (rank === best.rank && d > best.date) {
+        best = { ...best, date: d };
+      }
+    }
+    if (best) {
+      tierKey = best.tierKey;
+      dateObj = best.date;
+    }
+  }
+
+  if (!tierKey || !dateObj) return null;
+
+  const reminderDateStr = formatDateOnly(dateObj);
+  if (!reminderDateStr) return null;
+
+  const templates = {
+    first:
+      "The member is falling behind on payments. The first reminder was issued on {ReminderDate}.",
+    second:
+      "The member is falling behind on payments. The second reminder was issued on {ReminderDate}.",
+    final:
+      "The member is falling behind on payments. The final reminder was issued on {ReminderDate}.",
+  };
+
+  return {
+    message: templates[tierKey].replace("{ReminderDate}", reminderDateStr),
+  };
+}
+
+const MEMBERSHIP_MORE_ICON = {
+  edit: "#1890ff",
+  duplicate: "#722ed1",
+  activate: "#52c41a",
+  activateMuted: "rgba(82, 196, 26, 0.45)",
+  cancel: "#ff4d4f",
+  deceased: "#fa8c16",
+};
+
+function membershipMoreIcon(Icon, color) {
+  return <Icon style={{ color, fontSize: 14 }} aria-hidden />;
+}
+
+const profileMoreActionsButtonStyle = {
+  backgroundColor: "#45669d",
+  borderColor: "#45669d",
+  color: "#fff",
+};
+
+const initialMembershipHeaderActionsMeta = {
+  showCancelMembership: false,
+  showActivateMembership: false,
+  activateMembershipDisabled: false,
+  activateMembershipTitle: undefined,
+};
 
 function AppTabs() {
   const dispatch = useDispatch();
@@ -49,7 +238,9 @@ function AppTabs() {
   const location = useLocation();
   const [searchParams] = useSearchParams();
   const profileIdParam = normalizeRouteId(searchParams.get("profileId"));
-  const subscriptionIdParam = normalizeRouteId(searchParams.get("subscriptionId"));
+  const subscriptionIdParam = normalizeRouteId(
+    searchParams.get("subscriptionId"),
+  );
   const activeTabParam = String(searchParams.get("activeTab") || "")
     .trim()
     .toLowerCase();
@@ -63,7 +254,7 @@ function AppTabs() {
       dispatch(
         getSubscriptionByProfileId({
           profileId: profileIdParam,
-          isCurrent: "true",
+          ...profileDetailActiveSubscriptionArgs,
         }),
       );
     }
@@ -81,6 +272,34 @@ function AppTabs() {
   }, [refreshDetailsData]);
 
   const { profileDetails } = useSelector((state) => state.profileDetails || {});
+  const { ProfileSubData } = useSelector(
+    (state) => state.profileSubscription || {},
+  );
+  const currentSubscriptionStatus =
+    pickPrimarySubscription(ProfileSubData?.data || [])?.subscriptionStatus ||
+    "";
+  const normalizedPrimarySubscriptionStatus = String(
+    currentSubscriptionStatus,
+  ).trim();
+  const subscriptionStatusBannerMessage =
+    MEMBERSHIP_STATUS_DETAIL_BANNERS[normalizedPrimarySubscriptionStatus] ??
+    null;
+  const showSubscriptionStatusBanner = Boolean(subscriptionStatusBannerMessage);
+  const subscriptionBannerTheme =
+    SUBSCRIPTION_BANNER_THEME_BY_STATUS[normalizedPrimarySubscriptionStatus] ??
+    SUBSCRIPTION_BANNER_THEME_DEFAULT;
+
+  const primarySubscriptionRow = useMemo(
+    () => pickPrimarySubscription(ProfileSubData?.data || []),
+    [ProfileSubData],
+  );
+
+  const paymentReminderBanner = useMemo(
+    () => buildPaymentReminderBanner(primarySubscriptionRow),
+    [primarySubscriptionRow],
+  );
+
+  const showPaymentReminderBanner = Boolean(paymentReminderBanner?.message);
 
   const [activeKey, setActiveKey] = useState("1");
   const [visibleTabs, setVisibleTabs] = useState(staticTabKeys);
@@ -89,10 +308,53 @@ function AppTabs() {
   const [isDrawerOpen, setisDrawerOpen] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
   const [isDeceased, setIsDeceased] = useState(false);
+
+  const profileIdForDeceased = profileDetails?._id || profileDetails?.id || "";
+  useEffect(() => {
+    if (!profileIdForDeceased) {
+      setIsDeceased(false);
+      return;
+    }
+    const pi = profileDetails?.personalInfo || {};
+    const fromApi = Boolean(pi.deceased) || Boolean(pi.deceasedDate);
+    setIsDeceased(fromApi);
+  }, [
+    profileIdForDeceased,
+    profileDetails?.personalInfo?.deceased,
+    profileDetails?.personalInfo?.deceasedDate,
+  ]);
+
   const [isDuplicateDrawerOpen, setIsDuplicateDrawerOpen] = useState(false);
   const [isApplicationDrawerOpen, setIsApplicationDrawerOpen] = useState(false);
   const [isSubscriptionDrawerOpen, setIsSubscriptionDrawerOpen] =
     useState(false);
+
+  const profileHeaderRef = useRef(null);
+  const [membershipHeaderActionsMeta, setMembershipHeaderActionsMeta] =
+    useState(initialMembershipHeaderActionsMeta);
+  const onMembershipHeaderActionsMetaChange = useCallback((meta) => {
+    setMembershipHeaderActionsMeta(meta);
+  }, []);
+
+  const [financeTabBarExtra, setFinanceTabBarExtra] = useState(null);
+  useEffect(() => {
+    if (activeKey !== "2") setFinanceTabBarExtra(null);
+  }, [activeKey]);
+
+  const financeToolbarApi = useMemo(
+    () => ({ setFinanceTabBarExtra: setFinanceTabBarExtra }),
+    [],
+  );
+
+  const [membershipTabBarExtra, setMembershipTabBarExtra] = useState(null);
+  useEffect(() => {
+    if (activeKey !== "1") setMembershipTabBarExtra(null);
+  }, [activeKey]);
+
+  const membershipToolbarApi = useMemo(
+    () => ({ setMembershipTabBarExtra }),
+    [],
+  );
 
   const { columns } = useTableColumns();
   const userApplications = useSelector(
@@ -103,6 +365,12 @@ function AppTabs() {
   );
   const { profileApplications, loading: profileApplicationsLoading } =
     useSelector((state) => state.profileApplications || {});
+
+  useEffect(() => {
+    if (activeKey === "3" && profileDetails?._id) {
+      dispatch(getProfileApplications({ profileId: profileDetails._id }));
+    }
+  }, [activeKey, profileDetails?._id, dispatch]);
 
   useEffect(() => {
     const requestedTab = String(location.state?.activeTab || "")
@@ -252,15 +520,38 @@ function AppTabs() {
     { key: "4", label: "Documents", children: <DoucmentsById /> },
     {
       key: "5",
-      label: "Communication History",
+      label: "Correspondence",
       children: <CommunicationHistory />,
     },
     { key: "6", label: "Cases", children: <CasesById /> },
+    {
+      key: "3",
+      label: "Applications",
+      children: (
+        <div style={{ padding: 20 }}>
+          <MyTable
+            columns={profileApplicationColumns}
+            dataSource={profileApplications}
+            loading={profileApplicationsLoading}
+            selection={false}
+          />
+        </div>
+      ),
+    },
+    {
+      key: "16",
+      label: "Events",
+      children: <div>Events</div>,
+    },
     { key: "7", label: "Claims", children: <ClaimsById /> },
     { key: "8", label: "Roster", children: <Roster /> },
     { key: "11", label: "Audit History", children: <HistoryByID /> },
     { key: "9", label: "Projects", children: <div>Projects</div> },
-    { key: "10", label: "Trainings", children: <div>Trainings</div> },
+    {
+      key: "10",
+      label: "Trainings (CPD)",
+      children: <div>Trainings (CPD)</div>,
+    },
   ];
 
   const handleMenuClick = (key) => {
@@ -299,65 +590,62 @@ function AppTabs() {
   const filteredItems = allItems.filter((item) =>
     visibleTabs.includes(item.key),
   );
+  /** Alphabetical by label (profile tab overflow ⋮ menu). */
   const Menuitems = [
-    {
-      key: "8",
-      label: "Roster",
-      icon: <FaFolder />,
-      onClick: () => handleMenuClick("8"),
-    },
-    // { key: '4', label: 'Documents', icon: <FaFileAlt />, onClick: () => handleMenuClick('4') },
-    {
-      key: "9",
-      label: "Projects",
-      icon: <FaProjectDiagram />,
-      onClick: () => handleMenuClick("9"),
-    },
-    {
-      key: "10",
-      label: "Trainings",
-      icon: <FaBook />,
-      onClick: () => handleMenuClick("10"),
-    },
     {
       key: "11",
       label: "Audit History",
       icon: <FaHistory />,
+      iconColor: "#722ed1",
       onClick: () => handleMenuClick("11"),
     },
     {
-      key: "12",
-      label: "Transfered History",
-      icon: <FaHistory />,
-      onClick: () => setTransferDrawer(true),
+      key: "13",
+      label: "Category Changes",
+      icon: <FaTags />,
+      iconColor: "#2f54eb",
+      onClick: () => setisDrawerOpen(true),
     },
     {
-      key: "13",
-      label: "Membership Category",
-      icon: <FaHistory />,
-      onClick: () => setisDrawerOpen(true),
+      key: "7",
+      label: "Claims",
+      icon: <FaBalanceScale />,
+      iconColor: "#fa541c",
+      onClick: () => handleMenuClick("7"),
+    },
+    {
+      key: "16",
+      label: "Events",
+      icon: <FaCalendarAlt />,
+      iconColor: "#13c2c2",
+      onClick: () => handleMenuClick("16"),
+    },
+    {
+      key: "9",
+      label: "Projects",
+      icon: <FaProjectDiagram />,
+      iconColor: "#1890ff",
+      onClick: () => handleMenuClick("9"),
     },
     {
       key: "14",
       label: "Reminders",
-      icon: <FaHistory />,
+      icon: <FaRegClock />,
+      iconColor: "#faad14",
       onClick: () => setIsReminder(true),
     },
     {
-      key: "application",
-      label: "Application",
-      icon: <FaFileAlt />,
-      onClick: () => {
-        if (profileDetails?._id) {
-          dispatch(getProfileApplications({ profileId: profileDetails._id }));
-        }
-        setIsApplicationDrawerOpen(true);
-      },
+      key: "8",
+      label: "Roster",
+      icon: <FaFolder />,
+      iconColor: "#13c2c2",
+      onClick: () => handleMenuClick("8"),
     },
     {
       key: "subscriptionhistory",
       label: "Subscription History",
-      icon: <FaHistory />,
+      icon: <FaIdCard />,
+      iconColor: "#597ef7",
       onClick: () => {
         if (profileDetails?._id) {
           dispatch(
@@ -369,7 +657,85 @@ function AppTabs() {
         setIsSubscriptionDrawerOpen(true);
       },
     },
+    {
+      key: "10",
+      label: "Trainings (CPD)",
+      icon: <FaBook />,
+      iconColor: "#eb2f96",
+      onClick: () => handleMenuClick("10"),
+    },
+    {
+      key: "12",
+      label: "Transfer Requests",
+      icon: <FaExchangeAlt />,
+      iconColor: "#fa8c16",
+      onClick: () => setTransferDrawer(true),
+    },
   ];
+
+  /** Ant Design menu items for the tab bar "More actions" button — extend per `activeKey` as needed. */
+  const profileTabMoreActionMenuItems = useMemo(() => {
+    switch (String(activeKey)) {
+      case "1": {
+        const items = [
+          {
+            key: "membership-edit",
+            label: isEditMode ? "Cancel Edit" : "Edit Profile",
+            icon: membershipMoreIcon(FaEdit, MEMBERSHIP_MORE_ICON.edit),
+            onClick: () => setIsEditMode((v) => !v),
+          },
+          {
+            key: "membership-duplicate",
+            label: "Check Duplicate",
+            icon: membershipMoreIcon(FaClone, MEMBERSHIP_MORE_ICON.duplicate),
+            onClick: () => setIsDuplicateDrawerOpen(true),
+          },
+        ];
+        if (membershipHeaderActionsMeta.showActivateMembership) {
+          items.push({
+            key: "membership-activate",
+            label: "Activate Membership",
+            icon: membershipMoreIcon(
+              FaUndo,
+              membershipHeaderActionsMeta.activateMembershipDisabled
+                ? MEMBERSHIP_MORE_ICON.activateMuted
+                : MEMBERSHIP_MORE_ICON.activate,
+            ),
+            disabled: membershipHeaderActionsMeta.activateMembershipDisabled,
+            title: membershipHeaderActionsMeta.activateMembershipTitle,
+            onClick: () =>
+              profileHeaderRef.current?.openActivateMembershipModal?.(),
+          });
+        }
+        if (membershipHeaderActionsMeta.showCancelMembership) {
+          items.push({
+            key: "membership-cancel",
+            label: "Cancel Membership",
+            icon: membershipMoreIcon(FaBan, MEMBERSHIP_MORE_ICON.cancel),
+            danger: true,
+            onClick: () =>
+              profileHeaderRef.current?.openCancelMembershipModal?.(),
+          });
+        }
+        items.push(
+          { type: "divider", key: "membership-divider-deceased" },
+          {
+            key: "membership-deceased",
+            label: isDeceased ? "Unmark as Deceased" : "Mark as Deceased",
+            icon: membershipMoreIcon(
+              FaUserSlash,
+              MEMBERSHIP_MORE_ICON.deceased,
+            ),
+            onClick: () => setIsDeceased((v) => !v),
+          },
+        );
+        return items;
+      }
+      default:
+        return [];
+    }
+  }, [activeKey, isEditMode, isDeceased, membershipHeaderActionsMeta]);
+
   const historyData = [
     {
       key: "1",
@@ -442,35 +808,170 @@ function AppTabs() {
   ];
 
   return (
-    <div className="d-flex">
+    <div
+      className="d-flex"
+      style={{
+        flex: "1 1 0%",
+        minHeight: 0,
+        minWidth: 0,
+        width: "100%",
+        height: "100%",
+        overflow: "hidden",
+      }}
+    >
       <ProfileHeader
-        isEditMode={isEditMode}
-        setIsEditMode={setIsEditMode}
+        ref={profileHeaderRef}
         showButtons={activeKey === "1"}
         isDeceased={isDeceased}
-        onDuplicateClick={() => setIsDuplicateDrawerOpen(true)}
+        onMembershipHeaderActionsMetaChange={
+          onMembershipHeaderActionsMetaChange
+        }
       />
-      <Tabs
-        activeKey={activeKey}
-        onChange={handleTabChange}
-        destroyInactiveTabPane
-        style={{ flex: 1, minWidth: 0 }}
-      >
-        {filteredItems.map((item) => (
-          <TabPane tab={item.label} key={item.key}>
-            <Suspense fallback={<Spin />}>{item.children}</Suspense>
-          </TabPane>
-        ))}
-        <TabPane
-          key="menu"
-          tab={
-            <div style={{ marginLeft: 8 }}>
-              <ThreeDotsMenu items={Menuitems} />
-            </div>
-          }
-          disabled
-        />
-      </Tabs>
+      <MembershipTabToolbarContext.Provider value={membershipToolbarApi}>
+        <FinanceTabToolbarContext.Provider value={financeToolbarApi}>
+          <div
+            style={{
+              flex: "1 1 0%",
+              minWidth: 0,
+              minHeight: 0,
+              height: "100%",
+              display: "flex",
+              flexDirection: "column",
+              overflow: "hidden",
+            }}
+          >
+            {showSubscriptionStatusBanner && (
+              <div
+                style={{
+                  flexShrink: 0,
+                  backgroundColor: subscriptionBannerTheme.backgroundColor,
+                  border: `1px solid ${subscriptionBannerTheme.borderColor}`,
+                  borderRadius: "4px",
+                  padding: "12px 16px",
+                  marginBottom: "8px",
+                  marginInline: "0 8px",
+                  marginTop: "4px",
+                  color: subscriptionBannerTheme.color,
+                  fontSize: "14px",
+                  fontWeight: 500,
+                }}
+              >
+                ⚠️ {subscriptionStatusBannerMessage}
+              </div>
+            )}
+            {showPaymentReminderBanner && (
+              <div
+                style={{
+                  flexShrink: 0,
+                  backgroundColor: PAYMENT_REMINDER_BANNER_THEME.backgroundColor,
+                  border: `1px solid ${PAYMENT_REMINDER_BANNER_THEME.borderColor}`,
+                  borderRadius: "4px",
+                  padding: "12px 16px",
+                  marginBottom: "8px",
+                  marginInline: "0 8px",
+                  marginTop: showSubscriptionStatusBanner ? 0 : "4px",
+                  color: PAYMENT_REMINDER_BANNER_THEME.color,
+                  fontSize: "14px",
+                  fontWeight: 500,
+                }}
+              >
+                ⚠️ {paymentReminderBanner.message}
+              </div>
+            )}
+            {isDeceased && (
+              <div
+                style={{
+                  flexShrink: 0,
+                  backgroundColor: "#fff7e6",
+                  border: "1px solid #ffd591",
+                  borderRadius: "4px",
+                  padding: "12px 16px",
+                  marginBottom: "8px",
+                  marginInline: "0 8px",
+                  marginTop:
+                    showSubscriptionStatusBanner || showPaymentReminderBanner
+                      ? 0
+                      : "4px",
+                  color: "#ad6800",
+                  fontSize: "14px",
+                  fontWeight: 500,
+                }}
+              >
+                ⚠️ Member is marked as deceased. Profile is read-only and
+                subscription has been cancelled.
+              </div>
+            )}
+            <Tabs
+              className="profile-details-tabs"
+              activeKey={activeKey}
+              onChange={handleTabChange}
+              destroyInactiveTabPane
+              tabBarExtraContent={{
+                right: (
+                  <div
+                    className="d-flex align-items-center gap-2 flex-wrap"
+                    style={{ marginInlineEnd: 8 }}
+                  >
+                    {activeKey === "1" ? membershipTabBarExtra : null}
+                    {activeKey === "2" ? financeTabBarExtra : null}
+                    {activeKey !== "2" &&
+                      (profileTabMoreActionMenuItems.length > 0 ? (
+                        <Dropdown
+                          menu={{ items: profileTabMoreActionMenuItems }}
+                          trigger={["click"]}
+                        >
+                          <Button
+                            type="default"
+                            style={profileMoreActionsButtonStyle}
+                            icon={<MoreOutlined />}
+                            aria-label="More actions"
+                          />
+                        </Dropdown>
+                      ) : (
+                        <Button
+                          type="default"
+                          style={{
+                            ...profileMoreActionsButtonStyle,
+                            opacity: 0.45,
+                          }}
+                          icon={<MoreOutlined />}
+                          aria-label="More actions"
+                          disabled
+                        />
+                      ))}
+                  </div>
+                ),
+              }}
+              style={{
+                flex: "1 1 0%",
+                minWidth: 0,
+                minHeight: 0,
+                height: "100%",
+                display: "flex",
+                flexDirection: "column",
+                overflow: "hidden",
+              }}
+            >
+              {filteredItems.map((item) => (
+                <TabPane tab={item.label} key={item.key}>
+                  <Suspense fallback={<Spin />}>{item.children}</Suspense>
+                </TabPane>
+              ))}
+              <TabPane
+                key="menu"
+                tab={
+                  <div style={{ marginLeft: 8 }}>
+                    <Suspense fallback={<Spin size="small" />}>
+                      <ThreeDotsMenu items={Menuitems} />
+                    </Suspense>
+                  </div>
+                }
+                disabled
+              />
+            </Tabs>
+          </div>
+        </FinanceTabToolbarContext.Provider>
+      </MembershipTabToolbarContext.Provider>
       <TransferRequests
         open={TransferDrawer}
         onClose={() => setTransferDrawer(false)}

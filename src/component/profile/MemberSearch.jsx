@@ -4,7 +4,10 @@ import { SearchOutlined, LoadingOutlined, UserAddOutlined } from "@ant-design/ic
 import { useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
-import { getSubscriptionByProfileId } from "../../features/subscription/profileSubscriptionSlice";
+import {
+  getSubscriptionByProfileId,
+  profileDetailActiveSubscriptionArgs,
+} from "../../features/subscription/profileSubscriptionSlice";
 import { searchProfiles } from "../../features/profiles/SearchProfile";
 import { buildDetailsSearch } from "../../utils/detailsRoute";
 import MemberSearchOptionLabel from "./MemberSearchOptionLabel";
@@ -292,7 +295,7 @@ const MemberSearch = ({
               await dispatch(
                 getSubscriptionByProfileId({
                   profileId: memberData?._id,
-                  isCurrent: true,
+                  ...profileDetailActiveSubscriptionArgs,
                 })
               ).unwrap();
 
@@ -339,7 +342,7 @@ const MemberSearch = ({
                 await dispatch(
                   getSubscriptionByProfileId({
                     profileId: memberData?._id,
-                    isCurrent: true,
+                    ...profileDetailActiveSubscriptionArgs,
                   })
                 ).unwrap();
               }
@@ -368,7 +371,7 @@ const MemberSearch = ({
               await dispatch(
                 getSubscriptionByProfileId({
                   profileId: memberData?._id,
-                  isCurrent: true,
+                  ...profileDetailActiveSubscriptionArgs,
                 })
               ).unwrap();
 
@@ -411,7 +414,7 @@ const MemberSearch = ({
               await dispatch(
                 getSubscriptionByProfileId({
                   profileId: memberData?._id,
-                  isCurrent: true,
+                  ...profileDetailActiveSubscriptionArgs,
                 })
               ).unwrap();
             }
@@ -434,7 +437,7 @@ const MemberSearch = ({
               await dispatch(
                 getSubscriptionByProfileId({
                   profileId: memberData?._id,
-                  isCurrent: true,
+                  ...profileDetailActiveSubscriptionArgs,
                 })
               ).unwrap();
 
