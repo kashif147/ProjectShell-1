@@ -5,19 +5,42 @@ import React, {
   useMemo,
   useCallback,
 } from "react";
-import { Button, Empty, notification, Dropdown, Tooltip, Segmented } from "antd";
+import {
+  Button,
+  Empty,
+  notification,
+  Dropdown,
+  Tooltip,
+  Segmented,
+  Tag,
+  Modal,
+  Alert,
+} from "antd";
 import {
   MoreOutlined,
   InfoCircleOutlined,
   RollbackOutlined,
   StopOutlined,
   SwapOutlined,
+  FileTextOutlined,
+  CheckCircleOutlined,
 } from "@ant-design/icons";
 import RefundDrawer from "./RefundDrawer";
 import WriteOffDrawer from "./WriteOffDrawer";
 import ReallocationDrawer from "./ReallocationDrawer";
+import CreditNoteDrawer from "./CreditNoteDrawer";
+import ApplyMemberCreditDrawer from "./ApplyMemberCreditDrawer";
+import MemberFinanceSummaryCards from "./MemberFinanceSummaryCards";
+import { FinanceColumnTitle } from "./FinanceInfoIcon";
+import {
+  LEDGER_BADGE_HELP,
+  LEDGER_COLUMN_HELP,
+  LEDGER_TX_DOC_HINT,
+} from "./financeFieldHelp";
+import { deriveRowBadges } from "./ledgerRowBadges";
+import { resolveLedgerDocumentLink } from "./ledgerDocumentLinks";
 import dayjs from "dayjs";
-import { useLocation, useSearchParams } from "react-router-dom";
+import { Link, useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import axios from "axios";
 import { useSelector } from "react-redux";
 import { getAccountServiceBaseUrl } from "../../config/serviceUrls";
@@ -33,7 +56,6 @@ const financeMoreActionsButtonStyle = {
   color: "#fff",
 };
 
-/** GL doc type values shown with friendlier labels in the Finance grid. */
 function displayDocTypeLabel(raw) {
   if (raw == null || String(raw).trim() === "") return "—";
   const s = String(raw).trim();
@@ -43,14 +65,15 @@ function displayDocTypeLabel(raw) {
   if (norm === "adjustment") return "Adjustment";
   if (norm === "receipt") return "Receipt";
   if (norm === "claim") return "Receipt";
+  if (norm === "creditnote") return "Credit Note";
+  if (norm === "writeoff") return "Write-Off";
   return s;
 }
 
 /** Prefer API simple-view label (ledgerDisplayDocType) when present. */
 function resolveLedgerDocTypeDisplay(record) {
   const api = record?.ledgerDisplayDocType;
-  if (api != null && String(api).trim() !== "")
-    return displayDocTypeLabel(api);
+  if (api != null && String(api).trim() !== "") return displayDocTypeLabel(api);
   return displayDocTypeLabel(
     record?.docType ?? record?.doc_type ?? record?.documentType,
   );
@@ -100,7 +123,7 @@ function createdAtChainRaw(item) {
     item?.updatedAt,
     item?.updated_at,
     gl?.updatedAt,
-    gl?.updated_at
+    gl?.updated_at,
   );
 }
 
@@ -147,10 +170,11 @@ function resolveLedgerUpdatedAt(item, gl, transactionDate) {
     item.modifiedAt,
     item.modified_at,
     item.lastModified,
-    item.last_modified
+    item.last_modified,
   );
   if (raw && dayjs(raw).isValid()) return raw;
-  if (transactionDate && dayjs(transactionDate).isValid()) return transactionDate;
+  if (transactionDate && dayjs(transactionDate).isValid())
+    return transactionDate;
   return "";
 }
 
@@ -169,7 +193,7 @@ function resolvePaymentTypeSource(item, gl) {
       st?.txType,
       st?.TxType,
       item?.payment?.txType,
-      item?.payment?.TxType
+      item?.payment?.TxType,
     ),
     typeof item?.txType === "string" ? item.txType : null,
     typeof item?.TxType === "string" ? item.TxType : null,
@@ -192,40 +216,48 @@ function resolvePaymentTypeSource(item, gl) {
     gl?.paymentType,
     gl?.paymentMethod,
     gl?.payMethod,
-    gl?.gateway
+    gl?.gateway,
   );
 }
 
-/** Normalize payment method labels for display (deductions, card, DD, etc.). */
+/** Operational payment labels (not COA clearing account names). */
 function displayPaymentType(raw) {
   if (raw == null || String(raw).trim() === "") return "—";
   const s = String(raw).trim();
   const compact = s.toLowerCase().replace(/[\s_-]+/g, "");
+  const lower = s.toLowerCase();
   const aliases = {
-    stripe: "Card Gateway Clearing",
-    card: "Card Gateway Clearing",
-    creditcard: "Card Gateway Clearing",
-    directdebit: "Direct Debit",
-    standingorder: "Standing Order",
-    standingorders: "Standing Order",
+    stripe: "Online payment (card)",
+    card: "Online payment (card)",
+    creditcard: "Online payment (card)",
+    cardgatewayclearing: "Online payment (card)",
+    directdebit: "Direct debit",
+    directdebitclearing: "Direct debit",
+    standingorder: "Standing order",
+    standingorders: "Standing order",
+    standingorderclearing: "Standing order",
     cheque: "Cheque",
     check: "Cheque",
+    undepositedcheques: "Cheque",
     cash: "Cash",
     cashpayment: "Cash",
-    deduction: "Deductions",
-    deductions: "Deductions",
-    salarydeduction: "Deductions",
-    payrolldeduction: "Deductions",
-    payroll: "Deductions",
-    banktransfer: "Bank Transfer",
-    transfer: "Bank Transfer",
+    deduction: "Salary deduction",
+    deductions: "Salary deduction",
+    salarydeduction: "Salary deduction",
+    salarydeductionclearing: "Salary deduction",
+    payrolldeduction: "Salary deduction",
+    payroll: "Salary deduction",
+    banktransfer: "Bank transfer",
+    transfer: "Bank transfer",
     paypal: "PayPal",
     revolut: "Revolut",
   };
   if (aliases[compact]) return aliases[compact];
-  return s
-    .replace(/[_-]+/g, " ")
-    .replace(/\b\w/g, (ch) => ch.toUpperCase());
+  if (/card.*clearing|gateway.*clearing/.test(lower)) return "Online payment (card)";
+  if (/salary.*clearing|deduction.*clearing/.test(lower)) return "Salary deduction";
+  if (/standing.*clearing/.test(lower)) return "Standing order";
+  if (/direct.*debit.*clearing/.test(lower)) return "Direct debit";
+  return s.replace(/[_-]+/g, " ").replace(/\b\w/g, (ch) => ch.toUpperCase());
 }
 
 /** Ledger payment-like docs: API may send `claim` or `receipt` (refund/reallocation use both). */
@@ -239,6 +271,22 @@ function isClaimDocType(record) {
 function isInvoiceDocType(record) {
   const raw = record?.docType ?? record?.doc_type ?? record?.documentType;
   return raw != null && String(raw).trim().toLowerCase() === "invoice";
+}
+
+function isCreditNoteDocType(record) {
+  const raw = record?.docType ?? record?.doc_type ?? record?.documentType;
+  const norm = raw != null ? String(raw).trim().toLowerCase() : "";
+  return norm === "creditnote" || norm === "credit note";
+}
+
+function ledgerDocTypeForActionsApi(record) {
+  const raw = record?.docType ?? record?.doc_type ?? record?.documentType;
+  if (!raw) return "";
+  const norm = String(raw).trim().toLowerCase();
+  if (norm === "claim") return "Receipt";
+  if (norm === "credit note") return "CreditNote";
+  if (norm === "write-off" || norm === "writeoff") return "WriteOff";
+  return String(raw).trim();
 }
 
 function normalizeLedgerMemberKey(v) {
@@ -269,7 +317,7 @@ function resolveClaimDocumentMemberId(item) {
     item?.claim?.membershipNumber,
     item?.claim?.regNo,
     item?.membershipNumber,
-    item?.regNo
+    item?.regNo,
   );
 }
 
@@ -290,9 +338,8 @@ function ledgerItemIncludedForMember(item, gl, targetId) {
   }
 
   return (
-    item.entries?.some(
-      (e) => normalizeLedgerMemberKey(e.memberId) === tid
-    ) ?? false
+    item.entries?.some((e) => normalizeLedgerMemberKey(e.memberId) === tid) ??
+    false
   );
 }
 
@@ -311,7 +358,7 @@ function entriesForMemberLedgerAggregation(item, gl, targetId) {
     const cid = normalizeLedgerMemberKey(claimMember);
     if (cid !== tid) return [];
     const byClaim = list.filter(
-      (e) => normalizeLedgerMemberKey(e.memberId) === cid
+      (e) => normalizeLedgerMemberKey(e.memberId) === cid,
     );
     if (byClaim.length > 0) return byClaim;
     return list.filter((e) => normalizeLedgerMemberKey(e.memberId) === tid);
@@ -320,18 +367,62 @@ function entriesForMemberLedgerAggregation(item, gl, targetId) {
   return list.filter((e) => normalizeLedgerMemberKey(e.memberId) === tid);
 }
 
+/** Draft credit notes are not in GL until approved; show them on the member ledger for review. */
+function draftCreditNotesAsLedgerItems(pendingCreditNotes, memberId) {
+  if (!pendingCreditNotes?.length) return [];
+  const mid = String(memberId || "").trim();
+  return pendingCreditNotes.map((cn) => {
+    const amt = Number(cn.amount) || 0;
+    const date = cn.effectiveDate || cn.createdAt || new Date().toISOString();
+    const createdAt = cn.createdAt || cn.effectiveDate || date;
+    const memo =
+      cn.reason ||
+      (cn.invoiceDocNo
+        ? `Credit note (awaiting approval) — invoice ${cn.invoiceDocNo}`
+        : "Credit note (awaiting approval)");
+    return {
+      _id: `draft-cn-${cn.docNo}`,
+      date,
+      createdAt,
+      docType: "CreditNote",
+      docNo: cn.docNo,
+      reference: cn.invoiceDocNo || cn.docNo,
+      memo,
+      ledgerDisplayDocType: "Credit Note",
+      displayLabel: "Credit Note",
+      isDraftCreditNote: true,
+      entries: [
+        {
+          accountCode: "1400",
+          dc: "C",
+          amount: amt,
+          memberId: mid,
+          periodBucket: cn.periodBucket || "current",
+        },
+      ],
+    };
+  });
+}
+
 /**
- * Tx Type column: `paymentType` on the row prefers `txType.description` from the API.
- * Claim/receipt rows fall back to Card Gateway Clearing only when nothing else is set.
+ * Tx Type column: payment method for receipts/claims; doc hint for invoices/adjustments.
  */
 function displayPaymentTypeForRow(record) {
   const label = displayPaymentType(record?.paymentType);
   if (label !== "—") return label;
-  if (isClaimDocType(record)) return "Card Gateway Clearing";
-  return "—";
+  if (isClaimDocType(record)) return "Online payment";
+  return docTypeTxTypeHint(record);
 }
 
-const CREDIT_CARD_PAYMENT_LABEL = "Card Gateway Clearing";
+function docTypeTxTypeHint(record) {
+  const main = resolveLedgerDocTypeDisplay(record);
+  return LEDGER_TX_DOC_HINT[main] || "—";
+}
+
+const ONLINE_CARD_PAYMENT_LABELS = new Set([
+  "Online payment (card)",
+  "Online payment",
+]);
 
 /** Underlying settlement method (not the claim-row display override). */
 function ledgerRowPaymentTypeLabel(record) {
@@ -348,12 +439,11 @@ function hasStripeLikeSettlementSignal(record) {
     record?.settlement && typeof record.settlement === "object"
       ? record.settlement
       : null;
-  const pay = record?.payment && typeof record.payment === "object"
-    ? record.payment
-    : null;
-  const blobs = [record, gl, st, pay].filter(
-    (o) => o && typeof o === "object"
-  );
+  const pay =
+    record?.payment && typeof record.payment === "object"
+      ? record.payment
+      : null;
+  const blobs = [record, gl, st, pay].filter((o) => o && typeof o === "object");
   for (const o of blobs) {
     for (const k of Object.keys(o)) {
       if (!STRIPE_KEY_HINT.test(k)) continue;
@@ -374,7 +464,8 @@ function hasStripeLikeSettlementSignal(record) {
 function rowPrefersExternalRefundSource(row) {
   if (hasStripeLikeSettlementSignal(row)) return false;
   const label = ledgerRowPaymentTypeLabel(row);
-  if (label === CREDIT_CARD_PAYMENT_LABEL) return false;
+  if (ONLINE_CARD_PAYMENT_LABELS.has(label)) return false;
+  if (/online payment|card/i.test(label)) return false;
   if (label === "—" && isClaimDocType(row)) return false;
   return true;
 }
@@ -385,8 +476,95 @@ function refundInitialModeFromReceiptRows(rows) {
   return anyExternal ? "external" : "stripe";
 }
 
+const CLEARING_ACCOUNT_CODES = new Set([
+  "1100",
+  "1200",
+  "1210",
+  "1220",
+  "1230",
+  "1240",
+  "1250",
+]);
+
+/** Card/cheque/batch payments use clearing settlement; invoices and adjustments do not. */
+function ledgerRowUsesClearingSettlement(record) {
+  const dt = String(record?.docType || "").toLowerCase();
+  if (!["receipt", "claim", "refund"].includes(dt)) return false;
+
+  const settlement = record?.settlement;
+  if (settlement?.provider) return true;
+  if (hasStripeLikeSettlementSignal(record)) return true;
+
+  const gl = glFromLedgerItem(record);
+  if (
+    (gl?.entries || []).some((e) => CLEARING_ACCOUNT_CODES.has(e.accountCode))
+  ) {
+    return true;
+  }
+
+  const payLabel = ledgerRowPaymentTypeLabel(record).toLowerCase();
+  if (
+    payLabel !== "—" &&
+    /clearing|cheque|card|direct debit|standing order|salary|deduction|stripe|gateway|batch/i.test(
+      payLabel,
+    )
+  ) {
+    return true;
+  }
+
+  return false;
+}
+
+/** Operational status on member ledger (clearing → badge, not status column). */
+function resolveLedgerRowStatus(record, pendingCreditNotes = []) {
+  if (record?.isDraftCreditNote) return "Draft";
+  const docNo = pickFirstNonEmptyString(record?.docNo, record?.reference);
+  if (docNo && pendingCreditNotes.some((cn) => cn.docNo === docNo)) {
+    return "Draft";
+  }
+
+  const dt = String(record?.docType || "").toLowerCase();
+  if (dt === "refund") return "Refunded";
+  if (dt === "writeoff") return "Written Off";
+
+  return "Posted";
+}
+
+function ledgerStatusTagColor(status) {
+  switch (status) {
+    case "Draft":
+      return "gold";
+    case "Refunded":
+      return "purple";
+    case "Written Off":
+      return "red";
+    default:
+      return "default";
+  }
+}
+
+function formatLedgerBalanceCents(balanceCents) {
+  const n = Number(balanceCents) || 0;
+  const euro = Math.abs(centsToEuro(n)).toLocaleString("en-IE", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  });
+  if (n > 0) return { text: `€${euro} (Dr)`, color: "#cf1322" };
+  if (n < 0) return { text: `€${euro} (Cr)`, color: "#389e0d" };
+  return { text: `€${euro}`, color: "#595959" };
+}
+
+/** Both debit and credit on row — often nets to zero (internal offset lines). */
+function rowHasOffsettingDebitCredit(record) {
+  const d = Number(record?.debit) || 0;
+  const c = Number(record?.credit) || 0;
+  if (d <= 0 || c <= 0) return false;
+  return Math.abs(d - c) < 1;
+}
+
 const TransactionHistory = () => {
   const financeToolbarApi = useFinanceTabToolbar();
+  const navigate = useNavigate();
   const location = useLocation();
   const [searchParams] = useSearchParams();
   const { profileDetails } = useSelector((state) => state.profileDetails || {});
@@ -418,8 +596,25 @@ const TransactionHistory = () => {
   const [reallocationDrawerOpen, setReallocationDrawerOpen] = useState(false);
   const [reallocationSourceRow, setReallocationSourceRow] = useState(null);
   const [ledgerView, setLedgerView] = useState("simple");
+  const [financeSummary, setFinanceSummary] = useState(null);
+  const [summaryLoading, setSummaryLoading] = useState(false);
+  const [pendingCreditNotes, setPendingCreditNotes] = useState([]);
+  const [creditNoteDrawerOpen, setCreditNoteDrawerOpen] = useState(false);
+  const [creditNoteDrawerMode, setCreditNoteDrawerMode] = useState("create");
+  const [creditNoteTarget, setCreditNoteTarget] = useState({
+    invoiceDocNo: "",
+    creditNoteDocNo: "",
+    prefillEuro: null,
+    summary: null,
+  });
+  const [creditNoteSubmitting, setCreditNoteSubmitting] = useState(false);
+  const [applyCreditOpen, setApplyCreditOpen] = useState(false);
+  const [applyCreditSubmitting, setApplyCreditSubmitting] = useState(false);
+  const [applyCreditPrefillEuro, setApplyCreditPrefillEuro] = useState(null);
+  const [applyCreditSummary, setApplyCreditSummary] = useState(null);
+  const [rowActionsCache, setRowActionsCache] = useState({});
   const targetTransactionId = String(
-    location.state?.transactionId || searchParams.get("transactionId") || ""
+    location.state?.transactionId || searchParams.get("transactionId") || "",
   )
     .trim()
     .toLowerCase();
@@ -446,6 +641,52 @@ const TransactionHistory = () => {
     setSelectedRowKeys([matchedRow.key]);
   }, [data, location.state?.transactionId, searchParams, targetTransactionId]);
 
+  const fetchPendingCreditNotes = useCallback(
+    async ({ ledgerPayload } = {}) => {
+      if (Array.isArray(ledgerPayload?.draftCreditNotes)) {
+        setPendingCreditNotes(ledgerPayload.draftCreditNotes);
+        return ledgerPayload.draftCreditNotes;
+      }
+
+      const token = localStorage.getItem("token");
+      if (!memberId || !token) {
+        setPendingCreditNotes([]);
+        return [];
+      }
+
+      const headers = { Authorization: `Bearer ${token}` };
+      const base = getAccountServiceBaseUrl();
+      const paths = [
+        `/reports/member/${encodeURIComponent(memberId)}/credit-notes`,
+        `/journal/credit-notes`,
+      ];
+
+      for (const path of paths) {
+        try {
+          const cnRes = await axios.get(`${base}${path}`, {
+            params: { memberId, status: "Draft" },
+            headers,
+          });
+          const cnPayload = cnRes.data?.data ?? cnRes.data;
+          const items = cnPayload?.items || [];
+          setPendingCreditNotes(items);
+          return items;
+        } catch (error) {
+          if (error?.response?.status === 404) continue;
+          console.warn(
+            "Draft credit notes unavailable:",
+            error?.response?.status || error,
+          );
+          break;
+        }
+      }
+
+      setPendingCreditNotes([]);
+      return [];
+    },
+    [memberId],
+  );
+
   const fetchLedgerData = useCallback(async () => {
     setLoading(true);
     try {
@@ -457,11 +698,16 @@ const TransactionHistory = () => {
           headers: {
             Authorization: `Bearer ${token}`,
           },
-        }
+        },
       );
 
+      const ledgerPayload = response.data?.data ?? response.data;
+      const pendingDrafts = await fetchPendingCreditNotes({
+        ledgerPayload,
+      });
+
       // Extract data safely
-      const rawData = response.data?.data?.items || [];
+      const rawData = ledgerPayload?.items || [];
 
       // Normalize memberId for comparison
       const targetId = String(memberId).trim().toLowerCase();
@@ -473,86 +719,174 @@ const TransactionHistory = () => {
       });
 
       // Oldest-first by createdAt/updatedAt only — running balance does not use Tx Date
-      const sortedData = [...filteredRawData].sort(compareLedgerByCreatedAtAsc);
+      const draftLedgerItems = draftCreditNotesAsLedgerItems(
+        pendingDrafts,
+        memberId,
+      );
+      const sortedData = [...filteredRawData, ...draftLedgerItems].sort(
+        compareLedgerByCreatedAtAsc,
+      );
 
       let cumulativeBalance = 0;
-      const ledgerData = sortedData.map((item, index) => {
-        const gl = glFromLedgerItem(item);
-        const memberEntries = entriesForMemberLedgerAggregation(
-          item,
-          gl,
-          targetId
-        );
+      const ledgerData = sortedData
+        .map((item, index) => {
+          const gl = glFromLedgerItem(item);
+          const memberEntries = entriesForMemberLedgerAggregation(
+            item,
+            gl,
+            targetId,
+          );
 
-        // Aggregate amounts (handles split entries in a single transaction)
-        let totalDebit = 0;
-        let totalCredit = 0;
+          // Aggregate amounts (handles split entries in a single transaction)
+          let totalDebit = 0;
+          let totalCredit = 0;
 
-        memberEntries.forEach(e => {
-          const amt = Number(e.amount) || 0;
-          if (e.dc === "D") totalDebit += amt;
-          if (e.dc === "C") totalCredit += amt;
+          memberEntries.forEach((e) => {
+            const amt = Number(e.amount) || 0;
+            if (e.dc === "D") totalDebit += amt;
+            if (e.dc === "C") totalCredit += amt;
+          });
+
+          cumulativeBalance += totalCredit - totalDebit;
+
+          const docType =
+            item.docType ??
+            item.doc_type ??
+            item.documentType ??
+            gl?.docType ??
+            gl?.doc_type ??
+            gl?.documentType;
+          const docNo =
+            item.docNo ??
+            item.doc_no ??
+            item.documentNo ??
+            gl?.docNo ??
+            gl?.doc_no ??
+            gl?.documentNo;
+          const memoField = pickFirstNonEmptyString(
+            item.memo,
+            gl?.memo,
+            item.description,
+          );
+          const paymentType = resolvePaymentTypeSource(item, gl);
+          const docTypeDisplayLabel = pickFirstNonEmptyString(
+            item.displayLabel,
+            gl?.displayLabel,
+            item.docTypeDisplayLabel,
+            gl?.docTypeDisplayLabel,
+          );
+          const updatedAt = resolveLedgerUpdatedAt(item, gl, item.date);
+          const ledgerCreatedAt = resolveLedgerCreatedAtDisplay(item);
+
+          return {
+            ...item,
+            key:
+              item._id || `ledger-${index}-${item.date}-${cumulativeBalance}`,
+            docType,
+            docNo,
+            memo: memoField,
+            paymentType,
+            displayLabel: docTypeDisplayLabel || "",
+            updatedAt,
+            ledgerCreatedAt,
+            reference: (item.reference || docNo || "-").trim(),
+            debit: totalDebit,
+            credit: totalCredit,
+            balance: cumulativeBalance,
+          };
+        })
+        .filter((item) => {
+          // Strict Filter: Only show rows with a valid date AND a non-zero financial impact
+          const hasDate = item.date && dayjs(item.date).isValid();
+          const hasAmount =
+            Math.abs(item.debit) > 0.001 || Math.abs(item.credit) > 0.001;
+          return hasDate && hasAmount;
         });
 
-        cumulativeBalance += (totalCredit - totalDebit);
-
-        const docType =
-          item.docType ?? item.doc_type ?? item.documentType ??
-          gl?.docType ?? gl?.doc_type ?? gl?.documentType;
-        const docNo =
-          item.docNo ?? item.doc_no ?? item.documentNo ??
-          gl?.docNo ?? gl?.doc_no ?? gl?.documentNo;
-        const memoField = pickFirstNonEmptyString(
-          item.memo,
-          gl?.memo,
-          item.description
-        );
-        const paymentType = resolvePaymentTypeSource(item, gl);
-        const docTypeDisplayLabel = pickFirstNonEmptyString(
-          item.displayLabel,
-          gl?.displayLabel,
-          item.docTypeDisplayLabel,
-          gl?.docTypeDisplayLabel
-        );
-        const updatedAt = resolveLedgerUpdatedAt(item, gl, item.date);
-        const ledgerCreatedAt = resolveLedgerCreatedAtDisplay(item);
-
-        return {
-          ...item,
-          key: item._id || `ledger-${index}-${item.date}-${cumulativeBalance}`,
-          docType,
-          docNo,
-          memo: memoField,
-          paymentType,
-          displayLabel: docTypeDisplayLabel || "",
-          updatedAt,
-          ledgerCreatedAt,
-          reference: (item.reference || docNo || "-").trim(),
-          debit: totalDebit,
-          credit: totalCredit,
-          balance: cumulativeBalance,
-        };
-      }).filter(item => {
-        // Strict Filter: Only show rows with a valid date AND a non-zero financial impact
-        const hasDate = item.date && dayjs(item.date).isValid();
-        const hasAmount = Math.abs(item.debit) > 0.001 || Math.abs(item.credit) > 0.001;
-        return hasDate && hasAmount;
-      });
-
       setData(ledgerData);
+      setRowActionsCache({});
     } catch (error) {
       console.error("Error fetching ledger data:", error);
       setData([]);
     } finally {
       setLoading(false);
     }
-  }, [memberId, ledgerView]);
+  }, [memberId, ledgerView, fetchPendingCreditNotes]);
+
+  const fetchFinanceSummary = useCallback(async () => {
+    if (!memberId) return;
+    setSummaryLoading(true);
+    const token = localStorage.getItem("token");
+    const year = new Date().getFullYear();
+    const headers = { Authorization: `Bearer ${token}` };
+
+    try {
+      const summaryRes = await axios.get(
+        `${getAccountServiceBaseUrl()}/reports/member/${encodeURIComponent(memberId)}/summary`,
+        { params: { year, scope: "current" }, headers },
+      );
+      const raw = summaryRes.data?.data ?? summaryRes.data;
+      const summaryData =
+        raw && typeof raw === "object"
+          ? {
+              ...raw,
+              outstandingBalance: Number(raw.outstandingBalance) || 0,
+              availableCredit: Number(raw.availableCredit) || 0,
+              refundableBalance:
+                Number(raw.refundableBalance ?? raw.availableCredit) || 0,
+              deferredIncomeBalance: Number(raw.deferredIncomeBalance) || 0,
+              writtenOffBalance: Number(raw.writtenOffBalance) || 0,
+              unreconciledClearingBalance:
+                Number(raw.unreconciledClearingBalance) || 0,
+            }
+          : {
+              memberId,
+              year,
+              outstandingBalance: 0,
+              availableCredit: 0,
+              refundableBalance: 0,
+            };
+      setFinanceSummary(summaryData);
+    } catch (error) {
+      console.error("Error fetching finance summary:", error);
+      setFinanceSummary({
+        memberId,
+        year,
+        outstandingBalance: 0,
+        availableCredit: 0,
+        refundableBalance: 0,
+        deferredIncomeBalance: 0,
+        writtenOffBalance: 0,
+        unreconciledClearingBalance: 0,
+        _loadError: true,
+      });
+    } finally {
+      await fetchPendingCreditNotes();
+      setSummaryLoading(false);
+    }
+  }, [memberId, fetchPendingCreditNotes]);
+
+  const refreshFinanceViews = useCallback(async () => {
+    await Promise.all([fetchLedgerData(), fetchFinanceSummary()]);
+  }, [fetchLedgerData, fetchFinanceSummary]);
 
   useEffect(() => {
     if (memberId) {
       fetchLedgerData();
+      fetchFinanceSummary();
     }
-  }, [memberId, fetchLedgerData]);
+  }, [memberId, fetchLedgerData, fetchFinanceSummary]);
+
+  useEffect(() => {
+    const handler = (ev) => {
+      const mid = ev?.detail?.memberId;
+      if (mid && String(mid) === String(memberId)) {
+        refreshFinanceViews();
+      }
+    };
+    window.addEventListener("member-finance-updated", handler);
+    return () => window.removeEventListener("member-finance-updated", handler);
+  }, [memberId, refreshFinanceViews]);
 
   const closeRefundDrawer = useCallback(() => {
     setRefundDrawerOpen(false);
@@ -576,13 +910,12 @@ const TransactionHistory = () => {
 
   const openReallocationForSelection = useCallback(() => {
     const rows = data.filter((r) =>
-      selectedRowKeys.some((k) => String(k) === String(r.key))
+      selectedRowKeys.some((k) => String(k) === String(r.key)),
     );
     if (rows.length !== 1) {
       notification.warning({
         message: "Select one payment",
-        description:
-          "Reallocation applies to a single Receipt (payment) row.",
+        description: "Reallocation applies to a single Receipt (payment) row.",
         placement: "topRight",
       });
       return;
@@ -602,7 +935,7 @@ const TransactionHistory = () => {
 
   const openWriteOffForSelection = useCallback(() => {
     const rows = data.filter((r) =>
-      selectedRowKeys.some((k) => String(k) === String(r.key))
+      selectedRowKeys.some((k) => String(k) === String(r.key)),
     );
     if (!rows.length) {
       notification.warning({
@@ -664,7 +997,7 @@ const TransactionHistory = () => {
     setPrefillRefundEuros(euros);
     setRefundInitialMode(refundInitialModeFromReceiptRows(rows));
     setReceiptSummaryText(
-      `${rows.length} receipt(s) — total payments: €${formatted}`
+      `${rows.length} receipt(s) — total payments: €${formatted}`,
     );
     setRefundDrawerOpen(true);
   }, []);
@@ -676,7 +1009,7 @@ const TransactionHistory = () => {
       row?.settlement?.paymentIntentId,
       row?.settlement?.paymentIntent,
       row?.underlyingReceiptGl?.paymentIntentId,
-      row?.underlyingReceiptGl?.paymentIntent
+      row?.underlyingReceiptGl?.paymentIntent,
     );
   }, []);
 
@@ -725,7 +1058,7 @@ const TransactionHistory = () => {
 
       if (hasMixedPaymentIntent) {
         const e = new Error(
-          "Online refunds require payment intent on every selected receipt."
+          "Online refunds require payment intent on every selected receipt.",
         );
         e.code = "MIXED_PAYMENT_INTENT";
         throw e;
@@ -733,7 +1066,7 @@ const TransactionHistory = () => {
 
       if (!validPaymentIntentIds.length) {
         const e = new Error(
-          "Online refunds require a payment intent. Please choose online receipts."
+          "Online refunds require a payment intent. Please choose online receipts.",
         );
         e.code = "MISSING_PAYMENT_INTENT";
         throw e;
@@ -742,7 +1075,7 @@ const TransactionHistory = () => {
       const uniquePaymentIntentIds = [...new Set(validPaymentIntentIds)];
       if (uniquePaymentIntentIds.length !== 1) {
         const e = new Error(
-          "Selected receipts have different payment intents. Please choose receipts for a single payment intent."
+          "Selected receipts have different payment intents. Please choose receipts for a single payment intent.",
         );
         e.code = "MULTIPLE_PAYMENT_INTENTS";
         throw e;
@@ -759,7 +1092,7 @@ const TransactionHistory = () => {
         refundDate,
       };
     },
-    [memberId, resolvePaymentIntentId]
+    [memberId, resolvePaymentIntentId],
   );
 
   const submitRefundRequest = useCallback(async (payload) => {
@@ -772,7 +1105,7 @@ const TransactionHistory = () => {
           Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
         },
-      }
+      },
     );
   }, []);
 
@@ -821,18 +1154,558 @@ const TransactionHistory = () => {
         memo,
       };
     },
-    [memberId]
+    [memberId],
   );
 
   const submitWriteOffRequest = useCallback(async (payload) => {
     const token = localStorage.getItem("token");
-    return axios.post(`${process.env.REACT_APP_ACCOUNT_SERVICE_URL}/journal/writeoff`, payload, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-        "Content-Type": "application/json",
+    return axios.post(
+      `${getAccountServiceBaseUrl()}/journal/writeoff`,
+      payload,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
       },
-    });
+    );
   }, []);
+
+  const authHeaders = useCallback(() => {
+    const token = localStorage.getItem("token");
+    return {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+    };
+  }, []);
+
+  const closeCreditNoteDrawer = useCallback(() => {
+    setCreditNoteDrawerOpen(false);
+    setCreditNoteTarget({
+      invoiceDocNo: "",
+      creditNoteDocNo: "",
+      prefillEuro: null,
+      summary: null,
+    });
+    setCreditNoteSubmitting(false);
+  }, []);
+
+  const createDraftCreditNotesForInvoices = useCallback(
+    async (invoiceRows) => {
+      if (!invoiceRows?.length || creditNoteSubmitting) return;
+      setCreditNoteSubmitting(true);
+      let ok = 0;
+      let failed = 0;
+      try {
+        for (const row of invoiceRows) {
+          const invoiceDocNo =
+            pickFirstNonEmptyString(row.docNo, row.reference) || "";
+          if (!invoiceDocNo) continue;
+          const debitCents = Number(row.debit) || 0;
+          if (debitCents <= 0) {
+            failed += 1;
+            continue;
+          }
+          const suffix = `${Date.now().toString(36)}${ok}`.toUpperCase();
+          try {
+            await axios.post(
+              `${getAccountServiceBaseUrl()}/journal/credit-notes`,
+              {
+                docNo: `CN-${suffix}`,
+                memberId: String(memberId || "").trim(),
+                invoiceDocNo,
+                amount: debitCents,
+                date: dayjs().format("YYYY-MM-DD"),
+                reason: "Bulk credit note from member ledger",
+                notes: "",
+              },
+              { headers: authHeaders() },
+            );
+            ok += 1;
+          } catch (error) {
+            failed += 1;
+            notification.error({
+              message: `Credit note failed for ${invoiceDocNo}`,
+              description:
+                error?.response?.data?.message ||
+                error?.message ||
+                "Could not create draft.",
+              placement: "topRight",
+            });
+          }
+        }
+        if (ok > 0) {
+          notification.success({
+            message: "Credit notes",
+            description: `${ok} draft credit note(s) created. Approve when ready to post GL.`,
+            placement: "topRight",
+          });
+          window.dispatchEvent(
+            new CustomEvent("member-finance-updated", {
+              detail: { memberId: String(memberId || "").trim() },
+            }),
+          );
+          await refreshFinanceViews();
+        }
+        if (failed > 0 && ok === 0) {
+          notification.warning({
+            message: "No credit notes created",
+            description:
+              "Each invoice must have a positive debit and remaining creditable balance (existing draft/approved CNs reduce the limit).",
+            placement: "topRight",
+          });
+        }
+      } finally {
+        setCreditNoteSubmitting(false);
+      }
+    },
+    [authHeaders, creditNoteSubmitting, memberId, refreshFinanceViews],
+  );
+
+  const openCreateCreditNote = useCallback(
+    (rows) => {
+      const invoiceRows = (rows || []).filter((r) => isInvoiceDocType(r));
+      if (!invoiceRows.length) {
+        notification.warning({
+          message: "Select invoice(s)",
+          description: "Credit notes reverse invoice revenue — select invoice row(s).",
+          placement: "topRight",
+        });
+        return;
+      }
+      if (invoiceRows.length > 1) {
+        Modal.confirm({
+          title: `Create ${invoiceRows.length} draft credit notes?`,
+          content:
+            "One draft credit note per invoice at the full invoice amount on each row. Amount is validated against remaining creditable balance (existing draft/approved CNs count toward the limit).",
+          okText: "Create drafts",
+          onOk: () => createDraftCreditNotesForInvoices(invoiceRows),
+        });
+        return;
+      }
+      const row = invoiceRows[0];
+      const docNo = pickFirstNonEmptyString(row.docNo, row.reference) || "";
+      const debitCents = Number(row.debit) || 0;
+      setCreditNoteTarget({
+        invoiceDocNo: docNo,
+        creditNoteDocNo: "",
+        prefillEuro:
+          debitCents > 0
+            ? Math.round(centsToEuro(debitCents) * 100) / 100
+            : null,
+        summary: `Invoice ${docNo} — debit €${centsToEuro(debitCents).toFixed(2)}. Max creditable amount may be lower if draft/approved CNs already exist for this invoice.`,
+      });
+      setCreditNoteDrawerMode("create");
+      setCreditNoteDrawerOpen(true);
+    },
+    [createDraftCreditNotesForInvoices],
+  );
+
+  const openApprovePendingCreditNote = useCallback((cn) => {
+    if (!cn?.docNo) return;
+    setCreditNoteTarget({
+      invoiceDocNo: cn.invoiceDocNo || "",
+      creditNoteDocNo: cn.docNo,
+      prefillEuro: cn.amount ? centsToEuro(cn.amount) : null,
+      summary: `Draft CN ${cn.docNo}${cn.invoiceDocNo ? ` for invoice ${cn.invoiceDocNo}` : ""}`,
+    });
+    setCreditNoteDrawerMode("approve");
+    setCreditNoteDrawerOpen(true);
+  }, []);
+
+  const openApproveCreditNote = useCallback(
+    (row) => {
+      const docNo = pickFirstNonEmptyString(row.docNo, row.reference) || "";
+      const pending = pendingCreditNotes.find((cn) => cn.docNo === docNo);
+      if (!pending && !isCreditNoteDocType(row)) {
+        notification.info({
+          message: "Not a draft credit note",
+          description:
+            "Draft credit notes appear in Pending approval above, or select a credit note row.",
+          placement: "topRight",
+        });
+        return;
+      }
+      setCreditNoteTarget({
+        invoiceDocNo: pending?.invoiceDocNo || "",
+        creditNoteDocNo: docNo,
+        prefillEuro: null,
+        summary: pending
+          ? `Draft CN ${docNo} for invoice ${pending.invoiceDocNo}`
+          : null,
+      });
+      setCreditNoteDrawerMode("approve");
+      setCreditNoteDrawerOpen(true);
+    },
+    [pendingCreditNotes],
+  );
+
+  const handleCreditNoteCreate = useCallback(
+    async (payload) => {
+      if (creditNoteSubmitting) return false;
+      try {
+        setCreditNoteSubmitting(true);
+        await axios.post(
+          `${getAccountServiceBaseUrl()}/journal/credit-notes`,
+          payload,
+          { headers: authHeaders() },
+        );
+        notification.success({
+          message: "Credit note",
+          description: "Draft saved. Approve when ready to post GL.",
+          placement: "topRight",
+        });
+        window.dispatchEvent(
+          new CustomEvent("member-finance-updated", {
+            detail: { memberId: String(memberId || "").trim() },
+          }),
+        );
+        await refreshFinanceViews();
+        return true;
+      } catch (error) {
+        notification.error({
+          message: "Credit note failed",
+          description:
+            error?.response?.data?.message ||
+            error?.message ||
+            "Could not create credit note.",
+          placement: "topRight",
+        });
+        return false;
+      } finally {
+        setCreditNoteSubmitting(false);
+      }
+    },
+    [authHeaders, creditNoteSubmitting, memberId, refreshFinanceViews],
+  );
+
+  const handleCreditNoteApprove = useCallback(
+    async ({ docNo }) => {
+      if (creditNoteSubmitting) return false;
+      try {
+        setCreditNoteSubmitting(true);
+        await axios.post(
+          `${getAccountServiceBaseUrl()}/journal/credit-notes/${encodeURIComponent(docNo)}/approve`,
+          {},
+          { headers: authHeaders() },
+        );
+        notification.success({
+          message: "Credit note approved",
+          description: "GL posted and member credit updated if applicable.",
+          placement: "topRight",
+        });
+        window.dispatchEvent(
+          new CustomEvent("member-finance-updated", {
+            detail: { memberId: String(memberId || "").trim() },
+          }),
+        );
+        await refreshFinanceViews();
+        return true;
+      } catch (error) {
+        notification.error({
+          message: "Approval failed",
+          description:
+            error?.response?.data?.message ||
+            error?.message ||
+            "Could not approve credit note.",
+          placement: "topRight",
+        });
+        return false;
+      } finally {
+        setCreditNoteSubmitting(false);
+      }
+    },
+    [authHeaders, creditNoteSubmitting, memberId, refreshFinanceViews],
+  );
+
+  const handleCreditNoteCancel = useCallback(
+    async (docNo) => {
+      try {
+        await axios.post(
+          `${getAccountServiceBaseUrl()}/journal/credit-notes/${encodeURIComponent(docNo)}/cancel`,
+          {},
+          { headers: authHeaders() },
+        );
+        notification.success({
+          message: "Credit note cancelled",
+          placement: "topRight",
+        });
+        await refreshFinanceViews();
+      } catch (error) {
+        notification.error({
+          message: "Cancel failed",
+          description: error?.response?.data?.message || error?.message,
+          placement: "topRight",
+        });
+      }
+    },
+    [authHeaders, refreshFinanceViews],
+  );
+
+  const handleApplyCreditSubmit = useCallback(
+    async (payload) => {
+      if (applyCreditSubmitting) return false;
+      setApplyCreditSubmitting(true);
+      try {
+        await axios.post(
+          `${getAccountServiceBaseUrl()}/journal/apply-member-credit`,
+          payload,
+          { headers: authHeaders() },
+        );
+        notification.success({
+          message: "Credit applied",
+          description: "Member credit allocated to outstanding balance.",
+          placement: "topRight",
+        });
+        window.dispatchEvent(
+          new CustomEvent("member-finance-updated", {
+            detail: { memberId: String(memberId || "").trim() },
+          }),
+        );
+        await refreshFinanceViews();
+        setApplyCreditOpen(false);
+        return true;
+      } catch (error) {
+        notification.error({
+          message: "Apply credit failed",
+          description: error?.response?.data?.message || error?.message,
+          placement: "topRight",
+        });
+        return false;
+      } finally {
+        setApplyCreditSubmitting(false);
+      }
+    },
+    [applyCreditSubmitting, authHeaders, memberId, refreshFinanceViews],
+  );
+
+  const fetchRowLedgerActions = useCallback(
+    async (record) => {
+      const key = String(record.key);
+      const token = localStorage.getItem("token");
+      const docType = ledgerDocTypeForActionsApi(record);
+      const docNo =
+        pickFirstNonEmptyString(record.docNo, record.reference) || "";
+      try {
+        const res = await axios.get(
+          `${getAccountServiceBaseUrl()}/reports/member/${memberId}/ledger-actions`,
+          {
+            params: {
+              docType,
+              docNo,
+              status: resolveLedgerRowStatus(record, pendingCreditNotes),
+              year: new Date().getFullYear(),
+            },
+            headers: { Authorization: `Bearer ${token}` },
+          },
+        );
+        const payload = res.data?.data || res.data;
+        setRowActionsCache((prev) => ({ ...prev, [key]: payload }));
+        return payload;
+      } catch {
+        return { actions: [], badges: [] };
+      }
+    },
+    [memberId, pendingCreditNotes],
+  );
+
+  const runLedgerAction = useCallback(
+    async (actionId, record) => {
+      switch (actionId) {
+        case "create-credit-note":
+          openCreateCreditNote([record]);
+          break;
+        case "write-off-balance":
+          setSelectedRowKeys([record.key]);
+          setWriteOffLedgerRows([record]);
+          setWriteOffDrawerOpen(true);
+          break;
+        case "refund":
+          openRefundForRecords([record]);
+          break;
+        case "refund-credit": {
+          const refundable = financeSummary?.refundableBalance || 0;
+          if (refundable <= 0) {
+            notification.warning({
+              message: "No refundable balance",
+              placement: "topRight",
+            });
+            break;
+          }
+          setRefundReceiptRows([]);
+          setPrefillRefundEuros(
+            Math.round(centsToEuro(refundable) * 100) / 100,
+          );
+          setRefundInitialMode("external");
+          setReceiptSummaryText(
+            `Refund from available credit — max €${centsToEuro(refundable).toFixed(2)}`,
+          );
+          setRefundDrawerOpen(true);
+          break;
+        }
+        case "approve":
+          openApproveCreditNote(record);
+          break;
+        case "cancel": {
+          const docNo = pickFirstNonEmptyString(record.docNo, record.reference);
+          if (docNo) await handleCreditNoteCancel(docNo);
+          break;
+        }
+        case "apply-member-credit":
+        case "apply-credit": {
+          const avail = financeSummary?.availableCredit || 0;
+          const out = financeSummary?.outstandingBalance || 0;
+          if (avail <= 0 || out <= 0) {
+            notification.warning({
+              message: "Nothing to apply",
+              description:
+                "Member needs available credit and an outstanding balance.",
+              placement: "topRight",
+            });
+            break;
+          }
+          setApplyCreditPrefillEuro(
+            Math.round(centsToEuro(Math.min(avail, out)) * 100) / 100,
+          );
+          setApplyCreditSummary(
+            record?.docNo
+              ? `Apply credit — invoice/ref ${record.docNo}`
+              : "Apply member credit to outstanding balance",
+          );
+          setApplyCreditOpen(true);
+          break;
+        }
+        case "reverse-receipt": {
+          const receiptDocNo = pickFirstNonEmptyString(
+            record.docNo,
+            record.reference,
+          );
+          if (!receiptDocNo) break;
+          Modal.confirm({
+            title: "Reverse receipt?",
+            content: `Post a reversing journal for receipt ${receiptDocNo}.`,
+            okText: "Reverse",
+            okButtonProps: { danger: true },
+            onOk: async () => {
+              const revNo = `RVR-${receiptDocNo}-${Date.now().toString(36).slice(-4).toUpperCase()}`;
+              await axios.post(
+                `${getAccountServiceBaseUrl()}/journal/reverse-receipt`,
+                {
+                  receiptDocNo,
+                  reversalDocNo: revNo,
+                  memberId,
+                },
+                { headers: authHeaders() },
+              );
+              notification.success({
+                message: "Receipt reversed",
+                placement: "topRight",
+              });
+              window.dispatchEvent(
+                new CustomEvent("member-finance-updated", {
+                  detail: { memberId: String(memberId || "").trim() },
+                }),
+              );
+              await refreshFinanceViews();
+            },
+          });
+          break;
+        }
+        case "print":
+          window.open(
+            `${getAccountServiceBaseUrl()}/reports/member/${encodeURIComponent(memberId)}/statement`,
+            "_blank",
+            "noopener,noreferrer",
+          );
+          break;
+        case "send": {
+          const ref = pickFirstNonEmptyString(
+            record.docNo,
+            record.reference,
+            record.memo,
+          );
+          if (ref && navigator.clipboard?.writeText) {
+            navigator.clipboard.writeText(ref);
+          }
+          notification.info({
+            message: "Reference copied",
+            description: ref
+              ? `${ref} — open Correspondence to email this member with the document reference.`
+              : "No document reference on this row.",
+            placement: "topRight",
+          });
+          break;
+        }
+        case "view-source-batch": {
+          const link = resolveLedgerDocumentLink(record);
+          if (link) {
+            navigate(link.path, { state: link.state });
+          } else {
+            notification.info({
+              message: "No linked batch",
+              description:
+                pickFirstNonEmptyString(record.docNo, record.reference) ||
+                "This document type is not tied to a payment batch.",
+              placement: "topRight",
+            });
+          }
+          break;
+        }
+        case "retain-credit":
+          Modal.info({
+            title: "Credit retained on account",
+            content:
+              "No further action is required. Available credit remains on Payment on Account (2020) and can be applied to invoices or refunded when eligible.",
+          });
+          break;
+        case "reverse":
+        case "recovery-note": {
+          const woRef = pickFirstNonEmptyString(
+            record.docNo,
+            record.reference,
+          );
+          Modal.info({
+            title:
+              actionId === "reverse"
+                ? "Reverse write-off"
+                : "Recovery note",
+            content: (
+              <span>
+                Write-off reversal is not automated. Finance may post a journal
+                adjustment with audit trail. Document: {woRef || "—"}
+              </span>
+            ),
+            okText: "Open journal adjustments",
+            onOk: () =>
+              navigate("/JournalAdjustments", {
+                state: {
+                  search: "Journal adjustments",
+                  highlightDocNo: woRef,
+                },
+              }),
+          });
+          break;
+        }
+        default:
+          notification.info({
+            message: actionId,
+            description: "Action not available for this row.",
+            placement: "topRight",
+          });
+      }
+    },
+    [
+      authHeaders,
+      financeSummary,
+      handleCreditNoteCancel,
+      memberId,
+      navigate,
+      openApproveCreditNote,
+      openCreateCreditNote,
+      openRefundForRecords,
+      refreshFinanceViews,
+    ],
+  );
 
   const handleWriteOffSubmit = useCallback(
     async (values) => {
@@ -849,10 +1722,10 @@ const TransactionHistory = () => {
         window.dispatchEvent(
           new CustomEvent("member-finance-updated", {
             detail: { memberId: String(memberId || "").trim() },
-          })
+          }),
         );
         setSelectedRowKeys([]);
-        await fetchLedgerData();
+        await refreshFinanceViews();
         closeWriteOffDrawer();
         return true;
       } catch (error) {
@@ -862,8 +1735,7 @@ const TransactionHistory = () => {
           error?.message;
         notification.error({
           message: "Write-off failed",
-          description:
-            backendMessage || "Unable to submit write-off request.",
+          description: backendMessage || "Unable to submit write-off request.",
           placement: "topRight",
         });
         return false;
@@ -874,11 +1746,11 @@ const TransactionHistory = () => {
     [
       buildWriteOffPayload,
       closeWriteOffDrawer,
-      fetchLedgerData,
+      refreshFinanceViews,
       memberId,
       submitWriteOffRequest,
       writeOffSubmitting,
-    ]
+    ],
   );
 
   const handleRefundSubmit = useCallback(
@@ -896,10 +1768,10 @@ const TransactionHistory = () => {
         window.dispatchEvent(
           new CustomEvent("member-finance-updated", {
             detail: { memberId: String(memberId || "").trim() },
-          })
+          }),
         );
         setSelectedRowKeys([]);
-        await fetchLedgerData();
+        await refreshFinanceViews();
         closeRefundDrawer();
         return true;
       } catch (error) {
@@ -907,12 +1779,14 @@ const TransactionHistory = () => {
           error?.response?.data?.remainingRefundableCents ??
           error?.response?.data?.data?.remainingRefundableCents;
         const remainingRefundableCents = Number(remainingRefundableCentsRaw);
-        const hasRemainingRefundableCents = Number.isFinite(remainingRefundableCents);
+        const hasRemainingRefundableCents = Number.isFinite(
+          remainingRefundableCents,
+        );
         const maxRefundableAmount = hasRemainingRefundableCents
           ? `€${centsToEuro(remainingRefundableCents).toLocaleString("en-IE", {
-            minimumFractionDigits: 2,
-            maximumFractionDigits: 2,
-          })}`
+              minimumFractionDigits: 2,
+              maximumFractionDigits: 2,
+            })}`
           : null;
         const backendMessage =
           error?.response?.data?.message ||
@@ -934,11 +1808,11 @@ const TransactionHistory = () => {
     [
       buildRefundPayload,
       closeRefundDrawer,
-      fetchLedgerData,
+      refreshFinanceViews,
       refundReceiptRows,
       refundSubmitting,
       submitRefundRequest,
-    ]
+    ],
   );
 
   const columns = useMemo(() => {
@@ -958,199 +1832,392 @@ const TransactionHistory = () => {
       .map((text) => ({ text, value: text }));
 
     return [
-    {
-      title: "Tx Date",
-      dataIndex: "date",
-      key: "date",
-      width: 130,
-      sorter: {
-        compare: (a, b) => compareLedgerByTransactionDateAsc(a, b),
+      {
+        title: (
+          <FinanceColumnTitle label="Tx Date" help={LEDGER_COLUMN_HELP.date} />
+        ),
+        dataIndex: "date",
+        key: "date",
+        width: 130,
+        sorter: {
+          compare: (a, b) => compareLedgerByTransactionDateAsc(a, b),
+        },
+        render: (text) =>
+          text && dayjs(text).isValid() ? formatDateOnly(text) : "-",
       },
-      render: (text) =>
-        text && dayjs(text).isValid() ? formatDateOnly(text) : "-",
-    },
-    {
-      title: "Doc Type",
-      dataIndex: "docType",
-      key: "docType",
-      width: 150,
-      ellipsis: true,
-      sorter: {
-        compare: (a, b) =>
-          resolveLedgerDocTypeDisplay(a).localeCompare(
-            resolveLedgerDocTypeDisplay(b),
-            undefined,
-            { sensitivity: "base" }
-          ),
-      },
-      filters: docTypeFilters,
-      onFilter: (value, record) =>
-        resolveLedgerDocTypeDisplay(record) === value,
-      filterSearch: true,
-      render: (_, r) => {
-        const main = resolveLedgerDocTypeDisplay(r);
-        const tipRaw =
-          r.displayLabel != null && String(r.displayLabel).trim() !== ""
-            ? String(r.displayLabel).trim()
-            : "";
-        const tip = tipRaw && tipRaw !== main ? tipRaw : "";
-        return (
-          <span
-            style={{
-              display: "inline-flex",
-              alignItems: "center",
-              gap: 6,
-              maxWidth: "100%",
-            }}
-          >
+      {
+        title: (
+          <FinanceColumnTitle
+            label="Doc Type"
+            help={LEDGER_COLUMN_HELP.docType}
+          />
+        ),
+        dataIndex: "docType",
+        key: "docType",
+        width: 150,
+        ellipsis: true,
+        sorter: {
+          compare: (a, b) =>
+            resolveLedgerDocTypeDisplay(a).localeCompare(
+              resolveLedgerDocTypeDisplay(b),
+              undefined,
+              { sensitivity: "base" },
+            ),
+        },
+        filters: docTypeFilters,
+        onFilter: (value, record) =>
+          resolveLedgerDocTypeDisplay(record) === value,
+        filterSearch: true,
+        render: (_, r) => {
+          const main = resolveLedgerDocTypeDisplay(r);
+          const tipRaw =
+            r.displayLabel != null && String(r.displayLabel).trim() !== ""
+              ? String(r.displayLabel).trim()
+              : "";
+          const tip = tipRaw && tipRaw !== main ? tipRaw : "";
+          return (
             <span
               style={{
-                overflow: "hidden",
-                textOverflow: "ellipsis",
-                whiteSpace: "nowrap",
-                minWidth: 0,
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 6,
+                maxWidth: "100%",
               }}
             >
-              {main}
+              <span
+                style={{
+                  overflow: "hidden",
+                  textOverflow: "ellipsis",
+                  whiteSpace: "nowrap",
+                  minWidth: 0,
+                }}
+              >
+                {main}
+              </span>
+              {tip ? (
+                <Tooltip title={tip}>
+                  <InfoCircleOutlined
+                    style={{ color: "#8c8c8c", flexShrink: 0, cursor: "help" }}
+                    aria-label="Document type description"
+                  />
+                </Tooltip>
+              ) : null}
             </span>
-            {tip ? (
-              <Tooltip title={tip}>
-                <InfoCircleOutlined
-                  style={{ color: "#8c8c8c", flexShrink: 0, cursor: "help" }}
-                  aria-label="Document type description"
-                />
-              </Tooltip>
-            ) : null}
-          </span>
-        );
-      },
-    },
-    {
-      title: "Tx Type",
-      dataIndex: "paymentType",
-      key: "paymentType",
-      width: 150,
-      ellipsis: true,
-      sorter: {
-        compare: (a, b) =>
-          displayPaymentTypeForRow(a).localeCompare(displayPaymentTypeForRow(b), undefined, {
-            sensitivity: "base",
-          }),
-      },
-      filters: paymentTypeFilters,
-      onFilter: (value, record) => displayPaymentTypeForRow(record) === value,
-      filterSearch: true,
-      render: (_, r) => displayPaymentTypeForRow(r),
-    },
-    {
-      title: "Debit",
-      dataIndex: "debit",
-      key: "debit",
-      width: 110,
-      align: 'right',
-      render: (value) => value ? <span style={{ color: "red" }}>€{centsToEuro(value).toLocaleString('en-IE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span> : "",
-    },
-    {
-      title: "Credit",
-      dataIndex: "credit",
-      key: "credit",
-      width: 110,
-      align: 'right',
-      render: (value) => value ? <span style={{ color: "green" }}>€{centsToEuro(value).toLocaleString('en-IE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span> : "",
-    },
-    {
-      title: "Balance",
-      dataIndex: "balance",
-      key: "balance",
-      width: 140,
-      align: 'right',
-      render: (value) => (
-        <span style={{ color: value < 0 ? "red" : "green" }}>
-          €{Math.abs(centsToEuro(value || 0)).toLocaleString('en-IE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-        </span>
-      ),
-    },
-    {
-      title: "Memo",
-      dataIndex: "memo",
-      key: "memo",
-      width: 200,
-      ellipsis: true,
-      render: (v, record) => {
-        const memoText =
-          v != null && String(v).trim() !== "" ? String(v).trim() : "—";
-        const refRaw = record?.reference;
-        const refText =
-          refRaw != null && String(refRaw).trim() !== "" && String(refRaw).trim() !== "-"
-            ? String(refRaw).trim()
-            : "—";
-        return (
-          <span
-            style={{
-              display: "inline-flex",
-              alignItems: "center",
-              gap: 8,
-              maxWidth: "100%",
-            }}
-          >
-            <span
-              style={{
-                overflow: "hidden",
-                textOverflow: "ellipsis",
-                whiteSpace: "nowrap",
-                flex: 1,
-                minWidth: 0,
-              }}
-            >
-              {memoText}
-            </span>
-            <Tooltip title={refText === "—" ? "No reference" : `Reference: ${refText}`}>
-              <InfoCircleOutlined
-                style={{ color: "#8c8c8c", flexShrink: 0, cursor: "help" }}
-                aria-label="Show reference"
-              />
-            </Tooltip>
-          </span>
-        );
-      },
-    },
-    {
-      title: "Created",
-      dataIndex: "ledgerCreatedAt",
-      key: "ledgerCreatedAt",
-      width: 158,
-      sorter: {
-        compare: (a, b) => {
-          const va = dayjs(a.ledgerCreatedAt).isValid()
-            ? dayjs(a.ledgerCreatedAt).valueOf()
-            : NaN;
-          const vb = dayjs(b.ledgerCreatedAt).isValid()
-            ? dayjs(b.ledgerCreatedAt).valueOf()
-            : NaN;
-          const okA = !Number.isNaN(va);
-          const okB = !Number.isNaN(vb);
-          if (okA && okB && va !== vb) return va - vb;
-          if (okA && !okB) return -1;
-          if (!okA && okB) return 1;
-          return String(a._id ?? a.key ?? "").localeCompare(
-            String(b._id ?? b.key ?? "")
           );
         },
       },
-      render: (text) =>
-        text && dayjs(text).isValid()
-          ? dayjs(text).format("DD/MM/YYYY HH:mm")
-          : "—",
-    },
-  ];
-  }, [data]);
+      {
+        title: (
+          <FinanceColumnTitle
+            label="Tx Type"
+            help={LEDGER_COLUMN_HELP.paymentType}
+          />
+        ),
+        dataIndex: "paymentType",
+        key: "paymentType",
+        width: 150,
+        ellipsis: true,
+        sorter: {
+          compare: (a, b) =>
+            displayPaymentTypeForRow(a).localeCompare(
+              displayPaymentTypeForRow(b),
+              undefined,
+              {
+                sensitivity: "base",
+              },
+            ),
+        },
+        filters: paymentTypeFilters,
+        onFilter: (value, record) => displayPaymentTypeForRow(record) === value,
+        filterSearch: true,
+        render: (_, r) => {
+          const tx = displayPaymentTypeForRow(r);
+          const tip = isClaimDocType(r)
+            ? "Online payment from membership application, linked to this member when subscription was created."
+            : tx === docTypeTxTypeHint(r) && tx !== "—"
+              ? "Document category (not a payment method)."
+              : null;
+          return tip ? (
+            <Tooltip title={tip}>
+              <span>{tx}</span>
+            </Tooltip>
+          ) : (
+            tx
+          );
+        },
+      },
+      {
+        title: (
+          <FinanceColumnTitle label="Status" help={LEDGER_COLUMN_HELP.status} />
+        ),
+        key: "status",
+        width: 100,
+        render: (_, r) => {
+          const st = resolveLedgerRowStatus(r, pendingCreditNotes);
+          return <Tag color={ledgerStatusTagColor(st)}>{st}</Tag>;
+        },
+      },
+      {
+        title: (
+          <FinanceColumnTitle label="Badges" help={LEDGER_COLUMN_HELP.badges} />
+        ),
+        key: "badges",
+        width: 168,
+        render: (_, r) => {
+          const st = resolveLedgerRowStatus(r, pendingCreditNotes);
+          const badges = deriveRowBadges(r, st);
+          if (!badges.length) return "—";
+          return (
+            <span style={{ display: "flex", flexWrap: "wrap", gap: 4 }}>
+              {badges.map((b) => (
+                <Tooltip key={b} title={LEDGER_BADGE_HELP[b] || b}>
+                  <Tag style={{ margin: 0, fontSize: 10, cursor: "help" }}>
+                    {b}
+                  </Tag>
+                </Tooltip>
+              ))}
+            </span>
+          );
+        },
+      },
+      {
+        title: (
+          <FinanceColumnTitle label="Source" help={LEDGER_COLUMN_HELP.sourceLink} />
+        ),
+        key: "sourceLink",
+        width: 118,
+        render: (_, r) => {
+          const link = resolveLedgerDocumentLink(r, memberId);
+          if (!link) return "—";
+          return (
+            <Link
+              to={link.path}
+              state={{ ...link.state, memberId }}
+              style={{ fontSize: 12 }}
+            >
+              {link.label}
+            </Link>
+          );
+        },
+      },
+      {
+        title: (
+          <FinanceColumnTitle label="Debit" help={LEDGER_COLUMN_HELP.debit} />
+        ),
+        dataIndex: "debit",
+        key: "debit",
+        width: 110,
+        align: "right",
+        render: (value, record) => {
+          if (!value) return "";
+          const cell = (
+            <span style={{ color: "red" }}>
+              €
+              {centsToEuro(value).toLocaleString("en-IE", {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2,
+              })}
+            </span>
+          );
+          if (rowHasOffsettingDebitCredit(record)) {
+            return (
+              <Tooltip title="This row has both debit and credit lines; balance uses the net (see column help).">
+                {cell}
+              </Tooltip>
+            );
+          }
+          return cell;
+        },
+      },
+      {
+        title: (
+          <FinanceColumnTitle label="Credit" help={LEDGER_COLUMN_HELP.credit} />
+        ),
+        dataIndex: "credit",
+        key: "credit",
+        width: 110,
+        align: "right",
+        render: (value, record) => {
+          if (!value) return "";
+          const cell = (
+            <span style={{ color: "green" }}>
+              €
+              {centsToEuro(value).toLocaleString("en-IE", {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2,
+              })}
+            </span>
+          );
+          if (rowHasOffsettingDebitCredit(record)) {
+            return (
+              <Tooltip title="This row has both debit and credit lines; balance uses the net (see column help).">
+                {cell}
+              </Tooltip>
+            );
+          }
+          return cell;
+        },
+      },
+      {
+        title: (
+          <FinanceColumnTitle
+            label="Balance"
+            help={LEDGER_COLUMN_HELP.balance}
+          />
+        ),
+        dataIndex: "balance",
+        key: "balance",
+        width: 148,
+        align: "right",
+        render: (value) => {
+          const { text, color } = formatLedgerBalanceCents(value);
+          return <span style={{ color, fontVariantNumeric: "tabular-nums" }}>{text}</span>;
+        },
+      },
+      {
+        title: (
+          <FinanceColumnTitle label="Memo" help={LEDGER_COLUMN_HELP.memo} />
+        ),
+        dataIndex: "memo",
+        key: "memo",
+        width: 200,
+        ellipsis: true,
+        render: (v, record) => {
+          const memoText =
+            v != null && String(v).trim() !== "" ? String(v).trim() : "—";
+          const refRaw = record?.reference;
+          const refText =
+            refRaw != null &&
+            String(refRaw).trim() !== "" &&
+            String(refRaw).trim() !== "-"
+              ? String(refRaw).trim()
+              : "—";
+          return (
+            <span
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 8,
+                maxWidth: "100%",
+              }}
+            >
+              <span
+                style={{
+                  overflow: "hidden",
+                  textOverflow: "ellipsis",
+                  whiteSpace: "nowrap",
+                  flex: 1,
+                  minWidth: 0,
+                }}
+              >
+                {memoText}
+              </span>
+              <Tooltip
+                title={
+                  refText === "—" ? "No reference" : `Reference: ${refText}`
+                }
+              >
+                <InfoCircleOutlined
+                  style={{ color: "#8c8c8c", flexShrink: 0, cursor: "help" }}
+                  aria-label="Show reference"
+                />
+              </Tooltip>
+            </span>
+          );
+        },
+      },
+      {
+        title: (
+          <FinanceColumnTitle
+            label="Created"
+            help={LEDGER_COLUMN_HELP.ledgerCreatedAt}
+          />
+        ),
+        dataIndex: "ledgerCreatedAt",
+        key: "ledgerCreatedAt",
+        width: 158,
+        sorter: {
+          compare: (a, b) => {
+            const va = dayjs(a.ledgerCreatedAt).isValid()
+              ? dayjs(a.ledgerCreatedAt).valueOf()
+              : NaN;
+            const vb = dayjs(b.ledgerCreatedAt).isValid()
+              ? dayjs(b.ledgerCreatedAt).valueOf()
+              : NaN;
+            const okA = !Number.isNaN(va);
+            const okB = !Number.isNaN(vb);
+            if (okA && okB && va !== vb) return va - vb;
+            if (okA && !okB) return -1;
+            if (!okA && okB) return 1;
+            return String(a._id ?? a.key ?? "").localeCompare(
+              String(b._id ?? b.key ?? ""),
+            );
+          },
+        },
+        render: (text) =>
+          text && dayjs(text).isValid()
+            ? dayjs(text).format("DD/MM/YYYY HH:mm")
+            : "—",
+      },
+      {
+        title: (
+          <FinanceColumnTitle
+            label="Actions"
+            help={LEDGER_COLUMN_HELP.actions}
+          />
+        ),
+        key: "actions",
+        width: 88,
+        fixed: "right",
+        render: (_, record) => {
+          const cached = rowActionsCache[record.key];
+          const menuItems = (cached?.actions || []).map((a) => ({
+            key: a.id,
+            label: a.label,
+            onClick: () => runLedgerAction(a.id, record),
+          }));
+          if (!menuItems.length) {
+            menuItems.push({
+              key: "loading",
+              label: "Load actions…",
+              onClick: async () => {
+                const payload = await fetchRowLedgerActions(record);
+                if (payload?.actions?.length) {
+                  const first = payload.actions[0];
+                  runLedgerAction(first.id, record);
+                }
+              },
+            });
+          }
+          return (
+            <Dropdown
+              menu={{ items: menuItems }}
+              trigger={["click"]}
+              onOpenChange={(open) => {
+                if (open) fetchRowLedgerActions(record);
+              }}
+            >
+              <Button type="link" size="small" icon={<MoreOutlined />} />
+            </Dropdown>
+          );
+        },
+      },
+    ];
+  }, [
+    data,
+    fetchRowLedgerActions,
+    memberId,
+    pendingCreditNotes,
+    rowActionsCache,
+    runLedgerAction,
+  ]);
 
   const selectedLedgerRows = useMemo(
     () =>
       data.filter((r) =>
-        selectedRowKeys.some((k) => String(k) === String(r.key))
+        selectedRowKeys.some((k) => String(k) === String(r.key)),
       ),
-    [data, selectedRowKeys]
+    [data, selectedRowKeys],
   );
 
   const writeOffInvoiceSummary = useMemo(() => {
@@ -1158,7 +2225,7 @@ const TransactionHistory = () => {
     if (!rows?.length) return null;
     const totalDebitCents = rows.reduce(
       (s, r) => s + (Number(r.debit) || 0),
-      0
+      0,
     );
     const euroStr = centsToEuro(totalDebitCents).toLocaleString("en-IE", {
       minimumFractionDigits: 2,
@@ -1166,12 +2233,7 @@ const TransactionHistory = () => {
     });
     const refs = rows
       .map((r) =>
-        pickFirstNonEmptyString(
-          r.docNo,
-          r.reference,
-          r.doc_no,
-          r.documentNo
-        )
+        pickFirstNonEmptyString(r.docNo, r.reference, r.doc_no, r.documentNo),
       )
       .filter(Boolean);
     const unique = [...new Set(refs)];
@@ -1187,7 +2249,7 @@ const TransactionHistory = () => {
     if (!rows?.length) return null;
     const totalDebitCents = rows.reduce(
       (s, r) => s + (Number(r.debit) || 0),
-      0
+      0,
     );
     if (totalDebitCents <= 0) return null;
     return Math.round(centsToEuro(totalDebitCents) * 100) / 100;
@@ -1197,14 +2259,22 @@ const TransactionHistory = () => {
     selectedLedgerRows.length > 0 &&
     selectedLedgerRows.every((r) => isInvoiceDocType(r));
 
+  const creditNoteMenuEnabled =
+    selectedLedgerRows.length > 0 &&
+    selectedLedgerRows.every((r) => isInvoiceDocType(r));
+
+  const applyCreditMenuEnabled =
+    (financeSummary?.availableCredit || 0) > 0 &&
+    (financeSummary?.outstandingBalance || 0) > 0;
+
   /** Refund from payment-like rows: Claim (app credit → member) or Receipt (cash in). */
   const refundMenuEnabled =
     selectedLedgerRows.length > 0 &&
     selectedLedgerRows.every((r) => isClaimDocType(r));
 
+  /** Reclassification applies only to posted payment documents (receipt/claim), not invoices or adjustments. */
   const reallocationMenuEnabled =
-    selectedLedgerRows.length === 1 &&
-    isClaimDocType(selectedLedgerRows[0]);
+    selectedLedgerRows.length === 1 && isClaimDocType(selectedLedgerRows[0]);
 
   useLayoutEffect(() => {
     const setExtras = financeToolbarApi?.setFinanceTabBarExtra;
@@ -1227,6 +2297,44 @@ const TransactionHistory = () => {
         <Dropdown
           menu={{
             items: [
+              {
+                key: "approve-cn",
+                label:
+                  pendingCreditNotes.length > 0
+                    ? `Approve credit notes (${pendingCreditNotes.length})`
+                    : "Approve credit notes",
+                icon: <CheckCircleOutlined />,
+                disabled: pendingCreditNotes.length === 0,
+                onClick: () =>
+                  openApprovePendingCreditNote(pendingCreditNotes[0]),
+              },
+              {
+                key: "creditnote",
+                label:
+                  selectedLedgerRows.length > 1
+                    ? `Create credit notes (${selectedLedgerRows.length})`
+                    : "Create credit note",
+                icon: <FileTextOutlined />,
+                disabled: !creditNoteMenuEnabled,
+                onClick: () => openCreateCreditNote(selectedLedgerRows),
+              },
+              {
+                key: "apply-credit",
+                label: "Apply member credit",
+                icon: <SwapOutlined />,
+                disabled: !applyCreditMenuEnabled,
+                onClick: () => {
+                  const avail = financeSummary?.availableCredit || 0;
+                  const out = financeSummary?.outstandingBalance || 0;
+                  setApplyCreditPrefillEuro(
+                    Math.round(centsToEuro(Math.min(avail, out)) * 100) / 100,
+                  );
+                  setApplyCreditSummary(
+                    "Apply member credit to outstanding balance",
+                  );
+                  setApplyCreditOpen(true);
+                },
+              },
               {
                 key: "refund",
                 label: "Refund",
@@ -1282,10 +2390,20 @@ const TransactionHistory = () => {
     openRefundForRecords,
     openWriteOffForSelection,
     openReallocationForSelection,
+    openCreateCreditNote,
+    creditNoteMenuEnabled,
+    applyCreditMenuEnabled,
+    financeSummary,
+    pendingCreditNotes,
+    openApprovePendingCreditNote,
   ]);
 
   if (!memberId) {
-    return <div className="mt-4"><Empty description="No Member ID provided" /></div>;
+    return (
+      <div className="mt-4">
+        <Empty description="No Member ID provided" />
+      </div>
+    );
   }
 
   return (
@@ -1301,6 +2419,59 @@ const TransactionHistory = () => {
         width: "100%",
       }}
     >
+      <div
+        style={{
+          flexShrink: 0,
+          flexGrow: 0,
+          width: "100%",
+          overflow: "visible",
+          zIndex: 1,
+        }}
+      >
+        <MemberFinanceSummaryCards
+          summary={financeSummary}
+          loading={summaryLoading}
+          pendingCreditNotes={pendingCreditNotes}
+          onApprovePending={openApprovePendingCreditNote}
+        />
+        {pendingCreditNotes.length > 0 ? (
+          <Alert
+            type="warning"
+            banner
+            showIcon
+            style={{ marginTop: 4, marginBottom: 0, padding: "2px 8px" }}
+            message={
+              <span
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  gap: 8,
+                  flexWrap: "wrap",
+                  fontSize: 12,
+                  lineHeight: 1.35,
+                }}
+              >
+                <span>
+                  {pendingCreditNotes.length} draft credit note
+                  {pendingCreditNotes.length === 1 ? "" : "s"} — approve to post
+                </span>
+                <Button
+                  size="small"
+                  type="primary"
+                  icon={<CheckCircleOutlined />}
+                  style={{ flexShrink: 0 }}
+                  onClick={() =>
+                    openApprovePendingCreditNote(pendingCreditNotes[0])
+                  }
+                >
+                  Approve
+                </Button>
+              </span>
+            }
+          />
+        ) : null}
+      </div>
       <div
         style={{
           flex: "1 1 0%",
@@ -1369,6 +2540,32 @@ const TransactionHistory = () => {
           });
           setSelectedRowKeys([]);
         }}
+      />
+
+      <CreditNoteDrawer
+        open={creditNoteDrawerOpen}
+        onClose={closeCreditNoteDrawer}
+        mode={creditNoteDrawerMode}
+        memberId={memberId}
+        invoiceDocNo={creditNoteTarget.invoiceDocNo}
+        creditNoteDocNo={creditNoteTarget.creditNoteDocNo}
+        prefillAmountEuro={creditNoteTarget.prefillEuro}
+        invoiceSummary={creditNoteTarget.summary}
+        submitLoading={creditNoteSubmitting}
+        onSubmitCreate={handleCreditNoteCreate}
+        onSubmitApprove={handleCreditNoteApprove}
+      />
+
+      <ApplyMemberCreditDrawer
+        open={applyCreditOpen}
+        onClose={() => setApplyCreditOpen(false)}
+        memberId={memberId}
+        availableCreditCents={financeSummary?.availableCredit || 0}
+        outstandingCents={financeSummary?.outstandingBalance || 0}
+        prefillAmountEuro={applyCreditPrefillEuro}
+        invoiceSummary={applyCreditSummary}
+        submitLoading={applyCreditSubmitting}
+        onSubmit={handleApplyCreditSubmit}
       />
     </div>
   );

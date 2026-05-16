@@ -88,7 +88,7 @@ const ReallocationDrawer = ({
           })}`
         : "—";
     const pt = currentPaymentTypeLabel || "—";
-    return `Reclassify payment · ${when} · Ref ${ref} · ${amt} · Current payment type: ${pt}`;
+    return `Reclassify how this payment was recorded (receipt/online payment only) · ${when} · Ref ${ref} · ${amt} · Current: ${pt}. Use only when the payment channel was posted incorrectly — not for invoices, credit notes, or adjustments.`;
   })();
 
   return (

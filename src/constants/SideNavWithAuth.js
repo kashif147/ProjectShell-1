@@ -24,6 +24,7 @@ import {
   FaMapMarkerAlt,
   FaUsers,
   FaFileImport,
+  FaFileAlt,
   FaClipboardList,
   FaExclamationTriangle,
   FaGavel,
@@ -150,6 +151,12 @@ export const financeItems = [
     ["payments:read"]
   ),
   createMenuItem(
+    "Credit notes",
+    <FaFileAlt />,
+    "Credit notes",
+    ["payments:read"]
+  ),
+  createMenuItem(
     "Imports",
     <FaFileImport />,
     "Imports",
@@ -159,6 +166,12 @@ export const financeItems = [
     "Reconciliations",
     <FaExchangeAlt />,
     "Reconciliations",
+    ["payments:read"]
+  ),
+  createMenuItem(
+    "Journal adjustments",
+    <FaCommentDollar />,
+    "Journal adjustments",
     ["payments:read"]
   ),
   // createMenuItem(

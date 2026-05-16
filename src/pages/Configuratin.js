@@ -54,6 +54,13 @@ import { FaEdit } from "react-icons/fa";
 import { FaArrowUpRightFromSquare } from "react-icons/fa6";
 import { FaRegCircleQuestion } from "react-icons/fa6";
 import { getAllLookups, resetLookups } from "../features/LookupsSlice";
+import {
+  findLookupTypeByCode,
+  getParentLookupOptions,
+  getParentLookupType,
+  groupLookupsByType,
+  lookupTypeRequiresParent,
+} from "../utils/lookupHierarchy";
 import axios from "axios";
 import { useDispatch, useSelector } from "react-redux";
 import { useTableColumns } from "../context/TableColumnsContext ";
@@ -276,17 +283,7 @@ function Configuratin() {
   const [searchTermStation, setSearchTermStation] = useState("");
   const [searchTermRegion, setSearchTermRegion] = useState("");
 
-  const groupedLookups = useMemo(() => {
-    if (!lookups || !Array.isArray(lookups)) return {};
-    return lookups.reduce((acc, item) => {
-      const type = item.lookuptypeName || item.lookuptypeId?.lookuptype || item.lookuptype?.name;
-      if (type) {
-        if (!acc[type]) acc[type] = [];
-        acc[type].push(item);
-      }
-      return acc;
-    }, {});
-  }, [lookups]);
+  const groupedLookups = useMemo(() => groupLookupsByType(lookups), [lookups]);
 
   // Lookup-specific search handler function
   const handleLookupSearch = (value) => {
@@ -1221,6 +1218,30 @@ function Configuratin() {
   useEffect(() => {
     setFilteredLookupsTypes(sortLookupTypesByName(lookupsTypes));
   }, [lookupsTypes]);
+
+  useEffect(() => {
+    if (!Array.isArray(lookupsTypes) || lookupsTypes.length === 0) return;
+
+    const workLocType = findLookupTypeByCode(lookupsTypes, "WORKLOC");
+    const branchType = findLookupTypeByCode(lookupsTypes, "BRANCH");
+    const regionType = findLookupTypeByCode(lookupsTypes, "REGION");
+
+    setdrawerIpnuts((prev) => ({
+      ...prev,
+      Station: {
+        ...prev.Station,
+        lookuptypeId: workLocType?._id || prev.Station?.lookuptypeId,
+      },
+      Districts: {
+        ...prev.Districts,
+        lookuptypeId: branchType?._id || prev.Districts?.lookuptypeId,
+      },
+      Divisions: {
+        ...prev.Divisions,
+        lookuptypeId: regionType?._id || prev.Divisions?.lookuptypeId,
+      },
+    }));
+  }, [lookupsTypes]);
   useMemo(() => {
     if (regions && Array.isArray(regions)) {
       setdata((prevState) => ({
@@ -1651,6 +1672,46 @@ function Configuratin() {
   };
 
   const [drawerIpnuts, setdrawerIpnuts] = useState(drawerInputsInitalValues);
+
+  const stationParentOptions = useMemo(
+    () =>
+      getParentLookupOptions(
+        lookups,
+        lookupsTypes,
+        drawerIpnuts?.Station?.lookuptypeId
+      ),
+    [lookups, lookupsTypes, drawerIpnuts?.Station?.lookuptypeId]
+  );
+
+  const branchParentOptions = useMemo(
+    () =>
+      getParentLookupOptions(
+        lookups,
+        lookupsTypes,
+        drawerIpnuts?.Districts?.lookuptypeId
+      ),
+    [lookups, lookupsTypes, drawerIpnuts?.Districts?.lookuptypeId]
+  );
+
+  const lookupParentOptions = useMemo(
+    () =>
+      getParentLookupOptions(
+        lookups,
+        lookupsTypes,
+        drawerIpnuts?.Lookup?.lookuptypeId
+      ),
+    [lookups, lookupsTypes, drawerIpnuts?.Lookup?.lookuptypeId]
+  );
+
+  const stationParentTypeLabel =
+    getParentLookupType(lookupsTypes, drawerIpnuts?.Station?.lookuptypeId)
+      ?.lookuptype || "Branch";
+  const branchParentTypeLabel =
+    getParentLookupType(lookupsTypes, drawerIpnuts?.Districts?.lookuptypeId)
+      ?.lookuptype || "Region";
+  const lookupParentTypeLabel =
+    getParentLookupType(lookupsTypes, drawerIpnuts?.Lookup?.lookuptypeId)
+      ?.lookuptype || "Parent Lookup";
   console.log("drawerIpnuts", drawerIpnuts);
   const drawrInptChng = (drawer, field, value) => {
     setdrawerIpnuts((prevState) => {
@@ -1697,8 +1758,12 @@ function Configuratin() {
 
     const filteredData = Object.keys(drawerInputsInitalValues[drawer]).reduce(
       (acc, key) => {
-        // ❌ exclude lookuptypeId
-        if (key === "lookuptypeId") return acc;
+        if (key === "lookuptypeId" && data.lookuptypeId) {
+          const val = data.lookuptypeId;
+          acc[key] =
+            val && typeof val === "object" && val._id ? val._id : val;
+          return acc;
+        }
 
         if (data.hasOwnProperty(key)) {
           const val = data[key];
@@ -1715,12 +1780,16 @@ function Configuratin() {
           } else {
             acc[key] = val;
           }
-        } else if (
-          key === "Parentlookupid" &&
-          data.hasOwnProperty("Parentlookup")
-        ) {
-          const val = data["Parentlookup"];
-          acc[key] = val && typeof val === "object" && val._id ? val._id : val;
+        } else if (key === "Parentlookupid") {
+          if (data.Parentlookupid !== undefined && data.Parentlookupid !== null) {
+            const val = data.Parentlookupid;
+            acc[key] =
+              val && typeof val === "object" && val._id ? val._id : val;
+          } else if (data.hasOwnProperty("Parentlookup")) {
+            const val = data.Parentlookup;
+            acc[key] =
+              val && typeof val === "object" && val._id ? val._id : val;
+          }
         }
         return acc;
       },
@@ -4662,15 +4731,12 @@ function Configuratin() {
       }
     }
 
-    // Parent lookup required for some types
-    const requiresParentLookup = [
-      "Districts",
-      "Cities",
-      "Counteries",
-      "Station",
-    ];
+    const lookuptypeIdForValidation =
+      currentInput.lookuptypeId ||
+      drawerInputsInitalValues[drawerType]?.lookuptypeId;
+
     if (
-      requiresParentLookup.includes(drawerType) &&
+      lookupTypeRequiresParent(lookupsTypes, lookuptypeIdForValidation) &&
       !currentInput.Parentlookupid
     ) {
       newErrors[drawerType].parentLookup = true;
@@ -6678,13 +6744,13 @@ function Configuratin() {
                 {/* Region Select */}
                 <div style={{ flex: 1 }}>
                   <CustomSelect
-                    label="Region"
-                    placeholder="Select Region"
-                    options={regionOptions}
+                    label={branchParentTypeLabel}
+                    placeholder={`Select ${branchParentTypeLabel}`}
+                    options={branchParentOptions.length ? branchParentOptions : regionOptions}
                     disabled={isDisable}
                     isIDs={true}
                     required
-                    hasError={!!errors?.Districts?.Parentlookupid}
+                    hasError={!!errors?.Districts?.parentLookup}
                     value={drawerIpnuts?.Districts?.Parentlookupid}
                     onChange={(val) => {
                       drawrInptChng(
@@ -7237,13 +7303,13 @@ function Configuratin() {
                   {/* Region Select */}
                   <div style={{ flex: 1 }}>
                     <CustomSelect
-                      label="Branch"
-                      placeholder="Select Branch"
-                      options={branchOptions}
+                      label={stationParentTypeLabel}
+                      placeholder={`Select ${stationParentTypeLabel}`}
+                      options={stationParentOptions.length ? stationParentOptions : branchOptions}
                       isIDs={true}
                       disabled={isDisable}
                       required
-                      hasError={!!errors?.Station?.Parentlookupid}
+                      hasError={!!errors?.Station?.parentLookup}
                       value={drawerIpnuts?.Station?.Parentlookupid}
                       onChange={(e) =>
                         drawrInptChng(
@@ -7533,13 +7599,13 @@ function Configuratin() {
                   {/* Region Select */}
                   <div style={{ flex: 1 }}>
                     <CustomSelect
-                      label="Region"
-                      placeholder="Select Region"
-                      options={regionOptions}
+                      label={stationParentTypeLabel}
+                      placeholder={`Select ${stationParentTypeLabel}`}
+                      options={stationParentOptions.length ? stationParentOptions : branchOptions}
                       isIDs={true}
                       disabled={isDisable}
                       required
-                      hasError={!!errors?.Station?.Parentlookupid}
+                      hasError={!!errors?.Station?.parentLookup}
                       value={drawerIpnuts?.Station?.Parentlookupid}
                       onChange={(val) =>
                         drawrInptChng("Station", "Parentlookupid", val.target.value)
@@ -8068,12 +8134,9 @@ function Configuratin() {
                 isSimple={true}
                 required
                 onChange={(value) => {
-                  drawrInptChng(
-                    "Lookup",
-                    "lookuptypeId",
-                    String(value.target.value),
-                  );
-                  // drawrInptChng("Lookup", "lookuptypeId", String(value));
+                  const nextTypeId = String(value.target.value);
+                  drawrInptChng("Lookup", "lookuptypeId", nextTypeId);
+                  drawrInptChng("Lookup", "Parentlookupid", null);
                 }}
                 hasError={!!errors?.Lookup?.lookuptypeId}
               />
@@ -8127,23 +8190,31 @@ function Configuratin() {
             </Col>
             <Col span={12}>
               <CustomSelect
-                label="Parent Lookup"
+                label={lookupParentTypeLabel}
                 name="Parentlookupid"
                 isIDs={true}
                 value={drawerIpnuts?.Lookup?.Parentlookupid || ""}
-                options={transformedData}
+                options={lookupParentOptions}
                 isSimple={true}
-                disabled={isDisable}
-                // required
+                disabled={
+                  isDisable ||
+                  !lookupTypeRequiresParent(
+                    lookupsTypes,
+                    drawerIpnuts?.Lookup?.lookuptypeId
+                  )
+                }
+                required={lookupTypeRequiresParent(
+                  lookupsTypes,
+                  drawerIpnuts?.Lookup?.lookuptypeId
+                )}
+                hasError={!!errors?.Lookup?.parentLookup}
                 onChange={(value) => {
                   drawrInptChng(
                     "Lookup",
                     "Parentlookupid",
-                    String(value.target.value),
+                    value.target.value ? String(value.target.value) : null,
                   );
-                  // drawrInptChng("Lookup", "lookuptypeId", String(value));
                 }}
-              // hasError={!!errors?.Lookup?.lookuptypeId}
               />
             </Col>
           </Row>

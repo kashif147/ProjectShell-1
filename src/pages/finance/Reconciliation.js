@@ -1,226 +1,286 @@
-import React from "react";
-import { Card, Row, Col } from "antd";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import {
-  PieChart,
-  Pie,
-  Cell,
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Legend,
-  Tooltip,
-  ResponsiveContainer,
-} from "recharts";
-import { Activity, CheckCircle, Shuffle, XCircle,Clock } from "lucide-react";
+  Button,
+  Card,
+  Input,
+  Modal,
+  Select,
+  Space,
+  Table,
+  Tag,
+  notification,
+} from "antd";
+import axios from "axios";
+import { getAccountServiceBaseUrl } from "../../config/serviceUrls";
+import { centsToEuro } from "../../utils/Utilities";
 
-// Summary cards
-
-const summaryCards = [
-  {
-    title: "Total Batches",
-    value: 50,
-    icon: <Activity size={24} color="#2563eb" />,
-    color: "#2563eb",
-    bg: "#dbeafe",
-  },
-  {
-    title: "Approved",
-    value: 36,
-    icon: <CheckCircle size={24} color="#22c55e" />,
-    color: "#22c55e",
-    bg: "#dcfce7",
-  },
-  {
-    title: "Pending",
-    value: 14,
-    icon: <Clock size={24} color="#eab308" />,
-    color: "#eab308",
-    bg: "#fef9c3",
-  },
-  {
-    title: "Rejected",
-    value: "00",
-    icon: <XCircle size={24} color="#ef4444" />,
-    color: "#ef4444",
-    bg: "#fee2e2",
-  },
-  {
-    title: "Closing Balance",
-    value: "€123,456.00",
-    icon: <Shuffle size={24} color="#0891b2" />,
-    color: "#0891b2",
-    bg: "#cffafe",
-  },
+const CLEARING_OPTIONS = [
+  { value: "1210", label: "1210 — Cheque clearing" },
+  { value: "1220", label: "1220 — Card clearing" },
+  { value: "1230", label: "1230 — Salary deduction" },
+  { value: "1240", label: "1240 — Standing order" },
+  { value: "1250", label: "1250 — Direct debit" },
 ];
 
-// Pie chart data
-const chartData = [
-  { name: "Approved", value: 36, color: "#45669d" },
-  { name: "Pending", value: 14, color: "#60a5fa" },
-  { name: "Rejected", value: 0, color: "#ef4444" },
-];
-
-// Bar chart data
-const batchTypeData = [
-  { name: "Cheque", count: 88 },
-  { name: "Deducation", count: 20 },
-  { name: "Direct Debit", count: 77 },
-  { name: "Standing Orders", count: 40 },
-  { name: "Refunds", count: 56 },
-  { name: "Online", count: 105 },
-];
+const statusColor = {
+  unmatched: "orange",
+  manual_matched: "blue",
+  suspense: "purple",
+  settled: "green",
+};
 
 const Reconciliation = () => {
+  const [clearingCode, setClearingCode] = useState("1220");
+  const [statusFilter, setStatusFilter] = useState("");
+  const [items, setItems] = useState([]);
+  const [supported, setSupported] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [seedLoading, setSeedLoading] = useState(false);
+
+  const authHeaders = useCallback(() => {
+    const token = localStorage.getItem("token");
+    return { Authorization: `Bearer ${token}` };
+  }, []);
+
+  const load = useCallback(async () => {
+    setLoading(true);
+    try {
+      const res = await axios.get(
+        `${getAccountServiceBaseUrl()}/finance/reconciliation`,
+        {
+          headers: authHeaders(),
+          params: {
+            clearingAccountCode: clearingCode,
+            reconciliationStatus: statusFilter || undefined,
+            limit: 200,
+          },
+        },
+      );
+      const payload = res.data?.data ?? res.data;
+      setItems(payload?.items || []);
+      setSupported(payload?.supportedClearingAccounts || []);
+    } catch (error) {
+      notification.error({
+        message: "Could not load reconciliation records",
+        description: error?.response?.data?.message || error.message,
+      });
+      setItems([]);
+    } finally {
+      setLoading(false);
+    }
+  }, [authHeaders, clearingCode, statusFilter]);
+
+  useEffect(() => {
+    load();
+  }, [load]);
+
+  const summary = useMemo(() => {
+    const counts = { unmatched: 0, manual_matched: 0, suspense: 0, settled: 0 };
+    let pendingAmount = 0;
+    for (const r of items) {
+      const st = r.reconciliationStatus || "unmatched";
+      if (counts[st] != null) counts[st] += 1;
+      if (st !== "settled") pendingAmount += Number(r.amount) || 0;
+    }
+    return { counts, pendingAmount, total: items.length };
+  }, [items]);
+
+  const seed = async () => {
+    setSeedLoading(true);
+    try {
+      const res = await axios.post(
+        `${getAccountServiceBaseUrl()}/finance/reconciliation/seed`,
+        { clearingAccountCode: clearingCode },
+        { headers: authHeaders() },
+      );
+      const payload = res.data?.data ?? res.data;
+      notification.success({
+        message: `Seeded ${payload?.created ?? 0} record(s) from pending GL`,
+      });
+      await load();
+    } catch (error) {
+      notification.error({
+        message: "Seed failed",
+        description: error?.response?.data?.message || error.message,
+      });
+    } finally {
+      setSeedLoading(false);
+    }
+  };
+
+  const settle = async (recordId) => {
+    try {
+      await axios.post(
+        `${getAccountServiceBaseUrl()}/finance/reconciliation/${recordId}/settle`,
+        {},
+        { headers: authHeaders() },
+      );
+      notification.success({ message: "Marked settled" });
+      await load();
+    } catch (error) {
+      notification.error({
+        message: "Settle failed",
+        description: error?.response?.data?.message || error.message,
+      });
+    }
+  };
+
+  const moveSuspense = (recordId) => {
+    let reason = "";
+    Modal.confirm({
+      title: "Move to suspense",
+      content: (
+        <Input.TextArea
+          rows={3}
+          placeholder="Reason"
+          onChange={(e) => {
+            reason = e.target.value;
+          }}
+        />
+      ),
+      onOk: async () => {
+        await axios.post(
+          `${getAccountServiceBaseUrl()}/finance/reconciliation/suspense`,
+          { recordId, suspenseReason: reason || "Manual suspense" },
+          { headers: authHeaders() },
+        );
+        notification.success({ message: "Moved to suspense" });
+        await load();
+      },
+    });
+  };
+
+  const manualMatch = (recordId) => {
+    let glDocNo = "";
+    Modal.confirm({
+      title: "Manual match",
+      content: (
+        <Input
+          placeholder="Matched GL doc no."
+          onChange={(e) => {
+            glDocNo = e.target.value;
+          }}
+        />
+      ),
+      onOk: async () => {
+        if (!glDocNo.trim()) return;
+        await axios.post(
+          `${getAccountServiceBaseUrl()}/finance/reconciliation/match`,
+          { recordId, matchedGlDocNo: glDocNo.trim() },
+          { headers: authHeaders() },
+        );
+        notification.success({ message: "Matched" });
+        await load();
+      },
+    });
+  };
+
+  const columns = [
+    { title: "GL doc", dataIndex: "glDocNo", key: "glDocNo", width: 140 },
+    {
+      title: "Clearing",
+      dataIndex: "clearingAccountCode",
+      key: "clearingAccountCode",
+      width: 90,
+    },
+    {
+      title: "Amount",
+      key: "amount",
+      width: 110,
+      render: (_, r) => `€${centsToEuro(r.amount || 0).toFixed(2)}`,
+    },
+    {
+      title: "Status",
+      dataIndex: "reconciliationStatus",
+      key: "reconciliationStatus",
+      width: 130,
+      render: (st) => (
+        <Tag color={statusColor[st] || "default"}>{st || "unmatched"}</Tag>
+      ),
+    },
+    {
+      title: "Settlement",
+      dataIndex: "settlementStatus",
+      key: "settlementStatus",
+      width: 100,
+    },
+    { title: "Matched to", dataIndex: "matchedGlDocNo", key: "matchedGlDocNo" },
+    {
+      title: "Actions",
+      key: "actions",
+      width: 220,
+      render: (_, r) => (
+        <Space size="small" wrap>
+          {r.reconciliationStatus !== "settled" ? (
+            <>
+              <Button type="link" size="small" onClick={() => manualMatch(r._id)}>
+                Match
+              </Button>
+              <Button type="link" size="small" onClick={() => moveSuspense(r._id)}>
+                Suspense
+              </Button>
+              <Button type="link" size="small" onClick={() => settle(r._id)}>
+                Settle
+              </Button>
+            </>
+          ) : null}
+        </Space>
+      ),
+    },
+  ];
+
   return (
-    <div style={{ padding: "20px" }}>
-      <div
-      style={{
-        display: "flex",
-        gap: 16,
-        overflowX: "auto",
-        whiteSpace: "nowrap",
-        paddingBottom: 8,
-        scrollbarWidth: "none", // hide scrollbar (Firefox)
-      }}
-    >
-     <div
-      style={{
-        display: "grid",
-        gridTemplateColumns: `repeat(${summaryCards.length}, 1fr)`,
-        gap: 12,
-        width: "100%",
-      }}
-    >
-      {summaryCards.map((card) => (
-        <Card
-          key={card.title}
-          style={{
-            borderRadius: 3,
-            backgroundColor: card.bg,
-            border: "1px solid #e5e7eb",
-            boxShadow: "none",
-            width: "100%",
-            transition: "all 0.3s ease",
-          }}
-          styles={{
-            body: {
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "center",
-              padding: "16px 18px",
-            },
-          }}
-        >
-          <div>
-            <div style={{ color: "#475569", fontSize: 13, fontWeight: 500 }}>
-              {card.title}
-            </div>
-            <div
-              style={{
-                fontSize: 26,
-                fontWeight: 700,
-                color: card.color,
-                marginTop: 4,
-              }}
-            >
-              {card.value}
-            </div>
-          </div>
-          <div
-            style={{
-              backgroundColor: "#fff",
-              borderRadius: "50%",
-              padding: 8,
-              border: `1px solid ${card.color}30`,
-            }}
-          >
-            {card.icon}
-          </div>
-        </Card>
-      ))}
-    </div>
-    </div>
-
-      <Row gutter={[16, 16]}>
-        {/* Left: Bar Chart */}
-        <Col span={12}>
-          <Card className="mt-4 pt-0">
-            <div
-              style={{
-                fontWeight: 600,
-                marginBottom: 8,
-                paddingTop: "20px",
-                paddingBottom: "20px",
-                backgroundColor: "#123c63",
-                fontSize: "16px",
-                color: "white",
-                textAlign: "center",
-              }}
-            >
-              Batch Type Analysis
-            </div>
-            <div style={{ width: "100%", height: 350 }}>
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={batchTypeData}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="name" />
-                  <YAxis />
-                  <Tooltip />
-                  <Legend />
-                  <Bar dataKey="count" label={{ position: "top", fill: "#667ea7ff", fontSize: 12 }}>
-                    {batchTypeData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill="#45669d" />
-                    ))}
-                  </Bar>
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
-          </Card>
-        </Col>
-
-        {/* Right: Pie Chart */}
-        <Col span={12}>
-          <Card className="mt-4 pt-0">
-            <div
-              style={{
-                fontWeight: 600,
-                marginBottom: 8,
-                paddingTop: "20px",
-                paddingBottom: "20px",
-                backgroundColor: "#123c63",
-                fontSize: "16px",
-                color: "white",
-                textAlign: "center",
-              }}
-            >
-              Batch Status Analysis
-            </div>
-            <div style={{ width: "100%", height: 350 }}>
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie
-                    data={chartData}
-                    cx="50%"
-                    cy="50%"
-                    labelLine={false}
-                    label={({ name, value }) => `${name}: ${value}`}
-                    outerRadius={100}
-                    dataKey="value"
-                  >
-                    {chartData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={entry.color} />
-                    ))}
-                  </Pie>
-                  <Tooltip />
-                  <Legend />
-                </PieChart>
-              </ResponsiveContainer>
-            </div>
-          </Card>
-        </Col>
-      </Row>
+    <div style={{ padding: 20 }}>
+      <Card title="Clearing reconciliation" style={{ marginBottom: 16 }}>
+        <Space wrap style={{ marginBottom: 16 }}>
+          <Select
+            style={{ width: 260 }}
+            value={clearingCode}
+            onChange={setClearingCode}
+            options={CLEARING_OPTIONS.filter(
+              (o) => !supported.length || supported.includes(o.value),
+            )}
+          />
+          <Select
+            allowClear
+            placeholder="Status filter"
+            style={{ width: 180 }}
+            value={statusFilter || undefined}
+            onChange={(v) => setStatusFilter(v || "")}
+            options={[
+              { value: "unmatched", label: "Unmatched" },
+              { value: "manual_matched", label: "Matched" },
+              { value: "suspense", label: "Suspense" },
+              { value: "settled", label: "Settled" },
+            ]}
+          />
+          <Button onClick={load} loading={loading}>
+            Refresh
+          </Button>
+          <Button type="primary" onClick={seed} loading={seedLoading}>
+            Seed from pending GL
+          </Button>
+        </Space>
+        <Space size="large" style={{ marginBottom: 12 }}>
+          <span>Total: {summary.total}</span>
+          <span>Unmatched: {summary.counts.unmatched}</span>
+          <span>Matched: {summary.counts.manual_matched}</span>
+          <span>Suspense: {summary.counts.suspense}</span>
+          <span>Settled: {summary.counts.settled}</span>
+          <span>
+            Open amount: €{centsToEuro(summary.pendingAmount).toFixed(2)}
+          </span>
+        </Space>
+        <Table
+          rowKey="_id"
+          size="small"
+          loading={loading}
+          dataSource={items}
+          columns={columns}
+          pagination={{ pageSize: 25 }}
+          scroll={{ x: 900 }}
+        />
+      </Card>
     </div>
   );
 };

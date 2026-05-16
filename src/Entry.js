@@ -162,6 +162,9 @@ const Deductions = lazyWithRetry(() => import("./pages/finance/Deductions"));
 const Reconciliation = lazyWithRetry(
   () => import("./pages/finance/Reconciliation"),
 );
+const JournalAdjustments = lazyWithRetry(
+  () => import("./pages/finance/JournalAdjustments"),
+);
 const DirectDebitAuthorization = lazyWithRetry(
   () => import("./pages/finance/DirectDebitAuthorization"),
 );
@@ -252,6 +255,9 @@ const RefundsSummary = lazyWithRetry(
 );
 const WriteOffsSummary = lazyWithRetry(
   () => import("./pages/finance/WriteOffsSummary"),
+);
+const CreditNotesSummary = lazyWithRetry(
+  () => import("./pages/finance/CreditNotesSummary"),
 );
 const DirectDebitBatchDetails = lazyWithRetry(
   () => import("./pages/finance/DirectDebitBatchDetails"),
@@ -805,6 +811,14 @@ function Entry() {
                         }
                       />
                       <Route
+                        path="JournalAdjustments"
+                        element={
+                          <ProtectedRoute requiredPermission={RoutePermissions["JournalAdjustments"]}>
+                            <JournalAdjustments />
+                          </ProtectedRoute>
+                        }
+                      />
+                      <Route
                         path="DirectDebitAuthorization"
                         element={
                           <ProtectedRoute requiredPermission={RoutePermissions["DirectDebitAuthorization"]}>
@@ -859,6 +873,14 @@ function Entry() {
                         element={
                           <ProtectedRoute requiredPermission={RoutePermissions["write-offs"]}>
                             <WriteOffsSummary />
+                          </ProtectedRoute>
+                        }
+                      />
+                      <Route
+                        path="CreditNotes"
+                        element={
+                          <ProtectedRoute requiredPermission={RoutePermissions["CreditNotes"]}>
+                            <CreditNotesSummary />
                           </ProtectedRoute>
                         }
                       />
