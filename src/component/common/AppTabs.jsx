@@ -63,6 +63,9 @@ const Roster = lazy(() => import("../../pages/roster/RosterDetails"));
 const HistoryByID = lazy(() => import("../../pages/HistoryByID"));
 const ProfileHeader = lazy(() => import("../common/ProfileHeader"));
 const DuplicateMembers = lazy(() => import("../profile/DuplicateMembers"));
+const SubscriptionHistoryDetail = lazy(
+  () => import("../common/SubscriptionHistoryDetail"),
+);
 
 /** Events ("16") and Claims ("7") are overflow-only, not shown on first load. */
 const staticTabKeys = ["1", "2", "4", "5", "6", "3"];
@@ -326,8 +329,19 @@ function AppTabs() {
 
   const [isDuplicateDrawerOpen, setIsDuplicateDrawerOpen] = useState(false);
   const [isApplicationDrawerOpen, setIsApplicationDrawerOpen] = useState(false);
-  const [isSubscriptionDrawerOpen, setIsSubscriptionDrawerOpen] =
-    useState(false);
+  const [selectedHistorySubscription, setSelectedHistorySubscription] =
+    useState(null);
+  const [isHistoryDetailOpen, setIsHistoryDetailOpen] = useState(false);
+
+  const openHistorySubscriptionDetail = useCallback((record) => {
+    if (!record) return;
+    setSelectedHistorySubscription(record);
+    setIsHistoryDetailOpen(true);
+  }, []);
+
+  const closeHistorySubscriptionDetail = useCallback(() => {
+    setIsHistoryDetailOpen(false);
+  }, []);
 
   const profileHeaderRef = useRef(null);
   const [membershipHeaderActionsMeta, setMembershipHeaderActionsMeta] =
@@ -421,6 +435,17 @@ function AppTabs() {
       title: "Category",
       dataIndex: "membershipCategory",
       key: "membershipCategory",
+      render: (text, record) => (
+        <a
+          style={{ color: "#1890ff", fontWeight: 500 }}
+          onClick={(e) => {
+            e.stopPropagation();
+            openHistorySubscriptionDetail(record);
+          }}
+        >
+          {text || "View Subscription"}
+        </a>
+      ),
     },
     {
       title: "Status",
@@ -449,6 +474,23 @@ function AppTabs() {
       title: "Movement",
       dataIndex: "membershipMovement",
       key: "membershipMovement",
+    },
+    {
+      title: "Actions",
+      key: "actions",
+      width: 100,
+      render: (_, record) => (
+        <Button
+          type="link"
+          size="small"
+          onClick={(e) => {
+            e.stopPropagation();
+            openHistorySubscriptionDetail(record);
+          }}
+        >
+          View
+        </Button>
+      ),
     },
   ];
 
@@ -546,6 +588,21 @@ function AppTabs() {
     { key: "7", label: "Claims", children: <ClaimsById /> },
     { key: "8", label: "Roster", children: <Roster /> },
     { key: "11", label: "Audit History", children: <HistoryByID /> },
+    {
+      key: "17",
+      label: "Subscription History",
+      children: (
+        <div style={{ padding: 20 }}>
+          <MyTable
+            columns={subscriptionHistoryColumns}
+            dataSource={ProfileSubHistory}
+            loading={ProfileSubHistoryLoading}
+            selection={false}
+            onRowClick={(record) => openHistorySubscriptionDetail(record)}
+          />
+        </div>
+      ),
+    },
     { key: "9", label: "Projects", children: <div>Projects</div> },
     {
       key: "10",
@@ -642,7 +699,7 @@ function AppTabs() {
       onClick: () => handleMenuClick("8"),
     },
     {
-      key: "subscriptionhistory",
+      key: "17",
       label: "Subscription History",
       icon: <FaIdCard />,
       iconColor: "#597ef7",
@@ -654,7 +711,7 @@ function AppTabs() {
             }),
           );
         }
-        setIsSubscriptionDrawerOpen(true);
+        handleMenuClick("17");
       },
     },
     {
@@ -1011,20 +1068,13 @@ function AppTabs() {
         />
       </Drawer>
 
-      <Drawer
-        title="Subscription History"
-        open={isSubscriptionDrawerOpen}
-        onClose={() => setIsSubscriptionDrawerOpen(false)}
-        width={1000}
-        styles={{ body: { padding: "20px" } }}
-      >
-        <MyTable
-          columns={subscriptionHistoryColumns}
-          dataSource={ProfileSubHistory}
-          loading={ProfileSubHistoryLoading}
-          selection={false}
+      <Suspense fallback={null}>
+        <SubscriptionHistoryDetail
+          open={isHistoryDetailOpen}
+          onClose={closeHistorySubscriptionDetail}
+          subscription={selectedHistorySubscription}
         />
-      </Drawer>
+      </Suspense>
     </div>
   );
 }

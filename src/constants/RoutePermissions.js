@@ -26,6 +26,8 @@ export const RoutePermissions = {
   "write-offs": "payments:read",
   "Import": "payments:read",
   "Reconciliation": "payments:read",
+  "JournalAdjustments": "payments:read",
+  "CreditNotes": "payments:read",
 
   // Correspondence
   "CorrespondenceDashboard": "dashboard:read",

@@ -126,7 +126,9 @@ const lookupsSlice = createSlice({
 
         if (Array.isArray(payload)) {
           payload.forEach((item) => {
-            const lookuptype = item.lookuptypeId?.lookuptype;
+            const lookuptype =
+              item.lookuptypeName ||
+              item.lookuptypeId?.lookuptype;
             const optionItem = {
               value: item._id,
               key: item._id,
@@ -140,6 +142,7 @@ const lookupsSlice = createSlice({
                 state.genderOptions.push(optionItem);
                 break;
               case "workLocation":
+              case "Work Location":
                 state.workLocationOptions.push(optionItem);
                 break;
               case "Grade":

@@ -66,6 +66,8 @@ const ProfileHeader = forwardRef(function ProfileHeader(
   const [ledgerBalanceIsCents, setLedgerBalanceIsCents] = useState(true);
   const [lastPaymentAmount, setLastPaymentAmount] = useState(0);
   const [lastPaymentDate, setLastPaymentDate] = useState(null);
+  const [availableCredit, setAvailableCredit] = useState(0);
+  const [refundableBalance, setRefundableBalance] = useState(0);
   const [paymentCode, setPaymentCode] = useState("");
   const [ledgerLoading, setLedgerLoading] = useState(false);
 
@@ -252,12 +254,18 @@ const ProfileHeader = forwardRef(function ProfileHeader(
         null;
       setLastPaymentAmount(normalizedLastPaymentAmount || 0);
       setLastPaymentDate(normalizedLastPaymentDate);
+      const creditCents =
+        summaryData?.availableCredit ?? summaryData?.refundableBalance ?? 0;
+      setAvailableCredit(Number(creditCents) || 0);
+      setRefundableBalance(Number(summaryData?.refundableBalance ?? creditCents) || 0);
     } catch (error) {
       console.error("Error fetching account summary in ProfileHeader:", error);
       setLedgerBalance(0);
       setLedgerBalanceIsCents(true);
       setLastPaymentAmount(0);
       setLastPaymentDate(null);
+      setAvailableCredit(0);
+      setRefundableBalance(0);
     } finally {
       setLedgerLoading(false);
     }
@@ -444,6 +452,14 @@ const ProfileHeader = forwardRef(function ProfileHeader(
           ? "#389e0d"
           : "#faad14";
     const lastPayment = `€${centsToEuro(lastPaymentAmount || 0).toLocaleString('en-IE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+    const availableCreditDisplay = `€${centsToEuro(availableCredit || 0).toLocaleString("en-IE", {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    })}`;
+    const refundableBalanceDisplay = `€${centsToEuro(refundableBalance || 0).toLocaleString("en-IE", {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    })}`;
 
     // Payment date only from account summary (cash receipt crediting 2020); not subscription start.
     const paymentDateRaw = lastPaymentDate || null;
@@ -488,6 +504,8 @@ const ProfileHeader = forwardRef(function ProfileHeader(
       balanceIndicator,
       balanceColor,
       lastPayment,
+      availableCredit: availableCreditDisplay,
+      refundableBalance: refundableBalanceDisplay,
       paymentDate,
       paymentCode: paymentCodeToUse,
     };
@@ -501,6 +519,8 @@ const ProfileHeader = forwardRef(function ProfileHeader(
     ledgerBalanceIsCents,
     lastPaymentAmount,
     lastPaymentDate,
+    availableCredit,
+    refundableBalance,
     paymentCode,
   ]); // Now recalculates when source OR subscriptionData OR summary data changes
 
@@ -838,6 +858,20 @@ const ProfileHeader = forwardRef(function ProfileHeader(
             <div className="detail-content">
               <span className="detail-label">Last Payment:</span>
               <span className="detail-value">{memberData.lastPayment}</span>
+            </div>
+          </div>
+          <div className="detail-row">
+            <FaCreditCard className="detail-icon" />
+            <div className="detail-content">
+              <span className="detail-label">Available Credit:</span>
+              <span className="detail-value">{memberData.availableCredit}</span>
+            </div>
+          </div>
+          <div className="detail-row">
+            <FaCreditCard className="detail-icon" />
+            <div className="detail-content">
+              <span className="detail-label">Refundable Balance:</span>
+              <span className="detail-value">{memberData.refundableBalance}</span>
             </div>
           </div>
           <div className="detail-row">

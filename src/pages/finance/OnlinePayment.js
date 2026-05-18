@@ -106,6 +106,15 @@ const OnlinePayment = () => {
     dispatch(fetchStripePayments());
   }, [dispatch]);
 
+  const highlightDocNo = String(location.state?.highlightDocNo || "")
+    .trim()
+    .toLowerCase();
+  const highlightPaymentIntentId = String(
+    location.state?.paymentIntentId || "",
+  )
+    .trim()
+    .toLowerCase();
+
   const normalizedStripePayments = useMemo(() => {
     if (!Array.isArray(stripePayments)) return [];
 
@@ -128,6 +137,30 @@ const OnlinePayment = () => {
       fullName: row?.fullName || "-",
     }));
   }, [stripePayments]);
+
+  const tablePayments = useMemo(() => {
+    if (!highlightDocNo && !highlightPaymentIntentId) {
+      return normalizedStripePayments;
+    }
+    const filtered = normalizedStripePayments.filter((row) => {
+      const doc = String(
+        row.docNo || row.transactionId || row.id || "",
+      )
+        .trim()
+        .toLowerCase();
+      const pi = resolvePaymentIntentId(row).toLowerCase();
+      if (highlightDocNo && doc && doc.includes(highlightDocNo)) return true;
+      if (highlightPaymentIntentId && pi === highlightPaymentIntentId) {
+        return true;
+      }
+      return false;
+    });
+    return filtered.length > 0 ? filtered : normalizedStripePayments;
+  }, [
+    normalizedStripePayments,
+    highlightDocNo,
+    highlightPaymentIntentId,
+  ]);
 
   // Row selection configuration
   const rowSelection = {
@@ -559,8 +592,14 @@ const OnlinePayment = () => {
           paddingBottom: "80px",
         }}
       >
+        {(highlightDocNo || highlightPaymentIntentId) && (
+          <div style={{ marginBottom: 8, padding: "0 34px", fontSize: 13 }}>
+            Showing match for ledger link
+            {highlightDocNo ? ` · ${location.state.highlightDocNo}` : ""}
+          </div>
+        )}
         <Table
-          dataSource={normalizedStripePayments}
+          dataSource={tablePayments}
           columns={columns}
           loading={loading}
           rowSelection={rowSelection}

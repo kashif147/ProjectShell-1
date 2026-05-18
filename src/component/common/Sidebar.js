@@ -230,6 +230,11 @@ const Sidebar = () => {
       case "Reconciliation":
       case "Reconciliations":
         return { path: "/Reconciliation", state: { search: "Reconciliation" } };
+      case "Journal adjustments":
+        return {
+          path: "/JournalAdjustments",
+          state: { search: "Journal adjustments" },
+        };
       case "Standing Orders":
         return { path: "/StandingOrders", state: { search: "Standing Orders" } };
       case "Cheque":
@@ -238,6 +243,8 @@ const Sidebar = () => {
         return { path: "/Refunds", state: { search: "Refunds" } };
       case "Write-offs":
         return { path: "/write-offs", state: { search: "Write-offs" } };
+      case "Credit notes":
+        return { path: "/CreditNotes", state: { search: "Credit notes" } };
       case "DD Authorisations":
         return {
           path: "/DirectDebitAuthorization",
@@ -461,6 +468,7 @@ const Sidebar = () => {
       "/DirectDebitAuthorization": "DD Authorisations",
       "/DirectDebit": "Direct Debit",
       "/write-offs": "Write-offs",
+      "/CreditNotes": "Credit notes",
       "/SuspendedMembersReport": "Suspended Members Report",
       "/ResignedMembersReport": "Resigned Members Report",
       "/NewMembersReport": "New Members Report",
