@@ -198,7 +198,7 @@ const Sidebar = () => {
       case "Transfer Requests":
         return { path: "/Transfers", state: { search: "Transfers" } };
       case "System Configuration":
-        return { path: "/Configuratin", state: { search: "" } };
+        return { path: "/Configuration", state: { search: "" } };
       case "Roster":
         return { path: "/RosterSummary", state: { search: "Rosters" } };
       case "Events":
@@ -416,7 +416,7 @@ const Sidebar = () => {
       "/CasesById": "Cases",
       "/CorrespondencesSummary": "Correspondences",
       "/Transfers": "Transfer Requests",
-      "/Configuratin": "System Configuration",
+      "/Configuration": "System Configuration",
       "/RosterSummary": "Roster",
       "/EventsSummary": "Events",
       "/EventDetails": "Events",

@@ -60,7 +60,7 @@ const lazyWithRetry = (componentImport) => {
 
 // Lazy loaded components with retry
 const Dummy = lazyWithRetry(() => import("./component/common/Dummy"));
-const Configuratin = lazyWithRetry(() => import("./pages/Configuratin"));
+const Configuration = lazyWithRetry(() => import("./pages/Configuration"));
 const ProfileDetails = lazyWithRetry(
   () => import("./pages/Profiles/ProfileDetails"),
 );
@@ -499,10 +499,10 @@ function Entry() {
                       />
 
                       <Route
-                        path="Configuratin"
+                        path="Configuration"
                         element={
-                          <ProtectedRoute requiredPermission={RoutePermissions["/Configuratin"]}>
-                            <Configuratin />
+                          <ProtectedRoute requiredPermission={RoutePermissions["/Configuration"]}>
+                            <Configuration />
                           </ProtectedRoute>
                         }
                       />
@@ -934,7 +934,7 @@ function Entry() {
                       <Route
                         path="CornMarket"
                         element={
-                          <ProtectedRoute requiredPermission={RoutePermissions["Configuratin"]}>
+                          <ProtectedRoute requiredPermission={RoutePermissions["Configuration"]}>
                             <CornGrideSummary />
                           </ProtectedRoute>
                         }

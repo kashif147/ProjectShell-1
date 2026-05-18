@@ -38,9 +38,9 @@ const Breadcrumb = () => {
     Finance: { icon: "💰", route: "/Import" },
     Correspondence: { icon: "📧", route: "/CorrespondenceDashboard" },
     Events: { icon: "📅", route: "/EventsDashboard" },
-    Configuration: { icon: "⚙️", route: "/Configuratin" },
+    Configuration: { icon: "⚙️", route: "/Configuration" },
     Reports: { icon: "📊", route: "/Reports" },
-    Settings: { icon: "⚙️", route: "/Configuratin" },
+    Settings: { icon: "⚙️", route: "/Configuration" },
     Courses: { icon: "📚", route: "/Courses" },
     "Professional Development": {
       icon: "💼",
@@ -415,7 +415,7 @@ const Breadcrumb = () => {
     },
 
     // Configuration
-    "/Configuratin": {
+    "/Configuration": {
       module: "Configuration",
       page: "System Configuration",
       icon: "⚙️",
@@ -785,14 +785,14 @@ const Breadcrumb = () => {
 
     // Navigate to the module's main page or summary
     const moduleRoutes = {
-      Configuration: "/Configuratin",
+      Configuration: "/Configuration",
       "Subscriptions & Rewards": "/Summary",
       "Issues Management": "/IssuesManagementDashboard",
       Correspondence: "/CorrespondenceDashboard",
       Finance: "/Import",
       Reports: "/Reports",
       Events: "/EventsDashboard",
-      Settings: "/Configuratin",
+      Settings: "/Configuration",
       Courses: "/Courses",
       "Professional Development": "/ProfessionalDevelopment",
     };

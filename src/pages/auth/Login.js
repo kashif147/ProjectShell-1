@@ -337,7 +337,7 @@ const Login = () => {
         // Navigate based on user role for default login behavior
         console.log("Login Debug - roleCodes:", roleCodes);
         if (roleCodes.includes("SU") || roleCodes.includes("ASU")) {
-          navigate("/Configuratin");
+          navigate("/Configuration");
         } else if (roleCodes.includes("IO")) {
           navigate("/CorrespondenceDashboard");
         } else if (roleCodes.includes("AM") || roleCodes.includes("DAM")) {
@@ -418,7 +418,7 @@ const Login = () => {
       });
 
       if (roleCodes.includes("SU")) {
-        navigate("/Configuratin");
+        navigate("/Configuration");
       } else if (roleCodes.includes("IO")) {
         navigate("/CorrespondenceDashboard");
       } else if (roleCodes.includes("AM") || roleCodes.includes("DAM")) {
@@ -511,7 +511,7 @@ const Login = () => {
 
       // Navigate based on user role
       if (roleCodes.includes("SU")) {
-        navigate("/Configuratin");
+        navigate("/Configuration");
       } else if (roleCodes.includes("IO")) {
         navigate("/CorrespondenceDashboard");
       } else if (roleCodes.includes("AM") || roleCodes.includes("DAM")) {

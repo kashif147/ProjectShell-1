@@ -41,7 +41,7 @@ export const RoutePermissions = {
   // Configuration & Management
   "templeteSummary": "templates:read",
   "templeteConfig": "templates:read",
-  "Configuratin": "portal:read", // System Configuration
+  "Configuration": "portal:read", // System Configuration
   "PermissionManagement": "role:permission:assign",
   "RoleManagement": "role:read",
   "UserManagement": "user:read",

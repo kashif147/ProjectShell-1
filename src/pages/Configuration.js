@@ -83,6 +83,14 @@ import {
 } from "../features/ContactTypeSlice";
 import { getContacts, resetContacts } from "../features/ContactSlice";
 import { getLookupTypes } from "../features/LookupTypeSlice";
+import {
+  buildConfigurationCards,
+  getDrawerKeyForLookupType,
+  getLookupTypeRecordForDrawer,
+  getLookupsForDrawer,
+  getLookupTypeFieldProps,
+  withDynamicLookupTypeId,
+} from "../utils/configurationLookupHelpers";
 import { set } from "react-hook-form";
 import MyInput from "../component/common/MyInput";
 import { useNavigate } from "react-router-dom";
@@ -220,7 +228,7 @@ const createFilterDropdown = (dataSource, getValue) => {
 
 // i have different drwers for configuration of lookups for the system
 
-function Configuratin() {
+const Configuration = () => {
   const [iroUsers, setIroUsers] = useState([]);
 
   useEffect(() => {
@@ -1141,55 +1149,37 @@ function Configuratin() {
 
   const [lookupTypSlct, setlookupTypSlct] = useState([]);
   useEffect(() => {
-    if (!lookupsTypes || Array.isArray(lookupsTypes)) return;
-    let arr = [];
-    lookupsTypes?.map((lokpty) => {
-      arr.push({ key: lokpty?._id, label: lokpty?.lookuptype });
-    });
+    if (!Array.isArray(lookupsTypes)) return;
+    const arr = lookupsTypes.map((lokpty) => ({
+      key: lokpty?._id,
+      label: lokpty?.lookuptype,
+    }));
     setlookupTypSlct(arr);
   }, [lookupsTypes]);
+
+  const configurationCards = useMemo(
+    () => buildConfigurationCards(lookupsTypes),
+    [lookupsTypes],
+  );
+
   useEffect(() => {
-    if (!lookups || !Array.isArray(lookups)) return;
+    if (!lookups || !Array.isArray(lookups) || !lookupsTypes?.length) return;
 
-    // ✅ List the keys you want to extract
-    const lookupKeys = [
-      "gender",
-      "Titles",
-      "ProjectTypes",
-      "Duties",
-      "MaritalStatus",
-      "county",
-      "Divisions",
-      "Cities",
-      "Boards",
-      "Councils",
-      "CorrespondenceType",
-      "Stations",
-      "DocumentType",
-      "ClaimType",
-      "Schemes",
-      "Reasons",
-      "Provinces",
-      "Districts",
-      "SpokenLanguages",
-      "Trainings",
-      "Ranks",
-      "RosterType",
-      "PostCode",
-      "Sections",
-      "Committees",
-      "ContactType",
-    ];
-
-    const filteredData = lookupKeys.reduce((acc, key) => {
-      acc[key] = lookups.filter(
-        (item) => item?.lookuptypeId?.key === key, // ✅ filter by key instead of ID
+    const filteredData = lookupsTypes.reduce((acc, lookupType) => {
+      const drawerKey = getDrawerKeyForLookupType(lookupType);
+      if (!drawerKey) return acc;
+      acc[drawerKey] = lookups.filter(
+        (item) =>
+          String(item?.lookuptypeId?._id) === String(lookupType._id) ||
+          item?.lookuptypeId?.lookuptype === lookupType.lookuptype ||
+          item?.lookuptypeName === lookupType.lookuptype,
       );
       return acc;
     }, {});
 
     setdata((prevState) => ({ ...prevState, ...filteredData }));
-  }, [lookups]);
+  }, [lookups, lookupsTypes]);
+
   const [searchTerm, setSearchTerm] = useState("");
   const [filteredLookupsTypes, setFilteredLookupsTypes] = useState([]);
   // const [filteredLookupsTypes, setFilteredLookupsTypes] = useState([]);
@@ -1333,7 +1323,7 @@ function Configuratin() {
     }));
   };
 
-  let drawerInputsInitalValues = {
+  const baseDrawerInputsInitalValues = {
     Bookmarks: {
       key: "",
       label: "",
@@ -1650,7 +1640,29 @@ function Configuratin() {
     },
   };
 
-  const [drawerIpnuts, setdrawerIpnuts] = useState(drawerInputsInitalValues);
+  const [drawerIpnuts, setdrawerIpnuts] = useState(baseDrawerInputsInitalValues);
+
+  useEffect(() => {
+    if (!Array.isArray(lookupsTypes) || lookupsTypes.length === 0) return;
+    setdrawerIpnuts((prev) => {
+      let changed = false;
+      const next = { ...prev };
+      Object.keys(baseDrawerInputsInitalValues).forEach((drawerKey) => {
+        if (!prev[drawerKey]) return;
+        const updated = withDynamicLookupTypeId(
+          prev[drawerKey],
+          drawerKey,
+          lookupsTypes,
+        );
+        if (updated?.lookuptypeId !== prev[drawerKey]?.lookuptypeId) {
+          next[drawerKey] = updated;
+          changed = true;
+        }
+      });
+      return changed ? next : prev;
+    });
+  }, [lookupsTypes]);
+
   console.log("drawerIpnuts", drawerIpnuts);
   const drawrInptChng = (drawer, field, value) => {
     setdrawerIpnuts((prevState) => {
@@ -1695,7 +1707,7 @@ function Configuratin() {
       [drawer]: value,
     }));
 
-    const filteredData = Object.keys(drawerInputsInitalValues[drawer]).reduce(
+    const filteredData = Object.keys(baseDrawerInputsInitalValues[drawer] || {}).reduce(
       (acc, key) => {
         // ❌ exclude lookuptypeId
         if (key === "lookuptypeId") return acc;
@@ -1765,10 +1777,17 @@ function Configuratin() {
     "label",
     "asc",
   );
+  const getDrawerInputsTemplate = (drawer) =>
+    withDynamicLookupTypeId(
+      baseDrawerInputsInitalValues[drawer],
+      drawer,
+      lookupsTypes,
+    );
+
   const resetCounteries = (drawer, callback) => {
     setdrawerIpnuts((prevState) => ({
       ...prevState,
-      [drawer]: drawerInputsInitalValues[drawer],
+      [drawer]: getDrawerInputsTemplate(drawer),
     }));
     if (callback && typeof callback === "function") {
       callback();
@@ -1781,7 +1800,7 @@ function Configuratin() {
       return {
         ...prevState,
         Lookup: {
-          ...drawerInputsInitalValues.Lookup,
+          ...baseDrawerInputsInitalValues.Lookup,
           lookuptypeId:
             lookuptypeId === null || lookuptypeId === undefined
               ? ""
@@ -1799,18 +1818,42 @@ function Configuratin() {
     }
   };
 
-  const openCloseDrawerFtn = (name) => {
-    setDrawerOpen((prevState) => {
-      const wasOpen = prevState[name]; // Check if it was open before
-      const newState = {
-        ...prevState,
-        [name]: !prevState[name],
-      };
+  const openConfigurationCard = (card) => {
+    const drawerKey = card?.key;
+    if (!drawerKey) return;
+    if (card?.isSystem) {
+      openCloseDrawerFtn(drawerKey);
+      return;
+    }
+    if (baseDrawerInputsInitalValues[drawerKey] !== undefined) {
+      openCloseDrawerFtn(drawerKey, card.lookupType);
+      return;
+    }
+    openCloseDrawerFtn("Lookup", card.lookupType);
+  };
 
+  const openCloseDrawerFtn = (name, lookupTypeRecord = null) => {
+    setDrawerOpen((prevState) => {
+      const wasOpen = prevState[name];
       if (wasOpen) {
-        disableFtn(true); // Execute only when closing
+        disableFtn(true);
+      } else {
+        const lookupType =
+          lookupTypeRecord || getLookupTypeRecordForDrawer(name, lookupsTypes);
+        if (lookupType?._id) {
+          setdrawerIpnuts((prev) => ({
+            ...prev,
+            [name]: {
+              ...(prev[name] || getDrawerInputsTemplate(name) || {}),
+              lookuptypeId: lookupType._id,
+            },
+          }));
+        }
       }
-      return newState;
+      return {
+        ...prevState,
+        [name]: !wasOpen,
+      };
     });
     setErrors({});
   };
@@ -4815,203 +4858,6 @@ function Configuratin() {
     setPageSize(size);
   };
   // const { Search } = Input;
-  const sections = [
-    {
-      title: "Geographic & Location",
-      items: [
-        {
-          key: "Countries",
-          icon: <Globe size={24} color="#ef4444" />,
-          label: "Countries",
-        }, // red-500
-        {
-          key: "Provinces",
-          icon: <Map size={24} color="#22c55e" />,
-          label: "Provinces",
-        }, // green-500
-        {
-          key: "counties",
-          icon: <Globe size={24} color="#22c55e" />,
-          label: "Counties",
-        }, // green-500
-        {
-          key: "Divisions",
-          icon: <Building2 size={24} color="#6366f1" />,
-          label: "Region",
-        }, // indigo-500
-        {
-          key: "Districts",
-          icon: <MapPinned size={24} color="#eab308" />,
-          label: "Branch",
-        }, // yellow-500
-        {
-          key: "Station",
-          icon: <MapPin size={24} color="#f97316" />,
-          label: "Work Location",
-        }, // orange-500
-        {
-          key: "Study Location",
-          icon: <University size={24} color="#f97316" />,
-          label: "Study Location",
-        }, // orange-500
-        {
-          key: "Cities",
-          icon: <Building2 size={24} color="#10b981" />,
-          label: "Cities",
-        }, // emerald-500
-        {
-          key: "PostCode",
-          icon: <Mail size={24} color="#0ea5e9" />,
-          label: "Post Codes",
-        }, // sky-500
-      ],
-    },
-    {
-      title: "Personal & Demographics",
-      items: [
-        {
-          key: "Title",
-          icon: <Crown size={24} color="#3b82f6" />,
-          label: "Titles",
-        }, // blue-500
-        {
-          key: "Gender",
-          icon: <User size={24} color="#ec4899" />,
-          label: "Gender",
-        }, // pink-500
-        {
-          key: "MaritalStatus",
-          icon: <Heart size={24} color="#a78bfa" />,
-          label: "Marital Status",
-        }, // purple-400
-        {
-          key: "SpokenLanguages",
-          icon: <Languages size={24} color="#f43f5e" />,
-          label: "Spoken Languages",
-        }, // rose-500
-      ],
-    },
-    {
-      title: "Professional & Organizational",
-      items: [
-        {
-          key: "Ranks",
-          icon: <BarChart3 size={24} color="#6b7280" />,
-          label: "Grade",
-        }, // gray-500
-        {
-          key: "Duties",
-          icon: <FileText size={24} color="#60a5fa" />,
-          label: "Duties",
-        }, // blue-400
-        {
-          key: "RosterType",
-          icon: <Calendar size={24} color="#06b6d4" />,
-          label: "Roster Type",
-        }, // cyan-500
-        {
-          key: "Boards",
-          icon: <Layout size={24} color="#14b8a6" />,
-          label: "Boards",
-        }, // teal-500
-        {
-          key: "Councils",
-          icon: <Landmark size={24} color="#8b5cf6" />,
-          label: "Councils",
-        }, // violet-500
-        {
-          key: "Committees",
-          icon: <Users size={24} color="#ec4899" />,
-          label: "Committees",
-        }, // pink-500
-        {
-          key: "Solicitors",
-          icon: <Gavel size={24} color="#64748b" />,
-          label: "Solicitors",
-        }, // slate-500
-        {
-          key: "Sections",
-          icon: <Briefcase size={24} color="#8b5cf6" />,
-          label: "Sections",
-        }, // violet-500
-      ],
-    },
-    {
-      title: "Projects & Training",
-      items: [
-        {
-          key: "ProjectTypes",
-          icon: <FolderKanban size={24} color="#f59e0b" />,
-          label: "Project Types",
-        }, // amber-500
-        {
-          key: "Trainings",
-          icon: <Lightbulb size={24} color="#84cc16" />,
-          label: "Trainings",
-        }, // lime-500
-      ],
-    },
-    {
-      title: "Communication & Documentation",
-      items: [
-        {
-          key: "ContactType",
-          icon: <Phone size={24} color="#a855f7" />,
-          label: "Contact Types",
-        }, // purple-500
-        {
-          key: "CorrespondenceType",
-          icon: <MessageSquare size={24} color="#4ade80" />,
-          label: "Correspondence Type",
-        }, // green-400
-        {
-          key: "DocumentType",
-          icon: <File size={24} color="#818cf8" />,
-          label: "Document Type",
-        }, // indigo-400
-        {
-          key: "Bookmarks",
-          icon: <Bookmark size={24} color="#818cf8" />,
-          label: "Bookmarks",
-        }, // indigo-400
-      ],
-    },
-    {
-      title: "Claims & Benefits",
-      items: [
-        {
-          key: "ClaimType",
-          icon: <Shield size={24} color="#f472b6" />,
-          label: "Claim Type",
-        }, // pink-400
-        {
-          key: "Schemes",
-          icon: <Boxes size={24} color="#facc15" />,
-          label: "Schemes",
-        }, // yellow-400
-        {
-          key: "Reasons",
-          icon: <CircleHelp size={24} color="#fb923c" />,
-          label: "Reasons",
-        }, // orange-400
-      ],
-    },
-    {
-      title: "System Lookups",
-      items: [
-        {
-          key: "LookupType",
-          icon: <Search size={24} color="#34d399" />,
-          label: "Lookup Type",
-        }, // emerald-400
-        {
-          key: "Lookup",
-          icon: <Search size={24} color="#fb7185" />,
-          label: "Lookup",
-        }, // rose-400
-      ],
-    },
-  ];
 
 
   // Updated table columns with Region filter
@@ -5048,6 +4894,13 @@ function Configuratin() {
     // Return columns in correct order: [...other columns, Region, Action]
     return [...allColumnsExceptLast, regionColumn, lastColumn];
   }, [columnDistricts, uniqueRegionNames]);
+
+  const lookupTypeSelectProps = (drawerKey) =>
+    getLookupTypeFieldProps(
+      drawerKey,
+      lookupsTypes,
+      drawerIpnuts?.[drawerKey]?.lookuptypeId,
+    );
 
   return (
     <div
@@ -5094,23 +4947,19 @@ function Configuratin() {
           }}
         >
           {(() => {
-            // Flatten all items from all sections into a single array
-            const allItems = sections.flatMap((section) => section.items);
-            const filteredItems = allItems
-              .filter((item) =>
-                item.label.toLowerCase().includes(searchQuery.toLowerCase()),
-              )
-              .sort((a, b) => a.label.localeCompare(b.label));
+            const filteredItems = configurationCards.filter((item) =>
+              item.label.toLowerCase().includes(searchQuery.toLowerCase()),
+            );
 
             return filteredItems.length > 0 ? (
               <div className="row gx-3 gy-3 mb-4 pb-4">
                 {filteredItems.map((item) => (
                   <div
-                    key={item.key}
+                    key={item.lookupTypeId || item.key}
                     className="col-6 col-sm-4 col-md-3 col-lg-1-5 d-flex"
                   >
                     <div
-                      onClick={() => openCloseDrawerFtn(item.key)}
+                      onClick={() => openConfigurationCard(item)}
                       className="d-flex flex-column align-items-center justify-content-center border rounded bg-white p-4 w-100 text-center hover-shadow"
                       style={{ cursor: "pointer" }}
                     >
@@ -5124,10 +4973,17 @@ function Configuratin() {
               </div>
             ) : (
               <p className="text-muted small mb-0 text-center">
-                No matches for "{searchQuery}".
+                {searchQuery
+                  ? `No matches for "${searchQuery}".`
+                  : "No lookup types found."}
               </p>
             );
           })()}
+          {lookupsTypesloading && (
+            <p className="text-muted small mb-0 text-center">
+              Loading lookup types...
+            </p>
+          )}
         </div>
       </div>
       <MyDrawer
@@ -6450,8 +6306,8 @@ function Configuratin() {
               <CustomSelect
                 label="Type:"
                 name="lookuptypeId"
-                value="PostCode"
-                options={[{ label: "PostCode", value: "PostCode" }]}
+                value={lookupTypeSelectProps("PostCode").value}
+                options={lookupTypeSelectProps("PostCode").options}
                 isSimple={true}
                 disabled={true}
                 required
@@ -8515,8 +8371,8 @@ function Configuratin() {
               <CustomSelect
                 label="Type:"
                 name="lookuptypeId"
-                value="City"
-                options={[{ label: "City", value: "City" }]}
+                value={lookupTypeSelectProps("Cities").value}
+                options={lookupTypeSelectProps("Cities").options}
                 isSimple={true}
                 disabled={true}
                 required
@@ -8667,8 +8523,8 @@ function Configuratin() {
               <CustomSelect
                 label="Type:"
                 name="lookuptypeId"
-                value="Title"
-                options={[{ label: "Title", value: "Title" }]}
+                value={lookupTypeSelectProps("Title").value}
+                options={lookupTypeSelectProps("Title").options}
                 isSimple={true}
                 disabled={true}
                 required
@@ -9052,8 +8908,8 @@ function Configuratin() {
               <CustomSelect
                 label="Type:"
                 name="lookuptypeId"
-                value="Project Types"
-                options={[{ label: "Project Types", value: "Project Types" }]}
+                value={lookupTypeSelectProps("ProjectTypes").value}
+                options={lookupTypeSelectProps("ProjectTypes").options}
                 isSimple={true}
                 disabled={true}
                 required
@@ -9316,8 +9172,8 @@ function Configuratin() {
               <CustomSelect
                 label="Lookup Type"
                 name="lookuptypeId"
-                value="Document Type"
-                options={[{ label: "Document Type", value: "Document Type" }]}
+                value={lookupTypeSelectProps("DocumentType").value}
+                options={lookupTypeSelectProps("DocumentType").options}
                 isSimple={true}
                 disabled={true}
                 required
@@ -9448,8 +9304,8 @@ function Configuratin() {
               <CustomSelect
                 label="Lookup Type"
                 name="lookuptypeId"
-                value="Claim Type"
-                options={[{ label: "Claim Type", value: "Claim Type" }]}
+                value={lookupTypeSelectProps("ClaimType").value}
+                options={lookupTypeSelectProps("ClaimType").options}
                 isSimple={true}
                 disabled={true}
                 required
@@ -9574,8 +9430,8 @@ function Configuratin() {
               <CustomSelect
                 label="Lookup Type"
                 name="lookuptypeId"
-                value="Schemes"
-                options={[{ label: "Schemes", value: "Schemes" }]}
+                value={lookupTypeSelectProps("Schemes").value}
+                options={lookupTypeSelectProps("Schemes").options}
                 isSimple={true}
                 disabled={true}
                 required
@@ -9701,8 +9557,8 @@ function Configuratin() {
               <CustomSelect
                 label="Lookup Type"
                 name="lookuptypeId"
-                value="Reasons"
-                options={[{ label: "Reasons", value: "Reasons" }]}
+                value={lookupTypeSelectProps("Reasons").value}
+                options={lookupTypeSelectProps("Reasons").options}
                 isSimple={true}
                 disabled={true}
                 required
@@ -10155,8 +10011,8 @@ function Configuratin() {
               <CustomSelect
                 label="Type:"
                 name="lookuptypeId"
-                value="Boards"
-                options={[{ label: "Boards", value: "Boards" }]}
+                value={lookupTypeSelectProps("Boards").value}
+                options={lookupTypeSelectProps("Boards").options}
                 isSimple={true}
                 disabled={true}
                 required
@@ -10288,8 +10144,8 @@ function Configuratin() {
               <CustomSelect
                 label="Type:"
                 name="lookuptypeId"
-                value="Councils"
-                options={[{ label: "Councils", value: "Councils" }]}
+                value={lookupTypeSelectProps("Councils").value}
+                options={lookupTypeSelectProps("Councils").options}
                 isSimple={true}
                 disabled={true}
                 required
@@ -10426,13 +10282,8 @@ function Configuratin() {
               <CustomSelect
                 label="Lookup Type"
                 name="lookuptypeId"
-                value="Correspondence Type"
-                options={[
-                  {
-                    label: "Correspondence Type",
-                    value: "Correspondence Type",
-                  },
-                ]}
+                value={lookupTypeSelectProps("CorrespondenceType").value}
+                options={lookupTypeSelectProps("CorrespondenceType").options}
                 isSimple={true}
                 disabled={true}
                 required
@@ -10579,10 +10430,8 @@ function Configuratin() {
               <CustomSelect
                 label="Type:"
                 name="lookuptypeId"
-                value="Spoken Languages"
-                options={[
-                  { label: "Spoken Languages", value: "Spoken Languages" },
-                ]}
+                value={lookupTypeSelectProps("SpokenLanguages").value}
+                options={lookupTypeSelectProps("SpokenLanguages").options}
                 isSimple={true}
                 disabled={true}
                 required
@@ -11202,4 +11051,4 @@ function Configuratin() {
   );
 }
 
-export default Configuratin;
+export default Configuration;

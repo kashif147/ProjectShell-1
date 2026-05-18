@@ -48,7 +48,7 @@ const AppLauncherMenu = ({ closeDropdown }) => {
       Membership: "/MembershipDashboard",
       Finance: "/onlinePayment",
       Correspondence: "/CorrespondenceDashboard",
-      Configuration: "/Configuratin",
+      Configuration: "/Configuration",
       Events: "/EventsDashboard",
       Reports: "/Reports",
       Settings: "/Settings",
