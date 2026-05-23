@@ -138,6 +138,7 @@ const MyInput = ({
   rows = 4,
   extra = null,
   onBlur,
+  onFocus: onFocusProp,
   maxLength,
   prefix,
 }) => {
@@ -196,7 +197,10 @@ const MyInput = ({
     value,
     onChange: handleChange,
     placeholder,
-    onFocus: () => setIsFocused(true),
+    onFocus: (e) => {
+      setIsFocused(true);
+      onFocusProp?.(e);
+    },
     onBlur: handleBlur,
     className: "my-input-field",
     disabled,

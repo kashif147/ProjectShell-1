@@ -69,6 +69,53 @@
   margin-bottom: 16px;
 }
 
+.tenant-form-drawer .color-field {
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+}
+
+.tenant-form-drawer .color-field .my-input-container {
+  flex: 1;
+}
+
+.tenant-form-drawer .color-picker-input {
+  width: 40px;
+  height: 40px;
+  padding: 2px;
+  border: 1px solid #d9d9d9;
+  border-radius: 4px;
+  cursor: pointer;
+  margin-bottom: 4px;
+}
+
+.tenant-branding-upload {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.tenant-branding-preview {
+  padding: 8px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 4px;
+  min-height: 48px;
+  display: flex;
+  align-items: center;
+}
+
+.tenant-branding-url {
+  font-size: 11px;
+  display: block;
+  max-width: 100%;
+}
+
+.tenant-branding-hint {
+  font-size: 13px;
+}
+
 .tenant-form-drawer .ant-drawer-header {
   background: var(--secoundry-bg-color);
   border-bottom: none;
@@ -120,6 +167,126 @@
   gap: 10px;
 }
 
+.tenant-office-drawer .drawer-main-cntainer {
+  padding: 10px 14px 12px;
+}
+
+.tenant-office-drawer .drawer-tab-content {
+  margin-top: 0;
+  padding: 10px 12px;
+}
+
+.tenant-office-drawer .drawer-tab-content + .drawer-tab-content,
+.tenant-office-drawer .office-section-gap {
+  margin-top: 8px;
+}
+
+.tenant-office-drawer .section-header {
+  margin-top: 0;
+  margin-bottom: 6px;
+  font-size: 14px;
+}
+
+.tenant-office-drawer .tenant-office-hours-hint {
+  font-size: 12px;
+  line-height: 1.35;
+  margin: 0 0 6px;
+}
+
+.tenant-office-drawer .my-input-wrapper {
+  margin-bottom: 6px;
+}
+
+.tenant-office-drawer .switch-field {
+  margin-bottom: 4px;
+  min-height: 32px;
+}
+
+.tenant-office-drawer .office-hours-table .ant-table-cell,
+.tenant-office-drawer .office-holidays-table .ant-table-cell {
+  padding: 6px 8px !important;
+}
+
+.tenant-office-drawer .drawer-tbl .ant-table-thead > tr > th {
+  padding: 4px 8px !important;
+  height: auto !important;
+  min-height: 0 !important;
+  line-height: 1.25 !important;
+  font-size: 12px;
+  vertical-align: middle !important;
+}
+
+.tenant-office-drawer .drawer-tbl.ant-table-small .ant-table-thead > tr > th {
+  padding: 4px 8px !important;
+}
+
+.tenant-office-drawer .drawer-tbl .ant-table-thead > tr > th::before {
+  display: none;
+}
+
+.tenant-office-drawer .office-holidays-table-spacer {
+  margin-top: 8px;
+}
+
+.tenant-office-drawer .office-hours-table .ant-table {
+  margin-bottom: 0;
+}
+
+.tenant-office-drawer .office-hours-table .ant-table-tbody > tr > td {
+  vertical-align: middle;
+}
+
+.tenant-office-drawer .office-hours-time-inline {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: nowrap;
+  max-width: 100%;
+}
+
+.tenant-office-drawer .office-hours-time-sep {
+  color: #94a3b8;
+  font-size: 12px;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.tenant-office-drawer .office-hours-time-picker.ant-picker {
+  width: 92px !important;
+  min-width: 92px;
+  margin: 0 !important;
+  flex-shrink: 0;
+}
+
+.tenant-office-drawer .office-hours-time-picker .ant-picker-input > input {
+  font-size: 13px;
+  padding: 0 4px;
+  text-align: center;
+}
+
+.tenant-office-drawer .office-hours-day {
+  font-weight: 500;
+  color: #334155;
+}
+
+.tenant-office-drawer .office-hours-row-closed {
+  background-color: #f8fafc;
+}
+
+.tenant-office-drawer .office-hours-row-closed .office-hours-day {
+  color: #94a3b8;
+}
+
+.tenant-office-drawer
+  .office-hours-row-closed
+  .office-hours-time-picker.ant-picker-disabled {
+  background: #f1f5f9;
+}
+
+.tenant-office-drawer .office-holidays-table {
+  margin-bottom: 0;
+}
+
 .tenant-form-drawer .tenant-active-switch {
   min-width: 52px;
   height: 26px;
@@ -143,7 +310,9 @@
   background-color: #22c55e;
 }
 
-.tenant-form-drawer .tenant-active-switch.ant-switch-checked .ant-switch-handle {
+.tenant-form-drawer
+  .tenant-active-switch.ant-switch-checked
+  .ant-switch-handle {
   left: calc(100% - 24px);
 }
 .tenant-form-drawer .ant-tabs-nav {
@@ -331,7 +500,9 @@
   color: #215e97 !important;
 }
 
-.ant-pagination .ant-select:not(.ant-select-disabled):hover .ant-select-selector {
+.ant-pagination
+  .ant-select:not(.ant-select-disabled):hover
+  .ant-select-selector {
   border-color: #215e97 !important;
 }
 

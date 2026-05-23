@@ -212,6 +212,21 @@ export const FilterProvider = ({ children }) => {
     const getNamesForItem = (item, type) => {
       const names = new Set();
 
+      // Simple nested location tree (default hierarchy API shape)
+      if (item?.id && item?.type) {
+        if (type === "Work Location" && item.type === "workLocation" && item.name) {
+          names.add(item.name);
+        }
+        if (type === "Branch" && item.branch?.name) {
+          names.add(item.branch.name);
+        }
+        if (type === "Region") {
+          const regionName = item.branch?.region?.name || item.region?.name;
+          if (regionName) names.add(regionName);
+        }
+        if (names.size > 0) return Array.from(names);
+      }
+
       // 1. Direct property (e.g. item.region, item.branch, item.lookup)
       const propName = type === "Work Location" ? "lookup" : type.toLowerCase();
       const direct = item[propName];

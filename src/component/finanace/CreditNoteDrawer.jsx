@@ -4,6 +4,7 @@ import dayjs from "dayjs";
 import MyDrawer from "../common/MyDrawer";
 import MyInput from "../common/MyInput";
 import MyDatePicker1 from "../common/MyDatePicker1";
+import MemberSearch from "../profile/MemberSearch";
 
 const initialFormState = (overrides = {}) => ({
   docNo: "",
@@ -27,9 +28,13 @@ const CreditNoteDrawer = ({
   onSubmitApprove,
   submitLoading = false,
   invoiceSummary = null,
+  hideMemberSearch = false,
 }) => {
   const [formValues, setFormValues] = useState(() => initialFormState());
   const [errors, setErrors] = useState({});
+  const [selectedMemberId, setSelectedMemberId] = useState(
+    () => String(memberId || "").trim(),
+  );
 
   const resetForm = useCallback(() => {
     setFormValues(initialFormState());
@@ -38,6 +43,7 @@ const CreditNoteDrawer = ({
 
   useEffect(() => {
     if (!open) return;
+    setSelectedMemberId(String(memberId || "").trim());
     const prefillRaw =
       prefillAmountEuro != null && !Number.isNaN(Number(prefillAmountEuro))
         ? Number(prefillAmountEuro)
@@ -56,12 +62,15 @@ const CreditNoteDrawer = ({
       }),
     );
     setErrors({});
-  }, [open, mode, invoiceDocNoProp, creditNoteDocNo, prefillAmountEuro]);
+  }, [open, mode, invoiceDocNoProp, creditNoteDocNo, prefillAmountEuro, memberId]);
 
   const handleDrawerClose = () => {
     resetForm();
+    setSelectedMemberId("");
     onClose();
   };
+
+  const resolvedMemberId = String(memberId || selectedMemberId || "").trim();
 
   const handleChange = (name, value) => {
     setFormValues((prev) => ({ ...prev, [name]: value }));
@@ -71,6 +80,7 @@ const CreditNoteDrawer = ({
   const validateCreate = () => {
     const next = {};
     if (!String(formValues.invoiceDocNo || "").trim()) next.invoiceDocNo = true;
+    if (!resolvedMemberId) next.memberId = true;
     if (!String(formValues.docNo || "").trim()) next.docNo = true;
     const amt = Number(formValues.amountEuros);
     if (!Number.isFinite(amt) || amt <= 0) next.amountEuros = true;
@@ -99,7 +109,7 @@ const CreditNoteDrawer = ({
     const euros = Number(formValues.amountEuros);
     const payload = {
       docNo: String(formValues.docNo).trim(),
-      memberId: String(memberId || "").trim(),
+      memberId: resolvedMemberId,
       invoiceDocNo: String(formValues.invoiceDocNo).trim(),
       amount: Math.round(euros * 100),
       date: formValues.effectiveDate.format("YYYY-MM-DD"),
@@ -135,6 +145,32 @@ const CreditNoteDrawer = ({
           />
         ) : (
           <Row gutter={[16, 16]}>
+            {!hideMemberSearch && !memberId ? (
+              <Col span={24}>
+                <label className="my-input-label">
+                  Member search <span className="star">*</span>
+                </label>
+                <MemberSearch
+                  fullWidth
+                  style={{ width: "100%" }}
+                  onSelectBehavior="callback"
+                  onSelectCallback={(record) => {
+                    const mid =
+                      record?.membershipNumber ||
+                      record?.memberId ||
+                      record?.membershipNo ||
+                      "";
+                    setSelectedMemberId(String(mid || "").trim());
+                    if (errors.memberId) {
+                      setErrors((prev) => ({ ...prev, memberId: false }));
+                    }
+                  }}
+                />
+                {errors.memberId ? (
+                  <span className="error-message">Member is required</span>
+                ) : null}
+              </Col>
+            ) : null}
             <Col span={24}>
               <MyInput
                 label="Credit note no."

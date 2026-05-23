@@ -6,7 +6,7 @@ import React, {
   useMemo,
   useCallback,
 } from "react";
-import { Tag } from "antd";
+import { Tag, Button, Space } from "antd";
 import { tableData } from "../Data";
 import { useLocation, useNavigate, Link } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
@@ -27,6 +27,8 @@ import {
   profileDetailActiveSubscriptionArgs,
 } from "../features/subscription/profileSubscriptionSlice";
 import { buildDetailsSearch } from "../utils/detailsRoute";
+import reconciliationWorkspace from "../utils/reconciliationWorkspace";
+import { callJournalAdjustmentApprove } from "../utils/journalAdjustmentsWorkspace";
 import { Triangle } from "lucide-react";
 import { Tooltip } from "antd";
 
@@ -535,6 +537,533 @@ const staticColumns = {
       isGride: true,
       isVisible: true,
       width: 160,
+    },
+  ],
+  CreditNotes: [
+    {
+      dataIndex: "docNo",
+      title: "CN ref",
+      ellipsis: true,
+      isGride: true,
+      isVisible: true,
+      width: 140,
+      render: (docNo, row) => {
+        const text = docNo || "—";
+        if (row?.highlight) {
+          return (
+            <span
+              style={{
+                fontWeight: 700,
+                background: "#fff7e6",
+                padding: "0 4px",
+              }}
+            >
+              {text}
+            </span>
+          );
+        }
+        return text;
+      },
+    },
+    {
+      dataIndex: "invoiceDocNo",
+      title: "Invoice",
+      ellipsis: true,
+      isGride: true,
+      isVisible: true,
+      width: 130,
+    },
+    {
+      dataIndex: "memberId",
+      title: "Member",
+      ellipsis: true,
+      isGride: true,
+      isVisible: true,
+      width: 110,
+      render: (mid) =>
+        mid ? (
+          <Link
+            to={{
+              pathname: "/Details",
+              search: buildDetailsSearch({ memberId: mid }),
+            }}
+          >
+            {mid}
+          </Link>
+        ) : (
+          "—"
+        ),
+    },
+    {
+      dataIndex: "amount",
+      title: "Amount",
+      ellipsis: true,
+      isGride: true,
+      isVisible: true,
+      width: 120,
+      align: "right",
+      render: (value) => {
+        if (value === "-" || value == null || Number.isNaN(Number(value))) return "—";
+        const amountInEuros = Number(value) / 100;
+        return formatCurrency(amountInEuros);
+      },
+    },
+    {
+      dataIndex: "status",
+      title: "Status",
+      ellipsis: true,
+      isGride: true,
+      isVisible: true,
+      width: 100,
+      render: (st) => {
+        const color =
+          st === "Draft"
+            ? "orange"
+            : st === "Approved"
+              ? "green"
+              : st === "Cancelled"
+                ? "red"
+                : st === "Posted"
+                  ? "blue"
+                  : "default";
+        return <Tag color={color}>{st || "—"}</Tag>;
+      },
+    },
+    {
+      dataIndex: "effectiveDate",
+      title: "Effective",
+      ellipsis: true,
+      isGride: true,
+      isVisible: true,
+      width: 110,
+      render: (value) => formatDateOnly(value),
+    },
+    {
+      dataIndex: "reason",
+      title: "Reason",
+      ellipsis: true,
+      isGride: true,
+      isVisible: true,
+      width: 200,
+    },
+    {
+      dataIndex: "createdBy",
+      title: "Created By",
+      ellipsis: true,
+      isGride: true,
+      isVisible: true,
+      width: 150,
+    },
+    {
+      dataIndex: "createdAt",
+      title: "Created At",
+      ellipsis: true,
+      isGride: true,
+      isVisible: true,
+      width: 160,
+      render: (value) => (value ? convertToLocalTime(value) : "—"),
+    },
+  ],
+  Reconciliation: [
+    {
+      dataIndex: "glDocNo",
+      title: "GL doc",
+      ellipsis: true,
+      isGride: true,
+      isVisible: true,
+      width: 140,
+    },
+    {
+      dataIndex: "clearingAccountCode",
+      title: "Clearing",
+      ellipsis: true,
+      isGride: true,
+      isVisible: true,
+      width: 90,
+    },
+    {
+      dataIndex: "amount",
+      title: "Amount",
+      ellipsis: true,
+      isGride: true,
+      isVisible: true,
+      width: 110,
+      align: "right",
+      render: (value) => {
+        if (value == null || Number.isNaN(Number(value))) return "—";
+        return formatCurrency(Number(value) / 100);
+      },
+    },
+    {
+      dataIndex: "reconciliationStatus",
+      title: "Status",
+      ellipsis: true,
+      isGride: true,
+      isVisible: true,
+      width: 130,
+      render: (st) => {
+        const color =
+          st === "unmatched"
+            ? "orange"
+            : st === "manual_matched"
+              ? "blue"
+              : st === "suspense"
+                ? "purple"
+                : st === "settled"
+                  ? "green"
+                  : "default";
+        return <Tag color={color}>{st || "unmatched"}</Tag>;
+      },
+    },
+    {
+      dataIndex: "settlementStatus",
+      title: "Settlement",
+      ellipsis: true,
+      isGride: true,
+      isVisible: true,
+      width: 100,
+    },
+    {
+      dataIndex: "matchedGlDocNo",
+      title: "Matched to",
+      ellipsis: true,
+      isGride: true,
+      isVisible: true,
+      width: 140,
+    },
+    {
+      dataIndex: "_id",
+      title: "Actions",
+      key: "actions",
+      isGride: true,
+      isVisible: true,
+      width: 220,
+      render: (_, r) => {
+        if (r.reconciliationStatus === "settled") return null;
+        const handlers = reconciliationWorkspace.getHandlers();
+        return (
+          <Space size="small" wrap>
+            <Button
+              type="link"
+              size="small"
+              onClick={() => handlers.manualMatch?.(r._id)}
+            >
+              Match
+            </Button>
+            <Button
+              type="link"
+              size="small"
+              onClick={() => handlers.moveSuspense?.(r._id)}
+            >
+              Suspense
+            </Button>
+            <Button
+              type="link"
+              size="small"
+              onClick={() => handlers.settle?.(r._id)}
+            >
+              Settle
+            </Button>
+          </Space>
+        );
+      },
+    },
+  ],
+  JournalAdjustments: [
+    {
+      dataIndex: "docNo",
+      title: "Adjustment reference",
+      ellipsis: true,
+      isGride: true,
+      isVisible: true,
+      width: 188,
+      render: (docNo, row) => {
+        const text = docNo || "—";
+        if (row?.highlight) {
+          return (
+            <span
+              style={{
+                display: "block",
+                fontFamily: "ui-monospace, monospace",
+                fontSize: 13,
+                fontWeight: 700,
+                background: "#fff7e6",
+              }}
+            >
+              {text}
+            </span>
+          );
+        }
+        return (
+          <span
+            style={{
+              display: "block",
+              fontFamily: "ui-monospace, monospace",
+              fontSize: 13,
+            }}
+          >
+            {text}
+          </span>
+        );
+      },
+    },
+    {
+      dataIndex: "approvalStatus",
+      title: "Status",
+      ellipsis: true,
+      isGride: true,
+      isVisible: true,
+      width: 110,
+      render: (status) => {
+        const color =
+          status === "Draft"
+            ? "orange"
+            : status === "Approved"
+              ? "green"
+              : status === "Cancelled"
+                ? "red"
+                : "default";
+        return <Tag color={color}>{status || "—"}</Tag>;
+      },
+    },
+    {
+      dataIndex: "debitAccount",
+      title: "Debit",
+      ellipsis: true,
+      isGride: true,
+      isVisible: true,
+      width: 90,
+    },
+    {
+      dataIndex: "creditAccount",
+      title: "Credit",
+      ellipsis: true,
+      isGride: true,
+      isVisible: true,
+      width: 90,
+    },
+    {
+      dataIndex: "amount",
+      title: "Amount",
+      ellipsis: true,
+      isGride: true,
+      isVisible: true,
+      width: 110,
+      align: "right",
+      render: (value) => {
+        if (value == null || Number.isNaN(Number(value))) return "—";
+        return formatCurrency(Number(value) / 100);
+      },
+    },
+    {
+      dataIndex: "memberId",
+      title: "Member",
+      ellipsis: true,
+      isGride: true,
+      isVisible: true,
+      width: 220,
+      render: (_, row) => {
+        const mid = String(row.memberId || "").trim();
+        if (!mid) return "—";
+        const name = String(row.memberDisplayName || "").trim();
+        const pid = String(row.memberProfileId || "").trim();
+        if (name && pid) {
+          return (
+            <Link
+              to={{
+                pathname: "/Details",
+                search: buildDetailsSearch(pid),
+              }}
+              style={{ color: "#215E97", fontWeight: 500 }}
+              title={`${name} (${mid})`}
+            >
+              {name}
+            </Link>
+          );
+        }
+        return (
+          <span style={{ color: "rgba(0,0,0,0.65)" }} title={mid}>
+            {mid}
+          </span>
+        );
+      },
+    },
+    {
+      dataIndex: "reason",
+      title: "Reason",
+      ellipsis: true,
+      isGride: true,
+      isVisible: true,
+      width: 200,
+    },
+    {
+      dataIndex: "_actions",
+      title: "Actions",
+      key: "actions",
+      isGride: true,
+      isVisible: true,
+      width: 100,
+      fixed: "right",
+      render: (_, r) =>
+        r.approvalStatus === "Draft" ? (
+          <Button
+            type="link"
+            size="small"
+            style={{ color: "#215E97", fontWeight: 500, padding: 0 }}
+            onClick={() => callJournalAdjustmentApprove(r.docNo)}
+          >
+            Approve
+          </Button>
+        ) : null,
+    },
+  ],
+  GeneralLedger: [
+    {
+      dataIndex: "memberId",
+      title: "Member",
+      ellipsis: true,
+      isGride: true,
+      isVisible: true,
+      width: 220,
+      render: (_, row) => {
+        const mid = String(row.memberId || "").trim();
+        if (!mid) return "—";
+        const name = String(row.memberDisplayName || "").trim();
+        const pid = String(row.memberProfileId || "").trim();
+        if (name && pid) {
+          return (
+            <Link
+              to={{
+                pathname: "/Details",
+                search: buildDetailsSearch(pid),
+              }}
+              style={{
+                color: "blue",
+                textDecoration: "underline",
+                cursor: "pointer",
+              }}
+              title={`${name} (${mid})`}
+            >
+              {name}
+            </Link>
+          );
+        }
+        return (
+          <span style={{ color: "rgba(0,0,0,0.65)" }} title={mid}>
+            {mid}
+          </span>
+        );
+      },
+    },
+    {
+      dataIndex: "date",
+      title: "Tx date",
+      ellipsis: true,
+      isGride: true,
+      isVisible: true,
+      width: 110,
+      render: (value) => formatDateOnly(value) || "—",
+    },
+    {
+      dataIndex: "docTypeLabel",
+      title: "Tx type",
+      ellipsis: true,
+      isGride: true,
+      isVisible: true,
+      width: 150,
+      render: (value, row) => value || row.docType || "—",
+    },
+    {
+      dataIndex: "docNo",
+      title: "Doc ref",
+      ellipsis: true,
+      isGride: true,
+      isVisible: true,
+      width: 168,
+      render: (docNo, row) => {
+        const text = docNo || "—";
+        if (row?.highlight) {
+          return (
+            <span
+              style={{
+                fontWeight: 700,
+                background: "#fff7e6",
+                padding: "0 4px",
+                fontFamily: "ui-monospace, monospace",
+                fontSize: 13,
+              }}
+            >
+              {text}
+            </span>
+          );
+        }
+        return (
+          <span style={{ fontFamily: "ui-monospace, monospace", fontSize: 13 }}>
+            {text}
+          </span>
+        );
+      },
+    },
+    {
+      dataIndex: "debit",
+      title: "Debit",
+      ellipsis: true,
+      isGride: true,
+      isVisible: true,
+      width: 100,
+      align: "right",
+      render: (value) => {
+        if (!value) return "";
+        return formatCurrency(Number(value) / 100);
+      },
+    },
+    {
+      dataIndex: "credit",
+      title: "Credit",
+      ellipsis: true,
+      isGride: true,
+      isVisible: true,
+      width: 100,
+      align: "right",
+      render: (value) => {
+        if (!value) return "";
+        return formatCurrency(Number(value) / 100);
+      },
+    },
+    {
+      dataIndex: "memo",
+      title: "Memo",
+      ellipsis: true,
+      isGride: true,
+      isVisible: true,
+      width: 240,
+    },
+    {
+      dataIndex: "approvalStatus",
+      title: "Status",
+      ellipsis: true,
+      isGride: true,
+      isVisible: true,
+      width: 96,
+      render: (status) => {
+        const s = status || "Posted";
+        const color =
+          s === "Draft"
+            ? "orange"
+            : s === "Cancelled"
+              ? "red"
+              : "green";
+        return <Tag color={color}>{s}</Tag>;
+      },
+    },
+    {
+      dataIndex: "createdAt",
+      title: "Posted",
+      ellipsis: true,
+      isGride: true,
+      isVisible: true,
+      width: 150,
+      render: (value) => (value ? convertToLocalTime(value) : "—"),
     },
   ],
   Profile: [
@@ -3306,6 +3835,193 @@ const staticColumns = {
 };
 
 const staticSearchFilters = {
+  Reconciliation: [
+    {
+      titleColumn: "GL doc",
+      isSearch: true,
+      isCheck: false,
+      comp: "!=",
+      lookups: {},
+    },
+    {
+      titleColumn: "Clearing",
+      isSearch: true,
+      isCheck: true,
+      comp: "=",
+      lookups: {
+        "1210": false,
+        "1220": false,
+        "1230": false,
+        "1240": false,
+        "1250": false,
+      },
+    },
+    {
+      titleColumn: "Status",
+      isSearch: true,
+      isCheck: true,
+      comp: "=",
+      lookups: {
+        unmatched: false,
+        manual_matched: false,
+        suspense: false,
+        settled: false,
+      },
+    },
+    {
+      titleColumn: "Settlement",
+      isSearch: true,
+      isCheck: false,
+      comp: "!=",
+      lookups: {},
+    },
+    {
+      titleColumn: "Matched to",
+      isSearch: true,
+      isCheck: false,
+      comp: "!=",
+      lookups: {},
+    },
+  ],
+  "Journal adjustments": [
+    {
+      titleColumn: "Adjustment reference",
+      isSearch: true,
+      isCheck: false,
+      comp: "!=",
+      lookups: {},
+    },
+    {
+      titleColumn: "Status",
+      isSearch: true,
+      isCheck: true,
+      comp: "=",
+      lookups: {
+        Draft: false,
+        Approved: false,
+        Cancelled: false,
+      },
+    },
+    {
+      titleColumn: "Debit",
+      isSearch: true,
+      isCheck: false,
+      comp: "!=",
+      lookups: {},
+    },
+    {
+      titleColumn: "Credit",
+      isSearch: true,
+      isCheck: false,
+      comp: "!=",
+      lookups: {},
+    },
+    {
+      titleColumn: "Member",
+      isSearch: true,
+      isCheck: false,
+      comp: "!=",
+      lookups: {},
+    },
+    {
+      titleColumn: "Reason",
+      isSearch: true,
+      isCheck: false,
+      comp: "!=",
+      lookups: {},
+    },
+  ],
+  "General ledger": [
+    {
+      titleColumn: "Member",
+      isSearch: true,
+      isCheck: false,
+      comp: "!=",
+      lookups: {},
+    },
+    {
+      titleColumn: "Tx type",
+      isSearch: true,
+      isCheck: true,
+      comp: "=",
+      lookups: {
+        Invoice: false,
+        Receipt: false,
+        "Credit Note": false,
+        Refund: false,
+        Adjustment: false,
+        Claim: false,
+        "Online payment": false,
+        "Fee Adjustment": false,
+        "Fee Increase": false,
+        "Fee Decrease": false,
+        WriteOff: false,
+        "Write-off": false,
+      },
+    },
+    {
+      titleColumn: "Doc ref",
+      isSearch: true,
+      isCheck: false,
+      comp: "!=",
+      lookups: {},
+    },
+    {
+      titleColumn: "Memo",
+      isSearch: true,
+      isCheck: false,
+      comp: "!=",
+      lookups: {},
+    },
+  ],
+  "Credit notes": [
+    {
+      titleColumn: "CN ref",
+      isSearch: true,
+      isCheck: false,
+      comp: "!=",
+      lookups: {},
+    },
+    {
+      titleColumn: "Invoice",
+      isSearch: true,
+      isCheck: false,
+      comp: "!=",
+      lookups: {},
+    },
+    {
+      titleColumn: "Member",
+      isSearch: true,
+      isCheck: false,
+      comp: "!=",
+      lookups: {},
+    },
+    {
+      titleColumn: "Status",
+      isSearch: true,
+      isCheck: true,
+      comp: "=",
+      lookups: {
+        Draft: false,
+        Approved: false,
+        Cancelled: false,
+        Posted: false,
+      },
+    },
+    {
+      titleColumn: "Effective",
+      isSearch: false,
+      isCheck: false,
+      lookups: {},
+    },
+    {
+      titleColumn: "Reason",
+      isSearch: true,
+      isCheck: false,
+      comp: "!=",
+      lookups: {},
+    },
+  ],
   onlinePayment: [
     {
       titleColumn: "Member ID",

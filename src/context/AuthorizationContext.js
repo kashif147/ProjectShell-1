@@ -8,6 +8,7 @@ import React, {
 import AuthorizationAPI from "../services/AuthorizationAPI";
 import PolicyClient from "../utils/node-policy-client";
 import { usePolicyClient } from "../utils/react-policy-hooks";
+import { clearBrandingOnLogout } from "./TenantBrandingContext";
 
 const AuthorizationContext = createContext();
 
@@ -150,6 +151,7 @@ export const AuthorizationProvider = ({ children }) => {
 
   // Clear authentication
   const clearAuth = () => {
+    clearBrandingOnLogout();
     dispatch({ type: AUTH_ACTIONS.CLEAR_AUTH });
     localStorage.removeItem("token");
     localStorage.removeItem("userData");
@@ -157,6 +159,7 @@ export const AuthorizationProvider = ({ children }) => {
     localStorage.removeItem("userPermissions");
     localStorage.removeItem("token_expiry");
     localStorage.removeItem("refresh_token");
+    localStorage.removeItem("activeMenuModule");
   };
 
   // Initialize auth state from localStorage on mount

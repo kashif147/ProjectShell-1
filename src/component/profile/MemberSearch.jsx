@@ -76,6 +76,8 @@ const MemberSearch = ({
   const searchTimeoutRef = useRef(null);
   const searchRequestIdRef = useRef(0);
   const inputRef = useRef(null);
+  /** When true, skip debounced API search (e.g. after selecting a member). */
+  const selectionLockRef = useRef(false);
 
   const rankMembersForQuery = (members, query) => {
     const q = String(query || "").trim().toLowerCase();
@@ -119,6 +121,7 @@ const MemberSearch = ({
     if (isControlled) {
       // When external value is cleared, clear internal states too
       if (externalValue === "") {
+        selectionLockRef.current = false;
         setOptions([]);
         setApiError(null);
         setCurrentSearchTerm("");
@@ -157,9 +160,19 @@ const MemberSearch = ({
   useEffect(() => {
     const fetchSearchResults = async () => {
       if (!debouncedSearchValue.trim() || debouncedSearchValue.length < 2) {
+        selectionLockRef.current = false;
         setOptions([]);
         setCurrentSearchTerm("");
         setSelectedOption(null);
+        setShowNoMatchOption(false);
+        setIsSearchTriggered(false);
+        setLoading(false);
+        return;
+      }
+
+      // After a confirmed selection, the display value is not a search query.
+      if (selectionLockRef.current) {
+        setOptions([]);
         setShowNoMatchOption(false);
         setIsSearchTriggered(false);
         setLoading(false);
@@ -334,8 +347,13 @@ const MemberSearch = ({
               // The search value should show the selected member's name or membership number
               const displayValue = `${memberData.personalInfo?.forename || ''} ${memberData.personalInfo?.surname || ''} (${memberData.membershipNumber || ''})`.trim();
 
+              selectionLockRef.current = true;
+              searchRequestIdRef.current += 1;
+              setShowNoMatchOption(false);
+              setIsSearchTriggered(false);
+
               // Update the value to show selected member
-              handleInputChange(displayValue);
+              handleInputChange(displayValue, { fromSelection: true });
 
               // Clear options dropdown
               setOptions([]);
@@ -412,7 +430,11 @@ const MemberSearch = ({
           case "none":
             // Just show success message and keep search value visible
             const displayValueNone = `${memberData.personalInfo?.forename || ''} ${memberData.personalInfo?.surname || ''} (${memberData.membershipNumber || ''})`.trim();
-            handleInputChange(displayValueNone); // Keep value visible
+            selectionLockRef.current = true;
+            searchRequestIdRef.current += 1;
+            setShowNoMatchOption(false);
+            setIsSearchTriggered(false);
+            handleInputChange(displayValueNone, { fromSelection: true }); // Keep value visible
             setOptions([]); // Clear dropdown
 
             message.success(`Member ${memberData.membershipNumber} selected`);
@@ -487,7 +509,7 @@ const MemberSearch = ({
   };
 
   // Handle input change (for typing)
-  const handleInputChange = (value) => {
+  const handleInputChange = (value, { fromSelection = false } = {}) => {
     console.log('Input changed to:', value);
 
     // Update value based on control mode
@@ -497,15 +519,21 @@ const MemberSearch = ({
       setInternalValue(value); // Use internal state
     }
 
+    if (fromSelection) {
+      return;
+    }
+
+    selectionLockRef.current = false;
     setSelectedOption(null);
+    setShowNoMatchOption(false);
 
     if (value === "") {
-      setShowNoMatchOption(false);
       setIsSearchTriggered(false);
     }
   };
 
   const handleClear = () => {
+    selectionLockRef.current = false;
     // Clear value based on control mode
     if (isControlled && externalOnChange) {
       externalOnChange(""); // Clear external value

@@ -28,6 +28,7 @@ export const RoutePermissions = {
   "Reconciliation": "payments:read",
   "JournalAdjustments": "payments:read",
   "CreditNotes": "payments:read",
+  "GeneralLedger": "payments:read",
 
   // Correspondence
   "CorrespondenceDashboard": "dashboard:read",
@@ -49,6 +50,7 @@ export const RoutePermissions = {
   "UserManagement": "user:read",
   "ProductTypesManagement": "portal:read",
   "TenantManagement": "tenant:read",
+  "TenantOffices": "tenant:read",
   "PolicyClientExample": "portal:read",
 
   // Reports

@@ -157,6 +157,12 @@ export const financeItems = [
     ["payments:read"]
   ),
   createMenuItem(
+    "General ledger",
+    <FaBalanceScale />,
+    "General ledger",
+    ["payments:read"]
+  ),
+  createMenuItem(
     "Imports",
     <FaFileImport />,
     "Imports",

@@ -43,6 +43,11 @@ import {
   profileDetailActiveSubscriptionArgs,
 } from "../../features/subscription/profileSubscriptionSlice";
 import { shouldDisableActivateUnlessLatestSubscriptionByStartDate } from "../../utils/applicationEligibility";
+import {
+  PROFILE_INVALIDATE_EVENT,
+  profileInvalidateMatchesContext,
+  scopesInclude,
+} from "../../utils/profileRealtimeEvents";
 
 const ACTIVATE_MEMBERSHIP_DISABLED_TITLE =
   "Only the subscription with the latest start date can be reactivated here. This membership is an older subscription line.";
@@ -66,9 +71,6 @@ const ProfileHeader = forwardRef(function ProfileHeader(
   const [ledgerBalanceIsCents, setLedgerBalanceIsCents] = useState(true);
   const [lastPaymentAmount, setLastPaymentAmount] = useState(0);
   const [lastPaymentDate, setLastPaymentDate] = useState(null);
-  const [availableCredit, setAvailableCredit] = useState(0);
-  const [refundableBalance, setRefundableBalance] = useState(0);
-  const [paymentCode, setPaymentCode] = useState("");
   const [ledgerLoading, setLedgerLoading] = useState(false);
 
   // Get data from Redux store
@@ -254,18 +256,12 @@ const ProfileHeader = forwardRef(function ProfileHeader(
         null;
       setLastPaymentAmount(normalizedLastPaymentAmount || 0);
       setLastPaymentDate(normalizedLastPaymentDate);
-      const creditCents =
-        summaryData?.availableCredit ?? summaryData?.refundableBalance ?? 0;
-      setAvailableCredit(Number(creditCents) || 0);
-      setRefundableBalance(Number(summaryData?.refundableBalance ?? creditCents) || 0);
     } catch (error) {
       console.error("Error fetching account summary in ProfileHeader:", error);
       setLedgerBalance(0);
       setLedgerBalanceIsCents(true);
       setLastPaymentAmount(0);
       setLastPaymentDate(null);
-      setAvailableCredit(0);
-      setRefundableBalance(0);
     } finally {
       setLedgerLoading(false);
     }
@@ -301,28 +297,65 @@ const ProfileHeader = forwardRef(function ProfileHeader(
     fetchAccountSummary();
   }, [fetchAccountSummary]);
 
-  useEffect(() => {
-    const handleMemberFinanceUpdated = (event) => {
-      const eventMemberId = String(event?.detail?.memberId || "")
-        .trim()
-        .toLowerCase();
-      const currentMemberId = String(memberIdForLedger || "")
-        .trim()
-        .toLowerCase();
+  const refreshSubscriptionData = useCallback(() => {
+    const profileId = source?.id || source?._id;
+    const subscriptionId =
+      searchParams.get("subscriptionId") || location.state?.subscriptionId;
+    if (!profileId) return;
+    if (subscriptionId) {
+      dispatch(getSubscriptionById(subscriptionId));
+    } else {
+      dispatch(
+        getSubscriptionByProfileId({
+          profileId,
+          ...profileDetailActiveSubscriptionArgs,
+        }),
+      );
+    }
+  }, [dispatch, source, searchParams, location.state?.subscriptionId]);
 
-      // Refresh only when event is for the currently visible member.
-      if (eventMemberId && eventMemberId !== currentMemberId) return;
-      fetchAccountSummary();
+  const refreshProfileDetailsOnly = useCallback(() => {
+    const profileId = source?.id || source?._id;
+    if (profileId) dispatch(getProfileDetailsById(profileId));
+  }, [dispatch, source]);
+
+  useEffect(() => {
+    const ctx = { profileId: profileIdForApps, memberId: memberIdForLedger };
+
+    const handleProfileInvalidate = (event) => {
+      const detail = event?.detail || {};
+      if (!profileInvalidateMatchesContext(detail, ctx)) return;
+
+      if (scopesInclude(detail.scopes, "all")) {
+        refreshAllData();
+        return;
+      }
+      if (scopesInclude(detail.scopes, "finance")) {
+        fetchAccountSummary();
+      }
+      if (scopesInclude(detail.scopes, "subscription")) {
+        refreshSubscriptionData();
+      }
+      if (scopesInclude(detail.scopes, "profile")) {
+        refreshProfileDetailsOnly();
+      }
     };
 
-    window.addEventListener("member-finance-updated", handleMemberFinanceUpdated);
+    window.addEventListener(PROFILE_INVALIDATE_EVENT, handleProfileInvalidate);
     return () => {
       window.removeEventListener(
-        "member-finance-updated",
-        handleMemberFinanceUpdated
+        PROFILE_INVALIDATE_EVENT,
+        handleProfileInvalidate,
       );
     };
-  }, [fetchAccountSummary, memberIdForLedger]);
+  }, [
+    fetchAccountSummary,
+    memberIdForLedger,
+    profileIdForApps,
+    refreshAllData,
+    refreshProfileDetailsOnly,
+    refreshSubscriptionData,
+  ]);
 
   const isSubscriptionEmpty = useMemo(() => {
     if (!ProfileSubData) return false;
@@ -452,14 +485,6 @@ const ProfileHeader = forwardRef(function ProfileHeader(
           ? "#389e0d"
           : "#faad14";
     const lastPayment = `€${centsToEuro(lastPaymentAmount || 0).toLocaleString('en-IE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-    const availableCreditDisplay = `€${centsToEuro(availableCredit || 0).toLocaleString("en-IE", {
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2,
-    })}`;
-    const refundableBalanceDisplay = `€${centsToEuro(refundableBalance || 0).toLocaleString("en-IE", {
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2,
-    })}`;
 
     // Payment date only from account summary (cash receipt crediting 2020); not subscription start.
     const paymentDateRaw = lastPaymentDate || null;
@@ -504,8 +529,6 @@ const ProfileHeader = forwardRef(function ProfileHeader(
       balanceIndicator,
       balanceColor,
       lastPayment,
-      availableCredit: availableCreditDisplay,
-      refundableBalance: refundableBalanceDisplay,
       paymentDate,
       paymentCode: paymentCodeToUse,
     };
@@ -519,9 +542,6 @@ const ProfileHeader = forwardRef(function ProfileHeader(
     ledgerBalanceIsCents,
     lastPaymentAmount,
     lastPaymentDate,
-    availableCredit,
-    refundableBalance,
-    paymentCode,
   ]); // Now recalculates when source OR subscriptionData OR summary data changes
 
   const statusBadgeTooltip = useMemo(() => {
@@ -591,8 +611,9 @@ const ProfileHeader = forwardRef(function ProfileHeader(
         if (shouldDisableActivateMembership) return;
         setIsUndoCancelModalVisible(true);
       },
+      refreshAccountSummary: () => fetchAccountSummary(),
     }),
-    [shouldDisableActivateMembership],
+    [shouldDisableActivateMembership, fetchAccountSummary],
   );
 
   useEffect(() => {
@@ -858,20 +879,6 @@ const ProfileHeader = forwardRef(function ProfileHeader(
             <div className="detail-content">
               <span className="detail-label">Last Payment:</span>
               <span className="detail-value">{memberData.lastPayment}</span>
-            </div>
-          </div>
-          <div className="detail-row">
-            <FaCreditCard className="detail-icon" />
-            <div className="detail-content">
-              <span className="detail-label">Available Credit:</span>
-              <span className="detail-value">{memberData.availableCredit}</span>
-            </div>
-          </div>
-          <div className="detail-row">
-            <FaCreditCard className="detail-icon" />
-            <div className="detail-content">
-              <span className="detail-label">Refundable Balance:</span>
-              <span className="detail-value">{memberData.refundableBalance}</span>
             </div>
           </div>
           <div className="detail-row">

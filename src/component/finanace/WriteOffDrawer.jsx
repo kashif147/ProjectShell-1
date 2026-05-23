@@ -141,15 +141,6 @@ const WriteOffDrawer = ({
                         </Col>
                     ) : null}
                     <Col span={24}>
-                        <MyInput
-                            label="Ref No."
-                            name="docNo"
-                            placeholder="Enter Ref No."
-                            value={formValues.docNo}
-                            onChange={(e) => handleChange("docNo", e.target.value)}
-                        />
-                    </Col>
-                    <Col span={24}>
                         <div className="my-input-wrapper">
                             <div className="d-flex justify-content-between">
                                 <label

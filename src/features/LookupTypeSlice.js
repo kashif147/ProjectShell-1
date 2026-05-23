@@ -2,6 +2,7 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import axios from "axios";
 import { baseURL } from "../utils/Utilities";
+import { normalizeLookupTypes } from "../utils/lookupHierarchy";
 
 // Fetch all lookup types
 export const getLookupTypes = createAsyncThunk(
@@ -74,7 +75,7 @@ const lookupsTypeSlice = createSlice({
       .addCase(getLookupTypes.fulfilled, (state, action) => {
         state.lookupsTypeerror = false;
         state.lookupsTypesloading = false;
-        state.lookupsTypes = action.payload; // Set the fetched lookup types
+        state.lookupsTypes = normalizeLookupTypes(action.payload);
       })
       .addCase(getLookupTypes.rejected, (state, action) => {
         state.loading = false;

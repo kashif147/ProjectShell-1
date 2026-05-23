@@ -1,3 +1,32 @@
+/** Membership operational fee rows (4900) — not finance-only journal adjustments. */
+function isOperationalMembershipFeeRow(record) {
+  const displayType = String(
+    record.ledgerDisplayDocType ?? record.displayLabel ?? "",
+  )
+    .trim()
+    .toLowerCase();
+  if (
+    displayType.includes("fee adjustment") ||
+    displayType.includes("fee increase") ||
+    displayType.includes("fee decrease") ||
+    record.displayType === "prorata_fee_adjustment"
+  ) {
+    return true;
+  }
+  if (record.ledgerPresentation === "fee_change_simple") return true;
+  const memo = String(record.memo ?? "").toLowerCase();
+  if (
+    memo.includes("category change") ||
+    memo.includes("pro-rata") ||
+    memo.includes("prorata")
+  ) {
+    return true;
+  }
+  const docNo = String(record.docNo ?? "");
+  if (/-PRORATA$/i.test(docNo) || /^CATNET-/i.test(docNo)) return true;
+  return false;
+}
+
 /**
  * Resolve finance workspace navigation targets from a member ledger row.
  * @returns {{ path: string, label: string, state?: object, search?: string } | null}
@@ -37,20 +66,18 @@ export function resolveLedgerDocumentLink(record, memberIdFallback = "") {
     };
   }
 
-  if (
-    docType === "adjustment" &&
-    (record.ledgerPresentation === "fee_change_simple" ||
-      String(record.memo || "").toLowerCase().includes("category change"))
-  ) {
-    return null;
-  }
-
   if (docType === "adjustment") {
-    return {
-      path: "/JournalAdjustments",
-      label: "Journal adj.",
-      state: { search: "Journal adjustments", highlightDocNo: docNo },
-    };
+    if (isOperationalMembershipFeeRow(record)) {
+      return null;
+    }
+    if (/^JADJ-/i.test(docNo)) {
+      return {
+        path: "/JournalAdjustments",
+        label: "Journal adj.",
+        state: { search: "Journal adjustments", highlightDocNo: docNo },
+      };
+    }
+    return null;
   }
 
   if (docType === "claim" || record.displayType === "application_credit_claim") {

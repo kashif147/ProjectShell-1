@@ -1,50 +1,60 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
-import {
-  Button,
-  Card,
-  Input,
-  Modal,
-  Select,
-  Space,
-  Table,
-  Tag,
-  notification,
-} from "antd";
+import { Input, Modal, notification } from "antd";
 import axios from "axios";
+import { useNavigate, useSearchParams } from "react-router-dom";
+import TableComponent from "../../component/common/TableComponent";
 import { getAccountServiceBaseUrl } from "../../config/serviceUrls";
 import { centsToEuro } from "../../utils/Utilities";
+import reconciliationWorkspace from "../../utils/reconciliationWorkspace";
+import { CLEARING_ACCOUNT_OPTIONS } from "../../constants/reconciliation";
 
-const CLEARING_OPTIONS = [
-  { value: "1210", label: "1210 — Cheque clearing" },
-  { value: "1220", label: "1220 — Card clearing" },
-  { value: "1230", label: "1230 — Salary deduction" },
-  { value: "1240", label: "1240 — Standing order" },
-  { value: "1250", label: "1250 — Direct debit" },
-];
-
-const statusColor = {
-  unmatched: "orange",
-  manual_matched: "blue",
-  suspense: "purple",
-  settled: "green",
-};
+const CLEARING_LABEL_BY_CODE = Object.fromEntries(
+  CLEARING_ACCOUNT_OPTIONS.map(({ value, label }) => {
+    const sep = label.indexOf(" — ");
+    return [
+      value,
+      sep >= 0
+        ? { code: label.slice(0, sep), name: label.slice(sep + 3) }
+        : { code: value, name: label },
+    ];
+  }),
+);
 
 const Reconciliation = () => {
-  const [clearingCode, setClearingCode] = useState("1220");
-  const [statusFilter, setStatusFilter] = useState("");
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const clearingCode = searchParams.get("clearing") || "1220";
+  const statusFilter = searchParams.get("status") || "";
+
   const [items, setItems] = useState([]);
-  const [supported, setSupported] = useState([]);
+  const [dashboard, setDashboard] = useState(null);
   const [loading, setLoading] = useState(false);
-  const [seedLoading, setSeedLoading] = useState(false);
 
   const authHeaders = useCallback(() => {
     const token = localStorage.getItem("token");
     return { Authorization: `Bearer ${token}` };
   }, []);
 
+  const loadDashboard = useCallback(async () => {
+    try {
+      const res = await axios.get(
+        `${getAccountServiceBaseUrl()}/finance/reconciliation/dashboard`,
+        { headers: authHeaders() },
+      );
+      const payload = res.data?.data ?? res.data;
+      setDashboard(payload);
+      reconciliationWorkspace.setSupportedClearing(
+        payload?.supportedClearingAccounts || [],
+      );
+    } catch {
+      setDashboard(null);
+    }
+  }, [authHeaders]);
+
   const load = useCallback(async () => {
     setLoading(true);
     try {
+      await loadDashboard();
       const res = await axios.get(
         `${getAccountServiceBaseUrl()}/finance/reconciliation`,
         {
@@ -58,7 +68,10 @@ const Reconciliation = () => {
       );
       const payload = res.data?.data ?? res.data;
       setItems(payload?.items || []);
-      setSupported(payload?.supportedClearingAccounts || []);
+      reconciliationWorkspace.setSupportedClearing(
+        payload?.supportedClearingAccounts ||
+          reconciliationWorkspace.getSupportedClearing(),
+      );
     } catch (error) {
       notification.error({
         message: "Could not load reconciliation records",
@@ -68,7 +81,7 @@ const Reconciliation = () => {
     } finally {
       setLoading(false);
     }
-  }, [authHeaders, clearingCode, statusFilter]);
+  }, [authHeaders, clearingCode, statusFilter, loadDashboard]);
 
   useEffect(() => {
     load();
@@ -85,202 +98,231 @@ const Reconciliation = () => {
     return { counts, pendingAmount, total: items.length };
   }, [items]);
 
-  const seed = async () => {
-    setSeedLoading(true);
-    try {
-      const res = await axios.post(
-        `${getAccountServiceBaseUrl()}/finance/reconciliation/seed`,
-        { clearingAccountCode: clearingCode },
-        { headers: authHeaders() },
-      );
-      const payload = res.data?.data ?? res.data;
-      notification.success({
-        message: `Seeded ${payload?.created ?? 0} record(s) from pending GL`,
-      });
-      await load();
-    } catch (error) {
-      notification.error({
-        message: "Seed failed",
-        description: error?.response?.data?.message || error.message,
-      });
-    } finally {
-      setSeedLoading(false);
-    }
-  };
+  const seed = useCallback(async () => {
+    const res = await axios.post(
+      `${getAccountServiceBaseUrl()}/finance/reconciliation/seed`,
+      { clearingAccountCode: clearingCode },
+      { headers: authHeaders() },
+    );
+    const payload = res.data?.data ?? res.data;
+    notification.success({
+      message: `Seeded ${payload?.created ?? 0} record(s) from pending GL`,
+    });
+    await load();
+  }, [authHeaders, clearingCode, load]);
 
-  const settle = async (recordId) => {
-    try {
-      await axios.post(
-        `${getAccountServiceBaseUrl()}/finance/reconciliation/${recordId}/settle`,
-        {},
-        { headers: authHeaders() },
-      );
-      notification.success({ message: "Marked settled" });
-      await load();
-    } catch (error) {
-      notification.error({
-        message: "Settle failed",
-        description: error?.response?.data?.message || error.message,
-      });
-    }
-  };
-
-  const moveSuspense = (recordId) => {
-    let reason = "";
-    Modal.confirm({
-      title: "Move to suspense",
-      content: (
-        <Input.TextArea
-          rows={3}
-          placeholder="Reason"
-          onChange={(e) => {
-            reason = e.target.value;
-          }}
-        />
-      ),
-      onOk: async () => {
+  const settle = useCallback(
+    async (recordId) => {
+      try {
         await axios.post(
-          `${getAccountServiceBaseUrl()}/finance/reconciliation/suspense`,
-          { recordId, suspenseReason: reason || "Manual suspense" },
+          `${getAccountServiceBaseUrl()}/finance/reconciliation/${recordId}/settle`,
+          {},
           { headers: authHeaders() },
         );
-        notification.success({ message: "Moved to suspense" });
+        notification.success({ message: "Marked settled" });
         await load();
-      },
-    });
-  };
+      } catch (error) {
+        notification.error({
+          message: "Settle failed",
+          description: error?.response?.data?.message || error.message,
+        });
+      }
+    },
+    [authHeaders, load],
+  );
 
-  const manualMatch = (recordId) => {
-    let glDocNo = "";
-    Modal.confirm({
-      title: "Manual match",
-      content: (
-        <Input
-          placeholder="Matched GL doc no."
-          onChange={(e) => {
-            glDocNo = e.target.value;
-          }}
-        />
-      ),
-      onOk: async () => {
-        if (!glDocNo.trim()) return;
-        await axios.post(
-          `${getAccountServiceBaseUrl()}/finance/reconciliation/match`,
-          { recordId, matchedGlDocNo: glDocNo.trim() },
-          { headers: authHeaders() },
-        );
-        notification.success({ message: "Matched" });
-        await load();
-      },
-    });
-  };
+  const moveSuspense = useCallback(
+    (recordId) => {
+      let reason = "";
+      Modal.confirm({
+        title: "Move to suspense",
+        content: (
+          <Input.TextArea
+            rows={3}
+            placeholder="Reason"
+            onChange={(e) => {
+              reason = e.target.value;
+            }}
+          />
+        ),
+        onOk: async () => {
+          await axios.post(
+            `${getAccountServiceBaseUrl()}/finance/reconciliation/suspense`,
+            { recordId, suspenseReason: reason || "Manual suspense" },
+            { headers: authHeaders() },
+          );
+          notification.success({ message: "Moved to suspense" });
+          await load();
+        },
+      });
+    },
+    [authHeaders, load],
+  );
 
-  const columns = [
-    { title: "GL doc", dataIndex: "glDocNo", key: "glDocNo", width: 140 },
-    {
-      title: "Clearing",
-      dataIndex: "clearingAccountCode",
-      key: "clearingAccountCode",
-      width: 90,
+  const manualMatch = useCallback(
+    (recordId) => {
+      let glDocNo = "";
+      Modal.confirm({
+        title: "Manual match",
+        content: (
+          <Input
+            placeholder="Matched GL doc no."
+            onChange={(e) => {
+              glDocNo = e.target.value;
+            }}
+          />
+        ),
+        onOk: async () => {
+          if (!glDocNo.trim()) return;
+          await axios.post(
+            `${getAccountServiceBaseUrl()}/finance/reconciliation/match`,
+            { recordId, matchedGlDocNo: glDocNo.trim() },
+            { headers: authHeaders() },
+          );
+          notification.success({ message: "Matched" });
+          await load();
+        },
+      });
     },
-    {
-      title: "Amount",
-      key: "amount",
-      width: 110,
-      render: (_, r) => `€${centsToEuro(r.amount || 0).toFixed(2)}`,
-    },
-    {
-      title: "Status",
-      dataIndex: "reconciliationStatus",
-      key: "reconciliationStatus",
-      width: 130,
-      render: (st) => (
-        <Tag color={statusColor[st] || "default"}>{st || "unmatched"}</Tag>
-      ),
-    },
-    {
-      title: "Settlement",
-      dataIndex: "settlementStatus",
-      key: "settlementStatus",
-      width: 100,
-    },
-    { title: "Matched to", dataIndex: "matchedGlDocNo", key: "matchedGlDocNo" },
-    {
-      title: "Actions",
-      key: "actions",
-      width: 220,
-      render: (_, r) => (
-        <Space size="small" wrap>
-          {r.reconciliationStatus !== "settled" ? (
-            <>
-              <Button type="link" size="small" onClick={() => manualMatch(r._id)}>
-                Match
-              </Button>
-              <Button type="link" size="small" onClick={() => moveSuspense(r._id)}>
-                Suspense
-              </Button>
-              <Button type="link" size="small" onClick={() => settle(r._id)}>
-                Settle
-              </Button>
-            </>
-          ) : null}
-        </Space>
-      ),
-    },
-  ];
+    [authHeaders, load],
+  );
+
+  useEffect(() => {
+    reconciliationWorkspace.registerHandlers({
+      seed,
+      settle,
+      moveSuspense,
+      manualMatch,
+    });
+    return () => reconciliationWorkspace.clearHandlers();
+  }, [seed, settle, moveSuspense, manualMatch]);
+
+  const rows = useMemo(
+    () =>
+      items.map((item) => ({
+        ...item,
+        key: item._id,
+      })),
+    [items],
+  );
+
+  const activeAccount = useMemo(
+    () =>
+      dashboard?.accounts?.find((a) => a.clearingAccountCode === clearingCode),
+    [dashboard, clearingCode],
+  );
 
   return (
-    <div style={{ padding: 20 }}>
-      <Card title="Clearing reconciliation" style={{ marginBottom: 16 }}>
-        <Space wrap style={{ marginBottom: 16 }}>
-          <Select
-            style={{ width: 260 }}
-            value={clearingCode}
-            onChange={setClearingCode}
-            options={CLEARING_OPTIONS.filter(
-              (o) => !supported.length || supported.includes(o.value),
-            )}
-          />
-          <Select
-            allowClear
-            placeholder="Status filter"
-            style={{ width: 180 }}
-            value={statusFilter || undefined}
-            onChange={(v) => setStatusFilter(v || "")}
-            options={[
-              { value: "unmatched", label: "Unmatched" },
-              { value: "manual_matched", label: "Matched" },
-              { value: "suspense", label: "Suspense" },
-              { value: "settled", label: "Settled" },
-            ]}
-          />
-          <Button onClick={load} loading={loading}>
-            Refresh
-          </Button>
-          <Button type="primary" onClick={seed} loading={seedLoading}>
-            Seed from pending GL
-          </Button>
-        </Space>
-        <Space size="large" style={{ marginBottom: 12 }}>
-          <span>Total: {summary.total}</span>
-          <span>Unmatched: {summary.counts.unmatched}</span>
-          <span>Matched: {summary.counts.manual_matched}</span>
-          <span>Suspense: {summary.counts.suspense}</span>
-          <span>Settled: {summary.counts.settled}</span>
+    <div style={{ width: "100%", padding: 0 }}>
+      {dashboard?.accounts?.length > 0 ? (
+        <div
+          style={{
+            display: "flex",
+            flexWrap: "nowrap",
+            gap: 8,
+            width: "100%",
+            boxSizing: "border-box",
+            padding: "4px 34px 4px",
+          }}
+        >
+          {dashboard.accounts.map((acc) => {
+            const meta =
+              CLEARING_LABEL_BY_CODE[acc.clearingAccountCode] || null;
+            const isActive = acc.clearingAccountCode === clearingCode;
+            return (
+              <button
+                key={acc.clearingAccountCode}
+                type="button"
+                onClick={() =>
+                  navigate(
+                    `/Reconciliation?clearing=${acc.clearingAccountCode}${
+                      statusFilter ? `&status=${statusFilter}` : ""
+                    }`,
+                  )
+                }
+                style={{
+                  flex: "1 1 0",
+                  minWidth: 0,
+                  padding: "8px 10px",
+                  textAlign: "left",
+                  cursor: "pointer",
+                  border: isActive
+                    ? "1px solid #1677ff"
+                    : "1px solid #d9d9d9",
+                  borderRadius: 4,
+                  background: isActive ? "#e6f4ff" : "#fafafa",
+                  fontSize: 11,
+                  lineHeight: 1.3,
+                }}
+              >
+              <div
+                style={{
+                  fontWeight: 600,
+                  marginBottom: 2,
+                  overflow: "hidden",
+                  textOverflow: "ellipsis",
+                  whiteSpace: "nowrap",
+                }}
+                title={
+                  meta
+                    ? `${meta.code} — ${meta.name}`
+                    : acc.clearingAccountCode
+                }
+              >
+                {acc.clearingAccountCode}
+                {meta?.name ? (
+                  <span style={{ fontWeight: 500, color: "#595959" }}>
+                    {" "}
+                    · {meta.name}
+                  </span>
+                ) : null}
+              </div>
+              <div style={{ color: "#595959", fontSize: 10 }}>
+                Unreconciled: {acc.unreconciledCount} · Open: €
+                {centsToEuro(acc.openAmount || 0).toFixed(2)}
+              </div>
+              <div style={{ color: "#595959", fontSize: 10 }}>
+                Pending GL: {acc.pendingGlCount}
+                {acc.lastReconciledAt
+                  ? ` · Last: ${new Date(acc.lastReconciledAt).toLocaleDateString("en-IE")}`
+                  : ""}
+              </div>
+            </button>
+            );
+          })}
+        </div>
+      ) : null}
+      <div
+        style={{
+          padding: "4px 34px 2px",
+          fontSize: 12,
+          color: "#595959",
+          display: "flex",
+          flexWrap: "wrap",
+          gap: 16,
+        }}
+      >
+        <span>Filter total: {summary.total}</span>
+        {activeAccount ? (
           <span>
-            Open amount: €{centsToEuro(summary.pendingAmount).toFixed(2)}
+            Account open: €
+            {centsToEuro(activeAccount.openAmount || 0).toFixed(2)}
           </span>
-        </Space>
-        <Table
-          rowKey="_id"
-          size="small"
-          loading={loading}
-          dataSource={items}
-          columns={columns}
-          pagination={{ pageSize: 25 }}
-          scroll={{ x: 900 }}
-        />
-      </Card>
+        ) : null}
+        <span>Unmatched: {summary.counts.unmatched}</span>
+        <span>Matched: {summary.counts.manual_matched}</span>
+        <span>Suspense: {summary.counts.suspense}</span>
+        <span>Settled: {summary.counts.settled}</span>
+        <span>
+          Open amount: €{centsToEuro(summary.pendingAmount).toFixed(2)}
+        </span>
+      </div>
+      <TableComponent
+        data={rows}
+        isGrideLoading={loading}
+        screenName="Reconciliation"
+        enableRowSelection={false}
+      />
     </div>
   );
 };

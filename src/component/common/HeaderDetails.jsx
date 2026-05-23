@@ -87,6 +87,15 @@ import DirectDebitForm from "../../pages/finance/components/DirectDebitForm";
 // import RefundEntryForm from "../../pages/finance/components/RefundEntryForm";
 import RefundDrawer from "../../component/finanace/RefundDrawer";
 import WriteOffDrawer from "../../component/finanace/WriteOffDrawer";
+import CreditNoteDrawer from "../../component/finanace/CreditNoteDrawer";
+import JournalAdjustmentDrawer from "../../component/finanace/JournalAdjustmentDrawer";
+import { getAccountServiceBaseUrl } from "../../config/serviceUrls";
+import {
+  CLEARING_ACCOUNT_OPTIONS,
+  RECONCILIATION_STATUS_OPTIONS,
+} from "../../constants/reconciliation";
+import reconciliationWorkspace from "../../utils/reconciliationWorkspace";
+import { bumpJournalAdjustmentsReload } from "../../utils/journalAdjustmentsWorkspace";
 import { fetchBatchesByType } from "../../features/profiles/batchMemberSlice";
 import CreateCasesDrawer from "../cases/CreateCasesDrawer";
 import CreateEventDrawer from "../event/CreateEventDrawer";
@@ -109,6 +118,69 @@ const HEADER_DASHBOARD_RANGE_NAVS = new Set([
 
 function isHeaderDashboardRangeNav(pathname) {
   return HEADER_DASHBOARD_RANGE_NAVS.has(pathname);
+}
+
+function ReconciliationHeaderFilters({
+  searchParams,
+  setSearchParams,
+  seedLoading,
+  onSeed,
+}) {
+  const clearingCode = searchParams.get("clearing") || "1220";
+  const statusFilter = searchParams.get("status") || "";
+  const supported = reconciliationWorkspace.getSupportedClearing();
+  const clearingOptions = CLEARING_ACCOUNT_OPTIONS.filter(
+    (o) => !supported.length || supported.includes(o.value),
+  );
+
+  const updateParam = (key, value) => {
+    setSearchParams(
+      (prev) => {
+        const next = new URLSearchParams(prev);
+        if (value) next.set(key, value);
+        else next.delete(key);
+        return next;
+      },
+      { replace: true },
+    );
+  };
+
+  return (
+    <div
+      className="d-flex search-fliters align-items-center flex-wrap w-100 mt-2 mb-1"
+      style={{ gap: 8 }}
+    >
+      <Select
+        style={{ width: 260, height: 30 }}
+        value={clearingCode}
+        options={clearingOptions}
+        onChange={(v) => updateParam("clearing", v)}
+      />
+      <Select
+        allowClear
+        placeholder="Status filter"
+        style={{ width: 180, height: 30 }}
+        value={statusFilter || undefined}
+        options={RECONCILIATION_STATUS_OPTIONS}
+        onChange={(v) => updateParam("status", v || "")}
+      />
+      <Button
+        type="primary"
+        onClick={onSeed}
+        loading={seedLoading}
+        style={{
+          backgroundColor: "#45669d",
+          borderRadius: "4px",
+          border: "none",
+          height: "32px",
+          fontWeight: "500",
+          color: "white",
+        }}
+      >
+        Seed from pending GL
+      </Button>
+    </div>
+  );
 }
 
 function HeaderDetails({
@@ -150,6 +222,14 @@ function HeaderDetails({
   const [ddDrawerOpen, setDdDrawerOpen] = useState(false);
   const [refundDrawerOpen, setRefundDrawerOpen] = useState(false);
   const [writeOffDrawerOpen, setWriteOffDrawerOpen] = useState(false);
+  const [creditNoteDrawerOpen, setCreditNoteDrawerOpen] = useState(false);
+  const [creditNoteSubmitting, setCreditNoteSubmitting] = useState(false);
+  const [journalAdjustmentDrawerOpen, setJournalAdjustmentDrawerOpen] =
+    useState(false);
+  const [journalAdjustmentSubmitting, setJournalAdjustmentSubmitting] =
+    useState(false);
+  const [reconciliationSeedLoading, setReconciliationSeedLoading] =
+    useState(false);
   const [casesDrawerOpen, setCasesDrawerOpen] = useState(false);
   const [eventDrawerOpen, setEventDrawerOpen] = useState(false);
   const [attendeeDrawerOpen, setAttendeeDrawerOpen] = useState(false);
@@ -1220,6 +1300,9 @@ function HeaderDetails({
             location?.pathname == "/templeteSummary" ||
             location?.pathname == "/write-offs" ||
             location?.pathname == "/Refunds" ||
+            location?.pathname == "/CreditNotes" ||
+            location?.pathname == "/JournalAdjustments" ||
+            location?.pathname == "/GeneralLedger" ||
             location?.pathname == "/InAppNotifications") && (
             <div className="search-main">
               <div className="title d-flex justify-content-between align-items-start">
@@ -1273,7 +1356,15 @@ function HeaderDetails({
                                     ? "Refunds"
                                     : nav === "/write-offs"
                                       ? "Write-offs"
-                                      : nav === "/onlinePayment"
+                                      : nav === "/CreditNotes"
+                                        ? "Credit notes"
+                                        : nav === "/Reconciliation"
+                                          ? "Reconciliation"
+                                          : nav === "/JournalAdjustments"
+                                            ? "Journal adjustments"
+                                            : nav === "/GeneralLedger"
+                                              ? "General ledger"
+                                              : nav === "/onlinePayment"
                                         ? "Finance"
                                         : nav === "/EventsDashboard"
                                           ? "Events Dashboard"
@@ -1333,6 +1424,8 @@ function HeaderDetails({
                           "/Cheque",
                           "/Refunds",
                           "/write-offs",
+                          "/CreditNotes",
+                          "/JournalAdjustments",
                           "/onlinePayment",
                           "/DirectDebit",
                         ].includes(nav) &&
@@ -1424,6 +1517,10 @@ function HeaderDetails({
                               setRefundDrawerOpen(true);
                             } else if (nav === "/write-offs") {
                               setWriteOffDrawerOpen(true);
+                            } else if (nav === "/CreditNotes") {
+                              setCreditNoteDrawerOpen(true);
+                            } else if (nav === "/JournalAdjustments") {
+                              setJournalAdjustmentDrawerOpen(true);
                             } else if (nav === "/CasesSummary") {
                               setCasesDrawerOpen(true);
                             } else if (
@@ -1475,21 +1572,20 @@ function HeaderDetails({
                   )}
                 </div>
               </div>
-              {nav == "/Reconciliation" ? (
-                <div className="d-flex search-fliters align-items-baseline w-100 mt-2 mb-1">
-                  <Row className="align-items-baseline w-100">
-                    <DatePicker
-                      format="DD/MM/YYYY"
-                      placeholder="From Date"
-                      style={{ width: 220, marginRight: 12 }}
-                    />
-                    <DatePicker
-                      format="DD/MM/YYYY"
-                      placeholder="To Date"
-                      style={{ width: 220 }}
-                    />
-                  </Row>
-                </div>
+              {nav === "/Reconciliation" ? (
+                <ReconciliationHeaderFilters
+                  searchParams={searchParams}
+                  setSearchParams={setSearchParams}
+                  seedLoading={reconciliationSeedLoading}
+                  onSeed={async () => {
+                    setReconciliationSeedLoading(true);
+                    try {
+                      await reconciliationWorkspace.getHandlers().seed?.();
+                    } finally {
+                      setReconciliationSeedLoading(false);
+                    }
+                  }}
+                />
               ) : nav == "/RemindersSummary" ? (
                 <div
                   className="d-flex search-fliters align-items-center flex-wrap w-100 mt-2 mb-1"
@@ -2151,6 +2247,97 @@ function HeaderDetails({
         submitLoading={false}
         onSubmit={async () => {
           return true;
+        }}
+      />
+      <CreditNoteDrawer
+        open={creditNoteDrawerOpen}
+        onClose={() => setCreditNoteDrawerOpen(false)}
+        mode="create"
+        submitLoading={creditNoteSubmitting}
+        onSubmitCreate={async (payload) => {
+          setCreditNoteSubmitting(true);
+          try {
+            const token = localStorage.getItem("token");
+            await axios.post(
+              `${getAccountServiceBaseUrl()}/journal/credit-notes`,
+              payload,
+              {
+                headers: {
+                  Authorization: `Bearer ${token}`,
+                  "Content-Type": "application/json",
+                },
+              },
+            );
+            message.success("Draft credit note created");
+            return true;
+          } catch (error) {
+            message.error(
+              error?.response?.data?.message ||
+                error?.message ||
+                "Could not create credit note",
+            );
+            return false;
+          } finally {
+            setCreditNoteSubmitting(false);
+          }
+        }}
+      />
+      <JournalAdjustmentDrawer
+        open={journalAdjustmentDrawerOpen}
+        onClose={() => setJournalAdjustmentDrawerOpen(false)}
+        submitLoading={journalAdjustmentSubmitting}
+        onSubmitDraft={async (payload) => {
+          setJournalAdjustmentSubmitting(true);
+          try {
+            const token = localStorage.getItem("token");
+            await axios.post(
+              `${getAccountServiceBaseUrl()}/finance/journal-adjustments`,
+              payload,
+              { headers: { Authorization: `Bearer ${token}` } },
+            );
+            message.success("Draft journal adjustment created");
+            bumpJournalAdjustmentsReload();
+            return true;
+          } catch (error) {
+            message.error(
+              error?.response?.data?.message ||
+                error?.message ||
+                "Create failed",
+            );
+            return false;
+          } finally {
+            setJournalAdjustmentSubmitting(false);
+          }
+        }}
+        onSubmitApprove={async (payload) => {
+          setJournalAdjustmentSubmitting(true);
+          try {
+            const token = localStorage.getItem("token");
+            const res = await axios.post(
+              `${getAccountServiceBaseUrl()}/finance/journal-adjustments`,
+              payload,
+              { headers: { Authorization: `Bearer ${token}` } },
+            );
+            const data = res.data?.data ?? res.data;
+            const docNo = data?.docNo || payload.docNo;
+            await axios.post(
+              `${getAccountServiceBaseUrl()}/finance/journal-adjustments/${encodeURIComponent(docNo)}/approve`,
+              {},
+              { headers: { Authorization: `Bearer ${token}` } },
+            );
+            message.success(`Journal adjustment approved — GL posted for ${docNo}`);
+            bumpJournalAdjustmentsReload();
+            return true;
+          } catch (error) {
+            message.error(
+              error?.response?.data?.message ||
+                error?.message ||
+                "Approve failed",
+            );
+            return false;
+          } finally {
+            setJournalAdjustmentSubmitting(false);
+          }
         }}
       />
       <CreateCasesDrawer

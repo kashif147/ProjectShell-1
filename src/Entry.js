@@ -165,6 +165,7 @@ const Reconciliation = lazyWithRetry(
 const JournalAdjustments = lazyWithRetry(
   () => import("./pages/finance/JournalAdjustments"),
 );
+const GeneralLedger = lazyWithRetry(() => import("./pages/finance/GeneralLedger"));
 const DirectDebitAuthorization = lazyWithRetry(
   () => import("./pages/finance/DirectDebitAuthorization"),
 );
@@ -185,6 +186,9 @@ const MembershipDashboard = lazyWithRetry(
 );
 const TenantManagement = lazyWithRetry(
   () => import("./pages/tenant-management/TenantManagement"),
+);
+const TenantOfficesPage = lazyWithRetry(
+  () => import("./pages/tenant-offices/TenantOfficesPage"),
 );
 const RoleManagement = lazyWithRetry(
   () => import("./pages/role-management/RoleManagement"),
@@ -885,6 +889,16 @@ function Entry() {
                         }
                       />
                       <Route
+                        path="GeneralLedger"
+                        element={
+                          <ProtectedRoute
+                            requiredPermission={RoutePermissions["GeneralLedger"]}
+                          >
+                            <GeneralLedger />
+                          </ProtectedRoute>
+                        }
+                      />
+                      <Route
                         path="Batch/:id"
                         element={
                           <ProtectedRoute>
@@ -1039,6 +1053,14 @@ function Entry() {
                         element={
                           <ProtectedRoute requiredPermission={RoutePermissions["TenantManagement"]}>
                             <TenantManagement />
+                          </ProtectedRoute>
+                        }
+                      />
+                      <Route
+                        path="TenantOffices"
+                        element={
+                          <ProtectedRoute requiredPermission={RoutePermissions["TenantOffices"]}>
+                            <TenantOfficesPage />
                           </ProtectedRoute>
                         }
                       />

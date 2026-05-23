@@ -1,0 +1,22 @@
+/* Keep scroll inside the allocation preview table, not the drawer body. */
+.reassign-allocation-table-wrap {
+  overflow: hidden;
+}
+
+.reassign-allocation-table-wrap .reassign-allocation-table .ant-table-body,
+.reassign-allocation-table-wrap .reassign-allocation-table .ant-table-content {
+  overflow-y: auto !important;
+}
+
+.reassign-allocation-table-wrap .reassign-allocation-table .ant-table-header {
+  flex-shrink: 0;
+}
+
+/* Reason field: 3 rows (override MyInput.css min-height: 100px ≈ 4 rows) */
+.reassign-payment-drawer
+  .my-input-wrapper:has(textarea[name="reason"])
+  textarea.my-input-field {
+  min-height: 72px;
+  height: 72px;
+  resize: vertical;
+}

@@ -37,6 +37,8 @@ const MyTable = ({
    */
   alwaysFirstSortField,
   alwaysFirstSortOrder = "ascend",
+  /** Ant Design Table `components` (e.g. resizable header cells). */
+  tableComponents,
 }) => {
   const [internalSelectedRowKeys, setInternalSelectedRowKeys] = useState([]);
   const [filteredInfo, setFilteredInfo] = useState({});
@@ -458,6 +460,7 @@ const MyTable = ({
       bordered
       tableLayout="fixed"
       sticky
+      components={tableComponents}
       scroll={mergedScroll}
       size="middle"
       onRow={(record, rowIndex) => ({

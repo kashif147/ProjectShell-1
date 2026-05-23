@@ -13,65 +13,48 @@ import {
 import MyInput from "../common/MyInput";
 import CustomSelect from "../common/CustomSelect";
 import { PlusOutlined, MinusCircleOutlined } from "@ant-design/icons";
-import { getAllTenants, updateTenant } from "../../features/TenantSlice";
+import { getAllTenants } from "../../features/TenantSlice";
 import { updateFtn } from "../../utils/Utilities";
 import { insertDataFtn } from "../../utils/Utilities";
-// import "../../../styles/TenantManagement.css";
-import "../../styles/TenantManagement.css"
+import "../../styles/TenantManagement.css";
 import { useDispatch } from "react-redux";
-import { json } from "react-router-dom";
 import MyAlert from "../common/MyAlert";
+import { mergeTenantFormData } from "../../constants/tenantDefaults";
+import TenantBrandingAssetUpload from "./TenantBrandingAssetUpload";
+import TenantOfficesPanel from "./TenantOfficesPanel";
+import { notifyBrandingRefresh } from "../../context/TenantBrandingContext";
+import {
+  clearTenantBrandingCache,
+  resolveTenantId,
+} from "../../services/tenantBrandingService";
 
 const { TabPane } = Tabs;
 
+const getChangedFields = (current, original) =>
+  Object.keys(current).reduce((acc, key) => {
+    if (JSON.stringify(current[key]) !== JSON.stringify(original?.[key])) {
+      acc[key] = current[key];
+    }
+    return acc;
+  }, {});
+
 const TenantForm = ({ tenant, onClose }) => {
-  const dispatch = useDispatch
+  const dispatch = useDispatch();
   const [originalTenant, setOriginalTenant] = useState(null);
-  const [iData, setIData] = useState({
-    name: "",
-    code: "",
-    description: "",
-    domain: "",
-    contactEmail: "",
-    contactPhone: "",
-    status: "PENDING",
-    isActive: true,
-    address: {
-      street: "",
-      city: "",
-      state: "",
-      zipCode: "",
-      country: "IE",
-    },
-    settings: {
-      maxUsers: 100,
-      allowSelfRegistration: true,
-      sessionTimeout: 24,
-      passwordPolicy: {
-        minLength: 8,
-        requireUppercase: true,
-        requireLowercase: true,
-        requireNumbers: true,
-        requireSpecialChars: true,
-      },
-    },
-    subscription: {
-      plan: "FREE",
-      startDate: "",
-      endDate: "",
-      autoRenew: true,
-    },
-    authenticationConnections: [],
-  });
+  const [iData, setIData] = useState(mergeTenantFormData(null));
 
   const [errors, setErrors] = useState({});
 
   useEffect(() => {
     if (tenant) {
-      setIData(tenant);         // populate form
-      setOriginalTenant(tenant); // keep original copy for comparison
+      const formData = mergeTenantFormData(tenant);
+      setIData(formData);
+      setOriginalTenant(formData);
+    } else {
+      const emptyForm = mergeTenantFormData(null);
+      setIData(emptyForm);
+      setOriginalTenant(null);
     }
-    // eslint-disable-next-line
   }, [tenant]);
 
   // const handleChange = (section, field, value) => {
@@ -86,12 +69,10 @@ const TenantForm = ({ tenant, onClose }) => {
 
   const validate = () => {
     let newErrors = {};
-    if (!iData.name?.trim()) newErrors.name = "Organization name is required";
+    if (!iData.name?.trim()) newErrors.name = "Tenant name is required";
     if (!iData.code?.trim()) newErrors.code = "Tenant code is required";
     if (!iData.description?.trim())
       newErrors.description = "Description is required";
-    if (!iData.contactEmail?.trim())
-      newErrors.contactEmail = "Contact email is required";
     if (!iData.subscription.plan)
       newErrors.subscriptionPlan = "Plan is required";
 
@@ -148,44 +129,32 @@ const TenantForm = ({ tenant, onClose }) => {
       return;
     }
     if (tenant) {
-      // compare iData vs originalTenant
-      const changedData = {};
-      Object.keys(iData).forEach((key) => {
-        if (JSON.stringify(iData[key]) !== JSON.stringify(originalTenant[key])) {
-          changedData[key] = iData[key];
-        }
-      });
-      if (tenant) {
-        // ✅ Find differences
-        const changedFields = Object.keys(iData).reduce((acc, key) => {
-          if (iData[key] !== tenant[key]) {
-            acc[key] = iData[key];
-          }
-          return acc;
-        }, {});
+      const changedFields = getChangedFields(iData, originalTenant);
 
-        if (Object.keys(changedFields).length === 0) {
-          MyAlert("error", 'No changes detected for tenant')
-          return;
-        }
-        try {
-          await updateFtn(
-            process.env.REACT_APP_POLICY_SERVICE_URL,
-            `/tenants/${tenant?._id}`,
-            // { id: tenant?._id, ...changedFields },
-            { ...changedFields },
-            async () => {
-              onClose();
-              setErrors({});
-              const res = await dispatch(getAllTenants());
-              console.log("after dispatch", res);
-            },
-            "Tenant updated successfully"
-          );
-        } catch (err) {
-          console.error("Update failed:", err);
-        }
+      if (Object.keys(changedFields).length === 0) {
+        MyAlert("error", "No changes detected for tenant");
         return;
+      }
+      try {
+        await updateFtn(
+          process.env.REACT_APP_POLICY_SERVICE_URL,
+          `/tenants/${tenant?._id}`,
+          { ...changedFields },
+          async () => {
+            onClose();
+            setErrors({});
+            if (changedFields.branding) {
+              clearTenantBrandingCache(tenant._id);
+              const sessionTenantId = resolveTenantId();
+              if (sessionTenantId) clearTenantBrandingCache(sessionTenantId);
+              notifyBrandingRefresh();
+            }
+            await dispatch(getAllTenants());
+          },
+          "Tenant updated successfully"
+        );
+      } catch (err) {
+        console.error("Update failed:", err);
       }
       return;
     }
@@ -205,7 +174,18 @@ const TenantForm = ({ tenant, onClose }) => {
       );
 
   };
-  console.log(errors, "yrs")
+  const ColorField = ({ label, value, onChange }) => (
+    <div className="color-field">
+      <MyInput label={label} value={value} onChange={(e) => onChange(e.target.value)} />
+      <input
+        type="color"
+        className="color-picker-input"
+        value={value || "#1E40AF"}
+        onChange={(e) => onChange(e.target.value)}
+        aria-label={`${label} picker`}
+      />
+    </div>
+  );
 
   return (
     <Drawer
@@ -230,17 +210,13 @@ const TenantForm = ({ tenant, onClose }) => {
       }
     >
       <div className="drawer-main-cntainer">
-        <Tabs defaultActiveKey="basic" size="small">
-          {/* 1️⃣ Basic Info & Contact */}
-          <TabPane tab="Basic Info & Contact" key="basic">
+        <Tabs defaultActiveKey="organisation" size="small">
+          <TabPane tab="Organisation Profile" key="organisation">
             <div className="drawer-tab-content pt-2">
-
-              {/* ================= Organization Info ================= */}
-              {/* <div className="section-header">🏢 Organization Info</div> */}
               <Row gutter={16}>
                 <Col span={12}>
                   <MyInput
-                    label="Organization Name"
+                    label="Tenant Name"
                     value={iData.name}
                     onChange={(e) => handleChange("root", "name", e.target.value, null)}
                     hasError={errors.name}
@@ -282,115 +258,327 @@ const TenantForm = ({ tenant, onClose }) => {
                     hasError={errors?.domain}
                   />
                 </Col>
-                {/* <Col span={8}>
-        <CustomSelect
-          label="Status"
-          value={iData.status}
-          onChange={(val) => handleChange("status", val)}
-          options={[
-            { value: "ACTIVE", label: "Active" },
-            { value: "INACTIVE", label: "Inactive" },
-            { value: "SUSPENDED", label: "Suspended" },
-            { value: "PENDING", label: "Pending" },
-          ]}
-        />
-      </Col> */}
                 <Col span={12}>
                   <div className="switch-field">
                     <label className="my-input-label">Active</label>
                     <Switch
                       className="tenant-active-switch"
                       checked={iData.isActive}
-                      onChange={(val) => handleChange("isActive", val)}
+                      onChange={(val) => handleChange("root", "isActive", val)}
                     />
                   </div>
                 </Col>
               </Row>
 
-              {/* ================= Contact Info ================= */}
-              <div className="section-header">📞 Contact Information</div>
+              <div className="section-header">Legal & Registration</div>
               <Row gutter={16}>
                 <Col span={12}>
                   <MyInput
-                    label="Contact Email"
-                    value={iData.contactEmail}
-                    onChange={(e) => handleChange("root", "contactEmail", e.target.value, null)}
-                    hasError={errors.contactEmail}
+                    label="Legal Name"
+                    value={iData.organisationProfile.legalName}
+                    onChange={(e) =>
+                      handleChange("organisationProfile", "legalName", e.target.value, null)
+                    }
+                  />
+                </Col>
+                <Col span={12}>
+                  <MyInput
+                    label="Trading Name"
+                    value={iData.organisationProfile.tradingName}
+                    onChange={(e) =>
+                      handleChange("organisationProfile", "tradingName", e.target.value, null)
+                    }
+                  />
+                </Col>
+              </Row>
+              <Row gutter={16}>
+                <Col span={8}>
+                  <MyInput
+                    label="Registration Number"
+                    value={iData.organisationProfile.registrationNumber}
+                    onChange={(e) =>
+                      handleChange(
+                        "organisationProfile",
+                        "registrationNumber",
+                        e.target.value,
+                        null
+                      )
+                    }
+                  />
+                </Col>
+                <Col span={8}>
+                  <MyInput
+                    label="Charity Number"
+                    value={iData.organisationProfile.charityNumber}
+                    onChange={(e) =>
+                      handleChange(
+                        "organisationProfile",
+                        "charityNumber",
+                        e.target.value,
+                        null
+                      )
+                    }
+                  />
+                </Col>
+                <Col span={8}>
+                  <MyInput
+                    label="VAT Number"
+                    value={iData.organisationProfile.vatNumber}
+                    onChange={(e) =>
+                      handleChange("organisationProfile", "vatNumber", e.target.value, null)
+                    }
+                  />
+                </Col>
+              </Row>
+              <Row gutter={16}>
+                <Col span={12}>
+                  <MyInput
+                    label="SEPA Originator Identification Number (OIN)"
+                    value={iData.organisationProfile.sepaOriginatorIdentificationNumber}
+                    onChange={(e) =>
+                      handleChange(
+                        "organisationProfile",
+                        "sepaOriginatorIdentificationNumber",
+                        e.target.value,
+                        null
+                      )
+                    }
+                  />
+                </Col>
+              </Row>
+
+              <div className="section-header">Contact</div>
+              <Row gutter={16}>
+                <Col span={12}>
+                  <MyInput
+                    label="Website"
+                    value={iData.organisationProfile.website}
+                    onChange={(e) =>
+                      handleChange("organisationProfile", "website", e.target.value, null)
+                    }
+                  />
+                </Col>
+                <Col span={12}>
+                  <MyInput
+                    label="Email"
                     type="email"
-                    required
+                    value={iData.organisationProfile.email}
+                    onChange={(e) =>
+                      handleChange("organisationProfile", "email", e.target.value, null)
+                    }
                   />
                 </Col>
+              </Row>
+              <Row gutter={16}>
                 <Col span={12}>
                   <MyInput
-                    label="Contact Phone"
-                    value={iData.contactPhone}
-                    onChange={(e) => handleChange("root", "contactPhone", e.target.value, null)}
-                    type='mobile'
-                  />
-                </Col>
-              </Row>
-
-              {/* ================= Address Info ================= */}
-              <div className="section-header">🏠 Address Information</div>
-              <Row gutter={16}>
-                <Col span={24}>
-                  <MyInput
-                    label="Street Address"
-                    value={iData.address.street}
+                    label="Contact Number"
+                    type="mobile"
+                    value={iData.organisationProfile.contactNumber}
                     onChange={(e) =>
-                      handleChange("address", "street", e.target.value, null)
+                      handleChange(
+                        "organisationProfile",
+                        "contactNumber",
+                        e.target.value,
+                        null
+                      )
                     }
-                  />
-                </Col>
-              </Row>
-
-              <Row gutter={16}>
-                <Col span={6}>
-                  <MyInput
-                    label="Area or Town"
-                    value={iData.address.city}
-                    onChange={(e) =>
-                      handleChange("address", "city", e.target.value, null)
-                    }
-                  />
-                </Col>
-                <Col span={6}>
-                  <MyInput
-                    label="City, County or Postcode"
-                    value={iData.address.state}
-                    onChange={(e) =>
-                      handleChange("address", "state", e.target.value, null)
-                    }
-                  />
-                </Col>
-                <Col span={6}>
-                  <MyInput
-                    label="Eircode"
-                    value={iData.address.zipCode}
-                    onChange={(e) =>
-                      handleChange("address", "zipCode", e.target.value, null)
-                    }
-                  />
-                </Col>
-                <Col span={6}>
-                  <CustomSelect
-                    label="Country"
-                    value={iData.address.country}
-                    onChange={(val) => handleChange("address", "country", val?.target.value, null)}
-                    options={[
-                      { value: "IE", label: "Ireland" },
-                      { value: "US", label: "United States" },
-                      { value: "CA", label: "Canada" },
-                      { value: "UK", label: "United Kingdom" },
-                      { value: "AU", label: "Australia" },
-                    ]}
                   />
                 </Col>
               </Row>
             </div>
           </TabPane>
 
+          {/* Branding */}
+          <TabPane tab="Branding" key="branding">
+            <div className="drawer-tab-content pt-2">
+              <div className="section-header">Logos & Assets</div>
+              <p className="text-muted tenant-branding-hint mb-3">
+                Default membership branding is shown until you upload your own assets to Azure Blob Storage.
+              </p>
+              <Row gutter={16}>
+                <Col span={8}>
+                  <TenantBrandingAssetUpload
+                    label="Logo"
+                    assetType="logo"
+                    value={iData.branding.logoUrl}
+                    tenantId={tenant?._id}
+                    onChange={(url) => handleChange("branding", "logoUrl", url, null)}
+                    previewHeight={56}
+                  />
+                </Col>
+                <Col span={8}>
+                  <TenantBrandingAssetUpload
+                    label="Dark Logo"
+                    assetType="logoDark"
+                    value={iData.branding.logoDarkUrl}
+                    tenantId={tenant?._id}
+                    onChange={(url) =>
+                      handleChange("branding", "logoDarkUrl", url, null)
+                    }
+                    previewHeight={56}
+                  />
+                </Col>
+                <Col span={8}>
+                  <TenantBrandingAssetUpload
+                    label="Favicon"
+                    assetType="favicon"
+                    value={iData.branding.faviconUrl}
+                    tenantId={tenant?._id}
+                    onChange={(url) =>
+                      handleChange("branding", "faviconUrl", url, null)
+                    }
+                    previewHeight={40}
+                  />
+                </Col>
+              </Row>
 
+              <div className="section-header">Colours</div>
+              <p className="text-muted tenant-branding-hint mb-2">
+                Matches Project Shell defaults (Utilites.css). Used for letters and exports; the live app sidebar keeps existing CSS.
+              </p>
+              <Row gutter={16}>
+                <Col span={8}>
+                  <ColorField
+                    label="Primary Colour"
+                    value={iData.branding.primaryColor}
+                    onChange={(val) => handleChange("branding", "primaryColor", val, null)}
+                  />
+                </Col>
+                <Col span={8}>
+                  <ColorField
+                    label="Secondary Colour"
+                    value={iData.branding.secondaryColor}
+                    onChange={(val) => handleChange("branding", "secondaryColor", val, null)}
+                  />
+                </Col>
+                <Col span={8}>
+                  <ColorField
+                    label="Accent Colour"
+                    value={iData.branding.accentColor}
+                    onChange={(val) => handleChange("branding", "accentColor", val, null)}
+                  />
+                </Col>
+              </Row>
+
+              <div className="section-header">Portal & Communications</div>
+              <Row gutter={16}>
+                <Col span={12}>
+                  <MyInput
+                    label="Portal Title"
+                    value={iData.branding.portalTitle}
+                    onChange={(e) =>
+                      handleChange("branding", "portalTitle", e.target.value, null)
+                    }
+                  />
+                </Col>
+              </Row>
+              <Row gutter={16}>
+                <Col span={24}>
+                  <MyInput
+                    label="Email Footer Text"
+                    value={iData.branding.emailFooterText}
+                    onChange={(e) =>
+                      handleChange("branding", "emailFooterText", e.target.value, null)
+                    }
+                    textarea
+                  />
+                </Col>
+              </Row>
+              <Row gutter={16}>
+                <Col span={12}>
+                  <TenantBrandingAssetUpload
+                    label="Letter Header"
+                    assetType="letterHeader"
+                    value={iData.branding.letterHeaderUrl}
+                    tenantId={tenant?._id}
+                    onChange={(url) =>
+                      handleChange("branding", "letterHeaderUrl", url, null)
+                    }
+                    previewHeight={48}
+                  />
+                </Col>
+                <Col span={12}>
+                  <TenantBrandingAssetUpload
+                    label="Letter Footer"
+                    assetType="letterFooter"
+                    value={iData.branding.letterFooterUrl}
+                    tenantId={tenant?._id}
+                    onChange={(url) =>
+                      handleChange("branding", "letterFooterUrl", url, null)
+                    }
+                    previewHeight={48}
+                  />
+                </Col>
+              </Row>
+            </div>
+          </TabPane>
+
+          {/* Regional Settings */}
+          <TabPane tab="Regional Settings" key="regional">
+            <div className="drawer-tab-content pt-2">
+              <Row gutter={16}>
+                <Col span={12}>
+                  <MyInput
+                    label="Timezone"
+                    value={iData.regionalSettings.timezone}
+                    onChange={(e) =>
+                      handleChange("regionalSettings", "timezone", e.target.value, null)
+                    }
+                  />
+                </Col>
+                <Col span={12}>
+                  <MyInput
+                    label="Locale"
+                    value={iData.regionalSettings.locale}
+                    onChange={(e) =>
+                      handleChange("regionalSettings", "locale", e.target.value, null)
+                    }
+                  />
+                </Col>
+              </Row>
+              <Row gutter={16}>
+                <Col span={12}>
+                  <CustomSelect
+                    label="Currency"
+                    value={iData.regionalSettings.currency}
+                    onChange={(val) =>
+                      handleChange(
+                        "regionalSettings",
+                        "currency",
+                        val?.target?.value || val,
+                        null
+                      )
+                    }
+                    options={[
+                      { value: "EUR", label: "EUR (€)" },
+                      { value: "GBP", label: "GBP (£)" },
+                      { value: "USD", label: "USD ($)" },
+                    ]}
+                  />
+                </Col>
+                <Col span={12}>
+                  <CustomSelect
+                    label="Date Format"
+                    value={iData.regionalSettings.dateFormat}
+                    onChange={(val) =>
+                      handleChange(
+                        "regionalSettings",
+                        "dateFormat",
+                        val?.target?.value || val,
+                        null
+                      )
+                    }
+                    options={[
+                      { value: "DD/MM/YYYY", label: "DD/MM/YYYY" },
+                      { value: "MM/DD/YYYY", label: "MM/DD/YYYY" },
+                      { value: "YYYY-MM-DD", label: "YYYY-MM-DD" },
+                    ]}
+                  />
+                </Col>
+              </Row>
+            </div>
+          </TabPane>
 
           {/* 2️⃣ Settings & Subscription */}
           <TabPane tab="Settings & Subscription" key="settings">
@@ -702,6 +890,14 @@ const TenantForm = ({ tenant, onClose }) => {
               })}
             </div>
           </TabPane>
+
+          {tenant?._id && (
+            <TabPane tab="Offices" key="offices">
+              <div className="drawer-tab-content pt-2">
+                <TenantOfficesPanel tenantId={tenant._id} />
+              </div>
+            </TabPane>
+          )}
 
         </Tabs>
       </div>
