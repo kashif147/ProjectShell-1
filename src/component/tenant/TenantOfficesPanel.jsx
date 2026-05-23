@@ -15,13 +15,13 @@ import {
   formatOfficeAddress,
   getDayLabel,
 } from "../../constants/tenantOfficeDefaults";
+import { useAuthorization } from "../../context/AuthorizationContext";
 
 const holidayCountLabel = (office) => {
   const n = office?.nonWorkingDays?.length || 0;
   if (!n) return "—";
   return n === 1 ? "1 closure" : `${n} closures`;
 };
-import { useAuthorization } from "../../context/AuthorizationContext";
 
 const officeTypeLabel = (type) =>
   OFFICE_TYPES.find((o) => o.value === type)?.label || type;
