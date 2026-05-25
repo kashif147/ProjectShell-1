@@ -153,6 +153,39 @@ export const serializeNonWorkingDaysForApi = (items = []) =>
     })
     .filter(Boolean);
 
+export const emptyOfficeDetailsForm = () => ({
+  name: "",
+  officeType: "BRANCH",
+  address: defaultOfficeAddress(),
+  email: "",
+  phone: "",
+  isPrimary: false,
+  isActive: true,
+});
+
+export const officeToDetailsForm = (office) => ({
+  name: office?.name || "",
+  officeType: office?.officeType || "BRANCH",
+  address: {
+    ...defaultOfficeAddress(),
+    ...(office?.address || {}),
+  },
+  email: office?.email || "",
+  phone: office?.phone || "",
+  isPrimary: Boolean(office?.isPrimary),
+  isActive: office?.isActive !== false,
+});
+
+export const serializeOfficeDetailsForApi = (form) => ({
+  name: form.name?.trim(),
+  officeType: form.officeType || "BRANCH",
+  address: form.address,
+  email: form.email?.trim() || undefined,
+  phone: form.phone?.trim() || undefined,
+  isPrimary: Boolean(form.isPrimary),
+  isActive: form.isActive !== false,
+});
+
 export const emptyOfficeForm = () => ({
   name: "",
   officeType: "BRANCH",

@@ -39,6 +39,7 @@ import {
   FaIdCard,
   FaCalendarAlt,
   FaBalanceScale,
+  FaFileAlt,
 } from "react-icons/fa";
 import { useTableColumns } from "../../context/TableColumnsContext ";
 import TransferRequests from "../TransferRequests";
@@ -344,6 +345,10 @@ function AppTabs() {
   }, []);
 
   const profileHeaderRef = useRef(null);
+  const documentsActionsRef = useRef(null);
+  const registerDocumentsActions = useCallback((actions) => {
+    documentsActionsRef.current = actions;
+  }, []);
   const [membershipHeaderActionsMeta, setMembershipHeaderActionsMeta] =
     useState(initialMembershipHeaderActionsMeta);
   const onMembershipHeaderActionsMetaChange = useCallback((meta) => {
@@ -559,7 +564,17 @@ function AppTabs() {
     },
     // { key: "15", label: "Duplicate Members", children: <DuplicateMembers /> },
     { key: "2", label: "Finance", children: <FinanceByID /> },
-    { key: "4", label: "Documents", children: <DoucmentsById /> },
+    {
+      key: "4",
+      label: "Documents",
+      children: (
+        <DoucmentsById
+          profileId={profileDetails?._id}
+          profile={profileDetails}
+          registerActions={registerDocumentsActions}
+        />
+      ),
+    },
     {
       key: "5",
       label: "Correspondence",
@@ -570,14 +585,13 @@ function AppTabs() {
       key: "3",
       label: "Applications",
       children: (
-        <div style={{ padding: 20 }}>
-          <MyTable
-            columns={profileApplicationColumns}
-            dataSource={profileApplications}
-            loading={profileApplicationsLoading}
-            selection={false}
-          />
-        </div>
+        <MyTable
+          columns={profileApplicationColumns}
+          dataSource={profileApplications}
+          loading={profileApplicationsLoading}
+          selection={false}
+          tablePadding={{ paddingLeft: "0", paddingRight: "0" }}
+        />
       ),
     },
     {
@@ -592,15 +606,14 @@ function AppTabs() {
       key: "17",
       label: "Subscription History",
       children: (
-        <div style={{ padding: 20 }}>
-          <MyTable
-            columns={subscriptionHistoryColumns}
-            dataSource={ProfileSubHistory}
-            loading={ProfileSubHistoryLoading}
-            selection={false}
-            onRowClick={(record) => openHistorySubscriptionDetail(record)}
-          />
-        </div>
+        <MyTable
+          columns={subscriptionHistoryColumns}
+          dataSource={ProfileSubHistory}
+          loading={ProfileSubHistoryLoading}
+          selection={false}
+          tablePadding={{ paddingLeft: "0", paddingRight: "0" }}
+          onRowClick={(record) => openHistorySubscriptionDetail(record)}
+        />
       ),
     },
     { key: "9", label: "Projects", children: <div>Projects</div> },
@@ -788,10 +801,27 @@ function AppTabs() {
         );
         return items;
       }
+      case "4":
+        if (!profileDetails?._id) return [];
+        return [
+          {
+            key: "documents-create-payment-form",
+            label: "Create payment form",
+            icon: membershipMoreIcon(FaFileAlt, "#45669d"),
+            onClick: () =>
+              documentsActionsRef.current?.openCreatePaymentForm?.(),
+          },
+        ];
       default:
         return [];
     }
-  }, [activeKey, isEditMode, isDeceased, membershipHeaderActionsMeta]);
+  }, [
+    activeKey,
+    isEditMode,
+    isDeceased,
+    membershipHeaderActionsMeta,
+    profileDetails?._id,
+  ]);
 
   const historyData = [
     {

@@ -190,6 +190,9 @@ const TenantManagement = lazyWithRetry(
 const TenantOfficesPage = lazyWithRetry(
   () => import("./pages/tenant-offices/TenantOfficesPage"),
 );
+const TenantDepartmentsPage = lazyWithRetry(
+  () => import("./pages/tenant-departments/TenantDepartmentsPage"),
+);
 const RoleManagement = lazyWithRetry(
   () => import("./pages/role-management/RoleManagement"),
 );
@@ -1061,6 +1064,14 @@ function Entry() {
                         element={
                           <ProtectedRoute requiredPermission={RoutePermissions["TenantOffices"]}>
                             <TenantOfficesPage />
+                          </ProtectedRoute>
+                        }
+                      />
+                      <Route
+                        path="TenantDepartments"
+                        element={
+                          <ProtectedRoute requiredPermission={RoutePermissions["TenantDepartments"]}>
+                            <TenantDepartmentsPage />
                           </ProtectedRoute>
                         }
                       />

@@ -51,6 +51,7 @@ export const RoutePermissions = {
   "ProductTypesManagement": "portal:read",
   "TenantManagement": "tenant:read",
   "TenantOffices": "tenant:read",
+  "TenantDepartments": "tenant:read",
   "PolicyClientExample": "portal:read",
 
   // Reports

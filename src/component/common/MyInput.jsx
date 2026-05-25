@@ -2,6 +2,14 @@ import React, { useEffect, useId, useState } from "react";
 import "../../styles/MyInput.css";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchCountries } from "../../features/CountriesSlice";
+import {
+  formatBicDisplay,
+  formatIbanDisplay,
+  sanitizeBicInput,
+  sanitizeIbanInput,
+  validateBic,
+  validateIban,
+} from "../../utils/iban";
 
 /** Digits only, strip trunk leading zeros (e.g. 0345… → 345…) */
 function normalizeNationalDigits(raw) {
@@ -141,6 +149,7 @@ const MyInput = ({
   onFocus: onFocusProp,
   maxLength,
   prefix,
+  success = false,
 }) => {
   const uid = useId().replace(/:/g, "");
   const inputId = id ?? (name ? String(name) : `myinput-${uid}`);
@@ -151,6 +160,8 @@ const MyInput = ({
   const [internalError, setInternalError] = useState("");
   const [countryCode, setCountryCode] = useState("+353"); // default fallback
   const [mobileNumber, setMobileNumber] = useState("");
+  const [ibanDisplay, setIbanDisplay] = useState("");
+  const [bicDisplay, setBicDisplay] = useState("");
 
   // 🔹 Fetch countries from API when needed
   useEffect(() => {
@@ -168,9 +179,31 @@ const MyInput = ({
     });
   };
 
+  const handleIbanChange = (e) => {
+    const compact = sanitizeIbanInput(e.target.value);
+    setIbanDisplay(formatIbanDisplay(compact));
+    onChange({ target: { name, value: compact } });
+    if (compact && !validateIban(compact, { required: false }).valid) {
+      setInternalError("Invalid IBAN");
+    } else {
+      setInternalError("");
+    }
+  };
+
+  const handleBicChange = (e) => {
+    const compact = sanitizeBicInput(e.target.value);
+    setBicDisplay(formatBicDisplay(compact));
+    onChange({ target: { name, value: compact } });
+    if (compact && !validateBic(compact, { required: false }).valid) {
+      setInternalError("Invalid BIC");
+    } else {
+      setInternalError("");
+    }
+  };
+
   const handleChange = (e) => {
     let val = e.target.value;
-    if (type === "mobile") return;
+    if (type === "mobile" || type === "iban" || type === "bic") return;
 
     if (type === "email") {
       onChange(e);
@@ -186,6 +219,18 @@ const MyInput = ({
 
   const handleBlur = (e) => {
     setIsFocused(false);
+    if (type === "iban" && value) {
+      const result = validateIban(value, { required });
+      if (!result.valid) {
+        setInternalError(result.message);
+      }
+    }
+    if (type === "bic" && value) {
+      const result = validateBic(value, { required });
+      if (!result.valid) {
+        setInternalError(result.message);
+      }
+    }
     if (onBlur) {
       onBlur(e);
     }
@@ -215,6 +260,16 @@ const MyInput = ({
   }
 
   const showError = hasError || internalError;
+
+  useEffect(() => {
+    if (type !== "bic") return;
+    setBicDisplay(formatBicDisplay(value));
+  }, [type, value]);
+
+  useEffect(() => {
+    if (type !== "iban") return;
+    setIbanDisplay(formatIbanDisplay(value));
+  }, [type, value]);
 
   useEffect(() => {
     if (type !== "mobile") return;
@@ -257,8 +312,7 @@ const MyInput = ({
       )}
 
       <div
-        className={`my-input-container ${showError ? "error" : ""} ${isFocused ? "focused" : ""
-          } ${disabled ? "disabled" : ""} ${type === "textarea" ? "textarea-container" : ""}`}
+        className={`my-input-container${showError ? " error" : ""}${isFocused ? " focused" : ""}${disabled ? " disabled" : ""}${type === "textarea" ? " textarea-container" : ""}${success ? " success" : ""}`}
       >
         {prefix && <div className="my-input-prefix">{prefix}</div>}
         {type === "textarea" ? (
@@ -311,10 +365,48 @@ const MyInput = ({
               disabled={disabled}
             />
           </div>
+        ) : type === "iban" ? (
+          <input
+            id={inputId}
+            name={name}
+            type="text"
+            className={`my-input-field my-input-field--iban ${showError ? 'error' : ''}`}
+            placeholder="IE12 BOFI 9012 3456 78"
+            value={ibanDisplay}
+            onChange={handleIbanChange}
+            onFocus={(e) => {
+              setIsFocused(true);
+              onFocusProp?.(e);
+            }}
+            onBlur={handleBlur}
+            disabled={disabled}
+            autoComplete="off"
+            spellCheck={false}
+          />
+        ) : type === "bic" ? (
+          <input
+            id={inputId}
+            name={name}
+            type="text"
+            className={`my-input-field my-input-field--bic ${showError ? "error" : ""}`}
+            placeholder="BOFIIE2D"
+            value={bicDisplay}
+            onChange={handleBicChange}
+            onFocus={(e) => {
+              setIsFocused(true);
+              onFocusProp?.(e);
+            }}
+            onBlur={handleBlur}
+            disabled={disabled}
+            autoComplete="off"
+            spellCheck={false}
+            maxLength={11}
+          />
         ) : (
           <input type={type} {...commonProps} />
         )}
         {showError && <span className="error-icon">ⓘ</span>}
+        {!showError && success && <span className="success-icon">✓</span>}
       </div>
     </div>
   );

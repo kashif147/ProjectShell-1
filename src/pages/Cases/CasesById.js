@@ -160,6 +160,7 @@ function CasesById() {
         columns={caseColumns}
         dataSource={caseDataSource}
         selection={false}
+        tablePadding={{ paddingLeft: "0", paddingRight: "0" }}
       />
     </div>
   );

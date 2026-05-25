@@ -33,13 +33,14 @@ import {
   UploadOutlined,
   EditOutlined,
   ReloadOutlined,
+  DownOutlined,
 } from "@ant-design/icons";
 import ContactDrawer from "./ContactDrawer";
 import JiraLikeMenu from "./JiraLikeMenu";
 import { useTableColumns } from "../../context/TableColumnsContext ";
 import SimpleMenu from "./SimpleMenu";
 import MyDrawer from "./MyDrawer";
-import { Input, Button, Row, Upload, message, Col } from "antd";
+import { Input, Button, Row, Upload, message, Col, Dropdown } from "antd";
 import MySelect from "./MySelect";
 import { IoSettingsOutline } from "react-icons/io5";
 import {
@@ -74,6 +75,8 @@ import Breadcrumb from "./Breadcrumb";
 import SimpleBatch from "../../pages/membership/SimpleBatch";
 import { getApplicationsWithFilter } from "../../features/applicationwithfilterslice";
 import { getPaymentFormsWithFilter } from "../../features/paymentFormsWithFilterSlice";
+import PaymentFormDetailDrawer from "../paymentForms/PaymentFormDetailDrawer";
+import { PAYMENT_FORM_TYPE_OPTIONS } from "../paymentForms/paymentFormTypes";
 import { useSelectedIds } from "../../context/SelectedIdsContext";
 import MyDatePicker1 from "./MyDatePicker1";
 import MyConfirm from "./MyConfirm";
@@ -84,6 +87,8 @@ import Toolbar from "./Toolbar";
 import { useFilters } from "../../context/FilterContext";
 import { useAuthorization } from "../../context/AuthorizationContext";
 import DirectDebitForm from "../../pages/finance/components/DirectDebitForm";
+import CreateDirectDebitRunForm from "../finance/CreateDirectDebitRunForm";
+import directDebitRunsApi from "../../services/directDebitRunsApi";
 // import RefundEntryForm from "../../pages/finance/components/RefundEntryForm";
 import RefundDrawer from "../../component/finanace/RefundDrawer";
 import WriteOffDrawer from "../../component/finanace/WriteOffDrawer";
@@ -214,12 +219,33 @@ function HeaderDetails({
   const [isBatchOpen, setIsBatchOpen] = useState(false);
   const batchFormRef = useRef(null);
   const lifecycleBatchFormRef = useRef(null);
+  const ddRunFormRef = useRef(null);
   const [isSimpleBatchOpen, setIsSimpleBatchOpen] = useState(false);
+  const [ddRunCreateOpen, setDdRunCreateOpen] = useState(false);
   const [aprove, setaprove] = useState("001");
   const [isDrawerOpen, setisDrawerOpen] = useState(false);
   const { viewMode, toggleView } = useView();
   const [value, setValue] = useState(dayjs("2025", "YYYY"));
   const [ddDrawerOpen, setDdDrawerOpen] = useState(false);
+  const [paymentFormCreateMode, setPaymentFormCreateMode] = useState(false);
+  const [paymentFormCreateType, setPaymentFormCreateType] = useState(null);
+  const [paymentFormDetailOpen, setPaymentFormDetailOpen] = useState(false);
+  const [paymentFormDetailId, setPaymentFormDetailId] = useState(null);
+
+  const paymentFormCreateBtnStyle = {
+    marginRight: "50px",
+    color: "white",
+    borderRadius: "3px",
+    backgroundColor: "#45669d",
+  };
+
+  const openPaymentFormCreate = (formType = "STANDING_ORDER") => {
+    setPaymentFormCreateMode(true);
+    setPaymentFormCreateType(formType);
+    setPaymentFormDetailId(null);
+    setPaymentFormDetailOpen(true);
+  };
+
   const [refundDrawerOpen, setRefundDrawerOpen] = useState(false);
   const [writeOffDrawerOpen, setWriteOffDrawerOpen] = useState(false);
   const [creditNoteDrawerOpen, setCreditNoteDrawerOpen] = useState(false);
@@ -326,6 +352,22 @@ function HeaderDetails({
     setIsSaveModalOpen(!isSaveModalOpen);
   };
   const navigate = useNavigate();
+
+  useEffect(() => {
+    if (location.pathname !== "/DirectDebit" || !location.state?.openCreateDdRun) {
+      return;
+    }
+    setDdRunCreateOpen(true);
+  }, [location.pathname, location.state?.openCreateDdRun]);
+
+  useEffect(() => {
+    if (!ddRunCreateOpen || !location.state?.ddRunPrefill) return;
+    const timer = window.setTimeout(() => {
+      ddRunFormRef.current?.setFromRun?.(location.state.ddRunPrefill);
+    }, 0);
+    return () => window.clearTimeout(timer);
+  }, [ddRunCreateOpen, location.state?.ddRunPrefill]);
+
   const inputRef = useRef(null);
   const {
     searchFilters,
@@ -1452,13 +1494,37 @@ function HeaderDetails({
                           !hasPermission("queries:create")) ||
                         (nav === "/InAppNotifications" &&
                           !hasPermission("notifications:create")) ||
-                        nav === "/UserNotifications" ? null : (
+                        nav === "/UserNotifications" ? null : nav ===
+                          "/PaymentForms" ? (
+                        <Button
+                          onClick={() => openPaymentFormCreate("STANDING_ORDER")}
+                          style={paymentFormCreateBtnStyle}
+                          className="butn"
+                        >
+                          Create
+                        </Button>
+                      ) : nav === "/DirectDebitAuthorization" ? (
+                        <Dropdown
+                          menu={{
+                            items: PAYMENT_FORM_TYPE_OPTIONS.map((o) => ({
+                              key: o.key,
+                              label: o.label,
+                            })),
+                            onClick: ({ key }) => openPaymentFormCreate(key),
+                          }}
+                          trigger={["click"]}
+                        >
+                          <Button
+                            style={paymentFormCreateBtnStyle}
+                            className="butn"
+                          >
+                            Create <DownOutlined />
+                          </Button>
+                        </Dropdown>
+                      ) : (
                         <Button
                           onClick={() => {
-                            if (
-                              nav == "/Applications" ||
-                              nav === "/PaymentForms"
-                            ) {
+                            if (nav == "/Applications") {
                               navigate("/applicationMgt");
                             } else if (
                               nav === "/members" ||
@@ -1473,12 +1539,13 @@ function HeaderDetails({
                               setrosterDrawer(!rosterDrawer);
                             else if (nav === "/Summary")
                               navigate("/applicationMgt");
-                            else if (
+                            else if (nav === "/DirectDebit") {
+                              setDdRunCreateOpen(true);
+                            } else if (
                               nav === "/CornMarket" ||
                               nav === "/NewGraduate" ||
                               nav === "/CornMarketRewards" ||
                               nav === "/RecruitAFriend" ||
-                              nav === "/DirectDebit" ||
                               nav === "/InAppNotifications"
                             ) {
                               setIsSimpleBatchOpen(true);
@@ -1511,8 +1578,6 @@ function HeaderDetails({
                               setIsBatchOpen(true);
                             } else if (nav === "/ChangCateSumm") {
                               setisDrawerOpen(!isDrawerOpen);
-                            } else if (nav === "/DirectDebitAuthorization") {
-                              setDdDrawerOpen(true);
                             } else if (nav === "/Refunds") {
                               setRefundDrawerOpen(true);
                             } else if (nav === "/write-offs") {
@@ -2187,6 +2252,48 @@ function HeaderDetails({
               : "workLocation"
         }
       />
+      <MyDrawer
+        isPagination={false}
+        width="33%"
+        title="Create Direct Debit Run"
+        open={ddRunCreateOpen}
+        isDisable={false}
+        onClose={() => {
+          setDdRunCreateOpen(false);
+          ddRunFormRef.current?.reset?.();
+        }}
+        add={async () => {
+          if (
+            !ddRunFormRef.current ||
+            typeof ddRunFormRef.current.submit !== "function"
+          ) {
+            return;
+          }
+          let payload;
+          try {
+            payload = await ddRunFormRef.current.submit();
+          } catch {
+            return;
+          }
+          if (!payload) return;
+          try {
+            const res = await directDebitRunsApi.create(payload);
+            message.success(`Run ${res.run?.runNo || ""} created`);
+            setDdRunCreateOpen(false);
+            ddRunFormRef.current?.reset?.();
+            window.dispatchEvent(new CustomEvent("direct-debit-runs-changed"));
+            if (res.run?._id) {
+              navigate("/DirectDebitBatchDetails", {
+                state: { runId: res.run._id, run: res.run },
+              });
+            }
+          } catch (err) {
+            message.error(err.message || "Failed to create DD run");
+          }
+        }}
+      >
+        <CreateDirectDebitRunForm ref={ddRunFormRef} />
+      </MyDrawer>
       <SimpleBatch
         open={isSimpleBatchOpen}
         onClose={() => setIsSimpleBatchOpen(false)}
@@ -2198,8 +2305,6 @@ function HeaderDetails({
             batchType = "inmo-rewards";
           } else if (nav.toLowerCase().includes("recruitafriend")) {
             batchType = "recruit-friend";
-          } else if (nav.toLowerCase().includes("directdebit")) {
-            batchType = "direct-debit";
           } else if (
             nav.toLowerCase().includes("inappnotifications") ||
             nav.toLowerCase().includes("communicationbatchdetail")
@@ -2636,6 +2741,42 @@ function HeaderDetails({
           }
         />
       ) : null}
+      <PaymentFormDetailDrawer
+        open={paymentFormDetailOpen}
+        formId={paymentFormDetailId}
+        createMode={paymentFormCreateMode}
+        createFormType={paymentFormCreateType}
+        onClose={() => {
+          setPaymentFormDetailOpen(false);
+          setPaymentFormDetailId(null);
+          setPaymentFormCreateMode(false);
+          setPaymentFormCreateType(null);
+        }}
+        onPersisted={(created) => {
+          setPaymentFormCreateMode(false);
+          setPaymentFormDetailId(created?._id || null);
+          if (location.pathname === "/PaymentForms") {
+            dispatch(
+              getPaymentFormsWithFilter({
+                templateId: paymentFormsTemplateId || "",
+                page: 1,
+                limit: 500,
+              }),
+            );
+          }
+        }}
+        onUpdated={() => {
+          if (location.pathname === "/PaymentForms") {
+            dispatch(
+              getPaymentFormsWithFilter({
+                templateId: paymentFormsTemplateId || "",
+                page: 1,
+                limit: 500,
+              }),
+            );
+          }
+        }}
+      />
     </div>
   );
 }

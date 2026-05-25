@@ -1,6 +1,7 @@
 import { applyBrandingPlaceholders } from "./tenantBrandingPlaceholders";
 import { DEFAULT_BRANDING_ASSET_URLS } from "./brandingAssets";
 import { SHELL_BRANDING } from "./shellBranding";
+import { defaultOfficeAddress } from "./tenantOfficeDefaults";
 
 export const defaultOrganisationProfile = {
   legalName: "",
@@ -11,6 +12,10 @@ export const defaultOrganisationProfile = {
   website: "",
   email: "",
   contactNumber: "",
+  bankName: "",
+  bankAddress: defaultOfficeAddress(),
+  iban: "",
+  bic: "",
   sepaOriginatorIdentificationNumber: "",
 };
 
@@ -45,6 +50,10 @@ export const mergeTenantFormData = (tenant) => ({
       tenant?.organisationProfile?.email ??
       tenant?.organisationProfile?.supportEmail ??
       "",
+    bankAddress: {
+      ...defaultOfficeAddress(),
+      ...(tenant?.organisationProfile?.bankAddress || {}),
+    },
   },
   branding: applyBrandingPlaceholders({
     ...defaultBranding,

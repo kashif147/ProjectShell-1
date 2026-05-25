@@ -1,15 +1,19 @@
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import { Button, Space, Table, Tag, Tooltip } from "antd";
 import {
   PlusOutlined,
   EditOutlined,
+  DeleteOutlined,
   StarOutlined,
   StarFilled,
+  ClockCircleOutlined,
 } from "@ant-design/icons";
 import axios from "axios";
 import { baseURL, insertDataFtn, updateFtn } from "../../utils/Utilities";
 import MyConfirm from "../common/MyConfirm";
-import TenantOfficeDrawer from "./TenantOfficeDrawer";
+import MyAlert from "../common/MyAlert";
+import TenantOfficeForm from "./TenantOfficeForm";
+import TenantOfficeScheduleDrawer from "./TenantOfficeScheduleDrawer";
 import {
   OFFICE_TYPES,
   formatOfficeAddress,
@@ -46,14 +50,19 @@ const TenantOfficesPanel = ({
   showInactive = false,
 }) => {
   const { hasPermission } = useAuthorization();
-  const canWrite = hasPermission("tenant:update") || hasPermission("tenant:write");
+  const canRead = hasPermission("tenant:read");
+  const canWrite =
+    hasPermission("tenant:update") || hasPermission("tenant:write");
   const canDelete = hasPermission("tenant:delete");
 
   const [offices, setOffices] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [drawerOpen, setDrawerOpen] = useState(false);
+  const [formOpen, setFormOpen] = useState(false);
   const [editingOffice, setEditingOffice] = useState(null);
   const [saving, setSaving] = useState(false);
+  const [scheduleDrawerOpen, setScheduleDrawerOpen] = useState(false);
+  const [scheduleOffice, setScheduleOffice] = useState(null);
+  const formSectionRef = useRef(null);
 
   const officesPath = useCurrentTenant
     ? "/tenant/offices"
@@ -86,14 +95,51 @@ const TenantOfficesPanel = ({
     }
   }, [canLoad, fetchOffices]);
 
-  const handleAdd = () => {
+  const closeForm = useCallback(() => {
+    setFormOpen(false);
     setEditingOffice(null);
-    setDrawerOpen(true);
+  }, []);
+
+  const openForm = useCallback((office = null) => {
+    setEditingOffice(office);
+    setFormOpen(true);
+    requestAnimationFrame(() => {
+      formSectionRef.current?.scrollIntoView?.({
+        behavior: "smooth",
+        block: "nearest",
+      });
+    });
+  }, []);
+
+  const handleAdd = () => {
+    if (formOpen && !editingOffice) {
+      closeForm();
+      return;
+    }
+    openForm(null);
   };
 
   const handleEdit = (office) => {
-    setEditingOffice(office);
-    setDrawerOpen(true);
+    openForm(office);
+  };
+
+  const openSchedule = (office) => {
+    if (!office?._id) return;
+    setScheduleOffice(office);
+    setScheduleDrawerOpen(true);
+  };
+
+  const handleManageSchedule = (office) => {
+    openSchedule(office);
+  };
+
+  const promptScheduleAfterCreate = (created) => {
+    if (!created?._id || !canWrite) return;
+    MyConfirm({
+      title: "Configure schedule?",
+      message: `"${created.name}" was created with default hours. Set opening hours and closures now?`,
+      onConfirm: () => openSchedule(created),
+    });
   };
 
   const handleSave = async (formData) => {
@@ -105,24 +151,32 @@ const TenantOfficesPanel = ({
           `${officesPath}/${editingOffice._id}`,
           formData,
           async () => {
-            setDrawerOpen(false);
+            closeForm();
             await fetchOffices();
           },
           "Office updated successfully"
         );
       } else {
-        await insertDataFtn(
-          baseURL,
-          officesPath,
-          formData,
-          "Office created successfully",
-          "Failed to create office",
-          async () => {
-            setDrawerOpen(false);
-            await fetchOffices();
-          }
-        );
+        const token = localStorage.getItem("token");
+        const response = await axios.post(`${baseURL}${officesPath}`, formData, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        });
+        if (response.status === 200 || response.status === 201) {
+          MyAlert("success", "Office created successfully");
+          closeForm();
+          await fetchOffices();
+          promptScheduleAfterCreate(response.data?.data);
+        }
       }
+    } catch (error) {
+      console.error("Failed to save office:", error);
+      MyAlert(
+        "error",
+        error.response?.data?.message || "Failed to create office"
+      );
     } finally {
       setSaving(false);
     }
@@ -151,9 +205,33 @@ const TenantOfficesPanel = ({
         await axios.delete(`${baseURL}${officesPath}/${office._id}`, {
           headers: { Authorization: `Bearer ${token}` },
         });
+        if (editingOffice?._id === office._id) {
+          closeForm();
+        }
+        if (scheduleOffice?._id === office._id) {
+          setScheduleDrawerOpen(false);
+          setScheduleOffice(null);
+        }
         await fetchOffices();
       },
     });
+  };
+
+  const handleScheduleSaved = async () => {
+    await fetchOffices();
+    if (scheduleOffice?._id) {
+      const token = localStorage.getItem("token");
+      try {
+        const response = await axios.get(
+          `${baseURL}${officesPath}/${scheduleOffice._id}`,
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+        const fresh = response.data?.data;
+        if (fresh) setScheduleOffice(fresh);
+      } catch {
+        /* list refresh is enough */
+      }
+    }
   };
 
   const columns = [
@@ -204,33 +282,64 @@ const TenantOfficesPanel = ({
     {
       title: "Actions",
       key: "actions",
-      width: 140,
+      fixed: "right",
+      align: "center",
+      width: 160,
       render: (_, record) =>
-        canWrite ? (
-          <Space>
-            <Tooltip title="Edit">
-              <Button
-                type="text"
-                icon={<EditOutlined />}
-                onClick={() => handleEdit(record)}
-              />
-            </Tooltip>
-            {!record.isPrimary && record.isActive && (
+        canRead || canWrite || canDelete ? (
+          <Space size="small" className="tenant-table-actions">
+            {canRead && record._id && (
+              <Tooltip title="Opening hours & closures">
+                <Button
+                  type="text"
+                  icon={<ClockCircleOutlined />}
+                  onClick={() => handleManageSchedule(record)}
+                  aria-label="Manage office schedule"
+                />
+              </Tooltip>
+            )}
+            {canWrite && (
+              <Tooltip title="Edit details">
+                <Button
+                  type="text"
+                  icon={<EditOutlined />}
+                  onClick={() => handleEdit(record)}
+                  aria-label="Edit office"
+                />
+              </Tooltip>
+            )}
+            {canWrite && !record.isPrimary && record.isActive && (
               <Tooltip title="Set as primary">
                 <Button
                   type="text"
                   icon={<StarOutlined />}
                   onClick={() => handleSetPrimary(record)}
+                  aria-label="Set as primary office"
                 />
               </Tooltip>
             )}
-            {record.isPrimary && (
-              <StarFilled style={{ color: "#1677ff", marginLeft: 4 }} />
+            {canWrite && record.isPrimary && (
+              <Tooltip title="Primary office">
+                <StarFilled
+                  style={{
+                    color: "#1677ff",
+                    fontSize: 16,
+                    verticalAlign: "middle",
+                  }}
+                  aria-hidden
+                />
+              </Tooltip>
             )}
             {canDelete && record.isActive && (
-              <Button type="link" danger onClick={() => handleDeactivate(record)}>
-                Deactivate
-              </Button>
+              <Tooltip title="Deactivate">
+                <Button
+                  type="text"
+                  danger
+                  icon={<DeleteOutlined />}
+                  onClick={() => handleDeactivate(record)}
+                  aria-label="Deactivate office"
+                />
+              </Tooltip>
             )}
           </Space>
         ) : null,
@@ -247,38 +356,67 @@ const TenantOfficesPanel = ({
 
   return (
     <div className="tenant-offices-panel">
-      <div className="d-flex justify-content-between align-items-center mb-3">
-        <p className="text-muted mb-0">
-          Manage branch and regional offices. Default hours: Mon–Thu 9:00–17:00,
-          Fri 8:30–16:30.
-        </p>
-        {canWrite && (
-          <Button
-            type="primary"
-            icon={<PlusOutlined />}
-            className="butn primary-btn"
-            onClick={handleAdd}
-          >
-            Add Office
-          </Button>
+      <div className="tenant-offices-content">
+        <div className="tenant-offices-toolbar">
+          <p className="text-muted mb-0 tenant-offices-hint">
+            Manage offices in place. Default hours apply until you open the
+            schedule for each office.
+          </p>
+          {canWrite && (
+            <Button
+              type={formOpen && !editingOffice ? "default" : "primary"}
+              icon={<PlusOutlined />}
+              className={
+                formOpen && !editingOffice
+                  ? "butn secoundry-btn"
+                  : "butn primary-btn"
+              }
+              onClick={handleAdd}
+            >
+              {formOpen && !editingOffice ? "Cancel" : "Add Office"}
+            </Button>
+          )}
+        </div>
+
+        {formOpen && canWrite && (
+          <div ref={formSectionRef} className="tenant-inline-form-wrap">
+            <TenantOfficeForm
+              office={editingOffice}
+              onCancel={closeForm}
+              onSave={handleSave}
+              saving={saving}
+            />
+          </div>
         )}
+
+        <div className="tenant-panel-table-wrap">
+          <Table
+            rowKey="_id"
+            loading={loading}
+            columns={columns}
+            dataSource={offices}
+            pagination={false}
+            size="small"
+            className="drawer-tbl"
+            scroll={{ x: "max-content" }}
+            rowClassName={(_record, index) =>
+              index % 2 !== 0 ? "odd-row" : "even-row"
+            }
+            locale={{ emptyText: "No Data" }}
+          />
+        </div>
       </div>
 
-      <Table
-        rowKey="_id"
-        loading={loading}
-        columns={columns}
-        dataSource={offices}
-        pagination={false}
-        size="small"
-      />
-
-      <TenantOfficeDrawer
-        open={drawerOpen}
-        office={editingOffice}
-        onClose={() => setDrawerOpen(false)}
-        onSave={handleSave}
-        saving={saving}
+      <TenantOfficeScheduleDrawer
+        open={scheduleDrawerOpen}
+        onClose={() => {
+          setScheduleDrawerOpen(false);
+          setScheduleOffice(null);
+        }}
+        tenantId={tenantId}
+        office={scheduleOffice}
+        useCurrentTenant={useCurrentTenant}
+        onSaved={handleScheduleSaved}
       />
     </div>
   );

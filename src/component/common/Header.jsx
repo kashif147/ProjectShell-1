@@ -421,6 +421,7 @@ function Header() {
                   setNotificationOpen(false);
                   navigate("/UserNotifications");
                 }}
+                onClose={() => setNotificationOpen(false)}
               />
             }
             trigger="click"
