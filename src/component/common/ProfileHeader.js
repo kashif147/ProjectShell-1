@@ -22,6 +22,10 @@ import {
   FaMoneyBillWave,
   FaColumns,
   FaWindowMaximize,
+  FaUsers,
+  FaStar,
+  FaBarcode,
+  FaWallet,
 } from "react-icons/fa";
 import dayjs from "dayjs";
 import MyDatePicker from "./MyDatePicker";
@@ -83,7 +87,7 @@ const ProfileHeader = forwardRef(function ProfileHeader(
 
   // Get data from Redux store
   const { profileDetails, loading, error } = useSelector(
-    (state) => state.profileDetails
+    (state) => state.profileDetails,
   );
 
   // Subscription API data
@@ -112,7 +116,7 @@ const ProfileHeader = forwardRef(function ProfileHeader(
     dispatch(
       getProfileSubscriptionsForActivateEligibility({
         profileId: profileIdForApps,
-      })
+      }),
     );
   }, [dispatch, profileIdForApps]);
 
@@ -206,7 +210,7 @@ const ProfileHeader = forwardRef(function ProfileHeader(
           sub?.membershipNumber ||
           sub?.membershipNo ||
           sub?.personalDetails?.membershipNo ||
-          sub?.profile?.membershipNumber
+          sub?.profile?.membershipNumber,
       )
       .find(Boolean);
     return (
@@ -238,7 +242,7 @@ const ProfileHeader = forwardRef(function ProfileHeader(
           headers: {
             Authorization: `Bearer ${token}`,
           },
-        }
+        },
       );
 
       const summaryData = response.data?.data || response.data;
@@ -399,10 +403,10 @@ const ProfileHeader = forwardRef(function ProfileHeader(
     // Personal Info
     const name = source
       ? `${getSafe(source, "personalInfo.forename", "")} ${getSafe(
-        source,
-        "personalInfo.surname",
-        ""
-      )}`.trim()
+          source,
+          "personalInfo.surname",
+          "",
+        )}`.trim()
       : "";
     const dob = formatDOB(getSafe(source, "personalInfo.dateOfBirth"));
     const gender = getSafe(source, "personalInfo.gender", "M")
@@ -430,9 +434,7 @@ const ProfileHeader = forwardRef(function ProfileHeader(
     // Expires: resignation / cancellation exit date when applicable; else subscription year end or profile deactivation
     const cancelBlock = subscriptionData?.cancellation;
     const dateCancelledRaw =
-      cancelBlock && !cancelBlock.reinstated
-        ? cancelBlock.dateCancelled
-        : null;
+      cancelBlock && !cancelBlock.reinstated ? cancelBlock.dateCancelled : null;
     const dateResignedRaw = subscriptionData?.resignation?.dateResigned;
     let expires = "";
     if (dateResignedRaw) {
@@ -449,11 +451,11 @@ const ProfileHeader = forwardRef(function ProfileHeader(
     // Contact Info
     const address = source?.contactInfo
       ? `${getSafe(source, "contactInfo.buildingOrHouse", "")} ${getSafe(
-        source,
-        "contactInfo.streetOrRoad",
-        ""
-      )}, ${getSafe(source, "contactInfo.areaOrTown", "")}`.trim() ||
-      "123 Main Street, New York"
+          source,
+          "contactInfo.streetOrRoad",
+          "",
+        )}, ${getSafe(source, "contactInfo.areaOrTown", "")}`.trim() ||
+        "123 Main Street, New York"
       : "123 Main Street, New York";
 
     const email =
@@ -461,7 +463,9 @@ const ProfileHeader = forwardRef(function ProfileHeader(
         ? getSafe(source, "contactInfo.workEmail")
         : getSafe(source, "contactInfo.personalEmail", "");
 
-    const phone = formatMobileNumber(getSafe(source, "contactInfo.mobileNumber", ""));
+    const phone = formatMobileNumber(
+      getSafe(source, "contactInfo.mobileNumber", ""),
+    );
 
     // Professional Info
     const grade = getSafe(source, "professionalDetails.grade", " ");
@@ -472,8 +476,8 @@ const ProfileHeader = forwardRef(function ProfileHeader(
     const subscriptionYear = subscriptionData?.subscriptionYear || "";
 
     // Financial Info - Now using fetched summary data
-    // Assume ledgerBalance (net) is in Euros if it has decimal, but to be safe and consistent with previous logic, 
-    // let's check if we should still use centsToEuro. 
+    // Assume ledgerBalance (net) is in Euros if it has decimal, but to be safe and consistent with previous logic,
+    // let's check if we should still use centsToEuro.
     // Actually, historical code used centsToEuro. If the API changed units, we should adjust.
     // Given the example "net": 120.5, it looks like Euros.
     const numericLedgerBalance = Number(ledgerBalance || 0);
@@ -492,17 +496,16 @@ const ProfileHeader = forwardRef(function ProfileHeader(
         : balanceIndicator === "Cr"
           ? "#389e0d"
           : "#faad14";
-    const lastPayment = `€${centsToEuro(lastPaymentAmount || 0).toLocaleString('en-IE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+    const lastPayment = `€${centsToEuro(lastPaymentAmount || 0).toLocaleString("en-IE", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 
     // Payment date only from account summary (cash receipt crediting 2020); not subscription start.
     const paymentDateRaw = lastPaymentDate || null;
-    const paymentDate = paymentDateRaw
-      ? formatDate(paymentDateRaw)
-      : "N/A";
+    const paymentDate = paymentDateRaw ? formatDate(paymentDateRaw) : "N/A";
 
     // Use paymentCode from API if available, fallback to generated one
-    const paymentCodeToUse = `MB-${subscriptionData?.subscriptionYear || dayjs().year()
-      }-${getSafe(source, "membershipNumber", "001")}`;
+    const paymentCodeToUse = `MB-${
+      subscriptionData?.subscriptionYear || dayjs().year()
+    }-${getSafe(source, "membershipNumber", "001")}`;
 
     return {
       // Personal Info
@@ -585,7 +588,7 @@ const ProfileHeader = forwardRef(function ProfileHeader(
 
   const mergedProfileSubscriptions = useMemo(() => {
     const fromEligibility = Array.isArray(
-      profileSubscriptionsForActivateEligibility
+      profileSubscriptionsForActivateEligibility,
     )
       ? profileSubscriptionsForActivateEligibility
       : [];
@@ -603,7 +606,7 @@ const ProfileHeader = forwardRef(function ProfileHeader(
     if (memberData.status !== "Resigned") return false;
     return shouldDisableActivateUnlessLatestSubscriptionByStartDate(
       currentSubscriptionForActivate,
-      mergedProfileSubscriptions
+      mergedProfileSubscriptions,
     );
   }, [
     memberData.status,
@@ -696,9 +699,7 @@ const ProfileHeader = forwardRef(function ProfileHeader(
     }
 
     const subscriptionId =
-      subscriptionData?._id != null
-        ? String(subscriptionData._id).trim()
-        : "";
+      subscriptionData?._id != null ? String(subscriptionData._id).trim() : "";
     if (!subscriptionId) {
       MyAlert(
         "error",
@@ -723,7 +724,7 @@ const ProfileHeader = forwardRef(function ProfileHeader(
             Authorization: `Bearer ${token}`,
             "Content-Type": "application/json",
           },
-        }
+        },
       );
 
       MyAlert("success", "Membership cancellation submitted successfully!");
@@ -784,214 +785,488 @@ const ProfileHeader = forwardRef(function ProfileHeader(
     );
   }
 
+  const isTopLayout = layout === "top";
+
+  const renderMetaTiles = () => {
+    const topMetaTiles = isTopLayout ? (
+      <>
+        {memberData?.category ? (
+          <div className="member-meta-tile member-meta-tile-category" title={memberData.category}>
+            <span className="member-meta-tile-icon" aria-hidden="true">
+              <FaUsers />
+            </span>
+            <span className="member-meta-tile-body">
+              <span className="member-meta-tile-label">Category</span>
+              <span className="member-meta-tile-value">{memberData.category}</span>
+            </span>
+          </div>
+        ) : null}
+        {memberData.grade ? (
+          <div className="member-meta-tile member-meta-tile-grade" title={memberData.grade}>
+            <span className="member-meta-tile-icon" aria-hidden="true">
+              <FaStar />
+            </span>
+            <span className="member-meta-tile-body">
+              <span className="member-meta-tile-label">Grade</span>
+              <span className="member-meta-tile-value">{memberData.grade}</span>
+            </span>
+          </div>
+        ) : null}
+        <div className="member-meta-tile" title={memberData.paymentCode}>
+          <span className="member-meta-tile-icon" aria-hidden="true">
+            <FaBarcode />
+          </span>
+          <span className="member-meta-tile-body">
+            <span className="member-meta-tile-label">Payment Code</span>
+            <span className="member-meta-tile-value">{memberData.paymentCode}</span>
+          </span>
+        </div>
+      </>
+    ) : null;
+
+    return (
+      <div
+        className={`member-meta-section ${isDeceased ? "member-deceased" : ""} ${
+          isTopLayout ? "member-meta-section-top" : ""
+        }`.trim()}
+      >
+        {isTopLayout ? (
+          topMetaTiles
+        ) : (
+          <>
+      {memberData?.category ? (
+        <div className="member-meta-tile" title={memberData.category}>
+          <span className="member-meta-tile-icon" aria-hidden="true">
+            <FaUsers />
+          </span>
+          <span className="member-meta-tile-body">
+            <span className="member-meta-tile-label">Category</span>
+            <span className="member-meta-tile-value">{memberData.category}</span>
+          </span>
+        </div>
+        ) : null}
+        {memberData.grade ? (
+          <div className="member-meta-tile member-meta-tile-grade" title={memberData.grade}>
+            <span className="member-meta-tile-icon" aria-hidden="true">
+              <FaStar />
+            </span>
+            <span className="member-meta-tile-body">
+              <span className="member-meta-tile-label">Grade</span>
+              <span className="member-meta-tile-value">{memberData.grade}</span>
+            </span>
+          </div>
+        ) : null}
+        <div className="member-meta-tile" title={memberData.paymentCode}>
+        <span className="member-meta-tile-icon" aria-hidden="true">
+          <FaBarcode />
+        </span>
+        <span className="member-meta-tile-body">
+          <span className="member-meta-tile-label">Payment Code</span>
+          <span className="member-meta-tile-value">{memberData.paymentCode}</span>
+        </span>
+      </div>
+      {subscriptionData ? (
+        <>
+          <div className="member-meta-tile" title={memberData.paymentType}>
+            <span className="member-meta-tile-icon" aria-hidden="true">
+              <FaCreditCard />
+            </span>
+            <span className="member-meta-tile-body">
+              <span className="member-meta-tile-label">Payment Type</span>
+              <span className="member-meta-tile-value">{memberData.paymentType}</span>
+            </span>
+          </div>
+          {memberData.subscriptionYear ? (
+            <div className="member-meta-tile" title={String(memberData.subscriptionYear)}>
+              <span className="member-meta-tile-icon" aria-hidden="true">
+                <FaCalendarAlt />
+              </span>
+              <span className="member-meta-tile-body">
+                <span className="member-meta-tile-label">Sub Year</span>
+                <span className="member-meta-tile-value">
+                  {memberData.subscriptionYear}
+                </span>
+              </span>
+            </div>
+          ) : null}
+        </>
+      ) : null}
+          </>
+        )}
+      </div>
+    );
+  };
+
+  const renderCompactLine = (
+    icon,
+    label,
+    value,
+    valueClassName = "",
+    lineClassName = "",
+    valueStyle,
+  ) => (
+    <div className={`member-compact-line ${lineClassName}`.trim()}>
+      <span className="member-compact-icon" aria-hidden="true">
+        {icon}
+      </span>
+      <span className="member-compact-text">
+        {label ? (
+          <span className="member-compact-label">{label}</span>
+        ) : null}
+        <span
+          className={`member-compact-value ${valueClassName}`.trim()}
+          style={valueStyle}
+        >
+          {value}
+        </span>
+      </span>
+    </div>
+  );
+
+  const renderCompactDualRow = (left, right, rowClassName = "") => (
+    <div className={`member-compact-dual-row ${rowClassName}`.trim()}>
+      {renderCompactLine(
+        left.icon,
+        left.label,
+        left.value,
+        left.valueClassName,
+        left.lineClassName,
+        left.valueStyle,
+      )}
+      {renderCompactLine(
+        right.icon,
+        right.label,
+        right.value,
+        right.valueClassName,
+        right.lineClassName,
+        right.valueStyle,
+      )}
+    </div>
+  );
+
   return (
     <div className={`member-header-container member-header-${layout}-layout`}>
       <div className={`member-header-single-card member-header-card-${layout}`}>
-        {/* Profile Header Section */}
         <div
-          className={`member-header-top ${isDeceased ? "member-deceased" : ""}`}
+          className={
+            isTopLayout
+              ? `member-header-top-band ${isDeceased ? "member-deceased" : ""}`
+              : "member-header-side-stack"
+          }
         >
-          <div className="member-profile-section">
-            <div className="member-layout-toggle" aria-label="Profile header layout">
-              <Tooltip title={`Switch to ${nextHeaderLayoutLabel}`}>
-                <button
-                  type="button"
-                  className="member-layout-toggle-btn"
-                  aria-label={`Switch to ${nextHeaderLayoutLabel.toLowerCase()} profile header`}
-                  onClick={() => handleHeaderLayoutChange(nextHeaderLayout)}
+          <div
+            className={`member-header-top ${!isTopLayout && isDeceased ? "member-deceased" : ""}`}
+          >
+            <div className="member-profile-section">
+              {!isTopLayout ? (
+                <div
+                  className="member-layout-toggle"
+                  aria-label="Profile header layout"
                 >
-                  {nextHeaderLayout === "top" ? (
-                    <FaWindowMaximize />
-                  ) : (
-                    <FaColumns />
-                  )}
-                </button>
-              </Tooltip>
-            </div>
-            <div className="member-avatar">
-              <FaUser className="avatar-icon" />
-            </div>
-            <h2 className="member-name">{memberData.name}</h2>
-            <p className="member-details">
-              {memberData.dob} ({memberData.gender}) {memberData.age}
-            </p>
-            <Tooltip
-              title={statusBadgeTooltip || undefined}
-              trigger={["hover", "focus"]}
-              mouseEnterDelay={0.05}
-              mouseLeaveDelay={0.05}
-            >
-              <span
-                className={`member-status-badge ${isDeceased
-                  ? "member-status-deceased"
-                  : /resign|cancel/i.test(memberData.status || "")
-                    ? "member-status-resigned"
-                    : /lapsed/i.test(memberData.status || "")
-                      ? "member-status-lapsed"
-                      : ""
-                  }`}
-                style={{ cursor: statusBadgeTooltip ? "help" : undefined }}
-              >
-                {memberData.status}
-                {subscriptionData?.isCurrent && " (Current)"}
-                {subscriptionData?.reinstated && " (Reinstated)"}
-              </span>
-            </Tooltip>
-          </div>
-
-          {/* Contact Information Section - on blue background */}
-          <div className="member-contact-section-blue">
-            <div className="contact-item-blue">
-              <FaEnvelope className="contact-icon-blue" />
-              <span>{memberData.email}</span>
-            </div>
-            <div className="contact-item-blue">
-              <FaPhone className="contact-icon-blue" />
-              <span>Cell: {memberData.phone}</span>
-            </div>
-            <div className="contact-item-blue">
-              <FaMapMarkerAlt className="contact-icon-blue" />
-              <span>{memberData.address}</span>
-            </div>
-          </div>
-        </div>
-
-        {/* Membership Details Section */}
-        <div className="member-details-section">
-          <div className="detail-row">
-            <FaIdCard className="detail-icon" />
-            <div className="detail-content">
-              <span className="detail-label">Member ID:</span>
-              <span className="detail-value member-id">
-                {memberData.memberId}
-              </span>
-            </div>
-          </div>
-          <div className="detail-row">
-            <FaCalendarAlt className="detail-icon" />
-            <div className="detail-content">
-              <span className="detail-label">Joined:</span>
-              <span className="detail-value">{memberData.joined}</span>
-            </div>
-          </div>
-          <div className="detail-row">
-            <FaClock className="detail-icon" />
-            <div className="detail-content">
-              <span className="detail-label">Expires:</span>
-              <span className="detail-value">{memberData.expires}</span>
-            </div>
-          </div>
-        </div>
-
-        {/* Financial Details Card */}
-        <div className="member-financial-card">
-          <div className="detail-row">
-            <FaExclamationTriangle className="detail-icon" />
-            <div className="detail-content">
-              <span className="detail-label">Balance:</span>
-              <span
-                className="detail-value"
-                style={{
-                  color: memberData.balanceColor || "#faad14",
-                  fontWeight: 700,
-                  fontSize: "18px",
-                }}
-              >
-                {memberData.balance}
-                {memberData.balanceIndicator && (
-                  <span
-                    style={{
-                      fontSize: "12px",
-                      marginLeft: 4,
-                      fontWeight: 600,
-                    }}
-                  >
-                    ({memberData.balanceIndicator})
-                  </span>
-                )}
-              </span>
-            </div>
-          </div>
-          <div className="detail-row">
-            <FaClock className="detail-icon" />
-            <div className="detail-content">
-              <span className="detail-label">Last Payment:</span>
-              <span className="detail-value">{memberData.lastPayment}</span>
-            </div>
-          </div>
-          <div className="detail-row">
-            <FaCalendarAlt className="detail-icon" />
-            <div className="detail-content">
-              <span className="detail-label">Payment Date:</span>
-              <span className="detail-value">{memberData.paymentDate}</span>
-            </div>
-          </div>
-          <div className="detail-row">
-            <FaCreditCard className="detail-icon" />
-            <div className="detail-content">
-              <span className="detail-label">Payment Code:</span>
-              <span className="detail-value">{memberData.paymentCode}</span>
-            </div>
-          </div>
-          {/* Show subscription info if available */}
-          {subscriptionData && (
-            <>
-              <div className="detail-row">
-                <FaMoneyBillWave className="detail-icon" />
-                <div className="detail-content">
-                  <span className="detail-label">Payment Type:</span>
-                  <span className="detail-value">{memberData.paymentType}</span>
+                  <Tooltip title={`Switch to ${nextHeaderLayoutLabel}`}>
+                    <button
+                      type="button"
+                      className="member-layout-toggle-btn"
+                      aria-label={`Switch to ${nextHeaderLayoutLabel.toLowerCase()} profile header`}
+                      onClick={() => handleHeaderLayoutChange(nextHeaderLayout)}
+                    >
+                      {nextHeaderLayout === "top" ? (
+                        <FaWindowMaximize />
+                      ) : (
+                        <FaColumns />
+                      )}
+                    </button>
+                  </Tooltip>
                 </div>
+              ) : null}
+              <div className="member-avatar">
+                <FaUser className="avatar-icon" />
               </div>
-              {memberData.subscriptionYear && (
+              <div className="member-profile-text">
+                <div className="member-profile-title-row">
+                  <h2 className="member-name">{memberData.name}</h2>
+                  <Tooltip
+                    title={statusBadgeTooltip || undefined}
+                    trigger={["hover", "focus"]}
+                    mouseEnterDelay={0.05}
+                    mouseLeaveDelay={0.05}
+                  >
+                    <span
+                      className={`member-status-badge ${
+                        isDeceased
+                          ? "member-status-deceased"
+                          : /resign|cancel/i.test(memberData.status || "")
+                            ? "member-status-resigned"
+                            : /lapsed/i.test(memberData.status || "")
+                              ? "member-status-lapsed"
+                              : ""
+                      }`}
+                      style={{
+                        cursor: statusBadgeTooltip ? "help" : undefined,
+                      }}
+                    >
+                      {memberData.status}
+                      {subscriptionData?.isCurrent && " (Current)"}
+                      {subscriptionData?.reinstated && " (Reinstated)"}
+                    </span>
+                  </Tooltip>
+                </div>
+                <p className="member-details">
+                  {memberData.dob} ({memberData.gender})
+                  {isTopLayout ? " • " : " "}
+                  {memberData.age}
+                </p>
+              </div>
+            </div>
+
+            <div
+              className={
+                isTopLayout ? "member-contact-section" : "member-contact-section-blue"
+              }
+            >
+              {isTopLayout ? (
+                <>
+                  {renderCompactDualRow(
+                    { icon: <FaEnvelope />, label: "", value: memberData.email },
+                    { icon: <FaPhone />, label: "", value: memberData.phone },
+                  )}
+                  {renderCompactLine(
+                    <FaMapMarkerAlt />,
+                    "",
+                    memberData.address,
+                  )}
+                </>
+              ) : (
+                <>
+              <div className="contact-item-blue">
+                <FaEnvelope
+                  className="contact-icon-blue"
+                />
+                  <span>{memberData.email}</span>
+              </div>
+              <div className="contact-item-blue">
+                <FaPhone
+                  className="contact-icon-blue"
+                />
+                  <span>Cell: {memberData.phone}</span>
+              </div>
+              <div className="contact-item-blue">
+                <FaMapMarkerAlt
+                  className="contact-icon-blue"
+                />
+                  <span>{memberData.address}</span>
+              </div>
+                </>
+              )}
+            </div>
+          </div>
+
+          <div className="member-details-section">
+            {isTopLayout ? (
+              <>
+                {memberData.subscriptionYear ? (
+                  renderCompactDualRow(
+                    {
+                      icon: <FaIdCard />,
+                      label: "Member ID:",
+                      value: memberData.memberId,
+                      valueClassName: "member-id",
+                    },
+                    {
+                      icon: <FaCalendarAlt />,
+                      label: "Sub Year:",
+                      value: memberData.subscriptionYear,
+                    },
+                  )
+                ) : (
+                  renderCompactLine(
+                    <FaIdCard />,
+                    "Member ID:",
+                    memberData.memberId,
+                    "member-id",
+                  )
+                )}
+                {renderCompactDualRow(
+                  {
+                    icon: <FaCalendarAlt />,
+                    label: "Joined:",
+                    value: memberData.joined,
+                  },
+                  {
+                    icon: <FaClock />,
+                    label: "Expires:",
+                    value: memberData.expires,
+                  },
+                )}
+              </>
+            ) : (
+              <>
                 <div className="detail-row">
-                  <FaCalendarAlt className="detail-icon" />
+                  <FaIdCard className="detail-icon" />
                   <div className="detail-content">
-                    <span className="detail-label">Sub Year:</span>
-                    <span className="detail-value">
-                      {memberData.subscriptionYear}
+                    <span className="detail-label">Member ID:</span>
+                    <span className="detail-value member-id">
+                      {memberData.memberId}
                     </span>
                   </div>
                 </div>
-              )}
-            </>
-          )}
-        </div>
-
-        {/* Grade and Category Section - on blue background */}
-        <div
-          className={`member-grade-section-blue ${isDeceased ? "member-deceased" : ""}`}
-        >
-          <div className="grade-row-blue">
-            <span className="grade-label-blue">Category:</span>
-            <span className="grade-value-blue">{memberData?.category}</span>
-          </div>
-          <div className="grade-row-blue">
-            <span className="grade-label-blue">Grade:</span>
-            <span className="grade-value-blue">{memberData.grade}</span>
-          </div>
-          <div className="grade-row-blue member-payment-meta-blue">
-            <span className="grade-label-blue">Payment Code:</span>
-            <span className="grade-value-blue">{memberData.paymentCode}</span>
-          </div>
-          {subscriptionData && (
-            <>
-              <div className="grade-row-blue member-payment-meta-blue">
-                <span className="grade-label-blue">Payment Type:</span>
-                <span className="grade-value-blue">{memberData.paymentType}</span>
-              </div>
-              {memberData.subscriptionYear && (
-                <div className="grade-row-blue member-payment-meta-blue">
-                  <span className="grade-label-blue">Sub Year:</span>
-                  <span className="grade-value-blue">
-                    {memberData.subscriptionYear}
-                  </span>
+                <div className="detail-row">
+                  <FaCalendarAlt className="detail-icon" />
+                  <div className="detail-content">
+                    <span className="detail-label">Joined:</span>
+                    <span className="detail-value">{memberData.joined}</span>
+                  </div>
                 </div>
-              )}
+                <div className="detail-row">
+                  <FaClock className="detail-icon" />
+                  <div className="detail-content">
+                    <span className="detail-label">Expires:</span>
+                    <span className="detail-value">{memberData.expires}</span>
+                  </div>
+                </div>
+              </>
+            )}
+          </div>
+
+          <div className="member-financial-card">
+            {isTopLayout ? (
+              <div className="member-financial-grid">
+                {subscriptionData
+                  ? renderCompactLine(
+                      <FaCreditCard />,
+                      "Payment Type:",
+                      memberData.paymentType,
+                      "",
+                      "member-financial-col-left",
+                    )
+                  : null}
+                {renderCompactLine(
+                  <FaWallet />,
+                  "Balance:",
+                  <>
+                    {memberData.balance}
+                    {memberData.balanceIndicator ? (
+                      <span className="member-balance-indicator">
+                        {" "}
+                        ({memberData.balanceIndicator})
+                      </span>
+                    ) : null}
+                  </>,
+                  "member-balance-value",
+                  "member-financial-col-right",
+                  {
+                    color: memberData.balanceColor || "#faad14",
+                    fontWeight: 700,
+                  },
+                )}
+                {renderCompactLine(
+                  <FaClock />,
+                  "Last Payment:",
+                  memberData.lastPayment,
+                  "",
+                  "member-financial-col-left",
+                )}
+                {renderCompactLine(
+                  <FaCalendarAlt />,
+                  "Payment Date:",
+                  memberData.paymentDate,
+                  "",
+                  "member-financial-col-right",
+                )}
+              </div>
+            ) : (
+              <>
+                <div className="detail-row">
+                  <FaExclamationTriangle className="detail-icon" />
+                  <div className="detail-content">
+                    <span className="detail-label">Balance:</span>
+                    <span
+                      className="detail-value member-balance-value"
+                      style={{
+                        color: memberData.balanceColor || "#faad14",
+                        fontWeight: 700,
+                      }}
+                    >
+                      {memberData.balance}
+                      {memberData.balanceIndicator && (
+                        <span className="member-balance-indicator">
+                          ({memberData.balanceIndicator})
+                        </span>
+                      )}
+                    </span>
+                  </div>
+                </div>
+                <div className="detail-row">
+                  <FaClock className="detail-icon" />
+                  <div className="detail-content">
+                    <span className="detail-label">Last Payment:</span>
+                    <span className="detail-value">{memberData.lastPayment}</span>
+                  </div>
+                </div>
+                <div className="detail-row">
+                  <FaCalendarAlt className="detail-icon" />
+                  <div className="detail-content">
+                    <span className="detail-label">Payment Date:</span>
+                    <span className="detail-value">{memberData.paymentDate}</span>
+                  </div>
+                </div>
+                <div className="detail-row">
+                  <FaCreditCard className="detail-icon" />
+                  <div className="detail-content">
+                    <span className="detail-label">Payment Code:</span>
+                    <span className="detail-value">{memberData.paymentCode}</span>
+                  </div>
+                </div>
+                {subscriptionData && (
+                  <>
+                    <div className="detail-row">
+                      <FaMoneyBillWave className="detail-icon" />
+                      <div className="detail-content">
+                        <span className="detail-label">Payment Type:</span>
+                        <span className="detail-value">{memberData.paymentType}</span>
+                      </div>
+                    </div>
+                    {memberData.subscriptionYear && (
+                      <div className="detail-row">
+                        <FaCalendarAlt className="detail-icon" />
+                        <div className="detail-content">
+                          <span className="detail-label">Sub Year:</span>
+                          <span className="detail-value">
+                            {memberData.subscriptionYear}
+                          </span>
+                        </div>
+                      </div>
+                    )}
+                  </>
+                )}
+              </>
+            )}
+          </div>
+
+          {isTopLayout ? (
+            <>
+              <div className="member-layout-toggle" aria-label="Profile header layout">
+                <Tooltip title={`Switch to ${nextHeaderLayoutLabel}`}>
+                  <button
+                    type="button"
+                    className="member-layout-toggle-btn"
+                    aria-label={`Switch to ${nextHeaderLayoutLabel.toLowerCase()} profile header`}
+                    onClick={() => handleHeaderLayoutChange(nextHeaderLayout)}
+                  >
+                    {nextHeaderLayout === "top" ? (
+                      <FaWindowMaximize />
+                    ) : (
+                      <FaColumns />
+                    )}
+                  </button>
+                </Tooltip>
+              </div>
+              {renderMetaTiles()}
             </>
+          ) : (
+            renderMetaTiles()
           )}
         </div>
-
       </div>
 
       {/* Cancel Membership Modal */}
