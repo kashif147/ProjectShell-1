@@ -136,7 +136,187 @@ function profileDetailsBreadcrumbState(record) {
   return out;
 }
 
-// Static column configurations
+const PAYMENT_FORM_SOURCE_LABELS = {
+  portal: "Portal",
+  mobile: "Mobile",
+  crm: "CRM",
+  post: "Post",
+  email: "Email",
+  walk_in: "Walk-in",
+  phone: "Phone",
+  notification: "Notification",
+};
+
+const PAYMENT_FORM_STATUS_COLORS = {
+  draft: "default",
+  generated: "default",
+  submitted: "blue",
+  verified: "purple",
+  active: "green",
+  rejected: "volcano",
+  superseded: "default",
+};
+
+function paymentFormColumns({ includeFormType = true } = {}) {
+  const cols = [
+    {
+      dataIndex: "membershipNumber",
+      title: "Membership No",
+      ellipsis: true,
+      isGride: true,
+      isVisible: true,
+      width: 140,
+      sorter: true,
+    },
+    {
+      dataIndex: "memberFullName",
+      title: "Member Name",
+      ellipsis: true,
+      isGride: true,
+      isVisible: true,
+      width: 200,
+      sorter: true,
+    },
+  ];
+  if (includeFormType) {
+    cols.push({
+      dataIndex: "formTypeLabel",
+      title: "Form Type",
+      ellipsis: true,
+      isGride: true,
+      isVisible: true,
+      width: 180,
+    });
+  }
+  cols.push(
+    {
+      dataIndex: "referenceMembershipNo",
+      title: "Reference / UMR",
+      ellipsis: true,
+      isGride: true,
+      isVisible: true,
+      width: 180,
+    },
+    {
+      dataIndex: "debtorBankName",
+      title: "Bank Name",
+      ellipsis: true,
+      isGride: true,
+      isVisible: true,
+      width: 160,
+    },
+    {
+      dataIndex: "debtorIbanDisplay",
+      title: "IBAN",
+      ellipsis: true,
+      isGride: true,
+      isVisible: true,
+      width: 220,
+      render: (value) => value || "—",
+    },
+    {
+      dataIndex: "debtorBic",
+      title: "BIC",
+      ellipsis: true,
+      isGride: true,
+      isVisible: true,
+      width: 120,
+      render: (value) => value || "—",
+    },
+    {
+      dataIndex: "paymentFrequency",
+      title: "Frequency",
+      ellipsis: true,
+      isGride: true,
+      isVisible: true,
+      width: 120,
+      render: (value) => value || "—",
+    },
+    {
+      dataIndex: "installmentAmountEur",
+      title: "Amount (€)",
+      ellipsis: true,
+      isGride: true,
+      isVisible: true,
+      width: 120,
+      align: "right",
+      render: (value, row) => {
+        if (row?.installmentAmountDisplay) return row.installmentAmountDisplay;
+        if (value == null || value === "") return "—";
+        const num = Number(value);
+        return Number.isFinite(num) ? formatCurrency(num) : "—";
+      },
+    },
+    {
+      dataIndex: "signedDate",
+      title: "Signed Date",
+      ellipsis: true,
+      isGride: true,
+      isVisible: true,
+      width: 130,
+      render: (value) => formatDateOnly(value),
+    },
+    {
+      dataIndex: "status",
+      title: "Status",
+      ellipsis: true,
+      isGride: true,
+      isVisible: true,
+      width: 120,
+      render: (status) => {
+        if (!status) return "—";
+        const color = PAYMENT_FORM_STATUS_COLORS[status] || "default";
+        return <Tag color={color}>{status}</Tag>;
+      },
+    },
+    {
+      dataIndex: "source",
+      title: "Received via",
+      ellipsis: true,
+      isGride: true,
+      isVisible: true,
+      width: 130,
+      render: (value) =>
+        value ? PAYMENT_FORM_SOURCE_LABELS[value] || value : "—",
+    },
+    {
+      dataIndex: "isAuthorized",
+      title: "Authorised",
+      ellipsis: true,
+      isGride: true,
+      isVisible: true,
+      width: 120,
+      render: (value, row) => {
+        if (!value) return "No";
+        const mode = row?.authorisationMode;
+        if (mode === "on_file")
+          return <Tag color="geekblue">On file</Tag>;
+        return <Tag color="green">Yes</Tag>;
+      },
+    },
+    {
+      dataIndex: "hasAttachment",
+      title: "Attachment",
+      ellipsis: true,
+      isGride: true,
+      isVisible: true,
+      width: 110,
+      align: "center",
+      render: (value) => (value ? <Tag color="blue">Attached</Tag> : "—"),
+    },
+    {
+      dataIndex: "updatedAt",
+      title: "Last Updated",
+      ellipsis: true,
+      isGride: true,
+      isVisible: true,
+      width: 160,
+      render: (value) => (value ? convertToLocalTime(value) : "—"),
+    },
+  );
+  return cols;
+}
+
 const staticColumns = {
   onlinePayment: [
     {
@@ -1381,61 +1561,8 @@ const staticColumns = {
       render: (value) => (value ? "Yes" : "No"),
     },
   ],
-  DirectDebitAuthorization: [
-    {
-      dataIndex: "id",
-      title: "ID",
-      ellipsis: true,
-      isGride: true,
-      isVisible: true,
-      width: 100,
-      sorter: true,
-    },
-    {
-      dataIndex: "accountName",
-      title: "Account Name",
-      ellipsis: true,
-      isGride: true,
-      isVisible: true,
-      width: 180,
-      sorter: true,
-    },
-    {
-      dataIndex: "bankName",
-      title: "Bank Name",
-      ellipsis: true,
-      isGride: true,
-      isVisible: true,
-      width: 150,
-    },
-    {
-      dataIndex: "iban",
-      title: "IBAN",
-      ellipsis: true,
-      isGride: true,
-      isVisible: true,
-      width: 250,
-    },
-    {
-      dataIndex: "status",
-      title: "Status",
-      ellipsis: true,
-      isGride: true,
-      isVisible: true,
-      width: 120,
-      render: (status) => (
-        <Tag color={status === "Active" ? "green" : "orange"}>{status}</Tag>
-      ),
-    },
-    {
-      dataIndex: "dateAuthorized",
-      title: "Date Authorized",
-      ellipsis: true,
-      isGride: true,
-      isVisible: true,
-      width: 160,
-    },
-  ],
+  DirectDebitAuthorization: paymentFormColumns({ includeFormType: false }),
+  "Payment Forms": paymentFormColumns({ includeFormType: true }),
   ChangCateSumm: [
     {
       dataIndex: "regNo",
@@ -5953,11 +6080,8 @@ const staticSearchFilters = {
   ],
 };
 
-// Payment Forms starts with the same table shell as Applications,
-// but remains its own screen key for template scoping.
-staticColumns["Payment Forms"] = (staticColumns.Applications || []).map((col) => ({
-  ...col,
-}));
+// Payment Forms columns are defined directly above as a dedicated set;
+// only filters are reused from Applications for template scoping.
 staticSearchFilters["Payment Forms"] = (staticSearchFilters.Applications || []).map(
   (filter) => ({
     ...filter,

@@ -33,14 +33,13 @@ import {
   UploadOutlined,
   EditOutlined,
   ReloadOutlined,
-  DownOutlined,
 } from "@ant-design/icons";
 import ContactDrawer from "./ContactDrawer";
 import JiraLikeMenu from "./JiraLikeMenu";
 import { useTableColumns } from "../../context/TableColumnsContext ";
 import SimpleMenu from "./SimpleMenu";
 import MyDrawer from "./MyDrawer";
-import { Input, Button, Row, Upload, message, Col, Dropdown } from "antd";
+import { Input, Button, Row, Upload, message, Col } from "antd";
 import MySelect from "./MySelect";
 import { IoSettingsOutline } from "react-icons/io5";
 import {
@@ -76,7 +75,6 @@ import SimpleBatch from "../../pages/membership/SimpleBatch";
 import { getApplicationsWithFilter } from "../../features/applicationwithfilterslice";
 import { getPaymentFormsWithFilter } from "../../features/paymentFormsWithFilterSlice";
 import PaymentFormDetailDrawer from "../paymentForms/PaymentFormDetailDrawer";
-import { PAYMENT_FORM_TYPE_OPTIONS } from "../paymentForms/paymentFormTypes";
 import { useSelectedIds } from "../../context/SelectedIdsContext";
 import MyDatePicker1 from "./MyDatePicker1";
 import MyConfirm from "./MyConfirm";
@@ -1504,23 +1502,13 @@ function HeaderDetails({
                           Create
                         </Button>
                       ) : nav === "/DirectDebitAuthorization" ? (
-                        <Dropdown
-                          menu={{
-                            items: PAYMENT_FORM_TYPE_OPTIONS.map((o) => ({
-                              key: o.key,
-                              label: o.label,
-                            })),
-                            onClick: ({ key }) => openPaymentFormCreate(key),
-                          }}
-                          trigger={["click"]}
+                        <Button
+                          onClick={() => openPaymentFormCreate("DD_MANDATE")}
+                          style={paymentFormCreateBtnStyle}
+                          className="butn"
                         >
-                          <Button
-                            style={paymentFormCreateBtnStyle}
-                            className="butn"
-                          >
-                            Create <DownOutlined />
-                          </Button>
-                        </Dropdown>
+                          Create
+                        </Button>
                       ) : (
                         <Button
                           onClick={() => {

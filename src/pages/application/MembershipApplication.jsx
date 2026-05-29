@@ -14,6 +14,7 @@ import { useTableColumns } from "../../context/TableColumnsContext ";
 import { transformFiltersForApi } from "../../utils/filterUtils";
 import { useLocation } from "react-router-dom";
 import PaymentFormDetailDrawer from "../../component/paymentForms/PaymentFormDetailDrawer";
+import { formatIbanDisplay } from "../../utils/iban";
 
 function MembershipApplication() {
   const dispatch = useDispatch();
@@ -89,8 +90,8 @@ function MembershipApplication() {
             applicationStatus: row.status,
             applicationId: row._id,
             membershipNo: row.membershipNumber,
-            formType: row.formTypeLabel || row.formType,
             fullName: row.memberFullName,
+            debtorIbanDisplay: formatIbanDisplay(row.debtorIbanDisplay) || null,
           })),
         );
       } else {

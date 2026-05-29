@@ -20,6 +20,8 @@ import {
   FaUser,
   FaCreditCard,
   FaMoneyBillWave,
+  FaColumns,
+  FaWindowMaximize,
 } from "react-icons/fa";
 import dayjs from "dayjs";
 import MyDatePicker from "./MyDatePicker";
@@ -53,7 +55,13 @@ const ACTIVATE_MEMBERSHIP_DISABLED_TITLE =
   "Only the subscription with the latest start date can be reactivated here. This membership is an older subscription line.";
 
 const ProfileHeader = forwardRef(function ProfileHeader(
-  { showButtons = false, isDeceased = false, onMembershipHeaderActionsMetaChange },
+  {
+    showButtons = false,
+    isDeceased = false,
+    layout = "side",
+    onLayoutChange,
+    onMembershipHeaderActionsMetaChange,
+  },
   ref,
 ) {
   const [isCancelModalVisible, setIsCancelModalVisible] = useState(false);
@@ -603,6 +611,20 @@ const ProfileHeader = forwardRef(function ProfileHeader(
     mergedProfileSubscriptions,
   ]);
 
+  const handleHeaderLayoutChange = useCallback(
+    (nextLayout) => {
+      if (nextLayout === layout || typeof onLayoutChange !== "function") {
+        return;
+      }
+      onLayoutChange(nextLayout);
+    },
+    [layout, onLayoutChange],
+  );
+
+  const nextHeaderLayout = layout === "top" ? "side" : "top";
+  const nextHeaderLayoutLabel =
+    nextHeaderLayout === "top" ? "Top view" : "Side view";
+
   useImperativeHandle(
     ref,
     () => ({
@@ -763,13 +785,29 @@ const ProfileHeader = forwardRef(function ProfileHeader(
   }
 
   return (
-    <div className="member-header-container">
-      <div className="member-header-single-card">
+    <div className={`member-header-container member-header-${layout}-layout`}>
+      <div className={`member-header-single-card member-header-card-${layout}`}>
         {/* Profile Header Section */}
         <div
           className={`member-header-top ${isDeceased ? "member-deceased" : ""}`}
         >
           <div className="member-profile-section">
+            <div className="member-layout-toggle" aria-label="Profile header layout">
+              <Tooltip title={`Switch to ${nextHeaderLayoutLabel}`}>
+                <button
+                  type="button"
+                  className="member-layout-toggle-btn"
+                  aria-label={`Switch to ${nextHeaderLayoutLabel.toLowerCase()} profile header`}
+                  onClick={() => handleHeaderLayoutChange(nextHeaderLayout)}
+                >
+                  {nextHeaderLayout === "top" ? (
+                    <FaWindowMaximize />
+                  ) : (
+                    <FaColumns />
+                  )}
+                </button>
+              </Tooltip>
+            </div>
             <div className="member-avatar">
               <FaUser className="avatar-icon" />
             </div>
@@ -932,6 +970,26 @@ const ProfileHeader = forwardRef(function ProfileHeader(
             <span className="grade-label-blue">Grade:</span>
             <span className="grade-value-blue">{memberData.grade}</span>
           </div>
+          <div className="grade-row-blue member-payment-meta-blue">
+            <span className="grade-label-blue">Payment Code:</span>
+            <span className="grade-value-blue">{memberData.paymentCode}</span>
+          </div>
+          {subscriptionData && (
+            <>
+              <div className="grade-row-blue member-payment-meta-blue">
+                <span className="grade-label-blue">Payment Type:</span>
+                <span className="grade-value-blue">{memberData.paymentType}</span>
+              </div>
+              {memberData.subscriptionYear && (
+                <div className="grade-row-blue member-payment-meta-blue">
+                  <span className="grade-label-blue">Sub Year:</span>
+                  <span className="grade-value-blue">
+                    {memberData.subscriptionYear}
+                  </span>
+                </div>
+              )}
+            </>
+          )}
         </div>
 
       </div>

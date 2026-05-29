@@ -25,16 +25,9 @@ const DirectDebitAuthorization = () => {
       const items = result.paymentForms || [];
       setData(
         items.map((row, i) => ({
+          ...row,
           key: row._id || String(i),
-          _id: row._id,
-          id: row.membershipNumber,
-          accountName: row.memberFullName || "—",
-          bankName: "—",
-          iban: formatIbanDisplay(row.directDebitMandate?.debtorIbanDisplay) || "—",
-          status: row.isAuthorized ? "Active" : row.status,
-          dateAuthorized: row.updatedAt
-            ? new Date(row.updatedAt).toISOString().slice(0, 10)
-            : "—",
+          debtorIbanDisplay: formatIbanDisplay(row.debtorIbanDisplay) || null,
         })),
       );
     } catch {

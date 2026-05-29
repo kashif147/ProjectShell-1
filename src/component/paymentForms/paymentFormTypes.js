@@ -18,3 +18,19 @@ export const FORM_TYPE_SELECT_OPTIONS = PAYMENT_FORM_TYPE_OPTIONS.map((o) => ({
   value: o.key,
   label: o.label,
 }));
+
+export const CRM_SOURCE_OPTIONS = [
+  { value: "post", label: "Post" },
+  { value: "email", label: "Email" },
+];
+
+export const SOURCE_LABELS = {
+  portal: "Portal",
+  mobile: "Mobile app",
+  crm: "CRM",
+  notification: "Notification",
+  post: "Post",
+  email: "Email",
+  walk_in: "Walk-in",
+  phone: "Phone",
+};

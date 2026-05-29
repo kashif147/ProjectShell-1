@@ -64,7 +64,7 @@ function MiniCard({ label, value, valueColor, help }) {
         alignItems: "center",
         justifyContent: "space-between",
         gap: 8,
-        padding: "8px 10px",
+        padding: "8px 12px",
         background: "#fafafa",
         border: "1px solid #d9d9d9",
         borderRadius: 6,
@@ -125,7 +125,7 @@ const MemberFinanceSummaryCards = ({
   };
 
   return (
-    <div style={{ marginBottom: 8, width: "100%" }}>
+    <div style={{ marginBottom: 8, width: "calc(100% - 1px)", marginLeft: 1 }}>
       {s._loadError ? (
         <Alert
           type="warning"
@@ -137,10 +137,8 @@ const MemberFinanceSummaryCards = ({
 
       <div
         style={{
-          display: "flex",
-          flexDirection: "row",
-          flexWrap: "nowrap",
-          alignItems: "stretch",
+          display: "grid",
+          gridTemplateColumns: "repeat(6, minmax(0, 1fr))",
           gap: 6,
           width: "100%",
         }}
@@ -156,7 +154,7 @@ const MemberFinanceSummaryCards = ({
         ))}
       </div>
 
-      {(s.lastPayment || s.latestInvoice || pendingCreditNotes?.length > 0) && (
+      {pendingCreditNotes?.length > 0 ? (
         <div
           style={{
             marginTop: 4,
@@ -169,57 +167,31 @@ const MemberFinanceSummaryCards = ({
             lineHeight: 1.4,
           }}
         >
-          {s.lastPayment ? (
-            <span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}>
-              Last payment {formatEuroCents(s.lastPayment.amount)}
-              {s.lastPayment.date
-                ? ` · ${new Date(s.lastPayment.date).toLocaleDateString("en-IE")}`
-                : ""}
-              <FinanceInfoIcon
-                title={SUMMARY_FOOTER_HELP.lastPayment}
-                ariaLabel="About last payment"
-              />
-            </span>
-          ) : null}
-          {s.latestInvoice ? (
-            <span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}>
-              Last invoice {formatEuroCents(s.latestInvoice.amount)} ·{" "}
-              {s.latestInvoice.docNo || "—"}
-              <FinanceInfoIcon
-                title={SUMMARY_FOOTER_HELP.lastInvoice}
-                ariaLabel="About last invoice"
-              />
-            </span>
-          ) : null}
-          {pendingCreditNotes?.length > 0 ? (
-            <>
-              <span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}>
-                Pending CN:
-                <FinanceInfoIcon
-                  title={SUMMARY_FOOTER_HELP.pendingCreditNote}
-                  ariaLabel="About pending credit notes"
-                />
-              </span>
-              {pendingCreditNotes.map((cn) => (
-                <Tag
-                  key={cn.docNo}
-                  color="orange"
-                  style={{
-                    margin: 0,
-                    fontSize: 10,
-                    lineHeight: "16px",
-                    padding: "0 5px",
-                    cursor: onApprovePending ? "pointer" : "default",
-                  }}
-                  onClick={() => onApprovePending?.(cn)}
-                >
-                  {cn.docNo} {formatEuroCents(cn.amount)}
-                </Tag>
-              ))}
-            </>
-          ) : null}
+          <span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}>
+            Pending CN:
+            <FinanceInfoIcon
+              title={SUMMARY_FOOTER_HELP.pendingCreditNote}
+              ariaLabel="About pending credit notes"
+            />
+          </span>
+          {pendingCreditNotes.map((cn) => (
+            <Tag
+              key={cn.docNo}
+              color="orange"
+              style={{
+                margin: 0,
+                fontSize: 10,
+                lineHeight: "16px",
+                padding: "0 5px",
+                cursor: onApprovePending ? "pointer" : "default",
+              }}
+              onClick={() => onApprovePending?.(cn)}
+            >
+              {cn.docNo} {formatEuroCents(cn.amount)}
+            </Tag>
+          ))}
         </div>
-      )}
+      ) : null}
     </div>
   );
 };

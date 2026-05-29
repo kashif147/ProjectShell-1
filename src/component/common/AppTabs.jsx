@@ -236,6 +236,17 @@ const initialMembershipHeaderActionsMeta = {
   activateMembershipTitle: undefined,
 };
 
+const profileHeaderLayoutStorageKey = "profile-header-layout";
+
+function getInitialProfileHeaderLayout() {
+  try {
+    const saved = localStorage.getItem(profileHeaderLayoutStorageKey);
+    return saved === "top" ? "top" : "side";
+  } catch {
+    return "side";
+  }
+}
+
 function AppTabs() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
@@ -312,6 +323,17 @@ function AppTabs() {
   const [isDrawerOpen, setisDrawerOpen] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
   const [isDeceased, setIsDeceased] = useState(false);
+  const [profileHeaderLayout, setProfileHeaderLayout] = useState(
+    getInitialProfileHeaderLayout,
+  );
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(profileHeaderLayoutStorageKey, profileHeaderLayout);
+    } catch {
+      // Ignore storage failures; the toggle still works for the current view.
+    }
+  }, [profileHeaderLayout]);
 
   const profileIdForDeceased = profileDetails?._id || profileDetails?.id || "";
   useEffect(() => {
@@ -896,7 +918,7 @@ function AppTabs() {
 
   return (
     <div
-      className="d-flex"
+      className={`profile-details-shell profile-details-shell-${profileHeaderLayout}`}
       style={{
         flex: "1 1 0%",
         minHeight: 0,
@@ -908,6 +930,8 @@ function AppTabs() {
     >
       <ProfileHeader
         ref={profileHeaderRef}
+        layout={profileHeaderLayout}
+        onLayoutChange={setProfileHeaderLayout}
         showButtons={activeKey === "1"}
         isDeceased={isDeceased}
         onMembershipHeaderActionsMetaChange={

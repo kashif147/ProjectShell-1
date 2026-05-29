@@ -40,7 +40,10 @@ import { useDispatch, useSelector } from "react-redux";
 import { getAllLookups } from "../../features/LookupsSlice";
 import { fetchCountries } from "../../features/CountriesSlice";
 import MemberSearch from "../profile/MemberSearch";
-import { FORM_TYPE_SELECT_OPTIONS } from "./paymentFormTypes";
+import {
+  FORM_TYPE_SELECT_OPTIONS,
+  SOURCE_LABELS,
+} from "./paymentFormTypes";
 import {
   formatIbanDisplay,
   isMaskedIban,
@@ -70,6 +73,210 @@ const IRISH_BANKS = [
   "Revolut",
   "N26",
 ];
+
+function isPdfUrl(url, name) {
+  if (name && /\.pdf$/i.test(name)) return true;
+  if (!url) return false;
+  const clean = String(url).split("?")[0].toLowerCase();
+  return clean.endsWith(".pdf");
+}
+
+function ScanPreview({ url, name }) {
+  if (!url) return null;
+  const pdf = isPdfUrl(url, name);
+  return (
+    <div className="payment-form-drawer__scan-preview">
+      {pdf ? (
+        <iframe
+          src={url}
+          className="payment-form-drawer__scan-iframe"
+          title={name || "Signed mandate"}
+        />
+      ) : (
+        <a href={url} target="_blank" rel="noreferrer">
+          <img
+            src={url}
+            alt={name || "Signed mandate"}
+            className="payment-form-drawer__scan-image"
+          />
+        </a>
+      )}
+      <div className="payment-form-drawer__scan-meta">
+        <span className="payment-form-drawer__scan-name">
+          {name || (pdf ? "Signed mandate (PDF)" : "Signed mandate")}
+        </span>
+        <Space size="small">
+          <a href={url} target="_blank" rel="noreferrer">
+            Open
+          </a>
+          <a href={url} download>
+            Download
+          </a>
+        </Space>
+      </div>
+    </div>
+  );
+}
+
+function AuthorisationChoice({
+  value,
+  onChange,
+  digitalLabel,
+  onFileLabel = "Authorisation on file (signed scan attached).",
+  uploadLabel = "Upload scanned form",
+  replaceLabel = "Replace scanned form",
+  scanUrl,
+  scanName,
+  pendingFile,
+  onPickFile,
+  onRemoveFile,
+  disabled,
+}) {
+  const set = (next) => {
+    if (disabled) return;
+    onChange?.(next === value ? null : next);
+  };
+  return (
+    <div className="payment-form-drawer__auth-choice">
+      <div
+        className={`payment-form-drawer__auth-option${value === "on_file" ? " is-active" : ""}`}
+      >
+        <Checkbox
+          checked={value === "on_file"}
+          onChange={() => set("on_file")}
+          disabled={disabled}
+        >
+          <span className="payment-form-drawer__auth-text">
+            <strong>{onFileLabel}</strong>
+          </span>
+        </Checkbox>
+        {value === "on_file" && (
+          <div className="payment-form-drawer__auth-option-body">
+            {!disabled && (
+              <Upload
+                beforeUpload={(file) => {
+                  onPickFile?.(file);
+                  return false;
+                }}
+                onRemove={() => onRemoveFile?.()}
+                maxCount={1}
+                fileList={
+                  pendingFile
+                    ? [
+                        {
+                          uid: "pending",
+                          name: pendingFile.name,
+                          status: "done",
+                        },
+                      ]
+                    : []
+                }
+              >
+                <Button>{scanUrl ? replaceLabel : uploadLabel}</Button>
+              </Upload>
+            )}
+            {scanUrl && <ScanPreview url={scanUrl} name={scanName} />}
+          </div>
+        )}
+      </div>
+      <div
+        className={`payment-form-drawer__auth-option${value === "digital" ? " is-active" : ""}`}
+      >
+        <Checkbox
+          checked={value === "digital"}
+          onChange={() => set("digital")}
+          disabled={disabled}
+        >
+          <span className="payment-form-drawer__auth-text">{digitalLabel}</span>
+        </Checkbox>
+      </div>
+    </div>
+  );
+}
+
+function SignaturePreview({ url, label }) {
+  if (!url) return null;
+  return (
+    <div className="payment-form-drawer__signature-inline">
+      {label && (
+        <span className="payment-form-drawer__signature-inline-label">
+          {label}
+        </span>
+      )}
+      <a href={url} target="_blank" rel="noreferrer">
+        <img
+          src={url}
+          alt={label || "Signature"}
+          className="payment-form-drawer__signature-image"
+        />
+      </a>
+    </div>
+  );
+}
+
+function SignatureEvidence({ record, signatureUrls }) {
+  const hasCanvas = (signatureUrls || []).some(Boolean);
+  const paperUrl = record?.downloadUrls?.paperUpload;
+  const signedPdfUrl = record?.downloadUrls?.signedPdf;
+  const paperName = record?.paperUpload?.fileName;
+  const signedName = record?.signedPdf?.fileName;
+
+  if (!hasCanvas && !paperUrl && !signedPdfUrl) {
+    return (
+      <div className="payment-form-drawer__signature-evidence payment-form-drawer__signature-evidence--missing">
+        <span className="payment-form-drawer__signature-evidence-hint">
+          No signature evidence on file yet.
+        </span>
+      </div>
+    );
+  }
+
+  return (
+    <div className="payment-form-drawer__signature-evidence">
+      {hasCanvas && (
+        <div className="payment-form-drawer__signature-inline-row">
+          {signatureUrls.map((url, idx) =>
+            url ? (
+              <SignaturePreview
+                key={`${url}-${idx}`}
+                url={url}
+                label={
+                  signatureUrls.filter(Boolean).length > 1
+                    ? `Signature ${idx + 1}`
+                    : "Signature"
+                }
+              />
+            ) : null,
+          )}
+        </div>
+      )}
+      {(paperUrl || signedPdfUrl) && (
+        <div className="payment-form-drawer__signature-evidence-links">
+          {paperUrl && (
+            <a
+              className="payment-form-drawer__signature-evidence-link"
+              href={paperUrl}
+              target="_blank"
+              rel="noreferrer"
+            >
+              View scanned form{paperName ? ` (${paperName})` : ""}
+            </a>
+          )}
+          {signedPdfUrl && (
+            <a
+              className="payment-form-drawer__signature-evidence-link"
+              href={signedPdfUrl}
+              target="_blank"
+              rel="noreferrer"
+            >
+              View signed PDF{signedName ? ` (${signedName})` : ""}
+            </a>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
 
 function ReadonlyRow({ label, value, mono = false }) {
   return (
@@ -260,6 +467,7 @@ export default function PaymentFormDetailDrawer({
   const [pdfDownloading, setPdfDownloading] = useState(false);
   const [selectedMember, setSelectedMember] = useState(null);
   const [composeFormType, setComposeFormType] = useState(createFormType);
+  const [pendingScanFile, setPendingScanFile] = useState(null);
   const [memberFormError, setMemberFormError] = useState(null);
   const isCompose = createMode && !formId;
   const memberLocked = lockMemberSelection || Boolean(initialProfileId);
@@ -317,6 +525,8 @@ export default function PaymentFormDetailDrawer({
       paymentFrequency:
         so.paymentFrequency || so.frequencyLayoutKey || "Monthly",
       installmentAmountEur: parseInstallmentAmountEur(so),
+      soAuthorisationMode:
+        so.authorisationMode || (so.isAuthorized ? "digital" : null),
       signatureDate1: sigDates[0] ? dayjs(sigDates[0]) : null,
       signatureDate2: sigDates[1] ? dayjs(sigDates[1]) : null,
       memberFullName: sd.memberFullName,
@@ -324,6 +534,8 @@ export default function PaymentFormDetailDrawer({
       payrollStaffNo: sd.payrollStaffNo,
       commencingDate: sd.commencingDate ? dayjs(sd.commencingDate) : null,
       signatureDate: sd.signedDate ? dayjs(sd.signedDate) : null,
+      sdAuthorisationMode:
+        sd.authorisationMode || (sd.isAuthorized ? "digital" : null),
       debtorName: dd.debtorName,
       ...(() => {
         const { line1, line2 } = splitDebtorAddressLines(dd.debtorAddress);
@@ -338,7 +550,8 @@ export default function PaymentFormDetailDrawer({
       ddIban: normalizeIban(dd.debtorIbanPlain || dd.debtorIbanDisplay || ""),
       ddBic: normalizeBic(dd.debtorBicPlain || ""),
       ddSignedDate: dd.signedDate ? dayjs(dd.signedDate) : null,
-      isAuthorized: dd.isAuthorized,
+      ddAuthorisationMode:
+        dd.authorisationMode || (dd.isAuthorized ? "digital" : null),
       ddPaymentType: ddPaymentTypeFromRecord(dd),
     });
     skipFrequencyRecalcRef.current = true;
@@ -364,6 +577,7 @@ export default function PaymentFormDetailDrawer({
     setSelectedMember(null);
     setMemberFormError(null);
     setComposeFormType(createFormType || "STANDING_ORDER");
+    setPendingScanFile(null);
     form.resetFields();
   };
 
@@ -461,6 +675,11 @@ export default function PaymentFormDetailDrawer({
           paymentFrequency: values.paymentFrequency || "Monthly",
           installmentAmountEur: values.installmentAmountEur,
           signatureDates,
+          authorisationMode:
+            values.soAuthorisationMode === "on_file" ||
+            values.soAuthorisationMode === "digital"
+              ? values.soAuthorisationMode
+              : null,
         },
       };
     }
@@ -472,6 +691,11 @@ export default function PaymentFormDetailDrawer({
           payrollStaffNo: values.payrollStaffNo,
           commencingDate: values.commencingDate?.toISOString?.(),
           signedDate: values.signatureDate?.toISOString?.(),
+          authorisationMode:
+            values.sdAuthorisationMode === "on_file" ||
+            values.sdAuthorisationMode === "digital"
+              ? values.sdAuthorisationMode
+              : null,
         },
       };
     }
@@ -492,7 +716,11 @@ export default function PaymentFormDetailDrawer({
           })(),
           debtorBic: normalizeBic(values.ddBic) || undefined,
           signedDate: values.ddSignedDate?.toISOString?.(),
-          isAuthorized: values.isAuthorized,
+          authorisationMode:
+            values.ddAuthorisationMode === "on_file" ||
+            values.ddAuthorisationMode === "digital"
+              ? values.ddAuthorisationMode
+              : null,
           paymentTypeRecurrent: resolveDdPaymentType(values, form) !== "oneoff",
         },
       };
@@ -521,7 +749,31 @@ export default function PaymentFormDetailDrawer({
           return;
         }
       }
+      const onFileSelectionField =
+        activeType === "DD_MANDATE" && values.ddAuthorisationMode === "on_file"
+          ? "ddAuthorisationMode"
+          : activeType === "STANDING_ORDER" &&
+              values.soAuthorisationMode === "on_file"
+            ? "soAuthorisationMode"
+            : activeType === "SALARY_DEDUCTION" &&
+                values.sdAuthorisationMode === "on_file"
+              ? "sdAuthorisationMode"
+              : null;
+      if (onFileSelectionField) {
+        const hasExistingScan = Boolean(
+          record?.downloadUrls?.signedPdf || record?.downloadUrls?.paperUpload,
+        );
+        if (!pendingScanFile && !hasExistingScan) {
+          message.error(
+            "Upload the scanned form to use 'Authorisation on file'.",
+          );
+          form.scrollToField(onFileSelectionField);
+          return;
+        }
+      }
       const body = buildPatchBody(values);
+      const wantsScanUpload =
+        Boolean(onFileSelectionField) && Boolean(pendingScanFile);
       setSaving(true);
       if (isCompose) {
         const profileId = selectedMember?._id || record?.profileId;
@@ -535,19 +787,61 @@ export default function PaymentFormDetailDrawer({
           formType: formTypeToCreate,
           ...body,
         });
+        if (wantsScanUpload && created?._id) {
+          try {
+            const withScan = await uploadSignedPaymentForm(
+              created._id,
+              pendingScanFile,
+            );
+            setRecord(withScan);
+            hydrateForm(withScan);
+            setPendingScanFile(null);
+          } catch {
+            message.warning(
+              "Form saved, but the scanned mandate could not be uploaded. Use the Signature evidence panel to attach it.",
+            );
+            setRecord(created);
+            hydrateForm(created);
+          }
+        } else {
+          setRecord(created);
+          hydrateForm(created);
+        }
         message.success("Payment form saved");
-        setRecord(created);
-        hydrateForm(created);
         onPersisted?.(created);
         onUpdated?.();
         return;
       }
       const updated = await updatePaymentForm(formId, body);
-      setRecord(updated);
-      hydrateForm(updated);
+      let next = updated;
+      if (wantsScanUpload) {
+        try {
+          next = await uploadSignedPaymentForm(formId, pendingScanFile);
+          setPendingScanFile(null);
+        } catch {
+          message.warning(
+            "Form saved, but the scanned mandate could not be uploaded. Try again from the Signature evidence panel.",
+          );
+        }
+      }
+      setRecord(next);
+      hydrateForm(next);
       message.success("Saved");
       onUpdated?.();
     } catch (err) {
+      if (Array.isArray(err?.errorFields) && err.errorFields.length > 0) {
+        const missingLabels = err.errorFields
+          .map((f) => f?.errors?.[0])
+          .filter(Boolean);
+        const summary =
+          missingLabels.length === 1
+            ? missingLabels[0]
+            : `Please complete the highlighted fields: ${missingLabels.join("; ")}`;
+        message.error(summary);
+        const firstField = err.errorFields[0]?.name;
+        if (firstField) form.scrollToField(firstField);
+        return;
+      }
       message.error(err?.response?.data?.error?.message || "Save failed");
     } finally {
       setSaving(false);
@@ -648,6 +942,9 @@ export default function PaymentFormDetailDrawer({
   const so = record?.standingOrder || {};
   const sd = record?.salaryDeduction || {};
   const dd = record?.directDebitMandate || {};
+  const signatureUrls = Array.isArray(record?.downloadUrls?.signatures)
+    ? record.downloadUrls.signatures
+    : [];
   const organisationReturn = resolveOrganisationReturnDetails(record);
   const organisationBank = resolveOrganisationBankDetails(record);
   const creditorAddressLines = resolveCreditorAddressLines(record, dd);
@@ -670,6 +967,7 @@ export default function PaymentFormDetailDrawer({
             : "Payment form";
 
   const memberHeaderLabel = formatMemberHeaderLabel(selectedMember, record);
+  const sourceLabel = record?.source ? SOURCE_LABELS[record.source] : null;
 
   return (
     <Drawer
@@ -680,6 +978,11 @@ export default function PaymentFormDetailDrawer({
           {memberHeaderLabel ? (
             <div className="payment-form-drawer__header-member">
               {memberHeaderLabel}
+            </div>
+          ) : null}
+          {sourceLabel && !isCompose ? (
+            <div className="payment-form-drawer__header-source">
+              Received via {sourceLabel}
             </div>
           ) : null}
         </div>
@@ -836,11 +1139,49 @@ export default function PaymentFormDetailDrawer({
                     Standing Order Set Up Form
                   </h3>
 
-                  <p className="payment-form-drawer__subsection">
-                    I/We hereby authorise and request you to debit my/our
-                    account (Details of the account from which payment will be
-                    made)
-                  </p>
+                  <Form.Item
+                    name="soAuthorisationMode"
+                    className="payment-form-drawer__auth-item"
+                    rules={[
+                      {
+                        validator: (_, val) =>
+                          val === "on_file" || val === "digital"
+                            ? Promise.resolve()
+                            : Promise.reject(
+                                new Error(
+                                  "Select one of the standing order authorisation options",
+                                ),
+                              ),
+                      },
+                    ]}
+                  >
+                    <AuthorisationChoice
+                      onFileLabel="Standing order authorisation on file (signed scan attached)."
+                      uploadLabel="Upload scanned standing order"
+                      replaceLabel="Replace scanned standing order"
+                      digitalLabel={
+                        <>
+                          I/We hereby authorise and request you to debit my/our
+                          account (Details of the account from which payment
+                          will be made).
+                        </>
+                      }
+                      scanUrl={
+                        record?.downloadUrls?.signedPdf ||
+                        record?.downloadUrls?.paperUpload ||
+                        null
+                      }
+                      scanName={
+                        record?.signedPdf?.fileName ||
+                        record?.paperUpload?.fileName ||
+                        null
+                      }
+                      pendingFile={pendingScanFile}
+                      onPickFile={setPendingScanFile}
+                      onRemoveFile={() => setPendingScanFile(null)}
+                      disabled={isFormReadOnly}
+                    />
+                  </Form.Item>
 
                   <Form.Item
                     name="debtorBankName"
@@ -1002,28 +1343,70 @@ export default function PaymentFormDetailDrawer({
                     />
                   </Form.Item>
 
-                  <p className="payment-form-drawer__static-text">
-                    Authorise the deduction from my pay, until further notice,
-                    the sum of{" "}
-                    {formatInstallmentAmount(sd) || "the applicable amount"} in
-                    respect of the{" "}
-                    <OrganisationNameBold name={organisationReturn.displayName} />{" "}
-                    financial year January – December, to be deducted on each pay
-                    day and paid to{" "}
-                    <OrganisationNameBold name={organisationReturn.displayName} />{" "}
-                    on my behalf.
-                    {"\n\n"}I also agree that if the subscription be varied, the
-                    deduction shall be varied accordingly.
-                    {"\n\n"}
-                    If there is an inadvertent shortfall in the amount deducted
-                    at source in respect of annual fee, I agree to pay the
-                    balance directly to{" "}
-                    <OrganisationNameBold name={organisationReturn.displayName} />
-                    {organisationReturn.addressLine
-                      ? ` at ${organisationReturn.addressLine}`
-                      : ""}
-                    .
-                  </p>
+                  <Form.Item
+                    name="sdAuthorisationMode"
+                    className="payment-form-drawer__auth-item"
+                    rules={[
+                      {
+                        validator: (_, val) =>
+                          val === "on_file" || val === "digital"
+                            ? Promise.resolve()
+                            : Promise.reject(
+                                new Error(
+                                  "Select one of the salary deduction authorisation options",
+                                ),
+                              ),
+                      },
+                    ]}
+                  >
+                    <AuthorisationChoice
+                      onFileLabel="Salary deduction authorisation on file (signed scan attached)."
+                      uploadLabel="Upload signed salary deduction form"
+                      replaceLabel="Replace signed salary deduction form"
+                      digitalLabel={
+                        <>
+                          Authorise the deduction from my pay, until further
+                          notice, the sum of{" "}
+                          {formatInstallmentAmount(sd) || "the applicable amount"}{" "}
+                          in respect of the{" "}
+                          <OrganisationNameBold
+                            name={organisationReturn.displayName}
+                          />{" "}
+                          financial year January – December, to be deducted on
+                          each pay day and paid to{" "}
+                          <OrganisationNameBold
+                            name={organisationReturn.displayName}
+                          />{" "}
+                          on my behalf. I also agree that if the subscription be
+                          varied, the deduction shall be varied accordingly. If
+                          there is an inadvertent shortfall in the amount
+                          deducted at source in respect of annual fee, I agree
+                          to pay the balance directly to{" "}
+                          <OrganisationNameBold
+                            name={organisationReturn.displayName}
+                          />
+                          {organisationReturn.addressLine
+                            ? ` at ${organisationReturn.addressLine}`
+                            : ""}
+                          .
+                        </>
+                      }
+                      scanUrl={
+                        record?.downloadUrls?.signedPdf ||
+                        record?.downloadUrls?.paperUpload ||
+                        null
+                      }
+                      scanName={
+                        record?.signedPdf?.fileName ||
+                        record?.paperUpload?.fileName ||
+                        null
+                      }
+                      pendingFile={pendingScanFile}
+                      onPickFile={setPendingScanFile}
+                      onRemoveFile={() => setPendingScanFile(null)}
+                      disabled={isFormReadOnly}
+                    />
+                  </Form.Item>
 
                   <Form.Item label="Reference (Membership) No">
                     <Input readOnly value={sd.referenceMembershipNo} />
@@ -1054,18 +1437,6 @@ export default function PaymentFormDetailDrawer({
                   >
                     <DatePicker style={{ width: "100%" }} format="DD/MM/YYYY" />
                   </Form.Item>
-
-                  {formId && !isFormReadOnly && (
-                    <Form.Item label="SIGNATURE">
-                      <Upload
-                        beforeUpload={() => false}
-                        onChange={handleSignedUpload}
-                        maxCount={1}
-                      >
-                        <Button>Upload signed form / signature</Button>
-                      </Upload>
-                    </Form.Item>
-                  )}
 
                   <Form.Item name="signatureDate" label="DATE">
                     <DatePicker style={{ width: "100%" }} format="DD/MM/YYYY" />
@@ -1101,38 +1472,56 @@ export default function PaymentFormDetailDrawer({
                   </Form.Item>
 
                   <Form.Item
-                    name="isAuthorized"
-                    valuePropName="checked"
+                    name="ddAuthorisationMode"
                     className="payment-form-drawer__auth-item"
                     rules={[
                       {
-                        validator: (_, checked) =>
-                          checked
+                        validator: (_, val) =>
+                          val === "on_file" || val === "digital"
                             ? Promise.resolve()
                             : Promise.reject(
                                 new Error(
-                                  "Confirm the mandate authorisation to continue",
+                                  "Select one of the mandate authorisation options",
                                 ),
                               ),
                       },
                     ]}
                   >
-                    <Checkbox className="payment-form-drawer__auth-checkbox">
-                      <span className="payment-form-drawer__auth-text">
-                        By signing this mandate form, you authorise (A) the{" "}
-                        <strong>{dd.creditorName || "Creditor"}</strong> to send
-                        instructions to your bank to debit your account and (B)
-                        your bank to debit your account in accordance with the
-                        instructions from the{" "}
-                        <strong>{dd.creditorName || "Creditor"}</strong>. As
-                        part of your rights, you are entitled to a refund from
-                        your bank under the terms and conditions of your
-                        agreement with your bank. A refund must be claimed
-                        within 8 weeks starting from the date on which your
-                        account was debited. Your rights are explained in a
-                        statement that you can obtain from your bank.
-                      </span>
-                    </Checkbox>
+                    <AuthorisationChoice
+                      onFileLabel="Mandate authorisation on file (signed scan attached)."
+                      uploadLabel="Upload scanned mandate"
+                      replaceLabel="Replace scanned mandate"
+                      digitalLabel={
+                        <>
+                          By signing this mandate form, you authorise (A) the{" "}
+                          <strong>{dd.creditorName || "Creditor"}</strong> to
+                          send instructions to your bank to debit your account
+                          and (B) your bank to debit your account in accordance
+                          with the instructions from the{" "}
+                          <strong>{dd.creditorName || "Creditor"}</strong>. As
+                          part of your rights, you are entitled to a refund
+                          from your bank under the terms and conditions of your
+                          agreement with your bank. A refund must be claimed
+                          within 8 weeks starting from the date on which your
+                          account was debited. Your rights are explained in a
+                          statement that you can obtain from your bank.
+                        </>
+                      }
+                      scanUrl={
+                        record?.downloadUrls?.signedPdf ||
+                        record?.downloadUrls?.paperUpload ||
+                        null
+                      }
+                      scanName={
+                        record?.signedPdf?.fileName ||
+                        record?.paperUpload?.fileName ||
+                        null
+                      }
+                      pendingFile={pendingScanFile}
+                      onPickFile={setPendingScanFile}
+                      onRemoveFile={() => setPendingScanFile(null)}
+                      disabled={isFormReadOnly}
+                    />
                   </Form.Item>
 
                   <div className="payment-form-drawer__readonly-block">
@@ -1293,18 +1682,6 @@ export default function PaymentFormDetailDrawer({
                     Creditor.
                   </p>
 
-                  {formId && !isFormReadOnly && (
-                    <Form.Item label="Signature">
-                      <Upload
-                        beforeUpload={() => false}
-                        onChange={handleSignedUpload}
-                        maxCount={1}
-                      >
-                        <Button>Upload signed mandate</Button>
-                      </Upload>
-                    </Form.Item>
-                  )}
-
                   <Form.Item
                     name="ddSignedDate"
                     label="Signature & Date"
@@ -1323,8 +1700,12 @@ export default function PaymentFormDetailDrawer({
           {!record.unsaved && formId && (
             <div className="payment-form-drawer__panel payment-form-drawer__panel--attachments">
               <h3 className="payment-form-drawer__section-title">
-                Attachments
+                Signature evidence
               </h3>
+              <SignatureEvidence
+                record={record}
+                signatureUrls={signatureUrls}
+              />
               <div className="payment-form-drawer__attachments-row">
                 <Button
                   loading={pdfDownloading}
@@ -1333,33 +1714,22 @@ export default function PaymentFormDetailDrawer({
                   Download PDF copy
                 </Button>
                 {!isFormReadOnly && (
-                  <Upload
-                    beforeUpload={() => false}
-                    onChange={handlePaperUpload}
-                    maxCount={1}
-                  >
-                    <Button>Upload paper / scan</Button>
-                  </Upload>
-                )}
-                {record.downloadUrls?.paperUpload && (
-                  <a
-                    className="payment-form-drawer__download-link"
-                    href={record.downloadUrls.paperUpload}
-                    target="_blank"
-                    rel="noreferrer"
-                  >
-                    Download paper upload
-                  </a>
-                )}
-                {record.downloadUrls?.signedPdf && (
-                  <a
-                    className="payment-form-drawer__download-link"
-                    href={record.downloadUrls.signedPdf}
-                    target="_blank"
-                    rel="noreferrer"
-                  >
-                    Download signed PDF
-                  </a>
+                  <>
+                    <Upload
+                      beforeUpload={() => false}
+                      onChange={handlePaperUpload}
+                      maxCount={1}
+                    >
+                      <Button>Upload paper / scan</Button>
+                    </Upload>
+                    <Upload
+                      beforeUpload={() => false}
+                      onChange={handleSignedUpload}
+                      maxCount={1}
+                    >
+                      <Button>Upload signed PDF</Button>
+                    </Upload>
+                  </>
                 )}
               </div>
             </div>

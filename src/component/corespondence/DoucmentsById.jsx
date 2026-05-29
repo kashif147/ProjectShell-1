@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useCallback, useMemo } from "react";
 import { FaFilePdf } from "react-icons/fa";
-import { Spin, message, Button, Tooltip } from "antd";
+import { Spin, message, Button, Tooltip, Tag } from "antd";
 import { DownloadOutlined } from "@ant-design/icons";
 import MyTable from "../common/MyTable";
 import {
@@ -30,6 +30,18 @@ function buildColumns(onDownloadPdf, downloadingId) {
       title: "Status",
       dataIndex: "status",
       key: "status",
+    },
+    {
+      title: "Authorised",
+      dataIndex: "isAuthorized",
+      key: "isAuthorized",
+      width: 120,
+      render: (value, row) => {
+        if (!value) return "No";
+        if (row?.authorisationMode === "on_file")
+          return <Tag color="geekblue">On file</Tag>;
+        return <Tag color="green">Yes</Tag>;
+      },
     },
     {
       title: "Date",
@@ -113,6 +125,8 @@ export default function DoucmentsById({
           name: `${item.formTypeLabel || item.formType} – ${item.membershipNumber}`,
           formType: item.formTypeLabel || item.formType,
           status: item.status,
+          isAuthorized: Boolean(item.isAuthorized),
+          authorisationMode: item.authorisationMode || null,
           dateUploaded: item.updatedAt
             ? dayjs(item.updatedAt).format("YYYY-MM-DD HH:mm")
             : "—",

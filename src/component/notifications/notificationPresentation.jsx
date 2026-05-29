@@ -71,9 +71,14 @@ export function NotificationRow({ item, onRowClick, padding = "16px 24px" }) {
                 marginLeft: 8,
               }}
             >
-              {isBatchProcessNotification(meta.type) && (
+              {isBatchProcessNotification(meta.type) && !isDdPrepare && (
                 <Text strong style={{ color: "#1D4ED8", fontSize: 12 }}>
                   {Number(meta.totalTransactions || 0)}
+                </Text>
+              )}
+              {isDdPrepare && meta.type === "DD_PREPARE_COMPLETED" && (
+                <Text strong style={{ color: "#1D4ED8", fontSize: 12 }}>
+                  {includedCount + excludedCount}
                 </Text>
               )}
               {!item.isRead && <Badge status="processing" color="#1890ff" />}
@@ -82,7 +87,37 @@ export function NotificationRow({ item, onRowClick, padding = "16px 24px" }) {
         }
         description={
           <div>
-            {isBatchProcessNotification(meta.type) ? (
+            {isDdPrepare ? (
+              <div
+                style={{
+                  fontSize: "12px",
+                  color: "#666",
+                  marginBottom: "4px",
+                  lineHeight: "1.4",
+                }}
+              >
+                <div>{item.body}</div>
+                <div>
+                  Run:{" "}
+                  <Text strong style={{ fontSize: 12 }}>
+                    {meta.runNo || meta.referenceNumber || "-"}
+                  </Text>
+                </div>
+                {meta.type === "DD_PREPARE_COMPLETED" &&
+                  (includedCount > 0 || excludedCount > 0) && (
+                    <div>
+                      Included:{" "}
+                      <Text strong style={{ fontSize: 12 }}>
+                        {includedCount}
+                      </Text>{" "}
+                      | Excluded:{" "}
+                      <Text strong style={{ fontSize: 12 }}>
+                        {excludedCount}
+                      </Text>
+                    </div>
+                  )}
+              </div>
+            ) : isBatchProcessNotification(meta.type) ? (
               <div
                 style={{
                   fontSize: "12px",
@@ -92,13 +127,6 @@ export function NotificationRow({ item, onRowClick, padding = "16px 24px" }) {
                 }}
               >
                 <div>{`Ref No: ${meta.referenceNumber || "-"} | Description: ${meta.description || "-"}`}</div>
-                {isDdPrepare &&
-                  meta.type === "DD_PREPARE_COMPLETED" &&
-                  (includedCount > 0 || excludedCount > 0) && (
-                    <div>
-                      Included: {includedCount} | Excluded: {excludedCount}
-                    </div>
-                  )}
               </div>
             ) : (
               <div
