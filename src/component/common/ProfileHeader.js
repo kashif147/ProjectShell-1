@@ -901,25 +901,19 @@ const ProfileHeader = forwardRef(function ProfileHeader(
       {subscriptionData ? (
         <>
           <div className="member-meta-tile" title={memberData.paymentType}>
-            <span className="member-meta-tile-icon" aria-hidden="true">
-              <FaCreditCard />
-            </span>
-            <span className="member-meta-tile-body">
-              <span className="member-meta-tile-label">Payment Type</span>
-              <span className="member-meta-tile-value">{memberData.paymentType}</span>
-            </span>
+            {renderCompactLine(
+              <FaCreditCard />,
+              "Payment Type:",
+              memberData.paymentType,
+            )}
           </div>
           {memberData.subscriptionYear ? (
             <div className="member-meta-tile" title={String(memberData.subscriptionYear)}>
-              <span className="member-meta-tile-icon" aria-hidden="true">
-                <FaCalendarAlt />
-              </span>
-              <span className="member-meta-tile-body">
-                <span className="member-meta-tile-label">Sub Year</span>
-                <span className="member-meta-tile-value">
-                  {memberData.subscriptionYear}
-                </span>
-              </span>
+              {renderCompactLine(
+                <FaCalendarAlt />,
+                "Sub Year:",
+                memberData.subscriptionYear,
+              )}
             </div>
           ) : null}
         </>
