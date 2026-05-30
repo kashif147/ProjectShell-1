@@ -21,6 +21,7 @@ import { getApplicationById } from "../../features/ApplicationDetailsSlice";
 import { buildApplicationMgtSearch } from "../../utils/applicationMgtRoute";
 import { getProfileApplications } from "../../features/profiles/profileApplicationsSlice";
 import { Tabs, Spin, Drawer, Button, Dropdown } from "antd";
+import axios from "axios";
 import { MoreOutlined } from "@ant-design/icons";
 import MyTable from "./MyTable";
 import {
@@ -42,9 +43,14 @@ import {
   FaFileAlt,
 } from "react-icons/fa";
 import { useTableColumns } from "../../context/TableColumnsContext ";
-import TransferRequests from "../TransferRequests";
+import { getTransferRequestHistoryById } from "../../constants/TransferRequestHistory";
+import { getTransferRequest } from "../../features/profiles/TransferRequest";
 import CategoryChangeRequest from "../details/ChangeCategoryDrawer";
-import Reminder from "../profile/Reminder";
+import {
+  ReminderTable,
+  defaultReminderHistoryRows,
+} from "../profile/Reminder";
+import MyAlert from "./MyAlert";
 import { formatDateOnly } from "../../utils/Utilities";
 import { FinanceTabToolbarContext } from "../../context/FinanceTabToolbarContext";
 import { MembershipTabToolbarContext } from "../../context/MembershipTabToolbarContext";
@@ -247,6 +253,32 @@ function getInitialProfileHeaderLayout() {
   }
 }
 
+const REMINDER_TYPE_LABELS = {
+  R1: "Reminder 1",
+  R2: "Reminder 2",
+  R3: "Reminder 3",
+};
+
+function normalizeTransferHistoryRows(raw) {
+  if (!raw) return [];
+  let arr = raw;
+  if (!Array.isArray(arr)) {
+    if (Array.isArray(arr?.data)) arr = arr.data;
+    else if (arr?.data != null) arr = [arr.data];
+    else arr = [arr];
+  }
+  return arr.map((item, index) => ({
+    key: item?._id || item?.id || `transfer-${index}`,
+    transferDate: item?.requestDate || item?.transferDate,
+    currentWorkLocationName: item?.currentWorkLocationName || "",
+    reason: item?.reason || "",
+    requestedWorkLocationName: item?.requestedWorkLocationName || "",
+    notes: item?.notes || "",
+    status: item?.status || "PENDING",
+    requestId: item?._id || item?.id,
+  }));
+}
+
 function AppTabs() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
@@ -318,9 +350,8 @@ function AppTabs() {
 
   const [activeKey, setActiveKey] = useState("1");
   const [visibleTabs, setVisibleTabs] = useState(staticTabKeys);
-  const [TransferDrawer, setTransferDrawer] = useState(false);
-  const [isReminder, setIsReminder] = useState(false);
-  const [isDrawerOpen, setisDrawerOpen] = useState(false);
+  const [isCategoryRequestModalOpen, setIsCategoryRequestModalOpen] =
+    useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
   const [isDeceased, setIsDeceased] = useState(false);
   const [profileHeaderLayout, setProfileHeaderLayout] = useState(
@@ -406,12 +437,21 @@ function AppTabs() {
   );
   const { profileApplications, loading: profileApplicationsLoading } =
     useSelector((state) => state.profileApplications || {});
+  const { history: transferHistoryRaw, loading: transferHistoryLoading } =
+    useSelector((state) => state.transferRequestHistory || {});
 
   useEffect(() => {
     if (activeKey === "3" && profileDetails?._id) {
       dispatch(getProfileApplications({ profileId: profileDetails._id }));
     }
   }, [activeKey, profileDetails?._id, dispatch]);
+
+  useEffect(() => {
+    const profileId = profileDetails?._id || profileDetails?.id;
+    if (activeKey === "12" && profileId) {
+      dispatch(getTransferRequestHistoryById(profileId));
+    }
+  }, [activeKey, profileDetails?._id, profileDetails?.id, dispatch]);
 
   useEffect(() => {
     const requestedTab = String(location.state?.activeTab || "")
@@ -571,6 +611,192 @@ function AppTabs() {
     },
   ];
 
+  const historyData = [
+    {
+      key: "1",
+      oldCategory: "general",
+      newCategory: "postgraduate_student",
+      effectiveDate: "01/12/2023",
+      reason: "Member enrolled in postgraduate program",
+      remarks: "Approved by admin after verification",
+      insertedAtSystem: "01/12/2023 09:00 AM",
+      insertedBySystem: "System",
+      insertedAtAdmin: "01/12/2023 10:30 AM",
+      insertedByAdmin: "Admin User",
+    },
+    {
+      key: "2",
+      oldCategory: "postgraduate_student",
+      newCategory: "affiliate_non_practicing",
+      effectiveDate: "15/03/2024",
+      reason: "Requested due to career break",
+      remarks: "Confirmed with HR letter",
+      insertedAtSystem: "15/03/2024 08:45 AM",
+      insertedBySystem: "System",
+      insertedAtAdmin: "16/03/2024 09:15 AM",
+      insertedByAdmin: "Membership Officer",
+    },
+    {
+      key: "3",
+      oldCategory: "affiliate_non_practicing",
+      newCategory: "retired_associate",
+      effectiveDate: "01/08/2024",
+      reason: "Retirement request submitted",
+      remarks: "Final approval granted",
+      insertedAtSystem: "01/08/2024 12:00 PM",
+      insertedBySystem: "System",
+      insertedAtAdmin: "02/08/2024 01:00 PM",
+      insertedByAdmin: "Super Admin",
+    },
+  ];
+
+  const columnHistory = [
+    { title: "Old Category", dataIndex: "oldCategory", key: "oldCategory" },
+    { title: "New Category", dataIndex: "newCategory", key: "newCategory" },
+    {
+      title: "Effective Date",
+      dataIndex: "effectiveDate",
+      key: "effectiveDate",
+    },
+    { title: "Reason", dataIndex: "reason", key: "reason" },
+    { title: "Remarks", dataIndex: "remarks", key: "remarks" },
+    {
+      title: "Inserted At",
+      dataIndex: "insertedAtSystem",
+      key: "insertedAtSystem",
+    },
+    {
+      title: "Inserted By",
+      dataIndex: "insertedBySystem",
+      key: "insertedBySystem",
+    },
+    {
+      title: "Inserted At",
+      dataIndex: "insertedAtAdmin",
+      key: "insertedAtAdmin",
+    },
+    {
+      title: "Inserted By",
+      dataIndex: "insertedByAdmin",
+      key: "insertedByAdmin",
+    },
+  ];
+
+  const profileReminderRows = useMemo(() => {
+    const hist = primarySubscriptionRow?.reminderHistory;
+    if (Array.isArray(hist) && hist.length > 0) {
+      return hist.map((h, index) => ({
+        key: h?._id || `reminder-${index}`,
+        reminder:
+          REMINDER_TYPE_LABELS[h?.type] || h?.type || `Reminder ${index + 1}`,
+        date: formatDateOnly(h?.reminderDate) || "—",
+        medium: h?.medium || "email",
+      }));
+    }
+    return defaultReminderHistoryRows;
+  }, [primarySubscriptionRow]);
+
+  const profileTransferRows = useMemo(
+    () => normalizeTransferHistoryRows(transferHistoryRaw),
+    [transferHistoryRaw],
+  );
+
+  const pendingTransferRequest = useMemo(
+    () =>
+      profileTransferRows.find(
+        (row) => String(row.status || "").toUpperCase() === "PENDING",
+      ),
+    [profileTransferRows],
+  );
+
+  const transferRequestColumns = useMemo(
+    () => [
+      {
+        title: "Transfer Date",
+        dataIndex: "transferDate",
+        key: "transferDate",
+        render: (date) => (date ? formatDateOnly(date) : ""),
+      },
+      {
+        title: "Work Location From",
+        dataIndex: "currentWorkLocationName",
+        key: "currentWorkLocationName",
+      },
+      {
+        title: "Transfer reason",
+        dataIndex: "reason",
+        key: "reason",
+      },
+      {
+        title: "Work Location To",
+        dataIndex: "requestedWorkLocationName",
+        key: "requestedWorkLocationName",
+      },
+      {
+        title: "Notes",
+        dataIndex: "notes",
+        key: "notes",
+      },
+      {
+        title: "Status",
+        dataIndex: "status",
+        key: "status",
+        render: (text) => {
+          const normalized = String(text || "");
+          let color = "default";
+          if (normalized === "Approved" || normalized === "APPROVED")
+            color = "green";
+          else if (normalized === "Rejected" || normalized === "REJECTED")
+            color = "red";
+          else if (
+            normalized === "Pending" ||
+            normalized === "PENDING"
+          )
+            color = "orange";
+          return <span style={{ color }}>{text}</span>;
+        },
+      },
+    ],
+    [],
+  );
+
+  const handleApproveTransferRequest = useCallback(async () => {
+    const requestId = pendingTransferRequest?.requestId;
+    if (!requestId) {
+      MyAlert("warning", "No pending transfer request to approve.");
+      return;
+    }
+    try {
+      const token = localStorage.getItem("token");
+      await axios.put(
+        `${process.env.REACT_APP_PROFILE_SERVICE_URL}/transfer-request/${requestId}`,
+        { action: "APPROVE", reason: "" },
+        {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        },
+      );
+      MyAlert(
+        "success",
+        "Transfer Request Approved",
+        "The transfer request has been approved successfully.",
+      );
+      dispatch(getTransferRequest());
+      const profileId = profileDetails?._id || profileDetails?.id;
+      if (profileId) {
+        dispatch(getTransferRequestHistoryById(profileId));
+      }
+    } catch (error) {
+      const message =
+        error.response?.data?.message ||
+        error.message ||
+        "Failed to approve transfer request";
+      MyAlert("error", "Approval Failed", message);
+    }
+  }, [dispatch, pendingTransferRequest, profileDetails]);
+
   const allItems = [
     {
       key: "1",
@@ -644,6 +870,35 @@ function AppTabs() {
       label: "Trainings (CPD)",
       children: <div>Trainings (CPD)</div>,
     },
+    {
+      key: "13",
+      label: "Category Changes",
+      children: (
+        <CategoryChangeRequest
+          inline
+          columnHistory={columnHistory}
+          historyData={historyData}
+        />
+      ),
+    },
+    {
+      key: "14",
+      label: "Reminders",
+      children: <ReminderTable dataSource={profileReminderRows} />,
+    },
+    {
+      key: "12",
+      label: "Transfer Requests",
+      children: (
+        <MyTable
+          columns={transferRequestColumns}
+          dataSource={profileTransferRows}
+          loading={transferHistoryLoading}
+          selection={false}
+          tablePadding={{ paddingLeft: "0", paddingRight: "0" }}
+        />
+      ),
+    },
   ];
 
   const handleMenuClick = (key) => {
@@ -696,7 +951,7 @@ function AppTabs() {
       label: "Category Changes",
       icon: <FaTags />,
       iconColor: "#2f54eb",
-      onClick: () => setisDrawerOpen(true),
+      onClick: () => handleMenuClick("13"),
     },
     {
       key: "7",
@@ -724,7 +979,7 @@ function AppTabs() {
       label: "Reminders",
       icon: <FaRegClock />,
       iconColor: "#faad14",
-      onClick: () => setIsReminder(true),
+      onClick: () => handleMenuClick("14"),
     },
     {
       key: "8",
@@ -761,7 +1016,13 @@ function AppTabs() {
       label: "Transfer Requests",
       icon: <FaExchangeAlt />,
       iconColor: "#fa8c16",
-      onClick: () => setTransferDrawer(true),
+      onClick: () => {
+        const profileId = profileDetails?._id || profileDetails?.id;
+        if (profileId) {
+          dispatch(getTransferRequestHistoryById(profileId));
+        }
+        handleMenuClick("12");
+      },
     },
   ];
 
@@ -834,6 +1095,27 @@ function AppTabs() {
               documentsActionsRef.current?.openCreatePaymentForm?.(),
           },
         ];
+      case "13":
+        return [
+          {
+            key: "category-change-request",
+            label: "Request Category Change",
+            icon: membershipMoreIcon(FaTags, "#2f54eb"),
+            onClick: () => setIsCategoryRequestModalOpen(true),
+          },
+        ];
+      case "14":
+        return [];
+      case "12":
+        return [
+          {
+            key: "transfer-approve",
+            label: "Approve Transfer Request",
+            icon: membershipMoreIcon(FaExchangeAlt, "#fa8c16"),
+            disabled: !pendingTransferRequest?.requestId,
+            onClick: () => handleApproveTransferRequest(),
+          },
+        ];
       default:
         return [];
     }
@@ -843,78 +1125,9 @@ function AppTabs() {
     isDeceased,
     membershipHeaderActionsMeta,
     profileDetails?._id,
+    pendingTransferRequest?.requestId,
+    handleApproveTransferRequest,
   ]);
-
-  const historyData = [
-    {
-      key: "1",
-      oldCategory: "general",
-      newCategory: "postgraduate_student",
-      effectiveDate: "01/12/2023",
-      reason: "Member enrolled in postgraduate program",
-      remarks: "Approved by admin after verification",
-      insertedAtSystem: "01/12/2023 09:00 AM",
-      insertedBySystem: "System",
-      insertedAtAdmin: "01/12/2023 10:30 AM",
-      insertedByAdmin: "Admin User",
-    },
-    {
-      key: "2",
-      oldCategory: "postgraduate_student",
-      newCategory: "affiliate_non_practicing",
-      effectiveDate: "15/03/2024",
-      reason: "Requested due to career break",
-      remarks: "Confirmed with HR letter",
-      insertedAtSystem: "15/03/2024 08:45 AM",
-      insertedBySystem: "System",
-      insertedAtAdmin: "16/03/2024 09:15 AM",
-      insertedByAdmin: "Membership Officer",
-    },
-    {
-      key: "3",
-      oldCategory: "affiliate_non_practicing",
-      newCategory: "retired_associate",
-      effectiveDate: "01/08/2024",
-      reason: "Retirement request submitted",
-      remarks: "Final approval granted",
-      insertedAtSystem: "01/08/2024 12:00 PM",
-      insertedBySystem: "System",
-      insertedAtAdmin: "02/08/2024 01:00 PM",
-      insertedByAdmin: "Super Admin",
-    },
-  ];
-
-  const columnHistory = [
-    { title: "Old Category", dataIndex: "oldCategory", key: "oldCategory" },
-    { title: "New Category", dataIndex: "newCategory", key: "newCategory" },
-    {
-      title: "Effective Date",
-      dataIndex: "effectiveDate",
-      key: "effectiveDate",
-    },
-    { title: "Reason", dataIndex: "reason", key: "reason" },
-    { title: "Remarks", dataIndex: "remarks", key: "remarks" },
-    {
-      title: "Inserted At",
-      dataIndex: "insertedAtSystem",
-      key: "insertedAtSystem",
-    },
-    {
-      title: "Inserted By",
-      dataIndex: "insertedBySystem",
-      key: "insertedBySystem",
-    },
-    {
-      title: "Inserted At",
-      dataIndex: "insertedAtAdmin",
-      key: "insertedAtAdmin",
-    },
-    {
-      title: "Inserted By",
-      dataIndex: "insertedByAdmin",
-      key: "insertedByAdmin",
-    },
-  ];
 
   return (
     <div
@@ -1083,19 +1296,15 @@ function AppTabs() {
           </div>
         </FinanceTabToolbarContext.Provider>
       </MembershipTabToolbarContext.Provider>
-      <TransferRequests
-        open={TransferDrawer}
-        onClose={() => setTransferDrawer(false)}
-        isSearch={false}
-        isChangeCat={false}
-      />
       <CategoryChangeRequest
-        open={isDrawerOpen}
-        onClose={() => setisDrawerOpen(false)}
+        asModal
+        isChangeCat
+        open={isCategoryRequestModalOpen}
+        onClose={() => setIsCategoryRequestModalOpen(false)}
+        ProfileDetails={profileDetails}
         columnHistory={columnHistory}
         historyData={historyData}
       />
-      <Reminder open={isReminder} onClose={() => setIsReminder(false)} />
 
       <Drawer
         title="Duplicate Members"

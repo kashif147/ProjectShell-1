@@ -787,116 +787,6 @@ const ProfileHeader = forwardRef(function ProfileHeader(
 
   const isTopLayout = layout === "top";
 
-  const renderMetaTiles = () => {
-    const topMetaTiles = isTopLayout ? (
-      <>
-        {memberData?.category ? (
-          <div className="member-meta-tile member-meta-tile-category" title={memberData.category}>
-            <span className="member-meta-tile-icon" aria-hidden="true">
-              <FaUsers />
-            </span>
-            <span className="member-meta-tile-body">
-              <span className="member-meta-tile-label">Category</span>
-              <span className="member-meta-tile-value">{memberData.category}</span>
-            </span>
-          </div>
-        ) : null}
-        {memberData.grade ? (
-          <div className="member-meta-tile member-meta-tile-grade" title={memberData.grade}>
-            <span className="member-meta-tile-icon" aria-hidden="true">
-              <FaStar />
-            </span>
-            <span className="member-meta-tile-body">
-              <span className="member-meta-tile-label">Grade</span>
-              <span className="member-meta-tile-value">{memberData.grade}</span>
-            </span>
-          </div>
-        ) : null}
-        <div className="member-meta-tile" title={memberData.paymentCode}>
-          <span className="member-meta-tile-icon" aria-hidden="true">
-            <FaBarcode />
-          </span>
-          <span className="member-meta-tile-body">
-            <span className="member-meta-tile-label">Payment Code</span>
-            <span className="member-meta-tile-value">{memberData.paymentCode}</span>
-          </span>
-        </div>
-      </>
-    ) : null;
-
-    return (
-      <div
-        className={`member-meta-section ${isDeceased ? "member-deceased" : ""} ${
-          isTopLayout ? "member-meta-section-top" : ""
-        }`.trim()}
-      >
-        {isTopLayout ? (
-          topMetaTiles
-        ) : (
-          <>
-      {memberData?.category ? (
-        <div className="member-meta-tile" title={memberData.category}>
-          <span className="member-meta-tile-icon" aria-hidden="true">
-            <FaUsers />
-          </span>
-          <span className="member-meta-tile-body">
-            <span className="member-meta-tile-label">Category</span>
-            <span className="member-meta-tile-value">{memberData.category}</span>
-          </span>
-        </div>
-        ) : null}
-        {memberData.grade ? (
-          <div className="member-meta-tile member-meta-tile-grade" title={memberData.grade}>
-            <span className="member-meta-tile-icon" aria-hidden="true">
-              <FaStar />
-            </span>
-            <span className="member-meta-tile-body">
-              <span className="member-meta-tile-label">Grade</span>
-              <span className="member-meta-tile-value">{memberData.grade}</span>
-            </span>
-          </div>
-        ) : null}
-        <div className="member-meta-tile" title={memberData.paymentCode}>
-        <span className="member-meta-tile-icon" aria-hidden="true">
-          <FaBarcode />
-        </span>
-        <span className="member-meta-tile-body">
-          <span className="member-meta-tile-label">Payment Code</span>
-          <span className="member-meta-tile-value">{memberData.paymentCode}</span>
-        </span>
-      </div>
-      {subscriptionData ? (
-        <>
-          <div className="member-meta-tile" title={memberData.paymentType}>
-            <span className="member-meta-tile-icon" aria-hidden="true">
-              <FaCreditCard />
-            </span>
-            <span className="member-meta-tile-body">
-              <span className="member-meta-tile-label">Payment Type</span>
-              <span className="member-meta-tile-value">{memberData.paymentType}</span>
-            </span>
-          </div>
-          {memberData.subscriptionYear ? (
-            <div className="member-meta-tile" title={String(memberData.subscriptionYear)}>
-              <span className="member-meta-tile-icon" aria-hidden="true">
-                <FaCalendarAlt />
-              </span>
-              <span className="member-meta-tile-body">
-                <span className="member-meta-tile-label">Sub Year</span>
-                <span className="member-meta-tile-value">
-                  {memberData.subscriptionYear}
-                </span>
-              </span>
-            </div>
-          ) : null}
-        </>
-      ) : null}
-          </>
-        )}
-      </div>
-    );
-  };
-
   const renderCompactLine = (
     icon,
     label,
@@ -944,6 +834,102 @@ const ProfileHeader = forwardRef(function ProfileHeader(
     </div>
   );
 
+  const renderMetaTiles = () => {
+    const topMetaTiles = isTopLayout ? (
+      <>
+        {memberData?.category ? (
+          <div
+            className="member-meta-tile member-meta-tile-category"
+            title={memberData.category}
+          >
+            {renderCompactLine(
+              <FaUsers />,
+              "Category:",
+              memberData.category,
+            )}
+          </div>
+        ) : null}
+        {memberData.grade ? (
+          <div
+            className="member-meta-tile member-meta-tile-grade"
+            title={memberData.grade}
+          >
+            {renderCompactLine(<FaStar />, "Grade:", memberData.grade)}
+          </div>
+        ) : null}
+        <div className="member-meta-tile" title={memberData.paymentCode}>
+          {renderCompactLine(
+            <FaBarcode />,
+            "Payment Code:",
+            memberData.paymentCode,
+          )}
+        </div>
+      </>
+    ) : null;
+
+    return (
+      <div
+        className={`member-meta-section ${isDeceased ? "member-deceased" : ""} ${
+          isTopLayout ? "member-meta-section-top" : ""
+        }`.trim()}
+      >
+        {isTopLayout ? (
+          topMetaTiles
+        ) : (
+          <>
+      {memberData?.category ? (
+        <div className="member-meta-tile" title={memberData.category}>
+          {renderCompactLine(
+            <FaUsers />,
+            "Category:",
+            memberData.category,
+          )}
+        </div>
+        ) : null}
+        {memberData.grade ? (
+          <div className="member-meta-tile member-meta-tile-grade" title={memberData.grade}>
+            {renderCompactLine(<FaStar />, "Grade:", memberData.grade)}
+          </div>
+        ) : null}
+        <div className="member-meta-tile" title={memberData.paymentCode}>
+          {renderCompactLine(
+            <FaBarcode />,
+            "Payment Code:",
+            memberData.paymentCode,
+          )}
+        </div>
+      {subscriptionData ? (
+        <>
+          <div className="member-meta-tile" title={memberData.paymentType}>
+            <span className="member-meta-tile-icon" aria-hidden="true">
+              <FaCreditCard />
+            </span>
+            <span className="member-meta-tile-body">
+              <span className="member-meta-tile-label">Payment Type</span>
+              <span className="member-meta-tile-value">{memberData.paymentType}</span>
+            </span>
+          </div>
+          {memberData.subscriptionYear ? (
+            <div className="member-meta-tile" title={String(memberData.subscriptionYear)}>
+              <span className="member-meta-tile-icon" aria-hidden="true">
+                <FaCalendarAlt />
+              </span>
+              <span className="member-meta-tile-body">
+                <span className="member-meta-tile-label">Sub Year</span>
+                <span className="member-meta-tile-value">
+                  {memberData.subscriptionYear}
+                </span>
+              </span>
+            </div>
+          ) : null}
+        </>
+      ) : null}
+          </>
+        )}
+      </div>
+    );
+  };
+
   return (
     <div className={`member-header-container member-header-${layout}-layout`}>
       <div className={`member-header-single-card member-header-card-${layout}`}>
@@ -985,37 +971,37 @@ const ProfileHeader = forwardRef(function ProfileHeader(
               <div className="member-profile-text">
                 <div className="member-profile-title-row">
                   <h2 className="member-name">{memberData.name}</h2>
-                  <Tooltip
-                    title={statusBadgeTooltip || undefined}
-                    trigger={["hover", "focus"]}
-                    mouseEnterDelay={0.05}
-                    mouseLeaveDelay={0.05}
-                  >
-                    <span
-                      className={`member-status-badge ${
-                        isDeceased
-                          ? "member-status-deceased"
-                          : /resign|cancel/i.test(memberData.status || "")
-                            ? "member-status-resigned"
-                            : /lapsed/i.test(memberData.status || "")
-                              ? "member-status-lapsed"
-                              : ""
-                      }`}
-                      style={{
-                        cursor: statusBadgeTooltip ? "help" : undefined,
-                      }}
-                    >
-                      {memberData.status}
-                      {subscriptionData?.isCurrent && " (Current)"}
-                      {subscriptionData?.reinstated && " (Reinstated)"}
-                    </span>
-                  </Tooltip>
                 </div>
                 <p className="member-details">
                   {memberData.dob} ({memberData.gender})
                   {isTopLayout ? " • " : " "}
                   {memberData.age}
                 </p>
+                <Tooltip
+                  title={statusBadgeTooltip || undefined}
+                  trigger={["hover", "focus"]}
+                  mouseEnterDelay={0.05}
+                  mouseLeaveDelay={0.05}
+                >
+                  <span
+                    className={`member-status-badge ${
+                      isDeceased
+                        ? "member-status-deceased"
+                        : /resign|cancel/i.test(memberData.status || "")
+                          ? "member-status-resigned"
+                          : /lapsed/i.test(memberData.status || "")
+                            ? "member-status-lapsed"
+                            : ""
+                    }`}
+                    style={{
+                      cursor: statusBadgeTooltip ? "help" : undefined,
+                    }}
+                  >
+                    {memberData.status}
+                    {subscriptionData?.isCurrent && " (Current)"}
+                    {subscriptionData?.reinstated && " (Reinstated)"}
+                  </span>
+                </Tooltip>
               </div>
             </div>
 
@@ -1156,7 +1142,7 @@ const ProfileHeader = forwardRef(function ProfileHeader(
                   "member-financial-col-right",
                   {
                     color: memberData.balanceColor || "#faad14",
-                    fontWeight: 700,
+                    fontWeight: 500,
                   },
                 )}
                 {renderCompactLine(
@@ -1184,7 +1170,7 @@ const ProfileHeader = forwardRef(function ProfileHeader(
                       className="detail-value member-balance-value"
                       style={{
                         color: memberData.balanceColor || "#faad14",
-                        fontWeight: 700,
+                        fontWeight: 500,
                       }}
                     >
                       {memberData.balance}

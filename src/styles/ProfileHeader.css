@@ -90,7 +90,7 @@
     #ffffff 100%
   );
   border-radius: 8px;
-  font-size: 12px;
+  font-size: 14px;
   line-height: 1.25;
   border: 1px solid #e4ebf2;
   box-shadow: 0 2px 8px rgba(33, 94, 151, 0.06);
@@ -170,9 +170,9 @@
   display: flex;
   flex-direction: column;
   justify-content: center;
-  gap: 2px;
+  gap: 5px;
   min-width: 0;
-  padding: 4px 8px;
+  padding: 8px 8px;
 }
 
 .member-header-top-band .member-financial-card {
@@ -220,7 +220,7 @@
 }
 
 .member-header-card-top .avatar-icon {
-  font-size: 15px;
+  font-size: 14px;
   color: var(--primary-color, #215e97);
 }
 
@@ -236,16 +236,22 @@
   gap: 3px;
 }
 
+.member-header-card-top .member-profile-text .member-status-badge {
+  margin-top: 3px;
+  display: inline-block;
+}
+
 .member-header-card-top .member-name {
-  font-size: 12px;
-  font-weight: 700;
+  font-size: 14px;
+  font-weight: 500;
   color: #1a2332;
   margin: 0;
   line-height: 1.15;
 }
 
 .member-header-card-top .member-details {
-  font-size: 12px;
+  font-size: 14px;
+  font-weight: 400;
   color: #5c6b7a;
   margin: 1px 0 0;
   white-space: nowrap;
@@ -255,7 +261,7 @@
 
 .member-header-card-top .member-status-badge {
   padding: 1px 8px;
-  font-size: 11px;
+  font-size: 14px;
   line-height: 1.35;
 }
 
@@ -282,17 +288,17 @@
 
 .member-header-card-top .member-contact-section .member-compact-value {
   color: #1a2332;
-  font-weight: 600;
+  font-weight: 400;
 }
 
 .member-header-card-top .member-compact-icon {
   flex-shrink: 0;
-  width: 14px;
+  width: 16px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   color: var(--primary-color, #215e97);
-  font-size: 12px;
+  font-size: 14px;
 }
 
 .member-header-card-top .member-compact-text {
@@ -305,14 +311,14 @@
 
 .member-header-card-top .member-compact-label {
   flex-shrink: 0;
-  font-size: 12px;
-  font-weight: 500;
+  font-size: 14px;
+  font-weight: 400;
   color: #7a8b9a;
 }
 
 .member-header-card-top .member-compact-value {
-  font-size: 12px;
-  font-weight: 600;
+  font-size: 14px;
+  font-weight: 400;
   color: #1a2332;
   min-width: 0;
   overflow: hidden;
@@ -327,12 +333,12 @@
 }
 
 .member-header-card-top .member-balance-value {
-  font-size: 12px !important;
+  font-size: 14px !important;
 }
 
 .member-header-card-top .member-balance-indicator {
-  font-size: 12px;
-  font-weight: 600;
+  font-size: 14px;
+  font-weight: 500;
 }
 
 .member-header-card-top .member-financial-grid {
@@ -405,13 +411,22 @@
   -webkit-line-clamp: 1;
 }
 
-/* Top meta tiles — icon only, splitters between columns */
+/* Top meta tiles — same row label + value as other attributes */
 .member-header-card-top .member-meta-tile {
   display: flex;
-  align-items: flex-start;
-  gap: 5px;
+  align-items: center;
+  gap: 0;
   min-width: 0;
-  padding: 3px 8px;
+  padding: 8px 8px;
+}
+
+.member-header-card-top .member-meta-tile .member-compact-line {
+  width: 100%;
+  min-width: 0;
+}
+
+.member-header-card-top .member-meta-tile .member-compact-value {
+  -webkit-line-clamp: 1;
 }
 
 .member-header-card-top .member-meta-tile:last-child {
@@ -428,7 +443,7 @@
   border-radius: 4px;
   background: rgba(33, 94, 151, 0.08);
   color: var(--primary-color, #215e97);
-  font-size: 11px;
+  font-size: 14px;
 }
 
 .member-header-card-top .member-meta-tile-body {
@@ -440,8 +455,8 @@
 }
 
 .member-header-card-top .member-meta-tile-label {
-  font-size: 9px;
-  font-weight: 700;
+  font-size: 14px;
+  font-weight: 500;
   letter-spacing: 0.04em;
   text-transform: uppercase;
   color: #8a97a5;
@@ -449,8 +464,8 @@
 }
 
 .member-header-card-top .member-meta-tile-value {
-  font-size: 12px;
-  font-weight: 600;
+  font-size: 14px;
+  font-weight: 400;
   color: #1a2332;
   line-height: 1.2;
   overflow: hidden;
@@ -492,12 +507,16 @@
   width: 100%;
 }
 
+.member-profile-text .member-status-badge {
+  margin-top: 4px;
+}
+
 /* Side meta tiles */
 .member-header-container:not(.member-header-top-layout) .member-meta-section {
   display: flex;
   flex-direction: column;
-  gap: 4px;
-  padding: 6px 10px 8px;
+  gap: 0;
+  padding: 0;
   border-top: 1px solid rgba(33, 94, 151, 0.1);
   background: linear-gradient(
     160deg,
@@ -509,12 +528,65 @@
 
 .member-header-container:not(.member-header-top-layout) .member-meta-tile {
   display: flex;
-  align-items: flex-start;
-  gap: 8px;
+  align-items: center;
+  gap: 0;
   padding: 4px 6px;
   border-radius: 4px;
   background: rgba(255, 255, 255, 0.55);
   border: 1px solid rgba(33, 94, 151, 0.1);
+  min-width: 0;
+}
+
+.member-header-container:not(.member-header-top-layout)
+  .member-meta-tile
+  .member-compact-line {
+  width: 100%;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  color: #1a2332;
+}
+
+.member-header-container:not(.member-header-top-layout)
+  .member-meta-tile
+  .member-compact-icon {
+  flex-shrink: 0;
+  width: 16px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--primary-color, #215e97);
+  font-size: 14px;
+}
+
+.member-header-container:not(.member-header-top-layout)
+  .member-meta-tile
+  .member-compact-text {
+  display: inline-flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 3px;
+  min-width: 0;
+}
+
+.member-header-container:not(.member-header-top-layout)
+  .member-meta-tile
+  .member-compact-label {
+  flex-shrink: 0;
+  font-size: 14px;
+  font-weight: 400;
+  color: #7a8b9a;
+}
+
+.member-header-container:not(.member-header-top-layout)
+  .member-meta-tile
+  .member-compact-value {
+  font-size: 14px;
+  font-weight: 400;
+  color: #1a2332;
+  min-width: 0;
+  word-break: break-word;
 }
 
 .member-header-container:not(.member-header-top-layout) .member-meta-tile-icon {
@@ -527,7 +599,7 @@
   border-radius: 4px;
   background: rgba(33, 94, 151, 0.08);
   color: var(--primary-color, #215e97);
-  font-size: 11px;
+  font-size: 14px;
 }
 
 .member-header-container:not(.member-header-top-layout) .member-meta-tile-body {
@@ -539,16 +611,16 @@
 }
 
 .member-header-container:not(.member-header-top-layout) .member-meta-tile-label {
-  font-size: 9px;
-  font-weight: 700;
+  font-size: 14px;
+  font-weight: 500;
   letter-spacing: 0.03em;
   text-transform: uppercase;
   color: #8a97a5;
 }
 
 .member-header-container:not(.member-header-top-layout) .member-meta-tile-value {
-  font-size: 12px;
-  font-weight: 600;
+  font-size: 14px;
+  font-weight: 400;
   color: #1a2332;
   word-break: break-word;
   white-space: normal;
@@ -558,6 +630,18 @@
 .member-header-side-stack {
   display: flex;
   flex-direction: column;
+}
+
+.member-header-container:not(.member-header-top-layout) .member-header-top {
+  padding: 8px;
+}
+
+.member-header-container:not(.member-header-top-layout) .member-details-section {
+  padding: 8px;
+}
+
+.member-header-container:not(.member-header-top-layout) .member-financial-card {
+  padding: 8px;
 }
 
 .member-header-container:not(.member-header-top-layout)
@@ -574,7 +658,7 @@
     #f0f6fb 45%,
     #f8fbfe 100%
   );
-  padding: 12px;
+  padding: 8px;
   position: relative;
   flex-shrink: 0;
   border-bottom: 1px solid #e8edf2;
@@ -598,7 +682,7 @@
   align-items: center;
   gap: 6px;
   cursor: pointer;
-  font-size: 12px;
+  font-size: 14px;
   transition: all 0.3s ease;
 }
 
@@ -644,7 +728,7 @@
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  font-size: 12px;
+  font-size: 14px;
   line-height: 1;
   padding: 0;
   transition:
@@ -695,14 +779,14 @@
 
 .member-name {
   color: #1a2332;
-  font-size: 18px;
-  font-weight: 600;
+  font-size: 14px;
+  font-weight: 500;
   margin: 0 0 4px 0;
 }
 
 .member-details {
   color: #5c6b7a;
-  font-size: 12px;
+  font-size: 14px;
   margin: 0 0 6px 0;
 }
 
@@ -711,7 +795,7 @@
   color: white;
   padding: 4px 12px;
   border-radius: 20px;
-  font-size: 12px;
+  font-size: 14px;
   font-weight: 500;
   display: inline-block;
 }
@@ -721,7 +805,7 @@
   color: #ad6800;
   padding: 4px 12px;
   border-radius: 20px;
-  font-size: 12px;
+  font-size: 14px;
   font-weight: 500;
   display: inline-block;
 }
@@ -731,7 +815,7 @@
   color: white;
   padding: 4px 12px;
   border-radius: 20px;
-  font-size: 12px;
+  font-size: 14px;
   font-weight: 500;
   display: inline-block;
 }
@@ -741,7 +825,7 @@
   color: #ad6800;
   padding: 4px 12px;
   border-radius: 20px;
-  font-size: 12px;
+  font-size: 14px;
   font-weight: 500;
   display: inline-block;
 }
@@ -759,12 +843,12 @@
   align-items: center;
   gap: 8px;
   color: #3d4f61;
-  font-size: 12px;
+  font-size: 14px;
   margin-bottom: 5px;
 }
 
 .contact-item-blue span {
-  font-size: 13px;
+  font-size: 14px;
 }
 
 .contact-item-blue:last-child {
@@ -842,14 +926,15 @@
 }
 
 .detail-label {
-  font-weight: 600;
+  font-weight: 400;
   color: #333;
-  font-size: 12px;
+  font-size: 14px;
 }
 
 .detail-value {
   color: #666;
-  font-size: 12px;
+  font-size: 14px;
+  font-weight: 400;
 }
 
 .member-id {
@@ -883,9 +968,9 @@
   display: flex;
   align-items: center;
   gap: 6px;
-  font-weight: 600;
+  font-weight: 500;
   color: #333;
-  font-size: 12px;
+  font-size: 14px;
 }
 
 .financial-title span {
@@ -899,8 +984,8 @@
 
 .balance-amount {
   color: #faad14;
-  font-size: 18px;
-  font-weight: 700;
+  font-size: 14px;
+  font-weight: 500;
 }
 
 .financial-details {
@@ -913,7 +998,7 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  font-size: 12px;
+  font-size: 14px;
 }
 
 .financial-label {
@@ -949,7 +1034,7 @@
   justify-content: space-between;
   align-items: center;
   margin-bottom: 4px;
-  font-size: 12px;
+  font-size: 14px;
   color: #3d4f61;
 }
 
@@ -958,13 +1043,13 @@
 }
 
 .grade-label-blue {
-  font-weight: 600;
+  font-weight: 400;
   color: #7a8b9a;
 }
 
 .grade-value-blue {
   color: #1a2332;
-  font-size: 13px;
+  font-size: 14px;
 }
 
 /* Legacy Grade and Category Section - kept for backward compatibility */
@@ -981,7 +1066,7 @@
   justify-content: space-between;
   align-items: center;
   margin-bottom: 8px;
-  font-size: 12px;
+  font-size: 14px;
 }
 
 .grade-row:last-child {
@@ -989,7 +1074,7 @@
 }
 
 .grade-label {
-  font-weight: 600;
+  font-weight: 400;
   color: #595959;
 }
 
@@ -1006,7 +1091,7 @@
   border-radius: 20px;
   padding: 8px 20px;
   color: #ff4d4f;
-  font-size: 12px;
+  font-size: 14px;
   font-weight: 500;
   cursor: pointer;
   transition: all 0.3s ease;

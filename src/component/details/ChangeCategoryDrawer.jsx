@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Table, Input } from 'antd';
+import { Input, Modal } from 'antd';
 import MyDrawer from '../common/MyDrawer';
 import CustomSelect from '../common/CustomSelect';
 import MyInput from '../common/MyInput';
@@ -17,7 +17,9 @@ function CategoryChangeRequest({
   columnHistory,
   historyData = [],
   isProfileDetails = false,
-  isChangeCat
+  isChangeCat,
+  inline = false,
+  asModal = false,
 }) {
   const initialFormData = {
     newCategory: '',
@@ -69,8 +71,7 @@ function CategoryChangeRequest({
     onClose();
   };
 
-  return (
-    <MyDrawer width="1000px" title={` ${isChangeCat ? "Category Change Request" : "Category Change History"}`} open={open} onClose={handleClose} add={handleSubmit}>
+  const content = (
       <div>
         {isProfileDetails === false && isChangeCat && (
           <Search className='pb-4' placeholder="Input search text" />
@@ -167,6 +168,45 @@ function CategoryChangeRequest({
           </div>
         )}
       </div>
+  );
+
+  if (inline) {
+    return columnHistory ? (
+      <MyTable
+        columns={columnHistory}
+        dataSource={historyData}
+        selection={false}
+        tablePadding={{ paddingLeft: "0", paddingRight: "0" }}
+      />
+    ) : null;
+  }
+
+  if (asModal) {
+    return (
+      <Modal
+        title={isChangeCat ? "Category Change Request" : "Category Change History"}
+        open={open}
+        onCancel={handleClose}
+        onOk={isChangeCat ? handleSubmit : handleClose}
+        okText={isChangeCat ? "Submit" : "Close"}
+        cancelText="Cancel"
+        width={1000}
+        destroyOnClose
+      >
+        {content}
+      </Modal>
+    );
+  }
+
+  return (
+    <MyDrawer
+      width="1000px"
+      title={` ${isChangeCat ? "Category Change Request" : "Category Change History"}`}
+      open={open}
+      onClose={handleClose}
+      add={handleSubmit}
+    >
+      {content}
     </MyDrawer>
   );
 }
