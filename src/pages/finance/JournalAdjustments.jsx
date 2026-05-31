@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
-import { notification } from "antd";
+import { notification, Spin } from "antd";
 import { useLocation } from "react-router-dom";
+import { useSelector } from "react-redux";
 import axios from "axios";
 import { getAccountServiceBaseUrl } from "../../config/serviceUrls";
 import {
@@ -8,6 +9,10 @@ import {
   searchProfilesByQuery,
 } from "../../services/profileSearchApi";
 import TableComponent from "../../component/common/TableComponent";
+import { useFilters } from "../../context/FilterContext";
+import { useTableColumns } from "../../context/TableColumnsContext ";
+import { applyClientSideRowFilters } from "../../utils/filterUtils";
+import { useRegisterGridFilterRows } from "../../hooks/useRegisterGridFilterRows";
 import {
   registerJournalAdjustmentApprove,
   clearJournalAdjustmentApprove,
@@ -23,7 +28,18 @@ function profileDisplayName(p) {
 const JournalAdjustments = () => {
   const location = useLocation();
   const highlightDocNo = String(location.state?.highlightDocNo || "").trim();
+  const { filtersState } = useFilters();
+  const { columns } = useTableColumns();
+  const journalColumns = columns.JournalAdjustments || [];
+
+  const { isInitialized } = useSelector((state) => state.applicationWithFilter);
+  const { activeTemplateId } = useSelector((state) => state.activeTemplate);
+  const { loading: templatesLoading } = useSelector(
+    (state) => state.templetefiltrsclumnapi,
+  );
+
   const [items, setItems] = useState([]);
+  const [filterSourceItems, setFilterSourceItems] = useState([]);
   const [loading, setLoading] = useState(false);
   const [memberEnrichment, setMemberEnrichment] = useState({});
 
@@ -37,24 +53,40 @@ const JournalAdjustments = () => {
     try {
       const res = await axios.get(
         `${getAccountServiceBaseUrl()}/finance/journal-adjustments`,
-        { headers: authHeaders(), params: { limit: 100 } },
+        { headers: authHeaders(), params: { limit: 500 } },
       );
       const payload = res.data?.data ?? res.data;
-      setItems(payload?.items || []);
+      const rawItems = payload?.items || [];
+      const mappedRows = rawItems.map((row, index) => {
+        const docNo = row.docNo || "";
+        return {
+          ...row,
+          key: docNo || `journal-adjustment-${index}`,
+          highlight:
+            Boolean(highlightDocNo) &&
+            String(docNo).trim() === highlightDocNo,
+        };
+      });
+      setFilterSourceItems(mappedRows);
+      setItems(
+        applyClientSideRowFilters(mappedRows, filtersState, journalColumns),
+      );
     } catch (error) {
       notification.error({
         message: "Could not load journal adjustments",
         description: error?.response?.data?.message || error.message,
       });
+      setFilterSourceItems([]);
       setItems([]);
     } finally {
       setLoading(false);
     }
-  }, [authHeaders]);
+  }, [authHeaders, filtersState, highlightDocNo, journalColumns]);
 
   useEffect(() => {
+    if (!isInitialized || templatesLoading) return;
     load();
-  }, [load]);
+  }, [activeTemplateId, isInitialized, load, templatesLoading]);
 
   useEffect(() => subscribeJournalAdjustmentsReload(load), [load]);
 
@@ -133,19 +165,38 @@ const JournalAdjustments = () => {
       items.map((row) => {
         const mid = String(row.memberId || "").trim();
         const enriched = mid ? memberEnrichment[mid] : null;
-        const docNo = row.docNo || "";
         return {
           ...row,
-          key: docNo,
           memberDisplayName: row.memberName || enriched?.memberDisplayName || "",
           memberProfileId: row.memberProfileId || enriched?.memberProfileId || "",
-          highlight:
-            Boolean(highlightDocNo) &&
-            String(docNo).trim() === highlightDocNo,
         };
       }),
-    [items, memberEnrichment, highlightDocNo],
+    [items, memberEnrichment],
   );
+
+  useRegisterGridFilterRows(
+    "JournalAdjustments",
+    filterSourceItems,
+    journalColumns,
+  );
+
+  if (!isInitialized || templatesLoading) {
+    return (
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          height: "100%",
+          padding: "50px",
+        }}
+      >
+        <Spin tip="Initializing Template...">
+          <div style={{ minHeight: 200, width: "100%" }} />
+        </Spin>
+      </div>
+    );
+  }
 
   return (
     <div style={{ width: "100%", padding: 0 }}>

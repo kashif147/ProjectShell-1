@@ -2007,7 +2007,7 @@ table tbody tr:nth-child(odd):hover td {
   width: 100%;
 }
 
-.common-table.reminder-cancellation-members-wrap .ant-table-cell {
+.common-table.reminder-cancellation-members-wrap .ant-table-tbody .ant-table-cell {
   white-space: nowrap !important;
 }
 

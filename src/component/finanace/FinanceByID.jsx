@@ -40,7 +40,15 @@ import {
   LEDGER_TX_DOC_HINT,
 } from "./financeFieldHelp";
 import { deriveRowBadges } from "./ledgerRowBadges";
-import { resolveLedgerDocumentLink } from "./ledgerDocumentLinks";
+import {
+  resolveLedgerDocumentLink,
+  resolveViewSourceBatchLink,
+} from "./ledgerDocumentLinks";
+import {
+  buildLedgerRelatedDocIndex,
+  extractBatchRef,
+  extractSourceDocRef,
+} from "./ledgerRelatedDocs";
 import dayjs from "dayjs";
 import {
   Link,
@@ -639,15 +647,31 @@ function ledgerStatusTagColor(status) {
   }
 }
 
-function formatLedgerBalanceCents(balanceCents) {
+function formatLedgerBalanceCents(balanceCents, record, pendingCreditNotes = []) {
   const n = Number(balanceCents) || 0;
   const euro = Math.abs(centsToEuro(n)).toLocaleString("en-IE", {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
   });
-  if (n > 0) return { text: `€${euro} (Dr)`, color: "#cf1322" };
-  if (n < 0) return { text: `€${euro} (Cr)`, color: "#389e0d" };
-  return { text: `€${euro}`, color: "#595959" };
+  let color = "#595959";
+  if (n > 0) color = "#cf1322";
+  else if (n < 0) color = "#389e0d";
+
+  if (record) {
+    const st = resolveLedgerRowStatus(record, pendingCreditNotes);
+    if (st === "Draft") color = "#d48806";
+    else if (st === "Refunded") color = "#722ed1";
+    else if (st === "Written Off") color = "#a8071a";
+    else {
+      const badges = deriveRowBadges(record, st);
+      if (badges.includes("CLEARING PENDING")) color = "#d46b08";
+      if (badges.includes("PARTIALLY REFUNDED")) color = "#531dab";
+    }
+  }
+
+  if (n > 0) return { text: `€${euro} (Dr)`, color };
+  if (n < 0) return { text: `€${euro} (Cr)`, color };
+  return { text: `€${euro}`, color };
 }
 
 /** Net member impact for row (matches balance step: debit − credit). */
@@ -713,7 +737,7 @@ const MEMO_COL_EXPAND_MAX_WIDTH = 2400;
 
 function ledgerFixedColumnsWidthExcludingMemo(ledgerView) {
   let w = 48 + 108 + 118 + 128 + 88 + 132 + 112 + 118 + 72;
-  if (ledgerView === "full") w += 148;
+  if (ledgerView === "full") w += 148 + 108 + 108 + 140;
   return w;
 }
 
@@ -1052,10 +1076,13 @@ const TransactionHistory = () => {
             docNo,
             memo: memoField,
             paymentType,
+            paymentStatus: item.paymentStatus ?? null,
             displayLabel: docTypeDisplayLabel || "",
             updatedAt,
             ledgerCreatedAt,
             reference: (item.reference || docNo || "-").trim(),
+            sourceDocRef: extractSourceDocRef({ ...item, docNo, memo: memoField }),
+            batchRef: extractBatchRef(item),
             debit: totalDebit,
             credit: totalCredit,
             balance: cumulativeBalance,
@@ -1069,7 +1096,13 @@ const TransactionHistory = () => {
           return hasDate && hasAmount;
         });
 
-      setData(ledgerData);
+      const relatedIndex = buildLedgerRelatedDocIndex(ledgerData);
+      const enrichedLedgerData = ledgerData.map((row) => ({
+        ...row,
+        relatedDocs: relatedIndex.get(row.key) || [],
+      }));
+
+      setData(enrichedLedgerData);
       setRowActionsCache({});
       setRowActionsOpenKey(null);
       rowActionsInflightRef.current.clear();
@@ -1964,9 +1997,14 @@ const TransactionHistory = () => {
           break;
         }
         case "view-source-batch": {
-          const link = resolveLedgerDocumentLink(record);
+          const link = resolveViewSourceBatchLink(record, memberId);
           if (link) {
-            navigate(link.path, { state: link.state });
+            navigate(link.path, {
+              state: {
+                ...link.state,
+                memberId: link.state?.memberId || memberId,
+              },
+            });
           } else {
             notification.info({
               message: "No linked batch",
@@ -2483,8 +2521,12 @@ const TransactionHistory = () => {
         key: "balance",
         width: 118,
         align: "right",
-        render: (value) => {
-          const { text, color } = formatLedgerBalanceCents(value);
+        render: (value, record) => {
+          const { text, color } = formatLedgerBalanceCents(
+            value,
+            record,
+            pendingCreditNotes,
+          );
           return (
             <span style={{ color, fontVariantNumeric: "tabular-nums" }}>
               {text}
@@ -2596,6 +2638,115 @@ const TransactionHistory = () => {
       },
       ...(ledgerView === "full"
         ? [
+            {
+              title: (
+                <FinanceColumnTitle
+                  label="Source"
+                  help={LEDGER_COLUMN_HELP.sourceDoc}
+                />
+              ),
+              key: "sourceDocRef",
+              width: 108,
+              ellipsis: true,
+              render: (_, r) => {
+                const ref = r.sourceDocRef || extractSourceDocRef(r);
+                if (!ref) return "—";
+                const related = (r.relatedDocs || []).find(
+                  (d) => d.docNo === ref,
+                );
+                if (related) {
+                  return (
+                    <Tooltip title={`Linked to ${ref}`}>
+                      <span style={{ fontFamily: "ui-monospace, monospace" }}>
+                        {ref}
+                      </span>
+                    </Tooltip>
+                  );
+                }
+                return (
+                  <span style={{ fontFamily: "ui-monospace, monospace" }}>
+                    {ref}
+                  </span>
+                );
+              },
+            },
+            {
+              title: (
+                <FinanceColumnTitle
+                  label="Batch"
+                  help={LEDGER_COLUMN_HELP.batchRef}
+                />
+              ),
+              key: "batchRef",
+              width: 108,
+              ellipsis: true,
+              render: (_, r) => {
+                const batch = r.batchRef || extractBatchRef(r);
+                return batch ? (
+                  <span style={{ fontFamily: "ui-monospace, monospace" }}>
+                    {batch}
+                  </span>
+                ) : (
+                  "—"
+                );
+              },
+            },
+            {
+              title: (
+                <FinanceColumnTitle
+                  label="Related"
+                  help={LEDGER_COLUMN_HELP.relatedDocs}
+                />
+              ),
+              key: "relatedDocs",
+              width: 140,
+              render: (_, r) => {
+                const links = r.relatedDocs || [];
+                if (!links.length) return "—";
+                return (
+                  <span
+                    style={{
+                      display: "flex",
+                      flexWrap: "wrap",
+                      gap: 4,
+                      fontSize: 11,
+                    }}
+                  >
+                    {links.slice(0, 3).map((d) => {
+                      const pseudoRow = { ...r, docNo: d.docNo, docType: d.docType };
+                      const link = resolveLedgerDocumentLink(pseudoRow, memberId);
+                      if (link) {
+                        return (
+                          <Link
+                            key={d.docNo}
+                            to={link.path}
+                            state={{ ...link.state, memberId }}
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            {d.docNo}
+                          </Link>
+                        );
+                      }
+                      return (
+                        <span key={d.docNo} title={d.docType || ""}>
+                          {d.docNo}
+                        </span>
+                      );
+                    })}
+                    {links.length > 3 ? (
+                      <Tooltip
+                        title={links
+                          .slice(3)
+                          .map((d) => d.docNo)
+                          .join(", ")}
+                      >
+                        <span>+{links.length - 3}</span>
+                      </Tooltip>
+                    ) : null}
+                  </span>
+                );
+              },
+            },
             {
               title: (
                 <FinanceColumnTitle

@@ -40,6 +40,12 @@ export const LEDGER_COLUMN_HELP = {
     "Running balance after this row (newest at top ≈ current position).\n\nFormula: previous balance + (debit − credit) for this row.\n\n(Dr) = overall amount owed; (Cr) = overall in credit.\n\nFor open invoice total use Outstanding; for money on account use Available credit on the cards above.",
   memo: "Journal memo and reference for this transaction. Double-click the Memo header to expand the column; drag the edge to resize.",
   ledgerCreatedAt: "Date and time this entry was created in the accounting system.",
+  sourceDoc:
+    "Upstream document this row relates to (invoice, receipt, etc.) from GL reference or memo.",
+  batchRef:
+    "Payment batch id or Stripe payout reference when the row came from batch or card clearing.",
+  relatedDocs:
+    "Other ledger documents in the same transaction chain — click to open the related record.",
   actions:
     "Contextual actions allowed for this document type, balance, and your permissions.",
 };

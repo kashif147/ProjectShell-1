@@ -157,27 +157,27 @@ export const financeItems = [
     ["payments:read"]
   ),
   createMenuItem(
-    "General ledger",
-    <FaBalanceScale />,
-    "General ledger",
-    ["payments:read"]
-  ),
-  createMenuItem(
     "Imports",
     <FaFileImport />,
     "Imports",
     ["payments:read"]
   ),
   createMenuItem(
-    "Reconciliations",
-    <FaExchangeAlt />,
-    "Reconciliations",
+    "General ledger",
+    <FaBalanceScale />,
+    "General ledger",
     ["payments:read"]
   ),
   createMenuItem(
     "Journal adjustments",
     <FaCommentDollar />,
     "Journal adjustments",
+    ["payments:read"]
+  ),
+  createMenuItem(
+    "Reconciliations",
+    <FaExchangeAlt />,
+    "Reconciliations",
     ["payments:read"]
   ),
   // createMenuItem(

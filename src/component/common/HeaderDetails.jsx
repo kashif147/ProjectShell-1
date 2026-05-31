@@ -1,4 +1,4 @@
-import { useState, React, useRef, useEffect, useMemo } from "react";
+import { useState, React, useRef, useEffect, useMemo, useCallback } from "react";
 import {
   Table,
   Checkbox,
@@ -93,12 +93,10 @@ import WriteOffDrawer from "../../component/finanace/WriteOffDrawer";
 import CreditNoteDrawer from "../../component/finanace/CreditNoteDrawer";
 import JournalAdjustmentDrawer from "../../component/finanace/JournalAdjustmentDrawer";
 import { getAccountServiceBaseUrl } from "../../config/serviceUrls";
-import {
-  CLEARING_ACCOUNT_OPTIONS,
-  RECONCILIATION_STATUS_OPTIONS,
-} from "../../constants/reconciliation";
 import reconciliationWorkspace from "../../utils/reconciliationWorkspace";
 import { bumpJournalAdjustmentsReload } from "../../utils/journalAdjustmentsWorkspace";
+import { bumpCreditNotesReload } from "../../utils/creditNotesWorkspace";
+import { bumpWriteOffsReload } from "../../utils/writeOffsWorkspace";
 import { fetchBatchesByType } from "../../features/profiles/batchMemberSlice";
 import CreateCasesDrawer from "../cases/CreateCasesDrawer";
 import CreateEventDrawer from "../event/CreateEventDrawer";
@@ -123,66 +121,46 @@ function isHeaderDashboardRangeNav(pathname) {
   return HEADER_DASHBOARD_RANGE_NAVS.has(pathname);
 }
 
-function ReconciliationHeaderFilters({
-  searchParams,
-  setSearchParams,
+function ReconciliationHeaderActions({
   seedLoading,
+  autoMatchLoading,
+  importLoading,
   onSeed,
+  onAutoMatch,
+  onImportOpen,
 }) {
-  const clearingCode = searchParams.get("clearing") || "1220";
-  const statusFilter = searchParams.get("status") || "";
-  const supported = reconciliationWorkspace.getSupportedClearing();
-  const clearingOptions = CLEARING_ACCOUNT_OPTIONS.filter(
-    (o) => !supported.length || supported.includes(o.value),
-  );
-
-  const updateParam = (key, value) => {
-    setSearchParams(
-      (prev) => {
-        const next = new URLSearchParams(prev);
-        if (value) next.set(key, value);
-        else next.delete(key);
-        return next;
-      },
-      { replace: true },
-    );
-  };
-
   return (
-    <div
-      className="d-flex search-fliters align-items-center flex-wrap w-100 mt-2 mb-1"
-      style={{ gap: 8 }}
-    >
-      <Select
-        style={{ width: 260, height: 30 }}
-        value={clearingCode}
-        options={clearingOptions}
-        onChange={(v) => updateParam("clearing", v)}
-      />
-      <Select
-        allowClear
-        placeholder="Status filter"
-        style={{ width: 180, height: 30 }}
-        value={statusFilter || undefined}
-        options={RECONCILIATION_STATUS_OPTIONS}
-        onChange={(v) => updateParam("status", v || "")}
-      />
+    <>
       <Button
         type="primary"
         onClick={onSeed}
         loading={seedLoading}
+        className="me-1 butn primary-btn"
         style={{
-          backgroundColor: "#45669d",
           borderRadius: "4px",
-          border: "none",
           height: "32px",
           fontWeight: "500",
-          color: "white",
         }}
       >
         Seed from pending GL
       </Button>
-    </div>
+      <Button
+        onClick={onAutoMatch}
+        loading={autoMatchLoading}
+        className="me-1 gray-btn butn"
+        style={{ height: "32px" }}
+      >
+        Auto-match
+      </Button>
+      <Button
+        onClick={onImportOpen}
+        loading={importLoading}
+        className="me-1 gray-btn butn"
+        style={{ height: "32px" }}
+      >
+        Import bank lines
+      </Button>
+    </>
   );
 }
 
@@ -246,6 +224,7 @@ function HeaderDetails({
 
   const [refundDrawerOpen, setRefundDrawerOpen] = useState(false);
   const [writeOffDrawerOpen, setWriteOffDrawerOpen] = useState(false);
+  const [writeOffSubmitting, setWriteOffSubmitting] = useState(false);
   const [creditNoteDrawerOpen, setCreditNoteDrawerOpen] = useState(false);
   const [creditNoteSubmitting, setCreditNoteSubmitting] = useState(false);
   const [journalAdjustmentDrawerOpen, setJournalAdjustmentDrawerOpen] =
@@ -254,6 +233,49 @@ function HeaderDetails({
     useState(false);
   const [reconciliationSeedLoading, setReconciliationSeedLoading] =
     useState(false);
+  const [reconciliationAutoMatchLoading, setReconciliationAutoMatchLoading] =
+    useState(false);
+  const [reconciliationImportLoading, setReconciliationImportLoading] =
+    useState(false);
+  const [reconciliationImportOpen, setReconciliationImportOpen] =
+    useState(false);
+  const [reconciliationImportText, setReconciliationImportText] = useState("");
+
+  const handleReconciliationSeed = useCallback(async () => {
+    setReconciliationSeedLoading(true);
+    try {
+      await reconciliationWorkspace.getHandlers().seed?.();
+    } finally {
+      setReconciliationSeedLoading(false);
+    }
+  }, []);
+
+  const handleReconciliationAutoMatch = useCallback(async () => {
+    setReconciliationAutoMatchLoading(true);
+    try {
+      await reconciliationWorkspace.getHandlers().autoMatch?.();
+    } finally {
+      setReconciliationAutoMatchLoading(false);
+    }
+  }, []);
+
+  const handleReconciliationImportOpen = useCallback(() => {
+    setReconciliationImportOpen(true);
+  }, []);
+
+  const handleReconciliationImportConfirm = useCallback(async () => {
+    setReconciliationImportLoading(true);
+    try {
+      await reconciliationWorkspace
+        .getHandlers()
+        .importBank?.(reconciliationImportText);
+      setReconciliationImportOpen(false);
+      setReconciliationImportText("");
+    } finally {
+      setReconciliationImportLoading(false);
+    }
+  }, [reconciliationImportText]);
+
   const [casesDrawerOpen, setCasesDrawerOpen] = useState(false);
   const [eventDrawerOpen, setEventDrawerOpen] = useState(false);
   const [attendeeDrawerOpen, setAttendeeDrawerOpen] = useState(false);
@@ -352,7 +374,10 @@ function HeaderDetails({
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (location.pathname !== "/DirectDebit" || !location.state?.openCreateDdRun) {
+    if (
+      location.pathname !== "/DirectDebit" ||
+      !location.state?.openCreateDdRun
+    ) {
       return;
     }
     setDdRunCreateOpen(true);
@@ -1405,19 +1430,20 @@ function HeaderDetails({
                                             : nav === "/GeneralLedger"
                                               ? "General ledger"
                                               : nav === "/onlinePayment"
-                                        ? "Finance"
-                                        : nav === "/EventsDashboard"
-                                          ? "Events Dashboard"
-                                          : nav === "/CorrespondenceDashboard"
-                                            ? "Campaign Dashboard"
-                                            : nav ===
-                                                "/IssuesManagementDashboard"
-                                              ? "Issues Management Dashboard"
-                                              : nav === "/EventsSummary"
-                                                ? "Events"
-                                                : nav === "/Attendees"
-                                                  ? "Attendees"
-                                                  : "")}
+                                                ? "Finance"
+                                                : nav === "/EventsDashboard"
+                                                  ? "Events Dashboard"
+                                                  : nav ===
+                                                      "/CorrespondenceDashboard"
+                                                    ? "Campaign Dashboard"
+                                                    : nav ===
+                                                        "/IssuesManagementDashboard"
+                                                      ? "Issues Management Dashboard"
+                                                      : nav === "/EventsSummary"
+                                                        ? "Events"
+                                                        : nav === "/Attendees"
+                                                          ? "Attendees"
+                                                          : "")}
                     </h2>
                   )}
                 </div>
@@ -1493,9 +1519,11 @@ function HeaderDetails({
                         (nav === "/InAppNotifications" &&
                           !hasPermission("notifications:create")) ||
                         nav === "/UserNotifications" ? null : nav ===
-                          "/PaymentForms" ? (
+                        "/PaymentForms" ? (
                         <Button
-                          onClick={() => openPaymentFormCreate("STANDING_ORDER")}
+                          onClick={() =>
+                            openPaymentFormCreate("STANDING_ORDER")
+                          }
                           style={paymentFormCreateBtnStyle}
                           className="butn"
                         >
@@ -1596,6 +1624,16 @@ function HeaderDetails({
                           {nav === "/Attendees" ? "Add Attendee" : "Create"}
                         </Button>
                       )}
+                      {nav === "/Reconciliation" ? (
+                        <ReconciliationHeaderActions
+                          seedLoading={reconciliationSeedLoading}
+                          autoMatchLoading={reconciliationAutoMatchLoading}
+                          importLoading={reconciliationImportLoading}
+                          onSeed={handleReconciliationSeed}
+                          onAutoMatch={handleReconciliationAutoMatch}
+                          onImportOpen={handleReconciliationImportOpen}
+                        />
+                      ) : null}
                       <SimpleMenu
                         title="Export"
                         triggerClassName="me-1 gray-btn butn"
@@ -1625,21 +1663,7 @@ function HeaderDetails({
                   )}
                 </div>
               </div>
-              {nav === "/Reconciliation" ? (
-                <ReconciliationHeaderFilters
-                  searchParams={searchParams}
-                  setSearchParams={setSearchParams}
-                  seedLoading={reconciliationSeedLoading}
-                  onSeed={async () => {
-                    setReconciliationSeedLoading(true);
-                    try {
-                      await reconciliationWorkspace.getHandlers().seed?.();
-                    } finally {
-                      setReconciliationSeedLoading(false);
-                    }
-                  }}
-                />
-              ) : nav == "/RemindersSummary" ? (
+              {nav == "/RemindersSummary" ? (
                 <div
                   className="d-flex search-fliters align-items-center flex-wrap w-100 mt-2 mb-1"
                   style={{ gap: 8 }}
@@ -2337,11 +2361,83 @@ function HeaderDetails({
       <WriteOffDrawer
         open={writeOffDrawerOpen}
         onClose={() => setWriteOffDrawerOpen(false)}
-        submitLoading={false}
-        onSubmit={async () => {
-          return true;
+        submitLoading={writeOffSubmitting}
+        onSubmit={async (values) => {
+          const memberId = String(values?.memberId || "").trim();
+          if (!memberId) {
+            message.error("Select a member before posting the write-off");
+            return false;
+          }
+          const amountEuros = Number(values?.amountEuros);
+          const amount = Number.isFinite(amountEuros)
+            ? Math.round(amountEuros * 100)
+            : NaN;
+          if (!Number.isFinite(amount) || amount <= 0) {
+            message.error("Enter a valid write-off amount");
+            return false;
+          }
+          setWriteOffSubmitting(true);
+          try {
+            const token = localStorage.getItem("token");
+            const docNoRaw = String(values?.docNo || "").trim();
+            const docNo =
+              docNoRaw ||
+              `WO-${Date.now().toString(36).toUpperCase()}${Math.random().toString(36).slice(2, 5).toUpperCase()}`;
+            await axios.post(
+              `${getAccountServiceBaseUrl()}/journal/writeoff`,
+              {
+                date: values?.date,
+                docNo,
+                memberId,
+                amount,
+                periodBucket: values?.periodBucket,
+                memo: values?.memo || "",
+              },
+              {
+                headers: {
+                  Authorization: `Bearer ${token}`,
+                  "Content-Type": "application/json",
+                },
+              },
+            );
+            message.success("Write-off posted");
+            bumpWriteOffsReload();
+            return true;
+          } catch (error) {
+            message.error(
+              error?.response?.data?.message ||
+                error?.message ||
+                "Could not post write-off",
+            );
+            return false;
+          } finally {
+            setWriteOffSubmitting(false);
+          }
         }}
       />
+      <Modal
+        title="Import bank / payout lines"
+        open={reconciliationImportOpen}
+        onCancel={() => {
+          setReconciliationImportOpen(false);
+          setReconciliationImportText("");
+        }}
+        confirmLoading={reconciliationImportLoading}
+        onOk={handleReconciliationImportConfirm}
+        okText="Import"
+        width={560}
+      >
+        <p style={{ fontSize: 13, color: "#595959" }}>
+          One line per entry: <code>reference, amount</code> (amount in euros,
+          e.g. <code>PO_abc123, 31.50</code>).
+        </p>
+        <Input.TextArea
+          rows={8}
+          value={reconciliationImportText}
+          onChange={(e) => setReconciliationImportText(e.target.value)}
+          placeholder="STRIPE_PO_123, 125.00&#10;REC-2026-010, 31.50"
+        />
+      </Modal>
       <CreditNoteDrawer
         open={creditNoteDrawerOpen}
         onClose={() => setCreditNoteDrawerOpen(false)}
@@ -2362,6 +2458,7 @@ function HeaderDetails({
               },
             );
             message.success("Draft credit note created");
+            bumpCreditNotesReload();
             return true;
           } catch (error) {
             message.error(
@@ -2418,7 +2515,9 @@ function HeaderDetails({
               {},
               { headers: { Authorization: `Bearer ${token}` } },
             );
-            message.success(`Journal adjustment approved — GL posted for ${docNo}`);
+            message.success(
+              `Journal adjustment approved — GL posted for ${docNo}`,
+            );
             bumpJournalAdjustmentsReload();
             return true;
           } catch (error) {

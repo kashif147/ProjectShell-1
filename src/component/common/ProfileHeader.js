@@ -156,6 +156,25 @@ const ProfileHeader = forwardRef(function ProfileHeader(
     return formatDate(dateString, "DD/MM/YYYY");
   };
 
+  const buildContactAddress = (contactInfo) => {
+    if (!contactInfo) return "";
+
+    const fullAddress = contactInfo.fullAddress?.trim();
+    if (fullAddress) return fullAddress;
+
+    return [
+      contactInfo.buildingOrHouse,
+      contactInfo.streetOrRoad,
+      contactInfo.areaOrTown,
+      contactInfo.countyCityOrPostCode,
+      contactInfo.eircode,
+      contactInfo.country,
+    ]
+      .map((part) => (part != null ? String(part).trim() : ""))
+      .filter(Boolean)
+      .join(", ");
+  };
+
   // Prefer current subscription row; otherwise latest period — matches CRM list when multiple rows exist
   const subscriptionData = useMemo(() => {
     let rows = [];
@@ -449,14 +468,7 @@ const ProfileHeader = forwardRef(function ProfileHeader(
     }
 
     // Contact Info
-    const address = source?.contactInfo
-      ? `${getSafe(source, "contactInfo.buildingOrHouse", "")} ${getSafe(
-          source,
-          "contactInfo.streetOrRoad",
-          "",
-        )}, ${getSafe(source, "contactInfo.areaOrTown", "")}`.trim() ||
-        "123 Main Street, New York"
-      : "123 Main Street, New York";
+    const address = buildContactAddress(source?.contactInfo);
 
     const email =
       getSafe(source, "contactInfo.preferredEmail") === "work"
@@ -857,11 +869,11 @@ const ProfileHeader = forwardRef(function ProfileHeader(
             {renderCompactLine(<FaStar />, "Grade:", memberData.grade)}
           </div>
         ) : null}
-        <div className="member-meta-tile" title={memberData.paymentCode}>
+        <div className="member-meta-tile" title={memberData.paymentType}>
           {renderCompactLine(
-            <FaBarcode />,
-            "Payment Code:",
-            memberData.paymentCode,
+            <FaCreditCard />,
+            "Payment Type:",
+            memberData.paymentType,
           )}
         </div>
       </>
@@ -891,6 +903,13 @@ const ProfileHeader = forwardRef(function ProfileHeader(
             {renderCompactLine(<FaStar />, "Grade:", memberData.grade)}
           </div>
         ) : null}
+        <div className="member-meta-tile" title={memberData.paymentType}>
+          {renderCompactLine(
+            <FaCreditCard />,
+            "Payment Type:",
+            memberData.paymentType,
+          )}
+        </div>
         <div className="member-meta-tile" title={memberData.paymentCode}>
           {renderCompactLine(
             <FaBarcode />,
@@ -900,13 +919,6 @@ const ProfileHeader = forwardRef(function ProfileHeader(
         </div>
       {subscriptionData ? (
         <>
-          <div className="member-meta-tile" title={memberData.paymentType}>
-            {renderCompactLine(
-              <FaCreditCard />,
-              "Payment Type:",
-              memberData.paymentType,
-            )}
-          </div>
           {memberData.subscriptionYear ? (
             <div className="member-meta-tile" title={String(memberData.subscriptionYear)}>
               {renderCompactLine(
@@ -1014,6 +1026,8 @@ const ProfileHeader = forwardRef(function ProfileHeader(
                     <FaMapMarkerAlt />,
                     "",
                     memberData.address,
+                    "member-contact-address",
+                    "member-contact-address-line",
                   )}
                 </>
               ) : (
@@ -1030,11 +1044,11 @@ const ProfileHeader = forwardRef(function ProfileHeader(
                 />
                   <span>Cell: {memberData.phone}</span>
               </div>
-              <div className="contact-item-blue">
+              <div className="contact-item-blue contact-item-blue-address">
                 <FaMapMarkerAlt
                   className="contact-icon-blue"
                 />
-                  <span>{memberData.address}</span>
+                  <span className="member-contact-address">{memberData.address}</span>
               </div>
                 </>
               )}
@@ -1111,15 +1125,13 @@ const ProfileHeader = forwardRef(function ProfileHeader(
           <div className="member-financial-card">
             {isTopLayout ? (
               <div className="member-financial-grid">
-                {subscriptionData
-                  ? renderCompactLine(
-                      <FaCreditCard />,
-                      "Payment Type:",
-                      memberData.paymentType,
-                      "",
-                      "member-financial-col-left",
-                    )
-                  : null}
+                {renderCompactLine(
+                  <FaBarcode />,
+                  "Payment Code:",
+                  memberData.paymentCode,
+                  "",
+                  "member-financial-col-left",
+                )}
                 {renderCompactLine(
                   <FaWallet />,
                   "Balance:",
@@ -1193,19 +1205,19 @@ const ProfileHeader = forwardRef(function ProfileHeader(
                 <div className="detail-row">
                   <FaCreditCard className="detail-icon" />
                   <div className="detail-content">
+                    <span className="detail-label">Payment Type:</span>
+                    <span className="detail-value">{memberData.paymentType}</span>
+                  </div>
+                </div>
+                <div className="detail-row">
+                  <FaBarcode className="detail-icon" />
+                  <div className="detail-content">
                     <span className="detail-label">Payment Code:</span>
                     <span className="detail-value">{memberData.paymentCode}</span>
                   </div>
                 </div>
                 {subscriptionData && (
                   <>
-                    <div className="detail-row">
-                      <FaMoneyBillWave className="detail-icon" />
-                      <div className="detail-content">
-                        <span className="detail-label">Payment Type:</span>
-                        <span className="detail-value">{memberData.paymentType}</span>
-                      </div>
-                    </div>
                     {memberData.subscriptionYear && (
                       <div className="detail-row">
                         <FaCalendarAlt className="detail-icon" />

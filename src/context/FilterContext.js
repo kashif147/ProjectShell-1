@@ -14,6 +14,14 @@ import { getCategoryLookup } from "../features/CategoryLookupSlice";
 import { getWorkLocationHierarchy } from "../features/LookupsWorkLocationSlice";
 import { resetInitialization } from "../features/applicationwithfilterslice";
 import { fetchSubscriptionYears } from "../features/subscription/subscriptionSlice";
+import { isDateFilterLabel, isNumericFilterLabel, isStringFilterLabel } from "../utils/filterUtils";
+import {
+  buildDataDerivedFilterOptions,
+  CLIENT_SIDE_GRID_FILTER_SCREENS,
+  hasRegisteredGridFilterRows,
+  mergeStaticAndDerivedOptions,
+  subscribeGridFilterRows,
+} from "../utils/gridFilterOptionsRegistry";
 
 const FilterContext = createContext();
 
@@ -131,6 +139,30 @@ export const FilterProvider = ({ children }) => {
       visibleFilters: [],
       filtersState: {},
     },
+    CreditNotes: {
+      visibleFilters: [],
+      filtersState: {},
+    },
+    JournalAdjustments: {
+      visibleFilters: [],
+      filtersState: {},
+    },
+    Refunds: {
+      visibleFilters: [],
+      filtersState: {},
+    },
+    WriteOffs: {
+      visibleFilters: [],
+      filtersState: {},
+    },
+    GeneralLedger: {
+      visibleFilters: [],
+      filtersState: {},
+    },
+    Reconciliation: {
+      visibleFilters: [],
+      filtersState: {},
+    },
   });
 
   // 🔹 Current screen's states
@@ -197,6 +229,12 @@ export const FilterProvider = ({ children }) => {
     if (!token) return;
     dispatch(fetchSubscriptionYears());
   }, [dispatch]);
+
+  /** Rebuild filter dropdown options when client-side grids register row data. */
+  const [gridFilterRowsTick, setGridFilterRowsTick] = useState(0);
+  useEffect(() => subscribeGridFilterRows(() => {
+    setGridFilterRowsTick((t) => t + 1);
+  }), []);
 
   // 🔹 Remove old API-based extraction helper
 
@@ -460,7 +498,7 @@ export const FilterProvider = ({ children }) => {
     Object.keys(newState).forEach((key) => {
       const filter = newState[key];
       if (filter?.selectedValues) {
-        const isDateFilter = key.toLowerCase().includes("date");
+        const isDateFilter = isDateFilterLabel(key);
         const cleaned = filter.selectedValues.filter((v) => {
           if (v === null || v === undefined) return false;
           if (isDateFilter && typeof v === "number" && Number.isFinite(v)) {
@@ -503,6 +541,12 @@ export const FilterProvider = ({ children }) => {
       "/membershipdashboard": "MembershipDashboard",
       "/email": "EmailCampaigns",
       "/emailcampaigndetail": "EmailCampaigns",
+      "/creditnotes": "CreditNotes",
+      "/journaladjustments": "JournalAdjustments",
+      "/refunds": "Refunds",
+      "/write-offs": "WriteOffs",
+      "/generalledger": "GeneralLedger",
+      "/reconciliation": "Reconciliation",
     };
     const key = (activeScreenName || "").toLowerCase();
     return pathMap[key] || "Applications";
@@ -613,11 +657,9 @@ export const FilterProvider = ({ children }) => {
         "Region",
       ],
       OnlinePayment: [
-        "Membership No",
-        "Email",
-        "Mobile No",
-        "Joining Date",
+        "Member / Application No",
         "Membership Category",
+        "Full Name",
         "Membership Status",
         "Renewal Date",
         "Transaction ID",
@@ -626,6 +668,9 @@ export const FilterProvider = ({ children }) => {
         "Payment Method",
         "Payment Status",
         "Billing Cycle",
+        "Email",
+        "Phone",
+        "Join Date",
       ],
       Communication: [
         "Membership No",
@@ -676,6 +721,76 @@ export const FilterProvider = ({ children }) => {
         "Grade",
         "Work Location",
       ],
+      CreditNotes: [
+        "CN Status",
+        "CN ref",
+        "Invoice",
+        "Member",
+        "Amount",
+        "Reason",
+        "Created By",
+        "Effective",
+        "Created At",
+      ],
+      JournalAdjustments: [
+        "JA Status",
+        "Adjustment reference",
+        "Debit",
+        "Credit",
+        "Member",
+        "Reason",
+        "Effective",
+        "Created At",
+      ],
+      Refunds: [
+        "Refund ID",
+        "Ref No",
+        "Memo",
+        "Refund Date",
+        "Refund Amount",
+        "Refund Type",
+        "Refund Source",
+        "Member No / Application No",
+        "Created By",
+        "Created At",
+      ],
+      WriteOffs: [
+        "WO Status",
+        "WriteOff",
+        "WriteOff Date",
+        "Ref",
+        "Amount",
+        "Member",
+        "Type",
+        "Created By",
+        "Created At",
+        "Updated By",
+        "Updated At",
+      ],
+      GeneralLedger: [
+        "GL Status",
+        "Member",
+        "Tx date",
+        "Tx type",
+        "Doc ref",
+        "GL Debit",
+        "GL Credit",
+        "Memo",
+        "Posted",
+      ],
+      Reconciliation: [
+        "Rec Status",
+        "Clearing Account",
+        "Bank ref",
+        "Member",
+        "Amount",
+        "Expected",
+        "Difference",
+        "Confidence",
+        "Suggested action",
+        "Matched GL",
+        "Source",
+      ],
     }),
     [],
   );
@@ -700,6 +815,12 @@ export const FilterProvider = ({ children }) => {
     ],
     MembershipDashboard: ["Membership Category", "Section (Primary Section)"],
     EmailCampaigns: ["Membership Category"],
+    CreditNotes: ["CN Status"],
+    JournalAdjustments: ["JA Status"],
+    Refunds: ["Refund Type"],
+    WriteOffs: ["WO Status"],
+    GeneralLedger: ["GL Status"],
+    Reconciliation: ["Rec Status", "Clearing Account"],
   };
 
   // 🔹 Helper to get default visible filters for a screen
@@ -726,6 +847,12 @@ export const FilterProvider = ({ children }) => {
       Attendees: getDefaultVisibleFilters("Attendees"),
       MembershipDashboard: getDefaultVisibleFilters("MembershipDashboard"),
       EmailCampaigns: getDefaultVisibleFilters("EmailCampaigns"),
+      CreditNotes: getDefaultVisibleFilters("CreditNotes"),
+      JournalAdjustments: getDefaultVisibleFilters("JournalAdjustments"),
+      Refunds: getDefaultVisibleFilters("Refunds"),
+      WriteOffs: getDefaultVisibleFilters("WriteOffs"),
+      GeneralLedger: getDefaultVisibleFilters("GeneralLedger"),
+      Reconciliation: getDefaultVisibleFilters("Reconciliation"),
     }),
     [],
   );
@@ -884,6 +1011,42 @@ export const FilterProvider = ({ children }) => {
           operator: "==",
           selectedValues: [],
         },
+        "Member / Application No": {
+          operator: "==",
+          selectedValues: [],
+        },
+        "Transaction ID": {
+          operator: "==",
+          selectedValues: [],
+        },
+        "Paid Amount": {
+          operator: "==",
+          selectedValues: [],
+        },
+        "Full Name": {
+          operator: "==",
+          selectedValues: [],
+        },
+        Email: {
+          operator: "==",
+          selectedValues: [],
+        },
+        Phone: {
+          operator: "==",
+          selectedValues: [],
+        },
+        "Renewal Date": {
+          operator: "between",
+          selectedValues: [],
+        },
+        "Payment Date": {
+          operator: "between",
+          selectedValues: [],
+        },
+        "Join Date": {
+          operator: "between",
+          selectedValues: [],
+        },
       },
       Communication: {
         Grade: {
@@ -1013,6 +1176,250 @@ export const FilterProvider = ({ children }) => {
           selectedValues: [],
         },
         Branch: {
+          operator: "==",
+          selectedValues: [],
+        },
+      },
+      CreditNotes: {
+        "CN Status": {
+          operator: "==",
+          selectedValues: [],
+        },
+        "CN ref": {
+          operator: "==",
+          selectedValues: [],
+        },
+        Invoice: {
+          operator: "==",
+          selectedValues: [],
+        },
+        Member: {
+          operator: "==",
+          selectedValues: [],
+        },
+        Amount: {
+          operator: "==",
+          selectedValues: [],
+        },
+        Reason: {
+          operator: "contains",
+          selectedValues: [],
+        },
+        "Created By": {
+          operator: "contains",
+          selectedValues: [],
+        },
+        Effective: {
+          operator: "between",
+          selectedValues: [],
+        },
+        "Created At": {
+          operator: "between",
+          selectedValues: [],
+        },
+      },
+      JournalAdjustments: {
+        "JA Status": {
+          operator: "==",
+          selectedValues: [],
+        },
+        "Adjustment reference": {
+          operator: "==",
+          selectedValues: [],
+        },
+        Debit: {
+          operator: "==",
+          selectedValues: [],
+        },
+        Credit: {
+          operator: "==",
+          selectedValues: [],
+        },
+        Member: {
+          operator: "==",
+          selectedValues: [],
+        },
+        Reason: {
+          operator: "contains",
+          selectedValues: [],
+        },
+        Effective: {
+          operator: "between",
+          selectedValues: [],
+        },
+        "Created At": {
+          operator: "between",
+          selectedValues: [],
+        },
+      },
+      Refunds: {
+        "Refund ID": {
+          operator: "==",
+          selectedValues: [],
+        },
+        "Ref No": {
+          operator: "==",
+          selectedValues: [],
+        },
+        Memo: {
+          operator: "contains",
+          selectedValues: [],
+        },
+        "Refund Date": {
+          operator: "between",
+          selectedValues: [],
+        },
+        "Refund Amount": {
+          operator: "==",
+          selectedValues: [],
+        },
+        "Refund Type": {
+          operator: "==",
+          selectedValues: [],
+        },
+        "Refund Source": {
+          operator: "==",
+          selectedValues: [],
+        },
+        "Member No / Application No": {
+          operator: "==",
+          selectedValues: [],
+        },
+        "Created By": {
+          operator: "contains",
+          selectedValues: [],
+        },
+        "Created At": {
+          operator: "between",
+          selectedValues: [],
+        },
+      },
+      WriteOffs: {
+        "WO Status": {
+          operator: "==",
+          selectedValues: [],
+        },
+        WriteOff: {
+          operator: "==",
+          selectedValues: [],
+        },
+        "WriteOff Date": {
+          operator: "between",
+          selectedValues: [],
+        },
+        Ref: {
+          operator: "==",
+          selectedValues: [],
+        },
+        Amount: {
+          operator: "==",
+          selectedValues: [],
+        },
+        Member: {
+          operator: "==",
+          selectedValues: [],
+        },
+        Type: {
+          operator: "==",
+          selectedValues: [],
+        },
+        "Created By": {
+          operator: "contains",
+          selectedValues: [],
+        },
+        "Created At": {
+          operator: "between",
+          selectedValues: [],
+        },
+        "Updated By": {
+          operator: "contains",
+          selectedValues: [],
+        },
+        "Updated At": {
+          operator: "between",
+          selectedValues: [],
+        },
+      },
+      GeneralLedger: {
+        "GL Status": {
+          operator: "==",
+          selectedValues: [],
+        },
+        Member: {
+          operator: "==",
+          selectedValues: [],
+        },
+        "Tx date": {
+          operator: "between",
+          selectedValues: [],
+        },
+        "Tx type": {
+          operator: "==",
+          selectedValues: [],
+        },
+        "Doc ref": {
+          operator: "==",
+          selectedValues: [],
+        },
+        "GL Debit": {
+          operator: "==",
+          selectedValues: [],
+        },
+        "GL Credit": {
+          operator: "==",
+          selectedValues: [],
+        },
+        Memo: {
+          operator: "contains",
+          selectedValues: [],
+        },
+        Posted: {
+          operator: "between",
+          selectedValues: [],
+        },
+      },
+      Reconciliation: {
+        "Rec Status": {
+          operator: "==",
+          selectedValues: [],
+        },
+        "Clearing Account": {
+          operator: "==",
+          selectedValues: [],
+        },
+        "Bank ref": {
+          operator: "contains",
+          selectedValues: [],
+        },
+        Member: {
+          operator: "==",
+          selectedValues: [],
+        },
+        Amount: {
+          operator: "==",
+          selectedValues: [],
+        },
+        Expected: {
+          operator: "==",
+          selectedValues: [],
+        },
+        Difference: {
+          operator: "==",
+          selectedValues: [],
+        },
+        Confidence: {
+          operator: "==",
+          selectedValues: [],
+        },
+        "Suggested action": {
+          operator: "==",
+          selectedValues: [],
+        },
+        "Matched GL": {
+          operator: "==",
+          selectedValues: [],
+        },
+        Source: {
           operator: "==",
           selectedValues: [],
         },
@@ -1166,11 +1573,20 @@ export const FilterProvider = ({ children }) => {
       return found ? found._id || found.value || found.id : null;
     }
 
+    if (filterName === "Category" && categoryData) {
+      const found = categoryData.find((item) => {
+        const itemLabel = item.label || item.name || item.lookupname;
+        return itemLabel === label;
+      });
+      return found ? found._id || found.value || found.id : null;
+    }
+
     const lookupMap = {
       Grade: gradeOptions,
       Region: regionOptions,
       Branch: branchOptions,
       "Payment Type": paymentTypeOptions,
+      "Payment Method": paymentTypeOptions,
       Gender: genderOptions,
       "Section (Primary)": sectionOptions,
       "Section (Primary Section)": sectionOptions,
@@ -1183,9 +1599,14 @@ export const FilterProvider = ({ children }) => {
     return found ? found.value : null;
   };
 
-  // 🔹 Dynamic filter options from lookups
+  // 🔹 Dynamic filter options from lookups + loaded grid rows (finance client-side grids)
   const filterOptions = useMemo(() => {
-    return {
+    const categoryOpts =
+      categoryLoading && !categoryData?.length
+        ? ["Loading..."]
+        : ["", ...getCategoryOptions()];
+
+    const base = {
       // 🔹 CUSTOM FILTERS
       "Application Status": [
         "",
@@ -1206,7 +1627,8 @@ export const FilterProvider = ({ children }) => {
       ],
 
       // 🔹 CATEGORY FILTER
-      "Membership Category": getCategoryOptions(),
+      Category: categoryOpts,
+      "Membership Category": categoryOpts,
 
       // 🔹 WORK LOCATION - hierarchical loading
       "Work Location": getHierarchicalWLOptions(),
@@ -1234,7 +1656,10 @@ export const FilterProvider = ({ children }) => {
       "Cancellation/Reinstated": ["", "Yes", "No"],
       "Payment Frequency": ["", "Monthly", "Quarterly", "Yearly"],
       "Membership Movement": ["", "NewJoin", "Rejoin", "Reinstate", "Renewed"],
-      "Payment Method": ["", "Credit Card", "PayPal", "Debit Card", "Stripe"],
+      "Payment Method":
+        lookupsloading && !paymentTypeOptions?.length
+          ? ["Loading..."]
+          : ["", ...getLookupOptions(paymentTypeOptions || [])],
       "Payment Status": ["", "Paid", "Pending", "Failed", "Refunded"],
       "Billing Cycle": ["", "Annual", "Monthly"],
       "Case Type": ["", "General", "Legal", "Financial", "Other"],
@@ -1242,6 +1667,29 @@ export const FilterProvider = ({ children }) => {
       Stakeholder: ["", "Internal", "External", "Partner"],
       "Event Type": ["", "Internal", "Workshop", "External"],
       Status: ["", "Active", "Planning", "Review", "Canceled"],
+      "CN Status": ["", "Draft", "Approved", "Cancelled", "Posted"],
+      "JA Status": ["", "Draft", "Approved", "Cancelled"],
+      "WO Status": ["", "Posted", "Reversed"],
+      "GL Status": ["", "Draft", "Posted", "Cancelled"],
+      "Rec Status": [
+        "",
+        "unmatched",
+        "auto_matched",
+        "manual_matched",
+        "suspense",
+        "settled",
+      ],
+      "Clearing Account": ["", "1210", "1220", "1230", "1240", "1250"],
+      Confidence: ["", "high", "medium", "low", "none"],
+      Source: ["", "bank", "gl"],
+      "Adjustment reference": [],
+      Debit: [],
+      Credit: [],
+      Reason: [],
+      "Created By": [],
+      "Member / Application No": [],
+      "Full Name": [],
+      Phone: [],
       Event: [
         "",
         "Annual Nursing Conference",
@@ -1277,6 +1725,24 @@ export const FilterProvider = ({ children }) => {
           : ["", ...(subscriptionYears || []).map(String)],
       "Transaction ID": [],
       "Paid Amount": [],
+      "Refund Amount": [],
+      "Refund ID": [],
+      "Ref No": [],
+      "Refund Type": [],
+      "Refund Source": [],
+      WriteOff: [],
+      Ref: [],
+      "GL Debit": [],
+      "GL Credit": [],
+      "Doc ref": [],
+      "Tx type": [],
+      Expected: [],
+      Difference: [],
+      "Suggested action": [],
+      "Matched GL": [],
+      "CN ref": [],
+      Invoice: [],
+      Member: [],
 
       // 🔹 Date filters
       "Submission Date": [],
@@ -1295,7 +1761,38 @@ export const FilterProvider = ({ children }) => {
       "Updated At": [],
       "Incident Date": [],
       "Event Date": [],
+      Effective: [],
     };
+
+    const pageFilterLabels = viewFilters[activePage] || [];
+    const dataDerived = buildDataDerivedFilterOptions(
+      activePage,
+      pageFilterLabels,
+    );
+
+    Object.entries(dataDerived).forEach(([label, opts]) => {
+      base[label] = mergeStaticAndDerivedOptions(base[label], opts, label);
+    });
+
+    const isClientSideGrid = CLIENT_SIDE_GRID_FILTER_SCREENS.has(activePage);
+    const gridLoaded = hasRegisteredGridFilterRows(activePage);
+
+    if (isClientSideGrid && !gridLoaded) {
+      pageFilterLabels.forEach((label) => {
+        if (isDateFilterLabel(label, [])) return;
+        if (isNumericFilterLabel(label, [])) return;
+        if (isStringFilterLabel(label, [])) return;
+        const current = base[label] || [];
+        const hasRealStatic = current.some(
+          (v) => String(v).trim() && v !== "Loading...",
+        );
+        if (!hasRealStatic) {
+          base[label] = ["Loading..."];
+        }
+      });
+    }
+
+    return base;
   }, [
     workLocationOptions,
     gradeOptions,
@@ -1313,12 +1810,18 @@ export const FilterProvider = ({ children }) => {
     subscriptionYears,
     subscriptionYearsLoaded,
     subscriptionYearsLoading,
+    activePage,
+    gridFilterRowsTick,
+    categoryLoading,
+    lookupsloading,
   ]);
 
   // 🔹 Helper functions
   const toggleFilter = (filter, checked) => {
     const newVisibleFilters = checked
-      ? [...visibleFilters, filter]
+      ? visibleFilters.includes(filter)
+        ? visibleFilters
+        : [...visibleFilters, filter]
       : visibleFilters.filter((f) => f !== filter);
 
     setVisibleFilters(newVisibleFilters);
@@ -1421,13 +1924,8 @@ export const FilterProvider = ({ children }) => {
     [activePage, viewFilters],
   );
 
-  // 🔹 Function to get filters in correct order
-  const getOrderedVisibleFilters = () => {
-    // Simply return the visibleFilters in the order they appear in viewFilters config
-    // This allows users to untick any filter, including "default" ones.
-    const configOrder = viewFilters[activePage] || [];
-    return configOrder.filter((filter) => visibleFilters.includes(filter));
-  };
+  // Preserve toolbar order: defaults first, then filters added from More append to the right.
+  const getOrderedVisibleFilters = () => visibleFilters;
 
   const orderedVisibleFilters = getOrderedVisibleFilters();
 
@@ -1473,8 +1971,10 @@ export const FilterProvider = ({ children }) => {
     }));
 
     // Also ensure all filters in the template are visible
+    const templateKeys = Object.keys(templateFilters);
     const newVisible = [
-      ...new Set([...visibleFilters, ...Object.keys(templateFilters)]),
+      ...visibleFilters,
+      ...templateKeys.filter((key) => !visibleFilters.includes(key)),
     ];
     setVisibleFilters(newVisible);
 

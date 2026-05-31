@@ -260,7 +260,7 @@
 }
 
 .member-header-card-top .member-status-badge {
-  padding: 1px 8px;
+  padding: 4px 8px;
   font-size: 14px;
   line-height: 1.35;
 }
@@ -330,6 +330,19 @@
 
 .member-header-card-top .member-compact-value.member-id {
   color: var(--primary-color, #215e97);
+}
+
+.member-header-card-top .member-compact-value.member-contact-address {
+  display: block;
+  overflow: visible;
+  -webkit-line-clamp: unset;
+  white-space: normal;
+  word-break: break-word;
+  line-height: 1.25;
+}
+
+.member-header-card-top .member-contact-section .member-contact-address-line {
+  align-items: flex-start;
 }
 
 .member-header-card-top .member-balance-value {
@@ -636,6 +649,12 @@
   padding: 8px;
 }
 
+.member-header-container:not(.member-header-top-layout)
+  .member-profile-text
+  .member-status-badge {
+  margin-top: 0;
+}
+
 .member-header-container:not(.member-header-top-layout) .member-details-section {
   padding: 8px;
 }
@@ -853,6 +872,16 @@
 
 .contact-item-blue:last-child {
   margin-bottom: 0;
+}
+
+.contact-item-blue-address {
+  align-items: flex-start;
+}
+
+.contact-item-blue-address .member-contact-address {
+  white-space: normal;
+  word-break: break-word;
+  line-height: 1.25;
 }
 
 .contact-icon-blue {

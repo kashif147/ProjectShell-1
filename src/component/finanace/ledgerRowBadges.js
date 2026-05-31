@@ -39,6 +39,15 @@ export function deriveRowBadges(record, status) {
   if (st === "Refunded") badges.push("REFUNDED");
   if (st === "Written Off") badges.push("WRITTEN OFF");
 
+  if (
+    record?.paymentStatus === "partially_refunded" ||
+    String(record?.paymentStatus || "").toLowerCase() === "partially_refunded"
+  ) {
+    badges.push("PARTIALLY REFUNDED");
+  } else if (record?.partiallyRefunded) {
+    badges.push("PARTIALLY REFUNDED");
+  }
+
   if (ledgerRowUsesClearingSettlement(record)) {
     const settlementStatus =
       record?.settlement?.status || record?.settlementStatus || "";

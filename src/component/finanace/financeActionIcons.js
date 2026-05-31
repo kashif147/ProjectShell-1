@@ -6,6 +6,7 @@ import {
   InboxOutlined,
   LinkOutlined,
   MoreOutlined,
+  PauseCircleOutlined,
   PrinterOutlined,
   RollbackOutlined,
   SendOutlined,
@@ -35,6 +36,9 @@ const FINANCE_ACTION_ICONS = {
   send: { Icon: SendOutlined, color: "#2f54eb" },
   "view-source-batch": { Icon: LinkOutlined, color: "#1890ff" },
   "retain-credit": { Icon: InboxOutlined, color: "#13c2c2" },
+  match: { Icon: LinkOutlined, color: "#1890ff" },
+  suspense: { Icon: PauseCircleOutlined, color: "#fa8c16" },
+  settle: { Icon: CheckCircleOutlined, color: "#52c41a" },
   loading: { Icon: MoreOutlined, color: "#8c8c8c" },
 };
 

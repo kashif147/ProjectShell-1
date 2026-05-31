@@ -1,4 +1,6 @@
 /** Shared handlers between Reconciliation page and table/header actions. */
+const RELOAD_EVENT = "reconciliation-reload";
+
 const reconciliationWorkspace = {
   handlers: {},
   supportedClearing: [],
@@ -19,5 +21,14 @@ const reconciliationWorkspace = {
     return this.supportedClearing;
   },
 };
+
+export function bumpReconciliationReload() {
+  window.dispatchEvent(new CustomEvent(RELOAD_EVENT));
+}
+
+export function subscribeReconciliationReload(handler) {
+  window.addEventListener(RELOAD_EVENT, handler);
+  return () => window.removeEventListener(RELOAD_EVENT, handler);
+}
 
 export default reconciliationWorkspace;
