@@ -14,7 +14,6 @@ const COMPARISON_DIMENSIONS = [
   "membershipCategory",
   "grade",
   "section",
-  "workLocation",
   "region",
   "branch",
 ];
@@ -28,7 +27,10 @@ function ComparisonBlock({ title, comparison, keyPrefix, loading }) {
           {loading ? (
             <Spin />
           ) : (
-            <Empty description="Comparison data unavailable" image={Empty.PRESENTED_IMAGE_SIMPLE} />
+            <Empty
+              description="Comparison data unavailable"
+              image={Empty.PRESENTED_IMAGE_SIMPLE}
+            />
           )}
         </div>
       </div>
@@ -84,7 +86,7 @@ export default function ExecutiveComparisonPanel({ refreshToken = 0 }) {
         const data = await reportService.getComparisonReport({
           ...buildMembershipComparisonBody(
             filtersStateRef.current,
-            membershipDashboardHeader
+            membershipDashboardHeader,
           ),
           dimensions: COMPARISON_DIMENSIONS,
         });
@@ -116,8 +118,6 @@ export default function ExecutiveComparisonPanel({ refreshToken = 0 }) {
 
   return (
     <section className="exec-comparison">
-      <h3 className="exec-section-title">Membership Comparison</h3>
-
       {error ? (
         <Alert type="error" message={error} showIcon className="exec-alert" />
       ) : null}

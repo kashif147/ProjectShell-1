@@ -1,7 +1,9 @@
+import { EXEC_CHART_GREEN } from "../analytics/movementChartConfig";
+
 /** Palette aligned with executive comparison mockup */
 export const VARIANCE_COLORS = {
-  up: "#22c55e",
-  upText: "#16a34a",
+  up: EXEC_CHART_GREEN,
+  upText: EXEC_CHART_GREEN,
   down: "#ef4444",
   downText: "#dc2626",
   neutral: "#94a3b8",
@@ -12,7 +14,7 @@ export const VARIANCE_COLORS = {
   headerText: "#334155",
   panelBorder: "#e2e8f0",
   rowBorder: "#eef2f7",
-  heatUp: "34, 197, 94",
+  heatUp: "81, 199, 145",
   heatDown: "239, 68, 68",
 };
 

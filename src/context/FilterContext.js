@@ -719,7 +719,6 @@ export const FilterProvider = ({ children }) => {
         "Section (Primary Section)",
         "Region",
         "Branch",
-        "Work Location",
       ],
       EmailCampaigns: [
         "Membership Category",
@@ -1142,10 +1141,6 @@ export const FilterProvider = ({ children }) => {
           selectedValues: [],
         },
         Branch: {
-          operator: "==",
-          selectedValues: [],
-        },
-        "Work Location": {
           operator: "==",
           selectedValues: [],
         },

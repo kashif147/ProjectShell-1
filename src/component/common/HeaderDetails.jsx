@@ -1,4 +1,11 @@
-import { useState, React, useRef, useEffect, useMemo, useCallback } from "react";
+import {
+  useState,
+  React,
+  useRef,
+  useEffect,
+  useMemo,
+  useCallback,
+} from "react";
 import {
   Table,
   Checkbox,
@@ -33,6 +40,7 @@ import {
   UploadOutlined,
   EditOutlined,
   ReloadOutlined,
+  PrinterOutlined,
 } from "@ant-design/icons";
 import ContactDrawer from "./ContactDrawer";
 import JiraLikeMenu from "./JiraLikeMenu";
@@ -66,6 +74,7 @@ import ChangeCategoryDrawer from "../details/ChangeCategoryDrawer";
 import MyInput from "./MyInput";
 import CustomSelect from "./CustomSelect";
 import ActionDropdown from "./ActionDropdown";
+import { prepareChartsForPrintAsync } from "../../pages/membership/executive/useExecDashboardPrint";
 import { getAllApplications } from "../../features/ApplicationSlice";
 import MultiFilterDropdown from "./MultiFilterDropdown";
 import SaveViewMenu from "./SaveViewMenu";
@@ -534,12 +543,6 @@ function HeaderDetails({
     onClick: () => setEditFieldsDrawerOpen(true),
   };
 
-  const menuItems =
-    nav === "/CasesSummary"
-      ? [...defaultMenuItems, editCasesItem]
-      : nav === "/worklocation" || nav === "/region" || nav === "/branch"
-        ? defaultMenuItems.filter((item) => item.label.startsWith("Assign"))
-        : defaultMenuItems;
   const [statusOperator, setStatusOperator] = useState("==");
   const [statusValues, setStatusValues] = useState(["submitted", "draft"]);
 
@@ -568,6 +571,12 @@ function HeaderDetails({
   const genaratePdf = (e) => {
     toPDF();
   };
+
+  const handleMembershipDashboardPrint = useCallback(async () => {
+    await prepareChartsForPrintAsync();
+    window.print();
+  }, []);
+
   const dispatch = useDispatch();
 
   const regions = useSelector((state) => state.regions.regions, shallowEqual);
@@ -1193,6 +1202,34 @@ function HeaderDetails({
   const batchSearchPaths = [];
   const isBatchSearchPage = batchSearchPaths.includes(location.pathname);
 
+  const menuItems = useMemo(() => {
+    if (nav === "/MembershipDashboard") {
+      return [
+        {
+          label: "Export PDF",
+          key: "export-pdf",
+          onClick: () => genaratePdf(),
+        },
+        { label: "Export CSV", key: "export-csv" },
+        { label: "Share", key: "share" },
+        { label: "Details view", key: "details-view" },
+      ];
+    }
+    if (nav === "/CasesSummary") {
+      return [...defaultMenuItems, editCasesItem];
+    }
+    if (
+      nav === "/worklocation" ||
+      nav === "/region" ||
+      nav === "/branch"
+    ) {
+      return defaultMenuItems.filter((item) =>
+        item.label.startsWith("Assign"),
+      );
+    }
+    return defaultMenuItems;
+  }, [nav, defaultMenuItems, editCasesItem]);
+
   return (
     <div className="" style={{ width: "100%", minWidth: 0 }}>
       {/* New Breadcrumb Component */}
@@ -1634,6 +1671,18 @@ function HeaderDetails({
                           onImportOpen={handleReconciliationImportOpen}
                         />
                       ) : null}
+                      {nav === "/MembershipDashboard" ? (
+                        <Button
+                          type="default"
+                          className="me-1 gray-btn butn"
+                          icon={<PrinterOutlined />}
+                          onClick={() => {
+                            void handleMembershipDashboardPrint();
+                          }}
+                        >
+                          Print
+                        </Button>
+                      ) : null}
                       <SimpleMenu
                         title="Export"
                         triggerClassName="me-1 gray-btn butn"
@@ -1796,49 +1845,51 @@ function HeaderDetails({
                       </div>
                     )}
                     {nav !== "/MembershipDashboard" ? (
-                    <div className="d-flex flex-shrink-0 align-items-center gap-2">
-                      {location?.pathname === "/worklocation" ||
-                      location?.pathname === "/region" ||
-                      location?.pathname === "/branch" ? null : (
-                        <>
-                          {nav !== "/templeteConfig" &&
-                            !isHeaderDashboardRangeNav(nav) && (
-                              <SaveViewMenu className="ms-3" />
+                      <div className="d-flex flex-shrink-0 align-items-center gap-2">
+                        {location?.pathname === "/worklocation" ||
+                        location?.pathname === "/region" ||
+                        location?.pathname === "/branch" ? null : (
+                          <>
+                            {nav !== "/templeteConfig" &&
+                              !isHeaderDashboardRangeNav(nav) && (
+                                <SaveViewMenu className="ms-3" />
+                              )}
+                            {isHeaderDashboardRangeNav(nav) && (
+                              <div
+                                className="events-header-range ms-3 flex-shrink-0"
+                                role="group"
+                                aria-label="Time range"
+                              >
+                                {HEADER_DASHBOARD_RANGE_KEYS.map((k) => (
+                                  <button
+                                    key={k}
+                                    type="button"
+                                    className={
+                                      headerDashboardRange === k
+                                        ? "is-active"
+                                        : ""
+                                    }
+                                    onClick={() =>
+                                      setSearchParams(
+                                        (prev) => {
+                                          const next = new URLSearchParams(
+                                            prev,
+                                          );
+                                          next.set("range", k);
+                                          return next;
+                                        },
+                                        { replace: true },
+                                      )
+                                    }
+                                  >
+                                    {k}
+                                  </button>
+                                ))}
+                              </div>
                             )}
-                          {isHeaderDashboardRangeNav(nav) && (
-                            <div
-                              className="events-header-range ms-3 flex-shrink-0"
-                              role="group"
-                              aria-label="Time range"
-                            >
-                              {HEADER_DASHBOARD_RANGE_KEYS.map((k) => (
-                                <button
-                                  key={k}
-                                  type="button"
-                                  className={
-                                    headerDashboardRange === k
-                                      ? "is-active"
-                                      : ""
-                                  }
-                                  onClick={() =>
-                                    setSearchParams(
-                                      (prev) => {
-                                        const next = new URLSearchParams(prev);
-                                        next.set("range", k);
-                                        return next;
-                                      },
-                                      { replace: true },
-                                    )
-                                  }
-                                >
-                                  {k}
-                                </button>
-                              ))}
-                            </div>
-                          )}
-                        </>
-                      )}
-                    </div>
+                          </>
+                        )}
+                      </div>
                     ) : null}
                   </div>
                 )

@@ -1,190 +1,260 @@
-import React from "react";
-import { Card, Table } from "antd";
+import React, { useMemo } from "react";
+import dayjs from "dayjs";
+import { Card } from "antd";
 import {
-  ResponsiveContainer,
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  PieChart,
-  Pie,
-  Cell,
-  ComposedChart,
-  Line,
-} from "recharts";
-import { CHART_PALETTE, formatCount } from "./executiveDashboardUtils";
-import { ExecDashboardIcon, EXEC_MINI_KPI_ICONS } from "./executiveDashboardIcons";
+  buildKpiPeriodLabels,
+  formatCount,
+  pctChange,
+} from "./executiveDashboardUtils";
+import { EXEC_MINI_KPI_ICONS, ExecDashboardIcon } from "./executiveDashboardIcons";
+import { MOVEMENT_SERIES } from "./analytics/movementChartConfig";
+import MovementStackLegend from "./analytics/MovementStackLegend";
+import MovementStackedBarChart from "./analytics/MovementStackedBarChart";
+import MovementTrendComposedChart from "./analytics/MovementTrendComposedChart";
+import ChartExpandButton from "./ChartExpandButton";
+import CategoryMovementPanel from "./analytics/CategoryMovementPanel";
 
-function Panel({ title, children, extra }) {
+/** Shared chart height for side-by-side category + trend panels */
+const ANALYTICS_PAIR_CHART_HEIGHT = 224;
+
+/** Grade / branch / section row — shared bar chart height */
+const ANALYTICS_TRIO_CHART_HEIGHT = 440;
+const ANALYTICS_TRIO_AXIS_MAX_WIDTH = 200;
+
+const MINI_ICON_BY_KEY = {
+  active: EXEC_MINI_KPI_ICONS.active,
+  newJoin: EXEC_MINI_KPI_ICONS.joiners,
+  rejoin: { ...EXEC_MINI_KPI_ICONS.joiners, accent: "#06b6d4" },
+  reinstate: { ...EXEC_MINI_KPI_ICONS.joiners, accent: "#8b5cf6" },
+  resigned: EXEC_MINI_KPI_ICONS.resigned,
+  cancelled: EXEC_MINI_KPI_ICONS.cancelled,
+};
+
+function Panel({ title, children, expandPayload }) {
   return (
-    <Card className="exec-panel exec-panel--nested" bordered={false} title={title} extra={extra}>
+    <Card
+      className="exec-panel exec-panel--nested"
+      bordered={false}
+      title={title}
+      extra={
+        expandPayload ? (
+          <ChartExpandButton title={title} payload={expandPayload} />
+        ) : null
+      }
+    >
       {children}
     </Card>
   );
 }
 
+function resolvePriorMovementRow(trendRows, periodYear, periodMonth) {
+  const trend = trendRows || [];
+  if (!trend.length) return null;
+
+  if (periodYear >= 2000 && periodMonth >= 1 && periodMonth <= 12) {
+    const priorAnchor = dayjs(
+      `${periodYear}-${String(periodMonth).padStart(2, "0")}-01`
+    ).subtract(1, "month");
+    const py = priorAnchor.year();
+    const pm = priorAnchor.month() + 1;
+    const match = trend.find((r) => r.year === py && r.month === pm);
+    if (match) return match;
+  }
+
+  return trend.length >= 2 ? trend[trend.length - 2] : null;
+}
+
+function formatMovementCompareDelta(current, prior) {
+  const c = Number(current) || 0;
+  const p = Number(prior) || 0;
+  const change = c - p;
+  if (change === 0) {
+    return { text: "0 (0%)", tone: "neutral" };
+  }
+  const pct = pctChange(c, p);
+  const changeLabel =
+    change > 0 ? `+${formatCount(change)}` : formatCount(change);
+  const pctLabel = pct > 0 ? `+${pct}` : String(pct);
+  return {
+    text: `${changeLabel} (${pctLabel}%)`,
+    tone: change > 0 ? "up" : "down",
+  };
+}
+
+function MovementMiniKpis({
+  headline,
+  trendRows,
+  periodYear,
+  periodMonth,
+  priorMonthShort,
+  hasPriorMonthSnapshot,
+}) {
+  const row = headline || {};
+  const priorRow = useMemo(
+    () => resolvePriorMovementRow(trendRows, periodYear, periodMonth),
+    [trendRows, periodYear, periodMonth]
+  );
+
+  return (
+    <div className="exec-mini-kpi-row exec-mini-kpi-row--movement">
+      {MOVEMENT_SERIES.map((s) => {
+        const spec = MINI_ICON_BY_KEY[s.key] || EXEC_MINI_KPI_ICONS.active;
+        const current = row[s.key];
+        const prior = priorRow?.[s.key];
+        const compare =
+          hasPriorMonthSnapshot === true && priorRow
+            ? formatMovementCompareDelta(current, prior)
+            : null;
+
+        return (
+          <div key={s.key} className="exec-mini-kpi exec-mini-kpi--card">
+            <div className="exec-mini-kpi__top">
+              <ExecDashboardIcon spec={spec} />
+              <div className="exec-mini-kpi__meta">
+                <span className="exec-mini-kpi__label">{s.label}</span>
+                <span className="exec-mini-kpi__value">{formatCount(current)}</span>
+              </div>
+            </div>
+            <div className="exec-mini-kpi__compare">
+              <span className="exec-mini-kpi__compare-label">
+                vs {priorMonthShort}
+              </span>
+              {compare ? (
+                <span
+                  className={`exec-mini-kpi__compare-delta exec-mini-kpi__compare-delta--${compare.tone}`}
+                >
+                  {compare.text}
+                </span>
+              ) : (
+                <span className="exec-mini-kpi__compare-delta exec-mini-kpi__compare-delta--neutral">
+                  —
+                </span>
+              )}
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
 export default function ExecutiveAnalyticsPanel({ data }) {
-  const branches = [...(data.branchData || [])]
-    .sort((a, b) => (b.count || 0) - (a.count || 0))
-    .slice(0, 8);
-  const grades = (data.gradeData || []).slice(0, 6);
-  const sections = (data.sectionData || []).slice(0, 6);
-  const workLocations = (data.workLocationData || []).slice(0, 6);
+  const periodLabels = useMemo(() => buildKpiPeriodLabels(data), [data]);
+  const mov = data?.movementAnalytics || {};
+  const headline = mov.headline;
+  const { selectedMonthLabel, priorMonthLabel } = periodLabels;
+  const priorMonthShort = useMemo(() => {
+    const year = Number(data?.periodYear);
+    const month = Number(data?.periodMonth);
+    if (year >= 2000 && month >= 1 && month <= 12) {
+      return dayjs(`${year}-${String(month).padStart(2, "0")}-01`)
+        .subtract(1, "month")
+        .format("MMM YYYY");
+    }
+    return priorMonthLabel;
+  }, [data?.periodYear, data?.periodMonth, priorMonthLabel]);
 
-  const tableData = (data.categoryData || []).map((row, i) => ({
-    key: row.name || i,
-    category: row.name,
-    active: row.value,
-    cancelled: 0,
-    resigned: 0,
-    total: row.value,
-  }));
+  const trendRows = useMemo(
+    () =>
+      (mov.trend12Months || []).map((p) => ({
+        ...p,
+        name: p.monthLabel || p.periodLabel,
+      })),
+    [mov.trend12Months]
+  );
 
-  const monthlyTrend = [
-    { month: "Jan", active: data.totalActiveLastMonth, cancelled: 12, resigned: 8 },
-    { month: "Feb", active: data.totalActiveLastMonth, cancelled: 10, resigned: 9 },
-    { month: "Mar", active: data.totalActiveThisMonth, cancelled: data.leavers, resigned: Math.round((data.leavers || 0) * 0.7) },
-    { month: "Apr", active: data.totalActive, cancelled: 8, resigned: 6 },
-    { month: "May", active: data.totalActive, cancelled: data.leavers, resigned: Math.round((data.leavers || 0) * 0.6) },
-    { month: "Jun", active: data.totalActive, cancelled: 6, resigned: 5 },
-  ];
+  const categoryPanelTitle = `Monthly stats by membership category — ${selectedMonthLabel}`;
+  const gradePanelTitle = `Active members by grade — ${selectedMonthLabel}`;
+  const branchPanelTitle = `Active members by branch — ${selectedMonthLabel}`;
+  const sectionPanelTitle = `Active members by section — ${selectedMonthLabel}`;
+
+  const categoryExpand = {
+    type: "analytics-category",
+    byCategory: mov.byCategory || [],
+  };
+  const trendExpand = {
+    type: "analytics-trend",
+    trendRows: mov.trend12Months || [],
+  };
+  const gradeExpand = {
+    type: "analytics-stacked-bar",
+    data: mov.byGrade || [],
+    maxRows: 50,
+  };
+  const branchExpand = {
+    type: "analytics-stacked-bar",
+    data: mov.byBranch || [],
+    maxRows: 50,
+  };
+  const sectionExpand = {
+    type: "analytics-stacked-bar",
+    data: mov.bySection || [],
+    maxRows: 50,
+  };
 
   return (
     <section className="exec-analytics">
-      <h3 className="exec-section-title">Membership Analytics</h3>
+      <MovementStackLegend />
+      <MovementMiniKpis
+        headline={headline}
+        trendRows={mov.trend12Months}
+        periodYear={data?.periodYear}
+        periodMonth={data?.periodMonth}
+        priorMonthShort={priorMonthShort}
+        hasPriorMonthSnapshot={data?.hasPriorMonthSnapshot}
+      />
 
-      <p className="exec-analytics__hint">
-        Use header filters for category, grade, branch, region, year, month, and member
-        types — changes apply automatically.
-      </p>
-
-      <div className="exec-mini-kpi-row">
-        <div className="exec-mini-kpi">
-          <div className="exec-mini-kpi__head">
-            <ExecDashboardIcon spec={EXEC_MINI_KPI_ICONS.active} />
-            <span className="exec-mini-kpi__label">Active Members</span>
-          </div>
-          <span
-            className="exec-mini-kpi__value"
-            style={{ color: EXEC_MINI_KPI_ICONS.active.accent }}
-          >
-            {formatCount(data.totalActive)}
-          </span>
-        </div>
-        <div className="exec-mini-kpi">
-          <div className="exec-mini-kpi__head">
-            <ExecDashboardIcon spec={EXEC_MINI_KPI_ICONS.cancelled} />
-            <span className="exec-mini-kpi__label">Cancelled</span>
-          </div>
-          <span
-            className="exec-mini-kpi__value"
-            style={{ color: EXEC_MINI_KPI_ICONS.cancelled.accent }}
-          >
-            {formatCount(data.leavers)}
-          </span>
-        </div>
-        <div className="exec-mini-kpi">
-          <div className="exec-mini-kpi__head">
-            <ExecDashboardIcon spec={EXEC_MINI_KPI_ICONS.resigned} />
-            <span className="exec-mini-kpi__label">Resigned</span>
-          </div>
-          <span
-            className="exec-mini-kpi__value"
-            style={{ color: EXEC_MINI_KPI_ICONS.resigned.accent }}
-          >
-            {formatCount(Math.round((data.leavers || 0) * 0.7))}
-          </span>
-        </div>
-      </div>
-
-      <Panel title="Monthly stats by category">
-        <Table
-          size="small"
-          pagination={false}
-          dataSource={tableData}
-          columns={[
-            { title: "Category", dataIndex: "category", key: "category" },
-            { title: "Active", dataIndex: "active", key: "active", align: "right" },
-            { title: "Cancelled", dataIndex: "cancelled", key: "cancelled", align: "right" },
-            { title: "Resigned", dataIndex: "resigned", key: "resigned", align: "right" },
-            { title: "Total", dataIndex: "total", key: "total", align: "right" },
-          ]}
-        />
-      </Panel>
-
-      <Panel title="Active vs cancelled vs resigned (trend)">
-        <div className="exec-chart-area">
-          <ResponsiveContainer width="100%" height="100%">
-            <ComposedChart data={monthlyTrend}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="month" />
-              <YAxis />
-              <Tooltip />
-              <Bar dataKey="active" fill="#22c55e" radius={[4, 4, 0, 0]} />
-              <Line type="monotone" dataKey="cancelled" stroke="#ef4444" strokeWidth={2} dot={false} />
-              <Line type="monotone" dataKey="resigned" stroke="#f59e0b" strokeWidth={2} dot={false} />
-            </ComposedChart>
-          </ResponsiveContainer>
-        </div>
-      </Panel>
-
-      <Panel title="Active members by branch">
-        <div className="exec-chart-area">
-          <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={branches} layout="vertical" margin={{ left: 8 }}>
-              <CartesianGrid strokeDasharray="3 3" horizontal={false} />
-              <XAxis type="number" />
-              <YAxis type="category" dataKey="name" width={100} tick={{ fontSize: 10 }} />
-              <Tooltip />
-              <Bar dataKey="count" fill="#3b82f6" radius={[0, 4, 4, 0]} />
-            </BarChart>
-          </ResponsiveContainer>
-        </div>
-      </Panel>
-
-      <div className="exec-analytics-duo">
-        <Panel title="By grade">
-          <div className="exec-chart-area exec-chart-area--short">
-            <ResponsiveContainer width="100%" height="100%">
-              <PieChart>
-                <Pie data={grades} dataKey="count" nameKey="name" innerRadius="45%" outerRadius="70%">
-                  {grades.map((_, i) => (
-                    <Cell key={i} fill={CHART_PALETTE[i % CHART_PALETTE.length]} />
-                  ))}
-                </Pie>
-                <Tooltip />
-              </PieChart>
-            </ResponsiveContainer>
-          </div>
+      <div className="exec-analytics-duo exec-analytics-duo--pair">
+        <Panel title={categoryPanelTitle} expandPayload={categoryExpand}>
+          <CategoryMovementPanel data={mov.byCategory} />
         </Panel>
-        <Panel title="By section">
-          <div className="exec-chart-area exec-chart-area--short">
-            <ResponsiveContainer width="100%" height="100%">
-              <PieChart>
-                <Pie data={sections} dataKey="count" nameKey="name" innerRadius="45%" outerRadius="70%">
-                  {sections.map((_, i) => (
-                    <Cell key={i} fill={CHART_PALETTE[(i + 2) % CHART_PALETTE.length]} />
-                  ))}
-                </Pie>
-                <Tooltip />
-              </PieChart>
-            </ResponsiveContainer>
+
+        <Panel title="Last 12 months — movement trend" expandPayload={trendExpand}>
+          <div className="exec-analytics-chart-block exec-analytics-chart-block--trend">
+            <MovementTrendComposedChart
+              data={trendRows}
+              categoryKey="name"
+              height={ANALYTICS_PAIR_CHART_HEIGHT}
+            />
           </div>
         </Panel>
       </div>
 
-      <Panel title="Active members by work location">
-        <ul className="exec-location-list">
-          {workLocations.map((loc) => (
-            <li key={loc.name}>
-              <span>{loc.name}</span>
-              <strong>{formatCount(loc.count)}</strong>
-            </li>
-          ))}
-        </ul>
-      </Panel>
+      <div className="exec-analytics-trio">
+        <Panel title={gradePanelTitle} expandPayload={gradeExpand}>
+          <MovementStackedBarChart
+            data={mov.byGrade}
+            layout="vertical"
+            height={ANALYTICS_TRIO_CHART_HEIGHT}
+            fitCategoryLabels
+            categoryAxisMaxWidth={ANALYTICS_TRIO_AXIS_MAX_WIDTH}
+            categoryAxisMinWidth={100}
+            maxRows={12}
+          />
+        </Panel>
+        <Panel title={branchPanelTitle} expandPayload={branchExpand}>
+          <MovementStackedBarChart
+            data={mov.byBranch}
+            layout="vertical"
+            height={ANALYTICS_TRIO_CHART_HEIGHT}
+            fitCategoryLabels
+            categoryAxisMaxWidth={ANALYTICS_TRIO_AXIS_MAX_WIDTH}
+            categoryAxisMinWidth={100}
+            maxRows={12}
+          />
+        </Panel>
+        <Panel title={sectionPanelTitle} expandPayload={sectionExpand}>
+          <MovementStackedBarChart
+            data={mov.bySection}
+            layout="vertical"
+            height={ANALYTICS_TRIO_CHART_HEIGHT}
+            fitCategoryLabels
+            categoryAxisMaxWidth={ANALYTICS_TRIO_AXIS_MAX_WIDTH}
+            categoryAxisMinWidth={100}
+            maxRows={12}
+          />
+        </Panel>
+      </div>
     </section>
   );
 }

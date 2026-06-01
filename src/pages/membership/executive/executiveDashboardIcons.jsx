@@ -56,6 +56,7 @@ export const EXEC_KPI_ICONS = {
 
 export const EXEC_MINI_KPI_ICONS = {
   active: EXEC_KPI_ICONS.active,
+  joiners: EXEC_KPI_ICONS.joiners,
   cancelled: {
     icon: CloseCircleOutlined,
     accent: "#dc2626",

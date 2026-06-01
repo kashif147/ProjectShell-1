@@ -16,6 +16,11 @@ import {
   NetGrowthWaterfall,
   buildCategorySlices,
 } from "./middleRowChartViews";
+import {
+  AnalyticsTrendExpand,
+  AnalyticsCategoryExpand,
+  AnalyticsStackedBarExpand,
+} from "./analytics/analyticsChartExpandViews";
 
 export default function ExecutiveChartExpandRenderer({ payload }) {
   const type = payload?.type;
@@ -66,12 +71,16 @@ export default function ExecutiveChartExpandRenderer({ payload }) {
 
     case "middle-region": {
       const allRegions = [...(payload.regionData || [])].sort(
-        (a, b) => (b.count || 0) - (a.count || 0)
+        (a, b) => (b.count || 0) - (a.count || 0),
       );
       const regionTotal =
         allRegions.reduce((s, r) => s + (r.count || 0), 0) || 1;
       return (
-        <RegionListChart expanded regions={allRegions} regionTotal={regionTotal} />
+        <RegionListChart
+          expanded
+          regions={allRegions}
+          regionTotal={regionTotal}
+        />
       );
     }
 
@@ -132,7 +141,23 @@ export default function ExecutiveChartExpandRenderer({ payload }) {
         />
       );
 
+    case "analytics-trend":
+      return <AnalyticsTrendExpand trendRows={payload.trendRows || []} />;
+
+    case "analytics-category":
+      return <AnalyticsCategoryExpand byCategory={payload.byCategory || []} />;
+
+    case "analytics-stacked-bar":
+      return (
+        <AnalyticsStackedBarExpand
+          data={payload.data || []}
+          maxRows={payload.maxRows ?? 50}
+        />
+      );
+
     default:
-      return <p className="exec-chart-expand-page__error">Unknown chart type.</p>;
+      return (
+        <p className="exec-chart-expand-page__error">Unknown chart type.</p>
+      );
   }
 }

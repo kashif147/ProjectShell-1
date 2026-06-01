@@ -33,11 +33,6 @@ export const membershipDashboardAPI = {
     const data = await reportingApi.getMembershipDashboard(filters);
     return data.regionData || [];
   },
-
-  getMembershipByWorkLocation: async (filters = {}) => {
-    const data = await reportingApi.getMembershipDashboard(filters);
-    return data.workLocationData || [];
-  },
 };
 
 export default membershipDashboardAPI;

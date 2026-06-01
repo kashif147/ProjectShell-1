@@ -3,7 +3,7 @@ import { buildWaterfallBridge } from "./waterfallUtils";
 
 export const CHART_PALETTE = [
   "#3b82f6",
-  "#22c55e",
+  "#51c791",
   "#f59e0b",
   "#8b5cf6",
   "#ef4444",
@@ -55,17 +55,29 @@ export function buildSparkline(current, prior, points = 8) {
 export function buildActiveTrendSeries(data) {
   const active = Number(data.totalActive) || 0;
   const ly = Number(data.totalActiveLY) || 0;
-  const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+  const months = [
+    "Jan",
+    "Feb",
+    "Mar",
+    "Apr",
+    "May",
+    "Jun",
+    "Jul",
+    "Aug",
+    "Sep",
+    "Oct",
+    "Nov",
+    "Dec",
+  ];
   const thisYear = dayjs(data.asOfDate || undefined).year() || dayjs().year();
   const lastYear = thisYear - 1;
 
   const seriesForYear = (base) =>
-    months.map((_, i) =>
-      Math.round((base || 0) * (0.92 + (i / 11) * 0.16))
-    );
+    months.map((_, i) => Math.round((base || 0) * (0.92 + (i / 11) * 0.16)));
 
   const lastYearValues = ly > 0 ? seriesForYear(ly) : months.map(() => 0);
-  const thisYearValues = active > 0 ? seriesForYear(active) : months.map(() => 0);
+  const thisYearValues =
+    active > 0 ? seriesForYear(active) : months.map(() => 0);
 
   return {
     points: months.map((month, i) => ({
@@ -81,7 +93,12 @@ export function buildActiveTrendSeries(data) {
 /** Top N slices + "Other" for readable donut/bar charts with many categories */
 export function rollupChartSlices(
   items,
-  { maxSlices = 6, valueKey = "value", nameKey = "name", otherLabel = "Other" } = {}
+  {
+    maxSlices = 6,
+    valueKey = "value",
+    nameKey = "name",
+    otherLabel = "Other",
+  } = {},
 ) {
   const rows = (items || [])
     .map((row, i) => ({
@@ -126,7 +143,10 @@ export function buildWaterfallSteps(data) {
   const closing = Number(data.totalActiveThisMonth ?? data.totalActive) || 0;
 
   let opening;
-  if (data.hasPriorMonthSnapshot === true && Number(data.totalActiveLastMonth) > 0) {
+  if (
+    data.hasPriorMonthSnapshot === true &&
+    Number(data.totalActiveLastMonth) > 0
+  ) {
     opening = Number(data.totalActiveLastMonth);
   } else {
     opening = Math.max(0, closing - joiners + leavers);
@@ -160,9 +180,9 @@ export function formatComparisonPeriodLabel(period) {
     return dayjs(period.asOfDate).format("MMM YYYY");
   }
   if (period.year && period.month) {
-    return dayjs(`${period.year}-${String(period.month).padStart(2, "0")}-01`).format(
-      "MMM YYYY"
-    );
+    return dayjs(
+      `${period.year}-${String(period.month).padStart(2, "0")}-01`,
+    ).format("MMM YYYY");
   }
   return period.label || "—";
 }
@@ -197,8 +217,10 @@ export function buildComparisonKpiPills(comparison) {
     {
       key: "net",
       title: "Net Growth",
-      valueA: a.netGrowth ?? (Number(a.joiners) || 0) - (Number(a.leavers) || 0),
-      valueB: b.netGrowth ?? (Number(b.joiners) || 0) - (Number(b.leavers) || 0),
+      valueA:
+        a.netGrowth ?? (Number(a.joiners) || 0) - (Number(a.leavers) || 0),
+      valueB:
+        b.netGrowth ?? (Number(b.joiners) || 0) - (Number(b.leavers) || 0),
       change: d.netGrowth,
     },
   ];
@@ -209,6 +231,36 @@ export function priorPeriodValue(value, hasSnapshot) {
   return Number(value) || 0;
 }
 
+/** Labels for KPI cards (toolbar Year / Month). */
+export function buildKpiPeriodLabels(data = {}) {
+  const asOf = dayjs(data.asOfDate);
+  const year = Number(data.periodYear);
+  const month = Number(data.periodMonth);
+  const anchor =
+    asOf.isValid() && year >= 2000 && month >= 1 && month <= 12
+      ? dayjs(`${year}-${String(month).padStart(2, "0")}-01`)
+      : asOf.isValid()
+        ? asOf.startOf("month")
+        : dayjs().startOf("month");
+
+  const selectedMonthLabel = anchor.format("MMMM YYYY");
+  const priorMonthLabel = anchor.subtract(1, "month").format("MMMM YYYY");
+  const ytdRangeLabel = `Jan–${anchor.format("MMM YYYY")}`;
+  const lytdRangeLabel = `Jan–${anchor.subtract(1, "year").format("MMM YYYY")}`;
+
+  return {
+    selectedMonthLabel,
+    priorMonthLabel,
+    ytdRangeLabel,
+    lytdRangeLabel,
+  };
+}
+
+export const KPI_METRIC_KIND = {
+  HEADCOUNT: "headcount",
+  MOVEMENT: "movement",
+};
+
 export function normalizeDashboardStats(stats) {
   const s = stats && typeof stats === "object" ? stats : {};
   const hasPriorYear = s.hasPriorYearSnapshot === true;
@@ -216,13 +268,23 @@ export function normalizeDashboardStats(stats) {
   return {
     ...s,
     totalActiveLY: priorPeriodValue(s.totalActiveLY, hasPriorYear),
-    totalActiveLastMonth: priorPeriodValue(s.totalActiveLastMonth, hasPriorMonth),
+    totalActiveLastMonth: priorPeriodValue(
+      s.totalActiveLastMonth,
+      hasPriorMonth,
+    ),
     categoryData: Array.isArray(s.categoryData) ? s.categoryData : [],
     gradeData: Array.isArray(s.gradeData) ? s.gradeData : [],
     sectionData: Array.isArray(s.sectionData) ? s.sectionData : [],
     branchData: Array.isArray(s.branchData) ? s.branchData : [],
     regionData: Array.isArray(s.regionData) ? s.regionData : [],
-    workLocationData: Array.isArray(s.workLocationData) ? s.workLocationData : [],
+    movementAnalytics: s.movementAnalytics || {
+      headline: null,
+      byCategory: [],
+      byBranch: [],
+      byGrade: [],
+      bySection: [],
+      trend12Months: [],
+    },
   };
 }
 
@@ -262,7 +324,6 @@ const MEMBERSHIP_DIMENSION_FILTER_LABELS = [
   "Section (Primary Section)",
   "Region",
   "Branch",
-  "Work Location",
 ];
 
 const MEMBERSHIP_DIMENSION_LABEL_TO_API = {
@@ -271,7 +332,6 @@ const MEMBERSHIP_DIMENSION_LABEL_TO_API = {
   "Section (Primary Section)": "sections",
   Region: "regions",
   Branch: "branches",
-  "Work Location": "workLocations",
 };
 
 function readDimensionSelections(filtersState, label) {

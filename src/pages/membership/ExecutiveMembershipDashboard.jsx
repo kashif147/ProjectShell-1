@@ -6,6 +6,8 @@ import ExecutiveKpiStrip from "./executive/ExecutiveKpiStrip";
 import ExecutiveMiddleRow from "./executive/ExecutiveMiddleRow";
 import ExecutiveAnalyticsPanel from "./executive/ExecutiveAnalyticsPanel";
 import ExecutiveComparisonPanel from "./executive/ExecutiveComparisonPanel";
+import ExecutiveDashboardSection from "./executive/ExecutiveDashboardSection";
+import useExecDashboardPrint from "./executive/useExecDashboardPrint";
 import {
   EMPTY_DASHBOARD_DATA,
   normalizeDashboardStats,
@@ -28,11 +30,19 @@ export default function ExecutiveMembershipDashboard() {
   const [fetchError, setFetchError] = useState(null);
   const [dashboardData, setDashboardData] = useState(EMPTY_DASHBOARD_DATA);
 
+  useExecDashboardPrint();
+
+  useEffect(() => {
+    document.body.classList.add("exec-membership-dashboard");
+    return () => document.body.classList.remove("exec-membership-dashboard");
+  }, []);
+
   const fetchDashboard = useCallback(async (filterPayload = {}) => {
     setLoading(true);
     setFetchError(null);
     try {
-      const stats = await membershipDashboardAPI.getDashboardStats(filterPayload);
+      const stats =
+        await membershipDashboardAPI.getDashboardStats(filterPayload);
       setDashboardData(normalizeDashboardStats(stats));
     } catch (error) {
       console.error("Error fetching dashboard data:", error);
@@ -47,9 +57,9 @@ export default function ExecutiveMembershipDashboard() {
     () =>
       buildMembershipDashboardFilters(
         filtersStateRef.current,
-        membershipHeaderRef.current
+        membershipHeaderRef.current,
       ),
-    []
+    [],
   );
 
   useEffect(() => {
@@ -73,20 +83,46 @@ export default function ExecutiveMembershipDashboard() {
   }
 
   return (
-    <div className="exec-dashboard">
+    <div className="exec-dashboard exec-dashboard--printable">
       <div className="exec-dashboard__inner">
         {fetchError ? (
-          <Alert type="error" message={fetchError} showIcon className="exec-alert" />
+          <Alert
+            type="error"
+            message={fetchError}
+            showIcon
+            className="exec-alert"
+          />
         ) : null}
 
-        <ExecutiveKpiStrip data={dashboardData} />
+        <ExecutiveDashboardSection
+          sectionKey="overview"
+          title="Overview"
+          subtitle="Headline KPIs and summary charts for the selected month"
+          defaultOpen
+        >
+          <ExecutiveKpiStrip data={dashboardData} />
+          <ExecutiveMiddleRow data={dashboardData} />
+        </ExecutiveDashboardSection>
 
-        <ExecutiveMiddleRow data={dashboardData} />
+        <ExecutiveDashboardSection
+          sectionKey="comparison"
+          title="Membership Comparison"
+          subtitle="Same month year-on-year and year-end vs selected month-end"
+          defaultOpen
+        >
+          <ExecutiveComparisonPanel
+            refreshToken={membershipDashboardApplyTick}
+          />
+        </ExecutiveDashboardSection>
 
-        <div className="exec-bottom-stack">
-          <ExecutiveComparisonPanel refreshToken={membershipDashboardApplyTick} />
+        <ExecutiveDashboardSection
+          sectionKey="analytics"
+          title="Membership Analytics"
+          subtitle="Movement breakdown, trends, and active members by dimension"
+          defaultOpen
+        >
           <ExecutiveAnalyticsPanel data={dashboardData} />
-        </div>
+        </ExecutiveDashboardSection>
       </div>
     </div>
   );
