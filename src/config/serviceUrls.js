@@ -17,9 +17,40 @@ export function getProfileServiceBaseUrl() {
   return trimTrailingSlashes(process.env.REACT_APP_PROFILE_SERVICE_URL);
 }
 
-/** Reporting service API base (e.g. https://host/reporting-service/api) */
+/**
+ * Reporting service API base (e.g. https://host/reporting-service/api).
+ * Gateway path `/reporting-service/api` is rewritten to the service root (routes are
+ * `/dashboard`, `/reports/membership`, …). For local dev without the gateway use
+ * `http://localhost:4005`.
+ */
 export function getReportingServiceBaseUrl() {
-  return trimTrailingSlashes(process.env.REACT_APP_REPORTING_SERVICE_URL);
+  const explicit = trimTrailingSlashes(
+    process.env.REACT_APP_REPORTING_SERVICE_URL
+  );
+  if (explicit) return explicit;
+
+  const gateway = trimTrailingSlashes(process.env.REACT_APP_GATEWAY_URL);
+  if (gateway) return `${gateway}/reporting-service/api`;
+
+  const sibling =
+    process.env.REACT_APP_PROFILE_SERVICE_URL ||
+    process.env.REACT_APP_ACCOUNT_SERVICE_URL ||
+    process.env.REACT_APP_SUBSCRIPTION_SERVICE_URL ||
+    process.env.REACT_APP_NOTIFICATION_SERVICE_URL;
+  const siblingUrl = trimTrailingSlashes(sibling);
+  const serviceRoot = siblingUrl.match(
+    /^(.*)\/(profile|account|subscription|notification)-service(\/api(\/v1)?)?$/i
+  );
+  if (serviceRoot) {
+    return `${serviceRoot[1]}/reporting-service/api`;
+  }
+
+  if (process.env.NODE_ENV === "development") {
+    // Match gateway path shape; service also mounts without /api for bare :4005 calls
+    return "http://localhost:4005/api";
+  }
+
+  return "";
 }
 
 /**

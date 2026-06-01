@@ -134,7 +134,7 @@ const CancelledMembersReport = () => {
       const skip = (currentPage - 1) * pageSize;
       const take = pageSize;
 
-      const result = await reportService.getPayments(filters, skip, take);
+      const result = await reportService.getCancelledMembers(filters, skip, take);
       setRowData(result.data || []);
       setTotalRows(result.total || 0);
       lastPaginationRef.current = { current: currentPage, pageSize };

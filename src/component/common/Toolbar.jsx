@@ -46,6 +46,7 @@ import {
 import { getViewById } from "../../features/views/ViewByIdSlice";
 import { setActiveTemplateId } from "../../features/views/ActiveTemplateSlice";
 import MyAlert from "./MyAlert";
+import MembershipDashboardHeaderControls from "../../pages/membership/executive/MembershipDashboardHeaderControls";
 import {
   markScreenChanged,
   resetScreenChanged,
@@ -951,6 +952,11 @@ const Toolbar = () => {
             />
           );
         })}
+
+        {location.pathname === "/MembershipDashboard" && (
+          <MembershipDashboardHeaderControls variant="inline" />
+        )}
+
         <SimpleMenu title="More" />
         <Button
           onClick={handleReset}

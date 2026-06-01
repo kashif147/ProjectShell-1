@@ -344,6 +344,16 @@ const Sidebar = () => {
           path: "/JoinersReport",
           state: { search: "Joiners Report" },
         };
+      case "Comparison Report":
+        return {
+          path: "/ComparisonReport",
+          state: { search: "Comparison Report" },
+        };
+      case "Live Stats":
+        return {
+          path: "/LiveStatsReport",
+          state: { search: "Live Stats" },
+        };
       case "Policy Client Example":
         return {
           path: "/PolicyClientExample",
@@ -493,6 +503,8 @@ const Sidebar = () => {
       "/NewMembersReport": "New Members Report",
       "/LeaversReport": "Leavers Report",
       "/JoinersReport": "Joiners Report",
+      "/ComparisonReport": "Comparison Report",
+      "/LiveStatsReport": "Live Stats",
       "/CorrespondenceDashboard": "Dashboard",
       "/IssuesManagementDashboard": "Dashboard",
       "/ReportsSettings": "Reports setting",

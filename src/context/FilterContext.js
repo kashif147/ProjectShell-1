@@ -180,6 +180,28 @@ export const FilterProvider = ({ children }) => {
   const [membershipDashboardApplyTick, setMembershipDashboardApplyTick] =
     useState(0);
 
+  const getDefaultMembershipDashboardHeader = () => {
+    const now = new Date();
+    return {
+      year: now.getUTCFullYear(),
+      month: now.getUTCMonth() + 1,
+      includeStudents: false,
+      includeHonorary: false,
+    };
+  };
+
+  const [membershipDashboardHeader, setMembershipDashboardHeader] = useState(
+    getDefaultMembershipDashboardHeader,
+  );
+
+  const updateMembershipDashboardHeader = useCallback((patch) => {
+    setMembershipDashboardHeader((prev) => ({ ...prev, ...patch }));
+  }, []);
+
+  const resetMembershipDashboardHeader = useCallback(() => {
+    setMembershipDashboardHeader(getDefaultMembershipDashboardHeader());
+  }, []);
+
   const location = useLocation();
   const activeScreenName = location?.pathname;
 
@@ -2009,6 +2031,9 @@ export const FilterProvider = ({ children }) => {
         filteredBranchOptions,
         membershipDashboardApplyTick,
         bumpMembershipDashboardApply,
+        membershipDashboardHeader,
+        updateMembershipDashboardHeader,
+        resetMembershipDashboardHeader,
       }}
     >
       {children}

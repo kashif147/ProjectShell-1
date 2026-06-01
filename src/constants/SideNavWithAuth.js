@@ -364,7 +364,7 @@ export const reportItems = [
     "Comparison Report",
     <FaBalanceScale />,
     "Comparison Report",
-    ["comparison:report:read"]
+    ["reporting:read"]
   ),
   createMenuItem(
     "Control Report",
@@ -406,7 +406,7 @@ export const reportItems = [
     "Live Stats",
     <FaChartPie />,
     "Live Stats",
-    ["LIVE:STATS:REPORT:READ"]
+    ["reporting:read"]
   ),
   createMenuItem(
     "New Members Report",

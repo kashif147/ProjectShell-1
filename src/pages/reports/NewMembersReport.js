@@ -56,7 +56,7 @@ const NewMembersReport = () => {
             lastPaginationRef.current = { current: currentPage, pageSize };
         } catch (error) {
             console.error("Error fetching data:", error);
-            message.error("Failed to fetch report data");
+            message.error(error?.message || "Failed to fetch report data");
         } finally {
             setLoading(false);
         }

@@ -171,7 +171,7 @@ function HeaderDetails({
 }) {
   const { Search } = Input;
   const { TextArea } = Input;
-  const { filtersState, bumpMembershipDashboardApply } = useFilters();
+  const { filtersState } = useFilters();
   const { toPDF, targetRef } = usePDF({ filename: "page.pdf" });
   const location = useLocation();
   const [searchParams, setSearchParams] = useSearchParams();
@@ -1795,26 +1795,16 @@ function HeaderDetails({
                         <Toolbar />
                       </div>
                     )}
+                    {nav !== "/MembershipDashboard" ? (
                     <div className="d-flex flex-shrink-0 align-items-center gap-2">
                       {location?.pathname === "/worklocation" ||
                       location?.pathname === "/region" ||
                       location?.pathname === "/branch" ? null : (
                         <>
-                          {nav !== "/MembershipDashboard" &&
-                            nav !== "/templeteConfig" &&
+                          {nav !== "/templeteConfig" &&
                             !isHeaderDashboardRangeNav(nav) && (
                               <SaveViewMenu className="ms-3" />
                             )}
-                          {nav === "/MembershipDashboard" && (
-                            <Button
-                              type="default"
-                              icon={<ReloadOutlined />}
-                              onClick={() => bumpMembershipDashboardApply()}
-                              className="me-1 gray-btn butn"
-                            >
-                              Refresh
-                            </Button>
-                          )}
                           {isHeaderDashboardRangeNav(nav) && (
                             <div
                               className="events-header-range ms-3 flex-shrink-0"
@@ -1849,6 +1839,7 @@ function HeaderDetails({
                         </>
                       )}
                     </div>
+                    ) : null}
                   </div>
                 )
               )}

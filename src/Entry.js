@@ -184,6 +184,9 @@ const RemindersDetails = lazyWithRetry(
 const MembershipDashboard = lazyWithRetry(
   () => import("./pages/membership/MembershipDashboard"),
 );
+const ExecutiveChartExpandPage = lazyWithRetry(
+  () => import("./pages/membership/executive/ExecutiveChartExpandPage"),
+);
 const TenantManagement = lazyWithRetry(
   () => import("./pages/tenant-management/TenantManagement"),
 );
@@ -219,6 +222,12 @@ const LeaversReport = lazyWithRetry(
 );
 const JoinersReport = lazyWithRetry(
   () => import("./pages/reports/JoinersReport"),
+);
+const ComparisonReport = lazyWithRetry(
+  () => import("./pages/reports/ComparisonReport"),
+);
+const LiveStatsReport = lazyWithRetry(
+  () => import("./pages/reports/LiveStatsReport"),
 );
 const ReportViewerDemo = lazyWithRetry(
   () => import("./features/reports/report-viewer/ReportViewerDemo"),
@@ -288,6 +297,7 @@ function Entry() {
     "/", // login page
     "/rewards/insurance",
     "/rewards/rewards",
+    "/MembershipDashboard/chart",
   ];
 
   const showSidebar = !noSidebarRoutes.includes(location.pathname);
@@ -366,7 +376,11 @@ function Entry() {
                     location.pathname === "/CancellationDetail"
                       ? "enable-vertical-scroll"
                       : ""
-                  } ${location.pathname === "/templeteConfig" ? "main-main--template-config" : ""}`}
+                  } ${location.pathname === "/templeteConfig" ? "main-main--template-config" : ""} ${
+                    location.pathname === "/MembershipDashboard"
+                      ? "main-main--exec-dashboard"
+                      : ""
+                  }`}
                 >
                   <Suspense
                     fallback={
@@ -1052,6 +1066,15 @@ function Entry() {
                       />
 
                       <Route
+                        path="MembershipDashboard/chart"
+                        element={
+                          <RoutePermissionWrapper path="/MembershipDashboard">
+                            <ExecutiveChartExpandPage />
+                          </RoutePermissionWrapper>
+                        }
+                      />
+
+                      <Route
                         path="TenantManagement"
                         element={
                           <ProtectedRoute requiredPermission={RoutePermissions["TenantManagement"]}>
@@ -1120,6 +1143,22 @@ function Entry() {
                         element={
                           <ProtectedRoute requiredPermission={RoutePermissions["JoinersReport"]}>
                             <JoinersReport />
+                          </ProtectedRoute>
+                        }
+                      />
+                      <Route
+                        path="ComparisonReport"
+                        element={
+                          <ProtectedRoute requiredPermission={RoutePermissions["ComparisonReport"]}>
+                            <ComparisonReport />
+                          </ProtectedRoute>
+                        }
+                      />
+                      <Route
+                        path="LiveStatsReport"
+                        element={
+                          <ProtectedRoute requiredPermission={RoutePermissions["LiveStatsReport"]}>
+                            <LiveStatsReport />
                           </ProtectedRoute>
                         }
                       />

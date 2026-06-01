@@ -299,6 +299,16 @@ const Breadcrumb = () => {
       page: "Joiners Report",
       icon: "📊",
     },
+    "/ComparisonReport": {
+      module: "Reports",
+      page: "Comparison Report",
+      icon: "📊",
+    },
+    "/LiveStatsReport": {
+      module: "Reports",
+      page: "Live Stats",
+      icon: "📊",
+    },
     "/Reports": {
       module: "Reports",
       page: "Reports",
