@@ -323,7 +323,7 @@ const Breadcrumb = () => {
     },
     "/MembershipDashboard": {
       module: "Subscriptions & Rewards",
-      page: "Membership Dashboard",
+      page: "Executive Dashboard",
       icon: "📊",
     },
     "/Applications": {
@@ -526,7 +526,7 @@ const Breadcrumb = () => {
     "/MembershipDashboard": {
       pageLabel: "Dashboard",
       listingPath: "/MembershipDashboard",
-      listingSearch: "Membership Dashboard",
+      listingSearch: "Executive Dashboard",
     },
     "/Summary": {
       pageLabel: "Profiles",
@@ -857,7 +857,7 @@ const Breadcrumb = () => {
     dispatch(updateMenuLbl({ key: MEMBERSHIP_MENU_KEY, value: true }));
     setTimeout(() => {
       navigate("/MembershipDashboard", {
-        state: { search: "Membership Dashboard" },
+        state: { search: "Executive Dashboard" },
       });
     }, 0);
   };

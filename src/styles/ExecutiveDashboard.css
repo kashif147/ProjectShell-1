@@ -702,7 +702,7 @@
   margin-bottom: 12px;
 }
 
-/* Membership Analytics — all 6 movement chips in one row */
+/* Live Stats — all 6 movement chips in one row */
 .exec-mini-kpi-row.exec-mini-kpi-row--movement {
   display: grid;
   grid-template-columns: repeat(6, minmax(0, 1fr));

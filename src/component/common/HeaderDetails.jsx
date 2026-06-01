@@ -1446,7 +1446,7 @@ function HeaderDetails({
                       {nav == "/" && location?.state == null
                         ? `Profile`
                         : nav === "/MembershipDashboard"
-                          ? "Membership Dashboard"
+                          ? "Executive Dashboard"
                           : location?.state?.search ||
                             (nav === "/DirectDebitAuthorization"
                               ? "Direct Debit Authorization"

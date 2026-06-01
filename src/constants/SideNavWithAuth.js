@@ -220,7 +220,7 @@ export const subscriptionItems = [
   createMenuItem(
     "MembershipDashboard",
     <FaChartLine />,
-    "Membership Dashboard",
+    "Executive Dashboard",
     []
   ),
   createMenuItem(

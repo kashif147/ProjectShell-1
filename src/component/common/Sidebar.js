@@ -224,7 +224,7 @@ const Sidebar = () => {
       case "MembershipDashboard":
         return {
           path: "/MembershipDashboard",
-          state: { search: "Membership Dashboard" },
+          state: { search: "Executive Dashboard" },
         };
       case "Reminders":
         return { path: "/RemindersSummary", state: { search: "Reminders" } };

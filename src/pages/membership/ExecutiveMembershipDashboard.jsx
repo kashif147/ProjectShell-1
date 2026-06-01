@@ -117,7 +117,7 @@ export default function ExecutiveMembershipDashboard() {
 
         <ExecutiveDashboardSection
           sectionKey="analytics"
-          title="Membership Analytics"
+          title="Membership Live Stats"
           subtitle="Movement breakdown, trends, and active members by dimension"
           defaultOpen
         >
