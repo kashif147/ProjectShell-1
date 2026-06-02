@@ -62,6 +62,7 @@ export const RoutePermissions = {
   "ResignedMembersReport": "reporting:read",
   "ComparisonReport": "reporting:read",
   "LiveStatsReport": "reporting:read",
+  "MembershipListingReport": "reporting:read",
   "SuspendedMembersReport": "crm:member:read",
 
   // Cases & Issues

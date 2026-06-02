@@ -318,6 +318,88 @@ export function buildMembershipYearOptions(yearsBack = 12) {
   });
 }
 
+/** Match undergraduate student membership category labels from lookups. */
+export function isUndergraduateStudentCategoryLabel(label) {
+  const combined = String(label ?? "")
+    .trim()
+    .toLowerCase();
+  if (!combined) return false;
+  if (combined.replace(/\s+/g, "_") === "undergraduate_student") return true;
+  return (
+    combined.includes("undergraduate") &&
+    combined.includes("student") &&
+    !combined.includes("postgraduate")
+  );
+}
+
+/** Match honorary membership category labels from lookups. */
+export function isHonoraryMembershipCategoryLabel(label) {
+  const combined = String(label ?? "")
+    .trim()
+    .toLowerCase();
+  if (!combined) return false;
+  return combined === "honorary" || /\bhonorary\b/.test(combined);
+}
+
+/** Labels from Membership Category filter options (excludes empty/loading). */
+export function parseMembershipCategoryOptionLabels(options = []) {
+  return (options || []).filter(
+    (label) =>
+      label &&
+      String(label).trim() &&
+      label !== "Loading..." &&
+      !String(label).startsWith("⚠️"),
+  );
+}
+
+export function resolveStudentMembershipCategoryLabels(allLabels) {
+  return parseMembershipCategoryOptionLabels(allLabels).filter(
+    isUndergraduateStudentCategoryLabel,
+  );
+}
+
+export function resolveHonoraryMembershipCategoryLabels(allLabels) {
+  return parseMembershipCategoryOptionLabels(allLabels).filter(
+    isHonoraryMembershipCategoryLabel,
+  );
+}
+
+/** Category labels excluded when dashboard Student/Honorary checkboxes are off. */
+export function buildDashboardCategoryExclusions(allLabels, header = {}) {
+  const exclusions = [];
+  if (!header.includeStudents) {
+    exclusions.push(...resolveStudentMembershipCategoryLabels(allLabels));
+  }
+  if (!header.includeHonorary) {
+    exclusions.push(...resolveHonoraryMembershipCategoryLabels(allLabels));
+  }
+  return [...new Set(exclusions)];
+}
+
+/** Toolbar chip state: != exclusions when checkboxes off, else manual/user == filter. */
+export function resolveDashboardMembershipCategoryFilterState(
+  header = {},
+  allCategoryLabels = [],
+  manualFilter = null,
+) {
+  const exclusions = buildDashboardCategoryExclusions(allCategoryLabels, header);
+  if (exclusions.length > 0) {
+    return { operator: "!=", selectedValues: exclusions };
+  }
+  const manual = manualFilter || header.manualMembershipCategories || {
+    operator: "==",
+    selectedValues: [],
+  };
+  return {
+    operator: manual.operator || "==",
+    selectedValues: Array.isArray(manual.selectedValues)
+      ? manual.selectedValues
+      : [],
+  };
+}
+
+const MEMBERSHIP_CATEGORY_NOT_EQUAL_KEY = "Membership Category Not Equal";
+
 const MEMBERSHIP_DIMENSION_FILTER_LABELS = [
   "Membership Category",
   "Grade",
@@ -341,12 +423,32 @@ function readDimensionSelections(filtersState, label) {
     : [];
 }
 
-export function buildMembershipDashboardFilters(filtersState, header = {}) {
+export function buildMembershipDashboardFilters(
+  filtersState,
+  header = {},
+  allCategoryLabels = [],
+) {
   const out = {};
   MEMBERSHIP_DIMENSION_FILTER_LABELS.forEach((label) => {
+    if (label === "Membership Category") return;
     const sel = readDimensionSelections(filtersState, label);
     if (sel.length) out[label] = sel;
   });
+
+  const manual = header.manualMembershipCategories;
+  const positiveSelections =
+    manual?.operator === "==" && Array.isArray(manual.selectedValues)
+      ? manual.selectedValues.map((v) => String(v).trim()).filter(Boolean)
+      : [];
+
+  if (positiveSelections.length) {
+    out["Membership Category"] = positiveSelections;
+  }
+
+  const exclusions = buildDashboardCategoryExclusions(allCategoryLabels, header);
+  if (exclusions.length) {
+    out[MEMBERSHIP_CATEGORY_NOT_EQUAL_KEY] = exclusions;
+  }
 
   const year = Number(header.year);
   const month = Number(header.month);
@@ -355,23 +457,38 @@ export function buildMembershipDashboardFilters(filtersState, header = {}) {
     out.month = month;
   }
 
-  if (header.includeStudents) out.includeStudents = true;
-  if (header.includeHonorary) out.includeHonorary = true;
+  // Backend still gates student/honorary via these flags (defaults exclude when omitted).
+  out.includeStudents = header.includeStudents !== false;
+  out.includeHonorary = header.includeHonorary !== false;
+
   return out;
 }
 
 /** Comparison API body: header flags + API dimension keys from toolbar filters. */
-export function buildMembershipComparisonBody(filtersState, header = {}) {
-  const dashboard = buildMembershipDashboardFilters(filtersState, header);
+export function buildMembershipComparisonBody(
+  filtersState,
+  header = {},
+  allCategoryLabels = [],
+) {
+  const dashboard = buildMembershipDashboardFilters(
+    filtersState,
+    header,
+    allCategoryLabels,
+  );
   const body = {
     dual: true,
-    includeStudents: dashboard.includeStudents === true,
-    includeHonorary: dashboard.includeHonorary === true,
+    includeStudents: header.includeStudents !== false,
+    includeHonorary: header.includeHonorary !== false,
     referenceYear: dashboard.year,
     referenceMonth: dashboard.month,
   };
   Object.entries(MEMBERSHIP_DIMENSION_LABEL_TO_API).forEach(([label, key]) => {
     if (dashboard[label]?.length) body[key] = dashboard[label];
   });
+  const exclusions = dashboard[MEMBERSHIP_CATEGORY_NOT_EQUAL_KEY];
+  if (exclusions?.length) {
+    body.excludedMembershipCategories = exclusions;
+    body[MEMBERSHIP_CATEGORY_NOT_EQUAL_KEY] = exclusions;
+  }
   return body;
 }

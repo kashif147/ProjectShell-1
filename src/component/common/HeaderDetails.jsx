@@ -1405,6 +1405,7 @@ function HeaderDetails({
             location?.pathname == "/CreditNotes" ||
             location?.pathname == "/JournalAdjustments" ||
             location?.pathname == "/GeneralLedger" ||
+            location?.pathname == "/MembershipListingReport" ||
             location?.pathname == "/InAppNotifications") && (
             <div className="search-main">
               <div className="title d-flex justify-content-between align-items-start">
@@ -1829,7 +1830,7 @@ function HeaderDetails({
               ) : (
                 nav !== "/templeteSummary" &&
                 nav !== "/CommunicationBatchDetail" && (
-                  <div className="d-flex me-4 search-fliters align-items-baseline justify-content-between flex-wrap mt-2 mb-1">
+                  <div className="d-flex me-4 search-fliters align-items-center justify-content-between flex-wrap mt-2 mb-1">
                     {isBatchSearchPage ? (
                       <Search
                         placeholder="Search by Batch Number"

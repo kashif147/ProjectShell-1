@@ -182,6 +182,38 @@
         { "dataIndex": "createdAt", "title": "Posted", "filterValueType": "date", "isGride": true, "isVisible": true, "ellipsis": true, "width": 150 }
       ]
     },
+    "membershiplisting": {
+      "screenKey": "MembershipListingReport",
+      "templateType": "membershiplisting",
+      "service": "profile-service",
+      "filters": {
+        "membershipCategories": { "operator": "equal_to", "values": [] },
+        "grades": { "operator": "equal_to", "values": [] },
+        "sections": { "operator": "equal_to", "values": [] },
+        "regions": { "operator": "equal_to", "values": [] },
+        "branches": { "operator": "equal_to", "values": [] },
+        "membershipStatuses": { "operator": "equal_to", "values": [] },
+        "dateRange": { "operator": "between", "values": [] }
+      },
+      "columns": [
+        { "dataIndex": "fullName", "title": "Full Name", "isGride": true, "isVisible": true, "ellipsis": true, "width": 200 },
+        { "dataIndex": "membershipNo", "title": "Membership Number", "isGride": true, "isVisible": true, "ellipsis": true, "width": 150 },
+        { "dataIndex": "membershipCategory", "title": "Membership Category", "isGride": true, "isVisible": true, "ellipsis": true, "width": 180 },
+        { "dataIndex": "grade", "title": "Grade", "isGride": true, "isVisible": true, "ellipsis": true, "width": 140 },
+        { "dataIndex": "workLocation", "title": "Work Location", "isGride": true, "isVisible": true, "ellipsis": true, "width": 160 },
+        { "dataIndex": "branch", "title": "Branch", "isGride": true, "isVisible": true, "ellipsis": true, "width": 140 },
+        { "dataIndex": "region", "title": "Region", "isGride": true, "isVisible": true, "ellipsis": true, "width": 140 },
+        { "dataIndex": "section", "title": "Primary Section", "isGride": true, "isVisible": true, "ellipsis": true, "width": 160 },
+        { "dataIndex": "startDate", "title": "Start Date", "filterValueType": "date", "isGride": true, "isVisible": true, "ellipsis": true, "width": 120 },
+        { "dataIndex": "expiryDate", "title": "Expiry Date", "filterValueType": "date", "isGride": true, "isVisible": true, "ellipsis": true, "width": 120 },
+        { "dataIndex": "cancelledAt", "title": "Cancelled", "filterValueType": "date", "isGride": true, "isVisible": true, "ellipsis": true, "width": 120 },
+        { "dataIndex": "resignedAt", "title": "Resigned", "filterValueType": "date", "isGride": true, "isVisible": true, "ellipsis": true, "width": 120 },
+        { "dataIndex": "processedAt", "title": "Processed At", "filterValueType": "date", "isGride": true, "isVisible": true, "ellipsis": true, "width": 120 },
+        { "dataIndex": "membershipStatus", "title": "Membership Status", "isGride": true, "isVisible": true, "ellipsis": true, "width": 140 },
+        { "dataIndex": "subscriptionYear", "title": "Sub Year", "isGride": true, "isVisible": true, "ellipsis": true, "width": 100 },
+        { "dataIndex": "isCurrent", "title": "isCurrent", "isGride": true, "isVisible": true, "ellipsis": true, "width": 90 }
+      ]
+    },
     "reconciliation": {
       "screenKey": "Reconciliation",
       "templateType": "reconciliation",

@@ -19,6 +19,7 @@ import {
 import { formatCompactCount, formatCount } from "../executiveDashboardUtils";
 import { VARIANCE_COLORS, varianceChartColor, varianceTextColor } from "./comparisonVarianceTheme";
 import ChartTitleBar from "../ChartTitleBar";
+import { chartLabelFormatter } from "../chartDataLabels";
 
 const BRANCH_LABEL_FONT = 10;
 const Y_AXIS_CHAR_WIDTH = 5.75;
@@ -202,6 +203,12 @@ export default function ComparisonVarianceBars({
                 {chartData.map((entry) => (
                   <Cell key={entry.fullName} fill={varianceChartColor(entry.tone)} />
                 ))}
+                <LabelList
+                  dataKey="variance"
+                  position="insideLeft"
+                  formatter={chartLabelFormatter(!expanded)}
+                  style={{ fontSize: expanded ? 9 : 8, fontWeight: 600, fill: "#ffffff" }}
+                />
                 <LabelList content={(props) => <ChangeLabel {...props} chartData={chartData} />} />
               </Bar>
             </BarChart>

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { useFilters } from "../../context/FilterContext";
 import { useLocation } from "react-router-dom";
 import SimpleMenu from "./SimpleMenu";
@@ -38,6 +38,7 @@ import { bumpRefundsReload } from "../../utils/refundsWorkspace";
 import { bumpWriteOffsReload } from "../../utils/writeOffsWorkspace";
 import { bumpGeneralLedgerReload } from "../../utils/generalLedgerWorkspace";
 import { bumpReconciliationReload } from "../../utils/reconciliationWorkspace";
+import { bumpMembershipListingReportReload } from "../../utils/membershipListingReportWorkspace";
 import { useAuthorization } from "../../context/AuthorizationContext";
 import {
   updateGridTemplate,
@@ -47,6 +48,11 @@ import { getViewById } from "../../features/views/ViewByIdSlice";
 import { setActiveTemplateId } from "../../features/views/ActiveTemplateSlice";
 import MyAlert from "./MyAlert";
 import MembershipDashboardHeaderControls from "../../pages/membership/executive/MembershipDashboardHeaderControls";
+import {
+  parseMembershipCategoryOptionLabels,
+  resolveDashboardMembershipCategoryFilterState,
+} from "../../pages/membership/executive/executiveDashboardUtils";
+import "../../styles/ToolbarFilters.css";
 import {
   markScreenChanged,
   resetScreenChanged,
@@ -225,6 +231,8 @@ const Toolbar = () => {
     applyTemplateFilters,
     getFiltersStateForSave,
     bumpMembershipDashboardApply,
+    membershipDashboardHeader,
+    updateMembershipDashboardHeader,
   } = useFilters();
   /** TableColumnsContext keys use "Members"; FilterContext uses "Membership" for /membership */
   const tableColumnScreen =
@@ -268,6 +276,7 @@ const Toolbar = () => {
       "/write-offs": "WriteOffs",
       "/generalledger": "GeneralLedger",
       "/reconciliation": "Reconciliation",
+      "/membershiplistingreport": "MembershipListingReport",
     };
     return pathMap[key] || "";
   };
@@ -282,6 +291,9 @@ const Toolbar = () => {
   const isWriteOffsScreen = normalizedPath === "/write-offs";
   const isGeneralLedgerScreen = normalizedPath === "/generalledger";
   const isReconciliationScreen = normalizedPath === "/reconciliation";
+  const isMembershipListingReportScreen =
+    normalizedPath === "/membershiplistingreport";
+  const isMembershipDashboard = normalizedPath === "/membershipdashboard";
   const isMembersScreen =
     location.pathname === "/members" ||
     location.pathname === "/Members" ||
@@ -316,6 +328,8 @@ const Toolbar = () => {
         ? "generalledger"
       : isReconciliationScreen
         ? "reconciliation"
+      : isMembershipListingReportScreen
+        ? "membershiplisting"
       : isPaymentFormsPage
       ? "payment forms"
       : isApplicationsPage
@@ -333,6 +347,14 @@ const Toolbar = () => {
   const [aiBoxOpen, setAiBoxOpen] = useState(false);
   const [aiQuery, setAiQuery] = useState("");
   const [aiLoading, setAiLoading] = useState(false);
+
+  const dashboardCategoryLabels = useMemo(
+    () =>
+      parseMembershipCategoryOptionLabels(
+        filterOptions["Membership Category"] || [],
+      ),
+    [filterOptions],
+  );
 
   useEffect(() => {
     if (!supportsAiGridFilter) setAiBoxOpen(false);
@@ -386,6 +408,29 @@ const Toolbar = () => {
 
   const handleFilterApply = (filterData) => {
     const { label, operator, selectedValues } = filterData;
+
+    if (isMembershipDashboard && label === "Membership Category") {
+      const manualMembershipCategories = { operator, selectedValues };
+      const nextHeader = {
+        ...membershipDashboardHeader,
+        manualMembershipCategories,
+      };
+      updateMembershipDashboardHeader({ manualMembershipCategories });
+      const nextCategoryFilter = resolveDashboardMembershipCategoryFilterState(
+        nextHeader,
+        dashboardCategoryLabels,
+        manualMembershipCategories,
+      );
+      updateFilter(
+        "Membership Category",
+        nextCategoryFilter.operator,
+        nextCategoryFilter.selectedValues,
+      );
+      markTemplateScreenDirty();
+      bumpMembershipDashboardApply();
+      return;
+    }
+
     updateFilter(label, operator, selectedValues);
     markTemplateScreenDirty();
   };
@@ -481,6 +526,8 @@ const Toolbar = () => {
       bumpGeneralLedgerReload();
     } else if (isReconciliationScreen) {
       bumpReconciliationReload();
+    } else if (isMembershipListingReportScreen) {
+      bumpMembershipListingReportReload();
     } else {
       if (Object.keys(cleanedFilters).length > 0) {
         dispatch(getAllApplications(cleanedFilters));
@@ -525,7 +572,8 @@ const Toolbar = () => {
       isRefundsScreen ||
       isWriteOffsScreen ||
       isGeneralLedgerScreen ||
-      isReconciliationScreen
+      isReconciliationScreen ||
+      isMembershipListingReportScreen
     ) {
       const screen =
         getScreenFromPath() ||
@@ -558,7 +606,23 @@ const Toolbar = () => {
           limit: 500,
         }),
       );
-    } else if (location.pathname === "/MembershipDashboard") {
+    } else if (isMembershipDashboard) {
+      updateMembershipDashboardHeader({
+        manualMembershipCategories: { operator: "==", selectedValues: [] },
+      });
+      const nextCategoryFilter = resolveDashboardMembershipCategoryFilterState(
+        {
+          ...membershipDashboardHeader,
+          manualMembershipCategories: { operator: "==", selectedValues: [] },
+        },
+        dashboardCategoryLabels,
+        { operator: "==", selectedValues: [] },
+      );
+      updateFilter(
+        "Membership Category",
+        nextCategoryFilter.operator,
+        nextCategoryFilter.selectedValues,
+      );
       bumpMembershipDashboardApply();
     } else if (
       location.pathname === "/EventsDashboard" ||
@@ -588,6 +652,8 @@ const Toolbar = () => {
       bumpGeneralLedgerReload();
     } else if (isReconciliationScreen) {
       bumpReconciliationReload();
+    } else if (isMembershipListingReportScreen) {
+      bumpMembershipListingReportReload();
     } else {
       dispatch(getAllApplications({}));
     }
@@ -786,6 +852,8 @@ const Toolbar = () => {
         bumpGeneralLedgerReload();
       } else if (isReconciliationScreen) {
         bumpReconciliationReload();
+      } else if (isMembershipListingReportScreen) {
+        bumpMembershipListingReportReload();
       }
     } catch (error) {
       console.error("Error updating template:", error);
@@ -843,10 +911,7 @@ const Toolbar = () => {
         gap: supportsAiGridFilter && aiBoxOpen ? 10 : 0,
       }}
     >
-      <div
-        className="d-flex align-items-center flex-wrap gap-2"
-        style={{ rowGap: 10 }}
-      >
+      <div className="d-flex align-items-center flex-wrap toolbar-filter-row">
         {/* Search input */}
         {location.pathname !== "/MembershipDashboard" &&
           location.pathname !== "/EventsDashboard" &&
@@ -872,7 +937,7 @@ const Toolbar = () => {
                 }
                 style={{
                   height: 34,
-                  borderRadius: 4,
+                  borderRadius: 3,
                   color: "gray",
                   padding: "4px 11px",
                   lineHeight: "22px",
@@ -953,34 +1018,20 @@ const Toolbar = () => {
           );
         })}
 
-        {location.pathname === "/MembershipDashboard" && (
+        {isMembershipDashboard && (
           <MembershipDashboardHeaderControls variant="inline" />
         )}
 
-        <SimpleMenu title="More" />
-        <Button
-          onClick={handleReset}
-          style={{
-            backgroundColor: "#091e420a",
-            borderRadius: "4px",
-            border: "none",
-            height: "32px",
-            fontWeight: "500",
-            color: "#42526e",
-          }}
-        >
+        <SimpleMenu
+          title="More"
+          triggerClassName="gray-btn butn"
+        />
+        <Button className="gray-btn butn" onClick={handleReset}>
           Reset
         </Button>
         <Button
+          className="toolbar-filter-action toolbar-filter-action--primary"
           onClick={handleSearch}
-          style={{
-            backgroundColor: "#45669d",
-            borderRadius: "4px",
-            border: "none",
-            height: "32px",
-            fontWeight: "500",
-            color: "white",
-          }}
         >
           Filter
         </Button>

@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { Alert, Spin, Empty } from "antd";
 import { useFilters } from "../../../context/FilterContext";
 import reportService from "../../../features/shared/services/reportService";
@@ -7,6 +7,7 @@ import {
   buildComparisonKpiPills,
   buildMembershipComparisonBody,
   formatComparisonPeriodLabel,
+  parseMembershipCategoryOptionLabels,
 } from "./executiveDashboardUtils";
 import ComparisonSectionCharts from "./comparison/ComparisonSectionCharts";
 
@@ -68,9 +69,17 @@ function ComparisonBlock({ title, comparison, keyPrefix, loading }) {
 }
 
 export default function ExecutiveComparisonPanel({ refreshToken = 0 }) {
-  const { membershipDashboardHeader, filtersState } = useFilters();
+  const { membershipDashboardHeader, filtersState, filterOptions } =
+    useFilters();
   const filtersStateRef = useRef(filtersState);
   filtersStateRef.current = filtersState;
+  const categoryLabels = useMemo(
+    () =>
+      parseMembershipCategoryOptionLabels(
+        filterOptions["Membership Category"] || [],
+      ),
+    [filterOptions],
+  );
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [sameMonth, setSameMonth] = useState(null);
@@ -87,6 +96,7 @@ export default function ExecutiveComparisonPanel({ refreshToken = 0 }) {
           ...buildMembershipComparisonBody(
             filtersStateRef.current,
             membershipDashboardHeader,
+            categoryLabels,
           ),
           dimensions: COMPARISON_DIMENSIONS,
         });
@@ -113,6 +123,7 @@ export default function ExecutiveComparisonPanel({ refreshToken = 0 }) {
     membershipDashboardHeader.month,
     membershipDashboardHeader.includeStudents,
     membershipDashboardHeader.includeHonorary,
+    categoryLabels,
     refreshToken,
   ]);
 

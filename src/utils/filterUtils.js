@@ -457,6 +457,7 @@ export const getLabelToKeyMap = (screenCols) => {
         'Suggested action': 'suggestedAction',
         'Matched GL': 'matchedGlDocNo',
         Source: 'sourceType',
+        'Date Range': 'dateRange',
     };
 
     if (screenCols && Array.isArray(screenCols)) {
@@ -535,6 +536,15 @@ const APPLICATION_API_FILTER_KEY_TO_LABEL = {
     reconciliationStatus: "Rec Status",
     matchedGlDocNo: "Matched GL",
     sourceType: "Source",
+    dateRange: "Date Range",
+    membershipStatuses: "Membership Status",
+    membershipStatus: "Membership Status",
+    membershipCategories: "Membership Category",
+    membershipCategory: "Membership Category",
+    sections: "Section (Primary Section)",
+    grades: "Grade",
+    regions: "Region",
+    branches: "Branch",
 };
 
 /** UI row field names that differ from template API filter keys. */
@@ -606,7 +616,7 @@ export const transformFiltersFromApi = (apiFilters, screenCols) => {
     Object.keys(apiFilters || {}).forEach(key => {
         const filter = apiFilters[key];
         const label =
-            keyToLabel[key] || APPLICATION_API_FILTER_KEY_TO_LABEL[key] || key;
+            APPLICATION_API_FILTER_KEY_TO_LABEL[key] || keyToLabel[key] || key;
         const apiOp = filter.operator;
         let operator;
         if (DATE_RANGE_OPERATORS.has(apiOp)) {
@@ -640,6 +650,33 @@ export const transformFiltersFromApi = (apiFilters, screenCols) => {
     });
     return transformed;
 };
+
+/** Applications uses "Application Status" — drop legacy duplicate "Status" chip. */
+export function consolidateApplicationsStatusFilter(
+    filtersState = {},
+    visibleFilters = [],
+) {
+    const nextState = { ...(filtersState || {}) };
+    const legacy = nextState.Status;
+    const canonical = nextState["Application Status"];
+
+    if (legacy) {
+        delete nextState.Status;
+        if (!canonical) {
+            nextState["Application Status"] = legacy;
+        }
+    }
+
+    let nextVisible = (visibleFilters || []).filter((label) => label !== "Status");
+    if (
+        nextState["Application Status"] &&
+        !nextVisible.includes("Application Status")
+    ) {
+        nextVisible = [...nextVisible, "Application Status"];
+    }
+
+    return { filtersState: nextState, visibleFilters: nextVisible };
+}
 
 /**
  * Some gateways return GET /templates/:id with the real document nested under

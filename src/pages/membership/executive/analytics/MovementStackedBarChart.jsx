@@ -8,8 +8,10 @@ import {
   CartesianGrid,
   Tooltip,
   Legend,
+  LabelList,
 } from "recharts";
 import { formatCount } from "../executiveDashboardUtils";
+import { stackedSegmentLabelProps } from "../chartDataLabels";
 import {
   MOVEMENT_SERIES,
   movementStackTotal,
@@ -126,7 +128,7 @@ export default function MovementStackedBarChart({
           margin={
             isHorizontal
               ? { left: 2, right: 8, top: 8, bottom: 4 }
-              : { left: 8, right: 8, top: 8, bottom: 4 }
+              : { left: 8, right: 8, top: 20, bottom: 4 }
           }
           barCategoryGap={isHorizontal ? "12%" : undefined}
         >
@@ -175,7 +177,12 @@ export default function MovementStackedBarChart({
               stackId="movement"
               fill={s.color}
               radius={isHorizontal ? [0, 0, 0, 0] : [0, 0, 0, 0]}
-            />
+            >
+              <LabelList
+                dataKey={s.key}
+                {...stackedSegmentLabelProps(!isHorizontal)}
+              />
+            </Bar>
           ))}
         </BarChart>
       </ResponsiveContainer>

@@ -1,9 +1,12 @@
-import React, { useCallback, useMemo } from "react";
-import { Select } from "antd";
+import React, { useCallback, useEffect, useMemo } from "react";
+import { Checkbox, Select } from "antd";
 import { DownOutlined } from "@ant-design/icons";
+import { useLocation } from "react-router-dom";
 import { useFilters } from "../../../context/FilterContext";
 import {
   buildMembershipYearOptions,
+  parseMembershipCategoryOptionLabels,
+  resolveDashboardMembershipCategoryFilterState,
   MEMBERSHIP_MONTH_OPTIONS,
 } from "./executiveDashboardUtils";
 
@@ -18,56 +21,134 @@ function FilterSelectChip({ label, value, options, onChange, className = "" }) {
         options={options}
         onChange={onChange}
         bordered={false}
-        suffixIcon={<DownOutlined className="exec-dashboard-filter-chip__chevron" />}
+        suffixIcon={
+          <DownOutlined className="exec-dashboard-filter-chip__chevron" />
+        }
       />
     </div>
   );
 }
 
-function FilterToggleChip({ label, checked, onChange }) {
+function FilterCheckboxChip({ label, checked, onChange }) {
   return (
-    <button
-      type="button"
-      className={`exec-dashboard-filter-chip exec-dashboard-filter-toggle${
-        checked ? " active" : ""
+    <div
+      className={`exec-dashboard-filter-chip exec-dashboard-filter-checkbox${
+        checked ? " exec-dashboard-filter-checkbox--checked" : ""
       }`}
-      onClick={() => onChange(!checked)}
-      aria-pressed={checked}
     >
-      <span className="filter-label">{label}</span>
-    </button>
+      <Checkbox
+        className="exec-dashboard-filter-checkbox__input"
+        checked={checked}
+        onChange={(e) => onChange(e.target.checked)}
+      >
+        <span className="filter-label">{label}</span>
+      </Checkbox>
+    </div>
   );
 }
 
-export default function MembershipDashboardHeaderControls({ variant = "default" }) {
+function categoryFilterStateChanged(current, next) {
+  const curOp = current?.operator || "==";
+  const curVals = current?.selectedValues || [];
+  if (curOp !== next.operator) return true;
+  if (curVals.length !== next.selectedValues.length) return true;
+  return next.selectedValues.some((value, index) => value !== curVals[index]);
+}
+
+export default function MembershipDashboardHeaderControls({
+  variant = "default",
+}) {
+  const location = useLocation();
+  const isMembershipDashboard =
+    (location.pathname || "").replace(/\/$/, "").toLowerCase() ===
+    "/membershipdashboard";
+
   const {
     membershipDashboardHeader,
     updateMembershipDashboardHeader,
     bumpMembershipDashboardApply,
+    filtersState,
+    updateFilter,
+    filterOptions,
   } = useFilters();
 
   const yearOptions = useMemo(() => buildMembershipYearOptions(12), []);
 
-  const applyHeaderChange = useCallback(
-    (patch) => {
-      updateMembershipDashboardHeader(patch);
-      bumpMembershipDashboardApply();
-    },
-    [updateMembershipDashboardHeader, bumpMembershipDashboardApply]
+  const allCategoryLabels = useMemo(
+    () =>
+      parseMembershipCategoryOptionLabels(
+        filterOptions["Membership Category"] || [],
+      ),
+    [filterOptions],
   );
 
-  if (variant !== "inline") {
+  const syncMembershipCategoryWithHeader = useCallback(
+    (header) => {
+      if (!isMembershipDashboard) return false;
+
+      const next = resolveDashboardMembershipCategoryFilterState(
+        header,
+        allCategoryLabels,
+        header.manualMembershipCategories,
+      );
+      const current = filtersState["Membership Category"];
+      const changed = categoryFilterStateChanged(current, next);
+
+      if (changed) {
+        updateFilter("Membership Category", next.operator, next.selectedValues);
+      }
+      return changed;
+    },
+    [
+      allCategoryLabels,
+      filtersState,
+      isMembershipDashboard,
+      updateFilter,
+    ],
+  );
+
+  const applyHeaderChange = useCallback(
+    (patch) => {
+      const nextHeader = { ...membershipDashboardHeader, ...patch };
+      updateMembershipDashboardHeader(patch);
+      if (isMembershipDashboard) {
+        syncMembershipCategoryWithHeader(nextHeader);
+      }
+      bumpMembershipDashboardApply();
+    },
+    [
+      membershipDashboardHeader,
+      updateMembershipDashboardHeader,
+      syncMembershipCategoryWithHeader,
+      bumpMembershipDashboardApply,
+      isMembershipDashboard,
+    ],
+  );
+
+  useEffect(() => {
+    if (variant !== "inline" || !isMembershipDashboard) return;
+    if (!allCategoryLabels.length) return;
+
+    const changed = syncMembershipCategoryWithHeader(membershipDashboardHeader);
+    if (changed) {
+      bumpMembershipDashboardApply();
+    }
+  }, [
+    variant,
+    isMembershipDashboard,
+    allCategoryLabels,
+    membershipDashboardHeader.includeStudents,
+    membershipDashboardHeader.includeHonorary,
+    syncMembershipCategoryWithHeader,
+    bumpMembershipDashboardApply,
+  ]);
+
+  if (variant !== "inline" || !isMembershipDashboard) {
     return null;
   }
 
   return (
     <div className="exec-dashboard-header-controls exec-dashboard-header-controls--inline">
-      <FilterSelectChip
-        label="Year"
-        value={membershipDashboardHeader.year}
-        options={yearOptions}
-        onChange={(year) => applyHeaderChange({ year })}
-      />
       <FilterSelectChip
         label="Month"
         value={membershipDashboardHeader.month}
@@ -75,13 +156,19 @@ export default function MembershipDashboardHeaderControls({ variant = "default" 
         onChange={(month) => applyHeaderChange({ month })}
         className="exec-dashboard-filter-chip--month"
       />
-      <FilterToggleChip
-        label="Include Student"
+      <FilterSelectChip
+        label="Year"
+        value={membershipDashboardHeader.year}
+        options={yearOptions}
+        onChange={(year) => applyHeaderChange({ year })}
+      />
+      <FilterCheckboxChip
+        label="Student"
         checked={membershipDashboardHeader.includeStudents}
         onChange={(includeStudents) => applyHeaderChange({ includeStudents })}
       />
-      <FilterToggleChip
-        label="Include Honorary"
+      <FilterCheckboxChip
+        label="Honorary"
         checked={membershipDashboardHeader.includeHonorary}
         onChange={(includeHonorary) => applyHeaderChange({ includeHonorary })}
       />

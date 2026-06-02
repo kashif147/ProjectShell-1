@@ -62,6 +62,7 @@ import { bumpRefundsReload } from "../../utils/refundsWorkspace";
 import { bumpWriteOffsReload } from "../../utils/writeOffsWorkspace";
 import { bumpGeneralLedgerReload } from "../../utils/generalLedgerWorkspace";
 import { bumpReconciliationReload } from "../../utils/reconciliationWorkspace";
+import { bumpMembershipListingReportReload } from "../../utils/membershipListingReportWorkspace";
 
 const SaveViewMenu = ({ className, style }) => {
   const dispatch = useDispatch();
@@ -159,6 +160,7 @@ const SaveViewMenu = ({ className, style }) => {
     writeoffs: "writeoffs",
     generalledger: "generalledger",
     reconciliation: "reconciliation",
+    membershiplistingreport: "membershiplisting",
     correspondencesummary: "notification",
     correspondencedashboard: "notification",
     communication: "notification",
@@ -268,6 +270,9 @@ const SaveViewMenu = ({ className, style }) => {
     }
     if (activePage === "Reconciliation") {
       bumpReconciliationReload();
+    }
+    if (activePage === "MembershipListingReport") {
+      bumpMembershipListingReportReload();
     }
   };
 

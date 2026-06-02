@@ -13,39 +13,49 @@
   box-sizing: border-box;
 }
 
-/* Membership dashboard filters — match Toolbar filter-button1 chips */
+/* Membership dashboard header chips (also refined in ToolbarFilters.css when in toolbar) */
 .exec-dashboard-header-controls--inline {
   display: inline-flex;
   align-items: center;
   flex-wrap: wrap;
-  gap: 0;
+  gap: 8px;
   margin: 0;
 }
 
 .exec-dashboard-filter-chip {
   display: inline-flex;
   align-items: center;
-  gap: 2px;
-  margin-left: 4px;
-  padding: 0 10px 0 10px;
-  min-height: 32px;
+  gap: 4px;
+  margin-left: 0;
+  padding: 0 12px;
+  min-height: 34px;
+  height: 34px;
   border-radius: 3px;
-  background-color: rgba(9, 30, 66, 0.04);
+  border: 1px solid #e2e8f0;
+  background-color: #fff;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
   cursor: pointer;
   flex-shrink: 0;
-  transition: background-color 0.15s ease;
+  transition:
+    background-color 0.15s ease,
+    border-color 0.15s ease,
+    box-shadow 0.15s ease;
 }
 
 .exec-dashboard-filter-chip:hover {
-  background-color: rgba(9, 30, 66, 0.08);
+  background-color: #f8fafc;
+  border-color: #cbd5e1;
 }
 
 .exec-dashboard-filter-chip .filter-label {
-  font-weight: 500;
-  color: #000000e0;
+  display: inline-flex;
+  align-items: center;
+  font-weight: 600;
+  color: #475569;
   white-space: nowrap;
-  font-size: 14px;
-  padding-right: 2px;
+  font-size: 13px;
+  line-height: 1;
+  padding-right: 4px;
   flex-shrink: 0;
 }
 
@@ -58,71 +68,112 @@
 }
 
 .exec-dashboard-filter-chip__select.ant-select {
-  height: 32px;
+  height: 34px;
 }
 
 .exec-dashboard-filter-chip__select .ant-select-selector {
+  display: flex !important;
+  align-items: center !important;
   background: transparent !important;
   border: none !important;
   box-shadow: none !important;
-  padding: 0 18px 0 0 !important;
-  height: 32px !important;
-  min-height: 32px !important;
+  padding: 0 16px 0 0 !important;
+  height: 34px !important;
+  min-height: 34px !important;
+}
+
+.exec-dashboard-filter-chip__select .ant-select-selection-wrap,
+.exec-dashboard-filter-chip__select .ant-select-selection-search {
+  display: flex !important;
+  align-items: center !important;
+  height: 100% !important;
 }
 
 .exec-dashboard-filter-chip__select .ant-select-selection-item {
-  font-weight: 500 !important;
-  color: #000000e0 !important;
-  line-height: 30px !important;
+  display: flex !important;
+  align-items: center !important;
+  font-weight: 600 !important;
+  color: #475569 !important;
+  line-height: 1.2 !important;
   padding-inline-end: 0 !important;
+  font-size: 13px !important;
 }
 
-.exec-dashboard-filter-chip__select .ant-select-arrow,
+.exec-dashboard-filter-chip__select .ant-select-arrow {
+  top: 50% !important;
+  margin-top: 0 !important;
+  transform: translateY(-50%);
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  height: auto !important;
+  inset-inline-end: 0 !important;
+}
+
+.exec-dashboard-filter-chip__select .ant-select-arrow .exec-dashboard-filter-chip__chevron,
 .exec-dashboard-filter-chip__chevron {
-  color: #215e97;
+  color: #475569;
   font-size: 10px;
-  right: 0;
+  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.exec-dashboard-filter-chip__select .ant-select-arrow .exec-dashboard-filter-chip__chevron svg,
+.exec-dashboard-filter-chip__chevron svg {
+  display: block;
 }
 
 .exec-dashboard-filter-chip__select.ant-select-open .ant-select-selector,
 .exec-dashboard-filter-chip:focus-within {
-  background-color: rgba(9, 30, 66, 0.08);
+  background-color: #f8fafc;
 }
 
-.exec-dashboard-filter-toggle {
-  border: 1px solid transparent;
-  font: inherit;
-  line-height: 1.2;
-  transition:
-    background-color 0.15s ease,
-    border-color 0.15s ease,
-    box-shadow 0.15s ease,
-    color 0.15s ease;
+.exec-dashboard-filter-checkbox {
+  cursor: default;
 }
 
-.exec-dashboard-filter-toggle .filter-label {
+.exec-dashboard-filter-checkbox__input.ant-checkbox-wrapper {
+  display: inline-flex;
+  align-items: center;
+  margin: 0;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.exec-dashboard-filter-checkbox__input .ant-checkbox {
+  top: 0;
+}
+
+.exec-dashboard-filter-checkbox__input .ant-checkbox + span {
+  padding-inline-start: 8px;
+  padding-inline-end: 0;
+}
+
+.exec-dashboard-filter-checkbox__input .ant-checkbox .ant-checkbox-inner {
+  width: 16px;
+  height: 16px;
+  border-radius: 3px;
+  border-color: #cbd5e1;
+}
+
+.exec-dashboard-filter-checkbox__input .ant-checkbox-checked .ant-checkbox-inner {
+  background-color: #45669d;
+  border-color: #45669d;
+}
+
+.exec-dashboard-filter-checkbox__input:hover .ant-checkbox-inner {
+  border-color: #45669d;
+}
+
+.exec-dashboard-filter-checkbox__input .filter-label {
   padding-right: 0;
-  transition: color 0.15s ease;
 }
 
-.exec-dashboard-filter-toggle:not(.active):hover {
-  background-color: rgba(9, 30, 66, 0.08) !important;
-}
-
-.exec-dashboard-filter-toggle.active {
-  background-color: #45669d !important;
-  border-color: #215e97 !important;
-  box-shadow: 0 1px 2px rgba(33, 94, 151, 0.35);
-}
-
-.exec-dashboard-filter-toggle.active .filter-label {
-  color: #fff !important;
-  font-weight: 600;
-}
-
-.exec-dashboard-filter-toggle.active:hover {
-  background-color: #3a5888 !important;
-  border-color: #1a4f82 !important;
+.exec-dashboard-filter-checkbox--checked {
+  background-color: #eff6ff !important;
+  border-color: #93c5fd !important;
 }
 
 .exec-dashboard-filter-chip__dropdown .ant-select-item {
@@ -393,6 +444,7 @@
 .exec-kpi-chip__vals {
   color: #475569;
   font-weight: 500;
+  font-size: 12px;
 }
 
 .exec-kpi-chip__sep {
@@ -402,7 +454,7 @@
 
 .exec-kpi-chip__delta {
   font-weight: 600;
-  font-size: 9px;
+  font-size: 10px;
   padding: 1px 5px;
   border-radius: 999px;
 }
@@ -486,9 +538,130 @@
   position: relative;
 }
 
+.exec-donut-wrap--with-legend {
+  display: flex;
+  flex-direction: column;
+  height: 220px;
+  min-height: 0;
+}
+
+.exec-donut-wrap--with-legend .exec-donut-chart {
+  flex: 1 1 auto;
+  min-height: 0;
+  position: relative;
+}
+
+.exec-donut-wrap--with-legend .exec-donut-chart .exec-chart-area {
+  height: 100%;
+}
+
 .exec-donut-wrap--tooltip-only .exec-chart-area {
   position: relative;
   height: 220px;
+}
+
+.exec-category-legend {
+  flex: 0 0 auto;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 4px 10px;
+  margin: 0;
+  padding: 6px 2px 0;
+  list-style: none;
+  align-content: start;
+}
+
+.exec-category-legend--compact {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 3px 8px;
+}
+
+.exec-category-legend--dense {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 2px 6px;
+}
+
+.exec-category-legend li {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  min-width: 0;
+  font-size: 10px;
+  line-height: 1.2;
+  color: #475569;
+  font-weight: 500;
+}
+
+.exec-category-legend--compact li {
+  font-size: 9px;
+  gap: 4px;
+}
+
+.exec-category-legend--dense li {
+  font-size: 8px;
+  gap: 3px;
+}
+
+.exec-category-legend__swatch {
+  width: 8px;
+  height: 8px;
+  border-radius: 2px;
+  flex-shrink: 0;
+}
+
+.exec-category-legend--compact .exec-category-legend__swatch,
+.exec-category-legend--dense .exec-category-legend__swatch {
+  width: 7px;
+  height: 7px;
+}
+
+.exec-category-legend__label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.exec-donut-wrap--expanded.exec-donut-wrap--with-legend {
+  height: min(58vh, 480px);
+  min-height: 360px;
+}
+
+.exec-donut-wrap--expanded .exec-category-legend {
+  grid-template-columns: repeat(auto-fill, minmax(108px, 1fr));
+  gap: 5px 10px;
+  padding-top: 8px;
+}
+
+.exec-donut-wrap--expanded .exec-category-legend--compact {
+  grid-template-columns: repeat(auto-fill, minmax(96px, 1fr));
+  gap: 4px 8px;
+}
+
+.exec-donut-wrap--expanded .exec-category-legend--dense {
+  grid-template-columns: repeat(auto-fill, minmax(84px, 1fr));
+  gap: 3px 6px;
+}
+
+.exec-donut-wrap--expanded .exec-category-legend li {
+  font-size: 12px;
+}
+
+.exec-donut-wrap--expanded .exec-category-legend__swatch {
+  width: 10px;
+  height: 10px;
+}
+
+.exec-donut-wrap--with-legend .exec-donut-chart .exec-chart-area--expanded {
+  height: 100%;
+  min-height: 0;
+}
+
+.exec-donut-wrap--expanded .exec-category-legend--compact li {
+  font-size: 11px;
+}
+
+.exec-donut-wrap--expanded .exec-category-legend--dense li {
+  font-size: 10px;
 }
 
 .exec-donut-center {

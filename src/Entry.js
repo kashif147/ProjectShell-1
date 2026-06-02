@@ -229,6 +229,9 @@ const ComparisonReport = lazyWithRetry(
 const LiveStatsReport = lazyWithRetry(
   () => import("./pages/reports/LiveStatsReport"),
 );
+const MembershipListingReport = lazyWithRetry(
+  () => import("./pages/reports/MembershipListingReport"),
+);
 const ReportViewerDemo = lazyWithRetry(
   () => import("./features/reports/report-viewer/ReportViewerDemo"),
 );
@@ -1159,6 +1162,18 @@ function Entry() {
                         element={
                           <ProtectedRoute requiredPermission={RoutePermissions["LiveStatsReport"]}>
                             <LiveStatsReport />
+                          </ProtectedRoute>
+                        }
+                      />
+                      <Route
+                        path="MembershipListingReport"
+                        element={
+                          <ProtectedRoute
+                            requiredPermission={
+                              RoutePermissions["MembershipListingReport"]
+                            }
+                          >
+                            <MembershipListingReport />
                           </ProtectedRoute>
                         }
                       />

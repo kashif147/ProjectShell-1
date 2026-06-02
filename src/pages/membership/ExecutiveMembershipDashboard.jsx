@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useRef } from "react";
+import React, { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import { Alert, Spin } from "antd";
 import membershipDashboardAPI from "../../services/membershipDashboardAPI";
 import { useFilters } from "../../context/FilterContext";
@@ -12,6 +12,7 @@ import {
   EMPTY_DASHBOARD_DATA,
   normalizeDashboardStats,
   buildMembershipDashboardFilters,
+  parseMembershipCategoryOptionLabels,
 } from "./executive/executiveDashboardUtils";
 import "../../styles/ExecutiveDashboard.css";
 
@@ -20,6 +21,7 @@ export default function ExecutiveMembershipDashboard() {
     membershipDashboardApplyTick,
     membershipDashboardHeader,
     filtersState,
+    filterOptions,
   } = useFilters();
   const filtersStateRef = useRef(filtersState);
   const membershipHeaderRef = useRef(membershipDashboardHeader);
@@ -53,13 +55,22 @@ export default function ExecutiveMembershipDashboard() {
     }
   }, []);
 
+  const categoryLabels = useMemo(
+    () =>
+      parseMembershipCategoryOptionLabels(
+        filterOptions["Membership Category"] || [],
+      ),
+    [filterOptions],
+  );
+
   const buildPayload = useCallback(
     () =>
       buildMembershipDashboardFilters(
         filtersStateRef.current,
         membershipHeaderRef.current,
+        categoryLabels,
       ),
-    [],
+    [categoryLabels],
   );
 
   useEffect(() => {
@@ -105,6 +116,15 @@ export default function ExecutiveMembershipDashboard() {
         </ExecutiveDashboardSection>
 
         <ExecutiveDashboardSection
+          sectionKey="analytics"
+          title="Membership Live Stats"
+          subtitle="Movement breakdown, trends, and active members by dimension"
+          defaultOpen
+        >
+          <ExecutiveAnalyticsPanel data={dashboardData} />
+        </ExecutiveDashboardSection>
+
+        <ExecutiveDashboardSection
           sectionKey="comparison"
           title="Membership Comparison"
           subtitle="Same month year-on-year and year-end vs selected month-end"
@@ -113,15 +133,6 @@ export default function ExecutiveMembershipDashboard() {
           <ExecutiveComparisonPanel
             refreshToken={membershipDashboardApplyTick}
           />
-        </ExecutiveDashboardSection>
-
-        <ExecutiveDashboardSection
-          sectionKey="analytics"
-          title="Membership Live Stats"
-          subtitle="Movement breakdown, trends, and active members by dimension"
-          defaultOpen
-        >
-          <ExecutiveAnalyticsPanel data={dashboardData} />
         </ExecutiveDashboardSection>
       </div>
     </div>

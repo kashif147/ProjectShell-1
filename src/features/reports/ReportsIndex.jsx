@@ -11,6 +11,14 @@ const ReportsIndex = () => {
 
   const reportCards = [
     {
+      title: "Membership Listing Report",
+      description:
+        "Filterable membership listing with executive dashboard dimensions and date range",
+      icon: <FileTextOutlined style={{ fontSize: "48px" }} />,
+      path: "/MembershipListingReport",
+      color: "#722ed1",
+    },
+    {
       title: "Cancelled Members Report",
       description: "View and export cancelled members data",
       icon: <FileTextOutlined style={{ fontSize: "48px" }} />,
@@ -39,7 +47,9 @@ const ReportsIndex = () => {
               <Card
                 hoverable
                 className="report-card"
-                onClick={() => navigate(report.path)}
+                onClick={() =>
+                  navigate(report.path, { state: { search: report.title } })
+                }
                 style={{
                   height: "100%",
                   textAlign: "center",

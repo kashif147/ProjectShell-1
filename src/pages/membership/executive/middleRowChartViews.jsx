@@ -8,11 +8,13 @@ import {
   CartesianGrid,
   Tooltip,
   Legend,
+  LabelList,
   PieChart,
   Pie,
   Cell,
 } from "recharts";
 import { CHART_PALETTE, formatCount } from "./executiveDashboardUtils";
+import { chartLabelListProps, renderDonutSliceLabel } from "./chartDataLabels";
 import ExecWaterfallChart from "./ExecWaterfallChart";
 
 function CategoryDonutTooltip({ active, payload, total }) {
@@ -53,7 +55,11 @@ export function ActiveTrendChart({ expanded, trend, lastYearLabel, thisYearLabel
       <ResponsiveContainer width="100%" height="100%">
         <LineChart
           data={trend}
-          margin={expanded ? { top: 12, right: 24, left: 8, bottom: 8 } : undefined}
+          margin={
+            expanded
+              ? { top: 28, right: 24, left: 8, bottom: 8 }
+              : { top: 22, right: 12, left: 4, bottom: 4 }
+          }
         >
           <CartesianGrid strokeDasharray="3 3" stroke="#eef2f7" />
           <XAxis dataKey="month" tick={{ fontSize: expanded ? 12 : 11 }} />
@@ -68,7 +74,17 @@ export function ActiveTrendChart({ expanded, trend, lastYearLabel, thisYearLabel
             strokeDasharray="4 4"
             dot={expanded}
             strokeWidth={expanded ? 2.5 : 2}
-          />
+          >
+            <LabelList
+              dataKey="lastYear"
+              {...chartLabelListProps({
+                compact: !expanded,
+                position: "bottom",
+                offset: 4,
+                fill: "#64748b",
+              })}
+            />
+          </Line>
           <Line
             type="monotone"
             dataKey="thisYear"
@@ -76,58 +92,99 @@ export function ActiveTrendChart({ expanded, trend, lastYearLabel, thisYearLabel
             stroke="#3b82f6"
             dot={{ r: expanded ? 4 : 3 }}
             strokeWidth={expanded ? 3 : 2.5}
-          />
+          >
+            <LabelList
+              dataKey="thisYear"
+              {...chartLabelListProps({
+                compact: !expanded,
+                position: "top",
+                offset: 8,
+                fill: "#2563eb",
+              })}
+            />
+          </Line>
         </LineChart>
       </ResponsiveContainer>
     </div>
   );
 }
 
+function CategoryDonutLegend({ items = [] }) {
+  if (!items.length) return null;
+
+  const density =
+    items.length > 10 ? "dense" : items.length > 6 ? "compact" : "default";
+
+  return (
+    <ul
+      className={`exec-category-legend exec-category-legend--${density}`}
+      aria-label="Membership category legend"
+    >
+      {items.map((entry, i) => (
+        <li key={entry.name} title={entry.name}>
+          <span
+            className="exec-category-legend__swatch"
+            style={{
+              background: entry.color || CHART_PALETTE[i % CHART_PALETTE.length],
+            }}
+          />
+          <span className="exec-category-legend__label">{entry.name}</span>
+        </li>
+      ))}
+    </ul>
+  );
+}
+
 export function CategoryDonutChart({ expanded, category, categoryTotal, totalActive }) {
-  const areaClass = expanded
+  const chartClass = expanded
     ? "exec-chart-area exec-chart-area--expanded"
     : "exec-chart-area";
 
   return (
     <div
-      className={`exec-donut-wrap exec-donut-wrap--tooltip-only${
+      className={`exec-donut-wrap exec-donut-wrap--with-legend${
         expanded ? " exec-donut-wrap--expanded" : ""
       }`}
     >
-      <div className={areaClass}>
-        <ResponsiveContainer width="100%" height="100%">
-          <PieChart>
-            <Pie
-              data={category}
-              dataKey="value"
-              nameKey="name"
-              innerRadius={expanded ? "52%" : "58%"}
-              outerRadius={expanded ? "88%" : "84%"}
-              paddingAngle={2}
-              cx="50%"
-              cy="50%"
+      <div className="exec-donut-chart">
+        <div className={chartClass}>
+          <ResponsiveContainer width="100%" height="100%">
+            <PieChart>
+              <Pie
+                data={category}
+                dataKey="value"
+                nameKey="name"
+                innerRadius={expanded ? "50%" : "54%"}
+                outerRadius={expanded ? "82%" : "78%"}
+                paddingAngle={2}
+                cx="50%"
+                cy="50%"
+                label={renderDonutSliceLabel}
+                labelLine={false}
+              >
+                {category.map((entry, i) => (
+                  <Cell
+                    key={entry.name}
+                    fill={entry.color || CHART_PALETTE[i % CHART_PALETTE.length]}
+                  />
+                ))}
+              </Pie>
+              <Tooltip content={<CategoryDonutTooltip total={categoryTotal} />} />
+            </PieChart>
+          </ResponsiveContainer>
+          <div className="exec-donut-center">
+            <div
+              className={`exec-donut-center__value${
+                expanded ? " exec-donut-center__value--lg" : ""
+              }`}
             >
-              {category.map((entry, i) => (
-                <Cell
-                  key={entry.name}
-                  fill={entry.color || CHART_PALETTE[i % CHART_PALETTE.length]}
-                />
-              ))}
-            </Pie>
-            <Tooltip content={<CategoryDonutTooltip total={categoryTotal} />} />
-          </PieChart>
-        </ResponsiveContainer>
-        <div className="exec-donut-center">
-          <div
-            className={`exec-donut-center__value${
-              expanded ? " exec-donut-center__value--lg" : ""
-            }`}
-          >
-            {formatCount(totalActive)}
+              {formatCount(totalActive)}
+            </div>
+            <div className="exec-donut-center__label">Active</div>
           </div>
-          <div className="exec-donut-center__label">Active</div>
         </div>
       </div>
+      <CategoryDonutLegend items={category} />
     </div>
   );
 }

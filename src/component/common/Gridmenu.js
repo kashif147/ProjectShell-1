@@ -21,6 +21,7 @@ import { bumpRefundsReload } from "../../utils/refundsWorkspace";
 import { bumpWriteOffsReload } from "../../utils/writeOffsWorkspace";
 import { bumpGeneralLedgerReload } from "../../utils/generalLedgerWorkspace";
 import { bumpReconciliationReload } from "../../utils/reconciliationWorkspace";
+import { bumpMembershipListingReportReload } from "../../utils/membershipListingReportWorkspace";
 
 function Gridmenu({ title, screenName, setColumnsDragbe, columnsForFilter, setColumnsForFilter }) {
   const dispatch = useDispatch();
@@ -47,6 +48,8 @@ function Gridmenu({ title, screenName, setColumnsDragbe, columnsForFilter, setCo
     (location.pathname || "").toLowerCase() === "/generalledger";
   const isReconciliationScreen =
     (location.pathname || "").toLowerCase() === "/reconciliation";
+  const isMembershipListingReportScreen =
+    (location.pathname || "").toLowerCase() === "/membershiplistingreport";
   const { hasAnyRole } = useAuthorization();
   const canEditGridTemplates = hasAnyRole(["SU", "ASU"]);
   const screenChanges = useSelector(
@@ -81,6 +84,8 @@ function Gridmenu({ title, screenName, setColumnsDragbe, columnsForFilter, setCo
         ? "generalledger"
       : isReconciliationScreen
         ? "reconciliation"
+      : isMembershipListingReportScreen
+        ? "membershiplisting"
       : isPaymentFormsScreen
       ? "payment forms"
       : isApplicationsScreen
@@ -186,6 +191,8 @@ function Gridmenu({ title, screenName, setColumnsDragbe, columnsForFilter, setCo
         bumpGeneralLedgerReload();
       } else if (isReconciliationScreen) {
         bumpReconciliationReload();
+      } else if (isMembershipListingReportScreen) {
+        bumpMembershipListingReportReload();
       }
     } catch (error) {
       console.error("Error updating template:", error);

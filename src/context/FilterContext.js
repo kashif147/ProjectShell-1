@@ -14,7 +14,7 @@ import { getCategoryLookup } from "../features/CategoryLookupSlice";
 import { getWorkLocationHierarchy } from "../features/LookupsWorkLocationSlice";
 import { resetInitialization } from "../features/applicationwithfilterslice";
 import { fetchSubscriptionYears } from "../features/subscription/subscriptionSlice";
-import { isDateFilterLabel, isNumericFilterLabel, isStringFilterLabel } from "../utils/filterUtils";
+import { isDateFilterLabel, isNumericFilterLabel, isStringFilterLabel, consolidateApplicationsStatusFilter } from "../utils/filterUtils";
 import {
   buildDataDerivedFilterOptions,
   CLIENT_SIDE_GRID_FILTER_SCREENS,
@@ -135,6 +135,10 @@ export const FilterProvider = ({ children }) => {
       visibleFilters: [],
       filtersState: {},
     },
+    MembershipListingReport: {
+      visibleFilters: [],
+      filtersState: {},
+    },
     EmailCampaigns: {
       visibleFilters: [],
       filtersState: {},
@@ -185,8 +189,9 @@ export const FilterProvider = ({ children }) => {
     return {
       year: now.getUTCFullYear(),
       month: now.getUTCMonth() + 1,
-      includeStudents: false,
-      includeHonorary: false,
+      includeStudents: true,
+      includeHonorary: true,
+      manualMembershipCategories: { operator: "==", selectedValues: [] },
     };
   };
 
@@ -561,6 +566,7 @@ export const FilterProvider = ({ children }) => {
       "/issuesmanagementdashboard": "Cases",
       "/attendees": "Attendees",
       "/membershipdashboard": "MembershipDashboard",
+      "/membershiplistingreport": "MembershipListingReport",
       "/email": "EmailCampaigns",
       "/emailcampaigndetail": "EmailCampaigns",
       "/creditnotes": "CreditNotes",
@@ -720,6 +726,15 @@ export const FilterProvider = ({ children }) => {
         "Region",
         "Branch",
       ],
+      MembershipListingReport: [
+        "Membership Category",
+        "Membership Status",
+        "Grade",
+        "Section (Primary Section)",
+        "Region",
+        "Branch",
+        "Date Range",
+      ],
       EmailCampaigns: [
         "Membership Category",
         "Submission Date",
@@ -835,6 +850,12 @@ export const FilterProvider = ({ children }) => {
       "Payment Status",
     ],
     MembershipDashboard: ["Membership Category", "Section (Primary Section)"],
+    MembershipListingReport: [
+      "Membership Category",
+      "Membership Status",
+      "Section (Primary Section)",
+      "Date Range",
+    ],
     EmailCampaigns: ["Membership Category"],
     CreditNotes: ["CN Status"],
     JournalAdjustments: ["JA Status"],
@@ -867,6 +888,7 @@ export const FilterProvider = ({ children }) => {
       Events: getDefaultVisibleFilters("Events"),
       Attendees: getDefaultVisibleFilters("Attendees"),
       MembershipDashboard: getDefaultVisibleFilters("MembershipDashboard"),
+      MembershipListingReport: getDefaultVisibleFilters("MembershipListingReport"),
       EmailCampaigns: getDefaultVisibleFilters("EmailCampaigns"),
       CreditNotes: getDefaultVisibleFilters("CreditNotes"),
       JournalAdjustments: getDefaultVisibleFilters("JournalAdjustments"),
@@ -1142,6 +1164,36 @@ export const FilterProvider = ({ children }) => {
         },
         Branch: {
           operator: "==",
+          selectedValues: [],
+        },
+      },
+      MembershipListingReport: {
+        "Membership Category": {
+          operator: "==",
+          selectedValues: [],
+        },
+        "Membership Status": {
+          operator: "==",
+          selectedValues: [],
+        },
+        Grade: {
+          operator: "==",
+          selectedValues: [],
+        },
+        "Section (Primary Section)": {
+          operator: "==",
+          selectedValues: [],
+        },
+        Region: {
+          operator: "==",
+          selectedValues: [],
+        },
+        Branch: {
+          operator: "==",
+          selectedValues: [],
+        },
+        "Date Range": {
+          operator: "between",
           selectedValues: [],
         },
       },
@@ -1468,8 +1520,18 @@ export const FilterProvider = ({ children }) => {
     const savedState = screenFilterStates[activeScreen];
 
     if (savedState && Object.keys(savedState.filtersState).length > 0) {
-      setVisibleFilters(savedState.visibleFilters);
-      setFiltersState(savedState.filtersState);
+      const loaded =
+        activeScreen === "Applications"
+          ? consolidateApplicationsStatusFilter(
+              savedState.filtersState,
+              savedState.visibleFilters,
+            )
+          : {
+              filtersState: savedState.filtersState,
+              visibleFilters: savedState.visibleFilters,
+            };
+      setVisibleFilters(loaded.visibleFilters);
+      setFiltersState(loaded.filtersState);
     } else {
       // If no saved state, use defaults
       setVisibleFilters(defaultVisibleFilters[activeScreen] || []);
@@ -1942,7 +2004,10 @@ export const FilterProvider = ({ children }) => {
   );
 
   // Preserve toolbar order: defaults first, then filters added from More append to the right.
-  const getOrderedVisibleFilters = () => visibleFilters;
+  const getOrderedVisibleFilters = () => {
+    if (activePage !== "Applications") return visibleFilters;
+    return visibleFilters.filter((label) => label !== "Status");
+  };
 
   const orderedVisibleFilters = getOrderedVisibleFilters();
 
@@ -1976,23 +2041,31 @@ export const FilterProvider = ({ children }) => {
     });
 
     const newFiltersState = { ...baseFilters, ...sanitizedTemplateFilters };
+    const consolidated =
+      activePage === "Applications"
+        ? consolidateApplicationsStatusFilter(newFiltersState, visibleFilters)
+        : { filtersState: newFiltersState, visibleFilters };
 
-    setFiltersState(newFiltersState);
-    filtersStateRef.current = newFiltersState;
+    setFiltersState(consolidated.filtersState);
+    filtersStateRef.current = consolidated.filtersState;
     setScreenFilterStates((prev) => ({
       ...prev,
       [activePage]: {
         ...prev[activePage],
-        filtersState: newFiltersState,
+        filtersState: consolidated.filtersState,
       },
     }));
 
     // Also ensure all filters in the template are visible
-    const templateKeys = Object.keys(templateFilters);
-    const newVisible = [
-      ...visibleFilters,
-      ...templateKeys.filter((key) => !visibleFilters.includes(key)),
+    const templateKeys = Object.keys(sanitizedTemplateFilters);
+    const mergedVisible = [
+      ...consolidated.visibleFilters,
+      ...templateKeys.filter((key) => !consolidated.visibleFilters.includes(key)),
     ];
+    const newVisible =
+      activePage === "Applications"
+        ? mergedVisible.filter((label) => label !== "Status")
+        : mergedVisible;
     setVisibleFilters(newVisible);
 
     userOverrodeTemplateFiltersRef.current = false;

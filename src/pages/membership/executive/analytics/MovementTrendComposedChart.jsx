@@ -9,8 +9,10 @@ import {
   CartesianGrid,
   Tooltip,
   Legend,
+  LabelList,
 } from "recharts";
 import { formatCount, formatCompactCount } from "../executiveDashboardUtils";
+import { chartLabelListProps } from "../chartDataLabels";
 import {
   EXEC_CHART_GREEN,
   MOVEMENT_SERIES,
@@ -65,7 +67,7 @@ export default function MovementTrendComposedChart({
       <ResponsiveContainer width="100%" height="100%">
         <ComposedChart
           data={data}
-          margin={{ left: 4, right: 4, top: 8, bottom: showLegend ? 4 : 4 }}
+          margin={{ left: 4, right: 4, top: 22, bottom: showLegend ? 4 : 4 }}
         >
           <CartesianGrid strokeDasharray="3 3" />
           <XAxis dataKey={categoryKey} tick={{ fontSize: 10 }} />
@@ -100,7 +102,17 @@ export default function MovementTrendComposedChart({
             fillOpacity={0.85}
             radius={[4, 4, 0, 0]}
             maxBarSize={36}
-          />
+          >
+            <LabelList
+              dataKey="active"
+              {...chartLabelListProps({
+                compact: true,
+                position: "top",
+                offset: 6,
+                fill: "#166534",
+              })}
+            />
+          </Bar>
           {FLOW_SERIES.map((s) => (
             <Line
               key={s.key}
@@ -112,7 +124,17 @@ export default function MovementTrendComposedChart({
               strokeWidth={2}
               dot={{ r: 2, fill: s.color, strokeWidth: 0 }}
               activeDot={{ r: 4 }}
-            />
+            >
+              <LabelList
+                dataKey={s.key}
+                {...chartLabelListProps({
+                  compact: true,
+                  position: "top",
+                  offset: 10,
+                  fill: s.color,
+                })}
+              />
+            </Line>
           ))}
         </ComposedChart>
       </ResponsiveContainer>

@@ -8,14 +8,7 @@ import {
   KPI_METRIC_KIND,
 } from "./executiveDashboardUtils";
 
-function MetricChip({
-  chipLabel,
-  subLabel,
-  current,
-  prior,
-  invert,
-  tooltip,
-}) {
+function MetricChip({ chipLabel, subLabel, current, prior, invert, tooltip }) {
   const delta = pctChange(current, prior);
   const up = delta >= 0;
   const tone =
@@ -44,7 +37,9 @@ function MetricChip({
           {formatCount(prior)}
         </span>
         {delta !== 0 ? (
-          <span className={`exec-kpi-chip__delta exec-kpi-chip__delta--${tone}`}>
+          <span
+            className={`exec-kpi-chip__delta exec-kpi-chip__delta--${tone}`}
+          >
             {up ? "+" : ""}
             {delta}%
           </span>
@@ -75,7 +70,7 @@ export default function ExecutiveKpiCard({
 }) {
   const spark = buildSparkline(
     monthCurrent ?? value,
-    sparkPrior ?? monthPrior ?? ytdPrior
+    sparkPrior ?? monthPrior ?? ytdPrior,
   );
 
   const isMovement = metricKind === KPI_METRIC_KIND.MOVEMENT;
@@ -141,7 +136,10 @@ export default function ExecutiveKpiCard({
           </div>
           <div className="exec-kpi-card__spark">
             <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={spark} margin={{ top: 4, right: 0, left: 0, bottom: 0 }}>
+              <AreaChart
+                data={spark}
+                margin={{ top: 4, right: 0, left: 0, bottom: 0 }}
+              >
                 <Area
                   type="monotone"
                   dataKey="v"

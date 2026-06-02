@@ -549,17 +549,17 @@ function SimpleMenu({
                 fontWeight: '500',
                 marginLeft: '8px'
               }
-              : {
-                ...(triggerClassName
-                  ? {}
-                  : { backgroundColor: 'transparent' }),
-                borderRadius: '4px',
-                height: '32px',
-                border: 'none',
-                fontWeight: '500',
-                marginLeft: '0px',
-                boxShadow: 'none'
-              }
+              : triggerClassName
+                ? undefined
+                : {
+                    backgroundColor: 'transparent',
+                    borderRadius: '4px',
+                    height: '32px',
+                    border: 'none',
+                    fontWeight: '500',
+                    marginLeft: '0px',
+                    boxShadow: 'none'
+                  }
           }
         >
           {title}

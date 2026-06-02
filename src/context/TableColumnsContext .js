@@ -970,11 +970,26 @@ function buildReconciliationColumns() {
   });
 }
 
+function buildMembershipListingReportColumns() {
+  const dateRender = (value) => formatDateOnly(value) || "—";
+  return mergeGridColumnDefaults(
+    GRID_COLUMN_DEFAULTS.MembershipListingReport || [],
+    {
+      startDate: { render: dateRender },
+      expiryDate: { render: dateRender },
+      cancelledAt: { render: dateRender },
+      resignedAt: { render: dateRender },
+      processedAt: { render: dateRender },
+    },
+  );
+}
+
 const staticColumns = {
   OnlinePayment: buildOnlinePaymentColumns(),
   Refunds: buildRefundsColumns(),
   WriteOffs: buildWriteOffsColumns(),
   CreditNotes: buildCreditNotesColumns(),
+  MembershipListingReport: buildMembershipListingReportColumns(),
   Reconciliation: buildReconciliationColumns(),
   JournalAdjustments: buildJournalAdjustmentsColumns(),
   GeneralLedger: buildGeneralLedgerColumns(),
@@ -1518,7 +1533,7 @@ const staticColumns = {
     },
     {
       dataIndex: "applicationStatus",
-      title: "Status",
+      title: "Application Status",
       ellipsis: true,
       isGride: true,
       isVisible: true,
