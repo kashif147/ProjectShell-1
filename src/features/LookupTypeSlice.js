@@ -34,23 +34,18 @@ export const getLookupTypes = createAsyncThunk(
     }
   },
   {
-    condition: (_, { getState }) => {
+    condition: (forceRefresh, { getState }) => {
+      if (forceRefresh === true) return true;
+
       const { lookupsTypes, regionTypes } = getState();
-      // Don't dispatch if already loading in either slice
       if (lookupsTypes.lookupsTypesloading || regionTypes.regionTypesLoading) {
-        return false; // Prevent duplicate request
+        return false;
       }
-      // Allow fetch if data doesn't exist or is empty in both slices
-      // (since both call the same endpoint)
+
       const hasLookupsTypesData =
         lookupsTypes.lookupsTypes && lookupsTypes.lookupsTypes.length > 0;
-      const hasRegionTypesData =
-        regionTypes.regionTypes && regionTypes.regionTypes.length > 0;
+      if (!hasLookupsTypesData) return true;
 
-      if (!hasLookupsTypesData && !hasRegionTypesData) {
-        return true; // Allow fetch
-      }
-      // Prevent if data already exists in either slice
       return false;
     },
   }
@@ -64,7 +59,12 @@ const lookupsTypeSlice = createSlice({
     lookupsTypesloading: false,
     lookupsTypeerror: null,
   },
-  reducers: {}, // Synchronous actions can be defined here if needed
+  reducers: {
+    clearLookupTypes: (state) => {
+      state.lookupsTypes = [];
+      state.lookupsTypeerror = null;
+    },
+  },
   extraReducers: (builder) => {
     builder
       .addCase(getLookupTypes.pending, (state) => {
@@ -83,4 +83,5 @@ const lookupsTypeSlice = createSlice({
   },
 });
 
+export const { clearLookupTypes } = lookupsTypeSlice.actions;
 export default lookupsTypeSlice.reducer;

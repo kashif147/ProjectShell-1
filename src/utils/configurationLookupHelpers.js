@@ -31,6 +31,46 @@ import {
   Crown,
 } from "lucide-react";
 
+/** Drawer keys that have a dedicated MyDrawer UI in Configuration.js */
+export const CONFIGURATION_DRAWER_KEYS = new Set([
+  "counties",
+  "Countries",
+  "Provinces",
+  "Cities",
+  "PostCode",
+  "Districts",
+  "Divisions",
+  "DivisionsForDistrict",
+  "DivisionsForStation",
+  "Station",
+  "StudyLocation",
+  "ContactType",
+  "LookupType",
+  "Lookup",
+  "RegionType",
+  "Bookmarks",
+  "Solicitors",
+  "Gender",
+  "Title",
+  "ProjectTypes",
+  "Trainings",
+  "Ranks",
+  "Duties",
+  "Boards",
+  "ClaimType",
+  "Schemes",
+  "Reasons",
+  "RosterType",
+  "Sections",
+  "Councils",
+  "CorrespondenceType",
+  "DocumentType",
+  "SpokenLanguages",
+  "MaritalStatus",
+  "Committees",
+  "StandardLookup",
+]);
+
 const LOOKUP_TYPE_NAME_TO_DRAWER_KEY = {
   boards: "Boards",
   bookmarks: "Bookmarks",
@@ -38,47 +78,85 @@ const LOOKUP_TYPE_NAME_TO_DRAWER_KEY = {
   cities: "Cities",
   city: "Cities",
   "claim type": "ClaimType",
+  claimtype: "ClaimType",
   committees: "Committees",
+  committee: "Committees",
   "contact types": "ContactType",
   "contact type": "ContactType",
+  contacttypes: "ContactType",
+  contacttype: "ContactType",
   "correspondence type": "CorrespondenceType",
+  correspondencetype: "CorrespondenceType",
   councils: "Councils",
   council: "Councils",
   countries: "Countries",
+  country: "Countries",
   counties: "counties",
   county: "counties",
   "document type": "DocumentType",
+  documenttype: "DocumentType",
   duties: "Duties",
   gender: "Gender",
   grade: "Ranks",
   ranks: "Ranks",
   lookup: "Lookup",
   "lookup type": "LookupType",
+  lookuptype: "LookupType",
   "marital status": "MaritalStatus",
+  maritalstatus: "MaritalStatus",
   "post codes": "PostCode",
   "post code": "PostCode",
+  postcode: "PostCode",
+  postcodes: "PostCode",
   "project types": "ProjectTypes",
+  projecttypes: "ProjectTypes",
+  projecttype: "ProjectTypes",
   provinces: "Provinces",
   province: "Provinces",
   reasons: "Reasons",
   region: "Divisions",
   regions: "Divisions",
+  regiontype: "RegionType",
   divisions: "Divisions",
+  division: "Divisions",
   "roster type": "RosterType",
+  rostertype: "RosterType",
   schemes: "Schemes",
+  scheme: "Schemes",
   sections: "Sections",
+  section: "Sections",
   solicitors: "Solicitors",
+  solicitor: "Solicitors",
   "spoken languages": "SpokenLanguages",
+  spokenlanguages: "SpokenLanguages",
   "study location": "StudyLocation",
+  studylocation: "StudyLocation",
   titles: "Title",
   title: "Title",
   trainings: "Trainings",
+  training: "Trainings",
   "work location": "Station",
   "work locations": "Station",
+  worklocation: "Station",
+  worklocations: "Station",
   station: "Station",
   stations: "Station",
   districts: "Districts",
   district: "Districts",
+  discipline: "StandardLookup",
+  bank: "StandardLookup",
+  "template type": "StandardLookup",
+  templatetype: "StandardLookup",
+  "payment type": "StandardLookup",
+  paymenttype: "StandardLookup",
+  "secondary section": "StandardLookup",
+  secondarysection: "StandardLookup",
+  "new graduate": "StandardLookup",
+  newgraduate: "StandardLookup",
+  "corn market": "StandardLookup",
+  cornmarket: "StandardLookup",
+  "cancellation reason": "StandardLookup",
+  cancellationreason: "StandardLookup",
 };
 
 const LOOKUP_CARD_ICONS = [
@@ -119,17 +197,93 @@ export function normalizeLookupTypeName(name) {
     .toLowerCase();
 }
 
+function camelCaseToWords(value) {
+  return String(value || "")
+    .replace(/([a-z])([A-Z])/g, "$1 $2")
+    .replace(/[_-]+/g, " ");
+}
+
+function lookupDrawerKeyFromNormalized(normalized) {
+  if (!normalized) return "";
+  if (LOOKUP_TYPE_NAME_TO_DRAWER_KEY[normalized]) {
+    return LOOKUP_TYPE_NAME_TO_DRAWER_KEY[normalized];
+  }
+  const compact = normalized.replace(/\s+/g, "");
+  if (LOOKUP_TYPE_NAME_TO_DRAWER_KEY[compact]) {
+    return LOOKUP_TYPE_NAME_TO_DRAWER_KEY[compact];
+  }
+  if (CONFIGURATION_DRAWER_KEYS.has(compact)) {
+    return compact;
+  }
+  for (const drawerKey of CONFIGURATION_DRAWER_KEYS) {
+    if (normalizeLookupTypeName(drawerKey) === normalized) {
+      return drawerKey;
+    }
+    if (normalizeLookupTypeName(drawerKey).replace(/\s+/g, "") === compact) {
+      return drawerKey;
+    }
+  }
+  return "";
+}
+
 export function getDrawerKeyForLookupType(lookupType) {
   if (!lookupType) return "";
-  const name = lookupType.lookuptype || lookupType.DisplayName || "";
-  const byName = LOOKUP_TYPE_NAME_TO_DRAWER_KEY[normalizeLookupTypeName(name)];
-  if (byName) return byName;
-  if (lookupType.key) {
-    const byKey = LOOKUP_TYPE_NAME_TO_DRAWER_KEY[normalizeLookupTypeName(lookupType.key)];
-    if (byKey) return byKey;
-    return lookupType.key;
+
+  const candidates = new Set();
+  const displayName = lookupType.lookuptype || lookupType.DisplayName || "";
+  if (displayName) {
+    candidates.add(normalizeLookupTypeName(displayName));
+    candidates.add(normalizeLookupTypeName(camelCaseToWords(displayName)));
   }
-  return String(name).replace(/\s+/g, "");
+  if (lookupType.key) {
+    candidates.add(normalizeLookupTypeName(lookupType.key));
+    candidates.add(normalizeLookupTypeName(camelCaseToWords(lookupType.key)));
+  }
+
+  for (const normalized of candidates) {
+    const drawerKey = lookupDrawerKeyFromNormalized(normalized);
+    if (drawerKey) return drawerKey;
+  }
+
+  return "";
+}
+
+/** Maps API lookup type to the correct configuration drawer. */
+export function resolveConfigurationDrawerKey(lookupType, fallbackKey = "") {
+  const mapped = getDrawerKeyForLookupType(lookupType);
+  if (mapped && CONFIGURATION_DRAWER_KEYS.has(mapped)) {
+    return mapped;
+  }
+  if (fallbackKey && CONFIGURATION_DRAWER_KEYS.has(fallbackKey)) {
+    return fallbackKey;
+  }
+  if (lookupType?.lookuptype || lookupType?._id) {
+    return "StandardLookup";
+  }
+  return "Lookup";
+}
+
+export function getLookupsForLookupType(lookupType, lookups = []) {
+  if (!lookupType || !Array.isArray(lookups)) return [];
+  const typeId = lookupType._id;
+  const typeName = lookupType.lookuptype;
+  return lookups.filter(
+    (item) =>
+      String(item?.lookuptypeId?._id) === String(typeId) ||
+      item?.lookuptypeId?.lookuptype === typeName ||
+      item?.lookuptypeName === typeName,
+  );
+}
+
+export function getLookupTypeFieldPropsForRecord(lookupType, selectedId) {
+  if (!lookupType?._id) {
+    return { value: selectedId || "", options: [] };
+  }
+  const value = selectedId || lookupType._id;
+  return {
+    value,
+    options: [{ label: lookupType.lookuptype, value: lookupType._id }],
+  };
 }
 
 export function getLookupTypeRecordForDrawer(drawerKey, lookupsTypes = []) {
@@ -179,9 +333,10 @@ export function buildConfigurationCards(lookupsTypes = []) {
           ),
         )
         .map((lookupType, index) => {
-          const drawerKey = getDrawerKeyForLookupType(lookupType);
+          const drawerKey = resolveConfigurationDrawerKey(lookupType);
           return {
-            key: drawerKey || String(lookupType._id),
+            key: drawerKey,
+            drawerKey,
             lookupTypeId: lookupType._id,
             label: lookupType.lookuptype || lookupType.DisplayName || "Lookup",
             icon: LOOKUP_CARD_ICONS[index % LOOKUP_CARD_ICONS.length],
