@@ -13,7 +13,27 @@ import {
 import MemberSearch from "../../../component/profile/MemberSearch";
 import "./DirectDebitForm.css";
 
-const DirectDebitForm = ({ initialData, onSubmit }) => {
+const DEFAULT_CREDITOR_NAME = "Global Services Ltd.";
+
+function MandateAuthorizationText({ creditorName }) {
+  const name = String(creditorName || "Creditor").trim() || "Creditor";
+  return (
+    <>
+      By signing this mandate form, you authorise (A) the{" "}
+      <strong>{name}</strong> to send instructions to your bank to debit your
+      account and (B) your bank to debit your account in accordance with the
+      instructions from the <strong>{name}</strong>. As part of your rights, you
+      are entitled to a refund from your bank under the terms and conditions of
+      your agreement with your bank. A refund must be claimed within 8 weeks
+      starting from the date on which your account was debited. Your rights are
+      explained in a statement that you can obtain from your bank.
+    </>
+  );
+}
+
+const DirectDebitForm = ({ initialData, onSubmit, creditorName: creditorNameProp }) => {
+  const creditorName =
+    creditorNameProp || initialData?.creditorName || DEFAULT_CREDITOR_NAME;
   const [selectedMember, setSelectedMember] = useState(null);
   const [formData, setFormData] = useState(
     initialData || {
@@ -149,6 +169,7 @@ const DirectDebitForm = ({ initialData, onSubmit }) => {
       fontSize: "14px",
       color: "#6b7280", // gray-500
       margin: 0,
+      lineHeight: 1.6,
     },
     // Read-only/Summary Box
     readOnlyBox: {
@@ -375,8 +396,7 @@ const DirectDebitForm = ({ initialData, onSubmit }) => {
                   <span style={{ color: "#ef4444" }}>*</span>
                 </label>
                 <p style={styles.authDesc}>
-                  By signing up to this form, member have authorised a recurring
-                  debit to my bank account.
+                  <MandateAuthorizationText creditorName={creditorName} />
                 </p>
               </div>
             </div>
@@ -423,7 +443,7 @@ const DirectDebitForm = ({ initialData, onSubmit }) => {
               <label style={styles.label}>
                 Account Name <span style={{ color: "#ef4444" }}>*</span>
               </label>
-              <div style={styles.readOnlyBox}>Global Services Ltd.</div>
+              <div style={styles.readOnlyBox}>{creditorName}</div>
             </div>
             <div>
               <label style={styles.label}>

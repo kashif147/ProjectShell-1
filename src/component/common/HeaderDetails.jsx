@@ -1,4 +1,11 @@
-import { useState, React, useRef, useEffect, useMemo } from "react";
+import {
+  useState,
+  React,
+  useRef,
+  useEffect,
+  useMemo,
+  useCallback,
+} from "react";
 import {
   Table,
   Checkbox,
@@ -33,6 +40,7 @@ import {
   UploadOutlined,
   EditOutlined,
   ReloadOutlined,
+  PrinterOutlined,
 } from "@ant-design/icons";
 import ContactDrawer from "./ContactDrawer";
 import JiraLikeMenu from "./JiraLikeMenu";
@@ -66,6 +74,7 @@ import ChangeCategoryDrawer from "../details/ChangeCategoryDrawer";
 import MyInput from "./MyInput";
 import CustomSelect from "./CustomSelect";
 import ActionDropdown from "./ActionDropdown";
+import { prepareChartsForPrintAsync } from "../../pages/membership/executive/useExecDashboardPrint";
 import { getAllApplications } from "../../features/ApplicationSlice";
 import MultiFilterDropdown from "./MultiFilterDropdown";
 import SaveViewMenu from "./SaveViewMenu";
@@ -74,6 +83,7 @@ import Breadcrumb from "./Breadcrumb";
 import SimpleBatch from "../../pages/membership/SimpleBatch";
 import { getApplicationsWithFilter } from "../../features/applicationwithfilterslice";
 import { getPaymentFormsWithFilter } from "../../features/paymentFormsWithFilterSlice";
+import PaymentFormDetailDrawer from "../paymentForms/PaymentFormDetailDrawer";
 import { useSelectedIds } from "../../context/SelectedIdsContext";
 import MyDatePicker1 from "./MyDatePicker1";
 import MyConfirm from "./MyConfirm";
@@ -84,9 +94,18 @@ import Toolbar from "./Toolbar";
 import { useFilters } from "../../context/FilterContext";
 import { useAuthorization } from "../../context/AuthorizationContext";
 import DirectDebitForm from "../../pages/finance/components/DirectDebitForm";
+import CreateDirectDebitRunForm from "../finance/CreateDirectDebitRunForm";
+import directDebitRunsApi from "../../services/directDebitRunsApi";
 // import RefundEntryForm from "../../pages/finance/components/RefundEntryForm";
 import RefundDrawer from "../../component/finanace/RefundDrawer";
 import WriteOffDrawer from "../../component/finanace/WriteOffDrawer";
+import CreditNoteDrawer from "../../component/finanace/CreditNoteDrawer";
+import JournalAdjustmentDrawer from "../../component/finanace/JournalAdjustmentDrawer";
+import { getAccountServiceBaseUrl } from "../../config/serviceUrls";
+import reconciliationWorkspace from "../../utils/reconciliationWorkspace";
+import { bumpJournalAdjustmentsReload } from "../../utils/journalAdjustmentsWorkspace";
+import { bumpCreditNotesReload } from "../../utils/creditNotesWorkspace";
+import { bumpWriteOffsReload } from "../../utils/writeOffsWorkspace";
 import { fetchBatchesByType } from "../../features/profiles/batchMemberSlice";
 import CreateCasesDrawer from "../cases/CreateCasesDrawer";
 import CreateEventDrawer from "../event/CreateEventDrawer";
@@ -111,6 +130,49 @@ function isHeaderDashboardRangeNav(pathname) {
   return HEADER_DASHBOARD_RANGE_NAVS.has(pathname);
 }
 
+function ReconciliationHeaderActions({
+  seedLoading,
+  autoMatchLoading,
+  importLoading,
+  onSeed,
+  onAutoMatch,
+  onImportOpen,
+}) {
+  return (
+    <>
+      <Button
+        type="primary"
+        onClick={onSeed}
+        loading={seedLoading}
+        className="me-1 butn primary-btn"
+        style={{
+          borderRadius: "4px",
+          height: "32px",
+          fontWeight: "500",
+        }}
+      >
+        Seed from pending GL
+      </Button>
+      <Button
+        onClick={onAutoMatch}
+        loading={autoMatchLoading}
+        className="me-1 gray-btn butn"
+        style={{ height: "32px" }}
+      >
+        Auto-match
+      </Button>
+      <Button
+        onClick={onImportOpen}
+        loading={importLoading}
+        className="me-1 gray-btn butn"
+        style={{ height: "32px" }}
+      >
+        Import bank lines
+      </Button>
+    </>
+  );
+}
+
 function HeaderDetails({
   hideBreadcrumb = false,
   setcontactDrawer: setExternalContactDrawer,
@@ -118,7 +180,7 @@ function HeaderDetails({
 }) {
   const { Search } = Input;
   const { TextArea } = Input;
-  const { filtersState, bumpMembershipDashboardApply } = useFilters();
+  const { filtersState } = useFilters();
   const { toPDF, targetRef } = usePDF({ filename: "page.pdf" });
   const location = useLocation();
   const [searchParams, setSearchParams] = useSearchParams();
@@ -142,14 +204,87 @@ function HeaderDetails({
   const [isBatchOpen, setIsBatchOpen] = useState(false);
   const batchFormRef = useRef(null);
   const lifecycleBatchFormRef = useRef(null);
+  const ddRunFormRef = useRef(null);
   const [isSimpleBatchOpen, setIsSimpleBatchOpen] = useState(false);
+  const [ddRunCreateOpen, setDdRunCreateOpen] = useState(false);
   const [aprove, setaprove] = useState("001");
   const [isDrawerOpen, setisDrawerOpen] = useState(false);
   const { viewMode, toggleView } = useView();
   const [value, setValue] = useState(dayjs("2025", "YYYY"));
   const [ddDrawerOpen, setDdDrawerOpen] = useState(false);
+  const [paymentFormCreateMode, setPaymentFormCreateMode] = useState(false);
+  const [paymentFormCreateType, setPaymentFormCreateType] = useState(null);
+  const [paymentFormDetailOpen, setPaymentFormDetailOpen] = useState(false);
+  const [paymentFormDetailId, setPaymentFormDetailId] = useState(null);
+
+  const paymentFormCreateBtnStyle = {
+    marginRight: "50px",
+    color: "white",
+    borderRadius: "3px",
+    backgroundColor: "#45669d",
+  };
+
+  const openPaymentFormCreate = (formType = "STANDING_ORDER") => {
+    setPaymentFormCreateMode(true);
+    setPaymentFormCreateType(formType);
+    setPaymentFormDetailId(null);
+    setPaymentFormDetailOpen(true);
+  };
+
   const [refundDrawerOpen, setRefundDrawerOpen] = useState(false);
   const [writeOffDrawerOpen, setWriteOffDrawerOpen] = useState(false);
+  const [writeOffSubmitting, setWriteOffSubmitting] = useState(false);
+  const [creditNoteDrawerOpen, setCreditNoteDrawerOpen] = useState(false);
+  const [creditNoteSubmitting, setCreditNoteSubmitting] = useState(false);
+  const [journalAdjustmentDrawerOpen, setJournalAdjustmentDrawerOpen] =
+    useState(false);
+  const [journalAdjustmentSubmitting, setJournalAdjustmentSubmitting] =
+    useState(false);
+  const [reconciliationSeedLoading, setReconciliationSeedLoading] =
+    useState(false);
+  const [reconciliationAutoMatchLoading, setReconciliationAutoMatchLoading] =
+    useState(false);
+  const [reconciliationImportLoading, setReconciliationImportLoading] =
+    useState(false);
+  const [reconciliationImportOpen, setReconciliationImportOpen] =
+    useState(false);
+  const [reconciliationImportText, setReconciliationImportText] = useState("");
+
+  const handleReconciliationSeed = useCallback(async () => {
+    setReconciliationSeedLoading(true);
+    try {
+      await reconciliationWorkspace.getHandlers().seed?.();
+    } finally {
+      setReconciliationSeedLoading(false);
+    }
+  }, []);
+
+  const handleReconciliationAutoMatch = useCallback(async () => {
+    setReconciliationAutoMatchLoading(true);
+    try {
+      await reconciliationWorkspace.getHandlers().autoMatch?.();
+    } finally {
+      setReconciliationAutoMatchLoading(false);
+    }
+  }, []);
+
+  const handleReconciliationImportOpen = useCallback(() => {
+    setReconciliationImportOpen(true);
+  }, []);
+
+  const handleReconciliationImportConfirm = useCallback(async () => {
+    setReconciliationImportLoading(true);
+    try {
+      await reconciliationWorkspace
+        .getHandlers()
+        .importBank?.(reconciliationImportText);
+      setReconciliationImportOpen(false);
+      setReconciliationImportText("");
+    } finally {
+      setReconciliationImportLoading(false);
+    }
+  }, [reconciliationImportText]);
+
   const [casesDrawerOpen, setCasesDrawerOpen] = useState(false);
   const [eventDrawerOpen, setEventDrawerOpen] = useState(false);
   const [attendeeDrawerOpen, setAttendeeDrawerOpen] = useState(false);
@@ -246,6 +381,25 @@ function HeaderDetails({
     setIsSaveModalOpen(!isSaveModalOpen);
   };
   const navigate = useNavigate();
+
+  useEffect(() => {
+    if (
+      location.pathname !== "/DirectDebit" ||
+      !location.state?.openCreateDdRun
+    ) {
+      return;
+    }
+    setDdRunCreateOpen(true);
+  }, [location.pathname, location.state?.openCreateDdRun]);
+
+  useEffect(() => {
+    if (!ddRunCreateOpen || !location.state?.ddRunPrefill) return;
+    const timer = window.setTimeout(() => {
+      ddRunFormRef.current?.setFromRun?.(location.state.ddRunPrefill);
+    }, 0);
+    return () => window.clearTimeout(timer);
+  }, [ddRunCreateOpen, location.state?.ddRunPrefill]);
+
   const inputRef = useRef(null);
   const {
     searchFilters,
@@ -389,12 +543,6 @@ function HeaderDetails({
     onClick: () => setEditFieldsDrawerOpen(true),
   };
 
-  const menuItems =
-    nav === "/CasesSummary"
-      ? [...defaultMenuItems, editCasesItem]
-      : nav === "/worklocation" || nav === "/region" || nav === "/branch"
-        ? defaultMenuItems.filter((item) => item.label.startsWith("Assign"))
-        : defaultMenuItems;
   const [statusOperator, setStatusOperator] = useState("==");
   const [statusValues, setStatusValues] = useState(["submitted", "draft"]);
 
@@ -423,6 +571,12 @@ function HeaderDetails({
   const genaratePdf = (e) => {
     toPDF();
   };
+
+  const handleMembershipDashboardPrint = useCallback(async () => {
+    await prepareChartsForPrintAsync();
+    window.print();
+  }, []);
+
   const dispatch = useDispatch();
 
   const regions = useSelector((state) => state.regions.regions, shallowEqual);
@@ -1048,6 +1202,34 @@ function HeaderDetails({
   const batchSearchPaths = [];
   const isBatchSearchPage = batchSearchPaths.includes(location.pathname);
 
+  const menuItems = useMemo(() => {
+    if (nav === "/MembershipDashboard") {
+      return [
+        {
+          label: "Export PDF",
+          key: "export-pdf",
+          onClick: () => genaratePdf(),
+        },
+        { label: "Export CSV", key: "export-csv" },
+        { label: "Share", key: "share" },
+        { label: "Details view", key: "details-view" },
+      ];
+    }
+    if (nav === "/CasesSummary") {
+      return [...defaultMenuItems, editCasesItem];
+    }
+    if (
+      nav === "/worklocation" ||
+      nav === "/region" ||
+      nav === "/branch"
+    ) {
+      return defaultMenuItems.filter((item) =>
+        item.label.startsWith("Assign"),
+      );
+    }
+    return defaultMenuItems;
+  }, [nav, defaultMenuItems, editCasesItem]);
+
   return (
     <div className="" style={{ width: "100%", minWidth: 0 }}>
       {/* New Breadcrumb Component */}
@@ -1220,6 +1402,10 @@ function HeaderDetails({
             location?.pathname == "/templeteSummary" ||
             location?.pathname == "/write-offs" ||
             location?.pathname == "/Refunds" ||
+            location?.pathname == "/CreditNotes" ||
+            location?.pathname == "/JournalAdjustments" ||
+            location?.pathname == "/GeneralLedger" ||
+            location?.pathname == "/MembershipListingReport" ||
             location?.pathname == "/InAppNotifications") && (
             <div className="search-main">
               <div className="title d-flex justify-content-between align-items-start">
@@ -1261,7 +1447,7 @@ function HeaderDetails({
                       {nav == "/" && location?.state == null
                         ? `Profile`
                         : nav === "/MembershipDashboard"
-                          ? "Membership Dashboard"
+                          ? "Executive Dashboard"
                           : location?.state?.search ||
                             (nav === "/DirectDebitAuthorization"
                               ? "Direct Debit Authorization"
@@ -1273,20 +1459,29 @@ function HeaderDetails({
                                     ? "Refunds"
                                     : nav === "/write-offs"
                                       ? "Write-offs"
-                                      : nav === "/onlinePayment"
-                                        ? "Finance"
-                                        : nav === "/EventsDashboard"
-                                          ? "Events Dashboard"
-                                          : nav === "/CorrespondenceDashboard"
-                                            ? "Campaign Dashboard"
-                                            : nav ===
-                                                "/IssuesManagementDashboard"
-                                              ? "Issues Management Dashboard"
-                                              : nav === "/EventsSummary"
-                                                ? "Events"
-                                                : nav === "/Attendees"
-                                                  ? "Attendees"
-                                                  : "")}
+                                      : nav === "/CreditNotes"
+                                        ? "Credit notes"
+                                        : nav === "/Reconciliation"
+                                          ? "Reconciliation"
+                                          : nav === "/JournalAdjustments"
+                                            ? "Journal adjustments"
+                                            : nav === "/GeneralLedger"
+                                              ? "General ledger"
+                                              : nav === "/onlinePayment"
+                                                ? "Finance"
+                                                : nav === "/EventsDashboard"
+                                                  ? "Events Dashboard"
+                                                  : nav ===
+                                                      "/CorrespondenceDashboard"
+                                                    ? "Campaign Dashboard"
+                                                    : nav ===
+                                                        "/IssuesManagementDashboard"
+                                                      ? "Issues Management Dashboard"
+                                                      : nav === "/EventsSummary"
+                                                        ? "Events"
+                                                        : nav === "/Attendees"
+                                                          ? "Attendees"
+                                                          : "")}
                     </h2>
                   )}
                 </div>
@@ -1333,6 +1528,8 @@ function HeaderDetails({
                           "/Cheque",
                           "/Refunds",
                           "/write-offs",
+                          "/CreditNotes",
+                          "/JournalAdjustments",
                           "/onlinePayment",
                           "/DirectDebit",
                         ].includes(nav) &&
@@ -1359,13 +1556,29 @@ function HeaderDetails({
                           !hasPermission("queries:create")) ||
                         (nav === "/InAppNotifications" &&
                           !hasPermission("notifications:create")) ||
-                        nav === "/UserNotifications" ? null : (
+                        nav === "/UserNotifications" ? null : nav ===
+                        "/PaymentForms" ? (
+                        <Button
+                          onClick={() =>
+                            openPaymentFormCreate("STANDING_ORDER")
+                          }
+                          style={paymentFormCreateBtnStyle}
+                          className="butn"
+                        >
+                          Create
+                        </Button>
+                      ) : nav === "/DirectDebitAuthorization" ? (
+                        <Button
+                          onClick={() => openPaymentFormCreate("DD_MANDATE")}
+                          style={paymentFormCreateBtnStyle}
+                          className="butn"
+                        >
+                          Create
+                        </Button>
+                      ) : (
                         <Button
                           onClick={() => {
-                            if (
-                              nav == "/Applications" ||
-                              nav === "/PaymentForms"
-                            ) {
+                            if (nav == "/Applications") {
                               navigate("/applicationMgt");
                             } else if (
                               nav === "/members" ||
@@ -1380,12 +1593,13 @@ function HeaderDetails({
                               setrosterDrawer(!rosterDrawer);
                             else if (nav === "/Summary")
                               navigate("/applicationMgt");
-                            else if (
+                            else if (nav === "/DirectDebit") {
+                              setDdRunCreateOpen(true);
+                            } else if (
                               nav === "/CornMarket" ||
                               nav === "/NewGraduate" ||
                               nav === "/CornMarketRewards" ||
                               nav === "/RecruitAFriend" ||
-                              nav === "/DirectDebit" ||
                               nav === "/InAppNotifications"
                             ) {
                               setIsSimpleBatchOpen(true);
@@ -1418,12 +1632,14 @@ function HeaderDetails({
                               setIsBatchOpen(true);
                             } else if (nav === "/ChangCateSumm") {
                               setisDrawerOpen(!isDrawerOpen);
-                            } else if (nav === "/DirectDebitAuthorization") {
-                              setDdDrawerOpen(true);
                             } else if (nav === "/Refunds") {
                               setRefundDrawerOpen(true);
                             } else if (nav === "/write-offs") {
                               setWriteOffDrawerOpen(true);
+                            } else if (nav === "/CreditNotes") {
+                              setCreditNoteDrawerOpen(true);
+                            } else if (nav === "/JournalAdjustments") {
+                              setJournalAdjustmentDrawerOpen(true);
                             } else if (nav === "/CasesSummary") {
                               setCasesDrawerOpen(true);
                             } else if (
@@ -1446,6 +1662,28 @@ function HeaderDetails({
                           {nav === "/Attendees" ? "Add Attendee" : "Create"}
                         </Button>
                       )}
+                      {nav === "/Reconciliation" ? (
+                        <ReconciliationHeaderActions
+                          seedLoading={reconciliationSeedLoading}
+                          autoMatchLoading={reconciliationAutoMatchLoading}
+                          importLoading={reconciliationImportLoading}
+                          onSeed={handleReconciliationSeed}
+                          onAutoMatch={handleReconciliationAutoMatch}
+                          onImportOpen={handleReconciliationImportOpen}
+                        />
+                      ) : null}
+                      {nav === "/MembershipDashboard" ? (
+                        <Button
+                          type="default"
+                          className="me-1 gray-btn butn"
+                          icon={<PrinterOutlined />}
+                          onClick={() => {
+                            void handleMembershipDashboardPrint();
+                          }}
+                        >
+                          Print
+                        </Button>
+                      ) : null}
                       <SimpleMenu
                         title="Export"
                         triggerClassName="me-1 gray-btn butn"
@@ -1475,22 +1713,7 @@ function HeaderDetails({
                   )}
                 </div>
               </div>
-              {nav == "/Reconciliation" ? (
-                <div className="d-flex search-fliters align-items-baseline w-100 mt-2 mb-1">
-                  <Row className="align-items-baseline w-100">
-                    <DatePicker
-                      format="DD/MM/YYYY"
-                      placeholder="From Date"
-                      style={{ width: 220, marginRight: 12 }}
-                    />
-                    <DatePicker
-                      format="DD/MM/YYYY"
-                      placeholder="To Date"
-                      style={{ width: 220 }}
-                    />
-                  </Row>
-                </div>
-              ) : nav == "/RemindersSummary" ? (
+              {nav == "/RemindersSummary" ? (
                 <div
                   className="d-flex search-fliters align-items-center flex-wrap w-100 mt-2 mb-1"
                   style={{ gap: 8 }}
@@ -1607,7 +1830,7 @@ function HeaderDetails({
               ) : (
                 nav !== "/templeteSummary" &&
                 nav !== "/CommunicationBatchDetail" && (
-                  <div className="d-flex me-4 search-fliters align-items-baseline justify-content-between flex-wrap mt-2 mb-1">
+                  <div className="d-flex me-4 search-fliters align-items-center justify-content-between flex-wrap mt-2 mb-1">
                     {isBatchSearchPage ? (
                       <Search
                         placeholder="Search by Batch Number"
@@ -1622,60 +1845,53 @@ function HeaderDetails({
                         <Toolbar />
                       </div>
                     )}
-                    <div className="d-flex flex-shrink-0 align-items-center gap-2">
-                      {location?.pathname === "/worklocation" ||
-                      location?.pathname === "/region" ||
-                      location?.pathname === "/branch" ? null : (
-                        <>
-                          {nav !== "/MembershipDashboard" &&
-                            nav !== "/templeteConfig" &&
-                            !isHeaderDashboardRangeNav(nav) && (
-                              <SaveViewMenu className="ms-3" />
+                    {nav !== "/MembershipDashboard" ? (
+                      <div className="d-flex flex-shrink-0 align-items-center gap-2">
+                        {location?.pathname === "/worklocation" ||
+                        location?.pathname === "/region" ||
+                        location?.pathname === "/branch" ? null : (
+                          <>
+                            {nav !== "/templeteConfig" &&
+                              !isHeaderDashboardRangeNav(nav) && (
+                                <SaveViewMenu className="ms-3" />
+                              )}
+                            {isHeaderDashboardRangeNav(nav) && (
+                              <div
+                                className="events-header-range ms-3 flex-shrink-0"
+                                role="group"
+                                aria-label="Time range"
+                              >
+                                {HEADER_DASHBOARD_RANGE_KEYS.map((k) => (
+                                  <button
+                                    key={k}
+                                    type="button"
+                                    className={
+                                      headerDashboardRange === k
+                                        ? "is-active"
+                                        : ""
+                                    }
+                                    onClick={() =>
+                                      setSearchParams(
+                                        (prev) => {
+                                          const next = new URLSearchParams(
+                                            prev,
+                                          );
+                                          next.set("range", k);
+                                          return next;
+                                        },
+                                        { replace: true },
+                                      )
+                                    }
+                                  >
+                                    {k}
+                                  </button>
+                                ))}
+                              </div>
                             )}
-                          {nav === "/MembershipDashboard" && (
-                            <Button
-                              type="default"
-                              icon={<ReloadOutlined />}
-                              onClick={() => bumpMembershipDashboardApply()}
-                              className="me-1 gray-btn butn"
-                            >
-                              Refresh
-                            </Button>
-                          )}
-                          {isHeaderDashboardRangeNav(nav) && (
-                            <div
-                              className="events-header-range ms-3 flex-shrink-0"
-                              role="group"
-                              aria-label="Time range"
-                            >
-                              {HEADER_DASHBOARD_RANGE_KEYS.map((k) => (
-                                <button
-                                  key={k}
-                                  type="button"
-                                  className={
-                                    headerDashboardRange === k
-                                      ? "is-active"
-                                      : ""
-                                  }
-                                  onClick={() =>
-                                    setSearchParams(
-                                      (prev) => {
-                                        const next = new URLSearchParams(prev);
-                                        next.set("range", k);
-                                        return next;
-                                      },
-                                      { replace: true },
-                                    )
-                                  }
-                                >
-                                  {k}
-                                </button>
-                              ))}
-                            </div>
-                          )}
-                        </>
-                      )}
-                    </div>
+                          </>
+                        )}
+                      </div>
+                    ) : null}
                   </div>
                 )
               )}
@@ -2091,6 +2307,48 @@ function HeaderDetails({
               : "workLocation"
         }
       />
+      <MyDrawer
+        isPagination={false}
+        width="33%"
+        title="Create Direct Debit Run"
+        open={ddRunCreateOpen}
+        isDisable={false}
+        onClose={() => {
+          setDdRunCreateOpen(false);
+          ddRunFormRef.current?.reset?.();
+        }}
+        add={async () => {
+          if (
+            !ddRunFormRef.current ||
+            typeof ddRunFormRef.current.submit !== "function"
+          ) {
+            return;
+          }
+          let payload;
+          try {
+            payload = await ddRunFormRef.current.submit();
+          } catch {
+            return;
+          }
+          if (!payload) return;
+          try {
+            const res = await directDebitRunsApi.create(payload);
+            message.success(`Run ${res.run?.runNo || ""} created`);
+            setDdRunCreateOpen(false);
+            ddRunFormRef.current?.reset?.();
+            window.dispatchEvent(new CustomEvent("direct-debit-runs-changed"));
+            if (res.run?._id) {
+              navigate("/DirectDebitBatchDetails", {
+                state: { runId: res.run._id, run: res.run },
+              });
+            }
+          } catch (err) {
+            message.error(err.message || "Failed to create DD run");
+          }
+        }}
+      >
+        <CreateDirectDebitRunForm ref={ddRunFormRef} />
+      </MyDrawer>
       <SimpleBatch
         open={isSimpleBatchOpen}
         onClose={() => setIsSimpleBatchOpen(false)}
@@ -2102,8 +2360,6 @@ function HeaderDetails({
             batchType = "inmo-rewards";
           } else if (nav.toLowerCase().includes("recruitafriend")) {
             batchType = "recruit-friend";
-          } else if (nav.toLowerCase().includes("directdebit")) {
-            batchType = "direct-debit";
           } else if (
             nav.toLowerCase().includes("inappnotifications") ||
             nav.toLowerCase().includes("communicationbatchdetail")
@@ -2148,9 +2404,175 @@ function HeaderDetails({
       <WriteOffDrawer
         open={writeOffDrawerOpen}
         onClose={() => setWriteOffDrawerOpen(false)}
-        submitLoading={false}
-        onSubmit={async () => {
-          return true;
+        submitLoading={writeOffSubmitting}
+        onSubmit={async (values) => {
+          const memberId = String(values?.memberId || "").trim();
+          if (!memberId) {
+            message.error("Select a member before posting the write-off");
+            return false;
+          }
+          const amountEuros = Number(values?.amountEuros);
+          const amount = Number.isFinite(amountEuros)
+            ? Math.round(amountEuros * 100)
+            : NaN;
+          if (!Number.isFinite(amount) || amount <= 0) {
+            message.error("Enter a valid write-off amount");
+            return false;
+          }
+          setWriteOffSubmitting(true);
+          try {
+            const token = localStorage.getItem("token");
+            const docNoRaw = String(values?.docNo || "").trim();
+            const docNo =
+              docNoRaw ||
+              `WO-${Date.now().toString(36).toUpperCase()}${Math.random().toString(36).slice(2, 5).toUpperCase()}`;
+            await axios.post(
+              `${getAccountServiceBaseUrl()}/journal/writeoff`,
+              {
+                date: values?.date,
+                docNo,
+                memberId,
+                amount,
+                periodBucket: values?.periodBucket,
+                memo: values?.memo || "",
+              },
+              {
+                headers: {
+                  Authorization: `Bearer ${token}`,
+                  "Content-Type": "application/json",
+                },
+              },
+            );
+            message.success("Write-off posted");
+            bumpWriteOffsReload();
+            return true;
+          } catch (error) {
+            message.error(
+              error?.response?.data?.message ||
+                error?.message ||
+                "Could not post write-off",
+            );
+            return false;
+          } finally {
+            setWriteOffSubmitting(false);
+          }
+        }}
+      />
+      <Modal
+        title="Import bank / payout lines"
+        open={reconciliationImportOpen}
+        onCancel={() => {
+          setReconciliationImportOpen(false);
+          setReconciliationImportText("");
+        }}
+        confirmLoading={reconciliationImportLoading}
+        onOk={handleReconciliationImportConfirm}
+        okText="Import"
+        width={560}
+      >
+        <p style={{ fontSize: 13, color: "#595959" }}>
+          One line per entry: <code>reference, amount</code> (amount in euros,
+          e.g. <code>PO_abc123, 31.50</code>).
+        </p>
+        <Input.TextArea
+          rows={8}
+          value={reconciliationImportText}
+          onChange={(e) => setReconciliationImportText(e.target.value)}
+          placeholder="STRIPE_PO_123, 125.00&#10;REC-2026-010, 31.50"
+        />
+      </Modal>
+      <CreditNoteDrawer
+        open={creditNoteDrawerOpen}
+        onClose={() => setCreditNoteDrawerOpen(false)}
+        mode="create"
+        submitLoading={creditNoteSubmitting}
+        onSubmitCreate={async (payload) => {
+          setCreditNoteSubmitting(true);
+          try {
+            const token = localStorage.getItem("token");
+            await axios.post(
+              `${getAccountServiceBaseUrl()}/journal/credit-notes`,
+              payload,
+              {
+                headers: {
+                  Authorization: `Bearer ${token}`,
+                  "Content-Type": "application/json",
+                },
+              },
+            );
+            message.success("Draft credit note created");
+            bumpCreditNotesReload();
+            return true;
+          } catch (error) {
+            message.error(
+              error?.response?.data?.message ||
+                error?.message ||
+                "Could not create credit note",
+            );
+            return false;
+          } finally {
+            setCreditNoteSubmitting(false);
+          }
+        }}
+      />
+      <JournalAdjustmentDrawer
+        open={journalAdjustmentDrawerOpen}
+        onClose={() => setJournalAdjustmentDrawerOpen(false)}
+        submitLoading={journalAdjustmentSubmitting}
+        onSubmitDraft={async (payload) => {
+          setJournalAdjustmentSubmitting(true);
+          try {
+            const token = localStorage.getItem("token");
+            await axios.post(
+              `${getAccountServiceBaseUrl()}/finance/journal-adjustments`,
+              payload,
+              { headers: { Authorization: `Bearer ${token}` } },
+            );
+            message.success("Draft journal adjustment created");
+            bumpJournalAdjustmentsReload();
+            return true;
+          } catch (error) {
+            message.error(
+              error?.response?.data?.message ||
+                error?.message ||
+                "Create failed",
+            );
+            return false;
+          } finally {
+            setJournalAdjustmentSubmitting(false);
+          }
+        }}
+        onSubmitApprove={async (payload) => {
+          setJournalAdjustmentSubmitting(true);
+          try {
+            const token = localStorage.getItem("token");
+            const res = await axios.post(
+              `${getAccountServiceBaseUrl()}/finance/journal-adjustments`,
+              payload,
+              { headers: { Authorization: `Bearer ${token}` } },
+            );
+            const data = res.data?.data ?? res.data;
+            const docNo = data?.docNo || payload.docNo;
+            await axios.post(
+              `${getAccountServiceBaseUrl()}/finance/journal-adjustments/${encodeURIComponent(docNo)}/approve`,
+              {},
+              { headers: { Authorization: `Bearer ${token}` } },
+            );
+            message.success(
+              `Journal adjustment approved — GL posted for ${docNo}`,
+            );
+            bumpJournalAdjustmentsReload();
+            return true;
+          } catch (error) {
+            message.error(
+              error?.response?.data?.message ||
+                error?.message ||
+                "Approve failed",
+            );
+            return false;
+          } finally {
+            setJournalAdjustmentSubmitting(false);
+          }
         }}
       />
       <CreateCasesDrawer
@@ -2449,6 +2871,42 @@ function HeaderDetails({
           }
         />
       ) : null}
+      <PaymentFormDetailDrawer
+        open={paymentFormDetailOpen}
+        formId={paymentFormDetailId}
+        createMode={paymentFormCreateMode}
+        createFormType={paymentFormCreateType}
+        onClose={() => {
+          setPaymentFormDetailOpen(false);
+          setPaymentFormDetailId(null);
+          setPaymentFormCreateMode(false);
+          setPaymentFormCreateType(null);
+        }}
+        onPersisted={(created) => {
+          setPaymentFormCreateMode(false);
+          setPaymentFormDetailId(created?._id || null);
+          if (location.pathname === "/PaymentForms") {
+            dispatch(
+              getPaymentFormsWithFilter({
+                templateId: paymentFormsTemplateId || "",
+                page: 1,
+                limit: 500,
+              }),
+            );
+          }
+        }}
+        onUpdated={() => {
+          if (location.pathname === "/PaymentForms") {
+            dispatch(
+              getPaymentFormsWithFilter({
+                templateId: paymentFormsTemplateId || "",
+                page: 1,
+                limit: 500,
+              }),
+            );
+          }
+        }}
+      />
     </div>
   );
 }

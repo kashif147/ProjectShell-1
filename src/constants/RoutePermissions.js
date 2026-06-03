@@ -7,7 +7,7 @@ export const RoutePermissions = {
   "Summary": "profile:read",
   "Details": "profile:read",
   "Members": "crm:member:read",
-  "MembershipDashboard": "dashboard:read",
+  "MembershipDashboard": "reporting:read",
   "Applications": "application:read",
   "PaymentForms": "application:read",
   "Transfers": "transferrequests:read",
@@ -28,6 +28,7 @@ export const RoutePermissions = {
   "Reconciliation": "payments:read",
   "JournalAdjustments": "payments:read",
   "CreditNotes": "payments:read",
+  "GeneralLedger": "payments:read",
 
   // Correspondence
   "CorrespondenceDashboard": "dashboard:read",
@@ -49,14 +50,19 @@ export const RoutePermissions = {
   "UserManagement": "user:read",
   "ProductTypesManagement": "portal:read",
   "TenantManagement": "tenant:read",
+  "TenantOffices": "tenant:read",
+  "TenantDepartments": "tenant:read",
   "PolicyClientExample": "portal:read",
 
   // Reports
-  "CancelledMembersReport": "subscriptions:read",
-  "JoinersReport": "crm:member:read",
+  "CancelledMembersReport": "reporting:read",
+  "JoinersReport": "reporting:read",
   "LeaversReport": "crm:member:read",
-  "NewMembersReport": "crm:member:read",
-  "ResignedMembersReport": "crm:member:read",
+  "NewMembersReport": "reporting:read",
+  "ResignedMembersReport": "reporting:read",
+  "ComparisonReport": "reporting:read",
+  "LiveStatsReport": "reporting:read",
+  "MembershipListingReport": "reporting:read",
   "SuspendedMembersReport": "crm:member:read",
 
   // Cases & Issues

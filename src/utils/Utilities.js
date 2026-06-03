@@ -233,6 +233,21 @@ export function convertToLocalTime(utcDateString) {
 }
 
 // Format date to DD/MM/YYYY (for Date of Birth and other date fields)
+/** Parse API / DB date-only or datetime into local dayjs (no UTC day-shift for YYYY-MM-DD). */
+export function dayjsFromDateOnly(value) {
+  if (!value) return null;
+  if (dayjs.isDayjs(value)) return value.isValid() ? value : null;
+  if (typeof value === "string") {
+    const datePart = value.trim().split("T")[0];
+    if (/^\d{4}-\d{2}-\d{2}$/.test(datePart)) {
+      const parsed = dayjs(datePart, "YYYY-MM-DD", true);
+      return parsed.isValid() ? parsed : null;
+    }
+  }
+  const parsed = dayjs(value);
+  return parsed.isValid() ? parsed : null;
+}
+
 export function formatDateOnly(dateString) {
   if (!dateString) return "";
   // Handle moment objects
@@ -242,6 +257,14 @@ export function formatDateOnly(dateString) {
   // Handle dayjs objects
   if (typeof dayjs !== "undefined" && dayjs.isDayjs && dayjs.isDayjs(dateString)) {
     return dateString.isValid() ? dateString.format("DD/MM/YYYY") : "";
+  }
+  // Calendar date strings (YYYY-MM-DD) — avoid UTC day-shift from ISO parsing
+  if (typeof dateString === "string") {
+    const datePart = dateString.trim().split("T")[0];
+    if (/^\d{4}-\d{2}-\d{2}$/.test(datePart)) {
+      const parsed = dayjs(datePart, "YYYY-MM-DD", true);
+      if (parsed.isValid()) return parsed.format("DD/MM/YYYY");
+    }
   }
   // Handle date strings (ISO, timestamp, etc.) - most common case
   const date = moment(dateString);
@@ -472,9 +495,15 @@ export const dateUtils = {
 
     const apiData = JSON.parse(JSON.stringify(data)); // Deep clone
 
-    const convertDateField = (obj, field) => {
+    const convertDateField = (obj, field, dateOnly = false) => {
       if (obj && obj[field] && dayjs.isDayjs(obj[field])) {
-        obj[field] = obj[field].isValid() ? obj[field].toISOString() : null;
+        if (!obj[field].isValid()) {
+          obj[field] = null;
+          return;
+        }
+        obj[field] = dateOnly
+          ? obj[field].format("YYYY-MM-DD")
+          : obj[field].toISOString();
       }
     };
 
@@ -489,8 +518,8 @@ export const dateUtils = {
     }
 
     if (apiData.subscriptionDetails) {
-      convertDateField(apiData.subscriptionDetails, "dateJoined");
-      convertDateField(apiData.subscriptionDetails, "submissionDate");
+      convertDateField(apiData.subscriptionDetails, "dateJoined", true);
+      convertDateField(apiData.subscriptionDetails, "submissionDate", true);
     }
 
     return apiData;

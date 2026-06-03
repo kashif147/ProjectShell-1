@@ -4,6 +4,10 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
 import { updateMenuLbl } from "../../features/MenuLblSlice";
 import { useReminders } from "../../context/CampaignDetailsProvider";
+import {
+  FINANCE_MENU_KEY,
+  shouldUseFinanceSidebarForPath,
+} from "../../utils/roleHomeModule";
 
 function getOpenApplicationFullName(app) {
   if (!app) return "";
@@ -35,7 +39,7 @@ const Breadcrumb = () => {
   // App launcher items mapping - matches the actual app launcher menu items
   const appLauncherItems = {
     Membership: { icon: "👤", route: "/Summary" },
-    Finance: { icon: "💰", route: "/Import" },
+    Finance: { icon: "💰", route: "/onlinePayment" },
     Correspondence: { icon: "📧", route: "/CorrespondenceDashboard" },
     Events: { icon: "📅", route: "/EventsDashboard" },
     Configuration: { icon: "⚙️", route: "/Configuration" },
@@ -230,6 +234,21 @@ const Breadcrumb = () => {
       page: "Write-offs",
       icon: "💰",
     },
+    "/CreditNotes": {
+      module: "Finance",
+      page: "Credit notes",
+      icon: "💰",
+    },
+    "/JournalAdjustments": {
+      module: "Finance",
+      page: "Journal adjustments",
+      icon: "💰",
+    },
+    "/GeneralLedger": {
+      module: "Finance",
+      page: "General ledger",
+      icon: "💰",
+    },
     "/BatchMemberSummary": {
       module: "Finance",
       page: "Batch Member Summary",
@@ -280,6 +299,21 @@ const Breadcrumb = () => {
       page: "Joiners Report",
       icon: "📊",
     },
+    "/ComparisonReport": {
+      module: "Reports",
+      page: "Comparison Report",
+      icon: "📊",
+    },
+    "/LiveStatsReport": {
+      module: "Reports",
+      page: "Live Stats",
+      icon: "📊",
+    },
+    "/MembershipListingReport": {
+      module: "Reports",
+      page: "Membership Listing Report",
+      icon: "📊",
+    },
     "/Reports": {
       module: "Reports",
       page: "Reports",
@@ -294,7 +328,7 @@ const Breadcrumb = () => {
     },
     "/MembershipDashboard": {
       module: "Subscriptions & Rewards",
-      page: "Membership Dashboard",
+      page: "Executive Dashboard",
       icon: "📊",
     },
     "/Applications": {
@@ -497,7 +531,7 @@ const Breadcrumb = () => {
     "/MembershipDashboard": {
       pageLabel: "Dashboard",
       listingPath: "/MembershipDashboard",
-      listingSearch: "Membership Dashboard",
+      listingSearch: "Executive Dashboard",
     },
     "/Summary": {
       pageLabel: "Profiles",
@@ -656,10 +690,19 @@ const Breadcrumb = () => {
       moduleIcon = routeBreadcrumbMap[listingKey]?.moduleIcon || moduleIcon;
     }
 
-    // /Details: second crumb follows listing you came from (TableComponent state.search)
+    let module = breadcrumbData.module;
+
+    // /Details: keep finance users in Finance; membership users follow listing source
     if (matchedPath === "/Details") {
       const src = location.state?.search;
-      if (src === "Members") {
+      const inFinanceContext = shouldUseFinanceSidebarForPath(currentPath, location.state, {
+        activeMenuKey: activeModule,
+      });
+
+      if (inFinanceContext) {
+        module = FINANCE_MENU_KEY;
+        membershipNav = null;
+      } else if (src === "Members") {
         membershipNav = {
           pageLabel: "Subscriptions",
           listingPath: "/members",
@@ -672,12 +715,11 @@ const Breadcrumb = () => {
       }
     }
 
-    // Get the app launcher item for the current module
-    const appLauncherItem = appLauncherItems[breadcrumbData.module];
+    const appLauncherItem = appLauncherItems[module];
 
     return {
       appLauncher: appLauncherItem,
-      module: breadcrumbData.module,
+      module,
       page: breadcrumbData.page,
       icon: pageIcon,
       pageIcon,
@@ -789,7 +831,7 @@ const Breadcrumb = () => {
       "Subscriptions & Rewards": "/Summary",
       "Issues Management": "/IssuesManagementDashboard",
       Correspondence: "/CorrespondenceDashboard",
-      Finance: "/Import",
+      Finance: "/onlinePayment",
       Reports: "/Reports",
       Events: "/EventsDashboard",
       Settings: "/Configuration",
@@ -820,7 +862,7 @@ const Breadcrumb = () => {
     dispatch(updateMenuLbl({ key: MEMBERSHIP_MENU_KEY, value: true }));
     setTimeout(() => {
       navigate("/MembershipDashboard", {
-        state: { search: "Membership Dashboard" },
+        state: { search: "Executive Dashboard" },
       });
     }, 0);
   };

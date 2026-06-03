@@ -1,6 +1,7 @@
 :root {
   --primary-color: #215e97;
   --secoundry-color: #c97a2f;
+  --accent-color: #0ea5e9;
   --secoundry-bg-color: #e6f7ff;
   --gray: rgba(9, 30, 66, 0.04);
 }

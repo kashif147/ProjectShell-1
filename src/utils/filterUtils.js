@@ -1,3 +1,373 @@
+import dayjs from "dayjs";
+import customParseFormat from "dayjs/plugin/customParseFormat";
+import { getRowFieldValue } from "./gridFilterOptionsRegistry";
+import {
+    NUMERIC_COMPARISON_OPERATORS,
+    NUMERIC_FILTER_OPERATORS,
+    STRING_FILTER_OPERATORS,
+} from "./filterOperatorConstants";
+
+dayjs.extend(customParseFormat);
+
+export const DATE_RANGE_OPERATORS = new Set(["between", "within", "more_than"]);
+
+export { NUMERIC_COMPARISON_OPERATORS, NUMERIC_FILTER_OPERATORS, STRING_FILTER_OPERATORS };
+
+const DATE_FIELD_KEY_EXACT = new Set([
+    "effective",
+    "effectiveDate",
+    "createdAt",
+    "updatedAt",
+    "submissionDate",
+    "joinDate",
+    "renewalDate",
+    "startDate",
+    "endDate",
+]);
+
+const NUMERIC_FILTER_LABEL_PATTERN =
+    /\b(amount|balance|fee|paid amount|last payment amount|membership fee|outstanding balance)\b/i;
+
+const DATE_FILTER_LABEL_PATTERN =
+    /\b(date|effective|expiry|created at|updated at|retired|joining|reminder|renewal|rollover|start date|end date|incident date|event date|submission|payment date|last payment|date of birth)\b/i;
+
+export const columnKeyToString = (col) => {
+    if (!col?.dataIndex) return "";
+    return Array.isArray(col.dataIndex)
+        ? col.dataIndex.join(".")
+        : String(col.dataIndex);
+};
+
+export const isDateColumn = (col) => {
+    if (!col) return false;
+    if (col.filterValueType === "date") return true;
+    if (col.filterValueType === "string" || col.filterValueType === "number") {
+        return false;
+    }
+
+    const key = columnKeyToString(col).toLowerCase();
+    if (DATE_FIELD_KEY_EXACT.has(key)) return true;
+    if (key.includes(".date") || key.endsWith("date")) return true;
+    if (key.endsWith("at") && (key.includes("created") || key.includes("updated"))) {
+        return true;
+    }
+
+    const title = String(col.title || "");
+    if (title.toLowerCase().includes("date")) return true;
+    return DATE_FILTER_LABEL_PATTERN.test(title);
+};
+
+export const isStringColumn = (col) => {
+    if (!col) return false;
+    if (col.filterValueType === "string") return true;
+    if (col.filterValueType === "date" || col.filterValueType === "number") {
+        return false;
+    }
+    return false;
+};
+
+export const isStringFilterLabel = (label, screenCols = []) => {
+    if (!label) return false;
+
+    const col = (screenCols || []).find((c) => c.title === label);
+    if (isStringColumn(col)) return true;
+
+    return false;
+};
+
+export const isDateFilterLabel = (label, screenCols = []) => {
+    if (!label) return false;
+    if (isStringFilterLabel(label, screenCols)) return false;
+    if (String(label).toLowerCase().includes("date")) return true;
+    if (DATE_FILTER_LABEL_PATTERN.test(String(label))) return true;
+
+    const col = (screenCols || []).find((c) => c.title === label);
+    return isDateColumn(col);
+};
+
+export const isNumericColumn = (col) => {
+    if (!col) return false;
+    if (col.filterValueType === "number") return true;
+
+    const key = columnKeyToString(col).toLowerCase();
+    if (
+        key.includes("amount") ||
+        key.includes("balance") ||
+        key.endsWith("fee")
+    ) {
+        return true;
+    }
+
+    const title = String(col.title || "");
+    return NUMERIC_FILTER_LABEL_PATTERN.test(title);
+};
+
+export const isNumericFilterLabel = (label, screenCols = []) => {
+    if (!label) return false;
+    if (NUMERIC_FILTER_LABEL_PATTERN.test(String(label))) return true;
+
+    const col = (screenCols || []).find((c) => c.title === label);
+    return isNumericColumn(col);
+};
+
+export const parseNumericCellValue = (value) => {
+    if (value == null || value === "" || value === "—" || value === "-") {
+        return null;
+    }
+    if (typeof value === "number" && Number.isFinite(value)) return value;
+
+    const str = String(value).trim().replace(/[€£$,]/g, "");
+    if (!str) return null;
+    const parsed = Number(str);
+    return Number.isFinite(parsed) ? parsed : null;
+};
+
+export const rowMatchesNumericFilter = (
+    rowValue,
+    { operator = "==", selectedValues = [] } = {},
+) => {
+    const values = (selectedValues || []).filter((v) => {
+        if (v === null || v === undefined) return false;
+        return String(v).trim() !== "";
+    });
+    if (!values.length) return true;
+
+    const rowNumber = parseNumericCellValue(rowValue);
+    const op = NUMERIC_FILTER_OPERATORS.has(operator) ? operator : "==";
+
+    if (rowNumber == null) return op === "!=";
+
+    if (op === "between") {
+        const start = parseNumericCellValue(values[0]);
+        const end = parseNumericCellValue(values[1]);
+        if (start == null || end == null) return true;
+        const min = Math.min(start, end);
+        const max = Math.max(start, end);
+        return rowNumber >= min && rowNumber <= max;
+    }
+
+    const target = parseNumericCellValue(values[0]);
+    if (target == null) return true;
+
+    switch (op) {
+        case "==":
+            return rowNumber === target;
+        case "!=":
+            return rowNumber !== target;
+        case "<":
+            return rowNumber < target;
+        case ">":
+            return rowNumber > target;
+        case "<=":
+            return rowNumber <= target;
+        case ">=":
+            return rowNumber >= target;
+        default:
+            return rowNumber === target;
+    }
+};
+
+export const parseFlexibleDate = (value) => {
+    if (value == null || value === "" || value === "—") return null;
+    if (typeof value === "number" && Number.isFinite(value)) {
+        const numeric = dayjs(value);
+        return numeric.isValid() ? numeric : null;
+    }
+    if (dayjs.isDayjs(value)) return value.isValid() ? value : null;
+
+    const str = String(value).trim();
+    if (!str) return null;
+
+    const formats = [
+        "YYYY-MM-DD HH:mm:ss",
+        "YYYY-MM-DDTHH:mm:ss.SSSZ",
+        "YYYY-MM-DDTHH:mm:ss",
+        "YYYY-MM-DD",
+        "DD/MM/YYYY HH:mm",
+        "DD/MM/YYYY",
+    ];
+
+    for (const format of formats) {
+        const parsed = dayjs(str, format, true);
+        if (parsed.isValid()) return parsed;
+    }
+
+    const fallback = dayjs(str);
+    return fallback.isValid() ? fallback : null;
+};
+
+export const rowMatchesDateFilter = (
+    rowValue,
+    { operator = "between", selectedValues = [] } = {},
+) => {
+    const values = (selectedValues || []).filter((v) => {
+        if (v === null || v === undefined) return false;
+        if (typeof v === "number" && Number.isFinite(v)) return true;
+        return String(v).trim() !== "";
+    });
+    if (!values.length) return true;
+
+    const rowDate = parseFlexibleDate(rowValue);
+    const op = DATE_RANGE_OPERATORS.has(operator)
+        ? operator
+        : operator === "!="
+          ? "!="
+          : "==";
+
+    if (!rowDate) return op === "!=";
+
+    if (op === "between") {
+        const start = parseFlexibleDate(values[0]);
+        const end = parseFlexibleDate(values[1]);
+        if (!start || !end) return true;
+        return !rowDate.isBefore(start) && !rowDate.isAfter(end);
+    }
+
+    if (op === "within") {
+        const amount = Number(values[0]);
+        const unit = values[1] || "days";
+        if (!Number.isFinite(amount)) return true;
+        const threshold = dayjs().subtract(amount, unit);
+        return !rowDate.isBefore(threshold);
+    }
+
+    if (op === "more_than") {
+        const amount = Number(values[0]);
+        const unit = values[1] || "days";
+        if (!Number.isFinite(amount)) return true;
+        const threshold = dayjs().subtract(amount, unit);
+        return rowDate.isBefore(threshold);
+    }
+
+    const target = parseFlexibleDate(values[0]);
+    if (!target) return true;
+    const sameDay = rowDate.isSame(target, "day");
+    return op === "!=" ? !sameDay : sameDay;
+};
+
+const normalizeFilterValues = (values = []) =>
+    values
+        .map((v) => String(v).trim())
+        .filter((v) => v !== "");
+
+function matchTextField(rowValue, selectedValues, operator) {
+    const cell = String(rowValue ?? "").toLowerCase();
+    const needles = normalizeFilterValues(selectedValues);
+    if (!needles.length) return true;
+    const anyMatch = needles.some((n) => cell.includes(n.toLowerCase()));
+    if (operator === "!=") return !anyMatch;
+    return anyMatch;
+}
+
+export const rowMatchesStringFilter = (
+    rowValue,
+    { operator = "contains", selectedValues = [] } = {},
+) => {
+    const values = (selectedValues || []).filter((v) => {
+        if (v === null || v === undefined) return false;
+        return String(v).trim() !== "";
+    });
+    if (!values.length) return true;
+
+    const cell = String(rowValue ?? "");
+    const needle = String(values[0] ?? "").trim();
+    if (!needle) return true;
+
+    const op = STRING_FILTER_OPERATORS.has(operator) ? operator : "contains";
+    const cellLower = cell.toLowerCase();
+    const needleLower = needle.toLowerCase();
+
+    switch (op) {
+        case "contains":
+            return cellLower.includes(needleLower);
+        case "not_contains":
+            return !cellLower.includes(needleLower);
+        case "starts_with":
+            return cellLower.startsWith(needleLower);
+        case "ends_with":
+            return cellLower.endsWith(needleLower);
+        case "==":
+            return cellLower === needleLower;
+        case "!=":
+            return cellLower !== needleLower;
+        default:
+            return cellLower.includes(needleLower);
+    }
+};
+
+export const applyClientSideRowFilters = (
+    rows,
+    filtersState = {},
+    screenCols = [],
+) => {
+    if (!Array.isArray(rows) || !rows.length) return rows || [];
+
+    const labelMap = getLabelToKeyMap(screenCols);
+
+    return rows.filter((row) => {
+        for (const [label, config] of Object.entries(filtersState)) {
+            const key = labelMap[label];
+            if (!key) continue;
+
+            const operator = config?.operator || "==";
+            const selectedValues = (config?.selectedValues || []).filter((v) => {
+                if (v === null || v === undefined) return false;
+                if (typeof v === "number" && Number.isFinite(v)) return true;
+                if (
+                    DATE_RANGE_OPERATORS.has(operator) &&
+                    typeof v === "number" &&
+                    Number.isFinite(v)
+                ) {
+                    return true;
+                }
+                return String(v).trim() !== "";
+            });
+            if (!selectedValues.length) continue;
+
+            if (isDateFilterLabel(label, screenCols)) {
+                if (
+                    !rowMatchesDateFilter(getRowFieldValue(row, key), {
+                        operator,
+                        selectedValues,
+                    })
+                ) {
+                    return false;
+                }
+                continue;
+            }
+
+            if (isNumericFilterLabel(label, screenCols)) {
+                if (
+                    !rowMatchesNumericFilter(getRowFieldValue(row, key), {
+                        operator,
+                        selectedValues,
+                    })
+                ) {
+                    return false;
+                }
+                continue;
+            }
+
+            if (isStringFilterLabel(label, screenCols)) {
+                if (
+                    !rowMatchesStringFilter(getRowFieldValue(row, key), {
+                        operator,
+                        selectedValues,
+                    })
+                ) {
+                    return false;
+                }
+                continue;
+            }
+
+            if (!matchTextField(getRowFieldValue(row, key), selectedValues, operator)) {
+                return false;
+            }
+        }
+        return true;
+    });
+};
+
 export const getLabelToKeyMap = (screenCols) => {
     const mapping = {};
     const hasSubscriptionStatusColumn = Array.isArray(screenCols)
@@ -38,6 +408,56 @@ export const getLabelToKeyMap = (screenCols) => {
         'Personal Email': 'personalEmail',
         'Work Email': 'workEmail',
         'Rank': 'grade', // Sometimes labeled as Rank but mapped to grade
+        'CN Status': 'status',
+        'CN ref': 'docNo',
+        'Invoice': 'invoiceDocNo',
+        'JA Status': 'approvalStatus',
+        'Adjustment reference': 'docNo',
+        'Debit': 'debitAccount',
+        'Credit': 'creditAccount',
+        'Member': 'memberId',
+        'Amount': 'amountEuro',
+        'Reason': 'reason',
+        'Created By': 'createdBy',
+        'Effective': 'effectiveDate',
+        'Payment Method': 'paymentMethod',
+        'Payment Status': 'paymentStatus',
+        'Billing Cycle': 'billingCycle',
+        'Member / Application No': 'memberNo',
+        'Transaction ID': 'transactionId',
+        'Full Name': 'fullName',
+        Phone: 'phone',
+        'Renewal Date': 'renewalDate',
+        'Payment Date': 'date',
+        'Join Date': 'joinDate',
+        'Paid Amount': 'paidAmountEuro',
+        'Refund Amount': 'refundAmountEuro',
+        'Refund ID': 'refundId',
+        'Ref No': 'refNo',
+        'Refund Date': 'refundDate',
+        'Refund Type': 'refundType',
+        'Refund Source': 'refundSource',
+        'Member No / Application No': 'memberNo',
+        'WriteOff': 'writeOff',
+        'WriteOff Date': 'writeOffDate',
+        'WO Status': 'status',
+        'Doc ref': 'docNo',
+        'Tx date': 'date',
+        'Tx type': 'docTypeLabel',
+        'GL Debit': 'debitEuro',
+        'GL Credit': 'creditEuro',
+        'GL Status': 'approvalStatus',
+        Posted: 'createdAt',
+        'Rec Status': 'reconciliationStatus',
+        'Clearing Account': 'clearingAccountCode',
+        'Bank ref': 'bankRef',
+        Expected: 'expectedAmountEuro',
+        Difference: 'amountDifferenceEuro',
+        Confidence: 'matchConfidence',
+        'Suggested action': 'suggestedAction',
+        'Matched GL': 'matchedGlDocNo',
+        Source: 'sourceType',
+        'Date Range': 'dateRange',
     };
 
     if (screenCols && Array.isArray(screenCols)) {
@@ -67,6 +487,75 @@ const APPLICATION_API_FILTER_KEY_TO_LABEL = {
     preferredEmail: "Preferred Email",
     personalEmail: "Personal Email",
     workEmail: "Work Email",
+    status: "CN Status",
+    docNo: "CN ref",
+    invoiceDocNo: "Invoice",
+    approvalStatus: "JA Status",
+    debitAccount: "Debit",
+    creditAccount: "Credit",
+    memberId: "Member",
+    effectiveDate: "Effective",
+    createdAt: "Created At",
+    paymentMethod: "Payment Method",
+    paymentStatus: "Payment Status",
+    billingCycle: "Billing Cycle",
+    memberNo: "Member / Application No",
+    transactionId: "Transaction ID",
+    fullName: "Full Name",
+    phone: "Phone",
+    renewalDate: "Renewal Date",
+    date: "Payment Date",
+    joinDate: "Join Date",
+    paidAmount: "Paid Amount",
+    amount: "Amount",
+    reason: "Reason",
+    createdBy: "Created By",
+    refundId: "Refund ID",
+    refNo: "Ref No",
+    memo: "Memo",
+    refundDate: "Refund Date",
+    refundAmount: "Refund Amount",
+    refundType: "Refund Type",
+    refundSource: "Refund Source",
+    writeOff: "WriteOff",
+    writeOffDate: "WriteOff Date",
+    ref: "Ref",
+    type: "Type",
+    updatedBy: "Updated By",
+    updatedAt: "Updated At",
+    docTypeLabel: "Tx type",
+    debit: "GL Debit",
+    credit: "GL Credit",
+    approvalStatus: "GL Status",
+    bankRef: "Bank ref",
+    expectedAmount: "Expected",
+    amountDifference: "Difference",
+    matchConfidence: "Confidence",
+    suggestedAction: "Suggested action",
+    clearingAccountCode: "Clearing Account",
+    reconciliationStatus: "Rec Status",
+    matchedGlDocNo: "Matched GL",
+    sourceType: "Source",
+    dateRange: "Date Range",
+    membershipStatuses: "Membership Status",
+    membershipStatus: "Membership Status",
+    membershipCategories: "Membership Category",
+    membershipCategory: "Membership Category",
+    sections: "Section (Primary Section)",
+    grades: "Grade",
+    regions: "Region",
+    branches: "Branch",
+};
+
+/** UI row field names that differ from template API filter keys. */
+const FILTER_API_KEY_ALIASES = {
+    amountEuro: "amount",
+    refundAmountEuro: "refundAmount",
+    debitEuro: "debit",
+    creditEuro: "credit",
+    paidAmountEuro: "paidAmount",
+    expectedAmountEuro: "expectedAmount",
+    amountDifferenceEuro: "amountDifference",
 };
 
 export const transformFiltersForApi = (filters, screenCols) => {
@@ -83,9 +572,32 @@ export const transformFiltersForApi = (filters, screenCols) => {
             const normalizedLabel = String(label).trim().toLowerCase();
             const key = labelMap[label] || normalizedLabelMap[normalizedLabel];
             if (!key) return; // Ignore unknown labels to avoid backend validation errors
-            transformed[key] = {
-                operator: filter.operator === '==' ? 'equal_to' : 'not_equal_to',
-                values: filter.selectedValues
+            const apiKey = FILTER_API_KEY_ALIASES[key] || key;
+            const isDate = isDateFilterLabel(label, screenCols);
+            const isNumeric = isNumericFilterLabel(label, screenCols);
+            const isString = isStringFilterLabel(label, screenCols);
+            const operator = filter.operator || "==";
+            let apiOperator;
+            if (isDate && DATE_RANGE_OPERATORS.has(operator)) {
+                apiOperator = operator;
+            } else if (isNumeric && NUMERIC_FILTER_OPERATORS.has(operator)) {
+                if (operator === "==") apiOperator = "equal_to";
+                else if (operator === "!=") apiOperator = "not_equal_to";
+                else if (operator === "<") apiOperator = "less_than";
+                else if (operator === ">") apiOperator = "greater_than";
+                else if (operator === "<=") apiOperator = "less_than_or_equal";
+                else if (operator === ">=") apiOperator = "greater_than_or_equal";
+                else apiOperator = operator;
+            } else if (isString && STRING_FILTER_OPERATORS.has(operator)) {
+                if (operator === "==") apiOperator = "equal_to";
+                else if (operator === "!=") apiOperator = "not_equal_to";
+                else apiOperator = operator;
+            } else {
+                apiOperator = operator === "==" ? "equal_to" : "not_equal_to";
+            }
+            transformed[apiKey] = {
+                operator: apiOperator,
+                values: (filter.selectedValues || []).map((v) => String(v)),
             };
         }
     });
@@ -104,14 +616,67 @@ export const transformFiltersFromApi = (apiFilters, screenCols) => {
     Object.keys(apiFilters || {}).forEach(key => {
         const filter = apiFilters[key];
         const label =
-            keyToLabel[key] || APPLICATION_API_FILTER_KEY_TO_LABEL[key] || key;
+            APPLICATION_API_FILTER_KEY_TO_LABEL[key] || keyToLabel[key] || key;
+        const apiOp = filter.operator;
+        let operator;
+        if (DATE_RANGE_OPERATORS.has(apiOp)) {
+            operator = apiOp;
+        } else if (apiOp === "equal_to") {
+            operator = "==";
+        } else if (apiOp === "not_equal_to") {
+            operator = "!=";
+        } else if (apiOp === "less_than") {
+            operator = "<";
+        } else if (apiOp === "greater_than") {
+            operator = ">";
+        } else if (apiOp === "less_than_or_equal") {
+            operator = "<=";
+        } else if (apiOp === "greater_than_or_equal") {
+            operator = ">=";
+        } else if (NUMERIC_FILTER_OPERATORS.has(apiOp)) {
+            operator = apiOp;
+        } else if (STRING_FILTER_OPERATORS.has(apiOp)) {
+            operator = apiOp;
+        } else {
+            operator = "==";
+        }
         transformed[label] = {
-            operator: filter.operator === 'equal_to' ? '==' : '!=',
-            selectedValues: filter.values || filter.selectedValues || []
+            operator,
+            selectedValues: (filter.values || filter.selectedValues || []).map((v) => {
+                const num = Number(v);
+                return Number.isFinite(num) ? num : v;
+            }),
         };
     });
     return transformed;
 };
+
+/** Applications uses "Application Status" — drop legacy duplicate "Status" chip. */
+export function consolidateApplicationsStatusFilter(
+    filtersState = {},
+    visibleFilters = [],
+) {
+    const nextState = { ...(filtersState || {}) };
+    const legacy = nextState.Status;
+    const canonical = nextState["Application Status"];
+
+    if (legacy) {
+        delete nextState.Status;
+        if (!canonical) {
+            nextState["Application Status"] = legacy;
+        }
+    }
+
+    let nextVisible = (visibleFilters || []).filter((label) => label !== "Status");
+    if (
+        nextState["Application Status"] &&
+        !nextVisible.includes("Application Status")
+    ) {
+        nextVisible = [...nextVisible, "Application Status"];
+    }
+
+    return { filtersState: nextState, visibleFilters: nextVisible };
+}
 
 /**
  * Some gateways return GET /templates/:id with the real document nested under
@@ -147,15 +712,17 @@ export const areFiltersEqual = (filtersA, filtersB) => {
 
         Object.keys(filters).forEach(key => {
             const filter = filters[key];
+            const operator = filter?.operator || "==";
+            const preserveOrder = DATE_RANGE_OPERATORS.has(operator);
             const values = (filter?.selectedValues || [])
                 .map(v => String(v))
-                .filter(v => v.trim() !== "")
-                .sort();
+                .filter(v => v.trim() !== "");
+            const normalizedValues = preserveOrder ? values : [...values].sort();
 
-            if (values.length > 0) {
+            if (normalizedValues.length > 0) {
                 normalized[key] = {
-                    operator: filter.operator || "==",
-                    values: values
+                    operator,
+                    values: normalizedValues
                 };
             }
         });

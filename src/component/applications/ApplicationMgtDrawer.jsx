@@ -19,7 +19,7 @@ import { Link } from "react-router-dom";
 import MemberSearch from "../profile/MemberSearch";
 import dayjs from "dayjs";
 import axios from "axios";
-import { dateUtils } from "../../utils/Utilities";
+import { dateUtils, dayjsFromDateOnly } from "../../utils/Utilities";
 import CustomSelect from "../common/CustomSelect";
 import { useTableColumns } from "../../context/TableColumnsContext ";
 import MyInput from "../common/MyInput";
@@ -376,13 +376,7 @@ function ApplicationMgtDrawer({
   const mapSearchResultToFormData = (searchResult) => {
     if (!searchResult) return null;
 
-    // Helper function to safely convert to Day.js
-    const toDayJS = (dateValue) => {
-      if (!dateValue) return null;
-      if (dayjs.isDayjs(dateValue)) return dateValue;
-      const parsed = dayjs(dateValue);
-      return parsed.isValid() ? parsed : null;
-    };
+    const toDayJS = dayjsFromDateOnly;
 
     return {
       personalInfo: {
@@ -605,13 +599,7 @@ function ApplicationMgtDrawer({
   const mapApiToState = (apiData) => {
     if (!apiData) return inputValue;
 
-    // Helper function to safely convert to Day.js
-    const toDayJS = (dateValue) => {
-      if (!dateValue) return null;
-      if (dayjs.isDayjs(dateValue)) return dateValue;
-      const parsed = dayjs(dateValue);
-      return parsed.isValid() ? parsed : null;
-    };
+    const toDayJS = dayjsFromDateOnly;
 
     return {
       personalInfo: {
@@ -1055,17 +1043,26 @@ function ApplicationMgtDrawer({
     const hierarchicalLookups = storedLookups ? JSON.parse(storedLookups) : [];
 
     const foundObject = hierarchicalLookups.find(
-      (item) => item.lookup && item.lookup._id === selectedLookupId
+      (item) =>
+        item.id === selectedLookupId ||
+        item.lookup?._id === selectedLookupId
     );
 
     if (foundObject) {
+      const isSimple = foundObject.type === "workLocation";
       setInfData((prevData) => ({
         ...prevData,
         professionalDetails: {
           ...prevData.professionalDetails,
-          workLocation: foundObject?.lookup?.lookupname,
-          region: foundObject.region?.lookupname || "",
-          branch: foundObject.branch?.lookupname || "",
+          workLocation: isSimple
+            ? foundObject.name
+            : foundObject?.lookup?.lookupname,
+          region: isSimple
+            ? foundObject.branch?.region?.name || foundObject.region?.name || ""
+            : foundObject.region?.lookupname || "",
+          branch: isSimple
+            ? foundObject.branch?.name || ""
+            : foundObject.branch?.lookupname || "",
         },
       }));
     }
@@ -2459,18 +2456,26 @@ function ApplicationMgtDrawer({
     console.log("Recruited by member:", memberData?._id);
 
     if (memberData) {
-      // Update the confirmedRecruiterProfileId in subscriptionDetails
+      const recruiterName = [
+        memberData.personalInfo?.forename,
+        memberData.personalInfo?.surname,
+      ]
+        .filter(Boolean)
+        .join(" ")
+        .trim();
+
       setInfData((prevData) => ({
         ...prevData,
         subscriptionDetails: {
           ...prevData.subscriptionDetails,
           confirmedRecruiterProfileId: memberData?._id || "",
+          recuritedBy: recruiterName,
+          recuritedByMembershipNo: memberData.membershipNumber || "",
         },
       }));
 
       setRecruiterSearchValue(
-        `${memberData.personalInfo?.forename || ""} ${memberData.personalInfo?.surname || ""
-        } (${memberData.membershipNumber || ""})`
+        `${recruiterName} (${memberData.membershipNumber || ""})`.trim()
       );
     }
   };

@@ -10,12 +10,31 @@ import { NotificationRow } from "../notifications/notificationPresentation";
 
 const { Title } = Typography;
 
-const NotificationPopover = ({ isOpen, onNavigateToAll }) => {
+const NotificationPopover = ({ isOpen, onNavigateToAll, onClose }) => {
+  const navigate = useNavigate();
   const { notifications, setNotifications, setBadge, markAsRead, markAllAsRead } =
     useNotifications();
   const [clearLoading, setClearLoading] = React.useState(false);
 
-  const handleMarkAsRead = async (notificationId) => {
+  /** Route DD prepare rows straight to the run's batch detail page. */
+  const navigateForNotification = (item) => {
+    const meta = item?.metadata || {};
+    if (
+      meta.type === "DD_PREPARE_QUEUED" ||
+      meta.type === "DD_PREPARE_COMPLETED"
+    ) {
+      const runId = meta.runId || meta.batchDetailId;
+      if (runId) {
+        onClose?.();
+        navigate("/DirectDebitBatchDetails", {
+          state: { runId, search: "Direct Debit Batch Details" },
+        });
+      }
+    }
+  };
+
+  const handleMarkAsRead = async (notificationId, item) => {
+    navigateForNotification(item);
     if (!notificationId) return;
 
     const target = notifications.find((n) => String(n._id) === String(notificationId));

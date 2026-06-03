@@ -163,15 +163,21 @@ export const financeItems = [
     ["payments:read"]
   ),
   createMenuItem(
-    "Reconciliations",
-    <FaExchangeAlt />,
-    "Reconciliations",
+    "General ledger",
+    <FaBalanceScale />,
+    "General ledger",
     ["payments:read"]
   ),
   createMenuItem(
     "Journal adjustments",
     <FaCommentDollar />,
     "Journal adjustments",
+    ["payments:read"]
+  ),
+  createMenuItem(
+    "Reconciliations",
+    <FaExchangeAlt />,
+    "Reconciliations",
     ["payments:read"]
   ),
   // createMenuItem(
@@ -214,7 +220,7 @@ export const subscriptionItems = [
   createMenuItem(
     "MembershipDashboard",
     <FaChartLine />,
-    "Membership Dashboard",
+    "Executive Dashboard",
     []
   ),
   createMenuItem(
@@ -358,7 +364,7 @@ export const reportItems = [
     "Comparison Report",
     <FaBalanceScale />,
     "Comparison Report",
-    ["comparison:report:read"]
+    ["reporting:read"]
   ),
   createMenuItem(
     "Control Report",
@@ -400,7 +406,7 @@ export const reportItems = [
     "Live Stats",
     <FaChartPie />,
     "Live Stats",
-    ["LIVE:STATS:REPORT:READ"]
+    ["reporting:read"]
   ),
   createMenuItem(
     "New Members Report",

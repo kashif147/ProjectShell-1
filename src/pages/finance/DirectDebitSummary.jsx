@@ -1,159 +1,155 @@
-import { useEffect } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
+import { Tag, message } from "antd";
 import MyTable from "../../component/common/MyTable";
-import { fetchBatchesByType } from "../../features/profiles/batchMemberSlice";
-import { useSelector, useDispatch } from 'react-redux';
-import dayjs from 'dayjs';
 import { useTableColumns } from "../../context/TableColumnsContext ";
 import { useNavigate } from "react-router-dom";
+import dayjs from "dayjs";
+import directDebitRunsApi from "../../services/directDebitRunsApi";
+
+const STATUS_COLORS = {
+  DRAFT: "default",
+  VALIDATED: "processing",
+  APPROVED: "blue",
+  FILE_GENERATED: "cyan",
+  SUBMITTED: "geekblue",
+  PARTIALLY_RECONCILED: "orange",
+  RECONCILED: "green",
+  CANCELLED: "red",
+};
+
+const DEFAULT_DD_COLUMNS = [
+  { title: "Run No", dataIndex: "runNo", key: "runNo" },
+  { title: "Type", dataIndex: "runType", key: "runType" },
+  { title: "Collection date", dataIndex: "collectionDate", key: "collectionDate" },
+  { title: "Status", dataIndex: "status", key: "status" },
+  { title: "Included", dataIndex: ["totals", "includedCount"], key: "included" },
+  { title: "Amount EUR", dataIndex: ["totals", "includedAmountEur"], key: "amount" },
+];
+
+const isDdRunColumnSet = (cols) =>
+  Array.isArray(cols) &&
+  cols.some(
+    (col) =>
+      col.dataIndex === "runNo" ||
+      col.key === "runNo" ||
+      (Array.isArray(col.dataIndex) && col.dataIndex[0] === "runNo"),
+  );
 
 function DirectDebitSummary() {
-    const dispatch = useDispatch();
-    const navigate = useNavigate();
-    const {
-        loadingBatches,
-        batchesData
-    } = useSelector((state) => state.batchMember);
-    const { columns } = useTableColumns();
+  const navigate = useNavigate();
+  const { columns } = useTableColumns();
+  const [loading, setLoading] = useState(false);
+  const [runs, setRuns] = useState([]);
 
-    // Get columns and add render function for Name column
-    const tableColumns = (columns["DirectDebitSummary"] || []).map(col => {
-        if (col.dataIndex === "name") {
-            return {
-                ...col,
-                render: (text, record) => (
-                    <span
-                        style={{ color: '#1890ff', cursor: 'pointer', fontWeight: '500' }}
-                        onClick={() => navigate("/DirectDebitBatchDetails", {
-                            state: {
-                                batchId: record.key,
-                                batch: record._original
-                            }
-                        })}
-                    >
-                        {text}
-                    </span>
-                )
-            };
-        }
-        return col;
-    });
+  const openRun = useCallback(
+    (record) => {
+      const runId = record?._id || record?.id || record?.key;
+      if (!runId) return;
+      navigate("/DirectDebitBatchDetails", {
+        state: { runId, run: record },
+      });
+    },
+    [navigate],
+  );
 
-    useEffect(() => {
-        dispatch(fetchBatchesByType({
-            type: 'direct-debit',
-            page: 1,
-            limit: 500
-        }));
-    }, [dispatch]);
+  const loadRuns = useCallback(async () => {
+    setLoading(true);
+    try {
+      const data = await directDebitRunsApi.list({ limit: 200 });
+      setRuns(data?.items || []);
+    } catch (err) {
+      message.error(err.message || "Failed to load DD runs");
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
-    // Format the batches data for the table
-    const formatTableData = () => {
-        let batches = batchesData?.data?.batches;
+  useEffect(() => {
+    loadRuns();
+  }, [loadRuns]);
 
-        // If no data is available from API, use mock data for demonstration
-        if (!batches || !Array.isArray(batches) || batches.length === 0) {
-            batches = [
-                {
-                    id: "DD-001",
-                    name: "Monthly DD Batch - January 2024",
-                    date: "2024-01-05",
-                    batchStatus: "Completed",
-                    createdAt: "2024-01-01T09:30:00Z",
-                    createdBy: "John Doe",
-                    updatedAt: "2024-01-05T14:45:00Z",
-                    profileIds: new Array(125).fill(0)
-                },
-                {
-                    id: "DD-002",
-                    name: "Monthly DD Batch - February 2024",
-                    date: "2024-02-05",
-                    batchStatus: "Processing",
-                    createdAt: "2024-02-01T10:15:00Z",
-                    createdBy: "Jane Smith",
-                    updatedAt: "2024-02-03T11:20:00Z",
-                    profileIds: new Array(88).fill(0)
-                },
-                {
-                    id: "DD-003",
-                    name: "Urgent Correction Batch",
-                    date: "2024-03-01",
-                    batchStatus: "Draft",
-                    createdAt: "2024-02-28T16:40:00Z",
-                    createdBy: "Finance Admin",
-                    updatedAt: "2024-02-28T16:45:00Z",
-                    profileIds: new Array(12).fill(0)
-                },
-                {
-                    id: "DD-004",
-                    name: "Bi-Weekly Run - Week 12",
-                    date: "2024-03-15",
-                    batchStatus: "Pending",
-                    createdAt: "2024-03-12T08:00:00Z",
-                    createdBy: "System",
-                    updatedAt: "2024-03-12T08:00:00Z",
-                    profileIds: new Array(45).fill(0)
-                }
-            ];
-        }
-        return batches.map((batch, index) => {
-            // Format date to DD/MM/YYYY
-            let formattedDate = "N/A";
-            if (batch.date) {
-                try {
-                    formattedDate = dayjs(batch.date).format('DD/MM/YYYY');
-                } catch (error) {
-                    console.error('Error formatting date:', error);
-                    formattedDate = "Invalid Date";
-                }
-            }
-
-            // Format createdAt to DD/MM/YYYY HH:mm
-            let formattedCreatedAt = "N/A";
-            if (batch.createdAt) {
-                try {
-                    formattedCreatedAt = dayjs(batch.createdAt).format('DD/MM/YYYY HH:mm');
-                } catch (error) {
-                    console.error('Error formatting createdAt:', error);
-                    formattedCreatedAt = "Invalid Date";
-                }
-            }
-
-            // Format updatedAt to DD/MM/YYYY HH:mm
-            let formattedUpdatedAt = "N/A";
-            if (batch.updatedAt) {
-                try {
-                    formattedUpdatedAt = dayjs(batch.updatedAt).format('DD/MM/YYYY HH:mm');
-                } catch (error) {
-                    console.error('Error formatting updatedAt:', error);
-                    formattedUpdatedAt = "Invalid Date";
-                }
-            }
-
-            return {
-                key: batch.id || batch.batchId || index.toString(),
-                name: batch.name || batch.batchName || "N/A",
-                date: formattedDate,
-                batchStatus: batch.batchStatus || batch.status || "N/A",
-                createdAt: formattedCreatedAt,
-                createdBy: batch.createdBy || "N/A",
-                updatedAt: formattedUpdatedAt,
-                Count: batch.profileIds?.length || 0,
-                _original: batch
-            };
-        });
+  useEffect(() => {
+    let debounceTimer;
+    const onChanged = () => {
+      if (window.location.pathname !== "/DirectDebit") return;
+      clearTimeout(debounceTimer);
+      debounceTimer = setTimeout(() => loadRuns(), 400);
     };
+    window.addEventListener("direct-debit-runs-changed", onChanged);
+    return () => {
+      clearTimeout(debounceTimer);
+      window.removeEventListener("direct-debit-runs-changed", onChanged);
+    };
+  }, [loadRuns]);
 
-    const tableData = formatTableData();
+  const tableColumns = useMemo(() => {
+    const contextCols = columns["DirectDebitSummary"];
+    const baseColumns = isDdRunColumnSet(contextCols)
+      ? contextCols.filter((col) => col.isVisible !== false)
+      : DEFAULT_DD_COLUMNS;
 
-    return (
-        <div className="" style={{ width: "100%" }}>
-            <MyTable
-                dataSource={tableData}
-                columns={tableColumns}
-                loading={loadingBatches}
-            />
-        </div>
-    );
+    return baseColumns.map((col) => {
+      if (col.dataIndex === "runNo" || col.key === "runNo") {
+        return {
+          ...col,
+          render: (text, record) => (
+            <span
+              style={{ color: "#1890ff", cursor: "pointer", fontWeight: 500 }}
+              onClick={(e) => {
+                e.stopPropagation();
+                openRun(record);
+              }}
+            >
+              {text || "—"}
+            </span>
+          ),
+        };
+      }
+      if (col.dataIndex === "status" || col.key === "status") {
+        return {
+          ...col,
+          render: (s) => <Tag color={STATUS_COLORS[s] || "default"}>{s}</Tag>,
+        };
+      }
+      if (col.dataIndex === "collectionDate" || col.key === "collectionDate") {
+        return {
+          ...col,
+          render: (d) => (d ? dayjs(d).format("DD MMM YYYY") : "—"),
+        };
+      }
+      if (col.key === "amount" || col.dataIndex?.[1] === "includedAmountEur") {
+        return {
+          ...col,
+          render: (_, r) =>
+            r.totals?.includedAmountEur != null
+              ? `€${Number(r.totals.includedAmountEur).toFixed(2)}`
+              : "—",
+        };
+      }
+      if (col.key === "included" || col.dataIndex?.[1] === "includedCount") {
+        return {
+          ...col,
+          render: (_, r) =>
+            r.totals?.includedCount != null ? r.totals.includedCount : "—",
+        };
+      }
+      return col;
+    });
+  }, [columns, openRun]);
+
+  const tableData = runs.map((r) => ({ ...r, key: r._id }));
+
+  return (
+    <div style={{ padding: "0 35px" }}>
+      <MyTable
+        loading={loading}
+        columns={tableColumns}
+        dataSource={tableData}
+        pagination={{ pageSize: 50 }}
+        onRowClick={openRun}
+      />
+    </div>
+  );
 }
 
 export default DirectDebitSummary;

@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="72" viewBox="0 0 800 72" role="img" aria-label="Letter footer">
+  <rect width="800" height="72" fill="#f8fafc"/>
+  <rect y="0" width="800" height="3" fill="#215e97"/>
+  <text x="400" y="28" text-anchor="middle" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="11" font-weight="600" fill="#215e97">MEMBERSHIP PORTAL</text>
+  <text x="400" y="48" text-anchor="middle" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="10" fill="#64748b">This message was sent by your membership organisation. Please retain for your records.</text>
+  <text x="400" y="62" text-anchor="middle" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="9" fill="#94a3b8">Confidential  intended for the addressee only</text>
+</svg>

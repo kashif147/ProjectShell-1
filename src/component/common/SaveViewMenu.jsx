@@ -37,7 +37,7 @@ import { useLocation } from "react-router-dom";
 import axios from "axios";
 import MyAlert from "./MyAlert";
 import MyInput from "./MyInput";
-import { getSubscriptionFilterTemplatesBaseUrl } from "../../config/serviceUrls";
+import { resolveTemplatesApiUrl } from "../../config/gridTemplateRouting";
 import {
   getLabelToKeyMap,
   normalizeViewTemplatePayload,
@@ -55,6 +55,14 @@ import {
   resetPaymentFormsInitialization,
 } from "../../features/paymentFormsWithFilterSlice";
 import { resetScreenChanged } from "../../features/views/ScreenFilterChangSlice";
+import { bumpCreditNotesReload } from "../../utils/creditNotesWorkspace";
+import { bumpJournalAdjustmentsReload } from "../../utils/journalAdjustmentsWorkspace";
+import { bumpOnlinePaymentsReload } from "../../utils/onlinePaymentsWorkspace";
+import { bumpRefundsReload } from "../../utils/refundsWorkspace";
+import { bumpWriteOffsReload } from "../../utils/writeOffsWorkspace";
+import { bumpGeneralLedgerReload } from "../../utils/generalLedgerWorkspace";
+import { bumpReconciliationReload } from "../../utils/reconciliationWorkspace";
+import { bumpMembershipListingReportReload } from "../../utils/membershipListingReportWorkspace";
 
 const SaveViewMenu = ({ className, style }) => {
   const dispatch = useDispatch();
@@ -144,6 +152,22 @@ const SaveViewMenu = ({ className, style }) => {
     membership: "members",
     summary: "profile",
     eventsdashboard: "eventsdashboard",
+    creditnotes: "creditnotes",
+    journaladjustments: "journaladjustments",
+    onlinepayment: "onlinepayment",
+    refunds: "refunds",
+    "write-offs": "writeoffs",
+    writeoffs: "writeoffs",
+    generalledger: "generalledger",
+    reconciliation: "reconciliation",
+    membershiplistingreport: "membershiplisting",
+    correspondencesummary: "notification",
+    correspondencedashboard: "notification",
+    communication: "notification",
+    communicationbatchdetail: "notification",
+    inappnotifications: "notification",
+    audithistory: "audithistory",
+    historybyid: "audithistory",
   };
 
   const normalizeTemplateType = (type) =>
@@ -218,6 +242,37 @@ const SaveViewMenu = ({ className, style }) => {
           limit: 500,
         }),
       );
+      return;
+    }
+    if (activePage === "CreditNotes") {
+      bumpCreditNotesReload();
+      return;
+    }
+    if (activePage === "JournalAdjustments") {
+      bumpJournalAdjustmentsReload();
+      return;
+    }
+    if (activePage === "OnlinePayment") {
+      bumpOnlinePaymentsReload();
+      return;
+    }
+    if (activePage === "Refunds") {
+      bumpRefundsReload();
+      return;
+    }
+    if (activePage === "WriteOffs") {
+      bumpWriteOffsReload();
+      return;
+    }
+    if (activePage === "GeneralLedger") {
+      bumpGeneralLedgerReload();
+      return;
+    }
+    if (activePage === "Reconciliation") {
+      bumpReconciliationReload();
+    }
+    if (activePage === "MembershipListingReport") {
+      bumpMembershipListingReportReload();
     }
   };
 
@@ -494,9 +549,7 @@ const SaveViewMenu = ({ className, style }) => {
       };
 
       const token = localStorage.getItem("token");
-      const API_URL = isMembersTemplateType
-        ? getSubscriptionFilterTemplatesBaseUrl()
-        : `${process.env.REACT_APP_PROFILE_SERVICE_URL}/templates`;
+      const API_URL = resolveTemplatesApiUrl(targetTemplateType);
 
       await axios.post(API_URL, payload, {
         headers: {

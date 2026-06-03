@@ -1,187 +1,228 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
-import { Button, Tag, notification } from "antd";
-import { Link, useLocation } from "react-router-dom";
 import axios from "axios";
+import { Alert, message, Space, Spin } from "antd";
+import { useLocation, Link } from "react-router-dom";
+import { useSelector } from "react-redux";
+import TableComponent from "../../component/common/TableComponent";
 import { getAccountServiceBaseUrl } from "../../config/serviceUrls";
-import { centsToEuro } from "../../utils/Utilities";
-import { buildDetailsSearch } from "../../utils/detailsRoute";
-import MyTable from "../../component/common/MyTable";
-
-const statusColor = {
-  Draft: "orange",
-  Approved: "green",
-  Cancelled: "red",
-  Posted: "blue",
-};
+import { useFilters } from "../../context/FilterContext";
+import { useTableColumns } from "../../context/TableColumnsContext ";
+import {
+  buildCreditNoteApiParams,
+  clearCreditNoteListActions,
+  registerCreditNoteListActions,
+  subscribeCreditNotesReload,
+} from "../../utils/creditNotesWorkspace";
+import { resolveCreditNoteAmountEuro } from "../../utils/creditNoteAmount";
+import { applyClientSideRowFilters } from "../../utils/filterUtils";
+import { useRegisterGridFilterRows } from "../../hooks/useRegisterGridFilterRows";
 
 const CreditNotesSummary = () => {
   const location = useLocation();
-  const highlightDocNo = String(
-    location.state?.highlightDocNo || "",
-  ).trim();
+  const { filtersState } = useFilters();
+  const { columns } = useTableColumns();
+  const creditNoteColumns = columns.CreditNotes || [];
+  const highlightDocNo = String(location.state?.highlightDocNo || "").trim();
   const filterMemberId = String(location.state?.memberId || "").trim();
 
-  const [items, setItems] = useState([]);
+  const { isInitialized } = useSelector((state) => state.applicationWithFilter);
+  const { activeTemplateId } = useSelector((state) => state.activeTemplate);
+  const { loading: templatesLoading } = useSelector(
+    (state) => state.templetefiltrsclumnapi,
+  );
+
+  const [rows, setRows] = useState([]);
+  const [filterSourceRows, setFilterSourceRows] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [statusFilter, setStatusFilter] = useState("");
 
-  const authHeaders = useCallback(() => {
-    const token = localStorage.getItem("token");
-    return { Authorization: `Bearer ${token}` };
-  }, []);
-
-  const load = useCallback(async () => {
+  const fetchCreditNotes = useCallback(async () => {
     setLoading(true);
     try {
-      const params = { limit: 200 };
-      if (filterMemberId) params.memberId = filterMemberId;
-      if (statusFilter) params.status = statusFilter;
-      const res = await axios.get(
-        `${getAccountServiceBaseUrl()}/journal/credit-notes`,
-        { headers: authHeaders(), params },
-      );
-      const payload = res.data?.data ?? res.data;
-      setItems(payload?.items || []);
-    } catch (error) {
-      notification.error({
-        message: "Could not load credit notes",
-        description: error?.response?.data?.message || error?.message,
+      const token = localStorage.getItem("token");
+      const params = buildCreditNoteApiParams(filtersState, {
+        memberIdFromNav: filterMemberId,
       });
-      setItems([]);
+      const response = await axios.get(
+        `${getAccountServiceBaseUrl()}/journal/credit-notes`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+          params,
+        },
+      );
+
+      const payload = response?.data?.data ?? response?.data;
+      const items = Array.isArray(payload?.items) ? payload.items : [];
+      const mappedRows = items.map((item, index) => {
+        const docNo = item?.docNo || "";
+        return {
+          key: item?._id || docNo || `credit-note-${index}`,
+          _id: item?._id,
+          docNo,
+          invoiceDocNo: item?.invoiceDocNo || "—",
+          memberId: item?.memberId || "",
+          amount: item?.amount ?? "-",
+          amountEuro: resolveCreditNoteAmountEuro(item),
+          status: item?.status || "—",
+          effectiveDate: item?.effectiveDate || item?.date || null,
+          reason: item?.reason || "",
+          createdBy: item?.createdBy || "System",
+          createdAt: item?.createdAt || null,
+          highlight:
+            Boolean(highlightDocNo) && String(docNo).trim() === highlightDocNo,
+        };
+      });
+
+      setFilterSourceRows(mappedRows);
+      setRows(
+        applyClientSideRowFilters(mappedRows, filtersState, creditNoteColumns),
+      );
+    } catch (error) {
+      console.error("Failed to fetch credit notes:", error);
+      message.error("Failed to load credit notes");
+      setFilterSourceRows([]);
+      setRows([]);
     } finally {
       setLoading(false);
     }
-  }, [authHeaders, filterMemberId, statusFilter]);
+  }, [creditNoteColumns, filterMemberId, filtersState, highlightDocNo]);
 
-  useEffect(() => {
-    load();
-  }, [load]);
-
-  const columns = useMemo(
-    () => [
-      {
-        title: "CN ref",
-        dataIndex: "docNo",
-        key: "docNo",
-        width: 140,
-        render: (docNo, row) => {
-          const isHighlight =
-            highlightDocNo &&
-            String(docNo || "").trim() === highlightDocNo;
-          return (
-            <span
-              style={
-                isHighlight
-                  ? { fontWeight: 700, background: "#fff7e6", padding: "0 4px" }
-                  : undefined
-              }
-            >
-              {docNo || "—"}
-            </span>
-          );
-        },
-      },
-      {
-        title: "Invoice",
-        dataIndex: "invoiceDocNo",
-        key: "invoiceDocNo",
-        width: 130,
-      },
-      {
-        title: "Member",
-        dataIndex: "memberId",
-        key: "memberId",
-        width: 110,
-        render: (mid) =>
-          mid ? (
-            <Link
-              to={{
-                pathname: "/Details",
-                search: buildDetailsSearch({ memberId: mid }),
-              }}
-            >
-              {mid}
-            </Link>
-          ) : (
-            "—"
-          ),
-      },
-      {
-        title: "Amount",
-        dataIndex: "amount",
-        key: "amount",
-        width: 100,
-        align: "right",
-        render: (cents) =>
-          `€${centsToEuro(Number(cents) || 0).toLocaleString("en-IE", {
-            minimumFractionDigits: 2,
-            maximumFractionDigits: 2,
-          })}`,
-      },
-      {
-        title: "Status",
-        dataIndex: "status",
-        key: "status",
-        width: 100,
-        render: (st) => (
-          <Tag color={statusColor[st] || "default"}>{st || "—"}</Tag>
-        ),
-      },
-      {
-        title: "Effective",
-        dataIndex: "effectiveDate",
-        key: "effectiveDate",
-        width: 110,
-        render: (d) =>
-          d ? new Date(d).toLocaleDateString("en-IE") : "—",
-      },
-      {
-        title: "Reason",
-        dataIndex: "reason",
-        key: "reason",
-        ellipsis: true,
-      },
-    ],
-    [highlightDocNo],
+  const approveCreditNote = useCallback(
+    async (docNo) => {
+      const ref = String(docNo || "").trim();
+      if (!ref) return;
+      try {
+        const token = localStorage.getItem("token");
+        await axios.post(
+          `${getAccountServiceBaseUrl()}/journal/credit-notes/${encodeURIComponent(ref)}/approve`,
+          {},
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "Content-Type": "application/json",
+            },
+          },
+        );
+        message.success(`Credit note ${ref} approved`);
+        await fetchCreditNotes();
+      } catch (error) {
+        message.error(
+          error?.response?.data?.message ||
+            error?.message ||
+            "Could not approve credit note",
+        );
+      }
+    },
+    [fetchCreditNotes],
   );
 
-  return (
-    <div className="p-3">
+  const cancelCreditNote = useCallback(
+    async (docNo) => {
+      const ref = String(docNo || "").trim();
+      if (!ref) return;
+      try {
+        const token = localStorage.getItem("token");
+        await axios.post(
+          `${getAccountServiceBaseUrl()}/journal/credit-notes/${encodeURIComponent(ref)}/cancel`,
+          {},
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "Content-Type": "application/json",
+            },
+          },
+        );
+        message.success(`Credit note ${ref} cancelled`);
+        await fetchCreditNotes();
+      } catch (error) {
+        message.error(
+          error?.response?.data?.message ||
+            error?.message ||
+            "Could not cancel credit note",
+        );
+      }
+    },
+    [fetchCreditNotes],
+  );
+
+  useEffect(() => {
+    registerCreditNoteListActions({
+      onApprove: approveCreditNote,
+      onCancel: cancelCreditNote,
+    });
+    return () => clearCreditNoteListActions();
+  }, [approveCreditNote, cancelCreditNote]);
+
+  useEffect(() => {
+    if (!isInitialized || templatesLoading) return;
+    fetchCreditNotes();
+  }, [
+    activeTemplateId,
+    fetchCreditNotes,
+    isInitialized,
+    templatesLoading,
+  ]);
+
+  useEffect(() => {
+    return subscribeCreditNotesReload(() => {
+      fetchCreditNotes();
+    });
+  }, [fetchCreditNotes]);
+
+  const memberBanner = useMemo(() => {
+    if (!filterMemberId) return null;
+    return (
+      <Alert
+        type="info"
+        showIcon
+        banner
+        style={{ marginBottom: 8 }}
+        message={
+          <Space wrap>
+            <span>
+              Showing credit notes for member <strong>{filterMemberId}</strong>
+            </span>
+            <Link
+              to="/Details"
+              state={{ memberId: filterMemberId, activeTab: "2" }}
+            >
+              Open member finance
+            </Link>
+          </Space>
+        }
+      />
+    );
+  }, [filterMemberId]);
+
+  useRegisterGridFilterRows("CreditNotes", filterSourceRows, creditNoteColumns);
+
+  if (!isInitialized || templatesLoading) {
+    return (
       <div
         style={{
           display: "flex",
-          flexWrap: "wrap",
-          gap: 8,
-          marginBottom: 8,
+          justifyContent: "center",
           alignItems: "center",
+          height: "100%",
+          padding: "50px",
         }}
       >
-        <span style={{ fontWeight: 600 }}>Credit notes</span>
-        {filterMemberId ? (
-          <Tag>Member {filterMemberId}</Tag>
-        ) : null}
-        <Button size="small" onClick={() => setStatusFilter("")}>
-          All
-        </Button>
-        <Button size="small" onClick={() => setStatusFilter("Draft")}>
-          Draft
-        </Button>
-        <Button size="small" onClick={() => setStatusFilter("Approved")}>
-          Approved
-        </Button>
-        <Button size="small" type="link" onClick={load}>
-          Refresh
-        </Button>
+        <Spin tip="Initializing Template...">
+          <div style={{ minHeight: 200, width: "100%" }} />
+        </Spin>
       </div>
-      <MyTable
-        columns={columns}
-        dataSource={items.map((row, i) => ({
-          ...row,
-          key: row.docNo || row._id || `cn-${i}`,
-        }))}
-        loading={loading}
-        footerVariant="infinite"
-        infiniteLoadOnScroll={false}
+    );
+  }
+
+  return (
+    <div style={{ width: "100%", padding: "0" }}>
+      {memberBanner}
+      <TableComponent
+        data={rows}
+        isGrideLoading={loading}
+        screenName="CreditNotes"
       />
     </div>
   );

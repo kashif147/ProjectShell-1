@@ -338,7 +338,11 @@ export function buildConfigurationCards(lookupsTypes = []) {
             key: drawerKey,
             drawerKey,
             lookupTypeId: lookupType._id,
-            label: lookupType.lookuptype || lookupType.DisplayName || "Lookup",
+            label:
+              lookupType.lookuptype ||
+              lookupType.DisplayName ||
+              lookupType.name ||
+              "Lookup",
             icon: LOOKUP_CARD_ICONS[index % LOOKUP_CARD_ICONS.length],
             lookupType,
           };

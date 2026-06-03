@@ -33,6 +33,7 @@ import "../../styles/AppLauncher.css";
 import axios from "axios";
 import MemberSearch from "../profile/MemberSearch";
 import { useNotifications } from "../../context/NotificationContext";
+import { useTenantBranding } from "../../context/TenantBrandingContext";
 
 const AppLauncherMenu = ({ closeDropdown }) => {
   const dispatch = useDispatch();
@@ -230,6 +231,9 @@ function Header() {
   const isLoggingOutRef = useRef(false);
   const navigate = useNavigate();
   const { clearAuth: clearAuthContext } = useAuthorization();
+  const { branding } = useTenantBranding();
+  const headerLogo = branding?.logoDarkUrl || branding?.logoUrl;
+  const portalTitle = branding?.portalTitle;
 
   const { ProfileDetails, ReportsTitle } = useTableColumns();
   const location = useLocation();
@@ -281,6 +285,7 @@ function Header() {
     localStorage.removeItem("token_expiry");
     localStorage.removeItem("refresh_token");
     localStorage.removeItem("userdata");
+    localStorage.removeItem("activeMenuModule");
 
     // Navigate immediately (don't wait for API)
     navigate("/");
@@ -334,6 +339,36 @@ function Header() {
           style={{ paddingLeft: "1%", width: "33%" }}
         >
           <AppLauncher />
+          {headerLogo ? (
+            <img
+              src={headerLogo}
+              alt={portalTitle || "Organisation logo"}
+              className="tenant-header-logo"
+              style={{
+                height: 36,
+                maxWidth: 160,
+                objectFit: "contain",
+                marginLeft: 8,
+              }}
+            />
+          ) : null}
+          {portalTitle ? (
+            <span
+              className="tenant-header-title"
+              style={{
+                color: "#fff",
+                fontWeight: 600,
+                marginLeft: 10,
+                fontSize: 15,
+                whiteSpace: "nowrap",
+                overflow: "hidden",
+                textOverflow: "ellipsis",
+                maxWidth: 200,
+              }}
+            >
+              {portalTitle}
+            </span>
+          ) : null}
           <nav className="navbar navbar-expand-lg navbar-light">
             <button
               className="navbar-toggler"
@@ -386,6 +421,7 @@ function Header() {
                   setNotificationOpen(false);
                   navigate("/UserNotifications");
                 }}
+                onClose={() => setNotificationOpen(false)}
               />
             }
             trigger="click"

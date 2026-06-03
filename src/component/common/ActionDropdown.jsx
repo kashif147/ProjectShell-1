@@ -1,5 +1,5 @@
-import React from 'react';
-import { Dropdown, Button } from 'antd';
+import React from "react";
+import { Dropdown, Button } from "antd";
 import { BsThreeDots } from "react-icons/bs";
 
 const ActionDropdown = ({ items = [] }) => {
@@ -13,7 +13,7 @@ const ActionDropdown = ({ items = [] }) => {
         })),
       }}
       placement="bottomRight"
-      trigger={['click']}
+      trigger={["click"]}
     >
       <Button
         className="me-1 gray-btn butn"

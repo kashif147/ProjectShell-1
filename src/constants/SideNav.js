@@ -276,7 +276,7 @@
 //         <FaChartLine />
 //       </div>
 //     ),
-//     label: <div className="sidebar-label">Membership Dashboard</div>,
+//     label: <div className="sidebar-label">Executive Dashboard</div>,
 //   },
 //   {
 //     key: "Applications",

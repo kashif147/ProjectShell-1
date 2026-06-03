@@ -254,8 +254,8 @@ function ClaimsById() {
       <div
         className="common-table"
         style={{
-          paddingLeft: "34px",
-          paddingRight: "34px",
+          paddingLeft: "0",
+          paddingRight: "0",
           width: "100%",
           overflowX: "auto",
           paddingBottom: "80px",

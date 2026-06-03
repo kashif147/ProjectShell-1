@@ -27,23 +27,25 @@ export const SUMMARY_FOOTER_HELP = {
 export const LEDGER_COLUMN_HELP = {
   date: "General ledger transaction (posting) date used for reporting and sorting.",
   docType:
-    "Operational document type (invoice, receipt, credit note, fee adjustment, etc.).",
+    "Operational document type (invoice, receipt, credit note, fee adjustment, etc.).\n\nWhen underlined, click to open the related finance record (online payment, credit notes, write-offs, journal adjustment, or payment batch). Invoices and membership fee adjustments are not linked.",
   paymentType:
     "How money was received or paid out. Online payments (claims) are card/application payments linked to this member after subscription is created. Empty for non-payment documents — see the note in Tx Type.",
   status:
     "Posted = on the general ledger. Draft = credit note not yet approved. Refunded / Written Off = document type indicates that outcome.\n\nClearing/reconciliation state is shown in Badges (CLEARING PENDING), not here.",
   badges:
     "Row-specific flags only: clearing pending, pending approval, refunded, written off, etc. Member-level credit is on the summary cards above.",
-  sourceLink:
-    "Open the related finance workspace record (online payment, batch, credit note list, write-offs, journal adjustments).",
-  debit:
-    "Member-side debit on this row (increases amount owed or reduces credit on 1400 / member view).\n\nSome journals show both debit and credit on the same row when multiple member lines net to zero (e.g. internal reallocations) — balance uses the net.",
-  credit:
-    "Member-side credit on this row (payment, credit note, or reduction in amount owed).",
+  amount:
+    "Effect of this transaction on the member account.\n\n(Dr) = member owes more (e.g. invoice). (Cr) = member owes less or is in credit (e.g. payment, credit note).\n\nFormula: debit − credit on member receivable lines for this row (net).",
   balance:
-    "Running net position after this transaction in created-at order (newest row at top shows current position).\n\nFormula per row: previous balance + credits − debits (member 1400 aggregation in simple view).\n\nNegative balance = member in credit (Cr); positive = amount owed (Dr).",
-  memo: "Journal memo and reference for this transaction; use the icon to view the full reference.",
+    "Running balance after this row (newest at top ≈ current position).\n\nFormula: previous balance + (debit − credit) for this row.\n\n(Dr) = overall amount owed; (Cr) = overall in credit.\n\nFor open invoice total use Outstanding; for money on account use Available credit on the cards above.",
+  memo: "Journal memo and reference for this transaction. Double-click the Memo header to expand the column; drag the edge to resize.",
   ledgerCreatedAt: "Date and time this entry was created in the accounting system.",
+  sourceDoc:
+    "Upstream document this row relates to (invoice, receipt, etc.) from GL reference or memo.",
+  batchRef:
+    "Payment batch id or Stripe payout reference when the row came from batch or card clearing.",
+  relatedDocs:
+    "Other ledger documents in the same transaction chain — click to open the related record.",
   actions:
     "Contextual actions allowed for this document type, balance, and your permissions.",
 };

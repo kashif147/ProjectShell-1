@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import {
   Drawer,
   Button,
@@ -10,68 +10,80 @@ import {
   Switch,
   message,
 } from "antd";
-import MyInput from "../common/MyInput";
+import {
+  isBankSectionComplete,
+  isBicFieldComplete,
+  isIbanFieldComplete,
+} from "../../utils/iban";
 import CustomSelect from "../common/CustomSelect";
 import { PlusOutlined, MinusCircleOutlined } from "@ant-design/icons";
-import { getAllTenants, updateTenant } from "../../features/TenantSlice";
+import {
+  getAllTenants,
+  updateOrganisationProfile,
+  updateBranding,
+  updateRegionalSettings,
+} from "../../features/TenantSlice";
 import { updateFtn } from "../../utils/Utilities";
 import { insertDataFtn } from "../../utils/Utilities";
-// import "../../../styles/TenantManagement.css";
-import "../../styles/TenantManagement.css"
+import "../../styles/TenantManagement.css";
 import { useDispatch } from "react-redux";
-import { json } from "react-router-dom";
 import MyAlert from "../common/MyAlert";
-
+import MyInput from "../common/MyInput";
+import { mergeTenantFormData } from "../../constants/tenantDefaults";
+import TenantBrandingAssetUpload from "./TenantBrandingAssetUpload";
+import TenantOfficesPanel from "./TenantOfficesPanel";
+import TenantDepartmentsPanel from "./TenantDepartmentsPanel";
+import { notifyBrandingRefresh } from "../../context/TenantBrandingContext";
+import {
+  clearTenantBrandingCache,
+  resolveTenantId,
+} from "../../services/tenantBrandingService";
 const { TabPane } = Tabs;
 
+const TENANT_TAB_KEYS = [
+  "details",
+  "organisation",
+  "branding",
+  "departments",
+  "offices",
+];
+
+const getChangedFields = (current, original) =>
+  Object.keys(current).reduce((acc, key) => {
+    if (JSON.stringify(current[key]) !== JSON.stringify(original?.[key])) {
+      acc[key] = current[key];
+    }
+    return acc;
+  }, {});
+
 const TenantForm = ({ tenant, onClose }) => {
-  const dispatch = useDispatch
+  const dispatch = useDispatch();
   const [originalTenant, setOriginalTenant] = useState(null);
-  const [iData, setIData] = useState({
-    name: "",
-    code: "",
-    description: "",
-    domain: "",
-    contactEmail: "",
-    contactPhone: "",
-    status: "PENDING",
-    isActive: true,
-    address: {
-      street: "",
-      city: "",
-      state: "",
-      zipCode: "",
-      country: "IE",
-    },
-    settings: {
-      maxUsers: 100,
-      allowSelfRegistration: true,
-      sessionTimeout: 24,
-      passwordPolicy: {
-        minLength: 8,
-        requireUppercase: true,
-        requireLowercase: true,
-        requireNumbers: true,
-        requireSpecialChars: true,
-      },
-    },
-    subscription: {
-      plan: "FREE",
-      startDate: "",
-      endDate: "",
-      autoRenew: true,
-    },
-    authenticationConnections: [],
-  });
+  const [iData, setIData] = useState(mergeTenantFormData(null));
 
   const [errors, setErrors] = useState({});
+  const [activeTabKey, setActiveTabKey] = useState("details");
+
+  useEffect(() => {
+    setActiveTabKey("details");
+  }, [tenant?._id]);
+
+  const handleTabChange = useCallback((key) => {
+    if (TENANT_TAB_KEYS.includes(key)) {
+      setActiveTabKey(key);
+    }
+  }, []);
 
   useEffect(() => {
     if (tenant) {
-      setIData(tenant);         // populate form
-      setOriginalTenant(tenant); // keep original copy for comparison
+      const formData = mergeTenantFormData(tenant);
+      setIData(formData);
+      setOriginalTenant(formData);
+    } else {
+      const emptyForm = mergeTenantFormData(null);
+      setIData(emptyForm);
+      setOriginalTenant(null);
     }
-    // eslint-disable-next-line
   }, [tenant]);
 
   // const handleChange = (section, field, value) => {
@@ -86,12 +98,10 @@ const TenantForm = ({ tenant, onClose }) => {
 
   const validate = () => {
     let newErrors = {};
-    if (!iData.name?.trim()) newErrors.name = "Organization name is required";
+    if (!iData.name?.trim()) newErrors.name = "Tenant name is required";
     if (!iData.code?.trim()) newErrors.code = "Tenant code is required";
     if (!iData.description?.trim())
       newErrors.description = "Description is required";
-    if (!iData.contactEmail?.trim())
-      newErrors.contactEmail = "Contact email is required";
     if (!iData.subscription.plan)
       newErrors.subscriptionPlan = "Plan is required";
 
@@ -99,7 +109,6 @@ const TenantForm = ({ tenant, onClose }) => {
     return Object.keys(newErrors).length === 0;
   };
   const handleChange = (section, field, value, index = null) => {
-
     setIData((prev) => {
       let updated = { ...prev };
 
@@ -120,6 +129,14 @@ const TenantForm = ({ tenant, onClose }) => {
           [field]: value,
         };
         updated.authenticationConnections = connections;
+      } else if (section === "organisationProfileBankAddress") {
+        updated.organisationProfile = {
+          ...prev.organisationProfile,
+          bankAddress: {
+            ...(prev.organisationProfile?.bankAddress || {}),
+            [field]: value,
+          },
+        };
       } else {
         updated[section] = {
           ...prev[section],
@@ -141,71 +158,109 @@ const TenantForm = ({ tenant, onClose }) => {
     });
   };
 
-
-
   const handleSubmit = async () => {
     if (!validate()) {
       return;
     }
     if (tenant) {
-      // compare iData vs originalTenant
-      const changedData = {};
-      Object.keys(iData).forEach((key) => {
-        if (JSON.stringify(iData[key]) !== JSON.stringify(originalTenant[key])) {
-          changedData[key] = iData[key];
-        }
-      });
-      if (tenant) {
-        // ✅ Find differences
-        const changedFields = Object.keys(iData).reduce((acc, key) => {
-          if (iData[key] !== tenant[key]) {
-            acc[key] = iData[key];
-          }
-          return acc;
-        }, {});
+      const changedFields = getChangedFields(iData, originalTenant);
 
-        if (Object.keys(changedFields).length === 0) {
-          MyAlert("error", 'No changes detected for tenant')
-          return;
+      if (Object.keys(changedFields).length === 0) {
+        MyAlert("error", "No changes detected for tenant");
+        return;
+      }
+
+      const changedKeys = Object.keys(changedFields);
+      const isOnlyChange = (key) =>
+        changedKeys.length === 1 && changedKeys[0] === key;
+
+      const afterUpdate = async () => {
+        onClose();
+        setErrors({});
+        if (changedFields.branding) {
+          clearTenantBrandingCache(tenant._id);
+          const sessionTenantId = resolveTenantId();
+          if (sessionTenantId) clearTenantBrandingCache(sessionTenantId);
+          notifyBrandingRefresh();
         }
-        try {
+        await dispatch(getAllTenants());
+      };
+
+      try {
+        if (isOnlyChange("organisationProfile")) {
+          await dispatch(
+            updateOrganisationProfile({
+              id: tenant._id,
+              organisationProfile: changedFields.organisationProfile,
+            }),
+          ).unwrap();
+        } else if (isOnlyChange("branding")) {
+          await dispatch(
+            updateBranding({
+              id: tenant._id,
+              branding: changedFields.branding,
+            }),
+          ).unwrap();
+        } else if (isOnlyChange("regionalSettings")) {
+          await dispatch(
+            updateRegionalSettings({
+              id: tenant._id,
+              regionalSettings: changedFields.regionalSettings,
+            }),
+          ).unwrap();
+        } else {
           await updateFtn(
             process.env.REACT_APP_POLICY_SERVICE_URL,
             `/tenants/${tenant?._id}`,
-            // { id: tenant?._id, ...changedFields },
             { ...changedFields },
-            async () => {
-              onClose();
-              setErrors({});
-              const res = await dispatch(getAllTenants());
-              console.log("after dispatch", res);
-            },
-            "Tenant updated successfully"
+            null,
+            "Tenant updated successfully",
           );
-        } catch (err) {
-          console.error("Update failed:", err);
+          await afterUpdate();
+          return;
         }
-        return;
+
+        MyAlert("success", "Tenant updated successfully");
+        await afterUpdate();
+      } catch (err) {
+        console.error("Update failed:", err);
+        MyAlert(
+          "error",
+          err?.message || "Failed to update tenant. Please try again.",
+        );
       }
       return;
-    }
-    else
+    } else
       insertDataFtn(
         process.env.REACT_APP_POLICY_SERVICE_URL,
-        "/tenants",      // API endpoint
-        iData,               // Payload
-        "Tenant created successfully",   // Success message
-        "Error creating tenant",         // Error message
+        "/tenants", // API endpoint
+        iData, // Payload
+        "Tenant created successfully", // Success message
+        "Error creating tenant", // Error message
         () => {
           // 🔥 Callback after success
-          onClose();          // close drawer/modal if applicable
-          setErrors({});      // clear errors
-          setIData({});       // reset form state
-        }
+          onClose(); // close drawer/modal if applicable
+          setErrors({}); // clear errors
+          setIData({}); // reset form state
+        },
       );
-
   };
-  console.log(errors, "yrs")
+  const ColorField = ({ label, value, onChange }) => (
+    <div className="color-field">
+      <MyInput
+        label={label}
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+      />
+      <input
+        type="color"
+        className="color-picker-input"
+        value={value || "#1E40AF"}
+        onChange={(e) => onChange(e.target.value)}
+        aria-label={`${label} picker`}
+      />
+    </div>
+  );
 
   return (
     <Drawer
@@ -230,19 +285,23 @@ const TenantForm = ({ tenant, onClose }) => {
       }
     >
       <div className="drawer-main-cntainer">
-        <Tabs defaultActiveKey="basic" size="small">
-          {/* 1️⃣ Basic Info & Contact */}
-          <TabPane tab="Basic Info & Contact" key="basic">
+        <Tabs
+          className="tenant-form-tabs"
+          activeKey={activeTabKey}
+          onChange={handleTabChange}
+          destroyInactiveTabPane
+          size="small"
+        >
+          <TabPane tab="Tenant Details" key="details">
             <div className="drawer-tab-content pt-2">
-
-              {/* ================= Organization Info ================= */}
-              {/* <div className="section-header">🏢 Organization Info</div> */}
               <Row gutter={16}>
                 <Col span={12}>
                   <MyInput
-                    label="Organization Name"
+                    label="Tenant Name"
                     value={iData.name}
-                    onChange={(e) => handleChange("root", "name", e.target.value, null)}
+                    onChange={(e) =>
+                      handleChange("root", "name", e.target.value, null)
+                    }
                     hasError={errors.name}
                     required
                   />
@@ -265,7 +324,9 @@ const TenantForm = ({ tenant, onClose }) => {
                   <MyInput
                     label="Description"
                     value={iData.description}
-                    onChange={(e) => handleChange("root", "description", e.target.value, null)}
+                    onChange={(e) =>
+                      handleChange("root", "description", e.target.value, null)
+                    }
                     hasError={errors.description}
                     required
                     textarea
@@ -278,123 +339,97 @@ const TenantForm = ({ tenant, onClose }) => {
                   <MyInput
                     label="Domain"
                     value={iData.domain}
-                    onChange={(e) => handleChange("root", "domain", e.target.value, null)}
+                    onChange={(e) =>
+                      handleChange("root", "domain", e.target.value, null)
+                    }
                     hasError={errors?.domain}
                   />
                 </Col>
-                {/* <Col span={8}>
-        <CustomSelect
-          label="Status"
-          value={iData.status}
-          onChange={(val) => handleChange("status", val)}
-          options={[
-            { value: "ACTIVE", label: "Active" },
-            { value: "INACTIVE", label: "Inactive" },
-            { value: "SUSPENDED", label: "Suspended" },
-            { value: "PENDING", label: "Pending" },
-          ]}
-        />
-      </Col> */}
                 <Col span={12}>
                   <div className="switch-field">
                     <label className="my-input-label">Active</label>
                     <Switch
                       className="tenant-active-switch"
                       checked={iData.isActive}
-                      onChange={(val) => handleChange("isActive", val)}
+                      onChange={(val) => handleChange("root", "isActive", val)}
                     />
                   </div>
                 </Col>
               </Row>
 
-              {/* ================= Contact Info ================= */}
-              <div className="section-header">📞 Contact Information</div>
+              <div className="section-header">Regional Settings</div>
               <Row gutter={16}>
                 <Col span={12}>
                   <MyInput
-                    label="Contact Email"
-                    value={iData.contactEmail}
-                    onChange={(e) => handleChange("root", "contactEmail", e.target.value, null)}
-                    hasError={errors.contactEmail}
-                    type="email"
-                    required
-                  />
-                </Col>
-                <Col span={12}>
-                  <MyInput
-                    label="Contact Phone"
-                    value={iData.contactPhone}
-                    onChange={(e) => handleChange("root", "contactPhone", e.target.value, null)}
-                    type='mobile'
-                  />
-                </Col>
-              </Row>
-
-              {/* ================= Address Info ================= */}
-              <div className="section-header">🏠 Address Information</div>
-              <Row gutter={16}>
-                <Col span={24}>
-                  <MyInput
-                    label="Street Address"
-                    value={iData.address.street}
+                    label="Timezone"
+                    value={iData.regionalSettings.timezone}
                     onChange={(e) =>
-                      handleChange("address", "street", e.target.value, null)
+                      handleChange(
+                        "regionalSettings",
+                        "timezone",
+                        e.target.value,
+                        null,
+                      )
+                    }
+                  />
+                </Col>
+                <Col span={12}>
+                  <MyInput
+                    label="Locale"
+                    value={iData.regionalSettings.locale}
+                    onChange={(e) =>
+                      handleChange(
+                        "regionalSettings",
+                        "locale",
+                        e.target.value,
+                        null,
+                      )
                     }
                   />
                 </Col>
               </Row>
-
               <Row gutter={16}>
-                <Col span={6}>
-                  <MyInput
-                    label="Area or Town"
-                    value={iData.address.city}
-                    onChange={(e) =>
-                      handleChange("address", "city", e.target.value, null)
-                    }
-                  />
-                </Col>
-                <Col span={6}>
-                  <MyInput
-                    label="City, County or Postcode"
-                    value={iData.address.state}
-                    onChange={(e) =>
-                      handleChange("address", "state", e.target.value, null)
-                    }
-                  />
-                </Col>
-                <Col span={6}>
-                  <MyInput
-                    label="Eircode"
-                    value={iData.address.zipCode}
-                    onChange={(e) =>
-                      handleChange("address", "zipCode", e.target.value, null)
-                    }
-                  />
-                </Col>
-                <Col span={6}>
+                <Col span={12}>
                   <CustomSelect
-                    label="Country"
-                    value={iData.address.country}
-                    onChange={(val) => handleChange("address", "country", val?.target.value, null)}
+                    label="Currency"
+                    value={iData.regionalSettings.currency}
+                    onChange={(val) =>
+                      handleChange(
+                        "regionalSettings",
+                        "currency",
+                        val?.target?.value || val,
+                        null,
+                      )
+                    }
                     options={[
-                      { value: "IE", label: "Ireland" },
-                      { value: "US", label: "United States" },
-                      { value: "CA", label: "Canada" },
-                      { value: "UK", label: "United Kingdom" },
-                      { value: "AU", label: "Australia" },
+                      { value: "EUR", label: "EUR (€)" },
+                      { value: "GBP", label: "GBP (£)" },
+                      { value: "USD", label: "USD ($)" },
+                    ]}
+                  />
+                </Col>
+                <Col span={12}>
+                  <CustomSelect
+                    label="Date Format"
+                    value={iData.regionalSettings.dateFormat}
+                    onChange={(val) =>
+                      handleChange(
+                        "regionalSettings",
+                        "dateFormat",
+                        val?.target?.value || val,
+                        null,
+                      )
+                    }
+                    options={[
+                      { value: "DD/MM/YYYY", label: "DD/MM/YYYY" },
+                      { value: "MM/DD/YYYY", label: "MM/DD/YYYY" },
+                      { value: "YYYY-MM-DD", label: "YYYY-MM-DD" },
                     ]}
                   />
                 </Col>
               </Row>
-            </div>
-          </TabPane>
 
-
-
-          {/* 2️⃣ Settings & Subscription */}
-          <TabPane tab="Settings & Subscription" key="settings">
-            <div className="drawer-tab-content pt-2">
+              <div className="section-header">Settings & Subscription</div>
               <Row gutter={[16, 8]}>
                 <Col span={8}>
                   <MyInput
@@ -412,7 +447,12 @@ const TenantForm = ({ tenant, onClose }) => {
                     <Switch
                       checked={iData.settings.allowSelfRegistration}
                       onChange={(val) =>
-                        handleChange("settings", "allowSelfRegistration", val, null)
+                        handleChange(
+                          "settings",
+                          "allowSelfRegistration",
+                          val,
+                          null,
+                        )
                       }
                     />
                   </label>
@@ -508,7 +548,9 @@ const TenantForm = ({ tenant, onClose }) => {
                   <label className="switch-label">
                     Special Chars{" "}
                     <Switch
-                      checked={iData.settings.passwordPolicy.requireSpecialChars}
+                      checked={
+                        iData.settings.passwordPolicy.requireSpecialChars
+                      }
                       onChange={(val) =>
                         setIData((prev) => ({
                           ...prev,
@@ -537,7 +579,8 @@ const TenantForm = ({ tenant, onClose }) => {
                     }
                     options={[
                       { value: "FREE", label: "Free" },
-                      { value: "PRO", label: "Pro" },
+                      { value: "BASIC", label: "Basic" },
+                      { value: "PREMIUM", label: "Premium" },
                       { value: "ENTERPRISE", label: "Enterprise" },
                     ]}
                     error={errors.subscriptionPlan}
@@ -578,12 +621,8 @@ const TenantForm = ({ tenant, onClose }) => {
                   </label>
                 </Col>
               </Row>
-            </div>
-          </TabPane>
 
-          {/* 3️⃣ Auth Connections */}
-          <TabPane tab="Auth Connections" key="auth">
-            <div className="drawer-tab-content pt-2">
+              <div className="section-header">Authentication Connections</div>
               <Button
                 type="dashed"
                 icon={<PlusOutlined />}
@@ -592,7 +631,13 @@ const TenantForm = ({ tenant, onClose }) => {
                     ...prev,
                     authenticationConnections: [
                       ...(prev.authenticationConnections || []),
-                      { connectionType: "", issuerUrl: "", directoryId: "", audience: "", isActive: true },
+                      {
+                        connectionType: "",
+                        issuerUrl: "",
+                        directoryId: "",
+                        audience: "",
+                        isActive: true,
+                      },
                     ],
                   }))
                 }
@@ -601,7 +646,10 @@ const TenantForm = ({ tenant, onClose }) => {
                 Add Connection
               </Button>
 
-              {(iData.authenticationConnections?.length ? iData.authenticationConnections : [{}]).map((conn, idx) => {
+              {(iData.authenticationConnections?.length
+                ? iData.authenticationConnections
+                : [{}]
+              ).map((conn, idx) => {
                 const connection = {
                   connectionType: "",
                   issuerUrl: "",
@@ -612,10 +660,7 @@ const TenantForm = ({ tenant, onClose }) => {
                 };
 
                 return (
-                  <div
-                    key={idx}
-                    className="auth-connection-card"
-                  >
+                  <div key={idx} className="auth-connection-card">
                     <div className="d-flex justify-content-end align-items-center mb-2 auth-connection-actions">
                       {iData.authenticationConnections?.length > 0 && (
                         <Button
@@ -624,7 +669,10 @@ const TenantForm = ({ tenant, onClose }) => {
                           onClick={() =>
                             setIData((prev) => ({
                               ...prev,
-                              authenticationConnections: prev.authenticationConnections.filter((_, i) => i !== idx),
+                              authenticationConnections:
+                                prev.authenticationConnections.filter(
+                                  (_, i) => i !== idx,
+                                ),
                             }))
                           }
                         >
@@ -635,9 +683,14 @@ const TenantForm = ({ tenant, onClose }) => {
                       <Switch
                         checked={connection.isActive}
                         onChange={(val) => {
-                          const newCons = [...(iData.authenticationConnections || [])];
+                          const newCons = [
+                            ...(iData.authenticationConnections || []),
+                          ];
                           newCons[idx] = { ...connection, isActive: val };
-                          setIData((prev) => ({ ...prev, authenticationConnections: newCons }));
+                          setIData((prev) => ({
+                            ...prev,
+                            authenticationConnections: newCons,
+                          }));
                         }}
                       />
                     </div>
@@ -648,12 +701,23 @@ const TenantForm = ({ tenant, onClose }) => {
                           label="Connection Type"
                           value={connection.connectionType}
                           onChange={(value) => {
-                            const newCons = [...(iData.authenticationConnections || [])];
-                            newCons[idx] = { ...connection, connectionType: value?.target.value };
-                            setIData((prev) => ({ ...prev, authenticationConnections: newCons }));
+                            const newCons = [
+                              ...(iData.authenticationConnections || []),
+                            ];
+                            newCons[idx] = {
+                              ...connection,
+                              connectionType: value?.target.value,
+                            };
+                            setIData((prev) => ({
+                              ...prev,
+                              authenticationConnections: newCons,
+                            }));
                           }}
                           options={[
-                            { label: "Entra ID (Azure AD)", value: "Entra ID (Azure AD)" },
+                            {
+                              label: "Entra ID (Azure AD)",
+                              value: "Entra ID (Azure AD)",
+                            },
                             { label: "Azure B2C", value: "Azure B2C" },
                           ]}
                         />
@@ -665,9 +729,17 @@ const TenantForm = ({ tenant, onClose }) => {
                           placeholder="https://login.microsoftonline.com/{tid}/v2.0"
                           value={connection.issuerUrl}
                           onChange={(e) => {
-                            const newCons = [...(iData.authenticationConnections || [])];
-                            newCons[idx] = { ...connection, issuerUrl: e.target.value };
-                            setIData((prev) => ({ ...prev, authenticationConnections: newCons }));
+                            const newCons = [
+                              ...(iData.authenticationConnections || []),
+                            ];
+                            newCons[idx] = {
+                              ...connection,
+                              issuerUrl: e.target.value,
+                            };
+                            setIData((prev) => ({
+                              ...prev,
+                              authenticationConnections: newCons,
+                            }));
                           }}
                         />
                       </Col>
@@ -677,9 +749,17 @@ const TenantForm = ({ tenant, onClose }) => {
                           label="Directory Id"
                           value={connection.directoryId}
                           onChange={(e) => {
-                            const newCons = [...(iData.authenticationConnections || [])];
-                            newCons[idx] = { ...connection, directoryId: e.target.value };
-                            setIData((prev) => ({ ...prev, authenticationConnections: newCons }));
+                            const newCons = [
+                              ...(iData.authenticationConnections || []),
+                            ];
+                            newCons[idx] = {
+                              ...connection,
+                              directoryId: e.target.value,
+                            };
+                            setIData((prev) => ({
+                              ...prev,
+                              authenticationConnections: newCons,
+                            }));
                           }}
                         />
                       </Col>
@@ -690,9 +770,17 @@ const TenantForm = ({ tenant, onClose }) => {
                           value={connection.audience}
                           placeholder="{clientId}"
                           onChange={(e) => {
-                            const newCons = [...(iData.authenticationConnections || [])];
-                            newCons[idx] = { ...connection, audience: e.target.value };
-                            setIData((prev) => ({ ...prev, authenticationConnections: newCons }));
+                            const newCons = [
+                              ...(iData.authenticationConnections || []),
+                            ];
+                            newCons[idx] = {
+                              ...connection,
+                              audience: e.target.value,
+                            };
+                            setIData((prev) => ({
+                              ...prev,
+                              authenticationConnections: newCons,
+                            }));
                           }}
                         />
                       </Col>
@@ -703,6 +791,481 @@ const TenantForm = ({ tenant, onClose }) => {
             </div>
           </TabPane>
 
+          <TabPane tab="Organisation Profile" key="organisation">
+            <div className="drawer-tab-content pt-2">
+              <div className="section-header">Legal & Registration</div>
+              <Row gutter={16}>
+                <Col span={12}>
+                  <MyInput
+                    label="Legal Name"
+                    value={iData.organisationProfile.legalName}
+                    onChange={(e) =>
+                      handleChange(
+                        "organisationProfile",
+                        "legalName",
+                        e.target.value,
+                        null,
+                      )
+                    }
+                  />
+                </Col>
+                <Col span={12}>
+                  <MyInput
+                    label="Trading Name"
+                    value={iData.organisationProfile.tradingName}
+                    onChange={(e) =>
+                      handleChange(
+                        "organisationProfile",
+                        "tradingName",
+                        e.target.value,
+                        null,
+                      )
+                    }
+                  />
+                </Col>
+              </Row>
+              <Row gutter={16}>
+                <Col span={8}>
+                  <MyInput
+                    label="Registration Number"
+                    value={iData.organisationProfile.registrationNumber}
+                    onChange={(e) =>
+                      handleChange(
+                        "organisationProfile",
+                        "registrationNumber",
+                        e.target.value,
+                        null,
+                      )
+                    }
+                  />
+                </Col>
+                <Col span={8}>
+                  <MyInput
+                    label="VAT Number"
+                    value={iData.organisationProfile.vatNumber}
+                    onChange={(e) =>
+                      handleChange(
+                        "organisationProfile",
+                        "vatNumber",
+                        e.target.value,
+                        null,
+                      )
+                    }
+                  />
+                </Col>
+                <Col span={8}>
+                  <MyInput
+                    label="Charity Number"
+                    value={iData.organisationProfile.charityNumber}
+                    onChange={(e) =>
+                      handleChange(
+                        "organisationProfile",
+                        "charityNumber",
+                        e.target.value,
+                        null,
+                      )
+                    }
+                  />
+                </Col>
+              </Row>
+
+              <div className="section-header">Contact</div>
+              <Row gutter={16}>
+                <Col span={12}>
+                  <MyInput
+                    label="Website"
+                    value={iData.organisationProfile.website}
+                    onChange={(e) =>
+                      handleChange(
+                        "organisationProfile",
+                        "website",
+                        e.target.value,
+                        null,
+                      )
+                    }
+                  />
+                </Col>
+                <Col span={12}>
+                  <MyInput
+                    label="Email"
+                    type="email"
+                    value={iData.organisationProfile.email}
+                    onChange={(e) =>
+                      handleChange(
+                        "organisationProfile",
+                        "email",
+                        e.target.value,
+                        null,
+                      )
+                    }
+                  />
+                </Col>
+              </Row>
+              <Row gutter={16}>
+                <Col span={12}>
+                  <MyInput
+                    label="Contact Number"
+                    type="mobile"
+                    value={iData.organisationProfile.contactNumber}
+                    onChange={(e) =>
+                      handleChange(
+                        "organisationProfile",
+                        "contactNumber",
+                        e.target.value,
+                        null,
+                      )
+                    }
+                  />
+                </Col>
+              </Row>
+
+              <div className="section-header">Bank Details</div>
+              <Row gutter={[12, 4]}>
+                <Col span={24}>
+                  <MyInput
+                    label="Account Name"
+                    value={iData.organisationProfile.bankName}
+                    onChange={(e) =>
+                      handleChange(
+                        "organisationProfile",
+                        "bankName",
+                        e.target.value,
+                        null,
+                      )
+                    }
+                  />
+                </Col>
+              </Row>
+              <Row
+                gutter={[12, 4]}
+                className={
+                  isBankSectionComplete(
+                    iData.organisationProfile.iban,
+                    iData.organisationProfile.bic,
+                  )
+                    ? "tenant-form__bank-row--valid"
+                    : undefined
+                }
+              >
+                <Col xs={24} md={12}>
+                  <MyInput
+                    label="IBAN"
+                    type="iban"
+                    success={isIbanFieldComplete(iData.organisationProfile.iban)}
+                    value={iData.organisationProfile.iban}
+                    onChange={(e) =>
+                      handleChange(
+                        "organisationProfile",
+                        "iban",
+                        e.target.value,
+                        null,
+                      )
+                    }
+                  />
+                </Col>
+                <Col xs={24} md={12}>
+                  <MyInput
+                    label="BIC"
+                    type="bic"
+                    success={isBicFieldComplete(iData.organisationProfile.bic)}
+                    value={iData.organisationProfile.bic}
+                    onChange={(e) =>
+                      handleChange(
+                        "organisationProfile",
+                        "bic",
+                        e.target.value,
+                        null,
+                      )
+                    }
+                  />
+                </Col>
+              </Row>
+              <Row gutter={[12, 4]}>
+                <Col xs={24} md={12}>
+                  <MyInput
+                    label="SEPA Originator Identification Number (OIN)"
+                    value={
+                      iData.organisationProfile
+                        .sepaOriginatorIdentificationNumber
+                    }
+                    onChange={(e) =>
+                      handleChange(
+                        "organisationProfile",
+                        "sepaOriginatorIdentificationNumber",
+                        e.target.value,
+                        null,
+                      )
+                    }
+                  />
+                </Col>
+              </Row>
+              <div className="tenant-org-bank-address">
+                <div className="section-header">Bank Address</div>
+                <Row gutter={[12, 4]}>
+                  <Col xs={24} md={12}>
+                    <MyInput
+                      label="Building or house"
+                      value={
+                        iData.organisationProfile.bankAddress?.buildingOrHouse
+                      }
+                      onChange={(e) =>
+                        handleChange(
+                          "organisationProfileBankAddress",
+                          "buildingOrHouse",
+                          e.target.value,
+                          null,
+                        )
+                      }
+                    />
+                  </Col>
+                  <Col xs={24} md={12}>
+                    <MyInput
+                      label="Street or road"
+                      value={
+                        iData.organisationProfile.bankAddress?.streetOrRoad
+                      }
+                      onChange={(e) =>
+                        handleChange(
+                          "organisationProfileBankAddress",
+                          "streetOrRoad",
+                          e.target.value,
+                          null,
+                        )
+                      }
+                    />
+                  </Col>
+                  <Col xs={24} md={12}>
+                    <MyInput
+                      label="Area or town"
+                      value={iData.organisationProfile.bankAddress?.areaOrTown}
+                      onChange={(e) =>
+                        handleChange(
+                          "organisationProfileBankAddress",
+                          "areaOrTown",
+                          e.target.value,
+                          null,
+                        )
+                      }
+                    />
+                  </Col>
+                  <Col xs={24} md={12}>
+                    <MyInput
+                      label="County, city or postcode"
+                      value={
+                        iData.organisationProfile.bankAddress
+                          ?.countyCityOrPostCode
+                      }
+                      onChange={(e) =>
+                        handleChange(
+                          "organisationProfileBankAddress",
+                          "countyCityOrPostCode",
+                          e.target.value,
+                          null,
+                        )
+                      }
+                    />
+                  </Col>
+                  <Col xs={24} md={12}>
+                    <MyInput
+                      label="Eircode"
+                      placeholder="e.g. D01X4X0"
+                      value={iData.organisationProfile.bankAddress?.eircode}
+                      onChange={(e) =>
+                        handleChange(
+                          "organisationProfileBankAddress",
+                          "eircode",
+                          e.target.value,
+                          null,
+                        )
+                      }
+                    />
+                  </Col>
+                  <Col xs={24} md={12}>
+                    <MyInput
+                      label="Country"
+                      value={iData.organisationProfile.bankAddress?.country}
+                      onChange={(e) =>
+                        handleChange(
+                          "organisationProfileBankAddress",
+                          "country",
+                          e.target.value,
+                          null,
+                        )
+                      }
+                    />
+                  </Col>
+                </Row>
+              </div>
+            </div>
+          </TabPane>
+
+          <TabPane tab="Branding" key="branding">
+            <div className="drawer-tab-content pt-2">
+              <div className="section-header">Logos & Assets</div>
+              <p className="text-muted tenant-branding-hint mb-3">
+                Default membership branding is shown until you upload your own
+                assets to Azure Blob Storage.
+              </p>
+              <Row gutter={16}>
+                <Col span={8}>
+                  <TenantBrandingAssetUpload
+                    label="Logo"
+                    assetType="logo"
+                    value={iData.branding.logoUrl}
+                    tenantId={tenant?._id}
+                    onChange={(url) =>
+                      handleChange("branding", "logoUrl", url, null)
+                    }
+                    previewHeight={56}
+                  />
+                </Col>
+                <Col span={8}>
+                  <TenantBrandingAssetUpload
+                    label="Dark Logo"
+                    assetType="logoDark"
+                    value={iData.branding.logoDarkUrl}
+                    tenantId={tenant?._id}
+                    onChange={(url) =>
+                      handleChange("branding", "logoDarkUrl", url, null)
+                    }
+                    previewHeight={56}
+                  />
+                </Col>
+                <Col span={8}>
+                  <TenantBrandingAssetUpload
+                    label="Favicon"
+                    assetType="favicon"
+                    value={iData.branding.faviconUrl}
+                    tenantId={tenant?._id}
+                    onChange={(url) =>
+                      handleChange("branding", "faviconUrl", url, null)
+                    }
+                    previewHeight={40}
+                  />
+                </Col>
+              </Row>
+
+              <div className="section-header">Colours</div>
+              <p className="text-muted tenant-branding-hint mb-2">
+                Matches Project Shell defaults (Utilites.css). Used for letters
+                and exports; the live app sidebar keeps existing CSS.
+              </p>
+              <Row gutter={16}>
+                <Col span={8}>
+                  <ColorField
+                    label="Primary Colour"
+                    value={iData.branding.primaryColor}
+                    onChange={(val) =>
+                      handleChange("branding", "primaryColor", val, null)
+                    }
+                  />
+                </Col>
+                <Col span={8}>
+                  <ColorField
+                    label="Secondary Colour"
+                    value={iData.branding.secondaryColor}
+                    onChange={(val) =>
+                      handleChange("branding", "secondaryColor", val, null)
+                    }
+                  />
+                </Col>
+                <Col span={8}>
+                  <ColorField
+                    label="Accent Colour"
+                    value={iData.branding.accentColor}
+                    onChange={(val) =>
+                      handleChange("branding", "accentColor", val, null)
+                    }
+                  />
+                </Col>
+              </Row>
+
+              <div className="section-header">Portal & Communications</div>
+              <Row gutter={16}>
+                <Col span={12}>
+                  <MyInput
+                    label="Portal Title"
+                    value={iData.branding.portalTitle}
+                    onChange={(e) =>
+                      handleChange(
+                        "branding",
+                        "portalTitle",
+                        e.target.value,
+                        null,
+                      )
+                    }
+                  />
+                </Col>
+              </Row>
+              <Row gutter={16}>
+                <Col span={24}>
+                  <MyInput
+                    label="Email Footer Text"
+                    value={iData.branding.emailFooterText}
+                    onChange={(e) =>
+                      handleChange(
+                        "branding",
+                        "emailFooterText",
+                        e.target.value,
+                        null,
+                      )
+                    }
+                    textarea
+                  />
+                </Col>
+              </Row>
+              <Row gutter={16}>
+                <Col span={12}>
+                  <TenantBrandingAssetUpload
+                    label="Letter Header"
+                    assetType="letterHeader"
+                    value={iData.branding.letterHeaderUrl}
+                    tenantId={tenant?._id}
+                    onChange={(url) =>
+                      handleChange("branding", "letterHeaderUrl", url, null)
+                    }
+                    previewHeight={48}
+                  />
+                </Col>
+                <Col span={12}>
+                  <TenantBrandingAssetUpload
+                    label="Letter Footer"
+                    assetType="letterFooter"
+                    value={iData.branding.letterFooterUrl}
+                    tenantId={tenant?._id}
+                    onChange={(url) =>
+                      handleChange("branding", "letterFooterUrl", url, null)
+                    }
+                    previewHeight={48}
+                  />
+                </Col>
+              </Row>
+            </div>
+          </TabPane>
+
+          <TabPane tab="Departments" key="departments" disabled={!tenant?._id}>
+            <div className="drawer-tab-content pt-2">
+              {tenant?._id ? (
+                <TenantDepartmentsPanel tenantId={tenant._id} />
+              ) : (
+                <p className="text-muted mb-0">
+                  Save the tenant first to manage departments.
+                </p>
+              )}
+            </div>
+          </TabPane>
+
+          <TabPane tab="Offices" key="offices" disabled={!tenant?._id}>
+            <div className="drawer-tab-content pt-2">
+              {tenant?._id ? (
+                <TenantOfficesPanel tenantId={tenant._id} />
+              ) : (
+                <p className="text-muted mb-0">
+                  Save the tenant first to manage offices.
+                </p>
+              )}
+            </div>
+          </TabPane>
         </Tabs>
       </div>
     </Drawer>

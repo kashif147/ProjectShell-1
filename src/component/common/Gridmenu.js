@@ -14,6 +14,14 @@ import { useFilters } from "../../context/FilterContext";
 import { transformFiltersForApi } from "../../utils/filterUtils";
 import MyAlert from "./MyAlert";
 import { useAuthorization } from "../../context/AuthorizationContext";
+import { bumpCreditNotesReload } from "../../utils/creditNotesWorkspace";
+import { bumpJournalAdjustmentsReload } from "../../utils/journalAdjustmentsWorkspace";
+import { bumpOnlinePaymentsReload } from "../../utils/onlinePaymentsWorkspace";
+import { bumpRefundsReload } from "../../utils/refundsWorkspace";
+import { bumpWriteOffsReload } from "../../utils/writeOffsWorkspace";
+import { bumpGeneralLedgerReload } from "../../utils/generalLedgerWorkspace";
+import { bumpReconciliationReload } from "../../utils/reconciliationWorkspace";
+import { bumpMembershipListingReportReload } from "../../utils/membershipListingReportWorkspace";
 
 function Gridmenu({ title, screenName, setColumnsDragbe, columnsForFilter, setColumnsForFilter }) {
   const dispatch = useDispatch();
@@ -26,6 +34,22 @@ function Gridmenu({ title, screenName, setColumnsDragbe, columnsForFilter, setCo
     (location.pathname || "").toLowerCase() === "/applications";
   const isPaymentFormsScreen =
     (location.pathname || "").toLowerCase() === "/paymentforms";
+  const isCreditNotesScreen =
+    (location.pathname || "").toLowerCase() === "/creditnotes";
+  const isJournalAdjustmentsScreen =
+    (location.pathname || "").toLowerCase() === "/journaladjustments";
+  const isOnlinePaymentScreen =
+    (location.pathname || "").toLowerCase() === "/onlinepayment";
+  const isRefundsScreen =
+    (location.pathname || "").toLowerCase() === "/refunds";
+  const isWriteOffsScreen =
+    (location.pathname || "").toLowerCase() === "/write-offs";
+  const isGeneralLedgerScreen =
+    (location.pathname || "").toLowerCase() === "/generalledger";
+  const isReconciliationScreen =
+    (location.pathname || "").toLowerCase() === "/reconciliation";
+  const isMembershipListingReportScreen =
+    (location.pathname || "").toLowerCase() === "/membershiplistingreport";
   const { hasAnyRole } = useAuthorization();
   const canEditGridTemplates = hasAnyRole(["SU", "ASU"]);
   const screenChanges = useSelector(
@@ -46,7 +70,23 @@ function Gridmenu({ title, screenName, setColumnsDragbe, columnsForFilter, setCo
 
   const gridTemplateType = isMembersScreen
     ? "members"
-    : isPaymentFormsScreen
+    : isCreditNotesScreen
+      ? "creditnotes"
+      : isJournalAdjustmentsScreen
+        ? "journaladjustments"
+      : isOnlinePaymentScreen
+        ? "onlinepayment"
+      : isRefundsScreen
+        ? "refunds"
+      : isWriteOffsScreen
+        ? "writeoffs"
+      : isGeneralLedgerScreen
+        ? "generalledger"
+      : isReconciliationScreen
+        ? "reconciliation"
+      : isMembershipListingReportScreen
+        ? "membershiplisting"
+      : isPaymentFormsScreen
       ? "payment forms"
       : isApplicationsScreen
       ? "application"
@@ -137,6 +177,22 @@ function Gridmenu({ title, screenName, setColumnsDragbe, columnsForFilter, setCo
             limit: 500,
           }),
         );
+      } else if (isCreditNotesScreen) {
+        bumpCreditNotesReload();
+      } else if (isJournalAdjustmentsScreen) {
+        bumpJournalAdjustmentsReload();
+      } else if (isOnlinePaymentScreen) {
+        bumpOnlinePaymentsReload();
+      } else if (isRefundsScreen) {
+        bumpRefundsReload();
+      } else if (isWriteOffsScreen) {
+        bumpWriteOffsReload();
+      } else if (isGeneralLedgerScreen) {
+        bumpGeneralLedgerReload();
+      } else if (isReconciliationScreen) {
+        bumpReconciliationReload();
+      } else if (isMembershipListingReportScreen) {
+        bumpMembershipListingReportReload();
       }
     } catch (error) {
       console.error("Error updating template:", error);
@@ -178,8 +234,9 @@ function Gridmenu({ title, screenName, setColumnsDragbe, columnsForFilter, setCo
         });
 
     setColumnsForFilter(reordered);
-    const newData = reordered.filter(col => col.isGride);
+    const newData = reordered.filter((col) => col.isGride);
     setColumnsDragbe(newData);
+    handleCheckboxFilterChange(title, checked, screen, width);
     if (reorderGridColumns) {
       const keys = reordered
         .filter((c) => c.isGride)
@@ -188,8 +245,6 @@ function Gridmenu({ title, screenName, setColumnsDragbe, columnsForFilter, setCo
         );
       reorderGridColumns(screenName, keys);
     }
-    // Update global context
-    handleCheckboxFilterChange(title, checked, screen, width);
   };
   const [checkBoxData, setcheckBoxData] = useState();
   useEffect(() => {

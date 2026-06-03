@@ -13,6 +13,8 @@ import { useSelectedIds } from "../../context/SelectedIdsContext";
 import { useTableColumns } from "../../context/TableColumnsContext ";
 import { transformFiltersForApi } from "../../utils/filterUtils";
 import { useLocation } from "react-router-dom";
+import PaymentFormDetailDrawer from "../../component/paymentForms/PaymentFormDetailDrawer";
+import { formatIbanDisplay } from "../../utils/iban";
 
 function MembershipApplication() {
   const dispatch = useDispatch();
@@ -36,7 +38,9 @@ function MembershipApplication() {
   const { columns } = useTableColumns();
   const { loading: templatesLoading } = useSelector((state) => state.templetefiltrsclumnapi);
   const [formattedApplications, setFormattedApplications] = useState([]);
-  const [selectedRows, setSelectedRows] = useState(null)
+  const [selectedRows, setSelectedRows] = useState(null);
+  const [paymentFormDetailId, setPaymentFormDetailId] = useState(null);
+  const [paymentFormDetailOpen, setPaymentFormDetailOpen] = useState(false);
   const { activeTemplateId } = useSelector((state) => state.activeTemplate);
   console.log(activeTemplateId, "activeTemplateId activeTemplateId");
 
@@ -78,17 +82,34 @@ function MembershipApplication() {
   useEffect(() => {
     const sourceData = isPaymentFormsPage ? paymentForms : applications;
     if (sourceData && sourceData.length > 0) {
-      setFormattedApplications(sourceData);
+      if (isPaymentFormsPage) {
+        setFormattedApplications(
+          sourceData.map((row) => ({
+            ...row,
+            key: row._id || row.key,
+            applicationStatus: row.status,
+            applicationId: row._id,
+            membershipNo: row.membershipNumber,
+            fullName: row.memberFullName,
+            debtorIbanDisplay: formatIbanDisplay(row.debtorIbanDisplay) || null,
+          })),
+        );
+      } else {
+        setFormattedApplications(sourceData);
+      }
     } else {
       setFormattedApplications([]);
     }
   }, [applications, paymentForms, isPaymentFormsPage]);
 
-  const shouldDisableRow = useCallback((record) => {
-    const status = record?.applicationStatus;
-    // Return true to DISABLE if status is NOT "submitted"
-    return status !== "submitted";
-  }, []);
+  const shouldDisableRow = useCallback(
+    (record) => {
+      if (isPaymentFormsPage) return false;
+      const status = record?.applicationStatus;
+      return status !== "submitted";
+    },
+    [isPaymentFormsPage],
+  );
 
   const [selectedKeys, setSelectedKeys] = useState([]);
   const [selectedApplicationIds, setSelectedApplicationIds] = useState([]);
@@ -101,9 +122,31 @@ function MembershipApplication() {
     setSelectedIds(ids);
   }, []);
 
-  const handleRowClick = useCallback((record, index) => {
-    console.log("Row clicked12:", record?.applicationId,);
-  }, []);
+  const handleRowClick = useCallback(
+    (record) => {
+      if (isPaymentFormsPage && record?._id) {
+        setPaymentFormDetailId(record._id);
+        setPaymentFormDetailOpen(true);
+      }
+    },
+    [isPaymentFormsPage],
+  );
+
+  const refreshPaymentFormsList = useCallback(() => {
+    if (!isPaymentFormsPage) return;
+    dispatch(
+      getPaymentFormsWithFilter({
+        templateId: activeTemplateId || paymentFormsTemplateId || "",
+        page: 1,
+        limit: 500,
+      }),
+    );
+  }, [
+    dispatch,
+    isPaymentFormsPage,
+    activeTemplateId,
+    paymentFormsTemplateId,
+  ]);
 
   // Synchronize local selection with global context (to handle clear selection)
   useEffect(() => {
@@ -136,13 +179,23 @@ function MembershipApplication() {
         selectedRowKeys={selectedKeys}
         onSelectionChange={handleSelectionChange}
         selectionType="checkbox"
-        enableRowSelection={true}
-        disableDefaultRowClick={true}
-        disableRowFn={shouldDisableRow} // Pass the disable function
+        enableRowSelection={!isPaymentFormsPage}
+        disableDefaultRowClick={!isPaymentFormsPage}
+        onRowClick={isPaymentFormsPage ? handleRowClick : undefined}
+        disableRowFn={shouldDisableRow}
       />
 
-      <div style={{ display: "flex", gap: 12 }}>
-      </div>
+      {isPaymentFormsPage && (
+        <PaymentFormDetailDrawer
+          open={paymentFormDetailOpen}
+          formId={paymentFormDetailId}
+          onClose={() => {
+            setPaymentFormDetailOpen(false);
+            setPaymentFormDetailId(null);
+          }}
+          onUpdated={refreshPaymentFormsList}
+        />
+      )}
     </div>
   );
 }

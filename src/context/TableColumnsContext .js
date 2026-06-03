@@ -6,7 +6,8 @@ import React, {
   useMemo,
   useCallback,
 } from "react";
-import { Tag } from "antd";
+import { Tag, Button, Space, Dropdown } from "antd";
+import { MoreOutlined } from "@ant-design/icons";
 import { tableData } from "../Data";
 import { useLocation, useNavigate, Link } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
@@ -27,10 +28,338 @@ import {
   profileDetailActiveSubscriptionArgs,
 } from "../features/subscription/profileSubscriptionSlice";
 import { buildDetailsSearch } from "../utils/detailsRoute";
+import reconciliationWorkspace from "../utils/reconciliationWorkspace";
+import { financeLedgerActionIcon } from "../component/finanace/financeActionIcons";
+import { callJournalAdjustmentApprove } from "../utils/journalAdjustmentsWorkspace";
+import {
+  callCreditNoteApprove,
+  callCreditNoteCancel,
+} from "../utils/creditNotesWorkspace";
+import {
+  GRID_COLUMN_DEFAULTS,
+  mergeGridColumnDefaults,
+} from "../config/gridColumnDefaults";
+import {
+  callOnlinePaymentOpenFinance,
+  callOnlinePaymentRefund,
+  isOnlinePaymentRefundableUnapproved,
+} from "../utils/onlinePaymentsWorkspace";
+import { resolvePaidAmountEuro } from "../utils/onlinePaymentAmount";
+import { callWriteOffReverse } from "../utils/writeOffsWorkspace";
+import { callRefundsAssociate } from "../utils/refundsWorkspace";
+import {
+  resolveCentsAmountEuro,
+  resolveRefundAmountEuro,
+} from "../utils/financeAmount";
 import { Triangle } from "lucide-react";
 import { Tooltip } from "antd";
 
 const TableColumnsContext = createContext();
+
+function buildCreditNotesColumns() {
+  return mergeGridColumnDefaults(GRID_COLUMN_DEFAULTS.CreditNotes || [], {
+    docNo: {
+      render: (docNo, row) => {
+        const text = docNo || "—";
+        if (row?.highlight) {
+          return (
+            <span
+              style={{
+                fontWeight: 700,
+                background: "#fff7e6",
+                padding: "0 4px",
+              }}
+            >
+              {text}
+            </span>
+          );
+        }
+        return text;
+      },
+    },
+    memberId: {
+      render: (mid) =>
+        mid ? (
+          <Link to="/Details" state={{ memberId: mid, activeTab: "2" }}>
+            {mid}
+          </Link>
+        ) : (
+          "—"
+        ),
+    },
+    amount: {
+      render: (value) => {
+        if (value === "-" || value == null || Number.isNaN(Number(value))) {
+          return "—";
+        }
+        const amountInEuros = Number(value) / 100;
+        return formatCurrency(amountInEuros);
+      },
+    },
+    status: {
+      render: (st) => {
+        const color =
+          st === "Draft"
+            ? "orange"
+            : st === "Approved"
+              ? "green"
+              : st === "Cancelled"
+                ? "red"
+                : st === "Posted"
+                  ? "blue"
+                  : "default";
+        return <Tag color={color}>{st || "—"}</Tag>;
+      },
+    },
+    effectiveDate: {
+      render: (value) => formatDateOnly(value),
+    },
+    createdAt: {
+      render: (value) => (value ? convertToLocalTime(value) : "—"),
+    },
+    _actions: {
+      render: (_, r) => {
+        if (r.status !== "Draft") return "—";
+        return (
+          <Space size={4}>
+            <Button
+              type="link"
+              size="small"
+              style={{ color: "#215E97", fontWeight: 500, padding: 0 }}
+              onClick={() => callCreditNoteApprove(r.docNo)}
+            >
+              Approve
+            </Button>
+            <Button
+              type="link"
+              size="small"
+              danger
+              style={{ padding: 0 }}
+              onClick={() => callCreditNoteCancel(r.docNo)}
+            >
+              Cancel
+            </Button>
+          </Space>
+        );
+      },
+    },
+  });
+}
+
+function buildJournalAdjustmentsColumns() {
+  return mergeGridColumnDefaults(GRID_COLUMN_DEFAULTS.JournalAdjustments || [], {
+    docNo: {
+      render: (docNo, row) => {
+        const text = docNo || "—";
+        if (row?.highlight) {
+          return (
+            <span
+              style={{
+                display: "block",
+                fontFamily: "ui-monospace, monospace",
+                fontSize: 13,
+                fontWeight: 700,
+                background: "#fff7e6",
+              }}
+            >
+              {text}
+            </span>
+          );
+        }
+        return (
+          <span
+            style={{
+              display: "block",
+              fontFamily: "ui-monospace, monospace",
+              fontSize: 13,
+            }}
+          >
+            {text}
+          </span>
+        );
+      },
+    },
+    approvalStatus: {
+      render: (status) => {
+        const color =
+          status === "Draft"
+            ? "orange"
+            : status === "Approved"
+              ? "green"
+              : status === "Cancelled"
+                ? "red"
+                : "default";
+        return <Tag color={color}>{status || "—"}</Tag>;
+      },
+    },
+    amount: {
+      render: (value) => {
+        if (value == null || Number.isNaN(Number(value))) return "—";
+        return formatCurrency(Number(value) / 100);
+      },
+    },
+    memberId: {
+      render: (_, row) => {
+        const mid = String(row.memberId || "").trim();
+        if (!mid) return "—";
+        const name = String(row.memberDisplayName || "").trim();
+        const pid = String(row.memberProfileId || "").trim();
+        if (name && pid) {
+          return (
+            <Link
+              to={{
+                pathname: "/Details",
+                search: buildDetailsSearch(pid),
+              }}
+              style={{ color: "#215E97", fontWeight: 500 }}
+              title={`${name} (${mid})`}
+            >
+              {name}
+            </Link>
+          );
+        }
+        return (
+          <span style={{ color: "rgba(0,0,0,0.65)" }} title={mid}>
+            {mid}
+          </span>
+        );
+      },
+    },
+    effectiveDate: {
+      render: (value) => formatDateOnly(value),
+    },
+    createdAt: {
+      render: (value) => (value ? convertToLocalTime(value) : "—"),
+    },
+    _actions: {
+      render: (_, r) =>
+        r.approvalStatus === "Draft" ? (
+          <Button
+            type="link"
+            size="small"
+            style={{ color: "#215E97", fontWeight: 500, padding: 0 }}
+            onClick={() => callJournalAdjustmentApprove(r.docNo)}
+          >
+            Approve
+          </Button>
+        ) : null,
+    },
+  });
+}
+
+function buildOnlinePaymentColumns() {
+  return mergeGridColumnDefaults(GRID_COLUMN_DEFAULTS.OnlinePayment || [], {
+    memberNo: {
+      render: (text) => text || "—",
+    },
+    category: {
+      render: (text) => text || "—",
+    },
+    fullName: {
+      render: (text, record) => {
+        if (!text || text === "-") return "—";
+        return (
+          <a
+            href="#"
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              callOnlinePaymentOpenFinance(record);
+            }}
+            style={{
+              color: "#1677ff",
+              textDecoration: "underline",
+              cursor: "pointer",
+            }}
+          >
+            {text}
+          </a>
+        );
+      },
+    },
+    membershipStatus: {
+      render: (text) => text || "—",
+    },
+    renewalDate: {
+      render: (value) => (value ? formatDateOnly(value) : "—"),
+    },
+    transactionId: {
+      render: (text, row) => {
+        const value = text || row?.docNo || row?.id || row?._id || "—";
+        if (row?.highlight) {
+          return (
+            <span
+              style={{
+                fontWeight: 700,
+                background: "#fff7e6",
+                padding: "0 4px",
+              }}
+            >
+              {value}
+            </span>
+          );
+        }
+        return value;
+      },
+    },
+    paidAmount: {
+      render: (_, row) => formatCurrency(resolvePaidAmountEuro(row)),
+    },
+    date: {
+      render: (value) => (value ? formatDateOnly(value) : "—"),
+    },
+    paymentMethod: {
+      render: (text) => text || "—",
+    },
+    paymentStatus: {
+      render: (status) => {
+        const value = String(status || "").toLowerCase();
+        let color = "default";
+        if (value === "paid") color = "green";
+        else if (value === "refunded") color = "red";
+        else if (value === "pending") color = "orange";
+        else if (value === "failed") color = "volcano";
+        return <Tag color={color}>{status || "—"}</Tag>;
+      },
+    },
+    billingCycle: {
+      render: (text) => text || "—",
+    },
+    email: {
+      render: (text) => text || "—",
+    },
+    phone: {
+      render: (value) => (value ? formatMobileNumber(value) : "—"),
+    },
+    joinDate: {
+      render: (value) => (value ? formatDateOnly(value) : "—"),
+    },
+    _actions: {
+      render: (_, record) => (
+        <Dropdown
+          menu={{
+            items: [
+              {
+                key: "Refund",
+                label: "Refund",
+                disabled: !isOnlinePaymentRefundableUnapproved(record),
+                onClick: () => callOnlinePaymentRefund(record),
+              },
+            ],
+          }}
+          trigger={["click"]}
+          placement="bottomRight"
+        >
+          <Button
+            type="text"
+            icon={<MoreOutlined style={{ fontSize: "20px" }} />}
+            onClick={(e) => e.stopPropagation()}
+          />
+        </Dropdown>
+      ),
+    },
+  });
+}
 
 function normalizeProfileDetailsRow(profileDetails) {
   if (profileDetails == null) return null;
@@ -134,214 +463,205 @@ function profileDetailsBreadcrumbState(record) {
   return out;
 }
 
-// Static column configurations
-const staticColumns = {
-  onlinePayment: [
+const PAYMENT_FORM_SOURCE_LABELS = {
+  portal: "Portal",
+  mobile: "Mobile",
+  crm: "CRM",
+  post: "Post",
+  email: "Email",
+  walk_in: "Walk-in",
+  phone: "Phone",
+  notification: "Notification",
+};
+
+const PAYMENT_FORM_STATUS_COLORS = {
+  draft: "default",
+  generated: "default",
+  submitted: "blue",
+  verified: "purple",
+  active: "green",
+  rejected: "volcano",
+  superseded: "default",
+};
+
+function paymentFormColumns({ includeFormType = true } = {}) {
+  const cols = [
     {
-      title: "Member No",
-      dataIndex: "Member No",
+      dataIndex: "membershipNumber",
+      title: "Membership No",
       ellipsis: true,
       isGride: true,
       isVisible: true,
-      width: 250,
+      width: 140,
       sorter: true,
-      // render: (memo) => {
-      //   if (!memo) return "-";
-      //   const memberMatch = memo.match(/member\s+([a-f0-9]+)/i);
-      //   const appMatch = memo.match(/Application\s+([a-z0-9-]+)/i);
-      //   return memberMatch ? memberMatch[1] : (appMatch ? appMatch[1] : memo);
-      // }
     },
     {
-      title: "Category",
-      dataIndex: "category",
-      ellipsis: true,
-      isGride: true,
-      isVisible: true,
-      width: 150,
-    },
-    {
-      title: "Full Name",
-      dataIndex: "fullName",
+      dataIndex: "memberFullName",
+      title: "Member Name",
       ellipsis: true,
       isGride: true,
       isVisible: true,
       width: 200,
       sorter: true,
     },
+  ];
+  if (includeFormType) {
+    cols.push({
+      dataIndex: "formTypeLabel",
+      title: "Form Type",
+      ellipsis: true,
+      isGride: true,
+      isVisible: true,
+      width: 180,
+    });
+  }
+  cols.push(
     {
-      title: "Membership Status",
-      dataIndex: "membershipStatus",
+      dataIndex: "referenceMembershipNo",
+      title: "Reference / UMR",
       ellipsis: true,
       isGride: true,
       isVisible: true,
       width: 180,
     },
     {
-      title: "Renewal Date",
-      dataIndex: "renewalDate",
+      dataIndex: "debtorBankName",
+      title: "Bank Name",
       ellipsis: true,
       isGride: true,
       isVisible: true,
-      width: 150,
+      width: 160,
     },
     {
-      title: "Transaction ID",
-      dataIndex: "docNo",
+      dataIndex: "debtorIbanDisplay",
+      title: "IBAN",
       ellipsis: true,
       isGride: true,
       isVisible: true,
-      width: 180,
+      width: 220,
+      render: (value) => value || "—",
     },
     {
-      title: "Paid Amount",
-      dataIndex: "entries",
-      ellipsis: true,
-      isGride: true,
-      isVisible: true,
-      width: 150,
-      align: "right",
-      render: (entries) => {
-        if (!Array.isArray(entries)) return formatCurrency(0);
-        const bankEntry = entries.find(
-          (e) => e.accountCode === "1220" && e.dc === "D",
-        );
-        const amountInEuros = bankEntry ? bankEntry.amount / 100 : 0;
-        return formatCurrency(amountInEuros);
-      },
-    },
-    {
-      title: "Payment Date",
-      dataIndex: "date",
-      ellipsis: true,
-      isGride: true,
-      isVisible: true,
-      width: 150,
-      render: (date) => formatDateOnly(date),
-    },
-    {
-      title: "Payment Method",
-      dataIndex: ["settlement", "provider"],
-      ellipsis: true,
-      isGride: true,
-      isVisible: true,
-      width: 150,
-    },
-    {
-      title: "Payment Status",
-      dataIndex: ["settlement", "status"],
-      ellipsis: true,
-      isGride: true,
-      isVisible: true,
-      width: 150,
-    },
-    {
-      title: "Billing Cycle",
-      dataIndex: "billingCycle",
-      ellipsis: true,
-      isGride: true,
-      isVisible: true,
-      width: 150,
-    },
-    {
-      title: "Email",
-      dataIndex: "email",
-      ellipsis: true,
-      isGride: true,
-      isVisible: true,
-      width: 200,
-    },
-    {
-      title: "Phone",
-      dataIndex: "phone",
-      ellipsis: true,
-      isGride: true,
-      isVisible: true,
-      width: 150,
-      render: (value) => formatMobileNumber(value),
-    },
-    {
-      title: "Join Date",
-      dataIndex: "joinDate",
-      ellipsis: true,
-      isGride: true,
-      isVisible: true,
-      width: 150,
-    },
-  ],
-  Refunds: [
-    {
-      dataIndex: "refundId",
-      title: "Refund ID",
+      dataIndex: "debtorBic",
+      title: "BIC",
       ellipsis: true,
       isGride: true,
       isVisible: true,
       width: 120,
-      sorter: true,
+      render: (value) => value || "—",
     },
     {
-      dataIndex: "refNo",
-      title: "Ref No",
+      dataIndex: "paymentFrequency",
+      title: "Frequency",
+      ellipsis: true,
+      isGride: true,
+      isVisible: true,
+      width: 120,
+      render: (value) => value || "—",
+    },
+    {
+      dataIndex: "installmentAmountEur",
+      title: "Amount (€)",
+      ellipsis: true,
+      isGride: true,
+      isVisible: true,
+      width: 120,
+      align: "right",
+      render: (value, row) => {
+        if (row?.installmentAmountDisplay) return row.installmentAmountDisplay;
+        if (value == null || value === "") return "—";
+        const num = Number(value);
+        return Number.isFinite(num) ? formatCurrency(num) : "—";
+      },
+    },
+    {
+      dataIndex: "signedDate",
+      title: "Signed Date",
       ellipsis: true,
       isGride: true,
       isVisible: true,
       width: 130,
-      sorter: true,
-    },
-    {
-      dataIndex: "memo",
-      title: "Memo",
-      ellipsis: true,
-      isGride: true,
-      isVisible: true,
-      width: 200,
-    },
-    {
-      dataIndex: "refundDate",
-      title: "Refund Date",
-      ellipsis: true,
-      isGride: true,
-      isVisible: true,
-      width: 130,
-      sorter: true,
       render: (value) => formatDateOnly(value),
     },
     {
-      dataIndex: "refundAmount",
-      title: "Refund Amount",
+      dataIndex: "status",
+      title: "Status",
       ellipsis: true,
       isGride: true,
       isVisible: true,
-      width: 140,
-      align: "right",
-      sorter: true,
+      width: 120,
+      render: (status) => {
+        if (!status) return "—";
+        const color = PAYMENT_FORM_STATUS_COLORS[status] || "default";
+        return <Tag color={color}>{status}</Tag>;
+      },
+    },
+    {
+      dataIndex: "source",
+      title: "Received via",
+      ellipsis: true,
+      isGride: true,
+      isVisible: true,
+      width: 130,
+      render: (value) =>
+        value ? PAYMENT_FORM_SOURCE_LABELS[value] || value : "—",
+    },
+    {
+      dataIndex: "isAuthorized",
+      title: "Authorised",
+      ellipsis: true,
+      isGride: true,
+      isVisible: true,
+      width: 120,
+      render: (value, row) => {
+        if (!value) return "No";
+        const mode = row?.authorisationMode;
+        if (mode === "on_file")
+          return <Tag color="geekblue">On file</Tag>;
+        return <Tag color="green">Yes</Tag>;
+      },
+    },
+    {
+      dataIndex: "hasAttachment",
+      title: "Attachment",
+      ellipsis: true,
+      isGride: true,
+      isVisible: true,
+      width: 110,
+      align: "center",
+      render: (value) => (value ? <Tag color="blue">Attached</Tag> : "—"),
+    },
+    {
+      dataIndex: "updatedAt",
+      title: "Last Updated",
+      ellipsis: true,
+      isGride: true,
+      isVisible: true,
+      width: 160,
+      render: (value) => (value ? convertToLocalTime(value) : "—"),
+    },
+  );
+  return cols;
+}
+
+function buildRefundsColumns() {
+  return mergeGridColumnDefaults(GRID_COLUMN_DEFAULTS.Refunds || [], {
+    memo: {
+      ellipsis: true,
+    },
+    refundDate: {
+      render: (value) => formatDateOnly(value),
+    },
+    refundAmount: {
       render: (value) => formatCurrency(value ?? 0),
     },
-    {
-      dataIndex: "refundType",
-      title: "Refund Type",
-      ellipsis: true,
-      isGride: true,
-      isVisible: true,
-      width: 140,
+    refundType: {
       render: (value) => (value ? String(value).replaceAll("_", " ") : "—"),
     },
-    {
-      dataIndex: "refundSource",
-      title: "Refund Source",
-      ellipsis: true,
-      isGride: true,
-      isVisible: true,
-      width: 140,
+    refundSource: {
       render: (value) => (value ? String(value) : "—"),
     },
-    {
-      dataIndex: "memberNo",
-      title: "Member No / Application No",
-      ellipsis: true,
-      isGride: true,
-      isVisible: true,
-      width: 180,
+    memberNo: {
       render: (_, record) =>
         record?.memberNo ??
         record?.membershipNo ??
@@ -349,194 +669,330 @@ const staticColumns = {
         record?.applicationNumber ??
         "—",
     },
-    {
-      dataIndex: "createdBy",
-      title: "Created By",
-      ellipsis: true,
-      isGride: true,
-      isVisible: true,
-      width: 150,
-    },
-    {
-      dataIndex: "createdAt",
-      title: "Created At",
-      ellipsis: true,
-      isGride: true,
-      isVisible: true,
-      width: 160,
+    createdAt: {
       render: (value) => (value ? convertToLocalTime(value) : "—"),
     },
-  ],
-  "write-offs": [
-    {
-      dataIndex: "Write-offs",
-      title: "Refund",
-      ellipsis: true,
-      isGride: true,
-      isVisible: true,
-      width: 150,
+    _actions: {
+      fixed: "right",
+      render: (_, record) => (
+        <Dropdown
+          menu={{
+            items: [
+              {
+                key: "associate",
+                label: "Associate to member",
+                onClick: () => callRefundsAssociate(record),
+              },
+            ],
+          }}
+          trigger={["click"]}
+          placement="bottomRight"
+        >
+          <Button
+            type="text"
+            icon={<MoreOutlined style={{ fontSize: "20px" }} />}
+          />
+        </Dropdown>
+      ),
     },
-    {
-      dataIndex: "Write-offs Date",
-      title: "Refund Date",
-      ellipsis: true,
-      isGride: true,
-      isVisible: true,
-      width: 150,
-      render: (value) => formatDateOnly(value),
-    },
-    {
-      dataIndex: "MembershipNo",
-      title: "Membership Number",
-      ellipsis: true,
-      isGride: true,
-      isVisible: true,
-      width: 150,
-    },
-    {
-      dataIndex: "ref",
-      title: "Ref",
-      ellipsis: true,
-      isGride: true,  
-      isVisible: true,
-      width: 150,
-    },
-    {
-      dataIndex: "amount",
-      title: "Amount",
-      ellipsis: true,
-      isGride: true,
-      isVisible: true,
-      width: 120,
-      align: "right",
-      render: (value) => {
-        if (value === "-" || value == null || Number.isNaN(Number(value))) return "—";
-        const amountInEuros = Number(value) / 100;
-        return formatCurrency(amountInEuros);
+  });
+}
+
+function buildWriteOffsColumns() {
+  return mergeGridColumnDefaults(GRID_COLUMN_DEFAULTS.WriteOffs || [], {
+    writeOff: {
+      render: (docNo, row) => {
+        const text = docNo || "—";
+        if (row?.highlight) {
+          return (
+            <span
+              style={{
+                fontWeight: 700,
+                background: "#fff7e6",
+                padding: "0 4px",
+              }}
+            >
+              {text}
+            </span>
+          );
+        }
+        return text;
       },
     },
-    {
-      dataIndex: "type",
-      title: "Type",
-      ellipsis: true,
-      isGride: true,
-      isVisible: true,
-      width: 150,
-    },
-    {
-      dataIndex: "createdBy",
-      title: "Created By",
-      ellipsis: true,
-      isGride: true,
-      isVisible: true,
-      width: 150,
-    },
-    {
-      dataIndex: "createdAt",
-      title: "Created At",
-      ellipsis: true,
-      isGride: true,
-      isVisible: true,
-      width: 160,
-    },
-    {
-      dataIndex: "updatedBy",
-      title: "Updated By",
-      ellipsis: true,
-      isGride: true,
-      isVisible: true,
-      width: 150,
-    },
-    {
-      dataIndex: "updatedAt",
-      title: "Updated At",
-      ellipsis: true,
-      isGride: true,
-      isVisible: true,
-      width: 160,
-    },
-  ],
-  WriteOffs: [
-    {
-      dataIndex: "writeOff",
-      title: "WriteOff",
-      ellipsis: true,
-      isGride: true,
-      isVisible: true,
-      width: 150,
-    },
-    {
-      dataIndex: "writeOffDate",
-      title: "WriteOff Date",
-      ellipsis: true,
-      isGride: true,
-      isVisible: true,
-      width: 150,
+    writeOffDate: {
       render: (value) => formatDateOnly(value),
     },
-    {
-      dataIndex: "ref",
-      title: "Ref",
-      ellipsis: true,
-      isGride: true,
-      isVisible: true,
-      width: 150,
-    },
-    {
-      dataIndex: "amount",
-      title: "Amount",
-      ellipsis: true,
-      isGride: true,
-      isVisible: true,
-      width: 120,
-      align: "right",
+    amount: {
       render: (value) => {
-        if (value === "-" || value == null || Number.isNaN(Number(value))) return "—";
-        const amountInEuros = Number(value) / 100;
-        return formatCurrency(amountInEuros);
+        if (value === "-" || value == null || Number.isNaN(Number(value))) {
+          return "—";
+        }
+        return formatCurrency(Number(value) / 100);
       },
     },
-    {
-      dataIndex: "type",
-      title: "Type",
-      ellipsis: true,
-      isGride: true,
-      isVisible: true,
-      width: 150,
+    memberId: {
+      render: (mid) =>
+        mid ? (
+          <Link to="/Details" state={{ memberId: mid, activeTab: "2" }}>
+            {mid}
+          </Link>
+        ) : (
+          "—"
+        ),
     },
-    {
-      dataIndex: "createdBy",
-      title: "Created By",
-      ellipsis: true,
-      isGride: true,
-      isVisible: true,
-      width: 150,
+    status: {
+      render: (st) => {
+        const color =
+          st === "Reversed" ? "red" : st === "Posted" ? "green" : "default";
+        return <Tag color={color}>{st || "—"}</Tag>;
+      },
     },
-    {
-      dataIndex: "createdAt",
-      title: "Created At",
-      ellipsis: true,
-      isGride: true,
-      isVisible: true,
-      width: 160,
+    _actions: {
+      fixed: "right",
+      render: (_, r) =>
+        r.canReverse && r.status !== "Reversed" ? (
+          <Button
+            type="link"
+            size="small"
+            danger
+            style={{ padding: 0 }}
+            onClick={() => callWriteOffReverse(r)}
+          >
+            Reverse
+          </Button>
+        ) : (
+          "—"
+        ),
     },
-    {
-      dataIndex: "updatedBy",
-      title: "Updated By",
-      ellipsis: true,
-      isGride: true,
-      isVisible: true,
-      width: 150,
+  });
+}
+
+function buildGeneralLedgerColumns() {
+  return mergeGridColumnDefaults(GRID_COLUMN_DEFAULTS.GeneralLedger || [], {
+    memberId: {
+      render: (_, row) => {
+        const mid = String(row.memberId || "").trim();
+        if (!mid) return "—";
+        const name = String(row.memberDisplayName || "").trim();
+        const pid = String(row.memberProfileId || "").trim();
+        if (name && pid) {
+          return (
+            <Link
+              to={{
+                pathname: "/Details",
+                search: buildDetailsSearch(pid),
+              }}
+              style={{
+                color: "blue",
+                textDecoration: "underline",
+                cursor: "pointer",
+              }}
+              title={`${name} (${mid})`}
+            >
+              {name}
+            </Link>
+          );
+        }
+        return (
+          <span style={{ color: "rgba(0,0,0,0.65)" }} title={mid}>
+            {mid}
+          </span>
+        );
+      },
     },
-    {
-      dataIndex: "updatedAt",
-      title: "Updated At",
-      ellipsis: true,
-      isGride: true,
-      isVisible: true,
-      width: 160,
+    date: {
+      render: (value) => formatDateOnly(value) || "—",
     },
-  ],
+    docTypeLabel: {
+      render: (value, row) => value || row.docType || "—",
+    },
+    docNo: {
+      render: (docNo, row) => {
+        const text = docNo || "—";
+        if (row?.highlight) {
+          return (
+            <span
+              style={{
+                fontWeight: 700,
+                background: "#fff7e6",
+                padding: "0 4px",
+                fontFamily: "ui-monospace, monospace",
+                fontSize: 13,
+              }}
+            >
+              {text}
+            </span>
+          );
+        }
+        return (
+          <span style={{ fontFamily: "ui-monospace, monospace", fontSize: 13 }}>
+            {text}
+          </span>
+        );
+      },
+    },
+    debit: {
+      render: (value) => {
+        if (!value) return "";
+        return formatCurrency(Number(value) / 100);
+      },
+    },
+    credit: {
+      render: (value) => {
+        if (!value) return "";
+        return formatCurrency(Number(value) / 100);
+      },
+    },
+    approvalStatus: {
+      render: (status) => {
+        const s = status || "Posted";
+        const color =
+          s === "Draft"
+            ? "orange"
+            : s === "Cancelled"
+              ? "red"
+              : "green";
+        return <Tag color={color}>{s}</Tag>;
+      },
+    },
+    createdAt: {
+      render: (value) => (value ? convertToLocalTime(value) : "—"),
+    },
+  });
+}
+
+function buildReconciliationColumns() {
+  return mergeGridColumnDefaults(GRID_COLUMN_DEFAULTS.Reconciliation || [], {
+    bankRef: {
+      render: (_, r) => r.bankRef || r.externalReference || r.glDocNo || "—",
+    },
+    memberId: {
+      render: (v) => v || "—",
+    },
+    amount: {
+      render: (value) => {
+        if (value == null || Number.isNaN(Number(value))) return "—";
+        return formatCurrency(Number(value) / 100);
+      },
+    },
+    expectedAmount: {
+      render: (value) => {
+        if (value == null || Number.isNaN(Number(value))) return "—";
+        return formatCurrency(Number(value) / 100);
+      },
+    },
+    amountDifference: {
+      render: (value) => {
+        if (value == null || Number.isNaN(Number(value))) return "—";
+        const n = Number(value) / 100;
+        const color =
+          n === 0 ? "#389e0d" : Math.abs(n) <= 0.5 ? "#1677ff" : "#cf1322";
+        return (
+          <span style={{ color, fontWeight: 600 }}>{formatCurrency(n)}</span>
+        );
+      },
+    },
+    matchConfidence: {
+      render: (v) => {
+        const color =
+          v === "high"
+            ? "green"
+            : v === "medium"
+              ? "blue"
+              : v === "low"
+                ? "orange"
+                : "default";
+        return <Tag color={color}>{v || "none"}</Tag>;
+      },
+    },
+    suggestedAction: {
+      render: (v) => v || "manual_match",
+    },
+    reconciliationStatus: {
+      render: (st) => {
+        const color =
+          st === "unmatched"
+            ? "orange"
+            : st === "auto_matched"
+              ? "cyan"
+              : st === "manual_matched"
+                ? "blue"
+                : st === "suspense"
+                  ? "purple"
+                  : st === "settled"
+                    ? "green"
+                    : "default";
+        return <Tag color={color}>{st || "unmatched"}</Tag>;
+      },
+    },
+    sourceType: {
+      render: (v) => (v === "bank" ? "Bank" : "GL"),
+    },
+    _actions: {
+      fixed: "right",
+      width: 102,
+      render: (_, record) => {
+        if (record.reconciliationStatus === "settled") return "—";
+        const handlers = reconciliationWorkspace.getHandlers();
+        return (
+          <Space size={0} onClick={(e) => e.stopPropagation()}>
+            <Tooltip title="Match">
+              <Button
+                type="text"
+                size="small"
+                icon={financeLedgerActionIcon("match")}
+                onClick={() => handlers.manualMatch?.(record._id)}
+                aria-label="Match"
+              />
+            </Tooltip>
+            <Tooltip title="Suspense">
+              <Button
+                type="text"
+                size="small"
+                icon={financeLedgerActionIcon("suspense")}
+                onClick={() => handlers.moveSuspense?.(record._id)}
+                aria-label="Suspense"
+              />
+            </Tooltip>
+            <Tooltip title="Settle">
+              <Button
+                type="text"
+                size="small"
+                icon={financeLedgerActionIcon("settle")}
+                onClick={() => handlers.settle?.(record._id)}
+                aria-label="Settle"
+              />
+            </Tooltip>
+          </Space>
+        );
+      },
+    },
+  });
+}
+
+function buildMembershipListingReportColumns() {
+  const dateRender = (value) => formatDateOnly(value) || "—";
+  return mergeGridColumnDefaults(
+    GRID_COLUMN_DEFAULTS.MembershipListingReport || [],
+    {
+      startDate: { render: dateRender },
+      expiryDate: { render: dateRender },
+      cancelledAt: { render: dateRender },
+      resignedAt: { render: dateRender },
+      processedAt: { render: dateRender },
+    },
+  );
+}
+
+const staticColumns = {
+  OnlinePayment: buildOnlinePaymentColumns(),
+  Refunds: buildRefundsColumns(),
+  WriteOffs: buildWriteOffsColumns(),
+  CreditNotes: buildCreditNotesColumns(),
+  MembershipListingReport: buildMembershipListingReportColumns(),
+  Reconciliation: buildReconciliationColumns(),
+  JournalAdjustments: buildJournalAdjustmentsColumns(),
+  GeneralLedger: buildGeneralLedgerColumns(),
   Profile: [
     // ======================= PROFILE BASICS =======================
     {
@@ -852,61 +1308,8 @@ const staticColumns = {
       render: (value) => (value ? "Yes" : "No"),
     },
   ],
-  DirectDebitAuthorization: [
-    {
-      dataIndex: "id",
-      title: "ID",
-      ellipsis: true,
-      isGride: true,
-      isVisible: true,
-      width: 100,
-      sorter: true,
-    },
-    {
-      dataIndex: "accountName",
-      title: "Account Name",
-      ellipsis: true,
-      isGride: true,
-      isVisible: true,
-      width: 180,
-      sorter: true,
-    },
-    {
-      dataIndex: "bankName",
-      title: "Bank Name",
-      ellipsis: true,
-      isGride: true,
-      isVisible: true,
-      width: 150,
-    },
-    {
-      dataIndex: "iban",
-      title: "IBAN",
-      ellipsis: true,
-      isGride: true,
-      isVisible: true,
-      width: 250,
-    },
-    {
-      dataIndex: "status",
-      title: "Status",
-      ellipsis: true,
-      isGride: true,
-      isVisible: true,
-      width: 120,
-      render: (status) => (
-        <Tag color={status === "Active" ? "green" : "orange"}>{status}</Tag>
-      ),
-    },
-    {
-      dataIndex: "dateAuthorized",
-      title: "Date Authorized",
-      ellipsis: true,
-      isGride: true,
-      isVisible: true,
-      width: 160,
-    },
-  ],
+  DirectDebitAuthorization: paymentFormColumns({ includeFormType: false }),
+  "Payment Forms": paymentFormColumns({ includeFormType: true }),
   ChangCateSumm: [
     {
       dataIndex: "regNo",
@@ -1130,7 +1533,7 @@ const staticColumns = {
     },
     {
       dataIndex: "applicationStatus",
-      title: "Status",
+      title: "Application Status",
       ellipsis: true,
       isGride: true,
       isVisible: true,
@@ -2563,28 +2966,58 @@ const staticColumns = {
   ],
   DirectDebitSummary: [
     {
-      dataIndex: "name",
-      title: "Batch Name",
+      dataIndex: "runNo",
+      title: "Run No",
+      key: "runNo",
       ellipsis: true,
       isGride: true,
       isVisible: true,
-      width: 150,
+      width: 220,
     },
     {
-      dataIndex: "date",
-      title: "Batch Date",
+      dataIndex: "runType",
+      title: "Type",
+      key: "runType",
+      ellipsis: true,
+      isGride: true,
+      isVisible: true,
+      width: 120,
+    },
+    {
+      dataIndex: "collectionDate",
+      title: "Collection date",
+      key: "collectionDate",
       ellipsis: true,
       isGride: true,
       isVisible: true,
       width: 160,
     },
     {
-      dataIndex: "batchStatus",
-      title: "Batch Status",
+      dataIndex: "status",
+      title: "Status",
+      key: "status",
       ellipsis: true,
       isGride: true,
       isVisible: true,
       width: 150,
+    },
+    {
+      dataIndex: ["totals", "includedCount"],
+      title: "Included",
+      key: "included",
+      ellipsis: true,
+      isGride: true,
+      isVisible: true,
+      width: 100,
+    },
+    {
+      dataIndex: ["totals", "includedAmountEur"],
+      title: "Amount EUR",
+      key: "amount",
+      ellipsis: true,
+      isGride: true,
+      isVisible: true,
+      width: 120,
     },
     {
       dataIndex: "createdAt",
@@ -2593,30 +3026,6 @@ const staticColumns = {
       isGride: true,
       isVisible: true,
       width: 150,
-    },
-    {
-      dataIndex: "createdBy",
-      title: "Created By",
-      ellipsis: true,
-      isGride: true,
-      isVisible: true,
-      width: 150,
-    },
-    {
-      dataIndex: "updatedAt",
-      title: "updated At",
-      ellipsis: true,
-      isGride: true,
-      isVisible: true,
-      width: 150,
-    },
-    {
-      dataIndex: "Count",
-      title: "Count",
-      ellipsis: true,
-      isGride: true,
-      isVisible: true,
-      width: 100,
     },
   ],
   CornMarketRewards: [
@@ -3306,6 +3715,207 @@ const staticColumns = {
 };
 
 const staticSearchFilters = {
+  Reconciliation: [
+    {
+      titleColumn: "Bank ref",
+      isSearch: true,
+      isCheck: false,
+      comp: "!=",
+      lookups: {},
+    },
+    {
+      titleColumn: "Member",
+      isSearch: true,
+      isCheck: false,
+      comp: "!=",
+      lookups: {},
+    },
+    {
+      titleColumn: "Clearing",
+      isSearch: true,
+      isCheck: true,
+      comp: "=",
+      lookups: {
+        all: false,
+        "1210": false,
+        "1220": false,
+        "1230": false,
+        "1240": false,
+        "1250": false,
+      },
+    },
+    {
+      titleColumn: "Status",
+      isSearch: true,
+      isCheck: true,
+      comp: "=",
+      lookups: {
+        unmatched: false,
+        auto_matched: false,
+        manual_matched: false,
+        suspense: false,
+        settled: false,
+      },
+    },
+    {
+      titleColumn: "Confidence",
+      isSearch: true,
+      isCheck: true,
+      comp: "=",
+      lookups: {
+        high: false,
+        medium: false,
+        low: false,
+        none: false,
+      },
+    },
+    {
+      titleColumn: "Suggested action",
+      isSearch: true,
+      isCheck: false,
+      comp: "!=",
+      lookups: {},
+    },
+  ],
+  "Journal adjustments": [
+    {
+      titleColumn: "Adjustment reference",
+      isSearch: true,
+      isCheck: false,
+      comp: "!=",
+      lookups: {},
+    },
+    {
+      titleColumn: "Status",
+      isSearch: true,
+      isCheck: true,
+      comp: "=",
+      lookups: {
+        Draft: false,
+        Approved: false,
+        Cancelled: false,
+      },
+    },
+    {
+      titleColumn: "Debit",
+      isSearch: true,
+      isCheck: false,
+      comp: "!=",
+      lookups: {},
+    },
+    {
+      titleColumn: "Credit",
+      isSearch: true,
+      isCheck: false,
+      comp: "!=",
+      lookups: {},
+    },
+    {
+      titleColumn: "Member",
+      isSearch: true,
+      isCheck: false,
+      comp: "!=",
+      lookups: {},
+    },
+    {
+      titleColumn: "Reason",
+      isSearch: true,
+      isCheck: false,
+      comp: "!=",
+      lookups: {},
+    },
+  ],
+  "General ledger": [
+    {
+      titleColumn: "Member",
+      isSearch: true,
+      isCheck: false,
+      comp: "!=",
+      lookups: {},
+    },
+    {
+      titleColumn: "Tx type",
+      isSearch: true,
+      isCheck: true,
+      comp: "=",
+      lookups: {
+        Invoice: false,
+        Receipt: false,
+        "Credit Note": false,
+        Refund: false,
+        Adjustment: false,
+        Claim: false,
+        "Online payment": false,
+        "Fee Adjustment": false,
+        "Fee Increase": false,
+        "Fee Decrease": false,
+        WriteOff: false,
+        "Write-off": false,
+      },
+    },
+    {
+      titleColumn: "Doc ref",
+      isSearch: true,
+      isCheck: false,
+      comp: "!=",
+      lookups: {},
+    },
+    {
+      titleColumn: "Memo",
+      isSearch: true,
+      isCheck: false,
+      comp: "!=",
+      lookups: {},
+    },
+  ],
+  "Credit notes": [
+    {
+      titleColumn: "CN ref",
+      isSearch: true,
+      isCheck: false,
+      comp: "!=",
+      lookups: {},
+    },
+    {
+      titleColumn: "Invoice",
+      isSearch: true,
+      isCheck: false,
+      comp: "!=",
+      lookups: {},
+    },
+    {
+      titleColumn: "Member",
+      isSearch: true,
+      isCheck: false,
+      comp: "!=",
+      lookups: {},
+    },
+    {
+      titleColumn: "Status",
+      isSearch: true,
+      isCheck: true,
+      comp: "=",
+      lookups: {
+        Draft: false,
+        Approved: false,
+        Cancelled: false,
+        Posted: false,
+      },
+    },
+    {
+      titleColumn: "Effective",
+      isSearch: false,
+      isCheck: false,
+      lookups: {},
+    },
+    {
+      titleColumn: "Reason",
+      isSearch: true,
+      isCheck: false,
+      comp: "!=",
+      lookups: {},
+    },
+  ],
   onlinePayment: [
     {
       titleColumn: "Member ID",
@@ -3337,7 +3947,7 @@ const staticSearchFilters = {
     },
     { titleColumn: "Join Date", isSearch: false, isCheck: false, lookups: {} },
     {
-      titleColumn: "Category",
+      titleColumn: "Membership Category",
       isSearch: true,
       isCheck: false,
       comp: "!=",
@@ -5231,11 +5841,8 @@ const staticSearchFilters = {
   ],
 };
 
-// Payment Forms starts with the same table shell as Applications,
-// but remains its own screen key for template scoping.
-staticColumns["Payment Forms"] = (staticColumns.Applications || []).map((col) => ({
-  ...col,
-}));
+// Payment Forms columns are defined directly above as a dedicated set;
+// only filters are reused from Applications for template scoping.
 staticSearchFilters["Payment Forms"] = (staticSearchFilters.Applications || []).map(
   (filter) => ({
     ...filter,
@@ -5515,13 +6122,14 @@ export const TableColumnsProvider = ({ children }) => {
         return Array.isArray(di) ? di.join(".") : String(di);
       };
       const byKey = new Map(list.map((c) => [toKey(c), c]));
-      const hidden = list.filter((c) => !c.isGride);
       const visibleOrdered = orderedVisibleDataIndexKeys
         .map((k) => byKey.get(String(k)))
         .filter(Boolean);
+      const visibleKeySet = new Set(visibleOrdered.map(toKey));
+      const remainder = list.filter((c) => !visibleKeySet.has(toKey(c)));
       return {
         ...prev,
-        [targetScreenName]: [...visibleOrdered, ...hidden],
+        [targetScreenName]: [...visibleOrdered, ...remainder],
       };
     });
     dispatch(markScreenChanged({ screen: targetScreenName }));

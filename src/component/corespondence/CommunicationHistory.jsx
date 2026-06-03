@@ -533,6 +533,7 @@ const CommunicationHistory = () => {
         columns={columns}
         selection={false}
         loading={loading}
+        tablePadding={{ paddingLeft: "0", paddingRight: "0" }}
       />
     </div>
   );

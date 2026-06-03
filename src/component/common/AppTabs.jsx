@@ -21,6 +21,7 @@ import { getApplicationById } from "../../features/ApplicationDetailsSlice";
 import { buildApplicationMgtSearch } from "../../utils/applicationMgtRoute";
 import { getProfileApplications } from "../../features/profiles/profileApplicationsSlice";
 import { Tabs, Spin, Drawer, Button, Dropdown } from "antd";
+import axios from "axios";
 import { MoreOutlined } from "@ant-design/icons";
 import MyTable from "./MyTable";
 import {
@@ -39,11 +40,17 @@ import {
   FaIdCard,
   FaCalendarAlt,
   FaBalanceScale,
+  FaFileAlt,
 } from "react-icons/fa";
 import { useTableColumns } from "../../context/TableColumnsContext ";
-import TransferRequests from "../TransferRequests";
+import { getTransferRequestHistoryById } from "../../constants/TransferRequestHistory";
+import { getTransferRequest } from "../../features/profiles/TransferRequest";
 import CategoryChangeRequest from "../details/ChangeCategoryDrawer";
-import Reminder from "../profile/Reminder";
+import {
+  ReminderTable,
+  defaultReminderHistoryRows,
+} from "../profile/Reminder";
+import MyAlert from "./MyAlert";
 import { formatDateOnly } from "../../utils/Utilities";
 import { FinanceTabToolbarContext } from "../../context/FinanceTabToolbarContext";
 import { MembershipTabToolbarContext } from "../../context/MembershipTabToolbarContext";
@@ -235,6 +242,43 @@ const initialMembershipHeaderActionsMeta = {
   activateMembershipTitle: undefined,
 };
 
+const profileHeaderLayoutStorageKey = "profile-header-layout";
+
+function getInitialProfileHeaderLayout() {
+  try {
+    const saved = localStorage.getItem(profileHeaderLayoutStorageKey);
+    return saved === "top" ? "top" : "side";
+  } catch {
+    return "side";
+  }
+}
+
+const REMINDER_TYPE_LABELS = {
+  R1: "Reminder 1",
+  R2: "Reminder 2",
+  R3: "Reminder 3",
+};
+
+function normalizeTransferHistoryRows(raw) {
+  if (!raw) return [];
+  let arr = raw;
+  if (!Array.isArray(arr)) {
+    if (Array.isArray(arr?.data)) arr = arr.data;
+    else if (arr?.data != null) arr = [arr.data];
+    else arr = [arr];
+  }
+  return arr.map((item, index) => ({
+    key: item?._id || item?.id || `transfer-${index}`,
+    transferDate: item?.requestDate || item?.transferDate,
+    currentWorkLocationName: item?.currentWorkLocationName || "",
+    reason: item?.reason || "",
+    requestedWorkLocationName: item?.requestedWorkLocationName || "",
+    notes: item?.notes || "",
+    status: item?.status || "PENDING",
+    requestId: item?._id || item?.id,
+  }));
+}
+
 function AppTabs() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
@@ -306,11 +350,21 @@ function AppTabs() {
 
   const [activeKey, setActiveKey] = useState("1");
   const [visibleTabs, setVisibleTabs] = useState(staticTabKeys);
-  const [TransferDrawer, setTransferDrawer] = useState(false);
-  const [isReminder, setIsReminder] = useState(false);
-  const [isDrawerOpen, setisDrawerOpen] = useState(false);
+  const [isCategoryRequestModalOpen, setIsCategoryRequestModalOpen] =
+    useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
   const [isDeceased, setIsDeceased] = useState(false);
+  const [profileHeaderLayout, setProfileHeaderLayout] = useState(
+    getInitialProfileHeaderLayout,
+  );
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(profileHeaderLayoutStorageKey, profileHeaderLayout);
+    } catch {
+      // Ignore storage failures; the toggle still works for the current view.
+    }
+  }, [profileHeaderLayout]);
 
   const profileIdForDeceased = profileDetails?._id || profileDetails?.id || "";
   useEffect(() => {
@@ -344,6 +398,10 @@ function AppTabs() {
   }, []);
 
   const profileHeaderRef = useRef(null);
+  const documentsActionsRef = useRef(null);
+  const registerDocumentsActions = useCallback((actions) => {
+    documentsActionsRef.current = actions;
+  }, []);
   const [membershipHeaderActionsMeta, setMembershipHeaderActionsMeta] =
     useState(initialMembershipHeaderActionsMeta);
   const onMembershipHeaderActionsMetaChange = useCallback((meta) => {
@@ -379,12 +437,21 @@ function AppTabs() {
   );
   const { profileApplications, loading: profileApplicationsLoading } =
     useSelector((state) => state.profileApplications || {});
+  const { history: transferHistoryRaw, loading: transferHistoryLoading } =
+    useSelector((state) => state.transferRequestHistory || {});
 
   useEffect(() => {
     if (activeKey === "3" && profileDetails?._id) {
       dispatch(getProfileApplications({ profileId: profileDetails._id }));
     }
   }, [activeKey, profileDetails?._id, dispatch]);
+
+  useEffect(() => {
+    const profileId = profileDetails?._id || profileDetails?.id;
+    if (activeKey === "12" && profileId) {
+      dispatch(getTransferRequestHistoryById(profileId));
+    }
+  }, [activeKey, profileDetails?._id, profileDetails?.id, dispatch]);
 
   useEffect(() => {
     const requestedTab = String(location.state?.activeTab || "")
@@ -544,255 +611,6 @@ function AppTabs() {
     },
   ];
 
-  const allItems = [
-    {
-      key: "1",
-      label: "Membership",
-      children: (
-        <MyDeatails
-          isEditMode={isEditMode}
-          setIsEditMode={setIsEditMode}
-          isDeceased={isDeceased}
-          setIsDeceased={setIsDeceased}
-        />
-      ),
-    },
-    // { key: "15", label: "Duplicate Members", children: <DuplicateMembers /> },
-    { key: "2", label: "Finance", children: <FinanceByID /> },
-    { key: "4", label: "Documents", children: <DoucmentsById /> },
-    {
-      key: "5",
-      label: "Correspondence",
-      children: <CommunicationHistory />,
-    },
-    { key: "6", label: "Cases", children: <CasesById /> },
-    {
-      key: "3",
-      label: "Applications",
-      children: (
-        <div style={{ padding: 20 }}>
-          <MyTable
-            columns={profileApplicationColumns}
-            dataSource={profileApplications}
-            loading={profileApplicationsLoading}
-            selection={false}
-          />
-        </div>
-      ),
-    },
-    {
-      key: "16",
-      label: "Events",
-      children: <div>Events</div>,
-    },
-    { key: "7", label: "Claims", children: <ClaimsById /> },
-    { key: "8", label: "Roster", children: <Roster /> },
-    { key: "11", label: "Audit History", children: <HistoryByID /> },
-    {
-      key: "17",
-      label: "Subscription History",
-      children: (
-        <div style={{ padding: 20 }}>
-          <MyTable
-            columns={subscriptionHistoryColumns}
-            dataSource={ProfileSubHistory}
-            loading={ProfileSubHistoryLoading}
-            selection={false}
-            onRowClick={(record) => openHistorySubscriptionDetail(record)}
-          />
-        </div>
-      ),
-    },
-    { key: "9", label: "Projects", children: <div>Projects</div> },
-    {
-      key: "10",
-      label: "Trainings (CPD)",
-      children: <div>Trainings (CPD)</div>,
-    },
-  ];
-
-  const handleMenuClick = (key) => {
-    const isStatic = staticTabKeys.includes(activeKey);
-
-    setVisibleTabs((prev) => {
-      const newTabs = [...prev];
-
-      // Remove existing dynamic (non-static) tabs
-      const updatedTabs = newTabs.filter((tabKey) =>
-        staticTabKeys.includes(tabKey),
-      );
-
-      // Add new tab if it's not already in the list
-      if (!updatedTabs.includes(key)) {
-        updatedTabs.push(key);
-      }
-
-      return updatedTabs;
-    });
-
-    setActiveKey(key);
-  };
-  const handleTabChange = (key) => {
-    const isStatic = staticTabKeys.includes(key);
-
-    if (isStatic) {
-      // Remove all dynamic tabs
-      setVisibleTabs((prev) =>
-        prev.filter((tabKey) => staticTabKeys.includes(tabKey)),
-      );
-    }
-
-    setActiveKey(key);
-  };
-  const filteredItems = allItems.filter((item) =>
-    visibleTabs.includes(item.key),
-  );
-  /** Alphabetical by label (profile tab overflow ⋮ menu). */
-  const Menuitems = [
-    {
-      key: "11",
-      label: "Audit History",
-      icon: <FaHistory />,
-      iconColor: "#722ed1",
-      onClick: () => handleMenuClick("11"),
-    },
-    {
-      key: "13",
-      label: "Category Changes",
-      icon: <FaTags />,
-      iconColor: "#2f54eb",
-      onClick: () => setisDrawerOpen(true),
-    },
-    {
-      key: "7",
-      label: "Claims",
-      icon: <FaBalanceScale />,
-      iconColor: "#fa541c",
-      onClick: () => handleMenuClick("7"),
-    },
-    {
-      key: "16",
-      label: "Events",
-      icon: <FaCalendarAlt />,
-      iconColor: "#13c2c2",
-      onClick: () => handleMenuClick("16"),
-    },
-    {
-      key: "9",
-      label: "Projects",
-      icon: <FaProjectDiagram />,
-      iconColor: "#1890ff",
-      onClick: () => handleMenuClick("9"),
-    },
-    {
-      key: "14",
-      label: "Reminders",
-      icon: <FaRegClock />,
-      iconColor: "#faad14",
-      onClick: () => setIsReminder(true),
-    },
-    {
-      key: "8",
-      label: "Roster",
-      icon: <FaFolder />,
-      iconColor: "#13c2c2",
-      onClick: () => handleMenuClick("8"),
-    },
-    {
-      key: "17",
-      label: "Subscription History",
-      icon: <FaIdCard />,
-      iconColor: "#597ef7",
-      onClick: () => {
-        if (profileDetails?._id) {
-          dispatch(
-            getSubscriptionHistoryByProfileId({
-              profileId: profileDetails._id,
-            }),
-          );
-        }
-        handleMenuClick("17");
-      },
-    },
-    {
-      key: "10",
-      label: "Trainings (CPD)",
-      icon: <FaBook />,
-      iconColor: "#eb2f96",
-      onClick: () => handleMenuClick("10"),
-    },
-    {
-      key: "12",
-      label: "Transfer Requests",
-      icon: <FaExchangeAlt />,
-      iconColor: "#fa8c16",
-      onClick: () => setTransferDrawer(true),
-    },
-  ];
-
-  /** Ant Design menu items for the tab bar "More actions" button — extend per `activeKey` as needed. */
-  const profileTabMoreActionMenuItems = useMemo(() => {
-    switch (String(activeKey)) {
-      case "1": {
-        const items = [
-          {
-            key: "membership-edit",
-            label: isEditMode ? "Cancel Edit" : "Edit Profile",
-            icon: membershipMoreIcon(FaEdit, MEMBERSHIP_MORE_ICON.edit),
-            onClick: () => setIsEditMode((v) => !v),
-          },
-          {
-            key: "membership-duplicate",
-            label: "Check Duplicate",
-            icon: membershipMoreIcon(FaClone, MEMBERSHIP_MORE_ICON.duplicate),
-            onClick: () => setIsDuplicateDrawerOpen(true),
-          },
-        ];
-        if (membershipHeaderActionsMeta.showActivateMembership) {
-          items.push({
-            key: "membership-activate",
-            label: "Activate Membership",
-            icon: membershipMoreIcon(
-              FaUndo,
-              membershipHeaderActionsMeta.activateMembershipDisabled
-                ? MEMBERSHIP_MORE_ICON.activateMuted
-                : MEMBERSHIP_MORE_ICON.activate,
-            ),
-            disabled: membershipHeaderActionsMeta.activateMembershipDisabled,
-            title: membershipHeaderActionsMeta.activateMembershipTitle,
-            onClick: () =>
-              profileHeaderRef.current?.openActivateMembershipModal?.(),
-          });
-        }
-        if (membershipHeaderActionsMeta.showCancelMembership) {
-          items.push({
-            key: "membership-cancel",
-            label: "Cancel Membership",
-            icon: membershipMoreIcon(FaBan, MEMBERSHIP_MORE_ICON.cancel),
-            danger: true,
-            onClick: () =>
-              profileHeaderRef.current?.openCancelMembershipModal?.(),
-          });
-        }
-        items.push(
-          { type: "divider", key: "membership-divider-deceased" },
-          {
-            key: "membership-deceased",
-            label: isDeceased ? "Unmark as Deceased" : "Mark as Deceased",
-            icon: membershipMoreIcon(
-              FaUserSlash,
-              MEMBERSHIP_MORE_ICON.deceased,
-            ),
-            onClick: () => setIsDeceased((v) => !v),
-          },
-        );
-        return items;
-      }
-      default:
-        return [];
-    }
-  }, [activeKey, isEditMode, isDeceased, membershipHeaderActionsMeta]);
-
   const historyData = [
     {
       key: "1",
@@ -864,9 +682,456 @@ function AppTabs() {
     },
   ];
 
+  const profileReminderRows = useMemo(() => {
+    const hist = primarySubscriptionRow?.reminderHistory;
+    if (Array.isArray(hist) && hist.length > 0) {
+      return hist.map((h, index) => ({
+        key: h?._id || `reminder-${index}`,
+        reminder:
+          REMINDER_TYPE_LABELS[h?.type] || h?.type || `Reminder ${index + 1}`,
+        date: formatDateOnly(h?.reminderDate) || "—",
+        medium: h?.medium || "email",
+      }));
+    }
+    return defaultReminderHistoryRows;
+  }, [primarySubscriptionRow]);
+
+  const profileTransferRows = useMemo(
+    () => normalizeTransferHistoryRows(transferHistoryRaw),
+    [transferHistoryRaw],
+  );
+
+  const pendingTransferRequest = useMemo(
+    () =>
+      profileTransferRows.find(
+        (row) => String(row.status || "").toUpperCase() === "PENDING",
+      ),
+    [profileTransferRows],
+  );
+
+  const transferRequestColumns = useMemo(
+    () => [
+      {
+        title: "Transfer Date",
+        dataIndex: "transferDate",
+        key: "transferDate",
+        render: (date) => (date ? formatDateOnly(date) : ""),
+      },
+      {
+        title: "Work Location From",
+        dataIndex: "currentWorkLocationName",
+        key: "currentWorkLocationName",
+      },
+      {
+        title: "Transfer reason",
+        dataIndex: "reason",
+        key: "reason",
+      },
+      {
+        title: "Work Location To",
+        dataIndex: "requestedWorkLocationName",
+        key: "requestedWorkLocationName",
+      },
+      {
+        title: "Notes",
+        dataIndex: "notes",
+        key: "notes",
+      },
+      {
+        title: "Status",
+        dataIndex: "status",
+        key: "status",
+        render: (text) => {
+          const normalized = String(text || "");
+          let color = "default";
+          if (normalized === "Approved" || normalized === "APPROVED")
+            color = "green";
+          else if (normalized === "Rejected" || normalized === "REJECTED")
+            color = "red";
+          else if (
+            normalized === "Pending" ||
+            normalized === "PENDING"
+          )
+            color = "orange";
+          return <span style={{ color }}>{text}</span>;
+        },
+      },
+    ],
+    [],
+  );
+
+  const handleApproveTransferRequest = useCallback(async () => {
+    const requestId = pendingTransferRequest?.requestId;
+    if (!requestId) {
+      MyAlert("warning", "No pending transfer request to approve.");
+      return;
+    }
+    try {
+      const token = localStorage.getItem("token");
+      await axios.put(
+        `${process.env.REACT_APP_PROFILE_SERVICE_URL}/transfer-request/${requestId}`,
+        { action: "APPROVE", reason: "" },
+        {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        },
+      );
+      MyAlert(
+        "success",
+        "Transfer Request Approved",
+        "The transfer request has been approved successfully.",
+      );
+      dispatch(getTransferRequest());
+      const profileId = profileDetails?._id || profileDetails?.id;
+      if (profileId) {
+        dispatch(getTransferRequestHistoryById(profileId));
+      }
+    } catch (error) {
+      const message =
+        error.response?.data?.message ||
+        error.message ||
+        "Failed to approve transfer request";
+      MyAlert("error", "Approval Failed", message);
+    }
+  }, [dispatch, pendingTransferRequest, profileDetails]);
+
+  const allItems = [
+    {
+      key: "1",
+      label: "Membership",
+      children: (
+        <MyDeatails
+          isEditMode={isEditMode}
+          setIsEditMode={setIsEditMode}
+          isDeceased={isDeceased}
+          setIsDeceased={setIsDeceased}
+        />
+      ),
+    },
+    // { key: "15", label: "Duplicate Members", children: <DuplicateMembers /> },
+    { key: "2", label: "Finance", children: <FinanceByID /> },
+    {
+      key: "4",
+      label: "Documents",
+      children: (
+        <DoucmentsById
+          profileId={profileDetails?._id}
+          profile={profileDetails}
+          registerActions={registerDocumentsActions}
+        />
+      ),
+    },
+    {
+      key: "5",
+      label: "Correspondence",
+      children: <CommunicationHistory />,
+    },
+    { key: "6", label: "Cases", children: <CasesById /> },
+    {
+      key: "3",
+      label: "Applications",
+      children: (
+        <MyTable
+          columns={profileApplicationColumns}
+          dataSource={profileApplications}
+          loading={profileApplicationsLoading}
+          selection={false}
+          tablePadding={{ paddingLeft: "0", paddingRight: "0" }}
+        />
+      ),
+    },
+    {
+      key: "16",
+      label: "Events",
+      children: <div>Events</div>,
+    },
+    { key: "7", label: "Claims", children: <ClaimsById /> },
+    { key: "8", label: "Roster", children: <Roster /> },
+    { key: "11", label: "Audit History", children: <HistoryByID /> },
+    {
+      key: "17",
+      label: "Subscription History",
+      children: (
+        <MyTable
+          columns={subscriptionHistoryColumns}
+          dataSource={ProfileSubHistory}
+          loading={ProfileSubHistoryLoading}
+          selection={false}
+          tablePadding={{ paddingLeft: "0", paddingRight: "0" }}
+          onRowClick={(record) => openHistorySubscriptionDetail(record)}
+        />
+      ),
+    },
+    { key: "9", label: "Projects", children: <div>Projects</div> },
+    {
+      key: "10",
+      label: "Trainings (CPD)",
+      children: <div>Trainings (CPD)</div>,
+    },
+    {
+      key: "13",
+      label: "Category Changes",
+      children: (
+        <CategoryChangeRequest
+          inline
+          columnHistory={columnHistory}
+          historyData={historyData}
+        />
+      ),
+    },
+    {
+      key: "14",
+      label: "Reminders",
+      children: <ReminderTable dataSource={profileReminderRows} />,
+    },
+    {
+      key: "12",
+      label: "Transfer Requests",
+      children: (
+        <MyTable
+          columns={transferRequestColumns}
+          dataSource={profileTransferRows}
+          loading={transferHistoryLoading}
+          selection={false}
+          tablePadding={{ paddingLeft: "0", paddingRight: "0" }}
+        />
+      ),
+    },
+  ];
+
+  const handleMenuClick = (key) => {
+    const isStatic = staticTabKeys.includes(activeKey);
+
+    setVisibleTabs((prev) => {
+      const newTabs = [...prev];
+
+      // Remove existing dynamic (non-static) tabs
+      const updatedTabs = newTabs.filter((tabKey) =>
+        staticTabKeys.includes(tabKey),
+      );
+
+      // Add new tab if it's not already in the list
+      if (!updatedTabs.includes(key)) {
+        updatedTabs.push(key);
+      }
+
+      return updatedTabs;
+    });
+
+    setActiveKey(key);
+  };
+  const handleTabChange = (key) => {
+    const isStatic = staticTabKeys.includes(key);
+
+    if (isStatic) {
+      // Remove all dynamic tabs
+      setVisibleTabs((prev) =>
+        prev.filter((tabKey) => staticTabKeys.includes(tabKey)),
+      );
+    }
+
+    setActiveKey(key);
+  };
+  const filteredItems = allItems.filter((item) =>
+    visibleTabs.includes(item.key),
+  );
+  /** Alphabetical by label (profile tab overflow ⋮ menu). */
+  const Menuitems = [
+    {
+      key: "11",
+      label: "Audit History",
+      icon: <FaHistory />,
+      iconColor: "#722ed1",
+      onClick: () => handleMenuClick("11"),
+    },
+    {
+      key: "13",
+      label: "Category Changes",
+      icon: <FaTags />,
+      iconColor: "#2f54eb",
+      onClick: () => handleMenuClick("13"),
+    },
+    {
+      key: "7",
+      label: "Claims",
+      icon: <FaBalanceScale />,
+      iconColor: "#fa541c",
+      onClick: () => handleMenuClick("7"),
+    },
+    {
+      key: "16",
+      label: "Events",
+      icon: <FaCalendarAlt />,
+      iconColor: "#13c2c2",
+      onClick: () => handleMenuClick("16"),
+    },
+    {
+      key: "9",
+      label: "Projects",
+      icon: <FaProjectDiagram />,
+      iconColor: "#1890ff",
+      onClick: () => handleMenuClick("9"),
+    },
+    {
+      key: "14",
+      label: "Reminders",
+      icon: <FaRegClock />,
+      iconColor: "#faad14",
+      onClick: () => handleMenuClick("14"),
+    },
+    {
+      key: "8",
+      label: "Roster",
+      icon: <FaFolder />,
+      iconColor: "#13c2c2",
+      onClick: () => handleMenuClick("8"),
+    },
+    {
+      key: "17",
+      label: "Subscription History",
+      icon: <FaIdCard />,
+      iconColor: "#597ef7",
+      onClick: () => {
+        if (profileDetails?._id) {
+          dispatch(
+            getSubscriptionHistoryByProfileId({
+              profileId: profileDetails._id,
+            }),
+          );
+        }
+        handleMenuClick("17");
+      },
+    },
+    {
+      key: "10",
+      label: "Trainings (CPD)",
+      icon: <FaBook />,
+      iconColor: "#eb2f96",
+      onClick: () => handleMenuClick("10"),
+    },
+    {
+      key: "12",
+      label: "Transfer Requests",
+      icon: <FaExchangeAlt />,
+      iconColor: "#fa8c16",
+      onClick: () => {
+        const profileId = profileDetails?._id || profileDetails?.id;
+        if (profileId) {
+          dispatch(getTransferRequestHistoryById(profileId));
+        }
+        handleMenuClick("12");
+      },
+    },
+  ];
+
+  /** Ant Design menu items for the tab bar "More actions" button — extend per `activeKey` as needed. */
+  const profileTabMoreActionMenuItems = useMemo(() => {
+    switch (String(activeKey)) {
+      case "1": {
+        const items = [
+          {
+            key: "membership-edit",
+            label: isEditMode ? "Cancel Edit" : "Edit Profile",
+            icon: membershipMoreIcon(FaEdit, MEMBERSHIP_MORE_ICON.edit),
+            onClick: () => setIsEditMode((v) => !v),
+          },
+          {
+            key: "membership-duplicate",
+            label: "Check Duplicate",
+            icon: membershipMoreIcon(FaClone, MEMBERSHIP_MORE_ICON.duplicate),
+            onClick: () => setIsDuplicateDrawerOpen(true),
+          },
+        ];
+        if (membershipHeaderActionsMeta.showActivateMembership) {
+          items.push({
+            key: "membership-activate",
+            label: "Activate Membership",
+            icon: membershipMoreIcon(
+              FaUndo,
+              membershipHeaderActionsMeta.activateMembershipDisabled
+                ? MEMBERSHIP_MORE_ICON.activateMuted
+                : MEMBERSHIP_MORE_ICON.activate,
+            ),
+            disabled: membershipHeaderActionsMeta.activateMembershipDisabled,
+            title: membershipHeaderActionsMeta.activateMembershipTitle,
+            onClick: () =>
+              profileHeaderRef.current?.openActivateMembershipModal?.(),
+          });
+        }
+        if (membershipHeaderActionsMeta.showCancelMembership) {
+          items.push({
+            key: "membership-cancel",
+            label: "Cancel Membership",
+            icon: membershipMoreIcon(FaBan, MEMBERSHIP_MORE_ICON.cancel),
+            danger: true,
+            onClick: () =>
+              profileHeaderRef.current?.openCancelMembershipModal?.(),
+          });
+        }
+        items.push(
+          { type: "divider", key: "membership-divider-deceased" },
+          {
+            key: "membership-deceased",
+            label: isDeceased ? "Unmark as Deceased" : "Mark as Deceased",
+            icon: membershipMoreIcon(
+              FaUserSlash,
+              MEMBERSHIP_MORE_ICON.deceased,
+            ),
+            onClick: () => setIsDeceased((v) => !v),
+          },
+        );
+        return items;
+      }
+      case "4":
+        if (!profileDetails?._id) return [];
+        return [
+          {
+            key: "documents-create-payment-form",
+            label: "Create payment form",
+            icon: membershipMoreIcon(FaFileAlt, "#45669d"),
+            onClick: () =>
+              documentsActionsRef.current?.openCreatePaymentForm?.(),
+          },
+        ];
+      case "13":
+        return [
+          {
+            key: "category-change-request",
+            label: "Request Category Change",
+            icon: membershipMoreIcon(FaTags, "#2f54eb"),
+            onClick: () => setIsCategoryRequestModalOpen(true),
+          },
+        ];
+      case "14":
+        return [];
+      case "12":
+        return [
+          {
+            key: "transfer-approve",
+            label: "Approve Transfer Request",
+            icon: membershipMoreIcon(FaExchangeAlt, "#fa8c16"),
+            disabled: !pendingTransferRequest?.requestId,
+            onClick: () => handleApproveTransferRequest(),
+          },
+        ];
+      default:
+        return [];
+    }
+  }, [
+    activeKey,
+    isEditMode,
+    isDeceased,
+    membershipHeaderActionsMeta,
+    profileDetails?._id,
+    pendingTransferRequest?.requestId,
+    handleApproveTransferRequest,
+  ]);
+
   return (
     <div
-      className="d-flex"
+      className={`profile-details-shell profile-details-shell-${profileHeaderLayout}`}
       style={{
         flex: "1 1 0%",
         minHeight: 0,
@@ -878,6 +1143,8 @@ function AppTabs() {
     >
       <ProfileHeader
         ref={profileHeaderRef}
+        layout={profileHeaderLayout}
+        onLayoutChange={setProfileHeaderLayout}
         showButtons={activeKey === "1"}
         isDeceased={isDeceased}
         onMembershipHeaderActionsMetaChange={
@@ -1029,19 +1296,15 @@ function AppTabs() {
           </div>
         </FinanceTabToolbarContext.Provider>
       </MembershipTabToolbarContext.Provider>
-      <TransferRequests
-        open={TransferDrawer}
-        onClose={() => setTransferDrawer(false)}
-        isSearch={false}
-        isChangeCat={false}
-      />
       <CategoryChangeRequest
-        open={isDrawerOpen}
-        onClose={() => setisDrawerOpen(false)}
+        asModal
+        isChangeCat
+        open={isCategoryRequestModalOpen}
+        onClose={() => setIsCategoryRequestModalOpen(false)}
+        ProfileDetails={profileDetails}
         columnHistory={columnHistory}
         historyData={historyData}
       />
-      <Reminder open={isReminder} onClose={() => setIsReminder(false)} />
 
       <Drawer
         title="Duplicate Members"

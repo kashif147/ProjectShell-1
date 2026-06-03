@@ -165,6 +165,7 @@ const Reconciliation = lazyWithRetry(
 const JournalAdjustments = lazyWithRetry(
   () => import("./pages/finance/JournalAdjustments"),
 );
+const GeneralLedger = lazyWithRetry(() => import("./pages/finance/GeneralLedger"));
 const DirectDebitAuthorization = lazyWithRetry(
   () => import("./pages/finance/DirectDebitAuthorization"),
 );
@@ -183,8 +184,17 @@ const RemindersDetails = lazyWithRetry(
 const MembershipDashboard = lazyWithRetry(
   () => import("./pages/membership/MembershipDashboard"),
 );
+const ExecutiveChartExpandPage = lazyWithRetry(
+  () => import("./pages/membership/executive/ExecutiveChartExpandPage"),
+);
 const TenantManagement = lazyWithRetry(
   () => import("./pages/tenant-management/TenantManagement"),
+);
+const TenantOfficesPage = lazyWithRetry(
+  () => import("./pages/tenant-offices/TenantOfficesPage"),
+);
+const TenantDepartmentsPage = lazyWithRetry(
+  () => import("./pages/tenant-departments/TenantDepartmentsPage"),
 );
 const RoleManagement = lazyWithRetry(
   () => import("./pages/role-management/RoleManagement"),
@@ -212,6 +222,15 @@ const LeaversReport = lazyWithRetry(
 );
 const JoinersReport = lazyWithRetry(
   () => import("./pages/reports/JoinersReport"),
+);
+const ComparisonReport = lazyWithRetry(
+  () => import("./pages/reports/ComparisonReport"),
+);
+const LiveStatsReport = lazyWithRetry(
+  () => import("./pages/reports/LiveStatsReport"),
+);
+const MembershipListingReport = lazyWithRetry(
+  () => import("./pages/reports/MembershipListingReport"),
 );
 const ReportViewerDemo = lazyWithRetry(
   () => import("./features/reports/report-viewer/ReportViewerDemo"),
@@ -281,6 +300,7 @@ function Entry() {
     "/", // login page
     "/rewards/insurance",
     "/rewards/rewards",
+    "/MembershipDashboard/chart",
   ];
 
   const showSidebar = !noSidebarRoutes.includes(location.pathname);
@@ -359,7 +379,11 @@ function Entry() {
                     location.pathname === "/CancellationDetail"
                       ? "enable-vertical-scroll"
                       : ""
-                  } ${location.pathname === "/templeteConfig" ? "main-main--template-config" : ""}`}
+                  } ${location.pathname === "/templeteConfig" ? "main-main--template-config" : ""} ${
+                    location.pathname === "/MembershipDashboard"
+                      ? "main-main--exec-dashboard"
+                      : ""
+                  }`}
                 >
                   <Suspense
                     fallback={
@@ -885,6 +909,16 @@ function Entry() {
                         }
                       />
                       <Route
+                        path="GeneralLedger"
+                        element={
+                          <ProtectedRoute
+                            requiredPermission={RoutePermissions["GeneralLedger"]}
+                          >
+                            <GeneralLedger />
+                          </ProtectedRoute>
+                        }
+                      />
+                      <Route
                         path="Batch/:id"
                         element={
                           <ProtectedRoute>
@@ -1035,10 +1069,35 @@ function Entry() {
                       />
 
                       <Route
+                        path="MembershipDashboard/chart"
+                        element={
+                          <RoutePermissionWrapper path="/MembershipDashboard">
+                            <ExecutiveChartExpandPage />
+                          </RoutePermissionWrapper>
+                        }
+                      />
+
+                      <Route
                         path="TenantManagement"
                         element={
                           <ProtectedRoute requiredPermission={RoutePermissions["TenantManagement"]}>
                             <TenantManagement />
+                          </ProtectedRoute>
+                        }
+                      />
+                      <Route
+                        path="TenantOffices"
+                        element={
+                          <ProtectedRoute requiredPermission={RoutePermissions["TenantOffices"]}>
+                            <TenantOfficesPage />
+                          </ProtectedRoute>
+                        }
+                      />
+                      <Route
+                        path="TenantDepartments"
+                        element={
+                          <ProtectedRoute requiredPermission={RoutePermissions["TenantDepartments"]}>
+                            <TenantDepartmentsPage />
                           </ProtectedRoute>
                         }
                       />
@@ -1087,6 +1146,34 @@ function Entry() {
                         element={
                           <ProtectedRoute requiredPermission={RoutePermissions["JoinersReport"]}>
                             <JoinersReport />
+                          </ProtectedRoute>
+                        }
+                      />
+                      <Route
+                        path="ComparisonReport"
+                        element={
+                          <ProtectedRoute requiredPermission={RoutePermissions["ComparisonReport"]}>
+                            <ComparisonReport />
+                          </ProtectedRoute>
+                        }
+                      />
+                      <Route
+                        path="LiveStatsReport"
+                        element={
+                          <ProtectedRoute requiredPermission={RoutePermissions["LiveStatsReport"]}>
+                            <LiveStatsReport />
+                          </ProtectedRoute>
+                        }
+                      />
+                      <Route
+                        path="MembershipListingReport"
+                        element={
+                          <ProtectedRoute
+                            requiredPermission={
+                              RoutePermissions["MembershipListingReport"]
+                            }
+                          >
+                            <MembershipListingReport />
                           </ProtectedRoute>
                         }
                       />

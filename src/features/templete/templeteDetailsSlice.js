@@ -1,6 +1,6 @@
-// src/redux/templeteDetailsSlice.js
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import axios from "axios";
+import { communicationServicePath } from "../../utils/communicationServiceUrl";
 
 // ✅ Async thunk to fetch template details
 export const loadtempletedetails = createAsyncThunk(
@@ -8,7 +8,7 @@ export const loadtempletedetails = createAsyncThunk(
   async (templateId, { rejectWithValue }) => {
     try {
       const token = localStorage.getItem("token"); // if auth required
-      const response = await axios.get(`${process.env.REACT_APP_CUMM}/templates/${templateId}`, {
+      const response = await axios.get(communicationServicePath(`templates/${templateId}`), {
         headers: {
           Authorization: token ? `Bearer ${token}` : undefined,
         },

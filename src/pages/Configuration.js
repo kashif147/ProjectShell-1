@@ -1279,15 +1279,8 @@ const Configuration = () => {
       dispatch(getContacts());
     }
 
-    // Only fetch lookup types if they don't exist and not already loading
-    // Note: getAllRegionTypes and getLookupTypes call the same endpoint
-    // We only call getLookupTypes to avoid duplicate API calls
-    if (
-      !lookupsTypesloading &&
-      (!lookupsTypes || lookupsTypes.length === 0) &&
-      !regionTypesLoading &&
-      (!regionTypes || regionTypes.length === 0)
-    ) {
+    // Fetch lookup types when not loaded (do not block on regionTypes — same API, separate slice)
+    if (!lookupsTypesloading && (!lookupsTypes || lookupsTypes.length === 0)) {
       dispatch(getLookupTypes());
     }
 
@@ -5147,7 +5140,7 @@ const Configuration = () => {
               </p>
             );
           })()}
-          {lookupsTypesloading && (
+          {lookupsTypesloading && (!lookupsTypes || lookupsTypes.length === 0) && (
             <p className="text-muted small mb-0 text-center">
               Loading lookup types...
             </p>

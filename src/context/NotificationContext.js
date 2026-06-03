@@ -6,49 +6,21 @@ import React, {
   useState,
   useCallback,
 } from "react";
-import { io } from "socket.io-client";
 import { notification } from "antd";
 import axios from "axios";
+import {
+  disconnectRealtimeSocket,
+  getNotificationServiceUrl,
+  getNotificationSocketConfig,
+  getRealtimeSocket,
+} from "../services/realtimeSocket";
+
+export { getNotificationServiceUrl, getNotificationSocketConfig };
 
 const NotificationContext = createContext();
 
 /** Coalesce overlapping unread-count XHRs (e.g. StrictMode double mount + visibility). */
 let unreadCountFetchInFlight = null;
-
-const NOTIFICATION_SERVICE_FALLBACK =
-  "https://projectshell-vm.northeurope.cloudapp.azure.com/notification-service/api";
-
-export const getNotificationServiceUrl = () => {
-  const env = (process.env.REACT_APP_NOTIFICATION_SERVICE_URL || "").trim();
-  if (env && env.includes("/notification-service/")) return env;
-  return NOTIFICATION_SERVICE_FALLBACK;
-};
-
-export const getNotificationSocketConfig = () => {
-  const baseUrl = getNotificationServiceUrl();
-  try {
-    const url = new URL(baseUrl);
-    return {
-      origin: url.origin,
-      path: `${url.pathname.replace(/\/$/, "")}/socket.io`,
-    };
-  } catch {
-    return {
-      origin: "https://projectshell-vm.northeurope.cloudapp.azure.com",
-      path: "/notification-service/api/socket.io",
-    };
-  }
-};
-
-/**
- * Socket.io-client ignores path in the URL; it only uses host/port.
- * Must pass path explicitly: io(origin, { path: basePath + "/socket.io" })
- */
-const getSocketOptions = () => {
-  return getNotificationSocketConfig();
-};
-
-let socket = null;
 
 export const NotificationProvider = ({ children }) => {
   const [badge, setBadge] = useState(0);
@@ -63,44 +35,35 @@ export const NotificationProvider = ({ children }) => {
       setBadge(0);
       setNotifications([]);
       window.recentNotificationIds = undefined;
-      if (socket) {
-        socket.disconnect();
-        socket = null;
-      }
+      disconnectRealtimeSocket();
       return;
     }
 
-    const { origin, path } = getSocketOptions();
-    socket = io(origin, {
-      path,
-      auth: { token },
-      query: { token },
-      transports: ["websocket"],
-    });
+    const socket = getRealtimeSocket();
+    if (!socket) return undefined;
 
-    socket.on("connect_error", (err) => {
+    const onConnectError = (err) => {
       console.warn(
         "[NotificationContext] Socket connect_error:",
-        err.message || err
+        err.message || err,
       );
-    });
+    };
 
-    socket.on("disconnect", (reason) => {
+    const onDisconnect = (reason) => {
       if (reason !== "io client disconnect") {
         console.warn("[NotificationContext] Socket disconnect:", reason);
       }
-    });
+    };
 
-    // Expose for Firebase duplicate guard
     window.recentNotificationIds = recentNotificationIds.current;
 
-    socket.on("unreadCount", (data) => {
+    const onUnreadCount = (data) => {
       if (typeof data?.count === "number") {
         setBadge(data.count);
       }
-    });
+    };
 
-    socket.on("notification", (notif) => {
+    const onNotification = (notif) => {
       if (!notif) return;
 
       const notifId = notif?._id ? String(notif._id) : null;
@@ -110,7 +73,6 @@ export const NotificationProvider = ({ children }) => {
 
       if (notif?._id) {
         recentNotificationIds.current.add(notif._id);
-
         setTimeout(() => {
           recentNotificationIds.current.delete(notif._id);
         }, 5000);
@@ -126,29 +88,41 @@ export const NotificationProvider = ({ children }) => {
         description: notif.body || "",
         duration: 4.5,
       });
-    });
+    };
 
-    socket.on("badgeIncrement", (data) => {
+    const onBadgeIncrement = (data) => {
       setBadge((prev) =>
         typeof data?.count === "number" ? data.count : prev + 1,
       );
-    });
+    };
 
-    socket.on("badgeDecrement", (data) => {
+    const onBadgeDecrement = (data) => {
       setBadge((prev) =>
         typeof data?.count === "number" ? data.count : Math.max(prev - 1, 0),
       );
-    });
+    };
 
-    socket.on("badgeReset", () => {
+    const onBadgeReset = () => {
       setBadge(0);
-    });
+    };
+
+    socket.on("connect_error", onConnectError);
+    socket.on("disconnect", onDisconnect);
+    socket.on("unreadCount", onUnreadCount);
+    socket.on("notification", onNotification);
+    socket.on("badgeIncrement", onBadgeIncrement);
+    socket.on("badgeDecrement", onBadgeDecrement);
+    socket.on("badgeReset", onBadgeReset);
 
     return () => {
-      if (socket) {
-        socket.disconnect();
-        socket = null;
-      }
+      socket.off("connect_error", onConnectError);
+      socket.off("disconnect", onDisconnect);
+      socket.off("unreadCount", onUnreadCount);
+      socket.off("notification", onNotification);
+      socket.off("badgeIncrement", onBadgeIncrement);
+      socket.off("badgeDecrement", onBadgeDecrement);
+      socket.off("badgeReset", onBadgeReset);
+      disconnectRealtimeSocket();
     };
   }, []);
 
@@ -187,7 +161,6 @@ export const NotificationProvider = ({ children }) => {
       document.removeEventListener("visibilitychange", handleVisibilityChange);
   }, [fetchUnreadCount]);
 
-  // Cross-tab logout sync
   useEffect(() => {
     const handleStorageChange = () => {
       const token = localStorage.getItem("token");
@@ -196,10 +169,7 @@ export const NotificationProvider = ({ children }) => {
         setBadge(0);
         setNotifications([]);
         window.recentNotificationIds = undefined;
-        if (socket) {
-          socket.disconnect();
-          socket = null;
-        }
+        disconnectRealtimeSocket();
       }
     };
 
@@ -211,12 +181,14 @@ export const NotificationProvider = ({ children }) => {
   }, []);
 
   const markAsRead = (notificationId) => {
+    const socket = getRealtimeSocket();
     if (socket && notificationId) {
       socket.emit("markAsRead", { notificationId });
     }
   };
 
   const markAllAsRead = () => {
+    const socket = getRealtimeSocket();
     if (socket) {
       socket.emit("markAllAsRead");
     }

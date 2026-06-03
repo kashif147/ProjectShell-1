@@ -19,6 +19,7 @@ const initialFormState = () => ({
     writeOffDate: dayjs(),
     periodBucket: "",
     memo: "",
+    memberId: "",
 });
 
 const WriteOffDrawer = ({
@@ -81,6 +82,9 @@ const WriteOffDrawer = ({
         }
         if (!formValues.writeOffDate) newErrors.writeOffDate = true;
         if (!formValues.periodBucket) newErrors.periodBucket = true;
+        if (!hideMemberSearch && !String(formValues.memberId || "").trim()) {
+            newErrors.memberId = true;
+        }
         setErrors(newErrors);
         return Object.keys(newErrors).length === 0;
     };
@@ -102,6 +106,7 @@ const WriteOffDrawer = ({
                 ? Math.round(eurosNum * 100) / 100
                 : formValues.amountEuros,
             periodBucket: formValues.periodBucket,
+            memberId: String(formValues.memberId || "").trim(),
         };
         try {
             const result = onSubmit ? await onSubmit(formattedValues) : true;
@@ -132,23 +137,29 @@ const WriteOffDrawer = ({
                     ) : null}
                     {!hideMemberSearch ? (
                         <Col span={24}>
-                            <label className="my-input-label">Member Search</label>
+                            <label className="my-input-label">
+                                Member Search{" "}
+                                <span className="star">*</span>
+                            </label>
                             <MemberSearch
                                 fullWidth={true}
                                 style={{ width: "100%" }}
-                                onSelectBehavior="none"
+                                onSelectBehavior="callback"
+                                onSelectCallback={(memberData) => {
+                                    const mid =
+                                        memberData?.memberId ||
+                                        memberData?._id ||
+                                        "";
+                                    handleChange("memberId", String(mid));
+                                }}
                             />
+                            {errors.memberId ? (
+                                <span className="error-message">
+                                    Select a member
+                                </span>
+                            ) : null}
                         </Col>
                     ) : null}
-                    <Col span={24}>
-                        <MyInput
-                            label="Ref No."
-                            name="docNo"
-                            placeholder="Enter Ref No."
-                            value={formValues.docNo}
-                            onChange={(e) => handleChange("docNo", e.target.value)}
-                        />
-                    </Col>
                     <Col span={24}>
                         <div className="my-input-wrapper">
                             <div className="d-flex justify-content-between">

@@ -1,6 +1,12 @@
 // lookupsSlice.js
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import axios from "axios";
+import {
+  getLookupId,
+  getLookupName,
+  getLookupTypeName,
+  normalizeLookups,
+} from "../utils/lookupHierarchy";
 
 const API_URL = process.env.REACT_APP_POLICY_SERVICE_URL;
 const getAuthHeaders = () => ({
@@ -106,7 +112,7 @@ const lookupsSlice = createSlice({
         state.lookupsloading = false;
         state.error = null;
         state.lastErrorTime = null;
-        state.lookups = payload;
+        state.lookups = normalizeLookups(payload);
 
         // Reset all arrays
         state.titleOptions = [];
@@ -124,15 +130,13 @@ const lookupsSlice = createSlice({
         state.countryOptions = [];
         state.provincesOption = []
 
-        if (Array.isArray(payload)) {
-          payload.forEach((item) => {
-            const lookuptype =
-              item.lookuptypeName ||
-              item.lookuptypeId?.lookuptype;
+        if (Array.isArray(state.lookups)) {
+          state.lookups.forEach((item) => {
+            const lookuptype = getLookupTypeName(item);
             const optionItem = {
-              value: item._id,
-              key: item._id,
-              label: item.lookupname,
+              value: getLookupId(item),
+              key: getLookupId(item),
+              label: getLookupName(item),
             };
             switch (lookuptype) {
               case "Title":

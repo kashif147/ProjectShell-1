@@ -17,6 +17,10 @@ import { useNavigate, useLocation, Link } from "react-router-dom";
 import { useAuthorization } from "../../context/AuthorizationContext";
 import { PushpinOutlined, PushpinFilled } from "@ant-design/icons";
 import { updateMenuLbl } from "../../features/MenuLblSlice";
+import {
+  FINANCE_MENU_KEY,
+  shouldUseFinanceSidebarForPath,
+} from "../../utils/roleHomeModule";
 // import policy from "../../utils/react-policy-client";
 
 const Sidebar = () => {
@@ -50,12 +54,20 @@ const Sidebar = () => {
       "/DirectDebit",
       "/DirectDebitBatchDetails",
       "/Reconciliation",
+      "/CreditNotes",
+      "/JournalAdjustments",
+      "/GeneralLedger",
       "/BatchMemberSummary",
     ];
 
-    const isFinanceRoute = financePaths.some((p) => path.startsWith(p));
-    if (isFinanceRoute && activeKey !== "Finance") {
-      dispatch(updateMenuLbl({ key: "Finance", value: true }));
+    const isFinanceRoute =
+      financePaths.some((p) => path.startsWith(p)) ||
+      shouldUseFinanceSidebarForPath(path, location.state, {
+        activeMenuKey: activeKey,
+      });
+
+    if (isFinanceRoute && activeKey !== FINANCE_MENU_KEY) {
+      dispatch(updateMenuLbl({ key: FINANCE_MENU_KEY, value: true }));
       return;
     }
 
@@ -116,7 +128,7 @@ const Sidebar = () => {
     ) {
       dispatch(updateMenuLbl({ key: "Subscriptions & Rewards", value: true }));
     }
-  }, [location.pathname, activeKey, dispatch]);
+  }, [location.pathname, location.state, activeKey, dispatch]);
 
   // These are the menu links for various modules, imported from a constants file
   const itemsMap = useMemo(
@@ -212,7 +224,7 @@ const Sidebar = () => {
       case "MembershipDashboard":
         return {
           path: "/MembershipDashboard",
-          state: { search: "Membership Dashboard" },
+          state: { search: "Executive Dashboard" },
         };
       case "Reminders":
         return { path: "/RemindersSummary", state: { search: "Reminders" } };
@@ -245,6 +257,11 @@ const Sidebar = () => {
         return { path: "/write-offs", state: { search: "Write-offs" } };
       case "Credit notes":
         return { path: "/CreditNotes", state: { search: "Credit notes" } };
+      case "General ledger":
+        return {
+          path: "/GeneralLedger",
+          state: { search: "General ledger" },
+        };
       case "DD Authorisations":
         return {
           path: "/DirectDebitAuthorization",
@@ -326,6 +343,21 @@ const Sidebar = () => {
         return {
           path: "/JoinersReport",
           state: { search: "Joiners Report" },
+        };
+      case "Comparison Report":
+        return {
+          path: "/ComparisonReport",
+          state: { search: "Comparison Report" },
+        };
+      case "Live Stats":
+        return {
+          path: "/LiveStatsReport",
+          state: { search: "Live Stats" },
+        };
+      case "Membership Listing Report":
+        return {
+          path: "/MembershipListingReport",
+          state: { search: "Membership Listing Report" },
         };
       case "Policy Client Example":
         return {
@@ -469,11 +501,16 @@ const Sidebar = () => {
       "/DirectDebit": "Direct Debit",
       "/write-offs": "Write-offs",
       "/CreditNotes": "Credit notes",
+      "/JournalAdjustments": "Journal adjustments",
+      "/GeneralLedger": "General ledger",
       "/SuspendedMembersReport": "Suspended Members Report",
       "/ResignedMembersReport": "Resigned Members Report",
       "/NewMembersReport": "New Members Report",
       "/LeaversReport": "Leavers Report",
       "/JoinersReport": "Joiners Report",
+      "/ComparisonReport": "Comparison Report",
+      "/LiveStatsReport": "Live Stats",
+      "/MembershipListingReport": "Membership Listing Report",
       "/CorrespondenceDashboard": "Dashboard",
       "/IssuesManagementDashboard": "Dashboard",
       "/ReportsSettings": "Reports setting",

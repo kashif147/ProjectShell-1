@@ -179,6 +179,9 @@ const TableComponent = ({
   onSelectionChange,
   selectionType = "checkbox",
   enableRowSelection = true,
+  hideLegacyRowChrome = false,
+  rowActionsInGridmenu = false,
+  selectionToolbar = null,
   onRowClick: externalOnRowClick = null,
   disableDefaultRowClick = false,
   disableRowFn = null,
@@ -314,22 +317,20 @@ const TableComponent = ({
   };
 
   const [columnsForFilter, setColumnsForFilter] = useState(() =>
-    (columns?.[screenName] || [])
-      ?.filter((item) => item?.isGride)
-      ?.map((item, index) => ({
-        ...item,
-        key: `${index}`,
-        onHeaderCell: () => ({ id: `${index}` }),
-        onCell: () => ({ id: `${index}` }),
-      })) || []
+    (columns?.[screenName] || [])?.map((item, index) => ({
+      ...item,
+      key: `${index}`,
+      onHeaderCell: () => ({ id: `${index}` }),
+      onCell: () => ({ id: `${index}` }),
+    })) || []
   );
 
   const getColumnStableKey = useCallback((col, fallbackIndex = 0) => {
     if (!col) return `idx:${fallbackIndex}`;
-    if (col.key) return `key:${col.key}`;
     if (Array.isArray(col.dataIndex)) return `data:${col.dataIndex.join(".")}`;
     if (col.dataIndex) return `data:${col.dataIndex}`;
     if (col.title) return `title:${col.title}`;
+    if (col.key) return `key:${col.key}`;
     return `idx:${fallbackIndex}`;
   }, []);
 
@@ -552,7 +553,19 @@ const TableComponent = ({
   ]);
 
   // Build columns
-  const draggableColumns = useMemo(() => [
+  const draggableColumns = useMemo(() => {
+    const actionsColumn = rowActionsInGridmenu
+      ? columnsDragbe.find(
+          (c) => c.dataIndex === "_actions" || c.key === "actions",
+        )
+      : null;
+    const dataColumns = rowActionsInGridmenu
+      ? columnsDragbe.filter(
+          (c) => c.dataIndex !== "_actions" && c.key !== "actions",
+        )
+      : columnsDragbe;
+
+    return [
     {
       title: (
         <Gridmenu
@@ -569,9 +582,14 @@ const TableComponent = ({
         />
       ),
       key: "gridmenu",
-      width: 75,
+      width: rowActionsInGridmenu ? 102 : 75,
       fixed: "left",
-      render: (record, index) => (
+      render: (record, index) => {
+        if (rowActionsInGridmenu && actionsColumn?.render) {
+          return actionsColumn.render(null, record, index);
+        }
+        if (hideLegacyRowChrome) return null;
+        return (
         <Space size="small">
           <CgAttachment
             style={{
@@ -623,9 +641,10 @@ const TableComponent = ({
             />
           )}
         </Space>
-      ),
+        );
+      },
     },
-    ...columnsDragbe.map((col) => ({
+    ...dataColumns.map((col) => ({
       ...col,
       title: (
         <DraggableHeaderCell id={col.key} key={col.key}>
@@ -1198,7 +1217,8 @@ const TableComponent = ({
         return true;
       },
     })),
-  ], [columnsDragbe, columnsForFilter, screenName, location?.pathname, handleRowClick, dispatch, navigate, getProfile]);
+  ];
+  }, [columnsDragbe, columnsForFilter, screenName, location?.pathname, handleRowClick, dispatch, navigate, getProfile, hideLegacyRowChrome, rowActionsInGridmenu]);
 
   // Pagination logic with UnifiedPagination
   const defaultPageSize = useMemo(() => getDefaultPageSize(dataSource.length), [dataSource.length]);
@@ -1301,6 +1321,7 @@ const TableComponent = ({
             paddingBottom: "80px", // Add padding to ensure pagination is visible
           }}
         >
+          {selectionToolbar}
           <Table
             rowKey={(record) => record.applicationId || record.key || record.id || record._id}
             rowClassName={() => ""}

@@ -1,8 +1,11 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { useFilters } from "../../context/FilterContext";
 import { useLocation } from "react-router-dom";
 import SimpleMenu from "./SimpleMenu";
 import MultiFilterDropdown from "./MultiFilterDropdown";
+import DateRang from "./DateRang";
+import NumberFilter from "./NumberFilter";
+import TextFilter from "./TextFilter";
 import { Button, Input } from "antd";
 import { EnterOutlined } from "@ant-design/icons";
 import { useDispatch, useSelector } from "react-redux";
@@ -24,7 +27,18 @@ import { useTableColumns } from "../../context/TableColumnsContext ";
 import {
   transformFiltersForApi,
   transformFiltersFromApi,
+  isDateFilterLabel,
+  isNumericFilterLabel,
+  isStringFilterLabel,
 } from "../../utils/filterUtils";
+import { bumpCreditNotesReload } from "../../utils/creditNotesWorkspace";
+import { bumpJournalAdjustmentsReload } from "../../utils/journalAdjustmentsWorkspace";
+import { bumpOnlinePaymentsReload } from "../../utils/onlinePaymentsWorkspace";
+import { bumpRefundsReload } from "../../utils/refundsWorkspace";
+import { bumpWriteOffsReload } from "../../utils/writeOffsWorkspace";
+import { bumpGeneralLedgerReload } from "../../utils/generalLedgerWorkspace";
+import { bumpReconciliationReload } from "../../utils/reconciliationWorkspace";
+import { bumpMembershipListingReportReload } from "../../utils/membershipListingReportWorkspace";
 import { useAuthorization } from "../../context/AuthorizationContext";
 import {
   updateGridTemplate,
@@ -33,12 +47,17 @@ import {
 import { getViewById } from "../../features/views/ViewByIdSlice";
 import { setActiveTemplateId } from "../../features/views/ActiveTemplateSlice";
 import MyAlert from "./MyAlert";
+import MembershipDashboardHeaderControls from "../../pages/membership/executive/MembershipDashboardHeaderControls";
+import {
+  parseMembershipCategoryOptionLabels,
+  resolveDashboardMembershipCategoryFilterState,
+} from "../../pages/membership/executive/executiveDashboardUtils";
+import "../../styles/ToolbarFilters.css";
 import {
   markScreenChanged,
   resetScreenChanged,
 } from "../../features/views/ScreenFilterChangSlice";
 import { message } from "antd";
-import DateRang from "./DateRang";
 
 const AI_FILTER_API_URL =
   process.env.REACT_APP_AI_PROFILE_FILTER_URL ||
@@ -212,6 +231,8 @@ const Toolbar = () => {
     applyTemplateFilters,
     getFiltersStateForSave,
     bumpMembershipDashboardApply,
+    membershipDashboardHeader,
+    updateMembershipDashboardHeader,
   } = useFilters();
   /** TableColumnsContext keys use "Members"; FilterContext uses "Membership" for /membership */
   const tableColumnScreen =
@@ -248,10 +269,31 @@ const Toolbar = () => {
       "/issuesmanagementdashboard": "Cases",
       "/attendees": "Attendees",
       "/membershipdashboard": "MembershipDashboard",
+      "/creditnotes": "CreditNotes",
+      "/journaladjustments": "JournalAdjustments",
+      "/onlinepayment": "OnlinePayment",
+      "/refunds": "Refunds",
+      "/write-offs": "WriteOffs",
+      "/generalledger": "GeneralLedger",
+      "/reconciliation": "Reconciliation",
+      "/membershiplistingreport": "MembershipListingReport",
     };
     return pathMap[key] || "";
   };
   const activeScreen = getScreenFromPath();
+  const normalizedPath = (location.pathname || "")
+    .replace(/\/$/, "")
+    .toLowerCase();
+  const isCreditNotesScreen = normalizedPath === "/creditnotes";
+  const isJournalAdjustmentsScreen = normalizedPath === "/journaladjustments";
+  const isOnlinePaymentScreen = normalizedPath === "/onlinepayment";
+  const isRefundsScreen = normalizedPath === "/refunds";
+  const isWriteOffsScreen = normalizedPath === "/write-offs";
+  const isGeneralLedgerScreen = normalizedPath === "/generalledger";
+  const isReconciliationScreen = normalizedPath === "/reconciliation";
+  const isMembershipListingReportScreen =
+    normalizedPath === "/membershiplistingreport";
+  const isMembershipDashboard = normalizedPath === "/membershipdashboard";
   const isMembersScreen =
     location.pathname === "/members" ||
     location.pathname === "/Members" ||
@@ -267,15 +309,28 @@ const Toolbar = () => {
     paymentFormsTemplateId ||
     currentTemplateId ||
     "";
-  const normalizedPath = (location.pathname || "")
-    .replace(/\/$/, "")
-    .toLowerCase();
   const isPaymentFormsPage = normalizedPath === "/paymentforms";
   const isApplicationsPage = normalizedPath === "/applications";
   const isApplicationLikePage = isApplicationsPage || isPaymentFormsPage;
   const gridTemplateType = isMembersScreen
     ? "members"
-    : isPaymentFormsPage
+    : isCreditNotesScreen
+      ? "creditnotes"
+      : isJournalAdjustmentsScreen
+        ? "journaladjustments"
+      : isOnlinePaymentScreen
+        ? "onlinepayment"
+      : isRefundsScreen
+        ? "refunds"
+      : isWriteOffsScreen
+        ? "writeoffs"
+      : isGeneralLedgerScreen
+        ? "generalledger"
+      : isReconciliationScreen
+        ? "reconciliation"
+      : isMembershipListingReportScreen
+        ? "membershiplisting"
+      : isPaymentFormsPage
       ? "payment forms"
       : isApplicationsPage
       ? "application"
@@ -293,6 +348,14 @@ const Toolbar = () => {
   const [aiQuery, setAiQuery] = useState("");
   const [aiLoading, setAiLoading] = useState(false);
 
+  const dashboardCategoryLabels = useMemo(
+    () =>
+      parseMembershipCategoryOptionLabels(
+        filterOptions["Membership Category"] || [],
+      ),
+    [filterOptions],
+  );
+
   useEffect(() => {
     if (!supportsAiGridFilter) setAiBoxOpen(false);
   }, [supportsAiGridFilter]);
@@ -308,7 +371,13 @@ const Toolbar = () => {
           ? "Profile"
           : isMembersScreen
             ? "Members"
-            : "");
+            : isCreditNotesScreen
+              ? "CreditNotes"
+              : isJournalAdjustmentsScreen
+                ? "JournalAdjustments"
+              : isOnlinePaymentScreen
+                ? "OnlinePayment"
+              : "");
     if (screen) {
       dispatch(markScreenChanged({ screen }));
     }
@@ -339,6 +408,29 @@ const Toolbar = () => {
 
   const handleFilterApply = (filterData) => {
     const { label, operator, selectedValues } = filterData;
+
+    if (isMembershipDashboard && label === "Membership Category") {
+      const manualMembershipCategories = { operator, selectedValues };
+      const nextHeader = {
+        ...membershipDashboardHeader,
+        manualMembershipCategories,
+      };
+      updateMembershipDashboardHeader({ manualMembershipCategories });
+      const nextCategoryFilter = resolveDashboardMembershipCategoryFilterState(
+        nextHeader,
+        dashboardCategoryLabels,
+        manualMembershipCategories,
+      );
+      updateFilter(
+        "Membership Category",
+        nextCategoryFilter.operator,
+        nextCategoryFilter.selectedValues,
+      );
+      markTemplateScreenDirty();
+      bumpMembershipDashboardApply();
+      return;
+    }
+
     updateFilter(label, operator, selectedValues);
     markTemplateScreenDirty();
   };
@@ -420,6 +512,22 @@ const Toolbar = () => {
           columns: visibleColumns,
         }),
       );
+    } else if (isCreditNotesScreen) {
+      bumpCreditNotesReload();
+    } else if (isJournalAdjustmentsScreen) {
+      bumpJournalAdjustmentsReload();
+    } else if (isOnlinePaymentScreen) {
+      bumpOnlinePaymentsReload();
+    } else if (isRefundsScreen) {
+      bumpRefundsReload();
+    } else if (isWriteOffsScreen) {
+      bumpWriteOffsReload();
+    } else if (isGeneralLedgerScreen) {
+      bumpGeneralLedgerReload();
+    } else if (isReconciliationScreen) {
+      bumpReconciliationReload();
+    } else if (isMembershipListingReportScreen) {
+      bumpMembershipListingReportReload();
     } else {
       if (Object.keys(cleanedFilters).length > 0) {
         dispatch(getAllApplications(cleanedFilters));
@@ -454,14 +562,32 @@ const Toolbar = () => {
 
   const handleReset = () => {
     resetFilters();
-    if (isApplicationLikePage || isProfileScreen || isMembersScreen) {
+    if (
+      isApplicationLikePage ||
+      isProfileScreen ||
+      isMembersScreen ||
+      isCreditNotesScreen ||
+      isJournalAdjustmentsScreen ||
+      isOnlinePaymentScreen ||
+      isRefundsScreen ||
+      isWriteOffsScreen ||
+      isGeneralLedgerScreen ||
+      isReconciliationScreen ||
+      isMembershipListingReportScreen
+    ) {
       const screen =
         getScreenFromPath() ||
         (isApplicationsPage
           ? "Applications"
           : isProfileScreen
             ? "Profile"
-            : "Members");
+            : isCreditNotesScreen
+              ? "CreditNotes"
+              : isJournalAdjustmentsScreen
+                ? "JournalAdjustments"
+              : isOnlinePaymentScreen
+                ? "OnlinePayment"
+              : "Members");
       if (screen) {
         dispatch(resetScreenChanged({ screen }));
       }
@@ -480,7 +606,23 @@ const Toolbar = () => {
           limit: 500,
         }),
       );
-    } else if (location.pathname === "/MembershipDashboard") {
+    } else if (isMembershipDashboard) {
+      updateMembershipDashboardHeader({
+        manualMembershipCategories: { operator: "==", selectedValues: [] },
+      });
+      const nextCategoryFilter = resolveDashboardMembershipCategoryFilterState(
+        {
+          ...membershipDashboardHeader,
+          manualMembershipCategories: { operator: "==", selectedValues: [] },
+        },
+        dashboardCategoryLabels,
+        { operator: "==", selectedValues: [] },
+      );
+      updateFilter(
+        "Membership Category",
+        nextCategoryFilter.operator,
+        nextCategoryFilter.selectedValues,
+      );
       bumpMembershipDashboardApply();
     } else if (
       location.pathname === "/EventsDashboard" ||
@@ -496,6 +638,22 @@ const Toolbar = () => {
           limit: 500,
         }),
       );
+    } else if (isCreditNotesScreen) {
+      bumpCreditNotesReload();
+    } else if (isJournalAdjustmentsScreen) {
+      bumpJournalAdjustmentsReload();
+    } else if (isOnlinePaymentScreen) {
+      bumpOnlinePaymentsReload();
+    } else if (isRefundsScreen) {
+      bumpRefundsReload();
+    } else if (isWriteOffsScreen) {
+      bumpWriteOffsReload();
+    } else if (isGeneralLedgerScreen) {
+      bumpGeneralLedgerReload();
+    } else if (isReconciliationScreen) {
+      bumpReconciliationReload();
+    } else if (isMembershipListingReportScreen) {
+      bumpMembershipListingReportReload();
     } else {
       dispatch(getAllApplications({}));
     }
@@ -680,6 +838,22 @@ const Toolbar = () => {
             limit: 500,
           }),
         );
+      } else if (isCreditNotesScreen) {
+        bumpCreditNotesReload();
+      } else if (isJournalAdjustmentsScreen) {
+        bumpJournalAdjustmentsReload();
+      } else if (isOnlinePaymentScreen) {
+        bumpOnlinePaymentsReload();
+      } else if (isRefundsScreen) {
+        bumpRefundsReload();
+      } else if (isWriteOffsScreen) {
+        bumpWriteOffsReload();
+      } else if (isGeneralLedgerScreen) {
+        bumpGeneralLedgerReload();
+      } else if (isReconciliationScreen) {
+        bumpReconciliationReload();
+      } else if (isMembershipListingReportScreen) {
+        bumpMembershipListingReportReload();
       }
     } catch (error) {
       console.error("Error updating template:", error);
@@ -737,10 +911,7 @@ const Toolbar = () => {
         gap: supportsAiGridFilter && aiBoxOpen ? 10 : 0,
       }}
     >
-      <div
-        className="d-flex align-items-center flex-wrap gap-2"
-        style={{ rowGap: 10 }}
-      >
+      <div className="d-flex align-items-center flex-wrap toolbar-filter-row">
         {/* Search input */}
         {location.pathname !== "/MembershipDashboard" &&
           location.pathname !== "/EventsDashboard" &&
@@ -756,11 +927,17 @@ const Toolbar = () => {
                       ? "Search Event ID or Name"
                       : location.pathname === "/Attendees"
                         ? "Search Attendee ID or Name"
-                        : "Membership No or Surname"
+                        : isCreditNotesScreen
+                          ? "Search CN ref or member"
+                          : isJournalAdjustmentsScreen
+                            ? "Search adjustment ref or member"
+                          : isOnlinePaymentScreen
+                            ? "Search transaction or member"
+                          : "Membership No or Surname"
                 }
                 style={{
                   height: 34,
-                  borderRadius: 4,
+                  borderRadius: 3,
                   color: "gray",
                   padding: "4px 11px",
                   lineHeight: "22px",
@@ -777,11 +954,48 @@ const Toolbar = () => {
           const operator = filterState?.operator || "==";
           const options = filterOptions[label] || [];
 
-          const isDateField = label.toLowerCase().includes("date");
+          const isDateField = isDateFilterLabel(
+            label,
+            columns[tableColumnScreen] || [],
+          );
 
           if (isDateField) {
             return (
               <DateRang
+                key={`${resolvedGridTemplateId || "default"}-${label}`}
+                label={label}
+                selectedValues={selectedValues}
+                operator={operator}
+                onApply={handleFilterApply}
+              />
+            );
+          }
+
+          const isNumericField = isNumericFilterLabel(
+            label,
+            columns[tableColumnScreen] || [],
+          );
+
+          if (isNumericField) {
+            return (
+              <NumberFilter
+                key={`${resolvedGridTemplateId || "default"}-${label}`}
+                label={label}
+                selectedValues={selectedValues}
+                operator={operator}
+                onApply={handleFilterApply}
+              />
+            );
+          }
+
+          const isStringField = isStringFilterLabel(
+            label,
+            columns[tableColumnScreen] || [],
+          );
+
+          if (isStringField) {
+            return (
+              <TextFilter
                 key={`${resolvedGridTemplateId || "default"}-${label}`}
                 label={label}
                 selectedValues={selectedValues}
@@ -803,30 +1017,21 @@ const Toolbar = () => {
             />
           );
         })}
-        <SimpleMenu title="More" />
-        <Button
-          onClick={handleReset}
-          style={{
-            backgroundColor: "#091e420a",
-            borderRadius: "4px",
-            border: "none",
-            height: "32px",
-            fontWeight: "500",
-            color: "#42526e",
-          }}
-        >
+
+        {isMembershipDashboard && (
+          <MembershipDashboardHeaderControls variant="inline" />
+        )}
+
+        <SimpleMenu
+          title="More"
+          triggerClassName="gray-btn butn"
+        />
+        <Button className="gray-btn butn" onClick={handleReset}>
           Reset
         </Button>
         <Button
+          className="toolbar-filter-action toolbar-filter-action--primary"
           onClick={handleSearch}
-          style={{
-            backgroundColor: "#45669d",
-            borderRadius: "4px",
-            border: "none",
-            height: "32px",
-            fontWeight: "500",
-            color: "white",
-          }}
         >
           Filter
         </Button>
