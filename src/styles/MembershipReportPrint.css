@@ -1,0 +1,18 @@
+@media print {
+  body.membership-report-print-active .sidebar,
+  body.membership-report-print-active .ant-layout-sider,
+  body.membership-report-print-active .search-main .title,
+  body.membership-report-print-active .report-export-toolbar,
+  body.membership-report-print-active .toolbar-main,
+  body.membership-report-print-active .chatbot-widget {
+    display: none !important;
+  }
+
+  body.membership-report-print-active .common-table {
+    padding: 0 !important;
+  }
+
+  body.membership-report-print-active .ant-table {
+    font-size: 9px;
+  }
+}

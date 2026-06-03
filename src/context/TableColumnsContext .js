@@ -972,16 +972,61 @@ function buildReconciliationColumns() {
 
 function buildMembershipListingReportColumns() {
   const dateRender = (value) => formatDateOnly(value) || "—";
+  const amountRender = (value) => {
+    if (value == null || value === "" || value === "—") return "—";
+    const n = Number(value);
+    if (!Number.isFinite(n)) return "—";
+    return formatCurrency(n);
+  };
+  const withSort = (col) => ({
+    ...col,
+    sorter: (a, b) => {
+      const key = Array.isArray(col.dataIndex)
+        ? col.dataIndex.join(".")
+        : col.dataIndex;
+      const av = a?.[key];
+      const bv = b?.[key];
+      if (av == null && bv == null) return 0;
+      if (av == null) return 1;
+      if (bv == null) return -1;
+      if (typeof av === "number" && typeof bv === "number") return av - bv;
+      return String(av).localeCompare(String(bv), undefined, {
+        numeric: true,
+        sensitivity: "base",
+      });
+    },
+  });
+
   return mergeGridColumnDefaults(
     GRID_COLUMN_DEFAULTS.MembershipListingReport || [],
-    {
-      startDate: { render: dateRender },
-      expiryDate: { render: dateRender },
-      cancelledAt: { render: dateRender },
-      resignedAt: { render: dateRender },
-      processedAt: { render: dateRender },
-    },
-  );
+    {},
+  ).map((col) => {
+    const key = Array.isArray(col.dataIndex)
+      ? col.dataIndex.join(".")
+      : col.dataIndex;
+    const base = withSort(col);
+    if (
+      [
+        "startDate",
+        "expiryDate",
+        "cancelledAt",
+        "resignedAt",
+        "processedAt",
+        "renewalDate",
+        "paymentDate",
+      ].includes(key)
+    ) {
+      return { ...base, render: dateRender };
+    }
+    if (
+      ["invoiceAmount", "arrearsAmount", "deferredAmount", "balance"].includes(
+        key,
+      )
+    ) {
+      return { ...base, render: amountRender };
+    }
+    return base;
+  });
 }
 
 const staticColumns = {

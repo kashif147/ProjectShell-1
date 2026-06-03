@@ -56,6 +56,7 @@ import { getProfileDetailsById } from "../../features/profiles/ProfileDetailsSli
 import { buildDetailsSearch } from "../../utils/detailsRoute";
 import UnifiedPagination, { getUnifiedPaginationConfig, getDefaultPageSize } from "./UnifiedPagination";
 import { getCornMarketBatchById } from "../../features/profiles/CornMarketBatchByIdSlice";
+import { isMembershipReportGridPath } from "../../constants/membershipReportRoutes";
 
 const EditableContext = React.createContext(null);
 
@@ -178,8 +179,8 @@ const TableComponent = ({
   selectedRowKeys,
   onSelectionChange,
   selectionType = "checkbox",
-  enableRowSelection = true,
-  hideLegacyRowChrome = false,
+  enableRowSelection: enableRowSelectionProp = true,
+  hideLegacyRowChrome: hideLegacyRowChromeProp = false,
   rowActionsInGridmenu = false,
   selectionToolbar = null,
   onRowClick: externalOnRowClick = null,
@@ -189,6 +190,13 @@ const TableComponent = ({
 }) => {
   const navigate = useNavigate();
   const location = useLocation();
+  const isReportGrid = isMembershipReportGridPath(location.pathname);
+  const enableRowSelection = isReportGrid
+    ? false
+    : enableRowSelectionProp;
+  const hideLegacyRowChrome = isReportGrid
+    ? true
+    : hideLegacyRowChromeProp;
   const {
     selectedRowIndex,
     setSelectedRowIndex,

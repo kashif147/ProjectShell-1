@@ -14,7 +14,13 @@ import { getCategoryLookup } from "../features/CategoryLookupSlice";
 import { getWorkLocationHierarchy } from "../features/LookupsWorkLocationSlice";
 import { resetInitialization } from "../features/applicationwithfilterslice";
 import { fetchSubscriptionYears } from "../features/subscription/subscriptionSlice";
-import { isDateFilterLabel, isNumericFilterLabel, isStringFilterLabel, consolidateApplicationsStatusFilter } from "../utils/filterUtils";
+import {
+  isDateFilterLabel,
+  isNumericFilterLabel,
+  isStringFilterLabel,
+  consolidateApplicationsStatusFilter,
+  consolidateMembershipListingFilters,
+} from "../utils/filterUtils";
 import {
   buildDataDerivedFilterOptions,
   CLIENT_SIDE_GRID_FILTER_SCREENS,
@@ -224,7 +230,11 @@ export const FilterProvider = ({ children }) => {
 
   /** Always use live filter state. Falling back to `screenFilterStates` when live was empty caused stale template values and broken Save / dirty behavior. */
   const getFiltersStateForSave = useCallback(() => {
-    return { ...(filtersStateRef.current || {}) };
+    const live = { ...(filtersStateRef.current || {}) };
+    if (activePageRef.current === "MembershipListingReport") {
+      return consolidateMembershipListingFilters(live, []).filtersState;
+    }
+    return live;
   }, []);
 
   // 🔹 Fetch lookups and categories when missing (avoids duplicating App.js bootstrap)
@@ -729,11 +739,25 @@ export const FilterProvider = ({ children }) => {
       MembershipListingReport: [
         "Membership Category",
         "Membership Status",
+        "Membership Movement",
         "Grade",
+        "Work Location",
         "Section (Primary Section)",
         "Region",
         "Branch",
-        "Date Range",
+        "Payment Type",
+        "Payment Frequency",
+        "Membership Start Date",
+        "Expiry Date",
+        "Cancelled Date",
+        "Resigned Date",
+        "Processed At Date",
+        "Renewal Date",
+        "Last Payment Date",
+        "Invoice Amount",
+        "Arrears Amount",
+        "Deferred Amount",
+        "Balance",
       ],
       EmailCampaigns: [
         "Membership Category",
@@ -853,8 +877,9 @@ export const FilterProvider = ({ children }) => {
     MembershipListingReport: [
       "Membership Category",
       "Membership Status",
+      "Membership Movement",
       "Section (Primary Section)",
-      "Date Range",
+      "Payment Type",
     ],
     EmailCampaigns: ["Membership Category"],
     CreditNotes: ["CN Status"],
@@ -1176,7 +1201,15 @@ export const FilterProvider = ({ children }) => {
           operator: "==",
           selectedValues: [],
         },
+        "Membership Movement": {
+          operator: "==",
+          selectedValues: [],
+        },
         Grade: {
+          operator: "==",
+          selectedValues: [],
+        },
+        "Work Location": {
           operator: "==",
           selectedValues: [],
         },
@@ -1192,7 +1225,39 @@ export const FilterProvider = ({ children }) => {
           operator: "==",
           selectedValues: [],
         },
-        "Date Range": {
+        "Payment Type": {
+          operator: "==",
+          selectedValues: [],
+        },
+        "Payment Frequency": {
+          operator: "==",
+          selectedValues: [],
+        },
+        "Membership Start Date": {
+          operator: "between",
+          selectedValues: [],
+        },
+        "Expiry Date": {
+          operator: "between",
+          selectedValues: [],
+        },
+        "Cancelled Date": {
+          operator: "between",
+          selectedValues: [],
+        },
+        "Resigned Date": {
+          operator: "between",
+          selectedValues: [],
+        },
+        "Processed At Date": {
+          operator: "between",
+          selectedValues: [],
+        },
+        "Renewal Date": {
+          operator: "between",
+          selectedValues: [],
+        },
+        "Last Payment Date": {
           operator: "between",
           selectedValues: [],
         },
@@ -1520,7 +1585,7 @@ export const FilterProvider = ({ children }) => {
     const savedState = screenFilterStates[activeScreen];
 
     if (savedState && Object.keys(savedState.filtersState).length > 0) {
-      const loaded =
+      let loaded =
         activeScreen === "Applications"
           ? consolidateApplicationsStatusFilter(
               savedState.filtersState,
@@ -1530,6 +1595,12 @@ export const FilterProvider = ({ children }) => {
               filtersState: savedState.filtersState,
               visibleFilters: savedState.visibleFilters,
             };
+      if (activeScreen === "MembershipListingReport") {
+        loaded = consolidateMembershipListingFilters(
+          loaded.filtersState,
+          loaded.visibleFilters,
+        );
+      }
       setVisibleFilters(loaded.visibleFilters);
       setFiltersState(loaded.filtersState);
     } else {
@@ -1538,6 +1609,31 @@ export const FilterProvider = ({ children }) => {
       setFiltersState(defaultFilterValues[activeScreen] || {});
     }
   }, [activeScreen]);
+
+  // Strip legacy "Date Range" chip when already on the listing report (no route change).
+  useEffect(() => {
+    if (activePage !== "MembershipListingReport") return;
+    const hasLegacyChip =
+      visibleFilters.includes("Date Range") ||
+      filtersState["Date Range"] ||
+      visibleFilters.includes("Payment Date") ||
+      filtersState["Payment Date"];
+    if (!hasLegacyChip) return;
+    const cleaned = consolidateMembershipListingFilters(
+      filtersState,
+      visibleFilters,
+    );
+    setFiltersState(cleaned.filtersState);
+    filtersStateRef.current = cleaned.filtersState;
+    setVisibleFilters(cleaned.visibleFilters);
+    setScreenFilterStates((prev) => ({
+      ...prev,
+      MembershipListingReport: {
+        visibleFilters: cleaned.visibleFilters,
+        filtersState: cleaned.filtersState,
+      },
+    }));
+  }, [activePage, filtersState, visibleFilters]);
 
   // 🔹 Removing old API-based effect
 
@@ -2005,8 +2101,15 @@ export const FilterProvider = ({ children }) => {
 
   // Preserve toolbar order: defaults first, then filters added from More append to the right.
   const getOrderedVisibleFilters = () => {
-    if (activePage !== "Applications") return visibleFilters;
-    return visibleFilters.filter((label) => label !== "Status");
+    if (activePage === "Applications") {
+      return visibleFilters.filter((label) => label !== "Status");
+    }
+    if (activePage === "MembershipListingReport") {
+      return visibleFilters.filter(
+        (label) => label !== "Date Range" && label !== "Payment Date",
+      );
+    }
+    return visibleFilters;
   };
 
   const orderedVisibleFilters = getOrderedVisibleFilters();
@@ -2041,10 +2144,17 @@ export const FilterProvider = ({ children }) => {
     });
 
     const newFiltersState = { ...baseFilters, ...sanitizedTemplateFilters };
-    const consolidated =
+    let consolidated =
       activePage === "Applications"
         ? consolidateApplicationsStatusFilter(newFiltersState, visibleFilters)
         : { filtersState: newFiltersState, visibleFilters };
+
+    if (activePage === "MembershipListingReport") {
+      consolidated = consolidateMembershipListingFilters(
+        consolidated.filtersState,
+        consolidated.visibleFilters,
+      );
+    }
 
     setFiltersState(consolidated.filtersState);
     filtersStateRef.current = consolidated.filtersState;
@@ -2062,10 +2172,16 @@ export const FilterProvider = ({ children }) => {
       ...consolidated.visibleFilters,
       ...templateKeys.filter((key) => !consolidated.visibleFilters.includes(key)),
     ];
-    const newVisible =
+    let newVisible =
       activePage === "Applications"
         ? mergedVisible.filter((label) => label !== "Status")
         : mergedVisible;
+    if (activePage === "MembershipListingReport") {
+      newVisible = consolidateMembershipListingFilters(
+        consolidated.filtersState,
+        newVisible,
+      ).visibleFilters;
+    }
     setVisibleFilters(newVisible);
 
     userOverrodeTemplateFiltersRef.current = false;

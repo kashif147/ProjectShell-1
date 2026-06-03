@@ -103,6 +103,8 @@ import CreditNoteDrawer from "../../component/finanace/CreditNoteDrawer";
 import JournalAdjustmentDrawer from "../../component/finanace/JournalAdjustmentDrawer";
 import { getAccountServiceBaseUrl } from "../../config/serviceUrls";
 import reconciliationWorkspace from "../../utils/reconciliationWorkspace";
+import { isReportHeaderPath } from "../../constants/membershipReportRoutes";
+import ReportExportMenu from "../reports/ReportExportMenu";
 import { bumpJournalAdjustmentsReload } from "../../utils/journalAdjustmentsWorkspace";
 import { bumpCreditNotesReload } from "../../utils/creditNotesWorkspace";
 import { bumpWriteOffsReload } from "../../utils/writeOffsWorkspace";
@@ -1556,8 +1558,10 @@ function HeaderDetails({
                           !hasPermission("queries:create")) ||
                         (nav === "/InAppNotifications" &&
                           !hasPermission("notifications:create")) ||
-                        nav === "/UserNotifications" ? null : nav ===
-                        "/PaymentForms" ? (
+                        nav === "/UserNotifications" ||
+                        isReportHeaderPath(nav)
+                          ? null
+                          : nav === "/PaymentForms" ? (
                         <Button
                           onClick={() =>
                             openPaymentFormCreate("STANDING_ORDER")
@@ -1684,14 +1688,18 @@ function HeaderDetails({
                           Print
                         </Button>
                       ) : null}
-                      <SimpleMenu
-                        title="Export"
-                        triggerClassName="me-1 gray-btn butn"
-                        data={exportbtn}
-                        isSearched={true}
-                        isCheckBox={false}
-                        actions={genaratePdf}
-                      />
+                      {isReportHeaderPath(nav) ? (
+                        <ReportExportMenu triggerClassName="me-1 gray-btn butn" />
+                      ) : (
+                        <SimpleMenu
+                          title="Export"
+                          triggerClassName="me-1 gray-btn butn"
+                          data={exportbtn}
+                          isSearched={true}
+                          isCheckBox={false}
+                          actions={genaratePdf}
+                        />
+                      )}
 
                       {/* <Button className="me-1 gray-btn butn">Executive Council</Button> */}
                       <Button className="me-1 gray-btn butn">Share</Button>

@@ -99,12 +99,7 @@ export default function MembershipDashboardHeaderControls({
       }
       return changed;
     },
-    [
-      allCategoryLabels,
-      filtersState,
-      isMembershipDashboard,
-      updateFilter,
-    ],
+    [allCategoryLabels, filtersState, isMembershipDashboard, updateFilter],
   );
 
   const applyHeaderChange = useCallback(

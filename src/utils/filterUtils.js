@@ -457,7 +457,13 @@ export const getLabelToKeyMap = (screenCols) => {
         'Suggested action': 'suggestedAction',
         'Matched GL': 'matchedGlDocNo',
         Source: 'sourceType',
-        'Date Range': 'dateRange',
+        'Membership Start Date': 'startDateRange',
+        'Expiry Date': 'expiryDateRange',
+        'Cancelled Date': 'cancelledDateRange',
+        'Resigned Date': 'resignedDateRange',
+        'Processed At Date': 'processedDateRange',
+        'Last Payment Date': 'paymentDate',
+        'Payment Method': 'paymentType',
     };
 
     if (screenCols && Array.isArray(screenCols)) {
@@ -536,15 +542,27 @@ const APPLICATION_API_FILTER_KEY_TO_LABEL = {
     reconciliationStatus: "Rec Status",
     matchedGlDocNo: "Matched GL",
     sourceType: "Source",
-    dateRange: "Date Range",
+    dateRange: "Membership Start Date",
+    startDateRange: "Membership Start Date",
+    expiryDateRange: "Expiry Date",
+    cancelledDateRange: "Cancelled Date",
+    resignedDateRange: "Resigned Date",
+    processedDateRange: "Processed At Date",
+    paymentDate: "Last Payment Date",
     membershipStatuses: "Membership Status",
+    membershipMovements: "Membership Movement",
     membershipStatus: "Membership Status",
+    paymentTypes: "Payment Type",
+    paymentType: "Payment Type",
+    paymentFrequencies: "Payment Frequency",
+    paymentFrequency: "Payment Frequency",
     membershipCategories: "Membership Category",
     membershipCategory: "Membership Category",
     sections: "Section (Primary Section)",
     grades: "Grade",
     regions: "Region",
     branches: "Branch",
+    workLocations: "Work Location",
 };
 
 /** UI row field names that differ from template API filter keys. */
@@ -558,7 +576,64 @@ const FILTER_API_KEY_ALIASES = {
     amountDifferenceEuro: "amountDifference",
 };
 
-export const transformFiltersForApi = (filters, screenCols) => {
+const MEMBERSHIP_LISTING_TEMPLATE_TYPES = new Set([
+    "membershiplisting",
+    "MembershipListing",
+    "membershipListing",
+]);
+
+/** UI / column keys → reporting-service template filter keys. */
+const MEMBERSHIP_LISTING_FILTER_KEY_ALIASES = {
+    membershipCategory: "membershipCategories",
+    membershipStatus: "membershipStatuses",
+    membershipMovement: "membershipMovements",
+    grade: "grades",
+    primarySection: "sections",
+    section: "sections",
+    region: "regions",
+    branch: "branches",
+    workLocation: "workLocations",
+    paymentType: "paymentTypes",
+    paymentFrequency: "paymentFrequencies",
+    subscriptionYear: "subscriptionYears",
+    startDate: "startDateRange",
+    expiryDate: "expiryDateRange",
+    cancelledAt: "cancelledDateRange",
+    resignedAt: "resignedDateRange",
+    processedAt: "processedDateRange",
+    renewalDate: "renewalDate",
+    paymentDate: "paymentDate",
+    invoiceAmount: "invoiceAmount",
+    arrearsAmount: "arrearsAmount",
+    deferredAmount: "deferredAmount",
+    balance: "balance",
+};
+
+function normalizeMembershipListingFilterKeys(transformed = {}) {
+    const out = { ...transformed };
+    for (const [fromKey, toKey] of Object.entries(MEMBERSHIP_LISTING_FILTER_KEY_ALIASES)) {
+        if (out[fromKey] && !out[toKey]) {
+            out[toKey] = out[fromKey];
+        }
+        if (out[fromKey] && toKey !== fromKey) {
+            delete out[fromKey];
+        }
+    }
+    if (out.dateRange) {
+        if (!out.startDateRange) {
+            out.startDateRange = out.dateRange;
+        }
+        delete out.dateRange;
+    }
+    return out;
+}
+
+function isMembershipListingTemplateType(templateType) {
+    if (!templateType) return false;
+    return MEMBERSHIP_LISTING_TEMPLATE_TYPES.has(String(templateType).trim());
+}
+
+export const transformFiltersForApi = (filters, screenCols, options = {}) => {
     const labelMap = getLabelToKeyMap(screenCols);
     const normalizedLabelMap = Object.entries(labelMap).reduce((acc, [label, key]) => {
         acc[String(label).trim().toLowerCase()] = key;
@@ -601,10 +676,15 @@ export const transformFiltersForApi = (filters, screenCols) => {
             };
         }
     });
+
+    if (isMembershipListingTemplateType(options.templateType)) {
+        return normalizeMembershipListingFilterKeys(transformed);
+    }
+
     return transformed;
 };
 
-export const transformFiltersFromApi = (apiFilters, screenCols) => {
+export const transformFiltersFromApi = (apiFilters, screenCols, options = {}) => {
     const labelMap = getLabelToKeyMap(screenCols);
     // Reverse the map for loading
     const keyToLabel = {};
@@ -613,10 +693,18 @@ export const transformFiltersFromApi = (apiFilters, screenCols) => {
     });
 
     const transformed = {};
+    const listingTemplate = isMembershipListingTemplateType(options.templateType);
+
     Object.keys(apiFilters || {}).forEach(key => {
         const filter = apiFilters[key];
-        const label =
+        let label =
             APPLICATION_API_FILTER_KEY_TO_LABEL[key] || keyToLabel[key] || key;
+        if (listingTemplate && (key === "dateRange" || label === "Date Range")) {
+            label = "Membership Start Date";
+        }
+        if (listingTemplate && label === "Payment Date") {
+            label = "Last Payment Date";
+        }
         const apiOp = filter.operator;
         let operator;
         if (DATE_RANGE_OPERATORS.has(apiOp)) {
@@ -673,6 +761,62 @@ export function consolidateApplicationsStatusFilter(
         !nextVisible.includes("Application Status")
     ) {
         nextVisible = [...nextVisible, "Application Status"];
+    }
+
+    return { filtersState: nextState, visibleFilters: nextVisible };
+}
+
+/** Drop legacy "Date Range" chip; map values onto Membership Start Date. */
+export function consolidateMembershipListingFilters(
+    filtersState = {},
+    visibleFilters = [],
+) {
+    const nextState = { ...(filtersState || {}) };
+    const legacy = nextState["Date Range"];
+    const canonical = nextState["Membership Start Date"];
+
+    if (legacy) {
+        delete nextState["Date Range"];
+        if (!canonical) {
+            nextState["Membership Start Date"] = legacy;
+        } else if (
+            (canonical.selectedValues || []).length === 0 &&
+            (legacy.selectedValues || []).length > 0
+        ) {
+            nextState["Membership Start Date"] = legacy;
+        }
+    }
+
+    let nextVisible = (visibleFilters || []).filter(
+        (label) => label !== "Date Range",
+    );
+    if (
+        nextState["Membership Start Date"] &&
+        !nextVisible.includes("Membership Start Date")
+    ) {
+        nextVisible = [...nextVisible, "Membership Start Date"];
+    }
+
+    const legacyPaymentDate = nextState["Payment Date"];
+    const lastPaymentDate = nextState["Last Payment Date"];
+    if (legacyPaymentDate) {
+        delete nextState["Payment Date"];
+        if (!lastPaymentDate) {
+            nextState["Last Payment Date"] = legacyPaymentDate;
+        } else if (
+            (lastPaymentDate.selectedValues || []).length === 0 &&
+            (legacyPaymentDate.selectedValues || []).length > 0
+        ) {
+            nextState["Last Payment Date"] = legacyPaymentDate;
+        }
+    }
+
+    nextVisible = nextVisible.filter((label) => label !== "Payment Date");
+    if (
+        nextState["Last Payment Date"] &&
+        !nextVisible.includes("Last Payment Date")
+    ) {
+        nextVisible = [...nextVisible, "Last Payment Date"];
     }
 
     return { filtersState: nextState, visibleFilters: nextVisible };

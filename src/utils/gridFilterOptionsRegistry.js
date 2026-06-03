@@ -14,6 +14,7 @@ export const CLIENT_SIDE_GRID_FILTER_SCREENS = new Set([
   "WriteOffs",
   "GeneralLedger",
   "Reconciliation",
+  "MembershipListingReport",
 ]);
 
 const registry = new Map();
@@ -151,6 +152,7 @@ export function hasRegisteredGridFilterRows(screenKey) {
 /** Filters with a fixed enum in FilterContext — grid data must not add invalid values. */
 const CLOSED_ENUM_FILTER_LABELS = new Set([
   "Membership Status",
+  "Membership Movement",
   "Payment Method",
   "CN Status",
   "JA Status",

@@ -39,6 +39,11 @@ import { bumpWriteOffsReload } from "../../utils/writeOffsWorkspace";
 import { bumpGeneralLedgerReload } from "../../utils/generalLedgerWorkspace";
 import { bumpReconciliationReload } from "../../utils/reconciliationWorkspace";
 import { bumpMembershipListingReportReload } from "../../utils/membershipListingReportWorkspace";
+import {
+  clearReportGridSearchQuery,
+  setReportGridSearchQuery,
+  subscribeReportGridSearch,
+} from "../../utils/reportGridSearchBridge";
 import { useAuthorization } from "../../context/AuthorizationContext";
 import {
   updateGridTemplate,
@@ -344,9 +349,18 @@ const Toolbar = () => {
     (isApplicationLikePage || isProfileScreen || isMembersScreen);
 
   const [batchName, setBatchName] = useState("");
+  const [gridSearch, setGridSearch] = useState("");
   const [aiBoxOpen, setAiBoxOpen] = useState(false);
   const [aiQuery, setAiQuery] = useState("");
   const [aiLoading, setAiLoading] = useState(false);
+
+  useEffect(() => {
+    if (!isMembershipListingReportScreen) {
+      setGridSearch("");
+      return undefined;
+    }
+    return subscribeReportGridSearch(setGridSearch);
+  }, [isMembershipListingReportScreen]);
 
   const dashboardCategoryLabels = useMemo(
     () =>
@@ -562,6 +576,9 @@ const Toolbar = () => {
 
   const handleReset = () => {
     resetFilters();
+    if (isMembershipListingReportScreen) {
+      clearReportGridSearchQuery();
+    }
     if (
       isApplicationLikePage ||
       isProfileScreen ||
@@ -763,6 +780,7 @@ const Toolbar = () => {
       const currentApiFilters = transformFiltersForApi(
         filterSnapshot,
         columns[tableColumnScreen] || [],
+        gridTemplateType ? { templateType: gridTemplateType } : {},
       );
       const screenColumns = columns[tableColumnScreen] || [];
       const currentColumnLabels = screenColumns.reduce((acc, col) => {
@@ -806,6 +824,7 @@ const Toolbar = () => {
       const nextFilters = transformFiltersFromApi(
         freshView?.filters || {},
         columns[tableColumnScreen] || [],
+        gridTemplateType ? { templateType: gridTemplateType } : {},
       );
       applyTemplateFilters(nextFilters);
 
@@ -920,20 +939,31 @@ const Toolbar = () => {
             <div style={{ flex: "0 0 250px" }}>
               <Input
                 className="my-input-field"
+                allowClear={isMembershipListingReportScreen}
+                value={
+                  isMembershipListingReportScreen ? gridSearch : undefined
+                }
+                onChange={(e) => {
+                  if (isMembershipListingReportScreen) {
+                    setReportGridSearchQuery(e.target.value);
+                  }
+                }}
                 placeholder={
-                  location.pathname === "/CasesSummary"
-                    ? "Search Case ID, team, or stakeholder"
-                    : location.pathname === "/EventsSummary"
-                      ? "Search Event ID or Name"
-                      : location.pathname === "/Attendees"
-                        ? "Search Attendee ID or Name"
-                        : isCreditNotesScreen
-                          ? "Search CN ref or member"
-                          : isJournalAdjustmentsScreen
-                            ? "Search adjustment ref or member"
-                          : isOnlinePaymentScreen
-                            ? "Search transaction or member"
-                          : "Membership No or Surname"
+                  isMembershipListingReportScreen
+                    ? "Membership No or Name"
+                    : location.pathname === "/CasesSummary"
+                      ? "Search Case ID, team, or stakeholder"
+                      : location.pathname === "/EventsSummary"
+                        ? "Search Event ID or Name"
+                        : location.pathname === "/Attendees"
+                          ? "Search Attendee ID or Name"
+                          : isCreditNotesScreen
+                            ? "Search CN ref or member"
+                            : isJournalAdjustmentsScreen
+                              ? "Search adjustment ref or member"
+                              : isOnlinePaymentScreen
+                                ? "Search transaction or member"
+                                : "Membership No or Surname"
                 }
                 style={{
                   height: 34,

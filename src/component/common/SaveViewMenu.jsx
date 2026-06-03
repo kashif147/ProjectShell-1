@@ -63,6 +63,11 @@ import { bumpWriteOffsReload } from "../../utils/writeOffsWorkspace";
 import { bumpGeneralLedgerReload } from "../../utils/generalLedgerWorkspace";
 import { bumpReconciliationReload } from "../../utils/reconciliationWorkspace";
 import { bumpMembershipListingReportReload } from "../../utils/membershipListingReportWorkspace";
+import {
+  GRID_SYSTEM_DEFAULT_PAGES,
+  buildVisibleColumnKeys,
+  buildColumnLabelsMap,
+} from "../../config/gridColumnDefaults";
 
 const SaveViewMenu = ({ className, style }) => {
   const dispatch = useDispatch();
@@ -281,9 +286,10 @@ const SaveViewMenu = ({ className, style }) => {
       return transformFiltersFromApi(
         apiFilters,
         columns[tableColumnScreen] || [],
+        { templateType: targetTemplateType },
       );
     },
-    [columns, tableColumnScreen],
+    [columns, tableColumnScreen, targetTemplateType],
   );
 
   /** Apply a template (list item or getViewById detail) to columns + filter chips + fetches. */
@@ -388,7 +394,17 @@ const SaveViewMenu = ({ className, style }) => {
       dispatch(setActiveTemplateId(systemView._id));
       handleApplyView(systemView);
     } else {
-      setActiveView("System Template");
+      const page = GRID_SYSTEM_DEFAULT_PAGES[targetTemplateType];
+      const colScreen = tableColumnScreen;
+      if (page?.columns?.length) {
+        const columnKeys = buildVisibleColumnKeys(page.columns);
+        const labels = buildColumnLabelsMap(page.columns);
+        applyTemplate(colScreen, columnKeys, columnKeys, labels, labels);
+        applyTemplateFilters(
+          transformFiltersForApply(page.filters || {}),
+        );
+      }
+      setActiveView("System default (local)");
       dispatch(setActiveTemplateId(null));
       initializeScreenWithTemplate("");
       dispatch(resetScreenChanged({ screen: activePage }));
@@ -526,6 +542,7 @@ const SaveViewMenu = ({ className, style }) => {
       const activeFilters = transformFiltersForApi(
         filtersState,
         columns[tableColumnScreen] || [],
+        { templateType: targetTemplateType },
       );
 
       // 2. Gather visible columns
@@ -595,11 +612,14 @@ const SaveViewMenu = ({ className, style }) => {
       fetchListingByTemplate(savedTemplate?._id || resolvedCurrentTemplateId || "");
     } catch (error) {
       console.error("Error saving template:", error);
-      MyAlert(
-        "error",
-        "Error",
-        error.response?.data?.message || "Failed to save template",
-      );
+      const apiMsg =
+        error.response?.data?.message ||
+        error.response?.data?.error?.message ||
+        error.response?.data?.data ||
+        (typeof error.response?.data === "string"
+          ? error.response.data
+          : null);
+      MyAlert("error", "Error", apiMsg || error.message || "Failed to save template");
     } finally {
       setSaving(false);
     }
@@ -787,6 +807,7 @@ const SaveViewMenu = ({ className, style }) => {
             Cancel
           </Button>,
           <Button
+            key="save"
             className="butn primary-btn"
             style={{ marginRight: 4 }}
             onClick={handleSaveView}
