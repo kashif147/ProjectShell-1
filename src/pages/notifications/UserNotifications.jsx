@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { Card, List, Typography, Button, Spin, message } from "antd";
 import { BellOutlined } from "@ant-design/icons";
 import axios from "axios";
+import { useNavigate } from "react-router-dom";
 import {
   useNotifications,
   getNotificationServiceUrl,
@@ -14,6 +15,7 @@ const PAGE_LIMIT = 100;
 const FILTERS = ["all", "unread"];
 
 const UserNotifications = () => {
+  const navigate = useNavigate();
   const {
     setNotifications,
     setBadge,
@@ -55,8 +57,24 @@ const UserNotifications = () => {
     loadList();
   }, [loadList]);
 
-  const handleMarkAsRead = async (notificationId) => {
+  const navigateForNotification = (item) => {
+    const meta = item?.metadata || {};
+    if (
+      meta.type === "DD_PREPARE_QUEUED" ||
+      meta.type === "DD_PREPARE_COMPLETED"
+    ) {
+      const runId = meta.runId || meta.batchDetailId;
+      if (runId) {
+        navigate("/DirectDebitBatchDetails", {
+          state: { runId, search: "Direct Debit Batch Details" },
+        });
+      }
+    }
+  };
+
+  const handleMarkAsRead = async (notificationId, item) => {
     if (!notificationId) return;
+    navigateForNotification(item);
     const target = items.find((n) => String(n._id) === String(notificationId));
     if (target?.isRead) return;
 

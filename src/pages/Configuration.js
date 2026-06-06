@@ -82,7 +82,31 @@ import {
   resetContactTypes,
 } from "../features/ContactTypeSlice";
 import { getContacts, resetContacts } from "../features/ContactSlice";
-import { getLookupTypes } from "../features/LookupTypeSlice";
+import {
+  getLookupTypes,
+  clearLookupTypes,
+} from "../features/LookupTypeSlice";
+import {
+  buildConfigurationCards,
+  getDrawerKeyForLookupType,
+  getLookupTypeRecordForDrawer,
+  getLookupsForDrawer,
+  getLookupTypeFieldProps,
+  resolveConfigurationDrawerKey,
+  getLookupsForLookupType,
+  getLookupTypeFieldPropsForRecord,
+  isWorkLocationLookupType,
+  withDynamicLookupTypeId,
+} from "../utils/configurationLookupHelpers";
+import {
+  lookupTypeRequiresParent,
+  resolveParentLookupIdFromRecord,
+  resolveParentLookupLabelFromRecord,
+  resolveParentLookupTypeIdFromRecord,
+  resolveParentLookupTypeLabelFromRecord,
+} from "../utils/lookupHierarchy";
+import ParentLookupSelect from "../component/configuration/ParentLookupSelect";
+import ParentLookupTypeSelect from "../component/configuration/ParentLookupTypeSelect";
 import { set } from "react-hook-form";
 import MyInput from "../component/common/MyInput";
 import { useNavigate } from "react-router-dom";
@@ -220,7 +244,7 @@ const createFilterDropdown = (dataSource, getValue) => {
 
 // i have different drwers for configuration of lookups for the system
 
-function Configuratin() {
+const Configuration = () => {
   const [iroUsers, setIroUsers] = useState([]);
 
   useEffect(() => {
@@ -648,9 +672,30 @@ function Configuratin() {
     const token = localStorage.getItem("token");
 
     const baseUrl = isCoum ? process.env.REACT_APP_CUMM : baseURL;
-    const finalUrl = isCoum
-      ? `${baseUrl}/${url1}`
-      : `${baseUrl}/api${url1.startsWith("/") ? url1 : `/${url1}`}`;
+
+    const resolveDeleteUrl = (base, pathOrUrl, forCoum) => {
+      if (/^https?:\/\//i.test(pathOrUrl)) {
+        return pathOrUrl;
+      }
+
+      const normalizedBase = String(base || "").replace(/\/+$/, "");
+      let path = pathOrUrl.startsWith("/") ? pathOrUrl : `/${pathOrUrl}`;
+
+      // Prevent .../api/api/... when base already ends with /api
+      if (normalizedBase.endsWith("/api") && path.startsWith("/api/")) {
+        path = path.slice(4) || "/";
+      }
+      if (normalizedBase.endsWith("/api") && path === "/api") {
+        path = "";
+      }
+
+      if (forCoum) {
+        return `${normalizedBase}/${String(pathOrUrl).replace(/^\/+/, "")}`;
+      }
+      return `${normalizedBase}${path}`;
+    };
+
+    const finalUrl = resolveDeleteUrl(baseUrl, url1, isCoum);
 
     const config = {
       method: "delete",
@@ -661,7 +706,7 @@ function Configuratin() {
       },
     };
 
-    if (body) config.data = JSON.stringify(body);
+    if (body) config.data = body;
 
     try {
       setButtonLoading((prev) => ({ ...prev, delete: true }));
@@ -676,10 +721,8 @@ function Configuratin() {
         await dispatch(getAllLookups()); // Assuming dispatch is available
       }
 
-      // ✅ Call callback if provided
       if (typeof callback === "function") {
-        console.log("Executing callback...");
-        // await callback();
+        await callback();
       }
 
       if (showAlert) {
@@ -728,6 +771,11 @@ function Configuratin() {
   const refreshCountries = () => {
     dispatch(clearCountriesData());
     dispatch(fetchCountries());
+  };
+
+  const refreshLookupTypes = () => {
+    dispatch(clearLookupTypes());
+    dispatch(getLookupTypes(true));
   };
 
   const columnBookmark = [
@@ -1011,6 +1059,7 @@ function Configuratin() {
     ContactType: false,
     LookupType: false,
     Lookup: false,
+    StandardLookup: false,
     Solicitors: false,
     Committees: false,
     SpokenLanguages: false,
@@ -1052,6 +1101,7 @@ function Configuratin() {
     ContactType: false,
     LookupType: false,
     Lookup: false,
+    StandardLookup: false,
     Solicitors: false,
     Committees: false,
     SpokenLanguages: false,
@@ -1141,55 +1191,44 @@ function Configuratin() {
 
   const [lookupTypSlct, setlookupTypSlct] = useState([]);
   useEffect(() => {
-    if (!lookupsTypes || Array.isArray(lookupsTypes)) return;
-    let arr = [];
-    lookupsTypes?.map((lokpty) => {
-      arr.push({ key: lokpty?._id, label: lokpty?.lookuptype });
-    });
+    if (!Array.isArray(lookupsTypes)) return;
+    const arr = lookupsTypes.map((lokpty) => ({
+      key: lokpty?._id,
+      label: lokpty?.lookuptype,
+    }));
     setlookupTypSlct(arr);
   }, [lookupsTypes]);
+
+  const configurationCards = useMemo(
+    () => buildConfigurationCards(lookupsTypes),
+    [lookupsTypes],
+  );
+
+  const [activeStandardLookupType, setActiveStandardLookupType] = useState(null);
+
+  const standardLookupTableData = useMemo(
+    () => getLookupsForLookupType(activeStandardLookupType, lookups),
+    [activeStandardLookupType, lookups],
+  );
+
   useEffect(() => {
-    if (!lookups || !Array.isArray(lookups)) return;
+    if (!lookups || !Array.isArray(lookups) || !lookupsTypes?.length) return;
 
-    // ✅ List the keys you want to extract
-    const lookupKeys = [
-      "gender",
-      "Titles",
-      "ProjectTypes",
-      "Duties",
-      "MaritalStatus",
-      "county",
-      "Divisions",
-      "Cities",
-      "Boards",
-      "Councils",
-      "CorrespondenceType",
-      "Stations",
-      "DocumentType",
-      "ClaimType",
-      "Schemes",
-      "Reasons",
-      "Provinces",
-      "Districts",
-      "SpokenLanguages",
-      "Trainings",
-      "Ranks",
-      "RosterType",
-      "PostCode",
-      "Sections",
-      "Committees",
-      "ContactType",
-    ];
-
-    const filteredData = lookupKeys.reduce((acc, key) => {
-      acc[key] = lookups.filter(
-        (item) => item?.lookuptypeId?.key === key, // ✅ filter by key instead of ID
+    const filteredData = lookupsTypes.reduce((acc, lookupType) => {
+      const drawerKey = getDrawerKeyForLookupType(lookupType);
+      if (!drawerKey) return acc;
+      acc[drawerKey] = lookups.filter(
+        (item) =>
+          String(item?.lookuptypeId?._id) === String(lookupType._id) ||
+          item?.lookuptypeId?.lookuptype === lookupType.lookuptype ||
+          item?.lookuptypeName === lookupType.lookuptype,
       );
       return acc;
     }, {});
 
     setdata((prevState) => ({ ...prevState, ...filteredData }));
-  }, [lookups]);
+  }, [lookups, lookupsTypes]);
+
   const [searchTerm, setSearchTerm] = useState("");
   const [filteredLookupsTypes, setFilteredLookupsTypes] = useState([]);
   // const [filteredLookupsTypes, setFilteredLookupsTypes] = useState([]);
@@ -1241,15 +1280,8 @@ function Configuratin() {
       dispatch(getContacts());
     }
 
-    // Only fetch lookup types if they don't exist and not already loading
-    // Note: getAllRegionTypes and getLookupTypes call the same endpoint
-    // We only call getLookupTypes to avoid duplicate API calls
-    if (
-      !lookupsTypesloading &&
-      (!lookupsTypes || lookupsTypes.length === 0) &&
-      !regionTypesLoading &&
-      (!regionTypes || regionTypes.length === 0)
-    ) {
+    // Fetch lookup types when not loaded (do not block on regionTypes — same API, separate slice)
+    if (!lookupsTypesloading && (!lookupsTypes || lookupsTypes.length === 0)) {
       dispatch(getLookupTypes());
     }
 
@@ -1333,7 +1365,7 @@ function Configuratin() {
     }));
   };
 
-  let drawerInputsInitalValues = {
+  const baseDrawerInputsInitalValues = {
     Bookmarks: {
       key: "",
       label: "",
@@ -1381,6 +1413,7 @@ function Configuratin() {
       lookupname: "",
       code: "",
       Parentlookupid: null,
+      Parentlookup: "",
       userid: "67f3f9d812b014a0a7a94081",
       isactive: true,
       isDeleted: false,
@@ -1394,6 +1427,7 @@ function Configuratin() {
         country: "",
         fullAddress: "",
       },
+      processSalaryDeduction: false,
     },
     Cities: {
       lookuptypeId: "68c85f22302e5600dc8477ed",
@@ -1401,6 +1435,7 @@ function Configuratin() {
       lookupname: "",
       code: "",
       Parentlookupid: null,
+      Parentlookup: "",
       userid: "67f3f9d812b014a0a7a94081",
       isactive: true,
       isDeleted: false,
@@ -1411,6 +1446,7 @@ function Configuratin() {
       lookupname: "",
       code: "",
       Parentlookupid: null,
+      Parentlookup: "",
       userid: "67f3f9d812b014a0a7a94081",
       isactive: true,
       isDeleted: false,
@@ -1423,6 +1459,7 @@ function Configuratin() {
       lookupname: "",
       code: "",
       Parentlookupid: null,
+      Parentlookup: "",
       userid: "67f3f9d812b014a0a7a94081",
       isactive: true,
       isDeleted: false,
@@ -1434,6 +1471,7 @@ function Configuratin() {
       lookupname: "",
       code: "",
       Parentlookupid: null,
+      Parentlookup: "",
       userid: "67f3f9d812b014a0a7a94081",
       isactive: true,
       isDeleted: false,
@@ -1444,6 +1482,7 @@ function Configuratin() {
       lookupname: "",
       code: "",
       Parentlookupid: null,
+      Parentlookup: "",
       userid: "67f3f9d812b014a0a7a94081",
       isactive: true,
       isDeleted: false,
@@ -1454,6 +1493,7 @@ function Configuratin() {
       lookupname: "",
       code: "",
       Parentlookupid: null,
+      Parentlookup: "",
       userid: "67f3f9d812b014a0a7a94081",
       isactive: true,
       isDeleted: false,
@@ -1464,6 +1504,7 @@ function Configuratin() {
       lookupname: "",
       code: "",
       Parentlookupid: null,
+      Parentlookup: "",
       userid: "67f3f9d812b014a0a7a94081",
       isactive: true,
       isDeleted: false,
@@ -1474,6 +1515,7 @@ function Configuratin() {
       lookupname: "",
       code: "",
       Parentlookupid: null,
+      Parentlookup: "",
       userid: "67f3f9d812b014a0a7a94081",
       isactive: true,
       isDeleted: false,
@@ -1484,6 +1526,7 @@ function Configuratin() {
       lookupname: "",
       code: "",
       Parentlookupid: null,
+      Parentlookup: "",
       userid: "67f3f9d812b014a0a7a94081",
       isactive: true,
       isDeleted: false,
@@ -1494,6 +1537,7 @@ function Configuratin() {
       lookupname: "",
       code: "",
       Parentlookupid: null,
+      Parentlookup: "",
       userid: "67f3f9d812b014a0a7a94081",
       isactive: true,
       isDeleted: false,
@@ -1502,6 +1546,8 @@ function Configuratin() {
       lookuptype: "",
       code: "",
       DisplayName: "",
+      ParentlookuptypeId: null,
+      Parentlookuptype: null,
       userid: "67f3f9d812b014a0a7a94081",
       isactive: true,
       isDeleted: false,
@@ -1512,9 +1558,23 @@ function Configuratin() {
       lookupname: "",
       code: "",
       Parentlookupid: null,
+      Parentlookup: "",
       userid: "67f3f9d812b014a0a7a94081",
       isactive: true,
       isDeleted: false,
+      processSalaryDeduction: false,
+    },
+    StandardLookup: {
+      lookuptypeId: "",
+      DisplayName: "",
+      lookupname: "",
+      code: "",
+      Parentlookupid: null,
+      Parentlookup: "",
+      userid: "67f3f9d812b014a0a7a94081",
+      isactive: true,
+      isDeleted: false,
+      processSalaryDeduction: false,
     },
     Gender: {
       lookuptypeId: "68c85f21302e5600dc8477da",
@@ -1522,6 +1582,7 @@ function Configuratin() {
       lookupname: "",
       code: "",
       Parentlookupid: null,
+      Parentlookup: "",
       userid: "67f3f9d812b014a0a7a94081",
       isactive: true,
       isDeleted: false,
@@ -1532,6 +1593,7 @@ function Configuratin() {
       lookupname: "",
       code: "",
       Parentlookupid: null,
+      Parentlookup: "",
       userid: "67f3f9d812b014a0a7a94081",
       isactive: true,
       isDeleted: false,
@@ -1542,6 +1604,7 @@ function Configuratin() {
       lookupname: "",
       code: "",
       Parentlookupid: null,
+      Parentlookup: "",
       userid: "67f3f9d812b014a0a7a94081",
       isactive: true,
       isDeleted: false,
@@ -1552,6 +1615,7 @@ function Configuratin() {
       lookupname: "",
       code: "",
       Parentlookupid: null,
+      Parentlookup: "",
       userid: "67f3f9d812b014a0a7a94081",
       isactive: true,
       isDeleted: false,
@@ -1562,6 +1626,7 @@ function Configuratin() {
       lookupname: "",
       code: "",
       Parentlookupid: "674a195dcc0986f64ca36fc2",
+      Parentlookup: "",
       userid: "67f3f9d812b014a0a7a94081",
       isactive: true,
       isDeleted: false,
@@ -1572,6 +1637,7 @@ function Configuratin() {
       lookupname: "",
       code: "",
       Parentlookupid: null,
+      Parentlookup: "",
       userid: "67f3f9d812b014a0a7a94081",
       isactive: true,
       isDeleted: false,
@@ -1582,6 +1648,7 @@ function Configuratin() {
       lookupname: "",
       code: "",
       Parentlookupid: null,
+      Parentlookup: "",
       userid: "67f3f9d812b014a0a7a94081",
       isactive: true,
       isDeleted: false,
@@ -1592,6 +1659,7 @@ function Configuratin() {
       code: "",
       lookupname: "",
       Parentlookupid: null,
+      Parentlookup: "",
       userid: "67f3f9d812b014a0a7a94081",
       isactive: true,
       isDeleted: false,
@@ -1602,6 +1670,7 @@ function Configuratin() {
       lookupname: "",
       code: "",
       Parentlookupid: null,
+      Parentlookup: "",
       userid: "67f3f9d812b014a0a7a94081",
       isactive: true,
       isDeleted: false,
@@ -1612,6 +1681,7 @@ function Configuratin() {
       lookupname: "",
       code: "",
       Parentlookupid: null,
+      Parentlookup: "",
       userid: "67f3f9d812b014a0a7a94081",
       isactive: true,
       isDeleted: false,
@@ -1628,6 +1698,38 @@ function Configuratin() {
       lookupname: "",
       code: "",
       Parentlookupid: null,
+      Parentlookup: "",
+      userid: "67f3f9d812b014a0a7a94081",
+      isactive: true,
+      isDeleted: false,
+    },
+    Committees: {
+      lookuptypeId: "",
+      RegionTypeID: "",
+      RegionCode: "",
+      RegionName: "",
+      DisplayName: "",
+      isactive: true,
+      isDeleted: false,
+    },
+    PostCode: {
+      lookuptypeId: "",
+      DisplayName: "",
+      lookupname: "",
+      code: "",
+      Parentlookupid: null,
+      Parentlookup: "",
+      userid: "67f3f9d812b014a0a7a94081",
+      isactive: true,
+      isDeleted: false,
+    },
+    StudyLocation: {
+      lookuptypeId: "",
+      DisplayName: "",
+      lookupname: "",
+      code: "",
+      Parentlookupid: null,
+      Parentlookup: "",
       userid: "67f3f9d812b014a0a7a94081",
       isactive: true,
       isDeleted: false,
@@ -1638,6 +1740,7 @@ function Configuratin() {
       lookupname: "",
       code: "",
       Parentlookupid: null,
+      Parentlookup: "",
       userid: "67f3f9d812b014a0a7a94081",
       isactive: true,
       isDeleted: false,
@@ -1650,8 +1753,29 @@ function Configuratin() {
     },
   };
 
-  const [drawerIpnuts, setdrawerIpnuts] = useState(drawerInputsInitalValues);
-  console.log("drawerIpnuts", drawerIpnuts);
+  const [drawerIpnuts, setdrawerIpnuts] = useState(baseDrawerInputsInitalValues);
+
+  useEffect(() => {
+    if (!Array.isArray(lookupsTypes) || lookupsTypes.length === 0) return;
+    setdrawerIpnuts((prev) => {
+      let changed = false;
+      const next = { ...prev };
+      Object.keys(baseDrawerInputsInitalValues).forEach((drawerKey) => {
+        if (!prev[drawerKey]) return;
+        const updated = withDynamicLookupTypeId(
+          prev[drawerKey],
+          drawerKey,
+          lookupsTypes,
+        );
+        if (updated?.lookuptypeId !== prev[drawerKey]?.lookuptypeId) {
+          next[drawerKey] = updated;
+          changed = true;
+        }
+      });
+      return changed ? next : prev;
+    });
+  }, [lookupsTypes]);
+
   const drawrInptChng = (drawer, field, value) => {
     setdrawerIpnuts((prevState) => {
       // Check if the field is nested inside ContactAddress
@@ -1679,6 +1803,28 @@ function Configuratin() {
     });
   };
 
+  const handleParentLookupChange = (drawer, { parentId, parentLabel }) => {
+    setdrawerIpnuts((prev) => ({
+      ...prev,
+      [drawer]: {
+        ...prev[drawer],
+        Parentlookupid: parentId,
+        Parentlookup: parentLabel ?? "",
+      },
+    }));
+  };
+
+  const handleParentLookupTypeChange = ({ parentTypeId, parentTypeLabel }) => {
+    setdrawerIpnuts((prev) => ({
+      ...prev,
+      LookupType: {
+        ...prev.LookupType,
+        ParentlookuptypeId: parentTypeId,
+        Parentlookuptype: parentTypeLabel,
+      },
+    }));
+  };
+
   const IsUpdateFtn = (drawer, value, data) => {
 
     if (value === false) {
@@ -1695,15 +1841,21 @@ function Configuratin() {
       [drawer]: value,
     }));
 
-    const filteredData = Object.keys(drawerInputsInitalValues[drawer]).reduce(
+    const filteredData = Object.keys(baseDrawerInputsInitalValues[drawer] || {}).reduce(
       (acc, key) => {
-        // ❌ exclude lookuptypeId
-        if (key === "lookuptypeId") return acc;
+        if (key === "lookuptypeId") {
+          if (data.lookuptypeId != null && data.lookuptypeId !== "") {
+            const val = data.lookuptypeId;
+            acc.lookuptypeId =
+              typeof val === "object" && val !== null && val._id
+                ? String(val._id)
+                : String(val);
+          }
+          return acc;
+        }
 
         if (data.hasOwnProperty(key)) {
           const val = data[key];
-          // If the value is a populated object from the backend (has _id), flatten it to just the ID string
-          // but preserve actual nested data objects like 'worklocationAddress'
           if (
             typeof val === "object" &&
             val !== null &&
@@ -1715,17 +1867,33 @@ function Configuratin() {
           } else {
             acc[key] = val;
           }
-        } else if (
-          key === "Parentlookupid" &&
-          data.hasOwnProperty("Parentlookup")
-        ) {
-          const val = data["Parentlookup"];
-          acc[key] = val && typeof val === "object" && val._id ? val._id : val;
         }
         return acc;
       },
       {},
     );
+
+    const parentId = resolveParentLookupIdFromRecord(data);
+    const parentLabel = resolveParentLookupLabelFromRecord(data);
+    if (parentId != null) {
+      filteredData.Parentlookupid = parentId;
+    }
+    if (parentLabel) {
+      filteredData.Parentlookup = parentLabel;
+    }
+
+    if (Object.prototype.hasOwnProperty.call(data, "ParentlookuptypeId")) {
+      const parentTypeId = resolveParentLookupTypeIdFromRecord(data);
+      filteredData.ParentlookuptypeId = parentTypeId;
+    }
+    if (Object.prototype.hasOwnProperty.call(data, "Parentlookuptype")) {
+      const parentTypeLabel = resolveParentLookupTypeLabelFromRecord(
+        data,
+        lookupsTypes,
+      );
+      filteredData.Parentlookuptype =
+        data.Parentlookuptype ?? parentTypeLabel ?? null;
+    }
 
     setdrawerIpnuts((prev) => ({
       ...prev,
@@ -1765,10 +1933,17 @@ function Configuratin() {
     "label",
     "asc",
   );
+  const getDrawerInputsTemplate = (drawer) =>
+    withDynamicLookupTypeId(
+      baseDrawerInputsInitalValues[drawer],
+      drawer,
+      lookupsTypes,
+    );
+
   const resetCounteries = (drawer, callback) => {
     setdrawerIpnuts((prevState) => ({
       ...prevState,
-      [drawer]: drawerInputsInitalValues[drawer],
+      [drawer]: getDrawerInputsTemplate(drawer),
     }));
     if (callback && typeof callback === "function") {
       callback();
@@ -1781,7 +1956,7 @@ function Configuratin() {
       return {
         ...prevState,
         Lookup: {
-          ...drawerInputsInitalValues.Lookup,
+          ...baseDrawerInputsInitalValues.Lookup,
           lookuptypeId:
             lookuptypeId === null || lookuptypeId === undefined
               ? ""
@@ -1799,18 +1974,47 @@ function Configuratin() {
     }
   };
 
-  const openCloseDrawerFtn = (name) => {
-    setDrawerOpen((prevState) => {
-      const wasOpen = prevState[name]; // Check if it was open before
-      const newState = {
-        ...prevState,
-        [name]: !prevState[name],
-      };
+  const openConfigurationCard = (card) => {
+    if (!card) return;
+    if (card.isSystem) {
+      openCloseDrawerFtn(card.key);
+      return;
+    }
+    const drawerKey = resolveConfigurationDrawerKey(
+      card.lookupType,
+      card.drawerKey || card.key,
+    );
+    if (drawerKey === "StandardLookup" && card.lookupType) {
+      setActiveStandardLookupType(card.lookupType);
+    }
+    openCloseDrawerFtn(drawerKey, card.lookupType);
+  };
 
+  const openCloseDrawerFtn = (name, lookupTypeRecord = null) => {
+    setDrawerOpen((prevState) => {
+      const wasOpen = prevState[name];
       if (wasOpen) {
-        disableFtn(true); // Execute only when closing
+        disableFtn(true);
+      } else {
+        const lookupType =
+          lookupTypeRecord ||
+          (name === "StandardLookup"
+            ? activeStandardLookupType
+            : getLookupTypeRecordForDrawer(name, lookupsTypes));
+        if (lookupType?._id) {
+          setdrawerIpnuts((prev) => ({
+            ...prev,
+            [name]: {
+              ...(prev[name] || getDrawerInputsTemplate(name) || {}),
+              lookuptypeId: lookupType._id,
+            },
+          }));
+        }
       }
-      return newState;
+      return {
+        ...prevState,
+        [name]: !wasOpen,
+      };
     });
     setErrors({});
   };
@@ -1846,6 +2050,7 @@ function Configuratin() {
         ...prev,
         [drawer]: {
           ...prev[drawer],
+          _id: idValue,
           id: idValue,
         },
       };
@@ -1910,7 +2115,7 @@ function Configuratin() {
                 title: "Confirm Deletion",
                 message: "Do You Want To Delete This Item?",
                 onConfirm: async () => {
-                  await deleteFtn(`lookup/`, { id: record?._id });
+                  await deleteFtn("/lookup/", { id: record?._id });
                 },
               })
             }
@@ -2222,7 +2427,7 @@ function Configuratin() {
                 title: "Confirm Deletion",
                 message: "Do You Want To Delete This Item?",
                 onConfirm: async () => {
-                  await deleteFtn(`/lookup/${record?._id}`, null, () => {
+                  await deleteFtn("/lookup/", { id: record?._id }, () => {
                     dispatch(resetLookups());
                     dispatch(getAllLookups());
                   });
@@ -2355,6 +2560,16 @@ function Configuratin() {
       },
     },
     {
+      title: "Process Salary Deduction",
+      key: "processSalaryDeduction",
+      render: (_, record) => (
+        <Checkbox
+          disabled
+          checked={!!record?.processSalaryDeduction}
+        />
+      ),
+    },
+    {
       title: "Active",
       render: (_, record) => (
         <Checkbox disabled={isDisable} checked={record?.isactive}></Checkbox>
@@ -2393,7 +2608,7 @@ function Configuratin() {
                 title: "Confirm Deletion",
                 message: "Do You Want To Delete This Item?",
                 onConfirm: async () => {
-                  await deleteFtn(`/lookup/${record?._id}`, null, () => {
+                  await deleteFtn("/lookup/", { id: record?._id }, () => {
                     dispatch(resetLookups());
                     dispatch(getAllLookups());
                   });
@@ -2505,7 +2720,7 @@ function Configuratin() {
                 title: "Confirm Deletion",
                 message: "Do You Want To Delete This Item?",
                 onConfirm: async () => {
-                  await deleteFtn(`/lookup/${record?._id}`, null, () => {
+                  await deleteFtn("/lookup/", { id: record?._id }, () => {
                     refreshLookups();
                   });
                 },
@@ -2571,11 +2786,7 @@ function Configuratin() {
                 title: "Confirm Deletion",
                 message: "Do You Want To Delete This Item?",
                 onConfirm: async () => {
-                  await deleteFtn(
-                    `lookup/`,
-                    { id: record?._id },
-                    dispatch(getAllLookups()),
-                  );
+                  await deleteFtn("/lookup/", { id: record?._id });
                   dispatch(getAllLookups());
                 },
               });
@@ -2714,10 +2925,14 @@ function Configuratin() {
                 title: "Confirm Deletion",
                 message: "Do You Want To Delete This Item?",
                 onConfirm: async () => {
-                  await deleteFtn(`/lookup/${record?._id}`, null, () => {
-                    dispatch(resetLookups());
-                    dispatch(getAllLookups());
-                  });
+                  await deleteFtn(
+                    "/lookuptype/",
+                    { id: record?._id },
+                    () => refreshLookupTypes(),
+                    true,
+                    false,
+                    false,
+                  );
                 },
               })
             }
@@ -2779,7 +2994,7 @@ function Configuratin() {
                 title: "Confirm Deletion",
                 message: "Do You Want To Delete This Item?",
                 onConfirm: async () => {
-                  await deleteFtn(`${baseURL}/RegionType`, record?._id, () =>
+                  await deleteFtn(`/lookuptype/${record?._id}`, null, () =>
                     dispatch(getAllRegionTypes()),
                   );
                 },
@@ -2873,7 +3088,7 @@ function Configuratin() {
                 title: "Confirm Deletion",
                 message: "Do You Want To Delete This Item?",
                 onConfirm: async () => {
-                  await deleteFtn(`/lookup/${record?._id}`, null, () => {
+                  await deleteFtn("/lookup/", { id: record?._id }, () => {
                     dispatch(resetLookups());
                     dispatch(getAllLookups());
                   });
@@ -2952,11 +3167,7 @@ function Configuratin() {
                 title: "Confirm Deletion",
                 message: "Do You Want To Delete This Item?",
                 onConfirm: async () => {
-                  await deleteFtn(
-                    `lookup/`,
-                    { id: record?._id },
-                    dispatch(getAllLookups()),
-                  );
+                  await deleteFtn("/lookup/", { id: record?._id });
                 },
               })
             }
@@ -3029,11 +3240,7 @@ function Configuratin() {
                 title: "Confirm Deletion",
                 message: "Do You Want To Delete This Item?",
                 onConfirm: async () => {
-                  await deleteFtn(
-                    `lookup/`,
-                    { id: record?._id },
-                    dispatch(getAllLookups()),
-                  );
+                  await deleteFtn("/lookup/", { id: record?._id });
                 },
               })
             }
@@ -3096,11 +3303,7 @@ function Configuratin() {
                 title: "Confirm Deletion",
                 message: "Do You Want To Delete This Item?",
                 onConfirm: async () => {
-                  await deleteFtn(
-                    `lookup/`,
-                    { id: record?._id },
-                    dispatch(getAllLookups()),
-                  );
+                  await deleteFtn("/lookup/", { id: record?._id });
                 },
               })
             }
@@ -3177,11 +3380,7 @@ function Configuratin() {
                 title: "Confirm Deletion",
                 message: "Do You Want To Delete This Item?",
                 onConfirm: async () => {
-                  await deleteFtn(
-                    `lookup/`,
-                    { id: record?._id },
-                    dispatch(getAllLookups()),
-                  );
+                  await deleteFtn("/lookup/", { id: record?._id });
                 },
               })
             }
@@ -3254,11 +3453,7 @@ function Configuratin() {
                 title: "Confirm Deletion",
                 message: "Do You Want To Delete This Item?",
                 onConfirm: async () => {
-                  await deleteFtn(
-                    `lookup/`,
-                    { id: record?._id },
-                    dispatch(getAllLookups()),
-                  );
+                  await deleteFtn("/lookup/", { id: record?._id });
                 },
               })
             }
@@ -3331,11 +3526,7 @@ function Configuratin() {
                 title: "Confirm Deletion",
                 message: "Do You Want To Delete This Item?",
                 onConfirm: async () => {
-                  await deleteFtn(
-                    `lookup/`,
-                    { id: record?._id },
-                    dispatch(getAllLookups()),
-                  );
+                  await deleteFtn("/lookup/", { id: record?._id });
                 },
               })
             }
@@ -3408,11 +3599,78 @@ function Configuratin() {
                 title: "Confirm Deletion",
                 message: "Do You Want To Delete This Item?",
                 onConfirm: async () => {
-                  await deleteFtn(
-                    `lookup/`,
-                    { id: record?._id },
-                    dispatch(getAllLookups()),
-                  );
+                  await deleteFtn("/lookup/", { id: record?._id });
+                },
+              })
+            }
+          />
+        </Space>
+      ),
+    },
+  ];
+  const columnStandardLookup = [
+    {
+      title: "Code",
+      dataIndex: "code",
+      key: "code",
+      sorter: (a, b) => (a.code || "").localeCompare(b.code || ""),
+      sortDirections: ["ascend", "descend"],
+    },
+    {
+      title: " Lookup Type ",
+      dataIndex: "lookuptype",
+      key: "lookuptype",
+      render: (_, record) => <>{record?.lookuptypeId?.lookuptype}</>,
+    },
+    {
+      title: " Display Name",
+      dataIndex: "DisplayName",
+      key: "DisplayName",
+    },
+    {
+      title: "Name",
+      dataIndex: "lookupname",
+      key: "lookupname",
+    },
+    {
+      title: "Active",
+      dataIndex: "isactive",
+      key: "isactive",
+      render: (_, record) => <Checkbox checked={record?.isactive}></Checkbox>,
+    },
+    {
+      title: (
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
+          <FaRegCircleQuestion size={16} style={{ marginRight: "8px" }} />
+          Action
+        </div>
+      ),
+      key: "action",
+      align: "center",
+      render: (_, record) => (
+        <Space size="middle">
+          <FaEdit
+            size={16}
+            style={{ marginRight: "10px" }}
+            onClick={() => {
+              IsUpdateFtn("StandardLookup", !isUpdateRec?.StandardLookup, record);
+              addIdKeyToLookup(record?._id, "StandardLookup");
+            }}
+          />
+          <AiFillDelete
+            size={16}
+            onClick={() =>
+              MyConfirm({
+                title: "Confirm Deletion",
+                message: "Do You Want To Delete This Item?",
+                onConfirm: async () => {
+                  await deleteFtn("/lookup/", { id: record?._id });
                 },
               })
             }
@@ -3483,11 +3741,7 @@ function Configuratin() {
                 title: "Confirm Deletion",
                 message: "Do You Want To Delete This Item?",
                 onConfirm: async () => {
-                  await deleteFtn(
-                    `lookup/`,
-                    { id: record?._id },
-                    dispatch(getAllLookups()),
-                  );
+                  await deleteFtn("/lookup/", { id: record?._id });
                 },
               })
             }
@@ -3562,11 +3816,7 @@ function Configuratin() {
                 title: "Confirm Deletion",
                 message: "Do You Want To Delete This Item?",
                 onConfirm: async () =>
-                  deleteFtn(
-                    `lookup/`,
-                    { id: record?._id },
-                    dispatch(getAllLookups()),
-                  ),
+                  deleteFtn("/lookup/", { id: record?._id }),
               })
             }
           />
@@ -3645,11 +3895,7 @@ function Configuratin() {
                 title: "Confirm Deletion",
                 message: "Do You Want To Delete This Item?",
                 onConfirm: async () => {
-                  deleteFtn(
-                    `lookup/`,
-                    { id: record?._id },
-                    dispatch(getAllLookups()),
-                  );
+                  deleteFtn("/lookup/", { id: record?._id });
                 },
               })
             }
@@ -3729,11 +3975,7 @@ function Configuratin() {
                 title: "Confirm Deletion",
                 message: "Do You Want To Delete This Item?",
                 onConfirm: async () => {
-                  await deleteFtn(
-                    `lookup/`,
-                    { id: record?._id },
-                    dispatch(getAllLookups()),
-                  );
+                  await deleteFtn("/lookup/", { id: record?._id });
                 },
               })
             }
@@ -3809,11 +4051,7 @@ function Configuratin() {
                 title: "Confirm Deletion",
                 message: "Do You Want To Delete This Item?",
                 onConfirm: async () => {
-                  await deleteFtn(
-                    `lookup/`,
-                    { id: record?._id },
-                    dispatch(getAllLookups()),
-                  );
+                  await deleteFtn("/lookup/", { id: record?._id });
                 },
               })
             }
@@ -3892,11 +4130,7 @@ function Configuratin() {
                 title: "Confirm Deletion",
                 message: "Do You Want To Delete This Item?",
                 onConfirm: async () => {
-                  await deleteFtn(
-                    `lookup/`,
-                    { id: record?._id },
-                    dispatch(getAllLookups()),
-                  );
+                  await deleteFtn("/lookup/", { id: record?._id });
                 },
               })
             }
@@ -3967,11 +4201,7 @@ function Configuratin() {
                 title: "Confirm Deletion",
                 message: "Do You Want To Delete This Item?",
                 onConfirm: async () => {
-                  await deleteFtn(
-                    `lookup/`,
-                    { id: record?._id },
-                    dispatch(getAllLookups()),
-                  );
+                  await deleteFtn("/lookup/", { id: record?._id });
                 },
               })
             }
@@ -4042,11 +4272,7 @@ function Configuratin() {
                 title: "Confirm Deletion",
                 message: "Do You Want To Delete This Item?",
                 onConfirm: async () => {
-                  await deleteFtn(
-                    `lookup/`,
-                    { id: record?._id },
-                    dispatch(getAllLookups()),
-                  );
+                  await deleteFtn("/lookup/", { id: record?._id });
                 },
               })
             }
@@ -4299,11 +4525,7 @@ function Configuratin() {
                 title: "Confirm Deletion",
                 message: "Do you want to delete this item?",
                 onConfirm: async () => {
-                  await deleteFtn(
-                    `lookup/`,
-                    { id: record?._id },
-                    dispatch(getAllLookups()),
-                  );
+                  await deleteFtn("/lookup/", { id: record?._id });
                 },
               })
             }
@@ -4591,11 +4813,7 @@ function Configuratin() {
                 title: "Confirm Deletion",
                 message: "Do You Want To Delete This Item?",
                 onConfirm: async () => {
-                  await deleteFtn(
-                    `lookup/`,
-                    { id: record?._id },
-                    dispatch(getAllLookups()),
-                  );
+                  await deleteFtn("/lookup/", { id: record?._id });
                 },
               })
             }
@@ -4639,6 +4857,11 @@ function Configuratin() {
         newErrors[drawerType].contactType = true;
       }
     }
+    else if (drawerType === "LookupType") {
+      if (!currentInput.lookuptype) {
+        newErrors[drawerType].lookuptype = true;
+      }
+    }
     // Special case: "Bookmarks" uses 'key' and 'label' instead of 'lookupname'
     else if (drawerType === "Bookmarks") {
       if (!currentInput.key) {
@@ -4656,24 +4879,23 @@ function Configuratin() {
       // Note: code is NOT required for Bookmarks
     }
     // Default case: other drawers use 'lookupname'
-    else {
+    else if (drawerType !== "LookupType" && drawerType !== "RegionType") {
       if (!currentInput.lookupname) {
         newErrors[drawerType].lookupname = true;
       }
     }
 
-    // Parent lookup required for some types
-    const requiresParentLookup = [
-      "Districts",
-      "Cities",
-      "Counteries",
-      "Station",
-    ];
-    if (
-      requiresParentLookup.includes(drawerType) &&
-      !currentInput.Parentlookupid
-    ) {
-      newErrors[drawerType].parentLookup = true;
+    if (drawerType !== "LookupType") {
+      const lookuptypeId =
+        currentInput.lookuptypeId?._id ||
+        currentInput.lookuptypeId ||
+        getLookupTypeRecordForDrawer(drawerType, lookupsTypes)?._id;
+      if (
+        lookupTypeRequiresParent(lookupsTypes, lookuptypeId, drawerType) &&
+        !currentInput.Parentlookupid
+      ) {
+        newErrors[drawerType].Parentlookupid = true;
+      }
     }
 
     setErrors(newErrors);
@@ -4795,11 +5017,7 @@ function Configuratin() {
                 title: "Confirm Deletion",
                 message: "Do You Want To Delete This Item?",
                 onConfirm: async () => {
-                  await deleteFtn(
-                    `lookup/`,
-                    { id: record?._id },
-                    dispatch(getAllLookups()),
-                  );
+                  await deleteFtn("/lookup/", { id: record?._id });
                 },
               })
             }
@@ -4815,203 +5033,6 @@ function Configuratin() {
     setPageSize(size);
   };
   // const { Search } = Input;
-  const sections = [
-    {
-      title: "Geographic & Location",
-      items: [
-        {
-          key: "Countries",
-          icon: <Globe size={24} color="#ef4444" />,
-          label: "Countries",
-        }, // red-500
-        {
-          key: "Provinces",
-          icon: <Map size={24} color="#22c55e" />,
-          label: "Provinces",
-        }, // green-500
-        {
-          key: "counties",
-          icon: <Globe size={24} color="#22c55e" />,
-          label: "Counties",
-        }, // green-500
-        {
-          key: "Divisions",
-          icon: <Building2 size={24} color="#6366f1" />,
-          label: "Region",
-        }, // indigo-500
-        {
-          key: "Districts",
-          icon: <MapPinned size={24} color="#eab308" />,
-          label: "Branch",
-        }, // yellow-500
-        {
-          key: "Station",
-          icon: <MapPin size={24} color="#f97316" />,
-          label: "Work Location",
-        }, // orange-500
-        {
-          key: "Study Location",
-          icon: <University size={24} color="#f97316" />,
-          label: "Study Location",
-        }, // orange-500
-        {
-          key: "Cities",
-          icon: <Building2 size={24} color="#10b981" />,
-          label: "Cities",
-        }, // emerald-500
-        {
-          key: "PostCode",
-          icon: <Mail size={24} color="#0ea5e9" />,
-          label: "Post Codes",
-        }, // sky-500
-      ],
-    },
-    {
-      title: "Personal & Demographics",
-      items: [
-        {
-          key: "Title",
-          icon: <Crown size={24} color="#3b82f6" />,
-          label: "Titles",
-        }, // blue-500
-        {
-          key: "Gender",
-          icon: <User size={24} color="#ec4899" />,
-          label: "Gender",
-        }, // pink-500
-        {
-          key: "MaritalStatus",
-          icon: <Heart size={24} color="#a78bfa" />,
-          label: "Marital Status",
-        }, // purple-400
-        {
-          key: "SpokenLanguages",
-          icon: <Languages size={24} color="#f43f5e" />,
-          label: "Spoken Languages",
-        }, // rose-500
-      ],
-    },
-    {
-      title: "Professional & Organizational",
-      items: [
-        {
-          key: "Ranks",
-          icon: <BarChart3 size={24} color="#6b7280" />,
-          label: "Grade",
-        }, // gray-500
-        {
-          key: "Duties",
-          icon: <FileText size={24} color="#60a5fa" />,
-          label: "Duties",
-        }, // blue-400
-        {
-          key: "RosterType",
-          icon: <Calendar size={24} color="#06b6d4" />,
-          label: "Roster Type",
-        }, // cyan-500
-        {
-          key: "Boards",
-          icon: <Layout size={24} color="#14b8a6" />,
-          label: "Boards",
-        }, // teal-500
-        {
-          key: "Councils",
-          icon: <Landmark size={24} color="#8b5cf6" />,
-          label: "Councils",
-        }, // violet-500
-        {
-          key: "Committees",
-          icon: <Users size={24} color="#ec4899" />,
-          label: "Committees",
-        }, // pink-500
-        {
-          key: "Solicitors",
-          icon: <Gavel size={24} color="#64748b" />,
-          label: "Solicitors",
-        }, // slate-500
-        {
-          key: "Sections",
-          icon: <Briefcase size={24} color="#8b5cf6" />,
-          label: "Sections",
-        }, // violet-500
-      ],
-    },
-    {
-      title: "Projects & Training",
-      items: [
-        {
-          key: "ProjectTypes",
-          icon: <FolderKanban size={24} color="#f59e0b" />,
-          label: "Project Types",
-        }, // amber-500
-        {
-          key: "Trainings",
-          icon: <Lightbulb size={24} color="#84cc16" />,
-          label: "Trainings",
-        }, // lime-500
-      ],
-    },
-    {
-      title: "Communication & Documentation",
-      items: [
-        {
-          key: "ContactType",
-          icon: <Phone size={24} color="#a855f7" />,
-          label: "Contact Types",
-        }, // purple-500
-        {
-          key: "CorrespondenceType",
-          icon: <MessageSquare size={24} color="#4ade80" />,
-          label: "Correspondence Type",
-        }, // green-400
-        {
-          key: "DocumentType",
-          icon: <File size={24} color="#818cf8" />,
-          label: "Document Type",
-        }, // indigo-400
-        {
-          key: "Bookmarks",
-          icon: <Bookmark size={24} color="#818cf8" />,
-          label: "Bookmarks",
-        }, // indigo-400
-      ],
-    },
-    {
-      title: "Claims & Benefits",
-      items: [
-        {
-          key: "ClaimType",
-          icon: <Shield size={24} color="#f472b6" />,
-          label: "Claim Type",
-        }, // pink-400
-        {
-          key: "Schemes",
-          icon: <Boxes size={24} color="#facc15" />,
-          label: "Schemes",
-        }, // yellow-400
-        {
-          key: "Reasons",
-          icon: <CircleHelp size={24} color="#fb923c" />,
-          label: "Reasons",
-        }, // orange-400
-      ],
-    },
-    {
-      title: "System Lookups",
-      items: [
-        {
-          key: "LookupType",
-          icon: <Search size={24} color="#34d399" />,
-          label: "Lookup Type",
-        }, // emerald-400
-        {
-          key: "Lookup",
-          icon: <Search size={24} color="#fb7185" />,
-          label: "Lookup",
-        }, // rose-400
-      ],
-    },
-  ];
 
 
   // Updated table columns with Region filter
@@ -5048,6 +5069,13 @@ function Configuratin() {
     // Return columns in correct order: [...other columns, Region, Action]
     return [...allColumnsExceptLast, regionColumn, lastColumn];
   }, [columnDistricts, uniqueRegionNames]);
+
+  const lookupTypeSelectProps = (drawerKey) =>
+    getLookupTypeFieldProps(
+      drawerKey,
+      lookupsTypes,
+      drawerIpnuts?.[drawerKey]?.lookuptypeId,
+    );
 
   return (
     <div
@@ -5094,23 +5122,19 @@ function Configuratin() {
           }}
         >
           {(() => {
-            // Flatten all items from all sections into a single array
-            const allItems = sections.flatMap((section) => section.items);
-            const filteredItems = allItems
-              .filter((item) =>
-                item.label.toLowerCase().includes(searchQuery.toLowerCase()),
-              )
-              .sort((a, b) => a.label.localeCompare(b.label));
+            const filteredItems = configurationCards.filter((item) =>
+              item.label.toLowerCase().includes(searchQuery.toLowerCase()),
+            );
 
             return filteredItems.length > 0 ? (
               <div className="row gx-3 gy-3 mb-4 pb-4">
                 {filteredItems.map((item) => (
                   <div
-                    key={item.key}
+                    key={item.lookupTypeId || item.key}
                     className="col-6 col-sm-4 col-md-3 col-lg-1-5 d-flex"
                   >
                     <div
-                      onClick={() => openCloseDrawerFtn(item.key)}
+                      onClick={() => openConfigurationCard(item)}
                       className="d-flex flex-column align-items-center justify-content-center border rounded bg-white p-4 w-100 text-center hover-shadow"
                       style={{ cursor: "pointer" }}
                     >
@@ -5124,10 +5148,17 @@ function Configuratin() {
               </div>
             ) : (
               <p className="text-muted small mb-0 text-center">
-                No matches for "{searchQuery}".
+                {searchQuery
+                  ? `No matches for "${searchQuery}".`
+                  : "No lookup types found."}
               </p>
             );
           })()}
+          {lookupsTypesloading && (!lookupsTypes || lookupsTypes.length === 0) && (
+            <p className="text-muted small mb-0 text-center">
+              Loading lookup types...
+            </p>
+          )}
         </div>
       </div>
       <MyDrawer
@@ -5220,7 +5251,7 @@ function Configuratin() {
               <Pagination
                 defaultCurrent={1}
                 total={gender.length}
-                pageSize={10}
+                pageSize={500}
               />
             </div>
           )}
@@ -5318,7 +5349,7 @@ function Configuratin() {
               <Pagination
                 defaultCurrent={1}
                 total={gender.length}
-                pageSize={10}
+                pageSize={500}
               />
             </div>
           )}
@@ -5448,7 +5479,7 @@ function Configuratin() {
               <Pagination
                 defaultCurrent={1}
                 total={gender.length}
-                pageSize={10}
+                pageSize={500}
               />
             </div>
           )}
@@ -5636,7 +5667,7 @@ function Configuratin() {
               <Pagination
                 defaultCurrent={1}
                 total={gender.length}
-                pageSize={10}
+                pageSize={500}
               />
             </div>
           )}
@@ -5732,7 +5763,7 @@ function Configuratin() {
               <Pagination
                 defaultCurrent={1}
                 total={RegionTy.length}
-                pageSize={10}
+                pageSize={500}
               />
             </div>
           )}
@@ -5829,7 +5860,7 @@ function Configuratin() {
               <Pagination
                 defaultCurrent={1}
                 total={ContactTy.length}
-                pageSize={10}
+                pageSize={500}
               />
             </div>
           )}
@@ -5923,21 +5954,21 @@ function Configuratin() {
                 hasError={!!errors?.Counteries?.DisplayName}
               />
             </Col>
-            <Col span={12}>
-              <CustomSelect
-                label="Province:"
-                placeholder="Select Province"
-                options={provincesOption}
-                isIDs={true}
-                value={drawerIpnuts?.counties?.Parentlookupid}
-                disabled={isDisable}
-                onChange={(e) =>
-                  drawrInptChng("counties", "Parentlookupid", e.target.value)
-                }
-                required
-                hasError={!!errors?.counties?.parentLookup}
-              />
-            </Col>
+            <ParentLookupSelect
+              drawerKey="counties"
+              lookuptypeId={drawerIpnuts?.counties?.lookuptypeId}
+              lookups={lookups}
+              lookupsTypes={lookupsTypes}
+              value={drawerIpnuts?.counties?.Parentlookupid}
+              parentLabel={drawerIpnuts?.counties?.Parentlookup}
+              disabled={isDisable}
+              required={lookupTypeRequiresParent(
+                lookupsTypes,
+                drawerIpnuts?.counties?.lookuptypeId,
+              )}
+              hasError={!!errors?.counties?.Parentlookupid}
+              onChange={(payload) => handleParentLookupChange("counties", payload)}
+            />
           </Row>
 
           <Checkbox
@@ -5953,7 +5984,7 @@ function Configuratin() {
           <div className="mt-4 config-tbl-container">
             <p>History</p>
             <Table
-              pagination={{ pageSize: 10 }}
+              pagination={{ pageSize: 500 }}
               columns={columnCountry}
               loading={lookupsloading}
               dataSource={groupedLookups?.County}
@@ -6063,6 +6094,23 @@ function Configuratin() {
                 disabled={isDisable}
               />
             </Col>
+            <ParentLookupSelect
+              drawerKey="Provinces"
+              lookuptypeId={drawerIpnuts?.Provinces?.lookuptypeId}
+              lookups={lookups}
+              lookupsTypes={lookupsTypes}
+              value={drawerIpnuts?.Provinces?.Parentlookupid}
+              parentLabel={drawerIpnuts?.Provinces?.Parentlookup}
+              disabled={isDisable}
+              required={lookupTypeRequiresParent(
+                lookupsTypes,
+                drawerIpnuts?.Provinces?.lookuptypeId,
+              )}
+              hasError={!!errors?.Provinces?.Parentlookupid}
+              onChange={(payload) => handleParentLookupChange("Provinces", payload)}
+            />
+          </Row>
+          <Row gutter={24}>
             <Col span={12}>
               <Checkbox
                 disabled={isDisable}
@@ -6349,27 +6397,24 @@ function Configuratin() {
                 {/* <p className="error">{errors?.Cities?.}</p> */}
               </div>
             </div>
-            <div className="drawer-inpts-container">
-              <div className="drawer-lbl-container">
-                <p>County :</p>
-              </div>
-              <div className="inpt-con">
-                <p className="star">*</p>
-                <div className="inpt-sub-con">
-                  <MySelect
-                    placeholder="Select County"
-                    onChange={(e) =>
-                      drawrInptChng("Cities", "Parentlookupid", e)
-                    }
-                    isSimple={true}
-                    options={selectLokups?.Counteries}
-                    disabled={isDisable}
-                    value={drawerIpnuts?.Cities?.Parentlookupid}
-                  />
-                  <p className="error">{errors?.Cities?.Parentlookupid}</p>
-                </div>
-              </div>
-            </div>
+            <Row gutter={24} style={{ marginTop: 8 }}>
+              <ParentLookupSelect
+                drawerKey="Cities"
+                lookuptypeId={drawerIpnuts?.Cities?.lookuptypeId}
+                lookups={lookups}
+                lookupsTypes={lookupsTypes}
+                value={drawerIpnuts?.Cities?.Parentlookupid}
+                parentLabel={drawerIpnuts?.Cities?.Parentlookup}
+                disabled={isDisable}
+                required={lookupTypeRequiresParent(
+                  lookupsTypes,
+                  drawerIpnuts?.Cities?.lookuptypeId,
+                )}
+                hasError={!!errors?.Cities?.Parentlookupid}
+                span={24}
+                onChange={(payload) => handleParentLookupChange("Cities", payload)}
+              />
+            </Row>
             <div className="drawer-inpts-container">
               <div className="drawer-lbl-container">
                 <p></p>
@@ -6450,8 +6495,8 @@ function Configuratin() {
               <CustomSelect
                 label="Type:"
                 name="lookuptypeId"
-                value="PostCode"
-                options={[{ label: "PostCode", value: "PostCode" }]}
+                value={lookupTypeSelectProps("PostCode").value}
+                options={lookupTypeSelectProps("PostCode").options}
                 isSimple={true}
                 disabled={true}
                 required
@@ -6673,44 +6718,38 @@ function Configuratin() {
                 hasError={!!errors?.Districts?.DisplayName}
               />
             </Col>
-            <Col span={12}>
-              <div style={{ display: "flex", gap: "8px" }}>
-                {/* Region Select */}
-                <div style={{ flex: 1 }}>
-                  <CustomSelect
-                    label="Region"
-                    placeholder="Select Region"
-                    options={regionOptions}
-                    disabled={isDisable}
-                    isIDs={true}
-                    required
-                    hasError={!!errors?.Districts?.Parentlookupid}
-                    value={drawerIpnuts?.Districts?.Parentlookupid}
-                    onChange={(val) => {
-                      drawrInptChng(
-                        "Districts",
-                        "Parentlookupid",
-                        val.target.value,
-                      );
-                    }}
-                  />
-                </div>
+          </Row>
 
-                {/* Button with fake label for alignment */}
-                <div style={{ display: "flex", flexDirection: "column" }}>
-                  {/* empty label space to match CustomSelect */}
-                  <label style={{ height: 20, visibility: "hidden" }}>
-                    label
-                  </label>
-                  <Button
-                    className="butn primary-btn detail-btn"
-                    style={{ height: 40 }}
-                    onClick={() => openCloseDrawerFtn("DivisionsForDistrict")}
-                  >
-                    +
-                  </Button>
-                </div>
-              </div>
+          <Row gutter={24} align="bottom">
+            <ParentLookupSelect
+              drawerKey="Districts"
+              lookuptypeId={drawerIpnuts?.Districts?.lookuptypeId}
+              lookups={lookups}
+              lookupsTypes={lookupsTypes}
+              value={drawerIpnuts?.Districts?.Parentlookupid}
+              parentLabel={drawerIpnuts?.Parentlookup}
+              disabled={isDisable}
+              required={lookupTypeRequiresParent(
+                lookupsTypes,
+                drawerIpnuts?.Districts?.lookuptypeId,
+              )}
+              hasError={!!errors?.Districts?.Parentlookupid}
+              span={12}
+              onChange={(payload) =>
+                handleParentLookupChange("Districts", payload)
+              }
+            />
+            <Col span={4}>
+              <label style={{ height: 20, visibility: "hidden" }}>
+                label
+              </label>
+              <Button
+                className="butn primary-btn detail-btn"
+                style={{ height: 40 }}
+                onClick={() => openCloseDrawerFtn("DivisionsForDistrict")}
+              >
+                +
+              </Button>
             </Col>
           </Row>
           <Row>
@@ -6935,7 +6974,7 @@ function Configuratin() {
                 </div>
               </div>
               <Table
-                pagination={{ pageSize: 10 }}
+                pagination={{ pageSize: 500 }}
                 columns={columnDivisions}
                 dataSource={filteredRegions}
                 loading={lookupsloading}
@@ -7058,20 +7097,23 @@ function Configuratin() {
                 hasError={!!errors?.Divisions?.DisplayName}
               />
             </Col>
-            <Col span={12}>
-              {/* <CustomSelect
-                label="County"
-                required
-                placeholder="Select County"
-                isSimple
-                options={selectLokups?.Counteries}
-                value={drawerIpnuts?.Divisions?.Parentlookupid}
-                onChange={(e) =>
-                  drawrInptChng("Divisions", "Parentlookupid", e)
-                }
-                hasError={!!errors?.Divisions?.parentLookup}
-              /> */}
-            </Col>
+            <ParentLookupSelect
+              drawerKey="Divisions"
+              lookuptypeId={drawerIpnuts?.Divisions?.lookuptypeId}
+              lookups={lookups}
+              lookupsTypes={lookupsTypes}
+              value={drawerIpnuts?.Divisions?.Parentlookupid}
+              parentLabel={drawerIpnuts?.Divisions?.Parentlookup}
+              disabled={isDisable}
+              required={lookupTypeRequiresParent(
+                lookupsTypes,
+                drawerIpnuts?.Divisions?.lookuptypeId,
+              )}
+              hasError={!!errors?.Divisions?.Parentlookupid}
+              onChange={(payload) =>
+                handleParentLookupChange("Divisions", payload)
+              }
+            />
           </Row>
 
           <Checkbox
@@ -7107,7 +7149,7 @@ function Configuratin() {
               </div>
             </div>
             <Table
-              pagination={{ pageSize: 10 }}
+              pagination={{ pageSize: 500 }}
               columns={columnDivisions}
               dataSource={filteredRegions}
               loading={lookupsloading}
@@ -7232,44 +7274,36 @@ function Configuratin() {
                   disabled={isDisable}
                 />
               </Col>
-              <Col span={12}>
-                <div style={{ display: "flex", gap: "8px" }}>
-                  {/* Region Select */}
-                  <div style={{ flex: 1 }}>
-                    <CustomSelect
-                      label="Branch"
-                      placeholder="Select Branch"
-                      options={branchOptions}
-                      isIDs={true}
-                      disabled={isDisable}
-                      required
-                      hasError={!!errors?.Station?.Parentlookupid}
-                      value={drawerIpnuts?.Station?.Parentlookupid}
-                      onChange={(e) =>
-                        drawrInptChng(
-                          "Station",
-                          "Parentlookupid",
-                          e.target.value,
-                        )
-                      }
-                    />
-                  </div>
+            </Row>
 
-                  {/* Button with fake label for alignment */}
-                  <div style={{ display: "flex", flexDirection: "column" }}>
-                    {/* empty label space to match CustomSelect */}
-                    <label style={{ height: 20, visibility: "hidden" }}>
-                      label
-                    </label>
-                    <Button
-                      className="butn primary-btn detail-btn"
-                      style={{ height: 40 }}
-                      onClick={() => openCloseDrawerFtn("Districts")}
-                    >
-                      +
-                    </Button>
-                  </div>
-                </div>
+            <Row gutter={24} align="bottom">
+              <ParentLookupSelect
+                drawerKey="Station"
+                lookuptypeId={drawerIpnuts?.Station?.lookuptypeId}
+                lookups={lookups}
+                lookupsTypes={lookupsTypes}
+                value={drawerIpnuts?.Station?.Parentlookupid}
+                parentLabel={drawerIpnuts?.Station?.Parentlookup}
+                disabled={isDisable}
+                required={lookupTypeRequiresParent(
+                  lookupsTypes,
+                  drawerIpnuts?.Station?.lookuptypeId,
+                )}
+                hasError={!!errors?.Station?.Parentlookupid}
+                span={12}
+                onChange={(payload) => handleParentLookupChange("Station", payload)}
+              />
+              <Col span={4}>
+                <label style={{ height: 20, visibility: "hidden" }}>
+                  label
+                </label>
+                <Button
+                  className="butn primary-btn detail-btn"
+                  style={{ height: 40 }}
+                  onClick={() => openCloseDrawerFtn("Districts")}
+                >
+                  +
+                </Button>
               </Col>
             </Row>
 
@@ -7283,6 +7317,21 @@ function Configuratin() {
                   }
                 >
                   Active
+                </Checkbox>
+              </Col>
+              <Col span={12}>
+                <Checkbox
+                  disabled={isDisable}
+                  checked={!!drawerIpnuts?.Station?.processSalaryDeduction}
+                  onChange={(e) =>
+                    drawrInptChng(
+                      "Station",
+                      "processSalaryDeduction",
+                      e.target.checked,
+                    )
+                  }
+                >
+                  Process Salary Deduction
                 </Checkbox>
               </Col>
             </Row>
@@ -7528,40 +7577,33 @@ function Configuratin() {
                   disabled={isDisable}
                 />
               </Col>
-              <Col span={12}>
-                <div style={{ display: "flex", gap: "8px" }}>
-                  {/* Region Select */}
-                  <div style={{ flex: 1 }}>
-                    <CustomSelect
-                      label="Region"
-                      placeholder="Select Region"
-                      options={regionOptions}
-                      isIDs={true}
-                      disabled={isDisable}
-                      required
-                      hasError={!!errors?.Station?.Parentlookupid}
-                      value={drawerIpnuts?.Station?.Parentlookupid}
-                      onChange={(val) =>
-                        drawrInptChng("Station", "Parentlookupid", val.target.value)
-                      }
-                    />
-                  </div>
-
-                  {/* Button with fake label for alignment */}
-                  <div style={{ display: "flex", flexDirection: "column" }}>
-                    {/* empty label space to match CustomSelect */}
-                    <label style={{ height: 20, visibility: "hidden" }}>
-                      label
-                    </label>
-                    <Button
-                      className="butn primary-btn detail-btn"
-                      style={{ height: 40 }}
-                      onClick={() => openCloseDrawerFtn("DivisionsForDistrict")}
-                    >
-                      +
-                    </Button>
-                  </div>
-                </div>
+              <ParentLookupSelect
+                drawerKey="Station"
+                lookuptypeId={drawerIpnuts?.Station?.lookuptypeId}
+                lookups={lookups}
+                lookupsTypes={lookupsTypes}
+                value={drawerIpnuts?.Station?.Parentlookupid}
+                parentLabel={drawerIpnuts?.Station?.Parentlookup}
+                disabled={isDisable}
+                required={lookupTypeRequiresParent(
+                  lookupsTypes,
+                  drawerIpnuts?.Station?.lookuptypeId,
+                )}
+                hasError={!!errors?.Station?.Parentlookupid}
+                span={12}
+                onChange={(payload) => handleParentLookupChange("Station", payload)}
+              />
+              <Col span={4}>
+                <label style={{ height: 20, visibility: "hidden" }}>
+                  label
+                </label>
+                <Button
+                  className="butn primary-btn detail-btn"
+                  style={{ height: 40 }}
+                  onClick={() => openCloseDrawerFtn("DivisionsForDistrict")}
+                >
+                  +
+                </Button>
               </Col>
             </Row>
 
@@ -7760,22 +7802,32 @@ function Configuratin() {
         }}
         isEdit={isUpdateRec?.LookupType}
         update={async () => {
-          await updateFtn("/lookuptype", drawerIpnuts?.LookupType, () =>
-            resetCounteries("LookupType"),
+          if (!validateForm("LookupType")) return;
+          await updateFtn(
+            "/lookuptype",
+            drawerIpnuts?.LookupType,
+            () => {
+              resetCounteries("LookupType");
+              refreshLookupTypes();
+            },
           );
-          dispatch(getLookupTypes());
           IsUpdateFtn("LookupType", false);
         }}
         add={async () => {
+          if (!validateForm("LookupType")) return;
           await insertDataFtn(
             `/lookuptype`,
-            { ...drawerIpnuts?.LookupType, userid: "67f3f9d812b014a0a7a94081" },
+            {
+              ...drawerIpnuts?.LookupType,
+              userid: "67f3f9d812b014a0a7a94081",
+            },
             "Data inserted successfully",
             "Data did not insert",
-            () =>
-              resetCounteries("Lookup Type", () => dispatch(getLookupTypes())),
+            () => {
+              resetCounteries("Lookup Type");
+              refreshLookupTypes();
+            },
           );
-          dispatch(getLookupTypes());
         }}
       //   onChange={handlePageChange}
       // total={lookupsTypes?.length}
@@ -7827,6 +7879,17 @@ function Configuratin() {
                 hasError={!!errors?.LookupType?.DisplayName}
               />
             </Col>
+            <ParentLookupTypeSelect
+              lookupsTypes={lookupsTypes}
+              value={drawerIpnuts?.LookupType?.ParentlookuptypeId}
+              parentLabel={drawerIpnuts?.LookupType?.Parentlookuptype}
+              excludeTypeId={
+                drawerIpnuts?.LookupType?._id || drawerIpnuts?.LookupType?.id
+              }
+              excludeTypeName={drawerIpnuts?.LookupType?.lookuptype}
+              hasError={!!errors?.LookupType?.ParentlookuptypeId}
+              onChange={handleParentLookupTypeChange}
+            />
           </Row>
 
           <Row gutter={24} className="mt-3">
@@ -8068,12 +8131,23 @@ function Configuratin() {
                 isSimple={true}
                 required
                 onChange={(value) => {
-                  drawrInptChng(
-                    "Lookup",
-                    "lookuptypeId",
-                    String(value.target.value),
+                  const nextTypeId = String(value.target.value);
+                  const isWorkLoc = isWorkLocationLookupType(
+                    nextTypeId,
+                    lookupsTypes,
                   );
-                  // drawrInptChng("Lookup", "lookuptypeId", String(value));
+                  setdrawerIpnuts((prev) => ({
+                    ...prev,
+                    Lookup: {
+                      ...(prev.Lookup || {}),
+                      lookuptypeId: nextTypeId,
+                      Parentlookupid: null,
+                      Parentlookup: "",
+                      ...(isWorkLoc
+                        ? {}
+                        : { processSalaryDeduction: false }),
+                    },
+                  }));
                 }}
                 hasError={!!errors?.Lookup?.lookuptypeId}
               />
@@ -8125,27 +8199,21 @@ function Configuratin() {
                 hasError={!!errors?.Lookup?.DisplayName}
               />
             </Col>
-            <Col span={12}>
-              <CustomSelect
-                label="Parent Lookup"
-                name="Parentlookupid"
-                isIDs={true}
-                value={drawerIpnuts?.Lookup?.Parentlookupid || ""}
-                options={transformedData}
-                isSimple={true}
-                disabled={isDisable}
-                // required
-                onChange={(value) => {
-                  drawrInptChng(
-                    "Lookup",
-                    "Parentlookupid",
-                    String(value.target.value),
-                  );
-                  // drawrInptChng("Lookup", "lookuptypeId", String(value));
-                }}
-              // hasError={!!errors?.Lookup?.lookuptypeId}
-              />
-            </Col>
+            <ParentLookupSelect
+              drawerKey="Lookup"
+              lookuptypeId={drawerIpnuts?.Lookup?.lookuptypeId}
+              lookups={lookups}
+              lookupsTypes={lookupsTypes}
+              value={drawerIpnuts?.Lookup?.Parentlookupid}
+              parentLabel={drawerIpnuts?.Lookup?.Parentlookup}
+              disabled={isDisable}
+              required={lookupTypeRequiresParent(
+                lookupsTypes,
+                drawerIpnuts?.Lookup?.lookuptypeId,
+              )}
+              hasError={!!errors?.Lookup?.Parentlookupid}
+              onChange={(payload) => handleParentLookupChange("Lookup", payload)}
+            />
           </Row>
 
           <Row gutter={24} className="">
@@ -8161,6 +8229,27 @@ function Configuratin() {
                 Active
               </Checkbox>
             </Col>
+            {isWorkLocationLookupType(
+              drawerIpnuts?.Lookup?.lookuptypeId,
+              lookupsTypes,
+            ) ? (
+              <Col span={12}>
+                <Checkbox
+                  disabled={isDisable}
+                  checked={!!drawerIpnuts?.Lookup?.processSalaryDeduction}
+                  onChange={(e) =>
+                    drawrInptChng(
+                      "Lookup",
+                      "processSalaryDeduction",
+                      e.target.checked,
+                    )
+                  }
+                  style={{ marginTop: "0px" }}
+                >
+                  Process Salary Deduction
+                </Checkbox>
+              </Col>
+            ) : null}
           </Row>
 
           <div className="mt-4 config-tbl-container">
@@ -8191,6 +8280,190 @@ function Configuratin() {
               }
               rowSelection={{ type: selectionType, ...rowSelection }}
               scroll={{ y: 270 }}
+              bordered
+            />
+          </div>
+        </div>
+      </MyDrawer>
+      <MyDrawer
+        title={activeStandardLookupType?.lookuptype || "Lookup"}
+        open={drawerOpen?.StandardLookup}
+        isPagination={true}
+        isEdit={isUpdateRec?.StandardLookup}
+        onClose={() => {
+          setActiveStandardLookupType(null);
+          openCloseDrawerFtn("StandardLookup");
+          IsUpdateFtn("StandardLookup", false);
+        }}
+        add={async () => {
+          if (!validateForm("StandardLookup")) return;
+          await insertDataFtn(
+            `/lookup`,
+            drawerIpnuts?.StandardLookup,
+            "Data inserted successfully",
+            "Data did not insert",
+            () =>
+              resetCounteries("StandardLookup", () => dispatch(getAllLookups())),
+          );
+          dispatch(getAllLookups());
+        }}
+        update={async () => {
+          if (!validateForm("StandardLookup")) return;
+          await updateFtn("/lookup", drawerIpnuts?.StandardLookup, () =>
+            resetCounteries("StandardLookup", () => dispatch(getAllLookups())),
+          );
+          dispatch(getAllLookups());
+          IsUpdateFtn("StandardLookup", false);
+        }}
+      >
+        <div className="drawer-main-cntainer p-4 me-2 ms-2">
+          <Row>
+            <Col span={24}>
+              <CustomSelect
+                label="Type:"
+                name="lookuptypeId"
+                value={
+                  getLookupTypeFieldPropsForRecord(
+                    activeStandardLookupType,
+                    drawerIpnuts?.StandardLookup?.lookuptypeId,
+                  ).value
+                }
+                options={
+                  getLookupTypeFieldPropsForRecord(
+                    activeStandardLookupType,
+                    drawerIpnuts?.StandardLookup?.lookuptypeId,
+                  ).options
+                }
+                isSimple={true}
+                disabled={true}
+                required
+                hasError={!!errors?.StandardLookup?.lookuptypeId}
+              />
+            </Col>
+          </Row>
+
+          <Row gutter={24}>
+            <Col span={12}>
+              <MyInput
+                label="Code:"
+                name="code"
+                value={drawerIpnuts?.StandardLookup?.code || ""}
+                onChange={(e) =>
+                  drawrInptChng("StandardLookup", "code", e.target.value)
+                }
+                placeholder="Enter code"
+                disabled={isDisable}
+                required
+                hasError={!!errors?.StandardLookup?.code}
+              />
+            </Col>
+            <Col span={12}>
+              <MyInput
+                label={`${activeStandardLookupType?.lookuptype || "Lookup"} Name:`}
+                name="lookupname"
+                value={drawerIpnuts?.StandardLookup?.lookupname || ""}
+                onChange={(e) =>
+                  drawrInptChng("StandardLookup", "lookupname", e.target.value)
+                }
+                placeholder={`Enter ${activeStandardLookupType?.lookuptype || "lookup"} name`}
+                disabled={isDisable}
+                required
+                hasError={!!errors?.StandardLookup?.lookupname}
+              />
+            </Col>
+          </Row>
+
+          <Row gutter={24}>
+            <Col span={12}>
+              <MyInput
+                label="Display Name:"
+                name="DisplayName"
+                value={drawerIpnuts?.StandardLookup?.DisplayName || ""}
+                onChange={(e) =>
+                  drawrInptChng("StandardLookup", "DisplayName", e.target.value)
+                }
+                placeholder="Enter display name"
+                disabled={isDisable}
+                hasError={!!errors?.StandardLookup?.DisplayName}
+              />
+            </Col>
+            <ParentLookupSelect
+              drawerKey="StandardLookup"
+              lookuptypeId={
+                activeStandardLookupType?._id ||
+                drawerIpnuts?.StandardLookup?.lookuptypeId
+              }
+              lookups={lookups}
+              lookupsTypes={lookupsTypes}
+              value={drawerIpnuts?.StandardLookup?.Parentlookupid}
+              parentLabel={drawerIpnuts?.StandardLookup?.Parentlookup}
+              disabled={isDisable}
+              required={lookupTypeRequiresParent(
+                lookupsTypes,
+                activeStandardLookupType?._id ||
+                  drawerIpnuts?.StandardLookup?.lookuptypeId,
+              )}
+              hasError={!!errors?.StandardLookup?.Parentlookupid}
+              onChange={(payload) =>
+                handleParentLookupChange("StandardLookup", payload)
+              }
+            />
+          </Row>
+
+          <Row gutter={24}>
+            <Col span={12}>
+              <Checkbox
+                disabled={isDisable}
+                onChange={(e) =>
+                  drawrInptChng("StandardLookup", "isactive", e.target.checked)
+                }
+                checked={drawerIpnuts?.StandardLookup?.isactive}
+                style={{ marginTop: "26px" }}
+              >
+                Active
+              </Checkbox>
+            </Col>
+            {isWorkLocationLookupType(activeStandardLookupType) ? (
+              <Col span={12}>
+                <Checkbox
+                  disabled={isDisable}
+                  checked={!!drawerIpnuts?.StandardLookup?.processSalaryDeduction}
+                  onChange={(e) =>
+                    drawrInptChng(
+                      "StandardLookup",
+                      "processSalaryDeduction",
+                      e.target.checked,
+                    )
+                  }
+                  style={{ marginTop: "26px" }}
+                >
+                  Process Salary Deduction
+                </Checkbox>
+              </Col>
+            ) : null}
+          </Row>
+
+          <div className="mt-4 config-tbl-container">
+            <h6 className="mb-3 text-primary">
+              Existing {activeStandardLookupType?.lookuptype || "Lookups"}
+            </h6>
+            <Table
+              pagination={false}
+              columns={columnStandardLookup}
+              dataSource={standardLookupTableData}
+              loading={lookupsloading}
+              className="drawer-tbl"
+              size="small"
+              rowKey={(record, index) =>
+                record._id || record.id || record.key || index
+              }
+              rowClassName={(record, index) =>
+                index % 2 !== 0 ? "odd-row" : "even-row"
+              }
+              rowSelection={{
+                type: selectionType,
+                ...rowSelection,
+              }}
               bordered
             />
           </div>
@@ -8439,6 +8712,24 @@ function Configuratin() {
                 hasError={!!errors?.Gender?.DisplayName}
               />
             </Col>
+            <ParentLookupSelect
+              drawerKey="Gender"
+              lookuptypeId={drawerIpnuts?.Gender?.lookuptypeId}
+              lookups={lookups}
+              lookupsTypes={lookupsTypes}
+              value={drawerIpnuts?.Gender?.Parentlookupid}
+              parentLabel={drawerIpnuts?.Gender?.Parentlookup}
+              disabled={isDisable}
+              required={lookupTypeRequiresParent(
+                lookupsTypes,
+                drawerIpnuts?.Gender?.lookuptypeId,
+              )}
+              hasError={!!errors?.Gender?.Parentlookupid}
+              onChange={(payload) => handleParentLookupChange("Gender", payload)}
+            />
+          </Row>
+
+          <Row gutter={24}>
             <Col span={12}>
               <Checkbox
                 disabled={isDisable}
@@ -8515,8 +8806,8 @@ function Configuratin() {
               <CustomSelect
                 label="Type:"
                 name="lookuptypeId"
-                value="City"
-                options={[{ label: "City", value: "City" }]}
+                value={lookupTypeSelectProps("Cities").value}
+                options={lookupTypeSelectProps("Cities").options}
                 isSimple={true}
                 disabled={true}
                 required
@@ -8572,21 +8863,21 @@ function Configuratin() {
                 hasError={!!errors?.Cities?.DisplayName}
               />
             </Col>
-            <Col span={12}>
-              <CustomSelect
-                label="County:"
-                name="Parentlookupid"
-                value={drawerIpnuts?.Cities?.Parentlookupid || ""}
-                options={selectLokups?.Counteries || []}
-                onChange={(val) =>
-                  drawrInptChng("Cities", "Parentlookupid", val)
-                }
-                isSimple={true}
-                disabled={isDisable}
-                required
-                hasError={!!errors?.Cities?.Parentlookupid}
-              />
-            </Col>
+            <ParentLookupSelect
+              drawerKey="Cities"
+              lookuptypeId={drawerIpnuts?.Cities?.lookuptypeId}
+              lookups={lookups}
+              lookupsTypes={lookupsTypes}
+              value={drawerIpnuts?.Cities?.Parentlookupid}
+              parentLabel={drawerIpnuts?.Cities?.Parentlookup}
+              disabled={isDisable}
+              required={lookupTypeRequiresParent(
+                lookupsTypes,
+                drawerIpnuts?.Cities?.lookuptypeId,
+              )}
+              hasError={!!errors?.Cities?.Parentlookupid}
+              onChange={(payload) => handleParentLookupChange("Cities", payload)}
+            />
           </Row>
 
           {/* Active */}
@@ -8667,8 +8958,8 @@ function Configuratin() {
               <CustomSelect
                 label="Type:"
                 name="lookuptypeId"
-                value="Title"
-                options={[{ label: "Title", value: "Title" }]}
+                value={lookupTypeSelectProps("Title").value}
+                options={lookupTypeSelectProps("Title").options}
                 isSimple={true}
                 disabled={true}
                 required
@@ -8721,6 +9012,24 @@ function Configuratin() {
                 hasError={!!errors?.Title?.DisplayName}
               />
             </Col>
+            <ParentLookupSelect
+              drawerKey="Title"
+              lookuptypeId={drawerIpnuts?.Title?.lookuptypeId}
+              lookups={lookups}
+              lookupsTypes={lookupsTypes}
+              value={drawerIpnuts?.Title?.Parentlookupid}
+              parentLabel={drawerIpnuts?.Title?.Parentlookup}
+              disabled={isDisable}
+              required={lookupTypeRequiresParent(
+                lookupsTypes,
+                drawerIpnuts?.Title?.lookuptypeId,
+              )}
+              hasError={!!errors?.Title?.Parentlookupid}
+              onChange={(payload) => handleParentLookupChange("Title", payload)}
+            />
+          </Row>
+
+          <Row gutter={24}>
             <Col span={12}>
               <Checkbox
                 disabled={isDisable}
@@ -8831,7 +9140,6 @@ function Configuratin() {
               </Col>
             </Row>
 
-            {/* Row 3: Display Name + Active */}
             <Row gutter={24}>
               <Col span={12}>
                 <MyInput
@@ -8843,22 +9151,35 @@ function Configuratin() {
                   }
                 />
               </Col>
+              <ParentLookupSelect
+                drawerKey="RosterType"
+                lookuptypeId={drawerIpnuts?.RosterType?.lookuptypeId}
+                lookups={lookups}
+                lookupsTypes={lookupsTypes}
+                value={drawerIpnuts?.RosterType?.Parentlookupid}
+                parentLabel={drawerIpnuts?.RosterType?.Parentlookup}
+                disabled={isDisable}
+                required={lookupTypeRequiresParent(
+                  lookupsTypes,
+                  drawerIpnuts?.RosterType?.lookuptypeId,
+                )}
+                hasError={!!errors?.RosterType?.Parentlookupid}
+                onChange={(payload) =>
+                  handleParentLookupChange("RosterType", payload)
+                }
+              />
+            </Row>
+            <Row gutter={24}>
               <Col span={12}>
-                <div style={{ display: "flex", flexDirection: "column" }}>
-                  {/* fake label for alignment */}
-                  <label style={{ height: 24, visibility: "hidden" }}>
-                    label
-                  </label>
-                  <Checkbox
-                    disabled={isDisable}
-                    checked={drawerIpnuts?.RosterType?.isactive}
-                    onChange={(e) =>
-                      drawrInptChng("RosterType", "isactive", e.target.checked)
-                    }
-                  >
-                    Active
-                  </Checkbox>
-                </div>
+                <Checkbox
+                  disabled={isDisable}
+                  checked={drawerIpnuts?.RosterType?.isactive}
+                  onChange={(e) =>
+                    drawrInptChng("RosterType", "isactive", e.target.checked)
+                  }
+                >
+                  Active
+                </Checkbox>
               </Col>
             </Row>
           </div>
@@ -8976,6 +9297,26 @@ function Configuratin() {
                 disabled={isDisable}
               />
             </Col>
+            <ParentLookupSelect
+              drawerKey="MaritalStatus"
+              lookuptypeId={drawerIpnuts?.MaritalStatus?.lookuptypeId}
+              lookups={lookups}
+              lookupsTypes={lookupsTypes}
+              value={drawerIpnuts?.MaritalStatus?.Parentlookupid}
+              parentLabel={drawerIpnuts?.MaritalStatus?.Parentlookup}
+              disabled={isDisable}
+              required={lookupTypeRequiresParent(
+                lookupsTypes,
+                drawerIpnuts?.MaritalStatus?.lookuptypeId,
+              )}
+              hasError={!!errors?.MaritalStatus?.Parentlookupid}
+              onChange={(payload) =>
+                handleParentLookupChange("MaritalStatus", payload)
+              }
+            />
+          </Row>
+
+          <Row gutter={24}>
             <Col span={12}>
               <Checkbox
                 disabled={isDisable}
@@ -9052,8 +9393,8 @@ function Configuratin() {
               <CustomSelect
                 label="Type:"
                 name="lookuptypeId"
-                value="Project Types"
-                options={[{ label: "Project Types", value: "Project Types" }]}
+                value={lookupTypeSelectProps("ProjectTypes").value}
+                options={lookupTypeSelectProps("ProjectTypes").options}
                 isSimple={true}
                 disabled={true}
                 required
@@ -9109,6 +9450,24 @@ function Configuratin() {
                 hasError={!!errors?.ProjectTypes?.DisplayName}
               />
             </Col>
+            <ParentLookupSelect
+              drawerKey="ProjectTypes"
+              lookuptypeId={drawerIpnuts?.ProjectTypes?.lookuptypeId}
+              lookups={lookups}
+              lookupsTypes={lookupsTypes}
+              value={drawerIpnuts?.ProjectTypes?.Parentlookupid}
+              parentLabel={drawerIpnuts?.ProjectTypes?.Parentlookup}
+              disabled={isDisable}
+              required={lookupTypeRequiresParent(
+                lookupsTypes,
+                drawerIpnuts?.ProjectTypes?.lookuptypeId,
+              )}
+              hasError={!!errors?.ProjectTypes?.Parentlookupid}
+              onChange={(payload) => handleParentLookupChange("ProjectTypes", payload)}
+            />
+          </Row>
+
+          <Row gutter={24}>
             <Col span={12}>
               <Checkbox
                 disabled={isDisable}
@@ -9186,15 +9545,13 @@ function Configuratin() {
             <Col span={24}>
               <CustomSelect
                 label="Lookup Type"
+                name="lookuptypeId"
+                value={lookupTypeSelectProps("Trainings").value}
+                options={lookupTypeSelectProps("Trainings").options}
                 isSimple={true}
-                placeholder="Trainings"
                 disabled={true}
-                options={lookupsType}
-                value={drawerIpnuts?.Trainings?.Parentlookupid}
-                onChange={(value) => {
-                  drawrInptChng("Trainings", "Parentlookupid", String(value));
-                }}
-                hasError={!!errors?.Trainings?.Parentlookupid}
+                required
+                hasError={!!errors?.Trainings?.lookuptypeId}
               />
             </Col>
 
@@ -9239,8 +9596,26 @@ function Configuratin() {
                 hasError={!!errors?.Trainings?.DisplayName}
               />
             </Col>
+            <ParentLookupSelect
+              drawerKey="Trainings"
+              lookuptypeId={drawerIpnuts?.Trainings?.lookuptypeId}
+              lookups={lookups}
+              lookupsTypes={lookupsTypes}
+              value={drawerIpnuts?.Trainings?.Parentlookupid}
+              parentLabel={drawerIpnuts?.Trainings?.Parentlookup}
+              disabled={isDisable}
+              required={lookupTypeRequiresParent(
+                lookupsTypes,
+                drawerIpnuts?.Trainings?.lookuptypeId,
+              )}
+              hasError={!!errors?.Trainings?.Parentlookupid}
+              onChange={(payload) =>
+                handleParentLookupChange("Trainings", payload)
+              }
+            />
+          </Row>
 
-            {/* Active Checkbox - half width */}
+          <Row gutter={24}>
             <Col span={12} style={{ marginTop: "30px" }}>
               <Checkbox
                 disabled={isDisable}
@@ -9316,8 +9691,8 @@ function Configuratin() {
               <CustomSelect
                 label="Lookup Type"
                 name="lookuptypeId"
-                value="Document Type"
-                options={[{ label: "Document Type", value: "Document Type" }]}
+                value={lookupTypeSelectProps("DocumentType").value}
+                options={lookupTypeSelectProps("DocumentType").options}
                 isSimple={true}
                 disabled={true}
                 required
@@ -9373,6 +9748,24 @@ function Configuratin() {
                 hasError={!!errors?.DocumentType?.DisplayName}
               />
             </Col>
+            <ParentLookupSelect
+              drawerKey="DocumentType"
+              lookuptypeId={drawerIpnuts?.DocumentType?.lookuptypeId}
+              lookups={lookups}
+              lookupsTypes={lookupsTypes}
+              value={drawerIpnuts?.DocumentType?.Parentlookupid}
+              parentLabel={drawerIpnuts?.DocumentType?.Parentlookup}
+              disabled={isDisable}
+              required={lookupTypeRequiresParent(
+                lookupsTypes,
+                drawerIpnuts?.DocumentType?.lookuptypeId,
+              )}
+              hasError={!!errors?.DocumentType?.Parentlookupid}
+              onChange={(payload) => handleParentLookupChange("DocumentType", payload)}
+            />
+          </Row>
+
+          <Row gutter={24}>
             <Col span={12}>
               <Checkbox
                 disabled={isDisable}
@@ -9448,8 +9841,8 @@ function Configuratin() {
               <CustomSelect
                 label="Lookup Type"
                 name="lookuptypeId"
-                value="Claim Type"
-                options={[{ label: "Claim Type", value: "Claim Type" }]}
+                value={lookupTypeSelectProps("ClaimType").value}
+                options={lookupTypeSelectProps("ClaimType").options}
                 isSimple={true}
                 disabled={true}
                 required
@@ -9503,6 +9896,24 @@ function Configuratin() {
                 hasError={!!errors?.ClaimType?.DisplayName}
               />
             </Col>
+            <ParentLookupSelect
+              drawerKey="ClaimType"
+              lookuptypeId={drawerIpnuts?.ClaimType?.lookuptypeId}
+              lookups={lookups}
+              lookupsTypes={lookupsTypes}
+              value={drawerIpnuts?.ClaimType?.Parentlookupid}
+              parentLabel={drawerIpnuts?.ClaimType?.Parentlookup}
+              disabled={isDisable}
+              required={lookupTypeRequiresParent(
+                lookupsTypes,
+                drawerIpnuts?.ClaimType?.lookuptypeId,
+              )}
+              hasError={!!errors?.ClaimType?.Parentlookupid}
+              onChange={(payload) => handleParentLookupChange("ClaimType", payload)}
+            />
+          </Row>
+
+          <Row gutter={24}>
             <Col span={12}>
               <Checkbox
                 disabled={isDisable}
@@ -9574,8 +9985,8 @@ function Configuratin() {
               <CustomSelect
                 label="Lookup Type"
                 name="lookuptypeId"
-                value="Schemes"
-                options={[{ label: "Schemes", value: "Schemes" }]}
+                value={lookupTypeSelectProps("Schemes").value}
+                options={lookupTypeSelectProps("Schemes").options}
                 isSimple={true}
                 disabled={true}
                 required
@@ -9629,6 +10040,24 @@ function Configuratin() {
                 hasError={!!errors?.Schemes?.DisplayName}
               />
             </Col>
+            <ParentLookupSelect
+              drawerKey="Schemes"
+              lookuptypeId={drawerIpnuts?.Schemes?.lookuptypeId}
+              lookups={lookups}
+              lookupsTypes={lookupsTypes}
+              value={drawerIpnuts?.Schemes?.Parentlookupid}
+              parentLabel={drawerIpnuts?.Schemes?.Parentlookup}
+              disabled={isDisable}
+              required={lookupTypeRequiresParent(
+                lookupsTypes,
+                drawerIpnuts?.Schemes?.lookuptypeId,
+              )}
+              hasError={!!errors?.Schemes?.Parentlookupid}
+              onChange={(payload) => handleParentLookupChange("Schemes", payload)}
+            />
+          </Row>
+
+          <Row gutter={24}>
             <Col span={12}>
               <Checkbox
                 disabled={isDisable}
@@ -9701,8 +10130,8 @@ function Configuratin() {
               <CustomSelect
                 label="Lookup Type"
                 name="lookuptypeId"
-                value="Reasons"
-                options={[{ label: "Reasons", value: "Reasons" }]}
+                value={lookupTypeSelectProps("Reasons").value}
+                options={lookupTypeSelectProps("Reasons").options}
                 isSimple={true}
                 disabled={true}
                 required
@@ -9756,6 +10185,24 @@ function Configuratin() {
                 hasError={!!errors?.Reasons?.DisplayName}
               />
             </Col>
+            <ParentLookupSelect
+              drawerKey="Reasons"
+              lookuptypeId={drawerIpnuts?.Reasons?.lookuptypeId}
+              lookups={lookups}
+              lookupsTypes={lookupsTypes}
+              value={drawerIpnuts?.Reasons?.Parentlookupid}
+              parentLabel={drawerIpnuts?.Reasons?.Parentlookup}
+              disabled={isDisable}
+              required={lookupTypeRequiresParent(
+                lookupsTypes,
+                drawerIpnuts?.Reasons?.lookuptypeId,
+              )}
+              hasError={!!errors?.Reasons?.Parentlookupid}
+              onChange={(payload) => handleParentLookupChange("Reasons", payload)}
+            />
+          </Row>
+
+          <Row gutter={24}>
             <Col span={12}>
               <Checkbox
                 disabled={isDisable}
@@ -9936,7 +10383,6 @@ function Configuratin() {
               </Col>
             </Row>
 
-            {/* Row 3: Display Name + Active */}
             <Row gutter={24}>
               <Col span={12}>
                 <MyInput
@@ -9948,23 +10394,33 @@ function Configuratin() {
                   }
                 />
               </Col>
-
+              <ParentLookupSelect
+                drawerKey="Duties"
+                lookuptypeId={drawerIpnuts?.Duties?.lookuptypeId}
+                lookups={lookups}
+                lookupsTypes={lookupsTypes}
+                value={drawerIpnuts?.Duties?.Parentlookupid}
+                parentLabel={drawerIpnuts?.Duties?.Parentlookup}
+                disabled={isDisable}
+                required={lookupTypeRequiresParent(
+                  lookupsTypes,
+                  drawerIpnuts?.Duties?.lookuptypeId,
+                )}
+                hasError={!!errors?.Duties?.Parentlookupid}
+                onChange={(payload) => handleParentLookupChange("Duties", payload)}
+              />
+            </Row>
+            <Row gutter={24}>
               <Col span={12}>
-                <div style={{ display: "flex", flexDirection: "column" }}>
-                  {/* Fake label space to align with MyInput label */}
-                  <label style={{ height: 24, visibility: "hidden" }}>
-                    label
-                  </label>
-                  <Checkbox
-                    disabled={isDisable}
-                    checked={drawerIpnuts?.Duties?.isactive}
-                    onChange={(e) =>
-                      drawrInptChng("Duties", "isactive", e.target.checked)
-                    }
-                  >
-                    Active
-                  </Checkbox>
-                </div>
+                <Checkbox
+                  disabled={isDisable}
+                  checked={drawerIpnuts?.Duties?.isactive}
+                  onChange={(e) =>
+                    drawrInptChng("Duties", "isactive", e.target.checked)
+                  }
+                >
+                  Active
+                </Checkbox>
               </Col>
             </Row>
           </div>
@@ -10063,7 +10519,6 @@ function Configuratin() {
               </Col>
             </Row>
 
-            {/* Row 3: Display Name + Active */}
             <Row gutter={24}>
               <Col span={12}>
                 <MyInput
@@ -10073,22 +10528,33 @@ function Configuratin() {
                   onChange={(val) => drawrInptChng("Ranks", "DisplayName", val)}
                 />
               </Col>
-
+              <ParentLookupSelect
+                drawerKey="Ranks"
+                lookuptypeId={drawerIpnuts?.Ranks?.lookuptypeId}
+                lookups={lookups}
+                lookupsTypes={lookupsTypes}
+                value={drawerIpnuts?.Ranks?.Parentlookupid}
+                parentLabel={drawerIpnuts?.Ranks?.Parentlookup}
+                disabled={isDisable}
+                required={lookupTypeRequiresParent(
+                  lookupsTypes,
+                  drawerIpnuts?.Ranks?.lookuptypeId,
+                )}
+                hasError={!!errors?.Ranks?.Parentlookupid}
+                onChange={(payload) => handleParentLookupChange("Ranks", payload)}
+              />
+            </Row>
+            <Row gutter={24}>
               <Col span={12}>
-                <div className="drawer-checkbox-wrapper">
-                  <label className="input-label">&nbsp;</label>
-                  <div className="checkbox-container">
-                    <Checkbox
-                      disabled={isDisable}
-                      onChange={(e) =>
-                        drawrInptChng("Ranks", "isactive", e.target.checked)
-                      }
-                      checked={drawerIpnuts?.Ranks?.isactive}
-                    >
-                      Active
-                    </Checkbox>
-                  </div>
-                </div>
+                <Checkbox
+                  disabled={isDisable}
+                  onChange={(e) =>
+                    drawrInptChng("Ranks", "isactive", e.target.checked)
+                  }
+                  checked={drawerIpnuts?.Ranks?.isactive}
+                >
+                  Active
+                </Checkbox>
               </Col>
             </Row>
           </div>
@@ -10155,8 +10621,8 @@ function Configuratin() {
               <CustomSelect
                 label="Type:"
                 name="lookuptypeId"
-                value="Boards"
-                options={[{ label: "Boards", value: "Boards" }]}
+                value={lookupTypeSelectProps("Boards").value}
+                options={lookupTypeSelectProps("Boards").options}
                 isSimple={true}
                 disabled={true}
                 required
@@ -10212,6 +10678,24 @@ function Configuratin() {
                 hasError={!!errors?.Boards?.DisplayName}
               />
             </Col>
+            <ParentLookupSelect
+              drawerKey="Boards"
+              lookuptypeId={drawerIpnuts?.Boards?.lookuptypeId}
+              lookups={lookups}
+              lookupsTypes={lookupsTypes}
+              value={drawerIpnuts?.Boards?.Parentlookupid}
+              parentLabel={drawerIpnuts?.Boards?.Parentlookup}
+              disabled={isDisable}
+              required={lookupTypeRequiresParent(
+                lookupsTypes,
+                drawerIpnuts?.Boards?.lookuptypeId,
+              )}
+              hasError={!!errors?.Boards?.Parentlookupid}
+              onChange={(payload) => handleParentLookupChange("Boards", payload)}
+            />
+          </Row>
+
+          <Row gutter={24}>
             <Col span={12}>
               <Checkbox
                 disabled={isDisable}
@@ -10288,8 +10772,8 @@ function Configuratin() {
               <CustomSelect
                 label="Type:"
                 name="lookuptypeId"
-                value="Councils"
-                options={[{ label: "Councils", value: "Councils" }]}
+                value={lookupTypeSelectProps("Councils").value}
+                options={lookupTypeSelectProps("Councils").options}
                 isSimple={true}
                 disabled={true}
                 required
@@ -10345,6 +10829,24 @@ function Configuratin() {
                 hasError={!!errors?.Councils?.DisplayName}
               />
             </Col>
+            <ParentLookupSelect
+              drawerKey="Councils"
+              lookuptypeId={drawerIpnuts?.Councils?.lookuptypeId}
+              lookups={lookups}
+              lookupsTypes={lookupsTypes}
+              value={drawerIpnuts?.Councils?.Parentlookupid}
+              parentLabel={drawerIpnuts?.Councils?.Parentlookup}
+              disabled={isDisable}
+              required={lookupTypeRequiresParent(
+                lookupsTypes,
+                drawerIpnuts?.Councils?.lookuptypeId,
+              )}
+              hasError={!!errors?.Councils?.Parentlookupid}
+              onChange={(payload) => handleParentLookupChange("Councils", payload)}
+            />
+          </Row>
+
+          <Row gutter={24}>
             <Col span={12}>
               <Checkbox
                 disabled={isDisable}
@@ -10426,13 +10928,8 @@ function Configuratin() {
               <CustomSelect
                 label="Lookup Type"
                 name="lookuptypeId"
-                value="Correspondence Type"
-                options={[
-                  {
-                    label: "Correspondence Type",
-                    value: "Correspondence Type",
-                  },
-                ]}
+                value={lookupTypeSelectProps("CorrespondenceType").value}
+                options={lookupTypeSelectProps("CorrespondenceType").options}
                 isSimple={true}
                 disabled={true}
                 required
@@ -10496,6 +10993,26 @@ function Configuratin() {
                 hasError={!!errors?.CorrespondenceType?.DisplayName}
               />
             </Col>
+            <ParentLookupSelect
+              drawerKey="CorrespondenceType"
+              lookuptypeId={drawerIpnuts?.CorrespondenceType?.lookuptypeId}
+              lookups={lookups}
+              lookupsTypes={lookupsTypes}
+              value={drawerIpnuts?.CorrespondenceType?.Parentlookupid}
+              parentLabel={drawerIpnuts?.CorrespondenceType?.Parentlookup}
+              disabled={isDisable}
+              required={lookupTypeRequiresParent(
+                lookupsTypes,
+                drawerIpnuts?.CorrespondenceType?.lookuptypeId,
+              )}
+              hasError={!!errors?.CorrespondenceType?.Parentlookupid}
+              onChange={(payload) =>
+                handleParentLookupChange("CorrespondenceType", payload)
+              }
+            />
+          </Row>
+
+          <Row gutter={24}>
             <Col span={12}>
               <Checkbox
                 disabled={isDisable}
@@ -10579,10 +11096,8 @@ function Configuratin() {
               <CustomSelect
                 label="Type:"
                 name="lookuptypeId"
-                value="Spoken Languages"
-                options={[
-                  { label: "Spoken Languages", value: "Spoken Languages" },
-                ]}
+                value={lookupTypeSelectProps("SpokenLanguages").value}
+                options={lookupTypeSelectProps("SpokenLanguages").options}
                 isSimple={true}
                 disabled={true}
                 required
@@ -10642,6 +11157,24 @@ function Configuratin() {
                 hasError={!!errors?.SpokenLanguages?.DisplayName}
               />
             </Col>
+            <ParentLookupSelect
+              drawerKey="SpokenLanguages"
+              lookuptypeId={drawerIpnuts?.SpokenLanguages?.lookuptypeId}
+              lookups={lookups}
+              lookupsTypes={lookupsTypes}
+              value={drawerIpnuts?.SpokenLanguages?.Parentlookupid}
+              parentLabel={drawerIpnuts?.SpokenLanguages?.Parentlookup}
+              disabled={isDisable}
+              required={lookupTypeRequiresParent(
+                lookupsTypes,
+                drawerIpnuts?.SpokenLanguages?.lookuptypeId,
+              )}
+              hasError={!!errors?.SpokenLanguages?.Parentlookupid}
+              onChange={(payload) => handleParentLookupChange("SpokenLanguages", payload)}
+            />
+          </Row>
+
+          <Row gutter={24}>
             <Col span={12}>
               <Checkbox
                 disabled={isDisable}
@@ -11140,7 +11673,6 @@ function Configuratin() {
               </Col>
             </Row>
 
-            {/* Row 3: Display Name + Active */}
             <Row gutter={24}>
               <Col span={12}>
                 <MyInput
@@ -11152,22 +11684,33 @@ function Configuratin() {
                   }
                 />
               </Col>
-
+              <ParentLookupSelect
+                drawerKey="Sections"
+                lookuptypeId={drawerIpnuts?.Sections?.lookuptypeId}
+                lookups={lookups}
+                lookupsTypes={lookupsTypes}
+                value={drawerIpnuts?.Sections?.Parentlookupid}
+                parentLabel={drawerIpnuts?.Sections?.Parentlookup}
+                disabled={isDisable}
+                required={lookupTypeRequiresParent(
+                  lookupsTypes,
+                  drawerIpnuts?.Sections?.lookuptypeId,
+                )}
+                hasError={!!errors?.Sections?.Parentlookupid}
+                onChange={(payload) => handleParentLookupChange("Sections", payload)}
+              />
+            </Row>
+            <Row gutter={24}>
               <Col span={12}>
-                <div className="drawer-checkbox-wrapper">
-                  <label className="input-label">&nbsp;</label>
-                  <div className="checkbox-container">
-                    <Checkbox
-                      disabled={isDisable}
-                      onChange={(e) =>
-                        drawrInptChng("Sections", "isactive", e.target.checked)
-                      }
-                      checked={drawerIpnuts?.Sections?.isactive}
-                    >
-                      Active
-                    </Checkbox>
-                  </div>
-                </div>
+                <Checkbox
+                  disabled={isDisable}
+                  onChange={(e) =>
+                    drawrInptChng("Sections", "isactive", e.target.checked)
+                  }
+                  checked={drawerIpnuts?.Sections?.isactive}
+                >
+                  Active
+                </Checkbox>
               </Col>
             </Row>
           </div>
@@ -11202,4 +11745,4 @@ function Configuratin() {
   );
 }
 
-export default Configuratin;
+export default Configuration;

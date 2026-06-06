@@ -1,5 +1,6 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import axios from "axios";
+import { resolveContentTemplatesApiUrl } from "../../config/contentTemplateRouting";
 
 // ✅ Async thunk to fetch all templates with token
 export const getTemplates = createAsyncThunk(
@@ -8,7 +9,7 @@ export const getTemplates = createAsyncThunk(
     try {
       const token = localStorage.getItem("token"); // get token from localStorage
 
-      const response = await axios.get(`${process.env.REACT_APP_CUMM}/templates`, {
+      const response = await axios.get(resolveContentTemplatesApiUrl(), {
         headers: {
           Authorization: `Bearer ${token}`, // pass token in header
         },

@@ -8,10 +8,15 @@ import { InteractionStatus } from "@azure/msal-browser";
 import { useDispatch, useSelector } from "react-redux";
 import { loginUser } from "../../features/AuthSlice";
 import { updateMenuLbl } from "../../features/MenuLblSlice";
+import {
+  getHomeMenuKeyFromRoles,
+  getHomeRouteFromRoles,
+} from "../../utils/roleHomeModule";
 import { generatePKCE } from "../../utils/Utilities";
 import { useAuthorization } from "../../context/AuthorizationContext";
 import { getRedirectUri } from "../../component/msft/msalConfig";
 import MyAlert from "../../component/common/MyAlert";
+import { notifyBrandingRefresh } from "../../context/TenantBrandingContext";
 import {
   UserOutlined,
   LockOutlined,
@@ -98,40 +103,10 @@ const Login = () => {
   const dispatch = useDispatch();
   const { setUserData } = useAuthorization();
 
-  // Function to set appropriate menu label based on user role
   const setMenuLabelForRole = useCallback(
     (roleCodes) => {
-      if (roleCodes.includes("SU")) {
-        // Super User - show Configuration module
-        dispatch(updateMenuLbl({ key: "Configuration", value: true }));
-      } else if (roleCodes.includes("GS") || roleCodes.includes("DGS")) {
-        // General Secretary roles - show Configuration module
-        dispatch(updateMenuLbl({ key: "Configuration", value: true }));
-      } else if (roleCodes.includes("MO") || roleCodes.includes("AMO")) {
-        // Membership Officer roles - show Subscriptions & Rewards
-        dispatch(
-          updateMenuLbl({ key: "Subscriptions & Rewards", value: true })
-        );
-      } else if (roleCodes.includes("AM") || roleCodes.includes("DAM")) {
-        // Account Manager roles - show Finance
-        dispatch(updateMenuLbl({ key: "Finance", value: true }));
-      } else if (roleCodes.includes("IRO")) {
-        // Industrial Relations Officer - show Issue Management
-        dispatch(updateMenuLbl({ key: "Issue Management", value: true }));
-      } else if (roleCodes.includes("IO")) {
-        // Correspondence Dashboard - show Correspondences module
-        dispatch(updateMenuLbl({ key: "Correspondences", value: true }));
-      } else if (roleCodes.includes("MEMBER")) {
-        // Regular member - show Subscriptions & Rewards
-        dispatch(
-          updateMenuLbl({ key: "Subscriptions & Rewards", value: true })
-        );
-      } else {
-        // Default fallback
-        dispatch(
-          updateMenuLbl({ key: "Subscriptions & Rewards", value: true })
-        );
-      }
+      const menuKey = getHomeMenuKeyFromRoles(roleCodes);
+      dispatch(updateMenuLbl({ key: menuKey, value: true }));
     },
     [dispatch]
   );
@@ -312,6 +287,7 @@ const Login = () => {
 
         // Set user data in authorization context
         await setUserData(decode, roleCodes, userPermissions);
+        notifyBrandingRefresh();
 
         // Set appropriate menu label based on user role
         setMenuLabelForRole(roleCodes);
@@ -334,19 +310,12 @@ const Login = () => {
           console.warn("⚠️ FCM permission request function not available yet");
         }
 
-        // Navigate based on user role for default login behavior
         console.log("Login Debug - roleCodes:", roleCodes);
-        if (roleCodes.includes("SU") || roleCodes.includes("ASU")) {
-          navigate("/Configuratin");
-        } else if (roleCodes.includes("IO")) {
-          navigate("/CorrespondenceDashboard");
-        } else if (roleCodes.includes("AM") || roleCodes.includes("DAM")) {
-          navigate("/onlinePayment", { state: { search: "Finance" } });
-        } else if (roleCodes.includes("MO") || roleCodes.includes("AMO")) {
-          navigate("/MembershipDashboard", { state: { search: "Subscriptions & Rewards" } });
-        } else {
-          navigate("/MembershipDashboard");
-        }
+        const homeRoute = getHomeRouteFromRoles(roleCodes);
+        const homeMenuKey = getHomeMenuKeyFromRoles(roleCodes);
+        navigate(homeRoute, {
+          state: { search: homeMenuKey === "Finance" ? "Finance" : homeMenuKey },
+        });
 
         if (data.refresh_token) {
           localStorage.setItem("refresh_token", data.refresh_token);
@@ -417,17 +386,12 @@ const Login = () => {
         return role.code || role.name || role;
       });
 
-      if (roleCodes.includes("SU")) {
-        navigate("/Configuratin");
-      } else if (roleCodes.includes("IO")) {
-        navigate("/CorrespondenceDashboard");
-      } else if (roleCodes.includes("AM") || roleCodes.includes("DAM")) {
-        navigate("/onlinePayment", { state: { search: "Finance" } });
-      } else if (roleCodes.includes("MO") || roleCodes.includes("AMO")) {
-        navigate("/MembershipDashboard", { state: { search: "Subscriptions & Rewards" } });
-      } else {
-        navigate("/MembershipDashboard");
-      }
+      setMenuLabelForRole(roleCodes);
+      const homeRoute = getHomeRouteFromRoles(roleCodes);
+      const homeMenuKey = getHomeMenuKeyFromRoles(roleCodes);
+      navigate(homeRoute, {
+        state: { search: homeMenuKey === "Finance" ? "Finance" : homeMenuKey },
+      });
     }
 
     // Add class to body to prevent scrolling
@@ -437,7 +401,7 @@ const Login = () => {
     return () => {
       document.body.classList.remove("login-page");
     };
-  }, [handleAuthRedirect, navigate]);
+  }, [handleAuthRedirect, navigate, setMenuLabelForRole]);
 
   // Step 2: Handle redirect after Microsoft login
 
@@ -509,22 +473,18 @@ const Login = () => {
         }, 300);
       }
 
-      // Navigate based on user role
-      if (roleCodes.includes("SU")) {
-        navigate("/Configuratin");
-      } else if (roleCodes.includes("IO")) {
-        navigate("/CorrespondenceDashboard");
-      } else if (roleCodes.includes("AM") || roleCodes.includes("DAM")) {
-        navigate("/onlinePayment", { state: { search: "Finance" } });
-      } else if (roleCodes.includes("MO") || roleCodes.includes("AMO")) {
-        navigate("/MembershipDashboard", { state: { search: "Subscriptions & Rewards" } });
-      } else {
-        navigate("/Summary", {
-          state: {
-            search: "Profile",
-          },
-        });
-      }
+      const homeRoute = getHomeRouteFromRoles(roleCodes);
+      const homeMenuKey = getHomeMenuKeyFromRoles(roleCodes);
+      navigate(homeRoute, {
+        state: {
+          search:
+            homeMenuKey === "Finance"
+              ? "Finance"
+              : homeMenuKey === "Subscriptions & Rewards"
+                ? "Subscriptions & Rewards"
+                : "Profile",
+        },
+      });
     }
   };
 

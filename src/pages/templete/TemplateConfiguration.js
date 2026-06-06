@@ -49,6 +49,7 @@ import {
 import { useDispatch, useSelector } from "react-redux";
 import { getBookmarks } from "../../features/templete/BookmarkActions";
 import htmlDocx from "html-docx-js/dist/html-docx";
+import { communicationServicePath } from "../../utils/communicationServiceUrl";
 
 Quill.register({ [`modules/${TableUp.moduleName}`]: TableUp }, true);
 
@@ -1073,7 +1074,7 @@ const updateTemplateAPI = async (
     let response;
     if (isEmailTemplate) {
       response = await fetch(
-        `${process.env.REACT_APP_CUMM || ""}/templates/${templateId}`,
+        communicationServicePath(`templates/${templateId}`),
         {
           method: "PUT",
           headers: {
@@ -1104,7 +1105,7 @@ const updateTemplateAPI = async (
         console.log("📝 No file update needed");
       }
       response = await fetch(
-        `${process.env.REACT_APP_CUMM || ""}/templates/${templateId}`,
+        communicationServicePath(`templates/${templateId}`),
         {
           method: "PUT",
           headers: {
@@ -1178,7 +1179,7 @@ const uploadTemplateAPI = async ({
   try {
     let response;
     if (isEmailTemplate) {
-      response = await fetch(`${process.env.REACT_APP_CUMM || ""}/templates/email`, {
+      response = await fetch(communicationServicePath("templates/email"), {
         method: "POST",
         headers: {
           Authorization: `Bearer ${token}`,
@@ -1215,7 +1216,7 @@ const uploadTemplateAPI = async ({
         type: file.type,
       });
       response = await fetch(
-        `${process.env.REACT_APP_CUMM || ""}/templates/upload`,
+        communicationServicePath("templates/upload"),
         {
           method: "POST",
           headers: {

@@ -69,6 +69,53 @@
   margin-bottom: 16px;
 }
 
+.tenant-form-drawer .color-field {
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+}
+
+.tenant-form-drawer .color-field .my-input-container {
+  flex: 1;
+}
+
+.tenant-form-drawer .color-picker-input {
+  width: 40px;
+  height: 40px;
+  padding: 2px;
+  border: 1px solid #d9d9d9;
+  border-radius: 4px;
+  cursor: pointer;
+  margin-bottom: 4px;
+}
+
+.tenant-branding-upload {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.tenant-branding-preview {
+  padding: 8px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 4px;
+  min-height: 48px;
+  display: flex;
+  align-items: center;
+}
+
+.tenant-branding-url {
+  font-size: 11px;
+  display: block;
+  max-width: 100%;
+}
+
+.tenant-branding-hint {
+  font-size: 13px;
+}
+
 .tenant-form-drawer .ant-drawer-header {
   background: var(--secoundry-bg-color);
   border-bottom: none;
@@ -120,6 +167,414 @@
   gap: 10px;
 }
 
+/* Departments tab (inline add / edit) */
+.tenant-departments-panel .tenant-departments-content {
+  display: flex;
+  flex-direction: column;
+}
+
+.tenant-departments-panel .tenant-departments-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.tenant-departments-panel .tenant-departments-hint {
+  flex: 1;
+  min-width: 0;
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+/* Offices tab (inline add / edit) */
+.tenant-offices-panel .tenant-offices-content {
+  display: flex;
+  flex-direction: column;
+}
+
+.tenant-offices-panel .tenant-offices-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.tenant-offices-panel .tenant-offices-hint {
+  flex: 1;
+  min-width: 0;
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.tenant-office-inline-form .tenant-office-inline-address {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid #e2e8f0;
+}
+
+.tenant-office-inline-form .tenant-office-inline-address .section-header {
+  margin-top: 0;
+  margin-bottom: 10px;
+  font-size: 14px;
+}
+
+.tenant-form-drawer .tenant-org-bank-address {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid #e2e8f0;
+}
+
+.tenant-form-drawer .tenant-org-bank-address .section-header {
+  margin-top: 0;
+  margin-bottom: 10px;
+  font-size: 14px;
+}
+
+/* Office schedule drawer */
+.tenant-office-schedule-drawer.ant-drawer .ant-drawer-body {
+  padding: 0;
+}
+
+.tenant-office-schedule-drawer .drawer-main-cntainer {
+  padding: 16px 20px 20px;
+}
+
+.tenant-office-schedule-drawer .tenant-office-schedule-drawer-title {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  line-height: 1.3;
+}
+
+.tenant-office-schedule-drawer .tenant-office-schedule-drawer-eyebrow {
+  font-size: 12px;
+  font-weight: 500;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+
+.tenant-office-schedule-drawer .tenant-office-schedule-drawer-heading {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--primary-color);
+}
+
+.tenant-office-schedule-panel .tenant-office-schedule-section {
+  margin-top: 0;
+  margin-bottom: 14px;
+  padding: 14px 16px;
+}
+
+.tenant-office-schedule-panel .tenant-office-schedule-section:last-of-type {
+  margin-bottom: 0;
+}
+
+.tenant-office-schedule-panel .tenant-office-schedule-actions {
+  display: flex;
+  justify-content: flex-end;
+  padding-top: 4px;
+}
+
+/* Offices & departments list tables — match tenant list / drawer-tbl styling */
+.tenant-offices-panel .tenant-panel-table-wrap,
+.tenant-departments-panel .tenant-panel-table-wrap,
+.tenant-department-contacts-panel .tenant-panel-table-wrap {
+  overflow: hidden;
+}
+
+.tenant-offices-panel .drawer-tbl .ant-table-thead > tr > th,
+.tenant-departments-panel .drawer-tbl .ant-table-thead > tr > th,
+.tenant-department-contacts-panel .drawer-tbl .ant-table-thead > tr > th {
+  background-color: #45669d !important;
+  color: #fff !important;
+}
+
+.tenant-offices-panel .drawer-tbl .ant-table-thead > tr > th::before,
+.tenant-departments-panel .drawer-tbl .ant-table-thead > tr > th::before,
+.tenant-department-contacts-panel .drawer-tbl .ant-table-thead > tr > th::before {
+  background-color: rgba(255, 255, 255, 0.2) !important;
+}
+
+.tenant-form-drawer .tenant-offices-panel .drawer-tbl,
+.tenant-form-drawer .tenant-departments-panel .drawer-tbl {
+  font-size: 13px;
+}
+
+.tenant-management-container .tenant-offices-panel .drawer-tbl .ant-table-body,
+.tenant-management-container .tenant-departments-panel .drawer-tbl .ant-table-body {
+  max-height: min(60vh, 600px);
+}
+
+.tenant-offices-panel .tenant-table-actions,
+.tenant-departments-panel .tenant-table-actions,
+.tenant-department-contacts-panel .tenant-table-actions {
+  display: inline-flex;
+  flex-wrap: nowrap;
+  justify-content: center;
+  white-space: nowrap;
+}
+
+.tenant-offices-panel .tenant-table-actions .ant-btn,
+.tenant-departments-panel .tenant-table-actions .ant-btn,
+.tenant-department-contacts-panel .tenant-table-actions .ant-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.tenant-offices-panel .drawer-tbl .ant-table-cell-fix-right,
+.tenant-departments-panel .drawer-tbl .ant-table-cell-fix-right,
+.tenant-department-contacts-panel .drawer-tbl .ant-table-cell-fix-right {
+  background: #fff;
+  z-index: 2;
+}
+
+.tenant-offices-panel .drawer-tbl .ant-table-thead .ant-table-cell-fix-right,
+.tenant-departments-panel .drawer-tbl .ant-table-thead .ant-table-cell-fix-right,
+.tenant-department-contacts-panel .drawer-tbl .ant-table-thead .ant-table-cell-fix-right {
+  background: #45669d !important;
+  z-index: 3;
+}
+
+.tenant-offices-panel .drawer-tbl .odd-row .ant-table-cell-fix-right,
+.tenant-departments-panel .drawer-tbl .odd-row .ant-table-cell-fix-right,
+.tenant-department-contacts-panel .drawer-tbl .odd-row .ant-table-cell-fix-right {
+  background: var(--table-row, #f8f9fa) !important;
+}
+
+/* Department contacts list drawer (nested from departments table) */
+.tenant-department-contacts-list-drawer.ant-drawer .ant-drawer-body {
+  padding: 0;
+}
+
+.tenant-department-contacts-list-drawer .drawer-main-cntainer {
+  padding: 16px 20px 20px;
+}
+
+.tenant-department-contacts-list-drawer .tenant-department-contacts-content.drawer-tab-content {
+  margin-top: 0;
+  padding: 16px 18px 18px;
+}
+
+.tenant-department-contacts-list-drawer .tenant-department-contacts-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.tenant-department-contacts-list-drawer .tenant-department-contacts-hint {
+  flex: 1;
+  min-width: 0;
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.tenant-department-contacts-list-drawer .tenant-panel-table-wrap {
+  margin: 0;
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+/* Contacts drawer title (single child drawer — no third stack) */
+.tenant-department-contacts-list-drawer .tenant-department-contacts-drawer-title {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  line-height: 1.3;
+}
+
+.tenant-department-contacts-list-drawer .tenant-department-contacts-drawer-eyebrow {
+  font-size: 12px;
+  font-weight: 500;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+
+.tenant-department-contacts-list-drawer .tenant-department-contacts-drawer-heading {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--primary-color);
+}
+
+/* Shared inline add / edit forms (departments tab + contacts drawer) */
+.tenant-inline-form-wrap {
+  margin-bottom: 16px;
+}
+
+.tenant-inline-form {
+  padding: 14px 16px 12px;
+  border: 1px solid #dbe4f0;
+  border-radius: 8px;
+  background: #f8fafc;
+}
+
+.tenant-inline-form-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.tenant-inline-form-subtitle {
+  font-size: 12px;
+  line-height: 1.4;
+  margin-top: 4px;
+}
+
+.tenant-inline-form .section-header {
+  margin-top: 0;
+  margin-bottom: 0;
+  font-size: 14px;
+}
+
+.tenant-inline-form-fields .my-input-wrapper {
+  margin-bottom: 8px;
+}
+
+.tenant-inline-form .switch-field {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 40px;
+  margin-bottom: 4px;
+}
+
+.tenant-inline-form-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 8px;
+  padding-top: 10px;
+  border-top: 1px solid #e2e8f0;
+}
+
+.tenant-office-drawer .drawer-main-cntainer {
+  padding: 10px 14px 12px;
+}
+
+.tenant-office-drawer .drawer-tab-content {
+  margin-top: 0;
+  padding: 10px 12px;
+}
+
+.tenant-office-drawer .drawer-tab-content + .drawer-tab-content,
+.tenant-office-drawer .office-section-gap {
+  margin-top: 8px;
+}
+
+.tenant-office-drawer .section-header {
+  margin-top: 0;
+  margin-bottom: 6px;
+  font-size: 14px;
+}
+
+.tenant-office-drawer .tenant-office-hours-hint {
+  font-size: 12px;
+  line-height: 1.35;
+  margin: 0 0 6px;
+}
+
+.tenant-office-drawer .my-input-wrapper {
+  margin-bottom: 6px;
+}
+
+.tenant-office-drawer .switch-field {
+  margin-bottom: 4px;
+  min-height: 32px;
+}
+
+.tenant-office-drawer .office-hours-table .ant-table-cell,
+.tenant-office-drawer .office-holidays-table .ant-table-cell {
+  padding: 6px 8px !important;
+}
+
+.tenant-office-drawer .drawer-tbl .ant-table-thead > tr > th {
+  padding: 4px 8px !important;
+  height: auto !important;
+  min-height: 0 !important;
+  line-height: 1.25 !important;
+  font-size: 12px;
+  vertical-align: middle !important;
+}
+
+.tenant-office-drawer .drawer-tbl.ant-table-small .ant-table-thead > tr > th {
+  padding: 4px 8px !important;
+}
+
+.tenant-office-drawer .drawer-tbl .ant-table-thead > tr > th::before {
+  display: none;
+}
+
+.tenant-office-drawer .office-holidays-table-spacer {
+  margin-top: 8px;
+}
+
+.tenant-office-drawer .office-hours-table .ant-table {
+  margin-bottom: 0;
+}
+
+.tenant-office-drawer .office-hours-table .ant-table-tbody > tr > td {
+  vertical-align: middle;
+}
+
+.tenant-office-drawer .office-hours-time-inline {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: nowrap;
+  max-width: 100%;
+}
+
+.tenant-office-drawer .office-hours-time-sep {
+  color: #94a3b8;
+  font-size: 12px;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.tenant-office-drawer .office-hours-time-picker.ant-picker {
+  width: 92px !important;
+  min-width: 92px;
+  margin: 0 !important;
+  flex-shrink: 0;
+}
+
+.tenant-office-drawer .office-hours-time-picker .ant-picker-input > input {
+  font-size: 13px;
+  padding: 0 4px;
+  text-align: center;
+}
+
+.tenant-office-drawer .office-hours-day {
+  font-weight: 500;
+  color: #334155;
+}
+
+.tenant-office-drawer .office-hours-row-closed {
+  background-color: #f8fafc;
+}
+
+.tenant-office-drawer .office-hours-row-closed .office-hours-day {
+  color: #94a3b8;
+}
+
+.tenant-office-drawer
+  .office-hours-row-closed
+  .office-hours-time-picker.ant-picker-disabled {
+  background: #f1f5f9;
+}
+
+.tenant-office-drawer .office-holidays-table {
+  margin-bottom: 0;
+}
+
 .tenant-form-drawer .tenant-active-switch {
   min-width: 52px;
   height: 26px;
@@ -143,7 +598,9 @@
   background-color: #22c55e;
 }
 
-.tenant-form-drawer .tenant-active-switch.ant-switch-checked .ant-switch-handle {
+.tenant-form-drawer
+  .tenant-active-switch.ant-switch-checked
+  .ant-switch-handle {
   left: calc(100% - 24px);
 }
 .tenant-form-drawer .ant-tabs-nav {
@@ -331,7 +788,9 @@
   color: #215e97 !important;
 }
 
-.ant-pagination .ant-select:not(.ant-select-disabled):hover .ant-select-selector {
+.ant-pagination
+  .ant-select:not(.ant-select-disabled):hover
+  .ant-select-selector {
   border-color: #215e97 !important;
 }
 
@@ -352,4 +811,12 @@
 .drawer-tbl .ant-table-body::-webkit-scrollbar,
 .drawer-tbl .ant-table-container::-webkit-scrollbar {
   display: none !important; /* Chrome, Safari, Opera */
+}
+
+.tenant-form__bank-row--valid {
+  background: #f6ffed;
+  border: 1px solid #b7eb8f;
+  border-radius: 8px;
+  padding: 8px 6px 0;
+  margin-bottom: 4px;
 }

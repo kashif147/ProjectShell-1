@@ -1,15 +1,90 @@
-import { createContext, useContext, useState, useMemo, useEffect, useCallback, useRef } from "react";
+import {
+  createContext,
+  useContext,
+  useState,
+  useMemo,
+  useEffect,
+  useCallback,
+  useRef,
+} from "react";
 import { useLocation } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
 import { getAllLookups } from "../features/LookupsSlice";
 import { getCategoryLookup } from "../features/CategoryLookupSlice";
 import { getWorkLocationHierarchy } from "../features/LookupsWorkLocationSlice";
 import { resetInitialization } from "../features/applicationwithfilterslice";
+import { fetchSubscriptionYears } from "../features/subscription/subscriptionSlice";
+import {
+  isDateFilterLabel,
+  isNumericFilterLabel,
+  isStringFilterLabel,
+  consolidateApplicationsStatusFilter,
+  consolidateMembershipListingFilters,
+} from "../utils/filterUtils";
+import {
+  buildDataDerivedFilterOptions,
+  CLIENT_SIDE_GRID_FILTER_SCREENS,
+  hasRegisteredGridFilterRows,
+  mergeStaticAndDerivedOptions,
+  subscribeGridFilterRows,
+} from "../utils/gridFilterOptionsRegistry";
 
 const FilterContext = createContext();
 
 // 🔹 Common filters that should appear on all screens
 const COMMON_FILTERS = ["Grade", "Work Location", "Region", "Branch"];
+
+/** Statistics report: membership / executive filters only (no application/profile fields). */
+const STATISTICS_REPORT_ALLOWED_FILTERS = [
+  "Membership Category",
+  "Membership Status",
+  "Membership Movement",
+  "Grade",
+  "Work Location",
+  "Section (Primary Section)",
+  "Region",
+  "Branch",
+  "Payment Type",
+  "Payment Frequency",
+  "Membership Start Date",
+  "Expiry Date",
+  "Cancelled Date",
+  "Resigned Date",
+  "Processed At Date",
+  "Renewal Date",
+  "Last Payment Date",
+  "Invoice Amount",
+  "Arrears Amount",
+  "Deferred Amount",
+  "Balance",
+];
+
+const STATISTICS_REPORT_ALLOWED_SET = new Set(
+  STATISTICS_REPORT_ALLOWED_FILTERS,
+);
+
+/** Toolbar chips shown on first visit / reset. Month, Year, Student, Honorary are header controls. */
+const STATISTICS_REPORT_DEFAULT_VISIBLE_FILTERS = [
+  "Membership Category",
+  "Grade",
+  "Branch",
+  "Region",
+];
+
+const WORKPLACE_BREAKDOWN_REPORT_DEFAULT_VISIBLE_FILTERS = [
+  "Membership Status",
+  "Work Location",
+  "Region",
+];
+
+const AGGREGATE_MEMBERSHIP_REPORT_SCREENS = new Set([
+  "StatisticsReport",
+  "WorkplaceBreakdownReport",
+]);
+
+function isAggregateMembershipReportScreen(screen) {
+  return AGGREGATE_MEMBERSHIP_REPORT_SCREENS.has(screen);
+}
 
 export const FilterProvider = ({ children }) => {
   const dispatch = useDispatch();
@@ -30,17 +105,21 @@ export const FilterProvider = ({ children }) => {
 
   // 🔹 Get category data from categoryLookup slice
   const { categoryData, categoryLoading, currentCategoryId } = useSelector(
-    (state) => state.categoryLookup
+    (state) => state.categoryLookup,
   );
 
   const MEMBERSHIP_CATEGORY_LOOKUP_ID = "68dae613c5b15073d66b891f";
 
   // 🔹 Get hierarchical data from lookupsWorkLocation slice
+  const { hierarchyData, workLocationLoading, workLocationError } = useSelector(
+    (state) => state.lookupsWorkLocation,
+  );
+
   const {
-    hierarchyData,
-    workLocationLoading,
-    workLocationError
-  } = useSelector((state) => state.lookupsWorkLocation);
+    subscriptionYears,
+    subscriptionYearsLoaded,
+    subscriptionYearsLoading,
+  } = useSelector((state) => state.subscription);
 
   // 🔹 Use hierarchical lookups from localStorage
   const [allHierarchicalData, setAllHierarchicalData] = useState([]);
@@ -56,11 +135,17 @@ export const FilterProvider = ({ children }) => {
         const parsed = JSON.parse(stored);
         if (Array.isArray(parsed)) {
           setAllHierarchicalData(parsed);
-          console.log("✅ FilterContext: Loaded hierarchical lookups from localStorage", parsed.length);
+          console.log(
+            "✅ FilterContext: Loaded hierarchical lookups from localStorage",
+            parsed.length,
+          );
         }
       }
     } catch (error) {
-      console.error("❌ FilterContext: Error loading hierarchy from localStorage", error);
+      console.error(
+        "❌ FilterContext: Error loading hierarchy from localStorage",
+        error,
+      );
     }
   }, []);
 
@@ -70,44 +155,84 @@ export const FilterProvider = ({ children }) => {
   const [screenFilterStates, setScreenFilterStates] = useState({
     Applications: {
       visibleFilters: [],
-      filtersState: {}
+      filtersState: {},
     },
     Profile: {
       visibleFilters: [],
-      filtersState: {}
+      filtersState: {},
     },
     Membership: {
       visibleFilters: [],
-      filtersState: {}
+      filtersState: {},
     },
     Members: {
       visibleFilters: [],
-      filtersState: {}
+      filtersState: {},
     },
     OnlinePayment: {
       visibleFilters: [],
-      filtersState: {}
+      filtersState: {},
     },
     Communication: {
       visibleFilters: [],
-      filtersState: {}
+      filtersState: {},
     },
     Cases: {
       visibleFilters: [],
-      filtersState: {}
+      filtersState: {},
     },
     Events: {
       visibleFilters: [],
-      filtersState: {}
+      filtersState: {},
     },
     Attendees: {
       visibleFilters: [],
-      filtersState: {}
+      filtersState: {},
     },
     MembershipDashboard: {
       visibleFilters: [],
-      filtersState: {}
-    }
+      filtersState: {},
+    },
+    MembershipListingReport: {
+      visibleFilters: [],
+      filtersState: {},
+    },
+    StatisticsReport: {
+      visibleFilters: [],
+      filtersState: {},
+    },
+    WorkplaceBreakdownReport: {
+      visibleFilters: [],
+      filtersState: {},
+    },
+    EmailCampaigns: {
+      visibleFilters: [],
+      filtersState: {},
+    },
+    CreditNotes: {
+      visibleFilters: [],
+      filtersState: {},
+    },
+    JournalAdjustments: {
+      visibleFilters: [],
+      filtersState: {},
+    },
+    Refunds: {
+      visibleFilters: [],
+      filtersState: {},
+    },
+    WriteOffs: {
+      visibleFilters: [],
+      filtersState: {},
+    },
+    GeneralLedger: {
+      visibleFilters: [],
+      filtersState: {},
+    },
+    Reconciliation: {
+      visibleFilters: [],
+      filtersState: {},
+    },
   });
 
   // 🔹 Current screen's states
@@ -124,6 +249,34 @@ export const FilterProvider = ({ children }) => {
   const activePageRef = useRef("Applications");
   const [membershipDashboardApplyTick, setMembershipDashboardApplyTick] =
     useState(0);
+
+  const getDefaultMembershipDashboardHeader = () => {
+    const now = new Date();
+    return {
+      year: now.getUTCFullYear(),
+      month: now.getUTCMonth() + 1,
+      includeStudents: true,
+      includeHonorary: true,
+      includeBreakdown: true,
+      includeEmptyRows: false,
+      rollingMonths: 12,
+      audienceScope: "full",
+      scopeUserId: null,
+      manualMembershipCategories: { operator: "==", selectedValues: [] },
+    };
+  };
+
+  const [membershipDashboardHeader, setMembershipDashboardHeader] = useState(
+    getDefaultMembershipDashboardHeader,
+  );
+
+  const updateMembershipDashboardHeader = useCallback((patch) => {
+    setMembershipDashboardHeader((prev) => ({ ...prev, ...patch }));
+  }, []);
+
+  const resetMembershipDashboardHeader = useCallback(() => {
+    setMembershipDashboardHeader(getDefaultMembershipDashboardHeader());
+  }, []);
 
   const location = useLocation();
   const activeScreenName = location?.pathname;
@@ -142,7 +295,15 @@ export const FilterProvider = ({ children }) => {
 
   /** Always use live filter state. Falling back to `screenFilterStates` when live was empty caused stale template values and broken Save / dirty behavior. */
   const getFiltersStateForSave = useCallback(() => {
-    return { ...(filtersStateRef.current || {}) };
+    const live = { ...(filtersStateRef.current || {}) };
+    if (
+      activePageRef.current === "MembershipListingReport" ||
+      activePageRef.current === "StatisticsReport" ||
+      activePageRef.current === "WorkplaceBreakdownReport"
+    ) {
+      return consolidateMembershipListingFilters(live, []).filtersState;
+    }
+    return live;
   }, []);
 
   // 🔹 Fetch lookups and categories when missing (avoids duplicating App.js bootstrap)
@@ -169,6 +330,18 @@ export const FilterProvider = ({ children }) => {
     categoryData,
   ]);
 
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    if (!token) return;
+    dispatch(fetchSubscriptionYears());
+  }, [dispatch]);
+
+  /** Rebuild filter dropdown options when client-side grids register row data. */
+  const [gridFilterRowsTick, setGridFilterRowsTick] = useState(0);
+  useEffect(() => subscribeGridFilterRows(() => {
+    setGridFilterRowsTick((t) => t + 1);
+  }), []);
+
   // 🔹 Remove old API-based extraction helper
 
   // 🔹 Multi-way dependent filtering logic (Final Robust version)
@@ -183,26 +356,54 @@ export const FilterProvider = ({ children }) => {
     const getNamesForItem = (item, type) => {
       const names = new Set();
 
+      // Simple nested location tree (default hierarchy API shape)
+      if (item?.id && item?.type) {
+        if (type === "Work Location" && item.type === "workLocation" && item.name) {
+          names.add(item.name);
+        }
+        if (type === "Branch" && item.branch?.name) {
+          names.add(item.branch.name);
+        }
+        if (type === "Region") {
+          const regionName = item.branch?.region?.name || item.region?.name;
+          if (regionName) names.add(regionName);
+        }
+        if (names.size > 0) return Array.from(names);
+      }
+
       // 1. Direct property (e.g. item.region, item.branch, item.lookup)
       const propName = type === "Work Location" ? "lookup" : type.toLowerCase();
       const direct = item[propName];
       if (direct) {
-        const name = direct.DisplayName || direct.lookupname || direct.label || (typeof direct === 'string' ? direct : null);
-        if (name && typeof name === 'string') names.add(name);
-        else if (typeof direct === 'string') {
+        const name =
+          direct.DisplayName ||
+          direct.lookupname ||
+          direct.label ||
+          (typeof direct === "string" ? direct : null);
+        if (name && typeof name === "string") names.add(name);
+        else if (typeof direct === "string") {
           // Resolve ID if string
-          const optionsMap = { 'Region': regionOptions, 'Branch': branchOptions, 'Work Location': workLocationOptions };
-          const found = optionsMap[type]?.find(opt => opt.value === direct || opt.id === direct || opt._id === direct);
+          const optionsMap = {
+            Region: regionOptions,
+            Branch: branchOptions,
+            "Work Location": workLocationOptions,
+          };
+          const found = optionsMap[type]?.find(
+            (opt) =>
+              opt.value === direct || opt.id === direct || opt._id === direct,
+          );
           if (found?.label) names.add(found.label);
         }
       }
 
       // 2. Hierarchy array
-      item.hierarchy?.forEach(h => {
+      item.hierarchy?.forEach((h) => {
         const hType = h.lookuptypeId?.lookuptype?.toLowerCase();
         // Handle "workLocation" camelCase from JSON vs "Work Location"
-        const isMatch = (type === "Work Location" && (hType === "worklocation" || hType === "workloc")) ||
-          (hType === type.toLowerCase());
+        const isMatch =
+          (type === "Work Location" &&
+            (hType === "worklocation" || hType === "workloc")) ||
+          hType === type.toLowerCase();
 
         if (isMatch) {
           const name = h.DisplayName || h.lookupname || h.label;
@@ -218,23 +419,23 @@ export const FilterProvider = ({ children }) => {
       let data = allHierarchicalData;
 
       if (excludeType !== "Work Location" && selectedWL.length > 0) {
-        data = data.filter(item => {
+        data = data.filter((item) => {
           const itemWLs = getNamesForItem(item, "Work Location");
-          return itemWLs.some(wl => selectedWL.includes(wl));
+          return itemWLs.some((wl) => selectedWL.includes(wl));
         });
       }
 
       if (excludeType !== "Region" && selectedRegion.length > 0) {
-        data = data.filter(item => {
+        data = data.filter((item) => {
           const itemRegions = getNamesForItem(item, "Region");
-          return itemRegions.some(reg => selectedRegion.includes(reg));
+          return itemRegions.some((reg) => selectedRegion.includes(reg));
         });
       }
 
       if (excludeType !== "Branch" && selectedBranch.length > 0) {
-        data = data.filter(item => {
+        data = data.filter((item) => {
           const itemBranches = getNamesForItem(item, "Branch");
-          return itemBranches.some(br => selectedBranch.includes(br));
+          return itemBranches.some((br) => selectedBranch.includes(br));
         });
       }
 
@@ -246,16 +447,16 @@ export const FilterProvider = ({ children }) => {
     const newRegions = new Set();
     const newBranches = new Set();
 
-    getFilteredSubset("Work Location").forEach(item => {
-      getNamesForItem(item, "Work Location").forEach(n => newWL.add(n));
+    getFilteredSubset("Work Location").forEach((item) => {
+      getNamesForItem(item, "Work Location").forEach((n) => newWL.add(n));
     });
 
-    getFilteredSubset("Region").forEach(item => {
-      getNamesForItem(item, "Region").forEach(n => newRegions.add(n));
+    getFilteredSubset("Region").forEach((item) => {
+      getNamesForItem(item, "Region").forEach((n) => newRegions.add(n));
     });
 
-    getFilteredSubset("Branch").forEach(item => {
-      getNamesForItem(item, "Branch").forEach(n => newBranches.add(n));
+    getFilteredSubset("Branch").forEach((item) => {
+      getNamesForItem(item, "Branch").forEach((n) => newBranches.add(n));
     });
 
     const finalWLs = Array.from(newWL).sort();
@@ -292,8 +493,7 @@ export const FilterProvider = ({ children }) => {
         Array.isArray(next) &&
         cur.length === next.length &&
         cur.every(
-          (v, i) =>
-            String(v).toLowerCase() === String(next[i]).toLowerCase(),
+          (v, i) => String(v).toLowerCase() === String(next[i]).toLowerCase(),
         );
 
       if (ru.length === 1) {
@@ -401,10 +601,10 @@ export const FilterProvider = ({ children }) => {
     let changed = false;
     const newState = { ...filtersState };
 
-    Object.keys(newState).forEach(key => {
+    Object.keys(newState).forEach((key) => {
       const filter = newState[key];
       if (filter?.selectedValues) {
-        const isDateFilter = key.toLowerCase().includes("date");
+        const isDateFilter = isDateFilterLabel(key);
         const cleaned = filter.selectedValues.filter((v) => {
           if (v === null || v === undefined) return false;
           if (isDateFilter && typeof v === "number" && Number.isFinite(v)) {
@@ -421,7 +621,9 @@ export const FilterProvider = ({ children }) => {
     });
 
     if (changed) {
-      console.log("🛡️ FilterContext: Pruned invalid values from state (enforced string-only)");
+      console.log(
+        "🛡️ FilterContext: Pruned invalid values from state (enforced string-only)",
+      );
       setFiltersState(newState);
     }
   }, [filtersState]);
@@ -430,6 +632,7 @@ export const FilterProvider = ({ children }) => {
   const getScreenFromPath = () => {
     const pathMap = {
       "/applications": "Applications",
+      "/paymentforms": "Payment Forms",
       "/summary": "Profile",
       "/membership": "Membership",
       "/members": "Members",
@@ -442,6 +645,17 @@ export const FilterProvider = ({ children }) => {
       "/issuesmanagementdashboard": "Cases",
       "/attendees": "Attendees",
       "/membershipdashboard": "MembershipDashboard",
+      "/membershiplistingreport": "MembershipListingReport",
+      "/statisticsreport": "StatisticsReport",
+      "/workplacebreakdownreport": "WorkplaceBreakdownReport",
+      "/email": "EmailCampaigns",
+      "/emailcampaigndetail": "EmailCampaigns",
+      "/creditnotes": "CreditNotes",
+      "/journaladjustments": "JournalAdjustments",
+      "/refunds": "Refunds",
+      "/write-offs": "WriteOffs",
+      "/generalledger": "GeneralLedger",
+      "/reconciliation": "Reconciliation",
     };
     const key = (activeScreenName || "").toLowerCase();
     return pathMap[key] || "Applications";
@@ -455,6 +669,20 @@ export const FilterProvider = ({ children }) => {
       Applications: [
         "Membership Category",
         "Application Status",
+        "Submission Date",
+        "Email (Preferred)",
+        "Mobile No",
+        "Grade",
+        "Section (Primary Section)",
+        "Work Location",
+        "Branch",
+        "Region",
+        "Payment Type",
+        "Payroll No",
+      ],
+      "Payment Forms": [
+        "Membership Category",
+        "Form Type",
         "Submission Date",
         "Email (Preferred)",
         "Mobile No",
@@ -538,11 +766,9 @@ export const FilterProvider = ({ children }) => {
         "Region",
       ],
       OnlinePayment: [
-        "Membership No",
-        "Email",
-        "Mobile No",
-        "Joining Date",
+        "Member / Application No",
         "Membership Category",
+        "Full Name",
         "Membership Status",
         "Renewal Date",
         "Transaction ID",
@@ -551,6 +777,9 @@ export const FilterProvider = ({ children }) => {
         "Payment Method",
         "Payment Status",
         "Billing Cycle",
+        "Email",
+        "Phone",
+        "Join Date",
       ],
       Communication: [
         "Membership No",
@@ -570,18 +799,51 @@ export const FilterProvider = ({ children }) => {
         "Stakeholder",
         "Priority",
       ],
-      Events: [
-        "Event",
-        "Event Type",
-        "Event Date",
-      ],
+      Events: ["Event", "Event Type", "Event Date"],
       MembershipDashboard: [
         "Membership Category",
         "Grade",
         "Section (Primary Section)",
         "Region",
         "Branch",
+      ],
+      MembershipListingReport: [
+        "Membership Category",
+        "Membership Status",
+        "Membership Movement",
+        "Grade",
         "Work Location",
+        "Section (Primary Section)",
+        "Region",
+        "Branch",
+        "Payment Type",
+        "Payment Frequency",
+        "Membership Start Date",
+        "Expiry Date",
+        "Cancelled Date",
+        "Resigned Date",
+        "Processed At Date",
+        "Renewal Date",
+        "Last Payment Date",
+        "Invoice Amount",
+        "Arrears Amount",
+        "Deferred Amount",
+        "Balance",
+      ],
+      StatisticsReport: [...STATISTICS_REPORT_ALLOWED_FILTERS],
+      WorkplaceBreakdownReport: [...STATISTICS_REPORT_ALLOWED_FILTERS],
+      EmailCampaigns: [
+        "Membership Category",
+        "Submission Date",
+        "Email (Preferred)",
+        "Mobile No",
+        "Grade",
+        "Section (Primary Section)",
+        "Work Location",
+        "Branch",
+        "Region",
+        "Payment Type",
+        "Payroll No",
       ],
       Attendees: [
         "Event",
@@ -592,13 +854,84 @@ export const FilterProvider = ({ children }) => {
         "Grade",
         "Work Location",
       ],
+      CreditNotes: [
+        "CN Status",
+        "CN ref",
+        "Invoice",
+        "Member",
+        "Amount",
+        "Reason",
+        "Created By",
+        "Effective",
+        "Created At",
+      ],
+      JournalAdjustments: [
+        "JA Status",
+        "Adjustment reference",
+        "Debit",
+        "Credit",
+        "Member",
+        "Reason",
+        "Effective",
+        "Created At",
+      ],
+      Refunds: [
+        "Refund ID",
+        "Ref No",
+        "Memo",
+        "Refund Date",
+        "Refund Amount",
+        "Refund Type",
+        "Refund Source",
+        "Member No / Application No",
+        "Created By",
+        "Created At",
+      ],
+      WriteOffs: [
+        "WO Status",
+        "WriteOff",
+        "WriteOff Date",
+        "Ref",
+        "Amount",
+        "Member",
+        "Type",
+        "Created By",
+        "Created At",
+        "Updated By",
+        "Updated At",
+      ],
+      GeneralLedger: [
+        "GL Status",
+        "Member",
+        "Tx date",
+        "Tx type",
+        "Doc ref",
+        "GL Debit",
+        "GL Credit",
+        "Memo",
+        "Posted",
+      ],
+      Reconciliation: [
+        "Rec Status",
+        "Clearing Account",
+        "Bank ref",
+        "Member",
+        "Amount",
+        "Expected",
+        "Difference",
+        "Confidence",
+        "Suggested action",
+        "Matched GL",
+        "Source",
+      ],
     }),
-    []
+    [],
   );
 
   // 🔹 Screen-specific default filters
   const screenSpecificDefaultFilters = {
     Applications: ["Application Status", "Membership Category"],
+    "Payment Forms": ["Form Type", "Membership Category"],
     Profile: ["Email", "Membership Category"],
     Membership: ["Membership Status", "Membership Category"],
     Members: ["Membership Status", "Membership Category"],
@@ -606,289 +939,914 @@ export const FilterProvider = ({ children }) => {
     Communication: ["Grade", "Work Location"],
     Cases: ["Incident Date", "Case Type", "Stakeholder", "Priority"],
     Events: ["Event", "Event Type", "Event Date"],
-    Attendees: ["Event", "Event Type", "Registration Status", "Event Date", "Payment Status"],
-    MembershipDashboard: [
-      "Membership Category",
-      "Section (Primary Section)",
+    Attendees: [
+      "Event",
+      "Event Type",
+      "Registration Status",
+      "Event Date",
+      "Payment Status",
     ],
+    MembershipDashboard: ["Membership Category", "Section (Primary Section)"],
+    MembershipListingReport: [
+      "Membership Category",
+      "Membership Status",
+      "Membership Movement",
+      "Section (Primary Section)",
+      "Payment Type",
+    ],
+    StatisticsReport: [...STATISTICS_REPORT_DEFAULT_VISIBLE_FILTERS],
+    WorkplaceBreakdownReport: [...WORKPLACE_BREAKDOWN_REPORT_DEFAULT_VISIBLE_FILTERS],
+    EmailCampaigns: ["Membership Category"],
+    CreditNotes: ["CN Status"],
+    JournalAdjustments: ["JA Status"],
+    Refunds: ["Refund Type"],
+    WriteOffs: ["WO Status"],
+    GeneralLedger: ["GL Status"],
+    Reconciliation: ["Rec Status", "Clearing Account"],
   };
+
+  /** Preserve order; drop duplicate labels (e.g. Grade in both screen defaults and COMMON_FILTERS). */
+  const dedupeFilterLabels = (labels = []) => {
+    const seen = new Set();
+    return labels.filter((label) => {
+      if (!label || seen.has(label)) return false;
+      seen.add(label);
+      return true;
+    });
+  };
+
+  const restrictStatisticsReportFilters = (
+    visible = [],
+    state = {},
+  ) => {
+    const visibleFilters = dedupeFilterLabels(
+      visible.filter((label) => STATISTICS_REPORT_ALLOWED_SET.has(label)),
+    );
+    const filtersState = {};
+    Object.entries(state || {}).forEach(([key, value]) => {
+      if (STATISTICS_REPORT_ALLOWED_SET.has(key)) {
+        filtersState[key] = value;
+      }
+    });
+    return { visibleFilters, filtersState };
+  };
+
+  const buildAggregateReportVisibleFilters = (screen, state = {}) => {
+    const defaults =
+      screen === "WorkplaceBreakdownReport"
+        ? WORKPLACE_BREAKDOWN_REPORT_DEFAULT_VISIBLE_FILTERS
+        : STATISTICS_REPORT_DEFAULT_VISIBLE_FILTERS;
+    const withValues = Object.keys(state || {}).filter(
+      (key) =>
+        STATISTICS_REPORT_ALLOWED_SET.has(key) &&
+        (state[key]?.selectedValues || []).length > 0,
+    );
+    return dedupeFilterLabels([
+      ...defaults,
+      ...withValues.filter((key) => !defaults.includes(key)),
+    ]);
+  };
+
+  const buildStatisticsReportVisibleFilters = (state = {}) =>
+    buildAggregateReportVisibleFilters("StatisticsReport", state);
+
+  const buildWorkplaceBreakdownReportVisibleFilters = (state = {}) =>
+    buildAggregateReportVisibleFilters("WorkplaceBreakdownReport", state);
 
   // 🔹 Helper to get default visible filters for a screen
   const getDefaultVisibleFilters = (screen) => {
+    if (screen === "StatisticsReport") {
+      return [...STATISTICS_REPORT_DEFAULT_VISIBLE_FILTERS];
+    }
+    if (screen === "WorkplaceBreakdownReport") {
+      return [...WORKPLACE_BREAKDOWN_REPORT_DEFAULT_VISIBLE_FILTERS];
+    }
     const screenSpecific = screenSpecificDefaultFilters[screen] || [];
-    const availableCommonFilters = COMMON_FILTERS.filter(filter =>
-      viewFilters[screen]?.includes(filter)
+    const availableCommonFilters = COMMON_FILTERS.filter((filter) =>
+      viewFilters[screen]?.includes(filter),
     );
-    return [...screenSpecific, ...availableCommonFilters];
+    return dedupeFilterLabels([...screenSpecific, ...availableCommonFilters]);
   };
 
   // 🔹 Default visible filters for each screen
-  const defaultVisibleFilters = useMemo(() => ({
-    Applications: getDefaultVisibleFilters("Applications"),
-    Profile: getDefaultVisibleFilters("Profile"),
-    Membership: getDefaultVisibleFilters("Membership"),
-    Members: getDefaultVisibleFilters("Members"),
-    OnlinePayment: getDefaultVisibleFilters("OnlinePayment"),
-    Communication: getDefaultVisibleFilters("Communication"),
-    Cases: getDefaultVisibleFilters("Cases"),
-    Events: getDefaultVisibleFilters("Events"),
-    Attendees: getDefaultVisibleFilters("Attendees"),
-    MembershipDashboard: getDefaultVisibleFilters("MembershipDashboard"),
-  }), [],);
+  const defaultVisibleFilters = useMemo(
+    () => ({
+      Applications: getDefaultVisibleFilters("Applications"),
+      "Payment Forms": getDefaultVisibleFilters("Payment Forms"),
+      Profile: getDefaultVisibleFilters("Profile"),
+      Membership: getDefaultVisibleFilters("Membership"),
+      Members: getDefaultVisibleFilters("Members"),
+      OnlinePayment: getDefaultVisibleFilters("OnlinePayment"),
+      Communication: getDefaultVisibleFilters("Communication"),
+      Cases: getDefaultVisibleFilters("Cases"),
+      Events: getDefaultVisibleFilters("Events"),
+      Attendees: getDefaultVisibleFilters("Attendees"),
+      MembershipDashboard: getDefaultVisibleFilters("MembershipDashboard"),
+      MembershipListingReport: getDefaultVisibleFilters("MembershipListingReport"),
+      StatisticsReport: getDefaultVisibleFilters("StatisticsReport"),
+      WorkplaceBreakdownReport: getDefaultVisibleFilters("WorkplaceBreakdownReport"),
+      EmailCampaigns: getDefaultVisibleFilters("EmailCampaigns"),
+      CreditNotes: getDefaultVisibleFilters("CreditNotes"),
+      JournalAdjustments: getDefaultVisibleFilters("JournalAdjustments"),
+      Refunds: getDefaultVisibleFilters("Refunds"),
+      WriteOffs: getDefaultVisibleFilters("WriteOffs"),
+      GeneralLedger: getDefaultVisibleFilters("GeneralLedger"),
+      Reconciliation: getDefaultVisibleFilters("Reconciliation"),
+    }),
+    [],
+  );
 
   // 🔹 Default filter VALUES for each screen
-  const defaultFilterValues = useMemo(() => ({
-    Applications: {
-      "Application Status": {
-        operator: "==",
-        selectedValues: ["Submitted"]
+  const defaultFilterValues = useMemo(
+    () => ({
+      Applications: {
+        "Application Status": {
+          operator: "==",
+          selectedValues: ["Submitted"],
+        },
+        "Membership Category": {
+          operator: "==",
+          selectedValues: [],
+        },
+        "Work Location": {
+          operator: "==",
+          selectedValues: [],
+        },
+        Grade: {
+          operator: "==",
+          selectedValues: [],
+        },
+        Region: {
+          operator: "==",
+          selectedValues: [],
+        },
+        Branch: {
+          operator: "==",
+          selectedValues: [],
+        },
       },
-      "Membership Category": {
-        operator: "==",
-        selectedValues: []
+      "Payment Forms": {
+        "Form Type": {
+          operator: "==",
+          selectedValues: [],
+        },
+        "Membership Category": {
+          operator: "==",
+          selectedValues: [],
+        },
+        "Work Location": {
+          operator: "==",
+          selectedValues: [],
+        },
+        Grade: {
+          operator: "==",
+          selectedValues: [],
+        },
+        Region: {
+          operator: "==",
+          selectedValues: [],
+        },
+        Branch: {
+          operator: "==",
+          selectedValues: [],
+        },
       },
-      "Work Location": {
-        operator: "==",
-        selectedValues: []
+      Profile: {
+        Email: {
+          operator: "==",
+          selectedValues: [],
+        },
+        "Membership Category": {
+          operator: "==",
+          selectedValues: [],
+        },
+        "Work Location": {
+          operator: "==",
+          selectedValues: [],
+        },
+        Grade: {
+          operator: "==",
+          selectedValues: [],
+        },
+        Region: {
+          operator: "==",
+          selectedValues: [],
+        },
+        Branch: {
+          operator: "==",
+          selectedValues: [],
+        },
       },
-      "Grade": {
-        operator: "==",
-        selectedValues: []
+      Membership: {
+        "Membership Status": {
+          operator: "==",
+          selectedValues: ["Active"],
+        },
+        "Membership Category": {
+          operator: "==",
+          selectedValues: [],
+        },
+        "Work Location": {
+          operator: "==",
+          selectedValues: [],
+        },
+        Grade: {
+          operator: "==",
+          selectedValues: [],
+        },
+        Region: {
+          operator: "==",
+          selectedValues: [],
+        },
+        Branch: {
+          operator: "==",
+          selectedValues: [],
+        },
       },
-      "Region": {
-        operator: "==",
-        selectedValues: []
+      Members: {
+        "Membership Status": {
+          operator: "==",
+          selectedValues: [],
+        },
+        "Membership Category": {
+          operator: "==",
+          selectedValues: [],
+        },
+        "Work Location": {
+          operator: "==",
+          selectedValues: [],
+        },
+        Grade: {
+          operator: "==",
+          selectedValues: [],
+        },
+        Region: {
+          operator: "==",
+          selectedValues: [],
+        },
+        Branch: {
+          operator: "==",
+          selectedValues: [],
+        },
       },
-      "Branch": {
-        operator: "==",
-        selectedValues: []
-      }
-    },
-    Profile: {
-      "Email": {
-        operator: "==",
-        selectedValues: []
+      OnlinePayment: {
+        "Membership Status": {
+          operator: "==",
+          selectedValues: [],
+        },
+        "Payment Status": {
+          operator: "==",
+          selectedValues: [],
+        },
+        "Payment Method": {
+          operator: "==",
+          selectedValues: [],
+        },
+        "Billing Cycle": {
+          operator: "==",
+          selectedValues: [],
+        },
+        "Membership Category": {
+          operator: "==",
+          selectedValues: [],
+        },
+        "Member / Application No": {
+          operator: "==",
+          selectedValues: [],
+        },
+        "Transaction ID": {
+          operator: "==",
+          selectedValues: [],
+        },
+        "Paid Amount": {
+          operator: "==",
+          selectedValues: [],
+        },
+        "Full Name": {
+          operator: "==",
+          selectedValues: [],
+        },
+        Email: {
+          operator: "==",
+          selectedValues: [],
+        },
+        Phone: {
+          operator: "==",
+          selectedValues: [],
+        },
+        "Renewal Date": {
+          operator: "between",
+          selectedValues: [],
+        },
+        "Payment Date": {
+          operator: "between",
+          selectedValues: [],
+        },
+        "Join Date": {
+          operator: "between",
+          selectedValues: [],
+        },
       },
-      "Membership Category": {
-        operator: "==",
-        selectedValues: []
+      Communication: {
+        Grade: {
+          operator: "==",
+          selectedValues: [],
+        },
+        "Work Location": {
+          operator: "==",
+          selectedValues: [],
+        },
+        Region: {
+          operator: "==",
+          selectedValues: [],
+        },
+        Branch: {
+          operator: "==",
+          selectedValues: [],
+        },
+        "Membership Category": {
+          operator: "==",
+          selectedValues: [],
+        },
       },
-      "Work Location": {
-        operator: "==",
-        selectedValues: []
+      Cases: {
+        "Incident Date": {
+          operator: "between",
+          selectedValues: [],
+        },
+        "Case Type": {
+          operator: "==",
+          selectedValues: [],
+        },
+        Stakeholder: {
+          operator: "==",
+          selectedValues: [],
+        },
+        Priority: {
+          operator: "==",
+          selectedValues: [],
+        },
       },
-      "Grade": {
-        operator: "==",
-        selectedValues: []
+      Events: {
+        Event: {
+          operator: "==",
+          selectedValues: [],
+        },
+        "Event Type": {
+          operator: "==",
+          selectedValues: [],
+        },
+        "Event Date": {
+          operator: "between",
+          selectedValues: [],
+        },
       },
-      "Region": {
-        operator: "==",
-        selectedValues: []
+      MembershipDashboard: {
+        "Membership Category": {
+          operator: "==",
+          selectedValues: [],
+        },
+        Grade: {
+          operator: "==",
+          selectedValues: [],
+        },
+        "Section (Primary Section)": {
+          operator: "==",
+          selectedValues: [],
+        },
+        Region: {
+          operator: "==",
+          selectedValues: [],
+        },
+        Branch: {
+          operator: "==",
+          selectedValues: [],
+        },
       },
-      "Branch": {
-        operator: "==",
-        selectedValues: []
-      }
-    },
-    Membership: {
-      "Membership Status": {
-        operator: "==",
-        selectedValues: ["Active"]
+      MembershipListingReport: {
+        "Membership Category": {
+          operator: "==",
+          selectedValues: [],
+        },
+        "Membership Status": {
+          operator: "==",
+          selectedValues: [],
+        },
+        "Membership Movement": {
+          operator: "==",
+          selectedValues: [],
+        },
+        Grade: {
+          operator: "==",
+          selectedValues: [],
+        },
+        "Work Location": {
+          operator: "==",
+          selectedValues: [],
+        },
+        "Section (Primary Section)": {
+          operator: "==",
+          selectedValues: [],
+        },
+        Region: {
+          operator: "==",
+          selectedValues: [],
+        },
+        Branch: {
+          operator: "==",
+          selectedValues: [],
+        },
+        "Payment Type": {
+          operator: "==",
+          selectedValues: [],
+        },
+        "Payment Frequency": {
+          operator: "==",
+          selectedValues: [],
+        },
+        "Membership Start Date": {
+          operator: "between",
+          selectedValues: [],
+        },
+        "Expiry Date": {
+          operator: "between",
+          selectedValues: [],
+        },
+        "Cancelled Date": {
+          operator: "between",
+          selectedValues: [],
+        },
+        "Resigned Date": {
+          operator: "between",
+          selectedValues: [],
+        },
+        "Processed At Date": {
+          operator: "between",
+          selectedValues: [],
+        },
+        "Renewal Date": {
+          operator: "between",
+          selectedValues: [],
+        },
+        "Last Payment Date": {
+          operator: "between",
+          selectedValues: [],
+        },
       },
-      "Membership Category": {
-        operator: "==",
-        selectedValues: []
+      StatisticsReport: {
+        "Membership Category": {
+          operator: "==",
+          selectedValues: [],
+        },
+        "Membership Status": {
+          operator: "==",
+          selectedValues: [],
+        },
+        "Membership Movement": {
+          operator: "==",
+          selectedValues: [],
+        },
+        Grade: {
+          operator: "==",
+          selectedValues: [],
+        },
+        "Work Location": {
+          operator: "==",
+          selectedValues: [],
+        },
+        "Section (Primary Section)": {
+          operator: "==",
+          selectedValues: [],
+        },
+        Region: {
+          operator: "==",
+          selectedValues: [],
+        },
+        Branch: {
+          operator: "==",
+          selectedValues: [],
+        },
+        "Payment Type": {
+          operator: "==",
+          selectedValues: [],
+        },
+        "Payment Frequency": {
+          operator: "==",
+          selectedValues: [],
+        },
+        "Membership Start Date": {
+          operator: "between",
+          selectedValues: [],
+        },
+        "Expiry Date": {
+          operator: "between",
+          selectedValues: [],
+        },
+        "Cancelled Date": {
+          operator: "between",
+          selectedValues: [],
+        },
+        "Resigned Date": {
+          operator: "between",
+          selectedValues: [],
+        },
+        "Processed At Date": {
+          operator: "between",
+          selectedValues: [],
+        },
+        "Renewal Date": {
+          operator: "between",
+          selectedValues: [],
+        },
+        "Last Payment Date": {
+          operator: "between",
+          selectedValues: [],
+        },
       },
-      "Work Location": {
-        operator: "==",
-        selectedValues: []
+      WorkplaceBreakdownReport: {
+        "Membership Category": {
+          operator: "==",
+          selectedValues: [],
+        },
+        "Membership Status": {
+          operator: "==",
+          selectedValues: ["Active"],
+        },
+        "Membership Movement": {
+          operator: "==",
+          selectedValues: [],
+        },
+        Grade: {
+          operator: "==",
+          selectedValues: [],
+        },
+        "Work Location": {
+          operator: "==",
+          selectedValues: [],
+        },
+        "Section (Primary Section)": {
+          operator: "==",
+          selectedValues: [],
+        },
+        Region: {
+          operator: "==",
+          selectedValues: [],
+        },
+        Branch: {
+          operator: "==",
+          selectedValues: [],
+        },
+        "Payment Type": {
+          operator: "==",
+          selectedValues: [],
+        },
+        "Payment Frequency": {
+          operator: "==",
+          selectedValues: [],
+        },
+        "Membership Start Date": {
+          operator: "between",
+          selectedValues: [],
+        },
+        "Expiry Date": {
+          operator: "between",
+          selectedValues: [],
+        },
+        "Cancelled Date": {
+          operator: "between",
+          selectedValues: [],
+        },
+        "Resigned Date": {
+          operator: "between",
+          selectedValues: [],
+        },
+        "Processed At Date": {
+          operator: "between",
+          selectedValues: [],
+        },
+        "Renewal Date": {
+          operator: "between",
+          selectedValues: [],
+        },
+        "Last Payment Date": {
+          operator: "between",
+          selectedValues: [],
+        },
       },
-      "Grade": {
-        operator: "==",
-        selectedValues: []
+      Attendees: {
+        Event: {
+          operator: "==",
+          selectedValues: [],
+        },
+        "Event Type": {
+          operator: "==",
+          selectedValues: [],
+        },
+        "Registration Status": {
+          operator: "==",
+          selectedValues: [],
+        },
+        "Payment Status": {
+          operator: "==",
+          selectedValues: [],
+        },
+        "Work Location": {
+          operator: "==",
+          selectedValues: [],
+        },
+        Grade: {
+          operator: "==",
+          selectedValues: [],
+        },
+        "Event Date": {
+          operator: "between",
+          selectedValues: [],
+        },
       },
-      "Region": {
-        operator: "==",
-        selectedValues: []
+      EmailCampaigns: {
+        "Membership Category": {
+          operator: "==",
+          selectedValues: [],
+        },
+        "Work Location": {
+          operator: "==",
+          selectedValues: [],
+        },
+        Grade: {
+          operator: "==",
+          selectedValues: [],
+        },
+        Region: {
+          operator: "==",
+          selectedValues: [],
+        },
+        Branch: {
+          operator: "==",
+          selectedValues: [],
+        },
       },
-      "Branch": {
-        operator: "==",
-        selectedValues: []
-      }
-    },
-    Members: {
-      "Membership Status": {
-        operator: "==",
-        selectedValues: []
+      CreditNotes: {
+        "CN Status": {
+          operator: "==",
+          selectedValues: [],
+        },
+        "CN ref": {
+          operator: "==",
+          selectedValues: [],
+        },
+        Invoice: {
+          operator: "==",
+          selectedValues: [],
+        },
+        Member: {
+          operator: "==",
+          selectedValues: [],
+        },
+        Amount: {
+          operator: "==",
+          selectedValues: [],
+        },
+        Reason: {
+          operator: "contains",
+          selectedValues: [],
+        },
+        "Created By": {
+          operator: "contains",
+          selectedValues: [],
+        },
+        Effective: {
+          operator: "between",
+          selectedValues: [],
+        },
+        "Created At": {
+          operator: "between",
+          selectedValues: [],
+        },
       },
-      "Membership Category": {
-        operator: "==",
-        selectedValues: []
+      JournalAdjustments: {
+        "JA Status": {
+          operator: "==",
+          selectedValues: [],
+        },
+        "Adjustment reference": {
+          operator: "==",
+          selectedValues: [],
+        },
+        Debit: {
+          operator: "==",
+          selectedValues: [],
+        },
+        Credit: {
+          operator: "==",
+          selectedValues: [],
+        },
+        Member: {
+          operator: "==",
+          selectedValues: [],
+        },
+        Reason: {
+          operator: "contains",
+          selectedValues: [],
+        },
+        Effective: {
+          operator: "between",
+          selectedValues: [],
+        },
+        "Created At": {
+          operator: "between",
+          selectedValues: [],
+        },
       },
-      "Work Location": {
-        operator: "==",
-        selectedValues: []
+      Refunds: {
+        "Refund ID": {
+          operator: "==",
+          selectedValues: [],
+        },
+        "Ref No": {
+          operator: "==",
+          selectedValues: [],
+        },
+        Memo: {
+          operator: "contains",
+          selectedValues: [],
+        },
+        "Refund Date": {
+          operator: "between",
+          selectedValues: [],
+        },
+        "Refund Amount": {
+          operator: "==",
+          selectedValues: [],
+        },
+        "Refund Type": {
+          operator: "==",
+          selectedValues: [],
+        },
+        "Refund Source": {
+          operator: "==",
+          selectedValues: [],
+        },
+        "Member No / Application No": {
+          operator: "==",
+          selectedValues: [],
+        },
+        "Created By": {
+          operator: "contains",
+          selectedValues: [],
+        },
+        "Created At": {
+          operator: "between",
+          selectedValues: [],
+        },
       },
-      "Grade": {
-        operator: "==",
-        selectedValues: []
+      WriteOffs: {
+        "WO Status": {
+          operator: "==",
+          selectedValues: [],
+        },
+        WriteOff: {
+          operator: "==",
+          selectedValues: [],
+        },
+        "WriteOff Date": {
+          operator: "between",
+          selectedValues: [],
+        },
+        Ref: {
+          operator: "==",
+          selectedValues: [],
+        },
+        Amount: {
+          operator: "==",
+          selectedValues: [],
+        },
+        Member: {
+          operator: "==",
+          selectedValues: [],
+        },
+        Type: {
+          operator: "==",
+          selectedValues: [],
+        },
+        "Created By": {
+          operator: "contains",
+          selectedValues: [],
+        },
+        "Created At": {
+          operator: "between",
+          selectedValues: [],
+        },
+        "Updated By": {
+          operator: "contains",
+          selectedValues: [],
+        },
+        "Updated At": {
+          operator: "between",
+          selectedValues: [],
+        },
       },
-      "Region": {
-        operator: "==",
-        selectedValues: []
+      GeneralLedger: {
+        "GL Status": {
+          operator: "==",
+          selectedValues: [],
+        },
+        Member: {
+          operator: "==",
+          selectedValues: [],
+        },
+        "Tx date": {
+          operator: "between",
+          selectedValues: [],
+        },
+        "Tx type": {
+          operator: "==",
+          selectedValues: [],
+        },
+        "Doc ref": {
+          operator: "==",
+          selectedValues: [],
+        },
+        "GL Debit": {
+          operator: "==",
+          selectedValues: [],
+        },
+        "GL Credit": {
+          operator: "==",
+          selectedValues: [],
+        },
+        Memo: {
+          operator: "contains",
+          selectedValues: [],
+        },
+        Posted: {
+          operator: "between",
+          selectedValues: [],
+        },
       },
-      "Branch": {
-        operator: "==",
-        selectedValues: []
-      }
-    },
-    OnlinePayment: {
-      "Membership Status": {
-        operator: "==",
-        selectedValues: []
+      Reconciliation: {
+        "Rec Status": {
+          operator: "==",
+          selectedValues: [],
+        },
+        "Clearing Account": {
+          operator: "==",
+          selectedValues: [],
+        },
+        "Bank ref": {
+          operator: "contains",
+          selectedValues: [],
+        },
+        Member: {
+          operator: "==",
+          selectedValues: [],
+        },
+        Amount: {
+          operator: "==",
+          selectedValues: [],
+        },
+        Expected: {
+          operator: "==",
+          selectedValues: [],
+        },
+        Difference: {
+          operator: "==",
+          selectedValues: [],
+        },
+        Confidence: {
+          operator: "==",
+          selectedValues: [],
+        },
+        "Suggested action": {
+          operator: "==",
+          selectedValues: [],
+        },
+        "Matched GL": {
+          operator: "==",
+          selectedValues: [],
+        },
+        Source: {
+          operator: "==",
+          selectedValues: [],
+        },
       },
-      "Payment Status": {
-        operator: "==",
-        selectedValues: []
-      },
-      "Payment Method": {
-        operator: "==",
-        selectedValues: []
-      },
-      "Billing Cycle": {
-        operator: "==",
-        selectedValues: []
-      },
-      "Membership Category": {
-        operator: "==",
-        selectedValues: []
-      }
-    },
-    Communication: {
-      "Grade": {
-        operator: "==",
-        selectedValues: []
-      },
-      "Work Location": {
-        operator: "==",
-        selectedValues: []
-      },
-      "Region": {
-        operator: "==",
-        selectedValues: []
-      },
-      "Branch": {
-        operator: "==",
-        selectedValues: []
-      },
-      "Membership Category": {
-        operator: "==",
-        selectedValues: []
-      }
-    },
-    Cases: {
-      "Incident Date": {
-        operator: "between",
-        selectedValues: []
-      },
-      "Case Type": {
-        operator: "==",
-        selectedValues: []
-      },
-      "Stakeholder": {
-        operator: "==",
-        selectedValues: []
-      },
-      "Priority": {
-        operator: "==",
-        selectedValues: []
-      }
-    },
-    Events: {
-      "Event": {
-        operator: "==",
-        selectedValues: []
-      },
-      "Event Type": {
-        operator: "==",
-        selectedValues: []
-      },
-      "Event Date": {
-        operator: "between",
-        selectedValues: []
-      }
-    },
-    MembershipDashboard: {
-      "Membership Category": {
-        operator: "==",
-        selectedValues: []
-      },
-      "Grade": {
-        operator: "==",
-        selectedValues: []
-      },
-      "Section (Primary Section)": {
-        operator: "==",
-        selectedValues: []
-      },
-      "Region": {
-        operator: "==",
-        selectedValues: []
-      },
-      "Branch": {
-        operator: "==",
-        selectedValues: []
-      },
-      "Work Location": {
-        operator: "==",
-        selectedValues: []
-      },
-    },
-    Attendees: {
-      "Event": {
-        operator: "==",
-        selectedValues: []
-      },
-      "Event Type": {
-        operator: "==",
-        selectedValues: []
-      },
-      "Registration Status": {
-        operator: "==",
-        selectedValues: []
-      },
-      "Payment Status": {
-        operator: "==",
-        selectedValues: []
-      },
-      "Work Location": {
-        operator: "==",
-        selectedValues: []
-      },
-      "Grade": {
-        operator: "==",
-        selectedValues: []
-      },
-      "Event Date": {
-        operator: "between",
-        selectedValues: []
-      }
-    }
-  }), []);
+    }),
+    [],
+  );
 
   // 🔹 When screen changes, save current state and load new screen's state
   useEffect(() => {
-    if (activeScreen === activePage && Object.keys(filtersState).length > 0) return;
+    if (activeScreen === activePage && Object.keys(filtersState).length > 0)
+      return;
 
     console.log("Switching from:", activePage, "to:", activeScreen);
 
     // Save current screen's state
-    setScreenFilterStates(prev => ({
+    setScreenFilterStates((prev) => ({
       ...prev,
       [activePage]: {
         visibleFilters: [...visibleFilters],
-        filtersState: { ...filtersState }
-      }
+        filtersState: { ...filtersState },
+      },
     }));
 
     // Switch to new screen
@@ -898,14 +1856,130 @@ export const FilterProvider = ({ children }) => {
     const savedState = screenFilterStates[activeScreen];
 
     if (savedState && Object.keys(savedState.filtersState).length > 0) {
-      setVisibleFilters(savedState.visibleFilters);
-      setFiltersState(savedState.filtersState);
+      let loaded =
+        activeScreen === "Applications"
+          ? consolidateApplicationsStatusFilter(
+              savedState.filtersState,
+              savedState.visibleFilters,
+            )
+          : {
+              filtersState: savedState.filtersState,
+              visibleFilters: savedState.visibleFilters,
+            };
+      if (
+        activeScreen === "MembershipListingReport" ||
+        isAggregateMembershipReportScreen(activeScreen)
+      ) {
+        loaded = consolidateMembershipListingFilters(
+          loaded.filtersState,
+          loaded.visibleFilters,
+        );
+      }
+      if (isAggregateMembershipReportScreen(activeScreen)) {
+        loaded = restrictStatisticsReportFilters(
+          loaded.visibleFilters,
+          loaded.filtersState,
+        );
+        loaded.visibleFilters = buildAggregateReportVisibleFilters(
+          activeScreen,
+          loaded.filtersState,
+        );
+      }
+      setVisibleFilters(loaded.visibleFilters);
+      setFiltersState(loaded.filtersState);
     } else {
       // If no saved state, use defaults
       setVisibleFilters(defaultVisibleFilters[activeScreen] || []);
       setFiltersState(defaultFilterValues[activeScreen] || {});
     }
   }, [activeScreen]);
+
+  // Drop duplicate or non-membership chips (saved state / templates from other screens).
+  useEffect(() => {
+    if (!isAggregateMembershipReportScreen(activePage)) return;
+    const restricted = restrictStatisticsReportFilters(
+      visibleFilters,
+      filtersState,
+    );
+    const visSame =
+      restricted.visibleFilters.length === visibleFilters.length &&
+      restricted.visibleFilters.every((l, i) => l === visibleFilters[i]);
+    const stateKeys = Object.keys(filtersState);
+    const restrictedKeys = Object.keys(restricted.filtersState);
+    const stateSame =
+      stateKeys.length === restrictedKeys.length &&
+      stateKeys.every((k) => restricted.filtersState[k] === filtersState[k]);
+    if (visSame && stateSame) return;
+    setVisibleFilters(restricted.visibleFilters);
+    setFiltersState(restricted.filtersState);
+    filtersStateRef.current = restricted.filtersState;
+    setScreenFilterStates((prev) => ({
+      ...prev,
+      [activePage]: {
+        visibleFilters: restricted.visibleFilters,
+        filtersState: restricted.filtersState,
+      },
+    }));
+  }, [activePage, visibleFilters, filtersState]);
+
+  // Aggregate membership reports: default toolbar chips only (extras only when filter has values).
+  useEffect(() => {
+    if (!isAggregateMembershipReportScreen(activePage)) return;
+    const normalized = buildAggregateReportVisibleFilters(
+      activePage,
+      filtersStateRef.current,
+    );
+    const visSame =
+      normalized.length === visibleFilters.length &&
+      normalized.every((label, i) => label === visibleFilters[i]);
+    if (visSame) return;
+    setVisibleFilters(normalized);
+    setScreenFilterStates((prev) => ({
+      ...prev,
+      [activePage]: {
+        visibleFilters: normalized,
+        filtersState: filtersStateRef.current,
+      },
+    }));
+  }, [activePage]);
+
+  // Strip legacy "Date Range" chip when already on the listing report (no route change).
+  useEffect(() => {
+    if (
+      activePage !== "MembershipListingReport" &&
+      !isAggregateMembershipReportScreen(activePage)
+    ) {
+      return;
+    }
+    const hasLegacyChip =
+      visibleFilters.includes("Date Range") ||
+      filtersState["Date Range"] ||
+      visibleFilters.includes("Payment Date") ||
+      filtersState["Payment Date"];
+    if (!hasLegacyChip) return;
+    const cleaned = consolidateMembershipListingFilters(
+      filtersState,
+      visibleFilters,
+    );
+    setFiltersState(cleaned.filtersState);
+    filtersStateRef.current = cleaned.filtersState;
+    setVisibleFilters(cleaned.visibleFilters);
+    setScreenFilterStates((prev) => ({
+      ...prev,
+      MembershipListingReport: {
+        visibleFilters: cleaned.visibleFilters,
+        filtersState: cleaned.filtersState,
+      },
+      StatisticsReport: {
+        visibleFilters: cleaned.visibleFilters,
+        filtersState: cleaned.filtersState,
+      },
+      WorkplaceBreakdownReport: {
+        visibleFilters: cleaned.visibleFilters,
+        filtersState: cleaned.filtersState,
+      },
+    }));
+  }, [activePage, filtersState, visibleFilters]);
 
   // 🔹 Removing old API-based effect
 
@@ -915,8 +1989,16 @@ export const FilterProvider = ({ children }) => {
       return [];
     }
     const options = lookupArray
-      .map(item => item.label || item.DisplayName || item.lookupname || (typeof item === 'string' ? item : ""))
-      .filter(label => label && typeof label === 'string' && label.trim() !== "");
+      .map(
+        (item) =>
+          item.label ||
+          item.DisplayName ||
+          item.lookupname ||
+          (typeof item === "string" ? item : ""),
+      )
+      .filter(
+        (label) => label && typeof label === "string" && label.trim() !== "",
+      );
 
     return [...new Set(options)].sort();
   };
@@ -984,8 +2066,13 @@ export const FilterProvider = ({ children }) => {
       return [];
     }
     const options = categoryData
-      .map(item => item.label || item.DisplayName || item.lookupname || item.name || "")
-      .filter(label => label && typeof label === 'string' && label.trim() !== "");
+      .map(
+        (item) =>
+          item.label || item.DisplayName || item.lookupname || item.name || "",
+      )
+      .filter(
+        (label) => label && typeof label === "string" && label.trim() !== "",
+      );
 
     return [...new Set(options)].sort();
   };
@@ -995,12 +2082,20 @@ export const FilterProvider = ({ children }) => {
     if (!label) return null;
 
     if (filterName === "Work Location" && workLocationOptions) {
-      const found = workLocationOptions.find(item => item.label === label);
+      const found = workLocationOptions.find((item) => item.label === label);
       return found ? found.value : null;
     }
 
     if (filterName === "Membership Category" && categoryData) {
-      const found = categoryData.find(item => {
+      const found = categoryData.find((item) => {
+        const itemLabel = item.label || item.name || item.lookupname;
+        return itemLabel === label;
+      });
+      return found ? found._id || found.value || found.id : null;
+    }
+
+    if (filterName === "Category" && categoryData) {
+      const found = categoryData.find((item) => {
         const itemLabel = item.label || item.name || item.lookupname;
         return itemLabel === label;
       });
@@ -1008,11 +2103,12 @@ export const FilterProvider = ({ children }) => {
     }
 
     const lookupMap = {
-      "Grade": gradeOptions,
-      "Region": regionOptions,
-      "Branch": branchOptions,
+      Grade: gradeOptions,
+      Region: regionOptions,
+      Branch: branchOptions,
       "Payment Type": paymentTypeOptions,
-      "Gender": genderOptions,
+      "Payment Method": paymentTypeOptions,
+      Gender: genderOptions,
       "Section (Primary)": sectionOptions,
       "Section (Primary Section)": sectionOptions,
     };
@@ -1020,80 +2116,154 @@ export const FilterProvider = ({ children }) => {
     const lookupArray = lookupMap[filterName];
     if (!lookupArray) return null;
 
-    const found = lookupArray.find(item => item.label === label);
+    const found = lookupArray.find((item) => item.label === label);
     return found ? found.value : null;
   };
 
-  // 🔹 Dynamic filter options from lookups
+  // 🔹 Dynamic filter options from lookups + loaded grid rows (finance client-side grids)
   const filterOptions = useMemo(() => {
-    return {
+    const categoryOpts =
+      categoryLoading && !categoryData?.length
+        ? ["Loading..."]
+        : ["", ...getCategoryOptions()];
+
+    const base = {
       // 🔹 CUSTOM FILTERS
-      "Application Status": ["", "In-Progress", "Approved", "Rejected", "Submitted"],
-      "Membership Status": ["", "Active", "Inactive", "Pending", "Cancelled"],
+      "Application Status": [
+        "",
+        "In-Progress",
+        "Approved",
+        "Rejected",
+        "Submitted",
+      ],
+      "Form Type": ["", "Salary Deductions", "Standing Orders"],
+      "Membership Status": [
+        "",
+        "Active",
+        "Cancelled",
+        "Resigned",
+        "Lapsed",
+        "Suspended",
+        "Archived",
+      ],
 
       // 🔹 CATEGORY FILTER
-      "Membership Category": getCategoryOptions(),
+      Category: categoryOpts,
+      "Membership Category": categoryOpts,
 
       // 🔹 WORK LOCATION - hierarchical loading
       "Work Location": getHierarchicalWLOptions(),
 
       // 🔹 REGION - hierarchical loading
-      "Region": getHierarchicalRegionOptions(),
+      Region: getHierarchicalRegionOptions(),
 
       // 🔹 BRANCH - hierarchical loading
-      "Branch": getHierarchicalBranchOptions(),
+      Branch: getHierarchicalBranchOptions(),
 
       // 🔹 OTHER REDUX LOOKUP FILTERS
       "Payment Type": getLookupOptions(paymentTypeOptions || []),
-      "Grade": getLookupOptions(gradeOptions || []),
+      Grade: getLookupOptions(gradeOptions || []),
       "Section (Primary)": getLookupOptions(sectionOptions || []),
       "Section (Primary Section)": getLookupOptions(sectionOptions || []),
-      "Gender": getLookupOptions(genderOptions || []),
+      Gender: getLookupOptions(genderOptions || []),
 
       // 🔹 More custom filters
       "Another Union Member": ["", "Yes", "No"],
-      "Consent": ["", "Yes", "No"],
+      Consent: ["", "Yes", "No"],
       "Income Protection": ["", "Yes", "No"],
       "INMO Rewards": ["", "Yes", "No"],
       "Partner Consent": ["", "Yes", "No"],
       "Cancellation Flag": ["", "Yes", "No"],
       "Cancellation/Reinstated": ["", "Yes", "No"],
       "Payment Frequency": ["", "Monthly", "Quarterly", "Yearly"],
-      "Membership Movement": ["", "New", "Renewal", "Upgrade", "Downgrade"],
-      "Payment Method": ["", "Credit Card", "PayPal", "Debit Card", "Stripe"],
+      "Membership Movement": ["", "NewJoin", "Rejoin", "Reinstate", "Renewed"],
+      "Payment Method":
+        lookupsloading && !paymentTypeOptions?.length
+          ? ["Loading..."]
+          : ["", ...getLookupOptions(paymentTypeOptions || [])],
       "Payment Status": ["", "Paid", "Pending", "Failed", "Refunded"],
       "Billing Cycle": ["", "Annual", "Monthly"],
       "Case Type": ["", "General", "Legal", "Financial", "Other"],
-      "Priority": ["", "Low", "Medium", "High", "Critical"],
-      "Stakeholder": ["", "Internal", "External", "Partner"],
+      Priority: ["", "Low", "Medium", "High", "Critical"],
+      Stakeholder: ["", "Internal", "External", "Partner"],
       "Event Type": ["", "Internal", "Workshop", "External"],
-      "Status": ["", "Active", "Planning", "Review", "Canceled"],
-      "Event": [
+      Status: ["", "Active", "Planning", "Review", "Canceled"],
+      "CN Status": ["", "Draft", "Approved", "Cancelled", "Posted"],
+      "JA Status": ["", "Draft", "Approved", "Cancelled"],
+      "WO Status": ["", "Posted", "Reversed"],
+      "GL Status": ["", "Draft", "Posted", "Cancelled"],
+      "Rec Status": [
+        "",
+        "unmatched",
+        "auto_matched",
+        "manual_matched",
+        "suspense",
+        "settled",
+      ],
+      "Clearing Account": ["", "1210", "1220", "1230", "1240", "1250"],
+      Confidence: ["", "high", "medium", "low", "none"],
+      Source: ["", "bank", "gl"],
+      "Adjustment reference": [],
+      Debit: [],
+      Credit: [],
+      Reason: [],
+      "Created By": [],
+      "Member / Application No": [],
+      "Full Name": [],
+      Phone: [],
+      Event: [
         "",
         "Annual Nursing Conference",
         "Advanced Clinical Skills",
         "Infection Control Essentials",
         "Leadership Forum",
       ],
-      "Registration Status": ["", "Registered", "Cancelled", "Pending", "Waitlisted"],
+      "Registration Status": [
+        "",
+        "Registered",
+        "Cancelled",
+        "Pending",
+        "Waitlisted",
+      ],
 
       // 🔹 Text input filters
-      "Email": [],
+      Email: [],
       "Membership No": [],
       "Mobile No": [],
       "Email (Preferred)": [],
       "Payroll No": [],
-      "Address": [],
+      Address: [],
       "NMBI No": [],
-      "Speciality": [],
+      Speciality: [],
       "Pension Number": [],
       "Outstanding Balance": [],
       "Membership Fee": [],
       "Last Payment Amount": [],
       "Reminder No": [],
-      "Subscription Year": [],
+      "Subscription Year":
+        subscriptionYearsLoading && !subscriptionYearsLoaded
+          ? ["Loading..."]
+          : ["", ...(subscriptionYears || []).map(String)],
       "Transaction ID": [],
       "Paid Amount": [],
+      "Refund Amount": [],
+      "Refund ID": [],
+      "Ref No": [],
+      "Refund Type": [],
+      "Refund Source": [],
+      WriteOff: [],
+      Ref: [],
+      "GL Debit": [],
+      "GL Credit": [],
+      "Doc ref": [],
+      "Tx type": [],
+      Expected: [],
+      Difference: [],
+      "Suggested action": [],
+      "Matched GL": [],
+      "CN ref": [],
+      Invoice: [],
+      Member: [],
 
       // 🔹 Date filters
       "Submission Date": [],
@@ -1112,7 +2282,38 @@ export const FilterProvider = ({ children }) => {
       "Updated At": [],
       "Incident Date": [],
       "Event Date": [],
+      Effective: [],
     };
+
+    const pageFilterLabels = viewFilters[activePage] || [];
+    const dataDerived = buildDataDerivedFilterOptions(
+      activePage,
+      pageFilterLabels,
+    );
+
+    Object.entries(dataDerived).forEach(([label, opts]) => {
+      base[label] = mergeStaticAndDerivedOptions(base[label], opts, label);
+    });
+
+    const isClientSideGrid = CLIENT_SIDE_GRID_FILTER_SCREENS.has(activePage);
+    const gridLoaded = hasRegisteredGridFilterRows(activePage);
+
+    if (isClientSideGrid && !gridLoaded) {
+      pageFilterLabels.forEach((label) => {
+        if (isDateFilterLabel(label, [])) return;
+        if (isNumericFilterLabel(label, [])) return;
+        if (isStringFilterLabel(label, [])) return;
+        const current = base[label] || [];
+        const hasRealStatic = current.some(
+          (v) => String(v).trim() && v !== "Loading...",
+        );
+        if (!hasRealStatic) {
+          base[label] = ["Loading..."];
+        }
+      });
+    }
+
+    return base;
   }, [
     workLocationOptions,
     gradeOptions,
@@ -1127,22 +2328,45 @@ export const FilterProvider = ({ children }) => {
     allHierarchicalData,
     regionOptions,
     branchOptions,
+    subscriptionYears,
+    subscriptionYearsLoaded,
+    subscriptionYearsLoading,
+    activePage,
+    gridFilterRowsTick,
+    categoryLoading,
+    lookupsloading,
   ]);
 
   // 🔹 Helper functions
   const toggleFilter = (filter, checked) => {
-    const newVisibleFilters = checked
-      ? [...visibleFilters, filter]
+    if (
+      isAggregateMembershipReportScreen(activePage) &&
+      !STATISTICS_REPORT_ALLOWED_SET.has(filter)
+    ) {
+      return;
+    }
+
+    let newVisibleFilters = checked
+      ? visibleFilters.includes(filter)
+        ? visibleFilters
+        : [...visibleFilters, filter]
       : visibleFilters.filter((f) => f !== filter);
+
+    if (isAggregateMembershipReportScreen(activePage)) {
+      newVisibleFilters = restrictStatisticsReportFilters(
+        newVisibleFilters,
+        filtersState,
+      ).visibleFilters;
+    }
 
     setVisibleFilters(newVisibleFilters);
 
-    setScreenFilterStates(prev => ({
+    setScreenFilterStates((prev) => ({
       ...prev,
       [activePage]: {
         ...prev[activePage],
-        visibleFilters: newVisibleFilters
-      }
+        visibleFilters: newVisibleFilters,
+      },
     }));
   };
 
@@ -1155,12 +2379,12 @@ export const FilterProvider = ({ children }) => {
     setFiltersState(resetFilterValues);
     filtersStateRef.current = resetFilterValues;
 
-    setScreenFilterStates(prev => ({
+    setScreenFilterStates((prev) => ({
       ...prev,
       [activePage]: {
         visibleFilters: resetVisibleFilters,
-        filtersState: resetFilterValues
-      }
+        filtersState: resetFilterValues,
+      },
     }));
   };
 
@@ -1169,13 +2393,19 @@ export const FilterProvider = ({ children }) => {
   }, []);
 
   // 🔹 Combined update function
-  const updateFilter = (filter, operator, selectedValues, customFiltersState = null) => {
+  const updateFilter = (
+    filter,
+    operator,
+    selectedValues,
+    customFiltersState = null,
+  ) => {
     const currentState = customFiltersState || filtersState;
 
     // 🛡️ Sanitize selectedValues (strictly non-empty strings)
-    const sanitize = (values) => (values || [])
-      .map(v => String(v))
-      .filter(v => v !== null && v !== undefined && v.trim() !== "");
+    const sanitize = (values) =>
+      (values || [])
+        .map((v) => String(v))
+        .filter((v) => v !== null && v !== undefined && v.trim() !== "");
 
     const sanitizedValues = sanitize(selectedValues);
 
@@ -1193,12 +2423,12 @@ export const FilterProvider = ({ children }) => {
       setFiltersState(newFilterState);
       filtersStateRef.current = newFilterState;
 
-      setScreenFilterStates(prev => ({
+      setScreenFilterStates((prev) => ({
         ...prev,
         [activePage]: {
           ...prev[activePage],
-          filtersState: newFilterState
-        }
+          filtersState: newFilterState,
+        },
       }));
     }
 
@@ -1226,24 +2456,40 @@ export const FilterProvider = ({ children }) => {
 
   const currentPageFilters = useMemo(
     () => viewFilters[activePage] || [],
-    [activePage, viewFilters]
+    [activePage, viewFilters],
   );
 
-  // 🔹 Function to get filters in correct order
+  // Preserve toolbar order: defaults first, then filters added from More append to the right.
   const getOrderedVisibleFilters = () => {
-    // Simply return the visibleFilters in the order they appear in viewFilters config
-    // This allows users to untick any filter, including "default" ones.
-    const configOrder = viewFilters[activePage] || [];
-    return configOrder.filter(filter => visibleFilters.includes(filter));
+    if (activePage === "Applications") {
+      return visibleFilters.filter((label) => label !== "Status");
+    }
+    if (isAggregateMembershipReportScreen(activePage)) {
+      return restrictStatisticsReportFilters(
+        visibleFilters.filter(
+          (label) => label !== "Date Range" && label !== "Payment Date",
+        ),
+        filtersState,
+      ).visibleFilters;
+    }
+    if (activePage === "MembershipListingReport") {
+      return dedupeFilterLabels(
+        visibleFilters.filter(
+          (label) => label !== "Date Range" && label !== "Payment Date",
+        ),
+      );
+    }
+    return dedupeFilterLabels(visibleFilters);
   };
 
   const orderedVisibleFilters = getOrderedVisibleFilters();
 
   const applyTemplateFilters = (templateFilters) => {
     // 🛡️ Sanitize selectedValues (strictly non-empty strings)
-    const sanitize = (values) => (values || [])
-      .map(v => String(v))
-      .filter(v => v !== null && v !== undefined && v.trim() !== "");
+    const sanitize = (values) =>
+      (values || [])
+        .map((v) => String(v))
+        .filter((v) => v !== null && v !== undefined && v.trim() !== "");
 
     // Use structural defaults with all selections empty — not product defaults like
     // "Submitted" for Application Status. Merging with full `defaultFilterValues` here
@@ -1260,28 +2506,82 @@ export const FilterProvider = ({ children }) => {
 
     // Sanitize incoming template filters
     const sanitizedTemplateFilters = {};
-    Object.keys(templateFilters).forEach(key => {
+    Object.keys(templateFilters).forEach((key) => {
       sanitizedTemplateFilters[key] = {
         ...templateFilters[key],
-        selectedValues: sanitize(templateFilters[key]?.selectedValues)
+        selectedValues: sanitize(templateFilters[key]?.selectedValues),
       };
     });
 
     const newFiltersState = { ...baseFilters, ...sanitizedTemplateFilters };
+    let consolidated =
+      activePage === "Applications"
+        ? consolidateApplicationsStatusFilter(newFiltersState, visibleFilters)
+        : { filtersState: newFiltersState, visibleFilters };
 
-    setFiltersState(newFiltersState);
-    filtersStateRef.current = newFiltersState;
-    setScreenFilterStates(prev => ({
+    if (
+      activePage === "MembershipListingReport" ||
+      isAggregateMembershipReportScreen(activePage)
+    ) {
+      consolidated = consolidateMembershipListingFilters(
+        consolidated.filtersState,
+        consolidated.visibleFilters,
+      );
+    }
+    if (isAggregateMembershipReportScreen(activePage)) {
+      consolidated = restrictStatisticsReportFilters(
+        consolidated.visibleFilters,
+        consolidated.filtersState,
+      );
+    }
+
+    setFiltersState(consolidated.filtersState);
+    filtersStateRef.current = consolidated.filtersState;
+    setScreenFilterStates((prev) => ({
       ...prev,
       [activePage]: {
         ...prev[activePage],
-        filtersState: newFiltersState
-      }
+        filtersState: consolidated.filtersState,
+      },
     }));
 
-    // Also ensure all filters in the template are visible
-    const newVisible = [...new Set([...visibleFilters, ...Object.keys(templateFilters)])];
-    setVisibleFilters(newVisible);
+    const templateKeys = Object.keys(sanitizedTemplateFilters);
+    let newVisible;
+    if (isAggregateMembershipReportScreen(activePage)) {
+      newVisible = buildAggregateReportVisibleFilters(
+        activePage,
+        consolidated.filtersState,
+      );
+      const keysWithValues = templateKeys.filter(
+        (key) =>
+          (sanitizedTemplateFilters[key]?.selectedValues || []).length > 0,
+      );
+      newVisible = restrictStatisticsReportFilters(
+        dedupeFilterLabels([
+          ...newVisible,
+          ...keysWithValues.filter((key) => !newVisible.includes(key)),
+        ]),
+        consolidated.filtersState,
+      ).visibleFilters;
+    } else {
+      const mergedVisible = [
+        ...consolidated.visibleFilters,
+        ...templateKeys.filter(
+          (key) => !consolidated.visibleFilters.includes(key),
+        ),
+      ];
+      newVisible =
+        activePage === "Applications"
+          ? mergedVisible.filter((label) => label !== "Status")
+          : mergedVisible;
+      if (activePage === "MembershipListingReport") {
+        newVisible = consolidateMembershipListingFilters(
+          consolidated.filtersState,
+          newVisible,
+        ).visibleFilters;
+      }
+    }
+    setVisibleFilters(dedupeFilterLabels(newVisible));
 
     userOverrodeTemplateFiltersRef.current = false;
   };
@@ -1314,6 +2614,9 @@ export const FilterProvider = ({ children }) => {
         filteredBranchOptions,
         membershipDashboardApplyTick,
         bumpMembershipDashboardApply,
+        membershipDashboardHeader,
+        updateMembershipDashboardHeader,
+        resetMembershipDashboardHeader,
       }}
     >
       {children}

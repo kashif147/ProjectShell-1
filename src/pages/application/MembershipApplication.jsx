@@ -1,58 +1,118 @@
-import React, { useEffect, useState, useCallback } from "react";
+import React, { useEffect, useState, useCallback, useMemo } from "react";
 import { useDispatch, useSelector } from "react-redux";
 // import TableComponent from "../../component/common/TableComponent";
 import TableComponent from "../../component/common/TableComponent";
 import { getApplicationsWithFilter } from "../../features/applicationwithfilterslice";
+import { getPaymentFormsWithFilter } from "../../features/paymentFormsWithFilterSlice";
 import MultiFilterDropdown from "../../component/common/MultiFilterDropdown";
-import { Spin } from "antd";
+import { Button, Space, Spin } from "antd";
 import { useFilters } from "../../context/FilterContext";
+import DuplicateProfileReview from "../../component/applications/DuplicateProfileReview";
 import dayjs from "dayjs";
 import utc from "dayjs/plugin/utc";
 import { useSelectedIds } from "../../context/SelectedIdsContext";
 import { useTableColumns } from "../../context/TableColumnsContext ";
 import { transformFiltersForApi } from "../../utils/filterUtils";
 import { useLocation } from "react-router-dom";
+import PaymentFormDetailDrawer from "../../component/paymentForms/PaymentFormDetailDrawer";
+import { formatIbanDisplay } from "../../utils/iban";
 
 function MembershipApplication() {
   const dispatch = useDispatch();
   const { filtersState } = useFilters();
-  const { applications, loading: applicationsLoading, isInitialized, currentTemplateId } = useSelector(
-    (state) => state.applicationWithFilter
-  );
-  const { selectedIds, setSelectedIds } = useSelectedIds();
   const location = useLocation();
+  const isPaymentFormsPage =
+    (location?.pathname || "").toLowerCase() === "/paymentforms";
+  const {
+    applications,
+    loading: applicationsLoading,
+    isInitialized,
+    currentTemplateId,
+  } = useSelector((state) => state.applicationWithFilter);
+  const {
+    paymentForms,
+    loading: paymentFormsLoading,
+    isInitialized: isPaymentFormsInitialized,
+    currentTemplateId: paymentFormsTemplateId,
+  } = useSelector((state) => state.paymentFormsWithFilter || {});
+  const { selectedIds, setSelectedIds } = useSelectedIds();
   const { columns } = useTableColumns();
   const { loading: templatesLoading } = useSelector((state) => state.templetefiltrsclumnapi);
   const [formattedApplications, setFormattedApplications] = useState([]);
-  const [selectedRows, setSelectedRows] = useState(null)
+  const [selectedRows, setSelectedRows] = useState(null);
+  const [paymentFormDetailId, setPaymentFormDetailId] = useState(null);
+  const [paymentFormDetailOpen, setPaymentFormDetailOpen] = useState(false);
+  const [duplicateReviewAppId, setDuplicateReviewAppId] = useState(null);
+  const [duplicateReviewOpen, setDuplicateReviewOpen] = useState(false);
   const { activeTemplateId } = useSelector((state) => state.activeTemplate);
   console.log(activeTemplateId, "activeTemplateId activeTemplateId");
 
   useEffect(() => {
-    if (!isInitialized) return;
-    const templateId = activeTemplateId || currentTemplateId || "";
+    const pageInitialized = isPaymentFormsPage
+      ? isPaymentFormsInitialized
+      : isInitialized;
+    if (!pageInitialized) return;
+    const templateId = isPaymentFormsPage
+      ? activeTemplateId || paymentFormsTemplateId || ""
+      : activeTemplateId || currentTemplateId || "";
+    if (isPaymentFormsPage) {
+      dispatch(
+        getPaymentFormsWithFilter({
+          templateId,
+          page: 1,
+          limit: 500,
+        }),
+      );
+      return;
+    }
     dispatch(
       getApplicationsWithFilter({
         templateId,
         page: 1,
-        limit: 10,
+        limit: 500,
       }),
     );
-  }, [activeTemplateId, currentTemplateId, isInitialized, dispatch]);
+  }, [
+    activeTemplateId,
+    currentTemplateId,
+    paymentFormsTemplateId,
+    isInitialized,
+    isPaymentFormsInitialized,
+    isPaymentFormsPage,
+    dispatch,
+  ]);
 
   useEffect(() => {
-    if (applications && applications.length > 0) {
-      setFormattedApplications(applications);
+    const sourceData = isPaymentFormsPage ? paymentForms : applications;
+    if (sourceData && sourceData.length > 0) {
+      if (isPaymentFormsPage) {
+        setFormattedApplications(
+          sourceData.map((row) => ({
+            ...row,
+            key: row._id || row.key,
+            applicationStatus: row.status,
+            applicationId: row._id,
+            membershipNo: row.membershipNumber,
+            fullName: row.memberFullName,
+            debtorIbanDisplay: formatIbanDisplay(row.debtorIbanDisplay) || null,
+          })),
+        );
+      } else {
+        setFormattedApplications(sourceData);
+      }
     } else {
       setFormattedApplications([]);
     }
-  }, [applications]);
+  }, [applications, paymentForms, isPaymentFormsPage]);
 
-  const shouldDisableRow = useCallback((record) => {
-    const status = record?.applicationStatus;
-    // Return true to DISABLE if status is NOT "submitted"
-    return status !== "submitted";
-  }, []);
+  const shouldDisableRow = useCallback(
+    (record) => {
+      if (isPaymentFormsPage) return false;
+      const status = record?.applicationStatus;
+      return status !== "submitted";
+    },
+    [isPaymentFormsPage],
+  );
 
   const [selectedKeys, setSelectedKeys] = useState([]);
   const [selectedApplicationIds, setSelectedApplicationIds] = useState([]);
@@ -63,11 +123,70 @@ function MembershipApplication() {
     // Map selectedRows to get application IDs
     const ids = selectedRows.map(row => row.applicationId || row._id);
     setSelectedIds(ids);
+  }, [setSelectedIds]);
+
+  const refreshApplicationsList = useCallback(() => {
+    dispatch(
+      getApplicationsWithFilter({
+        templateId: activeTemplateId || currentTemplateId || "",
+        page: 1,
+        limit: 500,
+      }),
+    );
+  }, [dispatch, activeTemplateId, currentTemplateId]);
+
+  const selectedSubmittedApplication = useMemo(() => {
+    if (isPaymentFormsPage || selectedKeys.length !== 1) return null;
+    const key = selectedKeys[0];
+    const row = formattedApplications.find(
+      (app) =>
+        String(app.applicationId || app.key || app._id) === String(key),
+    );
+    if (!row || row.applicationStatus !== "submitted") return null;
+    return row;
+  }, [formattedApplications, isPaymentFormsPage, selectedKeys]);
+
+  const openDuplicateReview = useCallback((applicationId) => {
+    if (!applicationId) return;
+    setDuplicateReviewAppId(applicationId);
+    setDuplicateReviewOpen(true);
   }, []);
 
-  const handleRowClick = useCallback((record, index) => {
-    console.log("Row clicked12:", record?.applicationId,);
-  }, []);
+  const handleDuplicateReviewRequest = useCallback(
+    (record) => {
+      const applicationId = record?.applicationId || record?._id;
+      if (applicationId && record?.applicationStatus === "submitted") {
+        openDuplicateReview(applicationId);
+      }
+    },
+    [openDuplicateReview],
+  );
+
+  const handleRowClick = useCallback(
+    (record) => {
+      if (isPaymentFormsPage && record?._id) {
+        setPaymentFormDetailId(record._id);
+        setPaymentFormDetailOpen(true);
+      }
+    },
+    [isPaymentFormsPage],
+  );
+
+  const refreshPaymentFormsList = useCallback(() => {
+    if (!isPaymentFormsPage) return;
+    dispatch(
+      getPaymentFormsWithFilter({
+        templateId: activeTemplateId || paymentFormsTemplateId || "",
+        page: 1,
+        limit: 500,
+      }),
+    );
+  }, [
+    dispatch,
+    isPaymentFormsPage,
+    activeTemplateId,
+    paymentFormsTemplateId,
+  ]);
 
   // Synchronize local selection with global context (to handle clear selection)
   useEffect(() => {
@@ -76,7 +195,12 @@ function MembershipApplication() {
     }
   }, [selectedIds]);
 
-  if (!isInitialized || templatesLoading) {
+  const pageLoading = isPaymentFormsPage ? paymentFormsLoading : applicationsLoading;
+  const pageInitialized = isPaymentFormsPage
+    ? isPaymentFormsInitialized
+    : isInitialized;
+
+  if (!pageInitialized || templatesLoading) {
     return (
       <div style={{ display: "flex", justifyContent: "center", alignItems: "center", height: "100%", padding: "50px" }}>
         <Spin tip="Initializing Template...">
@@ -90,18 +214,80 @@ function MembershipApplication() {
     <div className="" style={{ width: "100%" }}>
       <TableComponent
         data={formattedApplications}
-        screenName="Applications"
-        isGrideLoading={applicationsLoading}
+        screenName={isPaymentFormsPage ? "Payment Forms" : "Applications"}
+        isGrideLoading={pageLoading}
         selectedRowKeys={selectedKeys}
         onSelectionChange={handleSelectionChange}
         selectionType="checkbox"
-        enableRowSelection={true}
-        disableDefaultRowClick={true}
-        disableRowFn={shouldDisableRow} // Pass the disable function
+        enableRowSelection={!isPaymentFormsPage}
+        disableDefaultRowClick={!isPaymentFormsPage}
+        onRowClick={isPaymentFormsPage ? handleRowClick : undefined}
+        disableRowFn={shouldDisableRow}
+        onDuplicateReviewRequest={
+          isPaymentFormsPage ? undefined : handleDuplicateReviewRequest
+        }
+        selectionToolbar={
+          !isPaymentFormsPage && selectedSubmittedApplication ? (
+            <div
+              style={{
+                marginBottom: 8,
+                display: "flex",
+                flexWrap: "wrap",
+                gap: 8,
+                alignItems: "center",
+              }}
+            >
+              <span
+                style={{
+                  padding: "8px 12px",
+                  background: "#f0f0f0",
+                  borderRadius: 4,
+                }}
+              >
+                1 submitted application selected
+              </span>
+              <Space size="small">
+                <Button
+                  size="small"
+                  type="primary"
+                  onClick={() =>
+                    openDuplicateReview(
+                      selectedSubmittedApplication.applicationId,
+                    )
+                  }
+                >
+                  Detect Duplicate
+                </Button>
+              </Space>
+            </div>
+          ) : null
+        }
       />
 
-      <div style={{ display: "flex", gap: 12 }}>
-      </div>
+      {!isPaymentFormsPage && (
+        <DuplicateProfileReview
+          open={duplicateReviewOpen}
+          onClose={() => {
+            setDuplicateReviewOpen(false);
+            setDuplicateReviewAppId(null);
+          }}
+          applicationId={duplicateReviewAppId}
+          runDetectionOnOpen
+          onReviewUpdated={refreshApplicationsList}
+        />
+      )}
+
+      {isPaymentFormsPage && (
+        <PaymentFormDetailDrawer
+          open={paymentFormDetailOpen}
+          formId={paymentFormDetailId}
+          onClose={() => {
+            setPaymentFormDetailOpen(false);
+            setPaymentFormDetailId(null);
+          }}
+          onUpdated={refreshPaymentFormsList}
+        />
+      )}
     </div>
   );
 }

@@ -1,6 +1,12 @@
 // lookupsSlice.js
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import axios from "axios";
+import {
+  getLookupId,
+  getLookupName,
+  getLookupTypeName,
+  normalizeLookups,
+} from "../utils/lookupHierarchy";
 
 const API_URL = process.env.REACT_APP_POLICY_SERVICE_URL;
 const getAuthHeaders = () => ({
@@ -9,6 +15,22 @@ const getAuthHeaders = () => ({
 });
 
 // Sort utility function
+const isWorkLocationLookupTypeName = (typeName) => {
+  const key = String(typeName || "")
+    .trim()
+    .toLowerCase()
+    .replace(/\s+/g, "");
+  return key === "worklocation";
+};
+
+const isPaymentMethodLookupTypeName = (typeName) => {
+  const key = String(typeName || "")
+    .trim()
+    .toLowerCase()
+    .replace(/\s+/g, "");
+  return key === "paymenttype" || key === "paymentmethod";
+};
+
 const sortArray = (array, key, order = 'asc') => {
   if (!Array.isArray(array)) return [];
 
@@ -58,6 +80,7 @@ const lookupsSlice = createSlice({
     secondarySectionOptions: [],
     studyLocationOptions: [],
     disciplineOptions: [],
+    youthForumOptions: [],
     countryOptions: [],
     provincesOption: [],
     
@@ -90,6 +113,7 @@ const lookupsSlice = createSlice({
       state.secondarySectionOptions = [];
       state.studyLocationOptions = [];
       state.disciplineOptions = [];
+      state.youthForumOptions = [];
       state.countryOptions = [];
       state.provincesOption = [];
       state.selectedWorkLocations = [];
@@ -106,7 +130,7 @@ const lookupsSlice = createSlice({
         state.lookupsloading = false;
         state.error = null;
         state.lastErrorTime = null;
-        state.lookups = payload;
+        state.lookups = normalizeLookups(payload);
 
         // Reset all arrays
         state.titleOptions = [];
@@ -121,16 +145,20 @@ const lookupsSlice = createSlice({
         state.secondarySectionOptions = [];
         state.studyLocationOptions = [];
         state.disciplineOptions = [];
+        state.youthForumOptions = [];
         state.countryOptions = [];
         state.provincesOption = []
 
-        if (Array.isArray(payload)) {
-          payload.forEach((item) => {
-            const lookuptype = item.lookuptypeId?.lookuptype;
+        if (Array.isArray(state.lookups)) {
+          state.lookups.forEach((item) => {
+            const lookuptype = getLookupTypeName(item);
             const optionItem = {
-              value: item._id,
-              key: item._id,
-              label: item.lookupname,
+              value: getLookupId(item),
+              key: getLookupId(item),
+              label: getLookupName(item),
+              ...(isWorkLocationLookupTypeName(lookuptype)
+                ? { processSalaryDeduction: !!item.processSalaryDeduction }
+                : {}),
             };
             switch (lookuptype) {
               case "Title":
@@ -140,6 +168,7 @@ const lookupsSlice = createSlice({
                 state.genderOptions.push(optionItem);
                 break;
               case "workLocation":
+              case "Work Location":
                 state.workLocationOptions.push(optionItem);
                 break;
               case "Grade":
@@ -152,6 +181,8 @@ const lookupsSlice = createSlice({
                 state.membershipCategoryOptions.push(optionItem);
                 break;
               case "Payment Type":
+              case "Payment Method":
+              case "paymentMethod":
                 state.paymentTypeOptions.push(optionItem);
                 break;
               case "Branch":
@@ -169,6 +200,11 @@ const lookupsSlice = createSlice({
               case "Discipline":
                 state.disciplineOptions.push(optionItem);
                 break;
+              case "Youth Forum":
+              case "youthForum":
+              case "Youth forum":
+                state.youthForumOptions.push(optionItem);
+                break;
               case "Country":
                 state.countryOptions.push(optionItem);
                 break
@@ -176,6 +212,11 @@ const lookupsSlice = createSlice({
                 state.provincesOption.push(optionItem);
                 break;
               default:
+                if (isWorkLocationLookupTypeName(lookuptype)) {
+                  state.workLocationOptions.push(optionItem);
+                } else if (isPaymentMethodLookupTypeName(lookuptype)) {
+                  state.paymentTypeOptions.push(optionItem);
+                }
                 break;
             }
           });
@@ -238,6 +279,7 @@ const lookupsSlice = createSlice({
         state.secondarySectionOptions = sortArray(state.secondarySectionOptions, 'label', 'asc');
         state.studyLocationOptions = sortArray(state.studyLocationOptions, 'label', 'asc');
         state.disciplineOptions = sortArray(state.disciplineOptions, 'label', 'asc');
+        state.youthForumOptions = sortArray(state.youthForumOptions, 'label', 'asc');
         state.countryOptions = sortArray(state.countryOptions, 'label', 'asc');
         state.Provinces = sortArray(state.Provinces, 'label', 'asc');
       })

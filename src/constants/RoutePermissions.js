@@ -7,8 +7,9 @@ export const RoutePermissions = {
   "Summary": "profile:read",
   "Details": "profile:read",
   "Members": "crm:member:read",
-  "MembershipDashboard": "dashboard:read",
+  "MembershipDashboard": "reporting:read",
   "Applications": "application:read",
+  "PaymentForms": "application:read",
   "Transfers": "transferrequests:read",
   "ChangCateSumm": "changeofcategory:read",
   "Cancallation": "subscriptions:read",
@@ -25,6 +26,9 @@ export const RoutePermissions = {
   "write-offs": "payments:read",
   "Import": "payments:read",
   "Reconciliation": "payments:read",
+  "JournalAdjustments": "payments:read",
+  "CreditNotes": "payments:read",
+  "GeneralLedger": "payments:read",
 
   // Correspondence
   "CorrespondenceDashboard": "dashboard:read",
@@ -32,6 +36,7 @@ export const RoutePermissions = {
   "UserNotifications": "notifications:read",
   "/UserNotifications": "notifications:read",
   "Email": "communication:write",
+  "EmailCampaignDetail": "communication:write",
   "Sms": "communication:write",
   "Notes": "communication:read",
   "CorrespondencesSummary": "communication:read",
@@ -39,20 +44,28 @@ export const RoutePermissions = {
   // Configuration & Management
   "templeteSummary": "templates:read",
   "templeteConfig": "templates:read",
-  "Configuratin": "portal:read", // System Configuration
+  "Configuration": "portal:read", // System Configuration
   "PermissionManagement": "role:permission:assign",
   "RoleManagement": "role:read",
   "UserManagement": "user:read",
   "ProductTypesManagement": "portal:read",
   "TenantManagement": "tenant:read",
+  "TenantOffices": "tenant:read",
+  "TenantDepartments": "tenant:read",
   "PolicyClientExample": "portal:read",
 
   // Reports
-  "CancelledMembersReport": "subscriptions:read",
-  "JoinersReport": "crm:member:read",
+  "Reports": "reporting:read",
+  "CancelledMembersReport": "reporting:read",
+  "JoinersReport": "reporting:read",
   "LeaversReport": "crm:member:read",
-  "NewMembersReport": "crm:member:read",
-  "ResignedMembersReport": "crm:member:read",
+  "NewMembersReport": "reporting:read",
+  "ResignedMembersReport": "reporting:read",
+  "ComparisonReport": "reporting:read",
+  "LiveStatsReport": "reporting:read",
+  "MembershipListingReport": "reporting:read",
+  "StatisticsReport": "reporting:read",
+  "WorkplaceBreakdownReport": "reporting:read",
   "SuspendedMembersReport": "crm:member:read",
 
   // Cases & Issues

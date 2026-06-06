@@ -1,6 +1,13 @@
-import React, { useState, useMemo, useEffect, useCallback } from "react";
+import React, {
+  useState,
+  useMemo,
+  useEffect,
+  useCallback,
+  forwardRef,
+  useImperativeHandle,
+} from "react";
 import { useLocation, useSearchParams } from "react-router-dom";
-import { Modal, Button, message, Dropdown, Tooltip } from "antd";
+import { Modal, Button, message, Tooltip } from "antd";
 import {
   FaMapMarkerAlt,
   FaEnvelope,
@@ -10,12 +17,15 @@ import {
   FaClock,
   FaShieldAlt,
   FaExclamationTriangle,
-  FaEdit,
   FaUser,
-  FaEllipsisV,
-  FaClone,
   FaCreditCard,
   FaMoneyBillWave,
+  FaColumns,
+  FaWindowMaximize,
+  FaUsers,
+  FaStar,
+  FaBarcode,
+  FaWallet,
 } from "react-icons/fa";
 import dayjs from "dayjs";
 import MyDatePicker from "./MyDatePicker";
@@ -35,16 +45,29 @@ import {
   getSubscriptionByProfileId,
   getSubscriptionById,
   getProfileSubscriptionsForActivateEligibility,
+  pickPrimarySubscription,
+  profileDetailActiveSubscriptionArgs,
 } from "../../features/subscription/profileSubscriptionSlice";
 import { shouldDisableActivateUnlessLatestSubscriptionByStartDate } from "../../utils/applicationEligibility";
+import {
+  PROFILE_INVALIDATE_EVENT,
+  profileInvalidateMatchesContext,
+  scopesInclude,
+} from "../../utils/profileRealtimeEvents";
 
-function ProfileHeader({
-  isEditMode = false,
-  setIsEditMode,
-  showButtons = false,
-  isDeceased = false,
-  onDuplicateClick,
-}) {
+const ACTIVATE_MEMBERSHIP_DISABLED_TITLE =
+  "Only the subscription with the latest start date can be reactivated here. This membership is an older subscription line.";
+
+const ProfileHeader = forwardRef(function ProfileHeader(
+  {
+    showButtons = false,
+    isDeceased = false,
+    layout = "side",
+    onLayoutChange,
+    onMembershipHeaderActionsMetaChange,
+  },
+  ref,
+) {
   const [isCancelModalVisible, setIsCancelModalVisible] = useState(false);
   const [isUndoCancelModalVisible, setIsUndoCancelModalVisible] =
     useState(false);
@@ -60,12 +83,11 @@ function ProfileHeader({
   const [ledgerBalanceIsCents, setLedgerBalanceIsCents] = useState(true);
   const [lastPaymentAmount, setLastPaymentAmount] = useState(0);
   const [lastPaymentDate, setLastPaymentDate] = useState(null);
-  const [paymentCode, setPaymentCode] = useState("");
   const [ledgerLoading, setLedgerLoading] = useState(false);
 
   // Get data from Redux store
   const { profileDetails, loading, error } = useSelector(
-    (state) => state.profileDetails
+    (state) => state.profileDetails,
   );
 
   // Subscription API data
@@ -94,7 +116,7 @@ function ProfileHeader({
     dispatch(
       getProfileSubscriptionsForActivateEligibility({
         profileId: profileIdForApps,
-      })
+      }),
     );
   }, [dispatch, profileIdForApps]);
 
@@ -134,60 +156,56 @@ function ProfileHeader({
     return formatDate(dateString, "DD/MM/YYYY");
   };
 
-  // FIXED: Simplified subscription data extraction - now reactive
+  const buildContactAddress = (contactInfo) => {
+    if (!contactInfo) return "";
+
+    const fullAddress = contactInfo.fullAddress?.trim();
+    if (fullAddress) return fullAddress;
+
+    return [
+      contactInfo.buildingOrHouse,
+      contactInfo.streetOrRoad,
+      contactInfo.areaOrTown,
+      contactInfo.countyCityOrPostCode,
+      contactInfo.eircode,
+      contactInfo.country,
+    ]
+      .map((part) => (part != null ? String(part).trim() : ""))
+      .filter(Boolean)
+      .join(", ");
+  };
+
+  // Prefer current subscription row; otherwise latest period — matches CRM list when multiple rows exist
   const subscriptionData = useMemo(() => {
-    // Check for direct array (existing logic)
-    if (Array.isArray(ProfileSubData?.data) && ProfileSubData.data.length > 0) {
-      return {
-        subscriptionStatus: ProfileSubData.data[0].subscriptionStatus || "",
-        paymentType: ProfileSubData.data[0].paymentType || "",
-        payrollNo: ProfileSubData.data[0].payrollNo || "",
-        paymentFrequency: ProfileSubData.data[0].paymentFrequency || "",
-        subscriptionYear: ProfileSubData.data[0].subscriptionYear || "",
-        isCurrent: ProfileSubData.data[0].isCurrent || false,
-        startDate: ProfileSubData.data[0].startDate || null, // Keep raw value for date-time formatting
-        startDateFormatted: ProfileSubData.data[0].startDate
-          ? formatDate(ProfileSubData.data[0].startDate)
-          : "",
-        endDate: ProfileSubData.data[0].endDate || null, // Keep raw value for date-time formatting
-        endDateFormatted: ProfileSubData.data[0].endDate
-          ? formatDate(ProfileSubData.data[0].endDate)
-          : "",
-        renewalDate: ProfileSubData.data[0].rolloverDate
-          ? formatDate(ProfileSubData.data[0].rolloverDate)
-          : "",
-        membershipMovement: ProfileSubData.data[0].membershipMovement || "",
-        reinstated: ProfileSubData.data[0].cancellation?.reinstated || false,
-        yearendProcessed: ProfileSubData.data[0].yearend?.processed || false,
-        ...ProfileSubData.data[0],
-      };
-    }
-    // Check for nested data structure (from screenshot: data.data)
-    else if (
+    let rows = [];
+    if (Array.isArray(ProfileSubData?.data)) {
+      rows = ProfileSubData.data;
+    } else if (
       ProfileSubData?.data?.data &&
-      Array.isArray(ProfileSubData.data.data) &&
-      ProfileSubData.data.data.length > 0
+      Array.isArray(ProfileSubData.data.data)
     ) {
-      const sub = ProfileSubData.data.data[0];
-      return {
-        subscriptionStatus: sub.subscriptionStatus || "",
-        paymentType: sub.paymentType || "",
-        payrollNo: sub.payrollNo || "",
-        paymentFrequency: sub.paymentFrequency || "",
-        subscriptionYear: sub.subscriptionYear || "",
-        isCurrent: sub.isCurrent || false,
-        startDate: sub.startDate || null, // Keep raw value for date-time formatting
-        startDateFormatted: sub.startDate ? formatDate(sub.startDate) : "",
-        endDate: sub.endDate || null, // Keep raw value for date-time formatting
-        endDateFormatted: sub.endDate ? formatDate(sub.endDate) : "",
-        renewalDate: sub.rolloverDate ? formatDate(sub.rolloverDate) : "",
-        membershipMovement: sub.membershipMovement || "",
-        reinstated: sub.cancellation?.reinstated || false,
-        yearendProcessed: sub.yearend?.processed || false,
-        ...sub,
-      };
+      rows = ProfileSubData.data.data;
     }
-    return null;
+    const sub = pickPrimarySubscription(rows);
+    if (!sub) return null;
+
+    return {
+      subscriptionStatus: sub.subscriptionStatus || "",
+      paymentType: sub.paymentType || "",
+      payrollNo: sub.payrollNo || "",
+      paymentFrequency: sub.paymentFrequency || "",
+      subscriptionYear: sub.subscriptionYear || "",
+      isCurrent: sub.isCurrent === true,
+      startDate: sub.startDate || null,
+      startDateFormatted: sub.startDate ? formatDate(sub.startDate) : "",
+      endDate: sub.endDate || null,
+      endDateFormatted: sub.endDate ? formatDate(sub.endDate) : "",
+      renewalDate: sub.rolloverDate ? formatDate(sub.rolloverDate) : "",
+      membershipMovement: sub.membershipMovement || "",
+      reinstated: sub.cancellation?.reinstated || false,
+      yearendProcessed: sub.yearend?.processed || false,
+      ...sub,
+    };
   }, [ProfileSubData]);
 
   const memberIdForLedger = useMemo(() => {
@@ -211,7 +229,7 @@ function ProfileHeader({
           sub?.membershipNumber ||
           sub?.membershipNo ||
           sub?.personalDetails?.membershipNo ||
-          sub?.profile?.membershipNumber
+          sub?.profile?.membershipNumber,
       )
       .find(Boolean);
     return (
@@ -243,7 +261,7 @@ function ProfileHeader({
           headers: {
             Authorization: `Bearer ${token}`,
           },
-        }
+        },
       );
 
       const summaryData = response.data?.data || response.data;
@@ -289,7 +307,12 @@ function ProfileHeader({
       if (subscriptionId) {
         dispatch(getSubscriptionById(subscriptionId));
       } else {
-        dispatch(getSubscriptionByProfileId({ profileId, isCurrent: "true" }));
+        dispatch(
+          getSubscriptionByProfileId({
+            profileId,
+            ...profileDetailActiveSubscriptionArgs,
+          }),
+        );
       }
     }
     fetchAccountSummary();
@@ -305,28 +328,65 @@ function ProfileHeader({
     fetchAccountSummary();
   }, [fetchAccountSummary]);
 
-  useEffect(() => {
-    const handleMemberFinanceUpdated = (event) => {
-      const eventMemberId = String(event?.detail?.memberId || "")
-        .trim()
-        .toLowerCase();
-      const currentMemberId = String(memberIdForLedger || "")
-        .trim()
-        .toLowerCase();
+  const refreshSubscriptionData = useCallback(() => {
+    const profileId = source?.id || source?._id;
+    const subscriptionId =
+      searchParams.get("subscriptionId") || location.state?.subscriptionId;
+    if (!profileId) return;
+    if (subscriptionId) {
+      dispatch(getSubscriptionById(subscriptionId));
+    } else {
+      dispatch(
+        getSubscriptionByProfileId({
+          profileId,
+          ...profileDetailActiveSubscriptionArgs,
+        }),
+      );
+    }
+  }, [dispatch, source, searchParams, location.state?.subscriptionId]);
 
-      // Refresh only when event is for the currently visible member.
-      if (eventMemberId && eventMemberId !== currentMemberId) return;
-      fetchAccountSummary();
+  const refreshProfileDetailsOnly = useCallback(() => {
+    const profileId = source?.id || source?._id;
+    if (profileId) dispatch(getProfileDetailsById(profileId));
+  }, [dispatch, source]);
+
+  useEffect(() => {
+    const ctx = { profileId: profileIdForApps, memberId: memberIdForLedger };
+
+    const handleProfileInvalidate = (event) => {
+      const detail = event?.detail || {};
+      if (!profileInvalidateMatchesContext(detail, ctx)) return;
+
+      if (scopesInclude(detail.scopes, "all")) {
+        refreshAllData();
+        return;
+      }
+      if (scopesInclude(detail.scopes, "finance")) {
+        fetchAccountSummary();
+      }
+      if (scopesInclude(detail.scopes, "subscription")) {
+        refreshSubscriptionData();
+      }
+      if (scopesInclude(detail.scopes, "profile")) {
+        refreshProfileDetailsOnly();
+      }
     };
 
-    window.addEventListener("member-finance-updated", handleMemberFinanceUpdated);
+    window.addEventListener(PROFILE_INVALIDATE_EVENT, handleProfileInvalidate);
     return () => {
       window.removeEventListener(
-        "member-finance-updated",
-        handleMemberFinanceUpdated
+        PROFILE_INVALIDATE_EVENT,
+        handleProfileInvalidate,
       );
     };
-  }, [fetchAccountSummary, memberIdForLedger]);
+  }, [
+    fetchAccountSummary,
+    memberIdForLedger,
+    profileIdForApps,
+    refreshAllData,
+    refreshProfileDetailsOnly,
+    refreshSubscriptionData,
+  ]);
 
   const isSubscriptionEmpty = useMemo(() => {
     if (!ProfileSubData) return false;
@@ -362,10 +422,10 @@ function ProfileHeader({
     // Personal Info
     const name = source
       ? `${getSafe(source, "personalInfo.forename", "")} ${getSafe(
-        source,
-        "personalInfo.surname",
-        ""
-      )}`.trim()
+          source,
+          "personalInfo.surname",
+          "",
+        )}`.trim()
       : "";
     const dob = formatDOB(getSafe(source, "personalInfo.dateOfBirth"));
     const gender = getSafe(source, "personalInfo.gender", "M")
@@ -374,7 +434,6 @@ function ProfileHeader({
     const age =
       calculateAge(getSafe(source, "personalInfo.dateOfBirth")) || "36 Yrs";
 
-    // Status - Use subscription status if available, otherwise fall back to profile data
     let status = "";
     if (isDeceased) {
       status = "Deceased";
@@ -391,28 +450,34 @@ function ProfileHeader({
     // Membership Info - Use subscription end date if available, otherwise fall back
     const memberId = getSafe(source, "membershipNumber", "");
     const joined = formatDate(getSafe(source, "firstJoinedDate")) || "";
-    // Format expires as date only - use formatted endDate from subscription or deactivatedAt from source
-    const expires =
-      subscriptionData?.endDateFormatted ||
-      formatDate(getSafe(source, "deactivatedAt")) ||
-      "";
+    // Expires: resignation / cancellation exit date when applicable; else subscription year end or profile deactivation
+    const cancelBlock = subscriptionData?.cancellation;
+    const dateCancelledRaw =
+      cancelBlock && !cancelBlock.reinstated ? cancelBlock.dateCancelled : null;
+    const dateResignedRaw = subscriptionData?.resignation?.dateResigned;
+    let expires = "";
+    if (dateResignedRaw) {
+      expires = formatDate(dateResignedRaw);
+    } else if (dateCancelledRaw) {
+      expires = formatDate(dateCancelledRaw);
+    } else {
+      expires =
+        subscriptionData?.endDateFormatted ||
+        formatDate(getSafe(source, "deactivatedAt")) ||
+        "";
+    }
 
     // Contact Info
-    const address = source?.contactInfo
-      ? `${getSafe(source, "contactInfo.buildingOrHouse", "")} ${getSafe(
-        source,
-        "contactInfo.streetOrRoad",
-        ""
-      )}, ${getSafe(source, "contactInfo.areaOrTown", "")}`.trim() ||
-      "123 Main Street, New York"
-      : "123 Main Street, New York";
+    const address = buildContactAddress(source?.contactInfo);
 
     const email =
       getSafe(source, "contactInfo.preferredEmail") === "work"
         ? getSafe(source, "contactInfo.workEmail")
         : getSafe(source, "contactInfo.personalEmail", "");
 
-    const phone = formatMobileNumber(getSafe(source, "contactInfo.mobileNumber", ""));
+    const phone = formatMobileNumber(
+      getSafe(source, "contactInfo.mobileNumber", ""),
+    );
 
     // Professional Info
     const grade = getSafe(source, "professionalDetails.grade", " ");
@@ -423,8 +488,8 @@ function ProfileHeader({
     const subscriptionYear = subscriptionData?.subscriptionYear || "";
 
     // Financial Info - Now using fetched summary data
-    // Assume ledgerBalance (net) is in Euros if it has decimal, but to be safe and consistent with previous logic, 
-    // let's check if we should still use centsToEuro. 
+    // Assume ledgerBalance (net) is in Euros if it has decimal, but to be safe and consistent with previous logic,
+    // let's check if we should still use centsToEuro.
     // Actually, historical code used centsToEuro. If the API changed units, we should adjust.
     // Given the example "net": 120.5, it looks like Euros.
     const numericLedgerBalance = Number(ledgerBalance || 0);
@@ -443,18 +508,16 @@ function ProfileHeader({
         : balanceIndicator === "Cr"
           ? "#389e0d"
           : "#faad14";
-    const lastPayment = `€${centsToEuro(lastPaymentAmount || 0).toLocaleString('en-IE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+    const lastPayment = `€${centsToEuro(lastPaymentAmount || 0).toLocaleString("en-IE", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 
-    // Use latest ledger date for payment date if available, fallback to subscription/submission
-    const paymentDateRaw =
-      lastPaymentDate || subscriptionData?.startDate || getSafe(source, "submissionDate") || null;
-    const paymentDate = paymentDateRaw
-      ? formatDate(paymentDateRaw)
-      : "N/A";
+    // Payment date only from account summary (cash receipt crediting 2020); not subscription start.
+    const paymentDateRaw = lastPaymentDate || null;
+    const paymentDate = paymentDateRaw ? formatDate(paymentDateRaw) : "N/A";
 
     // Use paymentCode from API if available, fallback to generated one
-    const paymentCodeToUse = `MB-${subscriptionData?.subscriptionYear || dayjs().year()
-      }-${getSafe(source, "membershipNumber", "001")}`;
+    const paymentCodeToUse = `MB-${
+      subscriptionData?.subscriptionYear || dayjs().year()
+    }-${getSafe(source, "membershipNumber", "001")}`;
 
     return {
       // Personal Info
@@ -502,7 +565,6 @@ function ProfileHeader({
     ledgerBalanceIsCents,
     lastPaymentAmount,
     lastPaymentDate,
-    paymentCode,
   ]); // Now recalculates when source OR subscriptionData OR summary data changes
 
   const statusBadgeTooltip = useMemo(() => {
@@ -532,13 +594,13 @@ function ProfileHeader({
 
   const currentSubscriptionForActivate = useMemo(() => {
     const arr = ProfileSubData?.data;
-    if (Array.isArray(arr) && arr[0]) return arr[0];
-    return null;
+    if (!Array.isArray(arr)) return null;
+    return pickPrimarySubscription(arr);
   }, [ProfileSubData]);
 
   const mergedProfileSubscriptions = useMemo(() => {
     const fromEligibility = Array.isArray(
-      profileSubscriptionsForActivateEligibility
+      profileSubscriptionsForActivateEligibility,
     )
       ? profileSubscriptionsForActivateEligibility
       : [];
@@ -556,12 +618,66 @@ function ProfileHeader({
     if (memberData.status !== "Resigned") return false;
     return shouldDisableActivateUnlessLatestSubscriptionByStartDate(
       currentSubscriptionForActivate,
-      mergedProfileSubscriptions
+      mergedProfileSubscriptions,
     );
   }, [
     memberData.status,
     currentSubscriptionForActivate,
     mergedProfileSubscriptions,
+  ]);
+
+  const handleHeaderLayoutChange = useCallback(
+    (nextLayout) => {
+      if (nextLayout === layout || typeof onLayoutChange !== "function") {
+        return;
+      }
+      onLayoutChange(nextLayout);
+    },
+    [layout, onLayoutChange],
+  );
+
+  const nextHeaderLayout = layout === "top" ? "side" : "top";
+  const nextHeaderLayoutLabel =
+    nextHeaderLayout === "top" ? "Top view" : "Side view";
+
+  useImperativeHandle(
+    ref,
+    () => ({
+      openCancelMembershipModal: () => setIsCancelModalVisible(true),
+      openActivateMembershipModal: () => {
+        if (shouldDisableActivateMembership) return;
+        setIsUndoCancelModalVisible(true);
+      },
+      refreshAccountSummary: () => fetchAccountSummary(),
+    }),
+    [shouldDisableActivateMembership, fetchAccountSummary],
+  );
+
+  useEffect(() => {
+    if (typeof onMembershipHeaderActionsMetaChange !== "function") return;
+    const showCancelMembership =
+      showButtons &&
+      !isDeceased &&
+      memberData.status !== "Resigned" &&
+      memberData.status !== "Lapsed" &&
+      !subscriptionData?.reinstated;
+    const showActivateMembership =
+      showButtons && !isDeceased && memberData.status === "Resigned";
+    onMembershipHeaderActionsMetaChange({
+      showCancelMembership,
+      showActivateMembership,
+      activateMembershipDisabled: shouldDisableActivateMembership,
+      activateMembershipTitle: shouldDisableActivateMembership
+        ? ACTIVATE_MEMBERSHIP_DISABLED_TITLE
+        : undefined,
+    });
+  }, [
+    onMembershipHeaderActionsMetaChange,
+    showButtons,
+    isDeceased,
+    memberData.status,
+    subscriptionData?.reinstated,
+    shouldDisableActivateMembership,
   ]);
 
   const cancellationReasons = [
@@ -573,10 +689,6 @@ function ProfileHeader({
     { key: "other", label: "Other" },
     { key: "deceased", label: "Deceased" },
   ];
-
-  const handleCancelClick = () => {
-    setIsCancelModalVisible(true);
-  };
 
   const handleCancelModalClose = () => {
     setIsCancelModalVisible(false);
@@ -598,9 +710,13 @@ function ProfileHeader({
       return;
     }
 
-    const profileId = source?.id || source?._id;
-    if (!profileId) {
-      MyAlert("error", "Profile ID not found. Cannot proceed.");
+    const subscriptionId =
+      subscriptionData?._id != null ? String(subscriptionData._id).trim() : "";
+    if (!subscriptionId) {
+      MyAlert(
+        "error",
+        "Active subscription ID not found. Cannot resign until subscription data loads.",
+      );
       return;
     }
 
@@ -613,14 +729,14 @@ function ProfileHeader({
 
     try {
       const response = await axios.put(
-        `${getSubscriptionServiceBaseUrl()}/subscriptions/resign/${profileId}`,
+        `${getSubscriptionServiceBaseUrl()}/subscriptions/${subscriptionId}/resign`,
         payload,
         {
           headers: {
             Authorization: `Bearer ${token}`,
             "Content-Type": "application/json",
           },
-        }
+        },
       );
 
       MyAlert("success", "Membership cancellation submitted successfully!");
@@ -681,245 +797,468 @@ function ProfileHeader({
     );
   }
 
-  return (
-    <div className="member-header-container">
-      <div className="member-header-single-card">
-        {/* Profile Header Section */}
-        <div
-          className={`member-header-top ${isDeceased ? "member-deceased" : ""}`}
+  const isTopLayout = layout === "top";
+
+  const renderCompactLine = (
+    icon,
+    label,
+    value,
+    valueClassName = "",
+    lineClassName = "",
+    valueStyle,
+  ) => (
+    <div className={`member-compact-line ${lineClassName}`.trim()}>
+      <span className="member-compact-icon" aria-hidden="true">
+        {icon}
+      </span>
+      <span className="member-compact-text">
+        {label ? (
+          <span className="member-compact-label">{label}</span>
+        ) : null}
+        <span
+          className={`member-compact-value ${valueClassName}`.trim()}
+          style={valueStyle}
         >
-          {showButtons && (
-            <Dropdown
-              menu={{
-                items: [
-                  {
-                    key: "edit",
-                    label: isEditMode ? "Cancel Edit" : "Edit Profile",
-                    icon: <FaEdit />,
-                    onClick: () => setIsEditMode && setIsEditMode(!isEditMode),
-                  },
-                  {
-                    key: "duplicate",
-                    label: "Check Duplicate",
-                    icon: <FaClone />,
-                    onClick: onDuplicateClick,
-                  },
-                ],
-              }}
-              trigger={["click"]}
-            >
-              <FaEllipsisV
-                className="menu-icon"
-                style={{
-                  cursor: "pointer",
-                  fontSize: "1rem",
-                  color: "#fff",
-                  position: "absolute",
-                  right: "10px",
-                  top: "10px",
-                }}
-              />
-            </Dropdown>
+          {value}
+        </span>
+      </span>
+    </div>
+  );
+
+  const renderCompactDualRow = (left, right, rowClassName = "") => (
+    <div className={`member-compact-dual-row ${rowClassName}`.trim()}>
+      {renderCompactLine(
+        left.icon,
+        left.label,
+        left.value,
+        left.valueClassName,
+        left.lineClassName,
+        left.valueStyle,
+      )}
+      {renderCompactLine(
+        right.icon,
+        right.label,
+        right.value,
+        right.valueClassName,
+        right.lineClassName,
+        right.valueStyle,
+      )}
+    </div>
+  );
+
+  const renderMetaTiles = () => {
+    const topMetaTiles = isTopLayout ? (
+      <>
+        {memberData?.category ? (
+          <div
+            className="member-meta-tile member-meta-tile-category"
+            title={memberData.category}
+          >
+            {renderCompactLine(
+              <FaUsers />,
+              "Category:",
+              memberData.category,
+            )}
+          </div>
+        ) : null}
+        {memberData.grade ? (
+          <div
+            className="member-meta-tile member-meta-tile-grade"
+            title={memberData.grade}
+          >
+            {renderCompactLine(<FaStar />, "Grade:", memberData.grade)}
+          </div>
+        ) : null}
+        <div className="member-meta-tile" title={memberData.paymentType}>
+          {renderCompactLine(
+            <FaCreditCard />,
+            "Payment Type:",
+            memberData.paymentType,
           )}
-
-          <div className="member-profile-section">
-            <div className="member-avatar">
-              <FaUser className="avatar-icon" />
-            </div>
-            <h2 className="member-name">{memberData.name}</h2>
-            <p className="member-details">
-              {memberData.dob} ({memberData.gender}) {memberData.age}
-            </p>
-            <Tooltip
-              title={statusBadgeTooltip || undefined}
-              trigger={["hover", "focus"]}
-              mouseEnterDelay={0.05}
-              mouseLeaveDelay={0.05}
-            >
-              <span
-                className={`member-status-badge ${isDeceased
-                  ? "member-status-deceased"
-                  : /resign|cancel/i.test(memberData.status || "")
-                    ? "member-status-resigned"
-                    : ""
-                  }`}
-                style={{ cursor: statusBadgeTooltip ? "help" : undefined }}
-              >
-                {memberData.status}
-                {subscriptionData?.isCurrent && " (Current)"}
-                {subscriptionData?.reinstated && " (Reinstated)"}
-              </span>
-            </Tooltip>
-          </div>
-
-          {/* Contact Information Section - on blue background */}
-          <div className="member-contact-section-blue">
-            <div className="contact-item-blue">
-              <FaEnvelope className="contact-icon-blue" />
-              <span>{memberData.email}</span>
-            </div>
-            <div className="contact-item-blue">
-              <FaPhone className="contact-icon-blue" />
-              <span>Cell: {memberData.phone}</span>
-            </div>
-            <div className="contact-item-blue">
-              <FaMapMarkerAlt className="contact-icon-blue" />
-              <span>{memberData.address}</span>
-            </div>
-          </div>
         </div>
+      </>
+    ) : null;
 
-        {/* Membership Details Section */}
-        <div className="member-details-section">
-          <div className="detail-row">
-            <FaIdCard className="detail-icon" />
-            <div className="detail-content">
-              <span className="detail-label">Member ID:</span>
-              <span className="detail-value member-id">
-                {memberData.memberId}
-              </span>
-            </div>
-          </div>
-          <div className="detail-row">
-            <FaCalendarAlt className="detail-icon" />
-            <div className="detail-content">
-              <span className="detail-label">Joined:</span>
-              <span className="detail-value">{memberData.joined}</span>
-            </div>
-          </div>
-          <div className="detail-row">
-            <FaClock className="detail-icon" />
-            <div className="detail-content">
-              <span className="detail-label">Expires:</span>
-              <span className="detail-value">{memberData.expires}</span>
-            </div>
-          </div>
+    return (
+      <div
+        className={`member-meta-section ${isDeceased ? "member-deceased" : ""} ${
+          isTopLayout ? "member-meta-section-top" : ""
+        }`.trim()}
+      >
+        {isTopLayout ? (
+          topMetaTiles
+        ) : (
+          <>
+      {memberData?.category ? (
+        <div className="member-meta-tile" title={memberData.category}>
+          {renderCompactLine(
+            <FaUsers />,
+            "Category:",
+            memberData.category,
+          )}
         </div>
+        ) : null}
+        {memberData.grade ? (
+          <div className="member-meta-tile member-meta-tile-grade" title={memberData.grade}>
+            {renderCompactLine(<FaStar />, "Grade:", memberData.grade)}
+          </div>
+        ) : null}
+        <div className="member-meta-tile" title={memberData.paymentType}>
+          {renderCompactLine(
+            <FaCreditCard />,
+            "Payment Type:",
+            memberData.paymentType,
+          )}
+        </div>
+        <div className="member-meta-tile" title={memberData.paymentCode}>
+          {renderCompactLine(
+            <FaBarcode />,
+            "Payment Code:",
+            memberData.paymentCode,
+          )}
+        </div>
+      {subscriptionData ? (
+        <>
+          {memberData.subscriptionYear ? (
+            <div className="member-meta-tile" title={String(memberData.subscriptionYear)}>
+              {renderCompactLine(
+                <FaCalendarAlt />,
+                "Sub Year:",
+                memberData.subscriptionYear,
+              )}
+            </div>
+          ) : null}
+        </>
+      ) : null}
+          </>
+        )}
+      </div>
+    );
+  };
 
-        {/* Financial Details Card */}
-        <div className="member-financial-card">
-          <div className="detail-row">
-            <FaExclamationTriangle className="detail-icon" />
-            <div className="detail-content">
-              <span className="detail-label">Balance:</span>
-              <span
-                className="detail-value"
-                style={{
-                  color: memberData.balanceColor || "#faad14",
-                  fontWeight: 700,
-                  fontSize: "18px",
-                }}
-              >
-                {memberData.balance}
-                {memberData.balanceIndicator && (
+  return (
+    <div className={`member-header-container member-header-${layout}-layout`}>
+      <div className={`member-header-single-card member-header-card-${layout}`}>
+        <div
+          className={
+            isTopLayout
+              ? `member-header-top-band ${isDeceased ? "member-deceased" : ""}`
+              : "member-header-side-stack"
+          }
+        >
+          <div
+            className={`member-header-top ${!isTopLayout && isDeceased ? "member-deceased" : ""}`}
+          >
+            <div className="member-profile-section">
+              {!isTopLayout ? (
+                <div
+                  className="member-layout-toggle"
+                  aria-label="Profile header layout"
+                >
+                  <Tooltip title={`Switch to ${nextHeaderLayoutLabel}`}>
+                    <button
+                      type="button"
+                      className="member-layout-toggle-btn"
+                      aria-label={`Switch to ${nextHeaderLayoutLabel.toLowerCase()} profile header`}
+                      onClick={() => handleHeaderLayoutChange(nextHeaderLayout)}
+                    >
+                      {nextHeaderLayout === "top" ? (
+                        <FaWindowMaximize />
+                      ) : (
+                        <FaColumns />
+                      )}
+                    </button>
+                  </Tooltip>
+                </div>
+              ) : null}
+              <div className="member-avatar">
+                <FaUser className="avatar-icon" />
+              </div>
+              <div className="member-profile-text">
+                <div className="member-profile-title-row">
+                  <h2 className="member-name">{memberData.name}</h2>
+                </div>
+                <p className="member-details">
+                  {memberData.dob} ({memberData.gender})
+                  {isTopLayout ? " • " : " "}
+                  {memberData.age}
+                </p>
+                <Tooltip
+                  title={statusBadgeTooltip || undefined}
+                  trigger={["hover", "focus"]}
+                  mouseEnterDelay={0.05}
+                  mouseLeaveDelay={0.05}
+                >
                   <span
+                    className={`member-status-badge ${
+                      isDeceased
+                        ? "member-status-deceased"
+                        : /resign|cancel/i.test(memberData.status || "")
+                          ? "member-status-resigned"
+                          : /lapsed/i.test(memberData.status || "")
+                            ? "member-status-lapsed"
+                            : ""
+                    }`}
                     style={{
-                      fontSize: "12px",
-                      marginLeft: 4,
-                      fontWeight: 600,
+                      cursor: statusBadgeTooltip ? "help" : undefined,
                     }}
                   >
-                    ({memberData.balanceIndicator})
+                    {memberData.status}
+                    {subscriptionData?.isCurrent && " (Current)"}
+                    {subscriptionData?.reinstated && " (Reinstated)"}
                   </span>
-                )}
-              </span>
-            </div>
-          </div>
-          <div className="detail-row">
-            <FaClock className="detail-icon" />
-            <div className="detail-content">
-              <span className="detail-label">Last Payment:</span>
-              <span className="detail-value">{memberData.lastPayment}</span>
-            </div>
-          </div>
-          <div className="detail-row">
-            <FaCalendarAlt className="detail-icon" />
-            <div className="detail-content">
-              <span className="detail-label">Payment Date:</span>
-              <span className="detail-value">{memberData.paymentDate}</span>
-            </div>
-          </div>
-          <div className="detail-row">
-            <FaCreditCard className="detail-icon" />
-            <div className="detail-content">
-              <span className="detail-label">Payment Code:</span>
-              <span className="detail-value">{memberData.paymentCode}</span>
-            </div>
-          </div>
-          {/* Show subscription info if available */}
-          {subscriptionData && (
-            <>
-              <div className="detail-row">
-                <FaMoneyBillWave className="detail-icon" />
-                <div className="detail-content">
-                  <span className="detail-label">Payment Type:</span>
-                  <span className="detail-value">{memberData.paymentType}</span>
-                </div>
+                </Tooltip>
               </div>
-              {memberData.subscriptionYear && (
+            </div>
+
+            <div
+              className={
+                isTopLayout ? "member-contact-section" : "member-contact-section-blue"
+              }
+            >
+              {isTopLayout ? (
+                <>
+                  {renderCompactDualRow(
+                    { icon: <FaEnvelope />, label: "", value: memberData.email },
+                    { icon: <FaPhone />, label: "", value: memberData.phone },
+                  )}
+                  {renderCompactLine(
+                    <FaMapMarkerAlt />,
+                    "",
+                    memberData.address,
+                    "member-contact-address",
+                    "member-contact-address-line",
+                  )}
+                </>
+              ) : (
+                <>
+              <div className="contact-item-blue">
+                <FaEnvelope
+                  className="contact-icon-blue"
+                />
+                  <span>{memberData.email}</span>
+              </div>
+              <div className="contact-item-blue">
+                <FaPhone
+                  className="contact-icon-blue"
+                />
+                  <span>Cell: {memberData.phone}</span>
+              </div>
+              <div className="contact-item-blue contact-item-blue-address">
+                <FaMapMarkerAlt
+                  className="contact-icon-blue"
+                />
+                  <span className="member-contact-address">{memberData.address}</span>
+              </div>
+                </>
+              )}
+            </div>
+          </div>
+
+          <div className="member-details-section">
+            {isTopLayout ? (
+              <>
+                {memberData.subscriptionYear ? (
+                  renderCompactDualRow(
+                    {
+                      icon: <FaIdCard />,
+                      label: "Member ID:",
+                      value: memberData.memberId,
+                      valueClassName: "member-id",
+                    },
+                    {
+                      icon: <FaCalendarAlt />,
+                      label: "Sub Year:",
+                      value: memberData.subscriptionYear,
+                    },
+                  )
+                ) : (
+                  renderCompactLine(
+                    <FaIdCard />,
+                    "Member ID:",
+                    memberData.memberId,
+                    "member-id",
+                  )
+                )}
+                {renderCompactDualRow(
+                  {
+                    icon: <FaCalendarAlt />,
+                    label: "Joined:",
+                    value: memberData.joined,
+                  },
+                  {
+                    icon: <FaClock />,
+                    label: "Expires:",
+                    value: memberData.expires,
+                  },
+                )}
+              </>
+            ) : (
+              <>
                 <div className="detail-row">
-                  <FaCalendarAlt className="detail-icon" />
+                  <FaIdCard className="detail-icon" />
                   <div className="detail-content">
-                    <span className="detail-label">Sub Year:</span>
-                    <span className="detail-value">
-                      {memberData.subscriptionYear}
+                    <span className="detail-label">Member ID:</span>
+                    <span className="detail-value member-id">
+                      {memberData.memberId}
                     </span>
                   </div>
                 </div>
-              )}
+                <div className="detail-row">
+                  <FaCalendarAlt className="detail-icon" />
+                  <div className="detail-content">
+                    <span className="detail-label">Joined:</span>
+                    <span className="detail-value">{memberData.joined}</span>
+                  </div>
+                </div>
+                <div className="detail-row">
+                  <FaClock className="detail-icon" />
+                  <div className="detail-content">
+                    <span className="detail-label">Expires:</span>
+                    <span className="detail-value">{memberData.expires}</span>
+                  </div>
+                </div>
+              </>
+            )}
+          </div>
+
+          <div className="member-financial-card">
+            {isTopLayout ? (
+              <div className="member-financial-grid">
+                {renderCompactLine(
+                  <FaBarcode />,
+                  "Payment Code:",
+                  memberData.paymentCode,
+                  "",
+                  "member-financial-col-left",
+                )}
+                {renderCompactLine(
+                  <FaWallet />,
+                  "Balance:",
+                  <>
+                    {memberData.balance}
+                    {memberData.balanceIndicator ? (
+                      <span className="member-balance-indicator">
+                        {" "}
+                        ({memberData.balanceIndicator})
+                      </span>
+                    ) : null}
+                  </>,
+                  "member-balance-value",
+                  "member-financial-col-right",
+                  {
+                    color: memberData.balanceColor || "#faad14",
+                    fontWeight: 500,
+                  },
+                )}
+                {renderCompactLine(
+                  <FaClock />,
+                  "Last Payment:",
+                  memberData.lastPayment,
+                  "",
+                  "member-financial-col-left",
+                )}
+                {renderCompactLine(
+                  <FaCalendarAlt />,
+                  "Payment Date:",
+                  memberData.paymentDate,
+                  "",
+                  "member-financial-col-right",
+                )}
+              </div>
+            ) : (
+              <>
+                <div className="detail-row">
+                  <FaExclamationTriangle className="detail-icon" />
+                  <div className="detail-content">
+                    <span className="detail-label">Balance:</span>
+                    <span
+                      className="detail-value member-balance-value"
+                      style={{
+                        color: memberData.balanceColor || "#faad14",
+                        fontWeight: 500,
+                      }}
+                    >
+                      {memberData.balance}
+                      {memberData.balanceIndicator && (
+                        <span className="member-balance-indicator">
+                          ({memberData.balanceIndicator})
+                        </span>
+                      )}
+                    </span>
+                  </div>
+                </div>
+                <div className="detail-row">
+                  <FaClock className="detail-icon" />
+                  <div className="detail-content">
+                    <span className="detail-label">Last Payment:</span>
+                    <span className="detail-value">{memberData.lastPayment}</span>
+                  </div>
+                </div>
+                <div className="detail-row">
+                  <FaCalendarAlt className="detail-icon" />
+                  <div className="detail-content">
+                    <span className="detail-label">Payment Date:</span>
+                    <span className="detail-value">{memberData.paymentDate}</span>
+                  </div>
+                </div>
+                <div className="detail-row">
+                  <FaCreditCard className="detail-icon" />
+                  <div className="detail-content">
+                    <span className="detail-label">Payment Type:</span>
+                    <span className="detail-value">{memberData.paymentType}</span>
+                  </div>
+                </div>
+                <div className="detail-row">
+                  <FaBarcode className="detail-icon" />
+                  <div className="detail-content">
+                    <span className="detail-label">Payment Code:</span>
+                    <span className="detail-value">{memberData.paymentCode}</span>
+                  </div>
+                </div>
+                {subscriptionData && (
+                  <>
+                    {memberData.subscriptionYear && (
+                      <div className="detail-row">
+                        <FaCalendarAlt className="detail-icon" />
+                        <div className="detail-content">
+                          <span className="detail-label">Sub Year:</span>
+                          <span className="detail-value">
+                            {memberData.subscriptionYear}
+                          </span>
+                        </div>
+                      </div>
+                    )}
+                  </>
+                )}
+              </>
+            )}
+          </div>
+
+          {isTopLayout ? (
+            <>
+              <div className="member-layout-toggle" aria-label="Profile header layout">
+                <Tooltip title={`Switch to ${nextHeaderLayoutLabel}`}>
+                  <button
+                    type="button"
+                    className="member-layout-toggle-btn"
+                    aria-label={`Switch to ${nextHeaderLayoutLabel.toLowerCase()} profile header`}
+                    onClick={() => handleHeaderLayoutChange(nextHeaderLayout)}
+                  >
+                    {nextHeaderLayout === "top" ? (
+                      <FaWindowMaximize />
+                    ) : (
+                      <FaColumns />
+                    )}
+                  </button>
+                </Tooltip>
+              </div>
+              {renderMetaTiles()}
             </>
+          ) : (
+            renderMetaTiles()
           )}
         </div>
-
-        {/* Grade and Category Section - on blue background */}
-        <div
-          className={`member-grade-section-blue ${isDeceased ? "member-deceased" : ""}`}
-        >
-          <div className="grade-row-blue">
-            <span className="grade-label-blue">Category:</span>
-            <span className="grade-value-blue">{memberData?.category}</span>
-          </div>
-          <div className="grade-row-blue">
-            <span className="grade-label-blue">Grade:</span>
-            <span className="grade-value-blue">{memberData.grade}</span>
-          </div>
-        </div>
-
-        {/* Action Buttons: Activate (Green) if Resigned, Cancel (Red) if Active */}
-        {showButtons && !isDeceased && (
-          <>
-            {memberData.status === "Resigned" ? (
-              <button
-                className="member-cancel-btn"
-                style={{
-                  backgroundColor: "#52c41a",
-                  borderColor: "#52c41a",
-                  color: "#fff",
-                  opacity: shouldDisableActivateMembership ? 0.5 : 1,
-                  cursor: shouldDisableActivateMembership
-                    ? "not-allowed"
-                    : "pointer",
-                }}
-                disabled={shouldDisableActivateMembership}
-                title={
-                  shouldDisableActivateMembership
-                    ? "Only the subscription with the latest start date can be reactivated here. This membership is an older subscription line."
-                    : undefined
-                }
-                onClick={() => {
-                  if (shouldDisableActivateMembership) return;
-                  setIsUndoCancelModalVisible(true);
-                }}
-              >
-                Activate Membership
-              </button>
-            ) : !subscriptionData?.reinstated ? (
-              <button className="member-cancel-btn" onClick={handleCancelClick}>
-                Cancel Membership
-              </button>
-            ) : null}
-          </>
-        )}
       </div>
 
       {/* Cancel Membership Modal */}
@@ -988,13 +1327,13 @@ function ProfileHeader({
       <UndoCancellationModal
         visible={isUndoCancelModalVisible}
         onClose={() => setIsUndoCancelModalVisible(false)}
-        record={source}
+        subscriptionId={subscriptionData?._id}
         onSuccess={() => {
           refreshAllData();
         }}
       />
     </div>
   );
-}
+});
 
 export default ProfileHeader;

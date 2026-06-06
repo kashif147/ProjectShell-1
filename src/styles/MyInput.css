@@ -230,6 +230,22 @@
   box-shadow: 0 0 0 4px rgba(220, 53, 69, 0.1);
 }
 
+.my-input-container.success {
+  border-color: #52c41a;
+  background: #f6ffed;
+}
+
+.my-input-container.success.focused {
+  box-shadow: 0 0 0 4px rgba(82, 196, 26, 0.12);
+}
+
+.my-input-field--bic {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono",
+    "Courier New", monospace;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
 .my-input-container.textarea-container {
   height: auto;
   overflow: visible;
@@ -253,6 +269,13 @@
   align-items: center;
   user-select: none;
   letter-spacing: 0.05em;
+}
+
+.my-input-field--iban {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono",
+    "Courier New", monospace;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
 }
 
 .my-input-container .my-input-field {
@@ -318,6 +341,23 @@ textarea.my-input-field {
   top: 50%;
   transform: translateY(-50%);
   color: #dc3545;
-  font-size: 16px;
+  font-size: 14px;
   pointer-events: none;
+}
+
+.success-icon {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #52c41a;
+  font-size: 14px;
+  font-weight: 700;
+  pointer-events: none;
+}
+
+.my-input-container.success .my-input-field,
+.my-input-container.success .my-input-field--iban,
+.my-input-container.success .my-input-field--bic {
+  padding-right: 28px;
 }

@@ -29,7 +29,7 @@ import {
   clearActiveTemplateId,
 } from "../../features/views/ActiveTemplateSlice";
 import { getApplicationsWithFilter } from "../../features/applicationwithfilterslice";
-import { getAllApplications } from "../../features/ApplicationSlice";
+import { getPaymentFormsWithFilter } from "../../features/paymentFormsWithFilterSlice";
 import { getSubscriptionsWithTemplate } from "../../features/subscription/subscriptionSlice";
 import { useTableColumns } from "../../context/TableColumnsContext ";
 import { useFilters } from "../../context/FilterContext";
@@ -37,7 +37,7 @@ import { useLocation } from "react-router-dom";
 import axios from "axios";
 import MyAlert from "./MyAlert";
 import MyInput from "./MyInput";
-import { getSubscriptionFilterTemplatesBaseUrl } from "../../config/serviceUrls";
+import { resolveTemplatesApiUrl } from "../../config/gridTemplateRouting";
 import {
   getLabelToKeyMap,
   normalizeViewTemplatePayload,
@@ -46,11 +46,30 @@ import {
 } from "../../utils/filterUtils";
 import {
   setTemplateId,
-  setInitialized,
   initializeWithTemplate,
   resetInitialization,
 } from "../../features/applicationwithfilterslice";
+import {
+  setPaymentFormsTemplateId,
+  initializePaymentFormsWithTemplate,
+  resetPaymentFormsInitialization,
+} from "../../features/paymentFormsWithFilterSlice";
 import { resetScreenChanged } from "../../features/views/ScreenFilterChangSlice";
+import { bumpCreditNotesReload } from "../../utils/creditNotesWorkspace";
+import { bumpJournalAdjustmentsReload } from "../../utils/journalAdjustmentsWorkspace";
+import { bumpOnlinePaymentsReload } from "../../utils/onlinePaymentsWorkspace";
+import { bumpRefundsReload } from "../../utils/refundsWorkspace";
+import { bumpWriteOffsReload } from "../../utils/writeOffsWorkspace";
+import { bumpGeneralLedgerReload } from "../../utils/generalLedgerWorkspace";
+import { bumpReconciliationReload } from "../../utils/reconciliationWorkspace";
+import { bumpMembershipListingReportReload } from "../../utils/membershipListingReportWorkspace";
+import { bumpMembershipStatisticsReportReload } from "../../utils/membershipStatisticsReportWorkspace";
+import { bumpWorkplaceBreakdownReportReload } from "../../utils/workplaceBreakdownReportWorkspace";
+import {
+  GRID_SYSTEM_DEFAULT_PAGES,
+  buildVisibleColumnKeys,
+  buildColumnLabelsMap,
+} from "../../config/gridColumnDefaults";
 
 const SaveViewMenu = ({ className, style }) => {
   const dispatch = useDispatch();
@@ -85,6 +104,9 @@ const SaveViewMenu = ({ className, style }) => {
   const { currentTemplateId } = useSelector(
     (state) => state.applicationWithFilter,
   );
+  const { currentTemplateId: paymentFormsTemplateId } = useSelector(
+    (state) => state.paymentFormsWithFilter || {},
+  );
   const { activeTemplateId } = useSelector((state) => state.activeTemplate);
   const { selectedView, loading: viewLoading } = useSelector(
     (state) => state.viewById,
@@ -115,6 +137,8 @@ const SaveViewMenu = ({ className, style }) => {
    */
   const tableColumnScreen =
     activePage === "Membership" ? "Members" : activePage;
+  const isPaymentFormsPage =
+    (location.pathname || "").toLowerCase() === "/paymentforms";
   const [activeView, setActiveView] = useState("Default View");
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [viewName, setViewName] = useState("");
@@ -130,10 +154,29 @@ const SaveViewMenu = ({ className, style }) => {
   // Application screens map to 'application' templateType
   const screenMapping = {
     applications: "application",
+    paymentforms: "payment forms",
     members: "members",
     membership: "members",
     summary: "profile",
     eventsdashboard: "eventsdashboard",
+    creditnotes: "creditnotes",
+    journaladjustments: "journaladjustments",
+    onlinepayment: "onlinepayment",
+    refunds: "refunds",
+    "write-offs": "writeoffs",
+    writeoffs: "writeoffs",
+    generalledger: "generalledger",
+    reconciliation: "reconciliation",
+    membershiplistingreport: "membershiplisting",
+    statisticsreport: "statisticsreport",
+    workplacebreakdownreport: "workplacebreakdownreport",
+    correspondencesummary: "notification",
+    correspondencedashboard: "notification",
+    communication: "notification",
+    communicationbatchdetail: "notification",
+    inappnotifications: "notification",
+    audithistory: "audithistory",
+    historybyid: "audithistory",
   };
 
   const normalizeTemplateType = (type) =>
@@ -151,14 +194,112 @@ const SaveViewMenu = ({ className, style }) => {
     (normalizeTemplateType(targetTemplateType) === "members" &&
       normalizeTemplateType(template?.templateType) === "subscription");
 
+  const resolvedCurrentTemplateId = isPaymentFormsPage
+    ? paymentFormsTemplateId
+    : currentTemplateId;
+
+  const initializeScreenWithTemplate = (templateId) => {
+    if (isPaymentFormsPage) {
+      dispatch(initializePaymentFormsWithTemplate(templateId));
+      return;
+    }
+    dispatch(initializeWithTemplate(templateId));
+  };
+
+  const resetScreenInitState = () => {
+    if (isPaymentFormsPage) {
+      dispatch(resetPaymentFormsInitialization());
+      return;
+    }
+    dispatch(resetInitialization());
+  };
+
+  const setScreenTemplateId = (templateId) => {
+    if (isPaymentFormsPage) {
+      dispatch(setPaymentFormsTemplateId(templateId));
+      return;
+    }
+    dispatch(setTemplateId(templateId));
+  };
+
+  const fetchListingByTemplate = (templateId) => {
+    if (isMembersTemplateType) {
+      dispatch(
+        getSubscriptionsWithTemplate({
+          templateId: templateId || "",
+          page: 1,
+          limit: 500,
+        }),
+      );
+      return;
+    }
+    if (isPaymentFormsPage) {
+      dispatch(
+        getPaymentFormsWithFilter({
+          templateId: templateId || "",
+          page: 1,
+          limit: 500,
+        }),
+      );
+      return;
+    }
+    if (activePage === "Applications" && templateId) {
+      dispatch(
+        getApplicationsWithFilter({
+          templateId,
+          page: 1,
+          limit: 500,
+        }),
+      );
+      return;
+    }
+    if (activePage === "CreditNotes") {
+      bumpCreditNotesReload();
+      return;
+    }
+    if (activePage === "JournalAdjustments") {
+      bumpJournalAdjustmentsReload();
+      return;
+    }
+    if (activePage === "OnlinePayment") {
+      bumpOnlinePaymentsReload();
+      return;
+    }
+    if (activePage === "Refunds") {
+      bumpRefundsReload();
+      return;
+    }
+    if (activePage === "WriteOffs") {
+      bumpWriteOffsReload();
+      return;
+    }
+    if (activePage === "GeneralLedger") {
+      bumpGeneralLedgerReload();
+      return;
+    }
+    if (activePage === "Reconciliation") {
+      bumpReconciliationReload();
+    }
+    if (activePage === "MembershipListingReport") {
+      bumpMembershipListingReportReload();
+    }
+    if (activePage === "StatisticsReport") {
+      bumpMembershipStatisticsReportReload();
+    }
+    if (activePage === "WorkplaceBreakdownReport") {
+      bumpWorkplaceBreakdownReportReload();
+    }
+  };
+
   const transformFiltersForApply = useCallback(
     (apiFilters) => {
       return transformFiltersFromApi(
         apiFilters,
         columns[tableColumnScreen] || [],
+        { templateType: targetTemplateType },
       );
     },
-    [columns, tableColumnScreen],
+    [columns, tableColumnScreen, targetTemplateType],
   );
 
   /** Apply a template (list item or getViewById detail) to columns + filter chips + fetches. */
@@ -186,25 +327,8 @@ const SaveViewMenu = ({ className, style }) => {
       );
       applyTemplateFilters(transformedFilters);
       setActiveView(t.name);
-      dispatch(initializeWithTemplate(t._id || ""));
-
-      if (isMembersTemplateType) {
-        dispatch(
-          getSubscriptionsWithTemplate({
-            templateId: t._id || "",
-            page: 1,
-            limit: 10,
-          }),
-        );
-      } else if (activePage === "Applications" && t._id) {
-        dispatch(
-          getApplicationsWithFilter({
-            templateId: t._id,
-            page: 1,
-            limit: 10,
-          }),
-        );
-      }
+      initializeScreenWithTemplate(t._id || "");
+      fetchListingByTemplate(t._id || "");
       dispatch(resetScreenChanged({ screen: activePage }));
     },
     [
@@ -244,7 +368,7 @@ const SaveViewMenu = ({ className, style }) => {
     if (lastScreen.current !== targetTemplateType) {
       lastAppliedTemplateIdRef.current = null;
       dispatch(resetScreenChanged({}));
-      dispatch(resetInitialization());
+      resetScreenInitState();
       dispatch(clearActiveTemplateId());
       lastScreen.current = targetTemplateType;
     }
@@ -280,9 +404,19 @@ const SaveViewMenu = ({ className, style }) => {
       dispatch(setActiveTemplateId(systemView._id));
       handleApplyView(systemView);
     } else {
-      setActiveView("System Template");
+      const page = GRID_SYSTEM_DEFAULT_PAGES[targetTemplateType];
+      const colScreen = tableColumnScreen;
+      if (page?.columns?.length) {
+        const columnKeys = buildVisibleColumnKeys(page.columns);
+        const labels = buildColumnLabelsMap(page.columns);
+        applyTemplate(colScreen, columnKeys, columnKeys, labels, labels);
+        applyTemplateFilters(
+          transformFiltersForApply(page.filters || {}),
+        );
+      }
+      setActiveView("System default (local)");
       dispatch(setActiveTemplateId(null));
-      dispatch(initializeWithTemplate(""));
+      initializeScreenWithTemplate("");
       dispatch(resetScreenChanged({ screen: activePage }));
     }
   }, [dispatch, targetTemplateType, templates, loading, isMembersTemplateType, activePage]);
@@ -373,23 +507,7 @@ const SaveViewMenu = ({ className, style }) => {
           updateSelectedTemplate(targetTemplateType, t);
         }
         dispatch(setActiveTemplateId(id));
-        if (activePage === "Applications") {
-          dispatch(
-            getApplicationsWithFilter({
-              templateId: id,
-              page: 1,
-              limit: 10,
-            }),
-          );
-        } else if (isMembersTemplateType) {
-          dispatch(
-            getSubscriptionsWithTemplate({
-              templateId: id,
-              page: 1,
-              limit: 10,
-            }),
-          );
-        }
+        fetchListingByTemplate(id);
       })
       .catch((error) => {
         console.error("Error setting default view:", error);
@@ -434,6 +552,7 @@ const SaveViewMenu = ({ className, style }) => {
       const activeFilters = transformFiltersForApi(
         filtersState,
         columns[tableColumnScreen] || [],
+        { templateType: targetTemplateType },
       );
 
       // 2. Gather visible columns
@@ -457,9 +576,7 @@ const SaveViewMenu = ({ className, style }) => {
       };
 
       const token = localStorage.getItem("token");
-      const API_URL = isMembersTemplateType
-        ? getSubscriptionFilterTemplatesBaseUrl()
-        : `${process.env.REACT_APP_PROFILE_SERVICE_URL}/templates`;
+      const API_URL = resolveTemplatesApiUrl(targetTemplateType);
 
       await axios.post(API_URL, payload, {
         headers: {
@@ -497,37 +614,22 @@ const SaveViewMenu = ({ className, style }) => {
         applyTemplateFilters(tFilters);
         setActiveView(savedViewName);
         lastAppliedTemplateIdRef.current = keyForView(savedTemplate);
-        dispatch(initializeWithTemplate(savedTemplate._id || ""));
+        initializeScreenWithTemplate(savedTemplate._id || "");
         dispatch(resetScreenChanged({ screen: activePage }));
       }
 
       // 3. Refresh the grid data
-      if (activePage === "Applications") {
-        dispatch(
-          getApplicationsWithFilter({
-            templateId: savedTemplate?._id || currentTemplateId || "",
-            page: 1,
-            limit: 10,
-          }),
-        );
-      } else if (isMembersTemplateType) {
-        dispatch(
-          getSubscriptionsWithTemplate({
-            templateId: savedTemplate?._id || currentTemplateId || "",
-            page: 1,
-            limit: 10,
-          }),
-        );
-      } else {
-        dispatch(getAllApplications());
-      }
+      fetchListingByTemplate(savedTemplate?._id || resolvedCurrentTemplateId || "");
     } catch (error) {
       console.error("Error saving template:", error);
-      MyAlert(
-        "error",
-        "Error",
-        error.response?.data?.message || "Failed to save template",
-      );
+      const apiMsg =
+        error.response?.data?.message ||
+        error.response?.data?.error?.message ||
+        error.response?.data?.data ||
+        (typeof error.response?.data === "string"
+          ? error.response.data
+          : null);
+      MyAlert("error", "Error", apiMsg || error.message || "Failed to save template");
     } finally {
       setSaving(false);
     }
@@ -715,6 +817,7 @@ const SaveViewMenu = ({ className, style }) => {
             Cancel
           </Button>,
           <Button
+            key="save"
             className="butn primary-btn"
             style={{ marginRight: 4 }}
             onClick={handleSaveView}

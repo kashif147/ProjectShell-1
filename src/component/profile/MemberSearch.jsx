@@ -4,7 +4,10 @@ import { SearchOutlined, LoadingOutlined, UserAddOutlined } from "@ant-design/ic
 import { useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
-import { getSubscriptionByProfileId } from "../../features/subscription/profileSubscriptionSlice";
+import {
+  getSubscriptionByProfileId,
+  profileDetailActiveSubscriptionArgs,
+} from "../../features/subscription/profileSubscriptionSlice";
 import { searchProfiles } from "../../features/profiles/SearchProfile";
 import { buildDetailsSearch } from "../../utils/detailsRoute";
 import MemberSearchOptionLabel from "./MemberSearchOptionLabel";
@@ -68,11 +71,47 @@ const MemberSearch = ({
   const [selectedOption, setSelectedOption] = useState(null);
   const [showNoMatchOption, setShowNoMatchOption] = useState(false);
   const [isSearchTriggered, setIsSearchTriggered] = useState(false);
-  const [isManualSearch, setIsManualSearch] = useState(false);
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const searchTimeoutRef = useRef(null);
+  const searchRequestIdRef = useRef(0);
   const inputRef = useRef(null);
+  /** When true, skip debounced API search (e.g. after selecting a member). */
+  const selectionLockRef = useRef(false);
+
+  const rankMembersForQuery = (members, query) => {
+    const q = String(query || "").trim().toLowerCase();
+    if (!q) return members;
+
+    const exact = members.filter(
+      (m) => String(m.membershipNumber || "").trim().toLowerCase() === q,
+    );
+    if (exact.length > 0) return exact;
+
+    return [...members].sort((a, b) => {
+      const aNo = String(a.membershipNumber || "").toLowerCase();
+      const bNo = String(b.membershipNumber || "").toLowerCase();
+      const aStarts = aNo.startsWith(q);
+      const bStarts = bNo.startsWith(q);
+      if (aStarts && !bStarts) return -1;
+      if (!aStarts && bStarts) return 1;
+      return aNo.localeCompare(bNo);
+    });
+  };
+
+  const membersToOptions = (members, searchTerm) =>
+    members.map((member) => ({
+      value: JSON.stringify({
+        displayValue: `${member.personalInfo?.forename || ""} ${member.personalInfo?.surname || ""}`,
+        membershipNumber: member.membershipNumber,
+        searchTerm,
+        memberData: member,
+      }),
+      label: <MemberSearchOptionLabel member={member} />,
+      memberId: member._id,
+      membershipNumber: member.membershipNumber,
+      memberData: member,
+    }));
 
   // Use debounce for search input
   const debouncedSearchValue = useDebounce(searchValue, 300);
@@ -82,6 +121,7 @@ const MemberSearch = ({
     if (isControlled) {
       // When external value is cleared, clear internal states too
       if (externalValue === "") {
+        selectionLockRef.current = false;
         setOptions([]);
         setApiError(null);
         setCurrentSearchTerm("");
@@ -118,27 +158,33 @@ const MemberSearch = ({
 
   // Handle search API call with debounce using direct API call
   useEffect(() => {
-    // Only search if search was manually triggered by typing
-    if (!isManualSearch) {
-      return;
-    }
-
     const fetchSearchResults = async () => {
       if (!debouncedSearchValue.trim() || debouncedSearchValue.length < 2) {
+        selectionLockRef.current = false;
         setOptions([]);
         setCurrentSearchTerm("");
         setSelectedOption(null);
         setShowNoMatchOption(false);
         setIsSearchTriggered(false);
+        setLoading(false);
         return;
       }
 
-      // Clear any existing timeout
+      // After a confirmed selection, the display value is not a search query.
+      if (selectionLockRef.current) {
+        setOptions([]);
+        setShowNoMatchOption(false);
+        setIsSearchTriggered(false);
+        setLoading(false);
+        return;
+      }
+
+      const requestId = ++searchRequestIdRef.current;
+
       if (searchTimeoutRef.current) {
         clearTimeout(searchTimeoutRef.current);
       }
 
-      // Set loading state after a short delay to prevent flickering
       searchTimeoutRef.current = setTimeout(() => {
         setLoading(true);
       }, 100);
@@ -148,35 +194,21 @@ const MemberSearch = ({
       setIsSearchTriggered(true);
 
       try {
-        // Direct API call to search profiles (NO Redux)
         const result = await searchProfilesDirect(debouncedSearchValue);
 
-        // Clear the timeout
+        if (requestId !== searchRequestIdRef.current) {
+          return;
+        }
+
         if (searchTimeoutRef.current) {
           clearTimeout(searchTimeoutRef.current);
           searchTimeoutRef.current = null;
         }
 
-        // Check if result has data and results array
         if (result && result.results && Array.isArray(result.results) && result.results.length > 0) {
-          const members = result.results;
+          const members = rankMembersForQuery(result.results, debouncedSearchValue);
           setShowNoMatchOption(false);
-
-          setOptions(
-            members.map((member) => ({
-              value: JSON.stringify({
-                // Store member data as stringified JSON
-                displayValue: `${member.personalInfo?.forename || ''} ${member.personalInfo?.surname || ''}`,
-                membershipNumber: member.membershipNumber,
-                searchTerm: debouncedSearchValue,
-                memberData: member
-              }),
-              label: <MemberSearchOptionLabel member={member} />,
-              memberId: member._id,
-              membershipNumber: member.membershipNumber,
-              memberData: member
-            }))
-          );
+          setOptions(membersToOptions(members, debouncedSearchValue));
         } else {
           // No results found - show "Add Member" option
           setShowNoMatchOption(true);
@@ -216,41 +248,34 @@ const MemberSearch = ({
           ]);
         }
       } catch (error) {
-        setApiError(error.message || 'Search failed');
-        message.error(`Search failed: ${error.message || 'Unknown error'}. Please try again.`);
+        if (requestId !== searchRequestIdRef.current) {
+          return;
+        }
+        setApiError(error.message || "Search failed");
+        message.error(
+          `Search failed: ${error.message || "Unknown error"}. Please try again.`,
+        );
         setOptions([]);
         setShowNoMatchOption(false);
       } finally {
-        setLoading(false);
-        setIsManualSearch(false); // Reset manual search flag
-        if (searchTimeoutRef.current) {
-          clearTimeout(searchTimeoutRef.current);
-          searchTimeoutRef.current = null;
+        if (requestId === searchRequestIdRef.current) {
+          setLoading(false);
+          if (searchTimeoutRef.current) {
+            clearTimeout(searchTimeoutRef.current);
+            searchTimeoutRef.current = null;
+          }
         }
       }
     };
 
     fetchSearchResults();
 
-    // Cleanup function
     return () => {
       if (searchTimeoutRef.current) {
         clearTimeout(searchTimeoutRef.current);
       }
     };
-  }, [debouncedSearchValue, onAddMember, addMemberLabel, isManualSearch]);
-
-  // Simplified search handler - only trigger on manual typing
-  const handleSearch = (value) => {
-    console.log('Search triggered with:', value);
-    // Only trigger search if value length >= 2 and it's a new search
-    if (value.length >= 2) {
-      setIsManualSearch(true);
-    }
-
-    // Update value through handleInputChange which handles both controlled and uncontrolled
-    handleInputChange(value);
-  };
+  }, [debouncedSearchValue, onAddMember, addMemberLabel]);
 
   const handleSelect = async (value, option) => {
     console.log('Selected value:', value);
@@ -270,7 +295,6 @@ const MemberSearch = ({
       setLoading(true);
       setApiError(null);
       setSelectedOption(parsedValue);
-      setIsManualSearch(false);
 
       // Use the stored member data directly
       if (parsedValue.memberData) {
@@ -292,7 +316,7 @@ const MemberSearch = ({
               await dispatch(
                 getSubscriptionByProfileId({
                   profileId: memberData?._id,
-                  isCurrent: true,
+                  ...profileDetailActiveSubscriptionArgs,
                 })
               ).unwrap();
 
@@ -323,8 +347,13 @@ const MemberSearch = ({
               // The search value should show the selected member's name or membership number
               const displayValue = `${memberData.personalInfo?.forename || ''} ${memberData.personalInfo?.surname || ''} (${memberData.membershipNumber || ''})`.trim();
 
+              selectionLockRef.current = true;
+              searchRequestIdRef.current += 1;
+              setShowNoMatchOption(false);
+              setIsSearchTriggered(false);
+
               // Update the value to show selected member
-              handleInputChange(displayValue);
+              handleInputChange(displayValue, { fromSelection: true });
 
               // Clear options dropdown
               setOptions([]);
@@ -339,7 +368,7 @@ const MemberSearch = ({
                 await dispatch(
                   getSubscriptionByProfileId({
                     profileId: memberData?._id,
-                    isCurrent: true,
+                    ...profileDetailActiveSubscriptionArgs,
                   })
                 ).unwrap();
               }
@@ -368,7 +397,7 @@ const MemberSearch = ({
               await dispatch(
                 getSubscriptionByProfileId({
                   profileId: memberData?._id,
-                  isCurrent: true,
+                  ...profileDetailActiveSubscriptionArgs,
                 })
               ).unwrap();
 
@@ -401,7 +430,11 @@ const MemberSearch = ({
           case "none":
             // Just show success message and keep search value visible
             const displayValueNone = `${memberData.personalInfo?.forename || ''} ${memberData.personalInfo?.surname || ''} (${memberData.membershipNumber || ''})`.trim();
-            handleInputChange(displayValueNone); // Keep value visible
+            selectionLockRef.current = true;
+            searchRequestIdRef.current += 1;
+            setShowNoMatchOption(false);
+            setIsSearchTriggered(false);
+            handleInputChange(displayValueNone, { fromSelection: true }); // Keep value visible
             setOptions([]); // Clear dropdown
 
             message.success(`Member ${memberData.membershipNumber} selected`);
@@ -411,7 +444,7 @@ const MemberSearch = ({
               await dispatch(
                 getSubscriptionByProfileId({
                   profileId: memberData?._id,
-                  isCurrent: true,
+                  ...profileDetailActiveSubscriptionArgs,
                 })
               ).unwrap();
             }
@@ -434,7 +467,7 @@ const MemberSearch = ({
               await dispatch(
                 getSubscriptionByProfileId({
                   profileId: memberData?._id,
-                  isCurrent: true,
+                  ...profileDetailActiveSubscriptionArgs,
                 })
               ).unwrap();
 
@@ -476,7 +509,7 @@ const MemberSearch = ({
   };
 
   // Handle input change (for typing)
-  const handleInputChange = (value) => {
+  const handleInputChange = (value, { fromSelection = false } = {}) => {
     console.log('Input changed to:', value);
 
     // Update value based on control mode
@@ -486,15 +519,21 @@ const MemberSearch = ({
       setInternalValue(value); // Use internal state
     }
 
+    if (fromSelection) {
+      return;
+    }
+
+    selectionLockRef.current = false;
     setSelectedOption(null);
+    setShowNoMatchOption(false);
 
     if (value === "") {
-      setShowNoMatchOption(false);
       setIsSearchTriggered(false);
     }
   };
 
   const handleClear = () => {
+    selectionLockRef.current = false;
     // Clear value based on control mode
     if (isControlled && externalOnChange) {
       externalOnChange(""); // Clear external value
@@ -509,7 +548,6 @@ const MemberSearch = ({
     setSelectedOption(null);
     setShowNoMatchOption(false);
     setIsSearchTriggered(false);
-    setIsManualSearch(false);
 
     // Call external clear callback if provided
     if (externalOnClear) {
@@ -554,10 +592,10 @@ const MemberSearch = ({
       <AutoComplete
         style={{ width: "100%" }}
         options={options}
-        onSearch={handleSearch}
         onSelect={handleSelect}
         value={searchValue}
         onChange={handleInputChange}
+        filterOption={false}
         popupMatchSelectWidth={false}
         notFoundContent={null}
         defaultActiveFirstOption={false}

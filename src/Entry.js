@@ -60,7 +60,7 @@ const lazyWithRetry = (componentImport) => {
 
 // Lazy loaded components with retry
 const Dummy = lazyWithRetry(() => import("./component/common/Dummy"));
-const Configuratin = lazyWithRetry(() => import("./pages/Configuratin"));
+const Configuration = lazyWithRetry(() => import("./pages/Configuration"));
 const ProfileDetails = lazyWithRetry(
   () => import("./pages/Profiles/ProfileDetails"),
 );
@@ -162,12 +162,19 @@ const Deductions = lazyWithRetry(() => import("./pages/finance/Deductions"));
 const Reconciliation = lazyWithRetry(
   () => import("./pages/finance/Reconciliation"),
 );
+const JournalAdjustments = lazyWithRetry(
+  () => import("./pages/finance/JournalAdjustments"),
+);
+const GeneralLedger = lazyWithRetry(() => import("./pages/finance/GeneralLedger"));
 const DirectDebitAuthorization = lazyWithRetry(
   () => import("./pages/finance/DirectDebitAuthorization"),
 );
 const NotDesignedYet = lazyWithRetry(() => import("./pages/NotDesign"));
 const Sms = lazyWithRetry(() => import("./pages/Correspondences/sms"));
 const Email = lazyWithRetry(() => import("./pages/Correspondences/Emails"));
+const EmailCampaignDetail = lazyWithRetry(
+  () => import("./pages/Correspondences/EmailCampaignDetail")
+);
 const Notes = lazyWithRetry(() => import("./pages/Correspondences/Notes"));
 const PopOut = lazyWithRetry(() => import("./component/common/PopOut"));
 const Members = lazyWithRetry(() => import("./pages/membership/Members"));
@@ -177,8 +184,17 @@ const RemindersDetails = lazyWithRetry(
 const MembershipDashboard = lazyWithRetry(
   () => import("./pages/membership/MembershipDashboard"),
 );
+const ExecutiveChartExpandPage = lazyWithRetry(
+  () => import("./pages/membership/executive/ExecutiveChartExpandPage"),
+);
 const TenantManagement = lazyWithRetry(
   () => import("./pages/tenant-management/TenantManagement"),
+);
+const TenantOfficesPage = lazyWithRetry(
+  () => import("./pages/tenant-offices/TenantOfficesPage"),
+);
+const TenantDepartmentsPage = lazyWithRetry(
+  () => import("./pages/tenant-departments/TenantDepartmentsPage"),
 );
 const RoleManagement = lazyWithRetry(
   () => import("./pages/role-management/RoleManagement"),
@@ -206,6 +222,21 @@ const LeaversReport = lazyWithRetry(
 );
 const JoinersReport = lazyWithRetry(
   () => import("./pages/reports/JoinersReport"),
+);
+const ComparisonReport = lazyWithRetry(
+  () => import("./pages/reports/ComparisonReport"),
+);
+const LiveStatsReport = lazyWithRetry(
+  () => import("./pages/reports/LiveStatsReport"),
+);
+const StatisticsReport = lazyWithRetry(
+  () => import("./pages/reports/StatisticsReport"),
+);
+const WorkplaceBreakdownReport = lazyWithRetry(
+  () => import("./pages/reports/WorkplaceBreakdownReport"),
+);
+const MembershipListingReport = lazyWithRetry(
+  () => import("./pages/reports/MembershipListingReport"),
 );
 const ReportViewerDemo = lazyWithRetry(
   () => import("./features/reports/report-viewer/ReportViewerDemo"),
@@ -250,6 +281,9 @@ const RefundsSummary = lazyWithRetry(
 const WriteOffsSummary = lazyWithRetry(
   () => import("./pages/finance/WriteOffsSummary"),
 );
+const CreditNotesSummary = lazyWithRetry(
+  () => import("./pages/finance/CreditNotesSummary"),
+);
 const DirectDebitBatchDetails = lazyWithRetry(
   () => import("./pages/finance/DirectDebitBatchDetails"),
 );
@@ -272,10 +306,16 @@ function Entry() {
     "/", // login page
     "/rewards/insurance",
     "/rewards/rewards",
+    "/MembershipDashboard/chart",
   ];
 
   const showSidebar = !noSidebarRoutes.includes(location.pathname);
-  const showHeaderDetails = showSidebar;
+
+  /** Reports hub — cards only; no breadcrumb, toolbar, templates, or header actions. */
+  const noHeaderDetailsRoutes = ["/Reports"];
+  const normalizedPath = String(location.pathname || "").replace(/\/$/, "") || "/";
+  const showHeaderDetails =
+    showSidebar && !noHeaderDetailsRoutes.includes(normalizedPath);
 
   // Debug logging
   console.log("Entry Debug - Current pathname:", location.pathname);
@@ -337,6 +377,8 @@ function Entry() {
                   style={{
                     flex: 1,
                     minHeight: 0,
+                    overflowY:
+                      location.pathname === "/applicationMgt" ? "hidden" : undefined,
                     scrollbarWidth:
                       location.pathname === "/CasesDetails" ||
                       location.pathname === "/RemindersDetails" ||
@@ -350,7 +392,11 @@ function Entry() {
                     location.pathname === "/CancellationDetail"
                       ? "enable-vertical-scroll"
                       : ""
-                  } ${location.pathname === "/templeteConfig" ? "main-main--template-config" : ""}`}
+                  } ${location.pathname === "/templeteConfig" ? "main-main--template-config" : ""} ${
+                    location.pathname === "/MembershipDashboard"
+                      ? "main-main--exec-dashboard"
+                      : ""
+                  }`}
                 >
                   <Suspense
                     fallback={
@@ -496,10 +542,10 @@ function Entry() {
                       />
 
                       <Route
-                        path="Configuratin"
+                        path="Configuration"
                         element={
-                          <ProtectedRoute requiredPermission={RoutePermissions["/Configuratin"]}>
-                            <Configuratin />
+                          <ProtectedRoute requiredPermission={RoutePermissions["/Configuration"]}>
+                            <Configuration />
                           </ProtectedRoute>
                         }
                       />
@@ -604,7 +650,11 @@ function Entry() {
                       <Route
                         path="Reports"
                         element={
-                          <ProtectedRoute>
+                          <ProtectedRoute
+                            requiredPermission={
+                              RoutePermissions["Reports"]
+                            }
+                          >
                             <ReportsIndex />
                           </ProtectedRoute>
                         }
@@ -691,6 +741,14 @@ function Entry() {
                         path="Applications"
                         element={
                           <ProtectedRoute requiredPermission={RoutePermissions["/Applications"]}>
+                            <MembershipApplication />
+                          </ProtectedRoute>
+                        }
+                      />
+                      <Route
+                        path="PaymentForms"
+                        element={
+                          <ProtectedRoute requiredPermission={RoutePermissions["PaymentForms"]}>
                             <MembershipApplication />
                           </ProtectedRoute>
                         }
@@ -794,6 +852,14 @@ function Entry() {
                         }
                       />
                       <Route
+                        path="JournalAdjustments"
+                        element={
+                          <ProtectedRoute requiredPermission={RoutePermissions["JournalAdjustments"]}>
+                            <JournalAdjustments />
+                          </ProtectedRoute>
+                        }
+                      />
+                      <Route
                         path="DirectDebitAuthorization"
                         element={
                           <ProtectedRoute requiredPermission={RoutePermissions["DirectDebitAuthorization"]}>
@@ -852,6 +918,24 @@ function Entry() {
                         }
                       />
                       <Route
+                        path="CreditNotes"
+                        element={
+                          <ProtectedRoute requiredPermission={RoutePermissions["CreditNotes"]}>
+                            <CreditNotesSummary />
+                          </ProtectedRoute>
+                        }
+                      />
+                      <Route
+                        path="GeneralLedger"
+                        element={
+                          <ProtectedRoute
+                            requiredPermission={RoutePermissions["GeneralLedger"]}
+                          >
+                            <GeneralLedger />
+                          </ProtectedRoute>
+                        }
+                      />
+                      <Route
                         path="Batch/:id"
                         element={
                           <ProtectedRoute>
@@ -893,6 +977,14 @@ function Entry() {
                           </ProtectedRoute>
                         }
                       />
+                      <Route
+                        path="EmailCampaignDetail"
+                        element={
+                          <ProtectedRoute requiredPermission={RoutePermissions["EmailCampaignDetail"]}>
+                            <EmailCampaignDetail />
+                          </ProtectedRoute>
+                        }
+                      />
 
                       <Route
                         path="Sms"
@@ -915,7 +1007,7 @@ function Entry() {
                       <Route
                         path="CornMarket"
                         element={
-                          <ProtectedRoute requiredPermission={RoutePermissions["Configuratin"]}>
+                          <ProtectedRoute requiredPermission={RoutePermissions["Configuration"]}>
                             <CornGrideSummary />
                           </ProtectedRoute>
                         }
@@ -994,10 +1086,35 @@ function Entry() {
                       />
 
                       <Route
+                        path="MembershipDashboard/chart"
+                        element={
+                          <RoutePermissionWrapper path="/MembershipDashboard">
+                            <ExecutiveChartExpandPage />
+                          </RoutePermissionWrapper>
+                        }
+                      />
+
+                      <Route
                         path="TenantManagement"
                         element={
                           <ProtectedRoute requiredPermission={RoutePermissions["TenantManagement"]}>
                             <TenantManagement />
+                          </ProtectedRoute>
+                        }
+                      />
+                      <Route
+                        path="TenantOffices"
+                        element={
+                          <ProtectedRoute requiredPermission={RoutePermissions["TenantOffices"]}>
+                            <TenantOfficesPage />
+                          </ProtectedRoute>
+                        }
+                      />
+                      <Route
+                        path="TenantDepartments"
+                        element={
+                          <ProtectedRoute requiredPermission={RoutePermissions["TenantDepartments"]}>
+                            <TenantDepartmentsPage />
                           </ProtectedRoute>
                         }
                       />
@@ -1046,6 +1163,56 @@ function Entry() {
                         element={
                           <ProtectedRoute requiredPermission={RoutePermissions["JoinersReport"]}>
                             <JoinersReport />
+                          </ProtectedRoute>
+                        }
+                      />
+                      <Route
+                        path="ComparisonReport"
+                        element={
+                          <ProtectedRoute requiredPermission={RoutePermissions["ComparisonReport"]}>
+                            <ComparisonReport />
+                          </ProtectedRoute>
+                        }
+                      />
+                      <Route
+                        path="LiveStatsReport"
+                        element={
+                          <ProtectedRoute requiredPermission={RoutePermissions["LiveStatsReport"]}>
+                            <LiveStatsReport />
+                          </ProtectedRoute>
+                        }
+                      />
+                      <Route
+                        path="StatisticsReport"
+                        element={
+                          <ProtectedRoute
+                            requiredPermission={RoutePermissions["StatisticsReport"]}
+                          >
+                            <StatisticsReport />
+                          </ProtectedRoute>
+                        }
+                      />
+                      <Route
+                        path="WorkplaceBreakdownReport"
+                        element={
+                          <ProtectedRoute
+                            requiredPermission={
+                              RoutePermissions["WorkplaceBreakdownReport"]
+                            }
+                          >
+                            <WorkplaceBreakdownReport />
+                          </ProtectedRoute>
+                        }
+                      />
+                      <Route
+                        path="MembershipListingReport"
+                        element={
+                          <ProtectedRoute
+                            requiredPermission={
+                              RoutePermissions["MembershipListingReport"]
+                            }
+                          >
+                            <MembershipListingReport />
                           </ProtectedRoute>
                         }
                       />

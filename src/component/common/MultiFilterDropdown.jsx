@@ -15,7 +15,14 @@ const MultiFilterDropdown = ({
   selectedValues = [],
   operator: propOperator = "==",
   onApply,
+  formatOptionLabel,
 }) => {
+  const renderOptionLabel = (option) => {
+    if (typeof formatOptionLabel === "function") {
+      return formatOptionLabel(option);
+    }
+    return option;
+  };
   const [open, setOpen] = useState(false);
   const [tempSelectedValues, setTempSelectedValues] = useState(selectedValues);
 
@@ -184,7 +191,7 @@ const MultiFilterDropdown = ({
                 checked={isChecked}
                 onChange={() => handleCheckboxChange(option)}
               >
-                {option}
+                {renderOptionLabel(option)}
               </Checkbox>
             );
           })}
@@ -215,7 +222,7 @@ const MultiFilterDropdown = ({
           cursor: "pointer"
         } : {}}
       >
-        <Space size={6} className="filter-button1__inner">
+        <Space size={6} align="center" className="filter-button1__inner">
           <span className="filter-label">{label}</span>
           {badgeCount > 0 && (
             <Badge count={badgeCount} className="red-badge" />
@@ -247,33 +254,49 @@ export default MultiFilterDropdown;
 const style = document.createElement("style");
 style.innerHTML = `
   .filter-button1 {
-    border: none;
+    border: 1px solid #e2e8f0;
     border-radius: 3px;
-    padding: 6px 14px 6px 10px !important;
+    padding: 0 12px !important;
     cursor: pointer;
     display: inline-flex;
     align-items: center;
-    background-color: rgba(9, 30, 66, 0.04);
-    font-size: 14px !important;
-    font-weight: 600 !important;
-    box-shadow: none !important;
-    margin-left: 4px;
+    background-color: #fff;
+    font-size: 13px !important;
+    font-weight: 500 !important;
+    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+    margin-left: 0;
     overflow: visible;
     flex-shrink: 0;
-    min-height: 30px;
+    min-height: 34px;
+    height: 34px;
     max-width: 100%;
+    transition:
+      background-color 0.15s ease,
+      border-color 0.15s ease,
+      box-shadow 0.15s ease;
   }
 
   .filter-button1__inner.ant-space {
+    display: inline-flex;
+    align-items: center;
+    height: 100%;
     overflow: visible;
   }
 
   .filter-button1 .ant-space-item {
+    display: inline-flex;
+    align-items: center;
     overflow: visible;
   }
 
+  .filter-button1:hover {
+    background-color: #f8fafc;
+    border-color: #cbd5e1;
+  }
+
   .filter-button1.active {
-    background-color: rgba(9, 30, 66, 0.08);
+    background-color: #eff6ff;
+    border-color: #93c5fd;
   }
 
   .filter-button1.disabled-state {
@@ -282,10 +305,14 @@ style.innerHTML = `
   }
 
   .filter-label {
-    font-weight: 500;
-    color: #000000e0;
+    display: inline-flex;
+    align-items: center;
+    font-weight: 600;
+    color: #475569;
     white-space: nowrap;
-    padding-right: 2px;
+    padding-right: 4px;
+    font-size: 13px;
+    line-height: 1;
   }
 
   .filter-button1.disabled-state .filter-label {
@@ -312,8 +339,16 @@ style.innerHTML = `
   }
 
   .dropdown-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
     font-size: 10px;
-    color: #215E97;
+    color: #475569;
+    line-height: 1;
+  }
+
+  .dropdown-icon svg {
+    display: block;
   }
 
   .filter-button1.disabled-state .dropdown-icon {

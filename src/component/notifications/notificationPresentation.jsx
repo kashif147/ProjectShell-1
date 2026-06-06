@@ -18,15 +18,26 @@ export const iconMap = {
 };
 
 export const isBatchProcessNotification = (type) =>
-  type === "BATCH_PROCESS_COMPLETED" || type === "BATCH_PROCESS_QUEUED";
+  type === "BATCH_PROCESS_COMPLETED" ||
+  type === "BATCH_PROCESS_QUEUED" ||
+  type === "DD_PREPARE_QUEUED" ||
+  type === "DD_PREPARE_COMPLETED";
+
+export const isDirectDebitPrepareNotification = (type) =>
+  type === "DD_PREPARE_QUEUED" || type === "DD_PREPARE_COMPLETED";
 
 /**
  * Single notification row for List renderItem (popover or full page).
  */
 export function NotificationRow({ item, onRowClick, padding = "16px 24px" }) {
+  const meta = item?.metadata || {};
+  const isDdPrepare = isDirectDebitPrepareNotification(meta.type);
+  const includedCount = Number(meta.included || 0);
+  const excludedCount = Number(meta.excluded || 0);
+
   return (
     <List.Item
-      onClick={() => onRowClick?.(item._id)}
+      onClick={() => onRowClick?.(item._id, item)}
       style={{
         padding,
         backgroundColor: item.isRead ? "#fff" : "#f6faff",
@@ -60,9 +71,14 @@ export function NotificationRow({ item, onRowClick, padding = "16px 24px" }) {
                 marginLeft: 8,
               }}
             >
-              {isBatchProcessNotification(item?.metadata?.type) && (
+              {isBatchProcessNotification(meta.type) && !isDdPrepare && (
                 <Text strong style={{ color: "#1D4ED8", fontSize: 12 }}>
-                  {Number(item?.metadata?.totalTransactions || 0)}
+                  {Number(meta.totalTransactions || 0)}
+                </Text>
+              )}
+              {isDdPrepare && meta.type === "DD_PREPARE_COMPLETED" && (
+                <Text strong style={{ color: "#1D4ED8", fontSize: 12 }}>
+                  {includedCount + excludedCount}
                 </Text>
               )}
               {!item.isRead && <Badge status="processing" color="#1890ff" />}
@@ -71,7 +87,7 @@ export function NotificationRow({ item, onRowClick, padding = "16px 24px" }) {
         }
         description={
           <div>
-            {isBatchProcessNotification(item?.metadata?.type) ? (
+            {isDdPrepare ? (
               <div
                 style={{
                   fontSize: "12px",
@@ -80,7 +96,37 @@ export function NotificationRow({ item, onRowClick, padding = "16px 24px" }) {
                   lineHeight: "1.4",
                 }}
               >
-                <div>{`Ref No: ${item?.metadata?.referenceNumber || "-"} | Description: ${item?.metadata?.description || "-"}`}</div>
+                <div>{item.body}</div>
+                <div>
+                  Run:{" "}
+                  <Text strong style={{ fontSize: 12 }}>
+                    {meta.runNo || meta.referenceNumber || "-"}
+                  </Text>
+                </div>
+                {meta.type === "DD_PREPARE_COMPLETED" &&
+                  (includedCount > 0 || excludedCount > 0) && (
+                    <div>
+                      Included:{" "}
+                      <Text strong style={{ fontSize: 12 }}>
+                        {includedCount}
+                      </Text>{" "}
+                      | Excluded:{" "}
+                      <Text strong style={{ fontSize: 12 }}>
+                        {excludedCount}
+                      </Text>
+                    </div>
+                  )}
+              </div>
+            ) : isBatchProcessNotification(meta.type) ? (
+              <div
+                style={{
+                  fontSize: "12px",
+                  color: "#666",
+                  marginBottom: "4px",
+                  lineHeight: "1.4",
+                }}
+              >
+                <div>{`Ref No: ${meta.referenceNumber || "-"} | Description: ${meta.description || "-"}`}</div>
               </div>
             ) : (
               <div

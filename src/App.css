@@ -945,7 +945,7 @@ tr {
   font-weight: 600 !important;
 }
 
-.configuratin-titles {
+.configuration-titles {
   size: 24px !important;
   color: var(--labelColor) !important;
 }
@@ -1300,6 +1300,54 @@ th.ant-table-cell.ant-table-cell-fix-left.ant-table-cell-fix-left-last {
   font-weight: 480;
 }
 
+/* Member finance ledger — memo column width + resize grip */
+.common-table th.ledger-memo-col,
+.common-table td.ledger-memo-col {
+  overflow: hidden;
+}
+
+.common-table th.ledger-memo-col {
+  position: relative !important;
+  overflow: visible !important;
+}
+
+.common-table th.ledger-memo-col .ledger-memo-col-header-title {
+  display: inline-flex;
+  align-items: center;
+  vertical-align: middle;
+}
+
+.common-table td.ledger-memo-col--expanded {
+  overflow: visible !important;
+  white-space: normal !important;
+  word-break: break-word;
+  vertical-align: top;
+}
+
+.common-table .finance-ledger-memo-resize-handle {
+  position: absolute;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  width: 10px;
+  margin: 0;
+  padding: 0;
+  cursor: col-resize;
+  z-index: 3;
+  touch-action: none;
+  background: linear-gradient(
+    to right,
+    transparent,
+    rgba(255, 255, 255, 0.15)
+  );
+  border-right: 2px solid rgba(255, 255, 255, 0.55);
+}
+
+.common-table .finance-ledger-memo-resize-handle:hover {
+  background: rgba(255, 255, 255, 0.25);
+  border-right-color: #fff;
+}
+
 .details-header {}
 
 :where(.css-dev-only-do-not-override-11lehqq).ant-menu-inline-collapsed>.ant-menu-item,
@@ -1355,7 +1403,8 @@ th.ant-table-cell.ant-table-cell-fix-left.ant-table-cell-fix-left-last {
   z-index: 10;
   top: 0;
   height: 40px !important;
-  line-height: 40px !important;
+  /* normal line-height so filter/sorter controls align; body cells keep numeric line-height in Utilites */
+  line-height: normal !important;
 }
 
 .common-table table tr td {
@@ -1751,6 +1800,24 @@ table tbody tr:nth-child(odd):hover td {
   line-height: 40px !important;
 }
 
+/* rc-table measure row — fixed body td height must not expand this hidden row */
+.claims-table .ant-table-tbody > tr.ant-table-measure-row,
+.common-table .ant-table-tbody > tr.ant-table-measure-row {
+  height: 0 !important;
+  font-size: 0 !important;
+}
+
+.claims-table .ant-table-tbody > tr.ant-table-measure-row > td,
+.common-table .ant-table-tbody > tr.ant-table-measure-row > td {
+  height: 0 !important;
+  min-height: 0 !important;
+  padding: 0 !important;
+  line-height: 0 !important;
+  border: none !important;
+  overflow: hidden !important;
+  background: transparent !important;
+}
+
 .heading-tbl .ant-table-thead>tr>th {
   background-color: #45669d !important;
   color: white !important;
@@ -1940,7 +2007,7 @@ table tbody tr:nth-child(odd):hover td {
   width: 100%;
 }
 
-.common-table.reminder-cancellation-members-wrap .ant-table-cell {
+.common-table.reminder-cancellation-members-wrap .ant-table-tbody .ant-table-cell {
   white-space: nowrap !important;
 }
 

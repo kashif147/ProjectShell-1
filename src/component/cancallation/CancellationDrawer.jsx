@@ -266,7 +266,7 @@ const CancellationDrawer = ({ open, onClose }) => {
                             className="claims-table"
                             columns={columns}
                             dataSource={data}
-                            pagination={{ pageSize: 5 }}
+                            pagination={{ pageSize: 500 }}
                             bordered
                             rowSelection={getRowSelection}
                         />

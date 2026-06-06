@@ -11,6 +11,7 @@ export const getHierarchicalLookups = createAsyncThunk(
       const response = await axios.get(
         `${process.env.REACT_APP_POLICY_SERVICE_URL}/lookup/by-type/68d036e2662428d1c504b3ad/hierarchy`,
         {
+          params: { format: "simple" },
           headers: {
             Authorization: `Bearer ${token}`, // Include token in headers
             "Content-Type": "application/json",

@@ -1,0 +1,307 @@
+{
+  "pages": {
+    "creditnotes": {
+      "screenKey": "CreditNotes",
+      "templateType": "creditnotes",
+      "service": "account-service",
+      "filters": {
+        "status": { "operator": "equal_to", "values": [] },
+        "docNo": { "operator": "equal_to", "values": [] },
+        "invoiceDocNo": { "operator": "equal_to", "values": [] },
+        "memberId": { "operator": "equal_to", "values": [] },
+        "effectiveDate": { "operator": "between", "values": [] },
+        "createdAt": { "operator": "between", "values": [] },
+        "amount": { "operator": "equal_to", "values": [] },
+        "reason": { "operator": "equal_to", "values": [] },
+        "createdBy": { "operator": "equal_to", "values": [] }
+      },
+      "columns": [
+        { "dataIndex": "docNo", "title": "CN ref", "isGride": true, "isVisible": true, "ellipsis": true, "width": 140 },
+        { "dataIndex": "invoiceDocNo", "title": "Invoice", "isGride": true, "isVisible": true, "ellipsis": true, "width": 130 },
+        { "dataIndex": "memberId", "title": "Member", "isGride": true, "isVisible": true, "ellipsis": true, "width": 110 },
+        { "dataIndex": "amount", "title": "Amount", "filterValueType": "number", "isGride": true, "isVisible": true, "ellipsis": true, "width": 120, "align": "right" },
+        { "dataIndex": "status", "title": "Status", "isGride": true, "isVisible": true, "ellipsis": true, "width": 100 },
+        { "dataIndex": "effectiveDate", "title": "Effective", "filterValueType": "date", "isGride": true, "isVisible": true, "ellipsis": true, "width": 110 },
+        { "dataIndex": "reason", "title": "Reason", "filterValueType": "string", "isGride": true, "isVisible": true, "ellipsis": true, "width": 200 },
+        { "dataIndex": "createdBy", "title": "Created By", "filterValueType": "string", "isGride": true, "isVisible": true, "ellipsis": true, "width": 150 },
+        { "dataIndex": "createdAt", "title": "Created At", "filterValueType": "date", "isGride": true, "isVisible": true, "ellipsis": true, "width": 160 },
+        { "dataIndex": "_actions", "title": "Actions", "key": "actions", "isGride": true, "isVisible": true, "width": 148, "fixed": "right" }
+      ]
+    },
+    "journaladjustments": {
+      "screenKey": "JournalAdjustments",
+      "templateType": "journaladjustments",
+      "service": "account-service",
+      "filters": {
+        "approvalStatus": { "operator": "equal_to", "values": [] },
+        "docNo": { "operator": "equal_to", "values": [] },
+        "debitAccount": { "operator": "equal_to", "values": [] },
+        "creditAccount": { "operator": "equal_to", "values": [] },
+        "memberId": { "operator": "equal_to", "values": [] },
+        "reason": { "operator": "equal_to", "values": [] },
+        "effectiveDate": { "operator": "between", "values": [] },
+        "createdAt": { "operator": "between", "values": [] }
+      },
+      "columns": [
+        { "dataIndex": "docNo", "title": "Adjustment reference", "isGride": true, "isVisible": true, "ellipsis": true, "width": 188 },
+        { "dataIndex": "approvalStatus", "title": "Status", "isGride": true, "isVisible": true, "ellipsis": true, "width": 110 },
+        { "dataIndex": "debitAccount", "title": "Debit", "isGride": true, "isVisible": true, "ellipsis": true, "width": 90 },
+        { "dataIndex": "creditAccount", "title": "Credit", "isGride": true, "isVisible": true, "ellipsis": true, "width": 90 },
+        { "dataIndex": "amount", "title": "Amount", "isGride": true, "isVisible": true, "ellipsis": true, "width": 110, "align": "right" },
+        { "dataIndex": "memberId", "title": "Member", "isGride": true, "isVisible": true, "ellipsis": true, "width": 220 },
+        { "dataIndex": "reason", "title": "Reason", "filterValueType": "string", "isGride": true, "isVisible": true, "ellipsis": true, "width": 200 },
+        { "dataIndex": "effectiveDate", "title": "Effective", "filterValueType": "date", "isGride": true, "isVisible": true, "ellipsis": true, "width": 110 },
+        { "dataIndex": "createdAt", "title": "Created At", "filterValueType": "date", "isGride": true, "isVisible": true, "ellipsis": true, "width": 160 },
+        { "dataIndex": "_actions", "title": "Actions", "key": "actions", "isGride": true, "isVisible": true, "width": 100, "fixed": "right" }
+      ]
+    },
+    "onlinepayment": {
+      "screenKey": "OnlinePayment",
+      "templateType": "onlinepayment",
+      "service": "account-service",
+      "filters": {
+        "membershipStatus": { "operator": "equal_to", "values": [] },
+        "paymentStatus": { "operator": "equal_to", "values": [] },
+        "paymentMethod": { "operator": "equal_to", "values": [] },
+        "billingCycle": { "operator": "equal_to", "values": [] },
+        "category": { "operator": "equal_to", "values": [] },
+        "memberNo": { "operator": "equal_to", "values": [] },
+        "transactionId": { "operator": "equal_to", "values": [] },
+        "fullName": { "operator": "equal_to", "values": [] },
+        "email": { "operator": "equal_to", "values": [] },
+        "phone": { "operator": "equal_to", "values": [] },
+        "renewalDate": { "operator": "between", "values": [] },
+        "date": { "operator": "between", "values": [] },
+        "joinDate": { "operator": "between", "values": [] },
+        "paidAmount": { "operator": "equal_to", "values": [] }
+      },
+      "columns": [
+        { "dataIndex": "memberNo", "title": "Member / Application No", "isGride": true, "isVisible": true, "ellipsis": true, "width": 250 },
+        { "dataIndex": "category", "title": "Membership Category", "isGride": true, "isVisible": true, "ellipsis": true, "width": 150 },
+        { "dataIndex": "fullName", "title": "Full Name", "isGride": true, "isVisible": true, "ellipsis": true, "width": 200 },
+        { "dataIndex": "membershipStatus", "title": "Membership Status", "isGride": true, "isVisible": true, "ellipsis": true, "width": 180 },
+        { "dataIndex": "renewalDate", "title": "Renewal Date", "filterValueType": "date", "isGride": true, "isVisible": true, "ellipsis": true, "width": 150 },
+        { "dataIndex": "transactionId", "title": "Transaction ID", "isGride": true, "isVisible": true, "ellipsis": true, "width": 180 },
+        { "dataIndex": "paidAmount", "title": "Paid Amount", "filterValueType": "number", "isGride": true, "isVisible": true, "ellipsis": true, "width": 150, "align": "right" },
+        { "dataIndex": "date", "title": "Payment Date", "filterValueType": "date", "isGride": true, "isVisible": true, "ellipsis": true, "width": 150 },
+        { "dataIndex": "paymentMethod", "title": "Payment Method", "isGride": true, "isVisible": true, "ellipsis": true, "width": 150 },
+        { "dataIndex": "paymentStatus", "title": "Payment Status", "isGride": true, "isVisible": true, "ellipsis": true, "width": 150 },
+        { "dataIndex": "billingCycle", "title": "Billing Cycle", "isGride": true, "isVisible": true, "ellipsis": true, "width": 150 },
+        { "dataIndex": "email", "title": "Email", "isGride": true, "isVisible": true, "ellipsis": true, "width": 200 },
+        { "dataIndex": "phone", "title": "Phone", "isGride": true, "isVisible": true, "ellipsis": true, "width": 150 },
+        { "dataIndex": "joinDate", "title": "Join Date", "filterValueType": "date", "isGride": true, "isVisible": true, "ellipsis": true, "width": 150 },
+        { "dataIndex": "_actions", "title": "Actions", "key": "actions", "isGride": true, "isVisible": true, "width": 80, "fixed": "right" }
+      ]
+    },
+    "refunds": {
+      "screenKey": "Refunds",
+      "templateType": "refunds",
+      "service": "account-service",
+      "filters": {
+        "refundId": { "operator": "equal_to", "values": [] },
+        "refNo": { "operator": "equal_to", "values": [] },
+        "memo": { "operator": "equal_to", "values": [] },
+        "refundDate": { "operator": "between", "values": [] },
+        "refundAmount": { "operator": "equal_to", "values": [] },
+        "refundType": { "operator": "equal_to", "values": [] },
+        "refundSource": { "operator": "equal_to", "values": [] },
+        "memberNo": { "operator": "equal_to", "values": [] },
+        "createdBy": { "operator": "equal_to", "values": [] },
+        "createdAt": { "operator": "between", "values": [] }
+      },
+      "columns": [
+        { "dataIndex": "refundId", "title": "Refund ID", "isGride": true, "isVisible": true, "ellipsis": true, "width": 120 },
+        { "dataIndex": "refNo", "title": "Ref No", "isGride": true, "isVisible": true, "ellipsis": true, "width": 130 },
+        { "dataIndex": "memo", "title": "Memo", "filterValueType": "string", "isGride": true, "isVisible": true, "ellipsis": true, "width": 200 },
+        { "dataIndex": "refundDate", "title": "Refund Date", "filterValueType": "date", "isGride": true, "isVisible": true, "ellipsis": true, "width": 130 },
+        { "dataIndex": "refundAmount", "title": "Refund Amount", "filterValueType": "number", "isGride": true, "isVisible": true, "ellipsis": true, "width": 140, "align": "right" },
+        { "dataIndex": "refundType", "title": "Refund Type", "isGride": true, "isVisible": true, "ellipsis": true, "width": 140 },
+        { "dataIndex": "refundSource", "title": "Refund Source", "isGride": true, "isVisible": true, "ellipsis": true, "width": 140 },
+        { "dataIndex": "memberNo", "title": "Member No / Application No", "isGride": true, "isVisible": true, "ellipsis": true, "width": 180 },
+        { "dataIndex": "createdBy", "title": "Created By", "filterValueType": "string", "isGride": true, "isVisible": true, "ellipsis": true, "width": 150 },
+        { "dataIndex": "createdAt", "title": "Created At", "filterValueType": "date", "isGride": true, "isVisible": true, "ellipsis": true, "width": 160 },
+        { "dataIndex": "_actions", "title": "Actions", "key": "actions", "isGride": true, "isVisible": true, "width": 72, "fixed": "right" }
+      ]
+    },
+    "writeoffs": {
+      "screenKey": "WriteOffs",
+      "templateType": "writeoffs",
+      "service": "account-service",
+      "filters": {
+        "writeOff": { "operator": "equal_to", "values": [] },
+        "writeOffDate": { "operator": "between", "values": [] },
+        "ref": { "operator": "equal_to", "values": [] },
+        "amount": { "operator": "equal_to", "values": [] },
+        "memberId": { "operator": "equal_to", "values": [] },
+        "status": { "operator": "equal_to", "values": [] },
+        "type": { "operator": "equal_to", "values": [] },
+        "createdBy": { "operator": "equal_to", "values": [] },
+        "createdAt": { "operator": "between", "values": [] },
+        "updatedBy": { "operator": "equal_to", "values": [] },
+        "updatedAt": { "operator": "between", "values": [] }
+      },
+      "columns": [
+        { "dataIndex": "writeOff", "title": "WriteOff", "isGride": true, "isVisible": true, "ellipsis": true, "width": 150 },
+        { "dataIndex": "writeOffDate", "title": "WriteOff Date", "filterValueType": "date", "isGride": true, "isVisible": true, "ellipsis": true, "width": 150 },
+        { "dataIndex": "ref", "title": "Ref", "isGride": true, "isVisible": true, "ellipsis": true, "width": 150 },
+        { "dataIndex": "amount", "title": "Amount", "filterValueType": "number", "isGride": true, "isVisible": true, "ellipsis": true, "width": 120, "align": "right" },
+        { "dataIndex": "memberId", "title": "Member", "isGride": true, "isVisible": true, "ellipsis": true, "width": 110 },
+        { "dataIndex": "status", "title": "WO Status", "isGride": true, "isVisible": true, "ellipsis": true, "width": 100 },
+        { "dataIndex": "type", "title": "Type", "isGride": true, "isVisible": true, "ellipsis": true, "width": 150 },
+        { "dataIndex": "createdBy", "title": "Created By", "filterValueType": "string", "isGride": true, "isVisible": true, "ellipsis": true, "width": 150 },
+        { "dataIndex": "createdAt", "title": "Created At", "filterValueType": "date", "isGride": true, "isVisible": true, "ellipsis": true, "width": 160 },
+        { "dataIndex": "updatedBy", "title": "Updated By", "filterValueType": "string", "isGride": true, "isVisible": true, "ellipsis": true, "width": 150 },
+        { "dataIndex": "updatedAt", "title": "Updated At", "filterValueType": "date", "isGride": true, "isVisible": true, "ellipsis": true, "width": 160 },
+        { "dataIndex": "_actions", "title": "Actions", "key": "actions", "isGride": true, "isVisible": true, "width": 100, "fixed": "right" }
+      ]
+    },
+    "generalledger": {
+      "screenKey": "GeneralLedger",
+      "templateType": "generalledger",
+      "service": "account-service",
+      "filters": {
+        "memberId": { "operator": "equal_to", "values": [] },
+        "date": { "operator": "between", "values": [] },
+        "docTypeLabel": { "operator": "equal_to", "values": [] },
+        "docNo": { "operator": "equal_to", "values": [] },
+        "debit": { "operator": "equal_to", "values": [] },
+        "credit": { "operator": "equal_to", "values": [] },
+        "memo": { "operator": "equal_to", "values": [] },
+        "approvalStatus": { "operator": "equal_to", "values": [] },
+        "createdAt": { "operator": "between", "values": [] }
+      },
+      "columns": [
+        { "dataIndex": "memberId", "title": "Member", "isGride": true, "isVisible": true, "ellipsis": true, "width": 220 },
+        { "dataIndex": "date", "title": "Tx date", "filterValueType": "date", "isGride": true, "isVisible": true, "ellipsis": true, "width": 110 },
+        { "dataIndex": "docTypeLabel", "title": "Tx type", "isGride": true, "isVisible": true, "ellipsis": true, "width": 150 },
+        { "dataIndex": "docNo", "title": "Doc ref", "isGride": true, "isVisible": true, "ellipsis": true, "width": 168 },
+        { "dataIndex": "debit", "title": "GL Debit", "filterValueType": "number", "isGride": true, "isVisible": true, "ellipsis": true, "width": 100, "align": "right" },
+        { "dataIndex": "credit", "title": "GL Credit", "filterValueType": "number", "isGride": true, "isVisible": true, "ellipsis": true, "width": 100, "align": "right" },
+        { "dataIndex": "memo", "title": "Memo", "filterValueType": "string", "isGride": true, "isVisible": true, "ellipsis": true, "width": 240 },
+        { "dataIndex": "approvalStatus", "title": "GL Status", "isGride": true, "isVisible": true, "ellipsis": true, "width": 96 },
+        { "dataIndex": "createdAt", "title": "Posted", "filterValueType": "date", "isGride": true, "isVisible": true, "ellipsis": true, "width": 150 }
+      ]
+    },
+    "membershiplisting": {
+      "screenKey": "MembershipListingReport",
+      "templateType": "membershiplisting",
+      "service": "reporting-service",
+      "filters": {
+        "membershipCategories": { "operator": "equal_to", "values": [] },
+        "membershipStatuses": { "operator": "equal_to", "values": [] },
+        "membershipMovements": { "operator": "equal_to", "values": [] },
+        "grades": { "operator": "equal_to", "values": [] },
+        "workLocations": { "operator": "equal_to", "values": [] },
+        "sections": { "operator": "equal_to", "values": [] },
+        "regions": { "operator": "equal_to", "values": [] },
+        "branches": { "operator": "equal_to", "values": [] },
+        "paymentTypes": { "operator": "equal_to", "values": [] },
+        "paymentFrequencies": { "operator": "equal_to", "values": [] },
+        "startDateRange": { "operator": "between", "values": [] },
+        "expiryDateRange": { "operator": "between", "values": [] },
+        "cancelledDateRange": { "operator": "between", "values": [] },
+        "resignedDateRange": { "operator": "between", "values": [] },
+        "processedDateRange": { "operator": "between", "values": [] }
+      },
+      "columns": [
+        { "dataIndex": "membershipNo", "title": "Membership No", "isGride": true, "isVisible": true, "ellipsis": true, "width": 130 },
+        { "dataIndex": "fullName", "title": "Name", "isGride": true, "isVisible": true, "ellipsis": true, "width": 200 },
+        { "dataIndex": "membershipCategory", "title": "Membership Category", "isGride": true, "isVisible": true, "ellipsis": true, "width": 170 },
+        { "dataIndex": "grade", "title": "Grade", "isGride": true, "isVisible": true, "ellipsis": true, "width": 120 },
+        { "dataIndex": "region", "title": "Region", "isGride": true, "isVisible": true, "ellipsis": true, "width": 120 },
+        { "dataIndex": "branch", "title": "Branch", "isGride": true, "isVisible": true, "ellipsis": true, "width": 120 },
+        { "dataIndex": "section", "title": "Primary Section", "isGride": true, "isVisible": true, "ellipsis": true, "width": 150 },
+        { "dataIndex": "subscriptionYear", "title": "Subs Year", "isGride": true, "isVisible": true, "ellipsis": true, "width": 90 },
+        { "dataIndex": "isCurrent", "title": "isCurrent", "isGride": true, "isVisible": true, "ellipsis": true, "width": 80 },
+        { "dataIndex": "startDate", "title": "Membership Start Date", "filterValueType": "date", "isGride": true, "isVisible": true, "ellipsis": true, "width": 130 },
+        { "dataIndex": "expiryDate", "title": "Expiry Date", "filterValueType": "date", "isGride": true, "isVisible": true, "ellipsis": true, "width": 110 },
+        { "dataIndex": "cancelledAt", "title": "Cancelled Date", "filterValueType": "date", "isGride": true, "isVisible": true, "ellipsis": true, "width": 120 },
+        { "dataIndex": "resignedAt", "title": "Resigned Date", "filterValueType": "date", "isGride": true, "isVisible": true, "ellipsis": true, "width": 120 },
+        { "dataIndex": "processedAt", "title": "Processed At Date", "filterValueType": "date", "isGride": true, "isVisible": true, "ellipsis": true, "width": 130 },
+        { "dataIndex": "renewalDate", "title": "Renewal Date", "filterValueType": "date", "isGride": true, "isVisible": true, "ellipsis": true, "width": 110 },
+        { "dataIndex": "paymentDate", "title": "Last Payment Date", "filterValueType": "date", "isGride": true, "isVisible": true, "ellipsis": true, "width": 130 },
+        { "dataIndex": "membershipStatus", "title": "Membership Status", "isGride": true, "isVisible": true, "ellipsis": true, "width": 130 },
+        { "dataIndex": "membershipMovement", "title": "Membership Movement", "isGride": true, "isVisible": true, "ellipsis": true, "width": 150 },
+        { "dataIndex": "paymentType", "title": "Payment Method", "isGride": true, "isVisible": true, "ellipsis": true, "width": 140 },
+        { "dataIndex": "paymentFrequency", "title": "Frequency", "isGride": true, "isVisible": true, "ellipsis": true, "width": 110 },
+        { "dataIndex": "invoiceAmount", "title": "Invoice Amount", "filterValueType": "number", "isGride": true, "isVisible": true, "ellipsis": true, "width": 110, "align": "right" },
+        { "dataIndex": "arrearsAmount", "title": "Arrears Amount", "filterValueType": "number", "isGride": true, "isVisible": true, "ellipsis": true, "width": 110, "align": "right" },
+        { "dataIndex": "deferredAmount", "title": "Deferred Amount", "filterValueType": "number", "isGride": true, "isVisible": true, "ellipsis": true, "width": 110, "align": "right" },
+        { "dataIndex": "balance", "title": "Balance", "filterValueType": "number", "isGride": true, "isVisible": true, "ellipsis": true, "width": 100, "align": "right" },
+        { "dataIndex": "workLocation", "title": "Work Location", "isGride": true, "isVisible": false, "ellipsis": true, "width": 140 }
+      ]
+    },
+    "statisticsreport": {
+      "screenKey": "StatisticsReport",
+      "templateType": "statisticsreport",
+      "service": "reporting-service",
+      "filters": {
+        "membershipCategories": { "operator": "equal_to", "values": [] },
+        "grades": { "operator": "equal_to", "values": [] },
+        "regions": { "operator": "equal_to", "values": [] },
+        "branches": { "operator": "equal_to", "values": [] }
+      },
+      "columns": [
+        { "dataIndex": "name", "title": "Name", "isGride": true, "isVisible": true, "ellipsis": true, "width": 200 },
+        { "dataIndex": "openingActive", "title": "Opening", "filterValueType": "number", "isGride": true, "isVisible": true, "ellipsis": true, "width": 90, "align": "right" },
+        { "dataIndex": "joined", "title": "Joined", "filterValueType": "number", "isGride": true, "isVisible": true, "ellipsis": true, "width": 80, "align": "right" },
+        { "dataIndex": "rejoin", "title": "Re-joined", "filterValueType": "number", "isGride": true, "isVisible": true, "ellipsis": true, "width": 90, "align": "right" },
+        { "dataIndex": "newJoin", "title": "New", "filterValueType": "number", "isGride": true, "isVisible": true, "ellipsis": true, "width": 70, "align": "right" },
+        { "dataIndex": "reinstatements", "title": "Reinstated", "filterValueType": "number", "isGride": true, "isVisible": true, "ellipsis": true, "width": 95, "align": "right" },
+        { "dataIndex": "resigned", "title": "Resigned", "filterValueType": "number", "isGride": true, "isVisible": true, "ellipsis": true, "width": 90, "align": "right" },
+        { "dataIndex": "lapsed", "title": "Lapsed", "filterValueType": "number", "isGride": true, "isVisible": true, "ellipsis": true, "width": 80, "align": "right" },
+        { "dataIndex": "closingActive", "title": "Closing", "filterValueType": "number", "isGride": true, "isVisible": true, "ellipsis": true, "width": 90, "align": "right" },
+        { "dataIndex": "calculatedClosing", "title": "Calc. closing", "filterValueType": "number", "isGride": true, "isVisible": true, "ellipsis": true, "width": 110, "align": "right" },
+        { "dataIndex": "variance", "title": "Variance", "filterValueType": "number", "isGride": true, "isVisible": false, "ellipsis": true, "width": 90, "align": "right" },
+        { "dataIndex": "balancesLabel", "title": "OK", "isGride": true, "isVisible": true, "ellipsis": true, "width": 72, "align": "center" }
+      ]
+    },
+    "workplacebreakdownreport": {
+      "screenKey": "WorkplaceBreakdownReport",
+      "templateType": "workplacebreakdownreport",
+      "service": "reporting-service",
+      "filters": {
+        "membershipStatuses": { "operator": "equal_to", "values": ["Active"] },
+        "regions": { "operator": "equal_to", "values": [] },
+        "workLocations": { "operator": "equal_to", "values": [] }
+      },
+      "columns": [
+        { "dataIndex": "workLocation", "title": "Work Location", "isGride": true, "isVisible": true, "ellipsis": true, "width": 220 },
+        { "dataIndex": "official", "title": "Official", "isGride": true, "isVisible": true, "ellipsis": true, "width": 80 },
+        { "dataIndex": "mom", "title": "MoM", "filterValueType": "number", "isGride": true, "isVisible": true, "ellipsis": true, "width": 72, "align": "right" }
+      ]
+    },
+    "reconciliation": {
+      "screenKey": "Reconciliation",
+      "templateType": "reconciliation",
+      "service": "account-service",
+      "filters": {
+        "bankRef": { "operator": "equal_to", "values": [] },
+        "memberId": { "operator": "equal_to", "values": [] },
+        "amount": { "operator": "equal_to", "values": [] },
+        "expectedAmount": { "operator": "equal_to", "values": [] },
+        "amountDifference": { "operator": "equal_to", "values": [] },
+        "matchConfidence": { "operator": "equal_to", "values": [] },
+        "suggestedAction": { "operator": "equal_to", "values": [] },
+        "clearingAccountCode": { "operator": "equal_to", "values": [] },
+        "reconciliationStatus": { "operator": "equal_to", "values": [] },
+        "matchedGlDocNo": { "operator": "equal_to", "values": [] },
+        "sourceType": { "operator": "equal_to", "values": [] }
+      },
+      "columns": [
+        { "dataIndex": "bankRef", "title": "Bank ref", "filterValueType": "string", "isGride": true, "isVisible": true, "ellipsis": true, "width": 140 },
+        { "dataIndex": "memberId", "title": "Member", "isGride": true, "isVisible": true, "ellipsis": true, "width": 110 },
+        { "dataIndex": "amount", "title": "Amount", "filterValueType": "number", "isGride": true, "isVisible": true, "ellipsis": true, "width": 100, "align": "right" },
+        { "dataIndex": "expectedAmount", "title": "Expected", "filterValueType": "number", "isGride": true, "isVisible": true, "ellipsis": true, "width": 100, "align": "right" },
+        { "dataIndex": "amountDifference", "title": "Difference", "filterValueType": "number", "isGride": true, "isVisible": true, "ellipsis": true, "width": 100, "align": "right" },
+        { "dataIndex": "matchConfidence", "title": "Confidence", "isGride": true, "isVisible": true, "ellipsis": true, "width": 100 },
+        { "dataIndex": "suggestedAction", "title": "Suggested action", "isGride": true, "isVisible": true, "ellipsis": true, "width": 130 },
+        { "dataIndex": "clearingAccountCode", "title": "Clearing", "isGride": true, "isVisible": true, "ellipsis": true, "width": 80 },
+        { "dataIndex": "reconciliationStatus", "title": "Rec Status", "isGride": true, "isVisible": true, "ellipsis": true, "width": 120 },
+        { "dataIndex": "matchedGlDocNo", "title": "Matched GL", "isGride": true, "isVisible": true, "ellipsis": true, "width": 120 },
+        { "dataIndex": "sourceType", "title": "Source", "isGride": true, "isVisible": true, "ellipsis": true, "width": 70 },
+        { "dataIndex": "_actions", "title": "Actions", "key": "actions", "isGride": true, "isVisible": true, "width": 72, "fixed": "right" }
+      ]
+    }
+  }
+}

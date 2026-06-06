@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="280" height="72" viewBox="0 0 280 72" role="img" aria-label="Membership Portal">
+  <rect width="280" height="72" rx="8" fill="#215e97"/>
+  <g transform="translate(16 14)">
+    <circle cx="22" cy="22" r="22" fill="#ffffff" fill-opacity="0.15"/>
+    <path fill="#ffffff" d="M22 12c-4.2 0-7.5 3-7.5 6.8 0 2.2 1.1 4.1 2.8 5.3-3.5 1.4-6 4.5-6.3 8.2h1.5c.3-3.2 3.2-5.7 6.8-5.7s6.5 2.5 6.8 5.7h1.5c-.3-3.7-2.8-6.8-6.3-8.2 1.7-1.2 2.8-3.1 2.8-5.3C29.5 15 26.2 12 22 12zm0 3c2.1 0 3.8 1.6 3.8 3.6S24.1 22.2 22 22.2s-3.8-1.6-3.8-3.6S19.9 15 22 15z"/>
+  </g>
+  <text x="68" y="32" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="18" font-weight="700" fill="#ffffff">Membership</text>
+  <text x="68" y="52" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="13" font-weight="500" fill="#e2e8f0">Portal</text>
+</svg>

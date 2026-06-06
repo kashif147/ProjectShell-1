@@ -11,6 +11,7 @@ export const getWorkLocationHierarchy = createAsyncThunk(
             const response = await axios.get(
                 `${process.env.REACT_APP_POLICY_SERVICE_URL}/lookup/${sampleWorkLocationId}/hierarchy`,
                 {
+                    params: { format: 'simple' },
                     headers: {
                         Authorization: `Bearer ${token}`,
                         'Content-Type': 'application/json',
@@ -24,7 +25,7 @@ export const getWorkLocationHierarchy = createAsyncThunk(
     }
 );
 
-// Helper function to transform hierarchy data
+// Simple nested tree: { id, type, branch: { id, region: { id } } }
 const transformHierarchyData = (apiData) => {
     const hierarchyData = {
         branch: "",
@@ -32,14 +33,18 @@ const transformHierarchyData = (apiData) => {
     };
     
     if (!apiData) return hierarchyData;
-    
-    // Process individual region and branch objects
-    if (apiData.region && apiData.region._id) {
-        hierarchyData.region = apiData.region._id;
+
+    if (apiData.type === "workLocation") {
+        if (apiData.branch?.id) hierarchyData.branch = apiData.branch.id;
+        if (apiData.branch?.region?.id) hierarchyData.region = apiData.branch.region.id;
+        else if (apiData.region?.id) hierarchyData.region = apiData.region.id;
+        return hierarchyData;
     }
-    
-    if (apiData.branch && apiData.branch._id) {
-        hierarchyData.branch = apiData.branch._id;
+
+    if (apiData.type === "branch") {
+        if (apiData.id) hierarchyData.branch = apiData.id;
+        if (apiData.region?.id) hierarchyData.region = apiData.region.id;
+        return hierarchyData;
     }
 
     return hierarchyData;

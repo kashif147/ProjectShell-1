@@ -7,12 +7,23 @@ import { useDispatch, useSelector } from "react-redux";
 import { getGridTemplates, updateGridTemplate } from "../../features/templete/templetefiltrsclumnapi";
 import { getViewById } from "../../features/views/ViewByIdSlice";
 import { getApplicationsWithFilter } from "../../features/applicationwithfilterslice";
+import { getPaymentFormsWithFilter } from "../../features/paymentFormsWithFilterSlice";
 import { getAllApplications } from "../../features/ApplicationSlice";
 import { getSubscriptionsWithTemplate } from "../../features/subscription/subscriptionSlice";
 import { useFilters } from "../../context/FilterContext";
 import { transformFiltersForApi } from "../../utils/filterUtils";
 import MyAlert from "./MyAlert";
 import { useAuthorization } from "../../context/AuthorizationContext";
+import { bumpCreditNotesReload } from "../../utils/creditNotesWorkspace";
+import { bumpJournalAdjustmentsReload } from "../../utils/journalAdjustmentsWorkspace";
+import { bumpOnlinePaymentsReload } from "../../utils/onlinePaymentsWorkspace";
+import { bumpRefundsReload } from "../../utils/refundsWorkspace";
+import { bumpWriteOffsReload } from "../../utils/writeOffsWorkspace";
+import { bumpGeneralLedgerReload } from "../../utils/generalLedgerWorkspace";
+import { bumpReconciliationReload } from "../../utils/reconciliationWorkspace";
+import { bumpMembershipListingReportReload } from "../../utils/membershipListingReportWorkspace";
+import { bumpMembershipStatisticsReportReload } from "../../utils/membershipStatisticsReportWorkspace";
+import { bumpWorkplaceBreakdownReportReload } from "../../utils/workplaceBreakdownReportWorkspace";
 
 function Gridmenu({ title, screenName, setColumnsDragbe, columnsForFilter, setColumnsForFilter }) {
   const dispatch = useDispatch();
@@ -23,6 +34,30 @@ function Gridmenu({ title, screenName, setColumnsDragbe, columnsForFilter, setCo
     location.pathname === "/membership";
   const isApplicationsScreen =
     (location.pathname || "").toLowerCase() === "/applications";
+  const isPaymentFormsScreen =
+    (location.pathname || "").toLowerCase() === "/paymentforms";
+  const isCreditNotesScreen =
+    (location.pathname || "").toLowerCase() === "/creditnotes";
+  const isJournalAdjustmentsScreen =
+    (location.pathname || "").toLowerCase() === "/journaladjustments";
+  const isOnlinePaymentScreen =
+    (location.pathname || "").toLowerCase() === "/onlinepayment";
+  const isRefundsScreen =
+    (location.pathname || "").toLowerCase() === "/refunds";
+  const isWriteOffsScreen =
+    (location.pathname || "").toLowerCase() === "/write-offs";
+  const isGeneralLedgerScreen =
+    (location.pathname || "").toLowerCase() === "/generalledger";
+  const isReconciliationScreen =
+    (location.pathname || "").toLowerCase() === "/reconciliation";
+  const normalizedGridPath = (location.pathname || "")
+    .replace(/\/$/, "")
+    .toLowerCase();
+  const isMembershipListingReportScreen =
+    normalizedGridPath === "/membershiplistingreport";
+  const isStatisticsReportScreen = normalizedGridPath === "/statisticsreport";
+  const isWorkplaceBreakdownReportScreen =
+    normalizedGridPath === "/workplacebreakdownreport";
   const { hasAnyRole } = useAuthorization();
   const canEditGridTemplates = hasAnyRole(["SU", "ASU"]);
   const screenChanges = useSelector(
@@ -31,7 +66,11 @@ function Gridmenu({ title, screenName, setColumnsDragbe, columnsForFilter, setCo
   const hasUnsavedViewChanges = !!screenChanges[String(screenName || "").toLowerCase()];
   const { columns, updateColumns, handleCheckboxFilterChange, updateSelectedTemplate, reorderGridColumns } = useTableColumns();
   const { filtersState, applyTemplateFilters } = useFilters();
-  const { currentTemplateId } = useSelector((state) => state.applicationWithFilter);
+  const { currentTemplateId } = useSelector((state) =>
+    isPaymentFormsScreen
+      ? state.paymentFormsWithFilter || { currentTemplateId: "" }
+      : state.applicationWithFilter,
+  );
   const [isUpdating, setIsUpdating] = useState(false);
   const [draggingIndex, setDraggingIndex] = useState(null);
   const [menuOpen, setMenuOpen] = useState(false);
@@ -39,7 +78,29 @@ function Gridmenu({ title, screenName, setColumnsDragbe, columnsForFilter, setCo
 
   const gridTemplateType = isMembersScreen
     ? "members"
-    : isApplicationsScreen
+    : isCreditNotesScreen
+      ? "creditnotes"
+      : isJournalAdjustmentsScreen
+        ? "journaladjustments"
+      : isOnlinePaymentScreen
+        ? "onlinepayment"
+      : isRefundsScreen
+        ? "refunds"
+      : isWriteOffsScreen
+        ? "writeoffs"
+      : isGeneralLedgerScreen
+        ? "generalledger"
+      : isReconciliationScreen
+        ? "reconciliation"
+      : isMembershipListingReportScreen
+        ? "membershiplisting"
+      : isStatisticsReportScreen
+        ? "statisticsreport"
+      : isWorkplaceBreakdownReportScreen
+        ? "workplacebreakdownreport"
+      : isPaymentFormsScreen
+      ? "payment forms"
+      : isApplicationsScreen
       ? "application"
       : undefined;
 
@@ -109,7 +170,15 @@ function Gridmenu({ title, screenName, setColumnsDragbe, columnsForFilter, setCo
           getApplicationsWithFilter({
             templateId: currentTemplateId,
             page: 1,
-            limit: 10,
+            limit: 500,
+          }),
+        );
+      } else if (isPaymentFormsScreen) {
+        await dispatch(
+          getPaymentFormsWithFilter({
+            templateId: currentTemplateId,
+            page: 1,
+            limit: 500,
           }),
         );
       } else if (isMembersScreen) {
@@ -117,9 +186,29 @@ function Gridmenu({ title, screenName, setColumnsDragbe, columnsForFilter, setCo
           getSubscriptionsWithTemplate({
             templateId: currentTemplateId,
             page: 1,
-            limit: 10,
+            limit: 500,
           }),
         );
+      } else if (isCreditNotesScreen) {
+        bumpCreditNotesReload();
+      } else if (isJournalAdjustmentsScreen) {
+        bumpJournalAdjustmentsReload();
+      } else if (isOnlinePaymentScreen) {
+        bumpOnlinePaymentsReload();
+      } else if (isRefundsScreen) {
+        bumpRefundsReload();
+      } else if (isWriteOffsScreen) {
+        bumpWriteOffsReload();
+      } else if (isGeneralLedgerScreen) {
+        bumpGeneralLedgerReload();
+      } else if (isReconciliationScreen) {
+        bumpReconciliationReload();
+      } else if (isMembershipListingReportScreen) {
+        bumpMembershipListingReportReload();
+      } else if (isStatisticsReportScreen) {
+        bumpMembershipStatisticsReportReload();
+      } else if (isWorkplaceBreakdownReportScreen) {
+        bumpWorkplaceBreakdownReportReload();
       }
     } catch (error) {
       console.error("Error updating template:", error);
@@ -161,8 +250,9 @@ function Gridmenu({ title, screenName, setColumnsDragbe, columnsForFilter, setCo
         });
 
     setColumnsForFilter(reordered);
-    const newData = reordered.filter(col => col.isGride);
+    const newData = reordered.filter((col) => col.isGride);
     setColumnsDragbe(newData);
+    handleCheckboxFilterChange(title, checked, screen, width);
     if (reorderGridColumns) {
       const keys = reordered
         .filter((c) => c.isGride)
@@ -171,8 +261,6 @@ function Gridmenu({ title, screenName, setColumnsDragbe, columnsForFilter, setCo
         );
       reorderGridColumns(screenName, keys);
     }
-    // Update global context
-    handleCheckboxFilterChange(title, checked, screen, width);
   };
   const [checkBoxData, setcheckBoxData] = useState();
   useEffect(() => {

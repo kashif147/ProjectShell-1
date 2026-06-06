@@ -1,4 +1,11 @@
-import { useState, React, useRef, useEffect, useMemo } from "react";
+import {
+  useState,
+  React,
+  useRef,
+  useEffect,
+  useMemo,
+  useCallback,
+} from "react";
 import {
   Table,
   Checkbox,
@@ -33,6 +40,7 @@ import {
   UploadOutlined,
   EditOutlined,
   ReloadOutlined,
+  PrinterOutlined,
 } from "@ant-design/icons";
 import ContactDrawer from "./ContactDrawer";
 import JiraLikeMenu from "./JiraLikeMenu";
@@ -66,6 +74,7 @@ import ChangeCategoryDrawer from "../details/ChangeCategoryDrawer";
 import MyInput from "./MyInput";
 import CustomSelect from "./CustomSelect";
 import ActionDropdown from "./ActionDropdown";
+import { prepareChartsForPrintAsync } from "../../pages/membership/executive/useExecDashboardPrint";
 import { getAllApplications } from "../../features/ApplicationSlice";
 import MultiFilterDropdown from "./MultiFilterDropdown";
 import SaveViewMenu from "./SaveViewMenu";
@@ -73,18 +82,32 @@ import ApplicationMgtDrawer from "../applications/ApplicationMgtDrawer";
 import Breadcrumb from "./Breadcrumb";
 import SimpleBatch from "../../pages/membership/SimpleBatch";
 import { getApplicationsWithFilter } from "../../features/applicationwithfilterslice";
+import { getPaymentFormsWithFilter } from "../../features/paymentFormsWithFilterSlice";
+import PaymentFormDetailDrawer from "../paymentForms/PaymentFormDetailDrawer";
 import { useSelectedIds } from "../../context/SelectedIdsContext";
 import MyDatePicker1 from "./MyDatePicker1";
 import MyConfirm from "./MyConfirm";
 import MyAlert from "./MyAlert";
 import axios from "axios";
+import { bulkSelectionHasRetrospective } from "../../utils/retrospectiveMembership";
 import Toolbar from "./Toolbar";
 import { useFilters } from "../../context/FilterContext";
 import { useAuthorization } from "../../context/AuthorizationContext";
 import DirectDebitForm from "../../pages/finance/components/DirectDebitForm";
+import CreateDirectDebitRunForm from "../finance/CreateDirectDebitRunForm";
+import directDebitRunsApi from "../../services/directDebitRunsApi";
 // import RefundEntryForm from "../../pages/finance/components/RefundEntryForm";
 import RefundDrawer from "../../component/finanace/RefundDrawer";
 import WriteOffDrawer from "../../component/finanace/WriteOffDrawer";
+import CreditNoteDrawer from "../../component/finanace/CreditNoteDrawer";
+import JournalAdjustmentDrawer from "../../component/finanace/JournalAdjustmentDrawer";
+import { getAccountServiceBaseUrl } from "../../config/serviceUrls";
+import reconciliationWorkspace from "../../utils/reconciliationWorkspace";
+import { isReportHeaderPath } from "../../constants/membershipReportRoutes";
+import ReportExportMenu from "../reports/ReportExportMenu";
+import { bumpJournalAdjustmentsReload } from "../../utils/journalAdjustmentsWorkspace";
+import { bumpCreditNotesReload } from "../../utils/creditNotesWorkspace";
+import { bumpWriteOffsReload } from "../../utils/writeOffsWorkspace";
 import { fetchBatchesByType } from "../../features/profiles/batchMemberSlice";
 import CreateCasesDrawer from "../cases/CreateCasesDrawer";
 import CreateEventDrawer from "../event/CreateEventDrawer";
@@ -109,6 +132,49 @@ function isHeaderDashboardRangeNav(pathname) {
   return HEADER_DASHBOARD_RANGE_NAVS.has(pathname);
 }
 
+function ReconciliationHeaderActions({
+  seedLoading,
+  autoMatchLoading,
+  importLoading,
+  onSeed,
+  onAutoMatch,
+  onImportOpen,
+}) {
+  return (
+    <>
+      <Button
+        type="primary"
+        onClick={onSeed}
+        loading={seedLoading}
+        className="me-1 butn primary-btn"
+        style={{
+          borderRadius: "4px",
+          height: "32px",
+          fontWeight: "500",
+        }}
+      >
+        Seed from pending GL
+      </Button>
+      <Button
+        onClick={onAutoMatch}
+        loading={autoMatchLoading}
+        className="me-1 gray-btn butn"
+        style={{ height: "32px" }}
+      >
+        Auto-match
+      </Button>
+      <Button
+        onClick={onImportOpen}
+        loading={importLoading}
+        className="me-1 gray-btn butn"
+        style={{ height: "32px" }}
+      >
+        Import bank lines
+      </Button>
+    </>
+  );
+}
+
 function HeaderDetails({
   hideBreadcrumb = false,
   setcontactDrawer: setExternalContactDrawer,
@@ -116,7 +182,7 @@ function HeaderDetails({
 }) {
   const { Search } = Input;
   const { TextArea } = Input;
-  const { filtersState, bumpMembershipDashboardApply } = useFilters();
+  const { filtersState } = useFilters();
   const { toPDF, targetRef } = usePDF({ filename: "page.pdf" });
   const location = useLocation();
   const [searchParams, setSearchParams] = useSearchParams();
@@ -140,14 +206,87 @@ function HeaderDetails({
   const [isBatchOpen, setIsBatchOpen] = useState(false);
   const batchFormRef = useRef(null);
   const lifecycleBatchFormRef = useRef(null);
+  const ddRunFormRef = useRef(null);
   const [isSimpleBatchOpen, setIsSimpleBatchOpen] = useState(false);
+  const [ddRunCreateOpen, setDdRunCreateOpen] = useState(false);
   const [aprove, setaprove] = useState("001");
   const [isDrawerOpen, setisDrawerOpen] = useState(false);
   const { viewMode, toggleView } = useView();
   const [value, setValue] = useState(dayjs("2025", "YYYY"));
   const [ddDrawerOpen, setDdDrawerOpen] = useState(false);
+  const [paymentFormCreateMode, setPaymentFormCreateMode] = useState(false);
+  const [paymentFormCreateType, setPaymentFormCreateType] = useState(null);
+  const [paymentFormDetailOpen, setPaymentFormDetailOpen] = useState(false);
+  const [paymentFormDetailId, setPaymentFormDetailId] = useState(null);
+
+  const paymentFormCreateBtnStyle = {
+    marginRight: "50px",
+    color: "white",
+    borderRadius: "3px",
+    backgroundColor: "#45669d",
+  };
+
+  const openPaymentFormCreate = (formType = "STANDING_ORDER") => {
+    setPaymentFormCreateMode(true);
+    setPaymentFormCreateType(formType);
+    setPaymentFormDetailId(null);
+    setPaymentFormDetailOpen(true);
+  };
+
   const [refundDrawerOpen, setRefundDrawerOpen] = useState(false);
   const [writeOffDrawerOpen, setWriteOffDrawerOpen] = useState(false);
+  const [writeOffSubmitting, setWriteOffSubmitting] = useState(false);
+  const [creditNoteDrawerOpen, setCreditNoteDrawerOpen] = useState(false);
+  const [creditNoteSubmitting, setCreditNoteSubmitting] = useState(false);
+  const [journalAdjustmentDrawerOpen, setJournalAdjustmentDrawerOpen] =
+    useState(false);
+  const [journalAdjustmentSubmitting, setJournalAdjustmentSubmitting] =
+    useState(false);
+  const [reconciliationSeedLoading, setReconciliationSeedLoading] =
+    useState(false);
+  const [reconciliationAutoMatchLoading, setReconciliationAutoMatchLoading] =
+    useState(false);
+  const [reconciliationImportLoading, setReconciliationImportLoading] =
+    useState(false);
+  const [reconciliationImportOpen, setReconciliationImportOpen] =
+    useState(false);
+  const [reconciliationImportText, setReconciliationImportText] = useState("");
+
+  const handleReconciliationSeed = useCallback(async () => {
+    setReconciliationSeedLoading(true);
+    try {
+      await reconciliationWorkspace.getHandlers().seed?.();
+    } finally {
+      setReconciliationSeedLoading(false);
+    }
+  }, []);
+
+  const handleReconciliationAutoMatch = useCallback(async () => {
+    setReconciliationAutoMatchLoading(true);
+    try {
+      await reconciliationWorkspace.getHandlers().autoMatch?.();
+    } finally {
+      setReconciliationAutoMatchLoading(false);
+    }
+  }, []);
+
+  const handleReconciliationImportOpen = useCallback(() => {
+    setReconciliationImportOpen(true);
+  }, []);
+
+  const handleReconciliationImportConfirm = useCallback(async () => {
+    setReconciliationImportLoading(true);
+    try {
+      await reconciliationWorkspace
+        .getHandlers()
+        .importBank?.(reconciliationImportText);
+      setReconciliationImportOpen(false);
+      setReconciliationImportText("");
+    } finally {
+      setReconciliationImportLoading(false);
+    }
+  }, [reconciliationImportText]);
+
   const [casesDrawerOpen, setCasesDrawerOpen] = useState(false);
   const [eventDrawerOpen, setEventDrawerOpen] = useState(false);
   const [attendeeDrawerOpen, setAttendeeDrawerOpen] = useState(false);
@@ -244,6 +383,25 @@ function HeaderDetails({
     setIsSaveModalOpen(!isSaveModalOpen);
   };
   const navigate = useNavigate();
+
+  useEffect(() => {
+    if (
+      location.pathname !== "/DirectDebit" ||
+      !location.state?.openCreateDdRun
+    ) {
+      return;
+    }
+    setDdRunCreateOpen(true);
+  }, [location.pathname, location.state?.openCreateDdRun]);
+
+  useEffect(() => {
+    if (!ddRunCreateOpen || !location.state?.ddRunPrefill) return;
+    const timer = window.setTimeout(() => {
+      ddRunFormRef.current?.setFromRun?.(location.state.ddRunPrefill);
+    }, 0);
+    return () => window.clearTimeout(timer);
+  }, [ddRunCreateOpen, location.state?.ddRunPrefill]);
+
   const inputRef = useRef(null);
   const {
     searchFilters,
@@ -268,6 +426,13 @@ function HeaderDetails({
   const { currentTemplateId } = useSelector(
     (state) => state.applicationWithFilter,
   );
+  const { currentTemplateId: paymentFormsTemplateId } = useSelector(
+    (state) => state.paymentFormsWithFilter || {},
+  );
+  const resolvedTemplateId =
+    location.pathname === "/PaymentForms"
+      ? paymentFormsTemplateId || ""
+      : currentTemplateId || "";
 
   const plainOptions = ["Approve", "Reject"];
   const screenName = location?.state?.search;
@@ -380,12 +545,6 @@ function HeaderDetails({
     onClick: () => setEditFieldsDrawerOpen(true),
   };
 
-  const menuItems =
-    nav === "/CasesSummary"
-      ? [...defaultMenuItems, editCasesItem]
-      : nav === "/worklocation" || nav === "/region" || nav === "/branch"
-        ? defaultMenuItems.filter((item) => item.label.startsWith("Assign"))
-        : defaultMenuItems;
   const [statusOperator, setStatusOperator] = useState("==");
   const [statusValues, setStatusValues] = useState(["submitted", "draft"]);
 
@@ -414,6 +573,12 @@ function HeaderDetails({
   const genaratePdf = (e) => {
     toPDF();
   };
+
+  const handleMembershipDashboardPrint = useCallback(async () => {
+    await prepareChartsForPrintAsync();
+    window.print();
+  }, []);
+
   const dispatch = useDispatch();
 
   const regions = useSelector((state) => state.regions.regions, shallowEqual);
@@ -438,247 +603,311 @@ function HeaderDetails({
       return;
     }
 
-    // State to manage date and processing
-    let selectedDate = null;
-    let isProcessing = false;
-    let modalRef = null;
+    const openBulkApprovalProcessingModal = () => {
+      // State to manage date and processing
+      let selectedDate = null;
+      let isProcessing = false;
+      let modalRef = null;
 
-    // Create the modal
-    modalRef = Modal.confirm({
-      title: "Select Processing Date",
-      icon: null,
-      width: 500,
-      className: "bulk-approval-modal",
-      content: (
-        <div style={{ padding: "10px 0 20px 0" }}>
-          <MyDatePicker1
-            label="Processing Date"
-            name="processingDate"
-            value={tempSelectedDate}
-            onChange={(date) => {
-              setTempSelectedDate(date);
-              selectedDate = date; // Also store in the closure variable
-              if (modalRef) {
-                modalRef.update({
-                  okButtonProps: {
-                    disabled: !date,
-                    style: date
-                      ? {
-                          backgroundColor: "#45669d",
-                          borderColor: "#45669d",
-                        }
-                      : {},
-                  },
-                });
-              }
-            }}
-            required={true}
-            placeholder="Select processing date"
-            format="DD/MM/YYYY"
-          />
-          {isProcessing && (
-            <div
-              style={{
-                textAlign: "center",
-                padding: "30px 0 10px 0",
-                borderTop: "1px solid #f0f0f0",
-                marginTop: "20px",
+      // Create the modal
+      modalRef = Modal.confirm({
+        title: "Select Processing Date",
+        icon: null,
+        width: 500,
+        className: "bulk-approval-modal",
+        content: (
+          <div style={{ padding: "10px 0 20px 0" }}>
+            <MyDatePicker1
+              label="Processing Date"
+              name="processingDate"
+              value={tempSelectedDate}
+              onChange={(date) => {
+                setTempSelectedDate(date);
+                selectedDate = date; // Also store in the closure variable
+                if (modalRef) {
+                  modalRef.update({
+                    okButtonProps: {
+                      disabled: !date,
+                      style: date
+                        ? {
+                            backgroundColor: "#45669d",
+                            borderColor: "#45669d",
+                          }
+                        : {},
+                    },
+                  });
+                }
               }}
-            >
-              <LoadingOutlined
-                style={{ fontSize: 32, color: "#45669d", marginBottom: 15 }}
-              />
-              <div style={{ fontSize: 16, fontWeight: 500, color: "#45669d" }}>
-                Processing {selectedApplications.length} application(s)...
+              required={true}
+              placeholder="Select processing date"
+              format="DD/MM/YYYY"
+            />
+            {isProcessing && (
+              <div
+                style={{
+                  textAlign: "center",
+                  padding: "30px 0 10px 0",
+                  borderTop: "1px solid #f0f0f0",
+                  marginTop: "20px",
+                }}
+              >
+                <LoadingOutlined
+                  style={{ fontSize: 32, color: "#45669d", marginBottom: 15 }}
+                />
+                <div
+                  style={{ fontSize: 16, fontWeight: 500, color: "#45669d" }}
+                >
+                  Processing {selectedApplications.length} application(s)...
+                </div>
+                <div style={{ marginTop: 8, color: "#666", fontSize: 14 }}>
+                  This may take a moment for large batches
+                </div>
               </div>
-              <div style={{ marginTop: 8, color: "#666", fontSize: 14 }}>
-                This may take a moment for large batches
-              </div>
-            </div>
-          )}
-        </div>
-      ),
-      okText: "Approve",
-      cancelText: "Cancel",
-      okButtonProps: {
-        disabled: true,
-        style: {
-          backgroundColor: "#45669d",
-          borderColor: "#45669d",
-          color: "white",
+            )}
+          </div>
+        ),
+        okText: "Approve",
+        cancelText: "Cancel",
+        okButtonProps: {
+          disabled: true,
+          style: {
+            backgroundColor: "#45669d",
+            borderColor: "#45669d",
+            color: "white",
+          },
         },
-      },
-      cancelButtonProps: {
-        style: {
-          borderColor: "#d9d9d9",
-          color: "rgba(0, 0, 0, 0.88)",
+        cancelButtonProps: {
+          style: {
+            borderColor: "#d9d9d9",
+            color: "rgba(0, 0, 0, 0.88)",
+          },
         },
-      },
-      onOk: async () => {
-        if (!selectedDate) {
-          MyAlert("error", "Date Required", "Please select a processing date.");
-          return Promise.reject();
-        }
-
-        // Set processing state
-        isProcessing = true;
-        if (modalRef) {
-          modalRef.update({
-            okButtonProps: {
-              disabled: true,
-              loading: true,
-              style: {
-                backgroundColor: "#45669d",
-                borderColor: "#45669d",
-                opacity: 0.7,
-              },
-            },
-            cancelButtonProps: {
-              disabled: true,
-              style: {
-                opacity: 0.5,
-                pointerEvents: "none",
-              },
-            },
-          });
-        }
-
-        try {
-          const applicationIds = selectedApplications; // It's already an array of IDs
-          const formattedDate = dayjs(selectedDate).format("YYYY-MM-DD");
-
-          const requestData = {
-            applicationIds: applicationIds,
-            processingDate: formattedDate,
-          };
-
-          // Show processing notification
-          const processingKey = "bulk-approval-processing";
-          message.loading({
-            content: `Approving ${selectedApplications.length} application(s)...`,
-            duration: 0,
-            key: processingKey,
-            style: {
-              marginTop: "50vh",
-            },
-          });
-
-          const token = localStorage.getItem("token");
-          const response = await axios.post(
-            `${process.env.REACT_APP_PROFILE_SERVICE_URL}/applications/bulk-approval`,
-            requestData,
-            {
-              headers: {
-                "Content-Type": "application/json",
-                Authorization: `Bearer ${token}`,
-              },
-              timeout: 300000,
-            },
-          );
-
-          // Clear processing notification
-          message.destroy(processingKey);
-
-          if (response.status === 200 || response.status === 204) {
+        onOk: async () => {
+          if (!selectedDate) {
             MyAlert(
-              "success",
-              "Approval Successful",
-              `Successfully approved ${applicationIds.length} application(s) with processing date ${dayjs(selectedDate).format("DD/MM/YYYY")}!`,
+              "error",
+              "Date Required",
+              "Please select a processing date.",
             );
-
-            // Clear selected IDs context
-            setSelectedIds([]);
-
-            // Refresh the grid
-            if (
-              location.pathname === "/applicationMgt" ||
-              location.pathname === "/Applications"
-            ) {
-              dispatch(
-                getApplicationsWithFilter({
-                  templateId: currentTemplateId || "",
-                  page: 1,
-                  limit: 10,
-                }),
-              );
-            } else {
-              dispatch(getAllApplications());
-            }
-
-            Modal.destroyAll();
-            return Promise.resolve();
-          } else {
-            MyAlert(
-              "warning",
-              "Partial Success",
-              `Approval completed but with status: ${response.status}`,
-            );
-            Modal.destroyAll();
-            return Promise.resolve();
+            return Promise.reject();
           }
-        } catch (error) {
-          // Clear any processing notifications
-          message.destroy("bulk-approval-processing");
 
-          // Reset modal state on error
-          isProcessing = false;
+          // Set processing state
+          isProcessing = true;
           if (modalRef) {
             modalRef.update({
               okButtonProps: {
-                disabled: !selectedDate,
-                loading: false,
-                style: selectedDate
-                  ? {
-                      backgroundColor: "#45669d",
-                      borderColor: "#45669d",
-                    }
-                  : {},
+                disabled: true,
+                loading: true,
+                style: {
+                  backgroundColor: "#45669d",
+                  borderColor: "#45669d",
+                  opacity: 0.7,
+                },
               },
               cancelButtonProps: {
-                disabled: false,
+                disabled: true,
                 style: {
-                  borderColor: "#d9d9d9",
-                  color: "rgba(0, 0, 0, 0.88)",
+                  opacity: 0.5,
+                  pointerEvents: "none",
                 },
               },
             });
           }
 
-          if (error.code === "ECONNABORTED") {
-            MyAlert(
-              "error",
-              "Request Timeout",
-              `The approval request is taking too long to process ${selectedApplications.length} applications. ` +
-                `The process may still be running in the background. Please check back later.`,
+          try {
+            const applicationIds = selectedApplications; // It's already an array of IDs
+            const formattedDate = dayjs(selectedDate).format("YYYY-MM-DD");
+
+            if (
+              bulkSelectionHasRetrospective(
+                gridData,
+                selectedApplications,
+                dayjs(formattedDate),
+              )
+            ) {
+              const proceed = await new Promise((resolve) => {
+                Modal.confirm({
+                  title: "Delayed application / membership pricing",
+                  content:
+                    "One or more selected rows have date joined, submission, or application date either more than 90 days before the processing date or in a previous calendar year. Fees may use catalogue pricing for that membership period (including rows marked inactive). Continue?",
+                  okText: "Continue",
+                  cancelText: "Cancel",
+                  centered: true,
+                  onOk: () => resolve(true),
+                  onCancel: () => resolve(false),
+                });
+              });
+              if (!proceed) {
+                isProcessing = false;
+                if (modalRef) {
+                  modalRef.update({
+                    okButtonProps: {
+                      disabled: !selectedDate,
+                      loading: false,
+                      style: selectedDate
+                        ? {
+                            backgroundColor: "#45669d",
+                            borderColor: "#45669d",
+                          }
+                        : {},
+                    },
+                    cancelButtonProps: {
+                      disabled: false,
+                      style: {
+                        borderColor: "#d9d9d9",
+                        color: "rgba(0, 0, 0, 0.88)",
+                      },
+                    },
+                  });
+                }
+                return Promise.reject();
+              }
+            }
+
+            const requestData = {
+              applicationIds: applicationIds,
+              processingDate: formattedDate,
+            };
+
+            // Show processing notification
+            const processingKey = "bulk-approval-processing";
+            message.loading({
+              content: `Approving ${selectedApplications.length} application(s)...`,
+              duration: 0,
+              key: processingKey,
+              style: {
+                marginTop: "50vh",
+              },
+            });
+
+            const token = localStorage.getItem("token");
+            const response = await axios.post(
+              `${process.env.REACT_APP_PROFILE_SERVICE_URL}/applications/bulk-approval`,
+              requestData,
+              {
+                headers: {
+                  "Content-Type": "application/json",
+                  Authorization: `Bearer ${token}`,
+                },
+                timeout: 300000,
+              },
             );
-          } else if (error.response) {
-            MyAlert(
-              "error",
-              "Approval Failed",
-              `Error ${error.response.status}: ${error.response.data?.message || "Failed to approve applications"}`,
-            );
-          } else if (error.request) {
-            MyAlert(
-              "error",
-              "Network Error",
-              "No response from server. Please check your connection.",
-            );
-          } else {
-            MyAlert(
-              "error",
-              "Error",
-              `Failed to approve applications: ${error.message}`,
-            );
+
+            // Clear processing notification
+            message.destroy(processingKey);
+
+            if (response.status === 200 || response.status === 204) {
+              MyAlert(
+                "success",
+                "Approval Successful",
+                `Successfully approved ${applicationIds.length} application(s) with processing date ${dayjs(selectedDate).format("DD/MM/YYYY")}!`,
+              );
+
+              // Clear selected IDs context
+              setSelectedIds([]);
+
+              // Refresh the grid
+              if (
+                location.pathname === "/applicationMgt" ||
+                location.pathname === "/Applications"
+              ) {
+                dispatch(
+                  getApplicationsWithFilter({
+                    templateId: resolvedTemplateId,
+                    page: 1,
+                    limit: 500,
+                  }),
+                );
+              } else if (location.pathname === "/PaymentForms") {
+                dispatch(
+                  getPaymentFormsWithFilter({
+                    templateId: resolvedTemplateId,
+                    page: 1,
+                    limit: 500,
+                  }),
+                );
+              } else {
+                dispatch(getAllApplications());
+              }
+
+              Modal.destroyAll();
+              return Promise.resolve();
+            } else {
+              MyAlert(
+                "warning",
+                "Partial Success",
+                `Approval completed but with status: ${response.status}`,
+              );
+              Modal.destroyAll();
+              return Promise.resolve();
+            }
+          } catch (error) {
+            // Clear any processing notifications
+            message.destroy("bulk-approval-processing");
+
+            // Reset modal state on error
+            isProcessing = false;
+            if (modalRef) {
+              modalRef.update({
+                okButtonProps: {
+                  disabled: !selectedDate,
+                  loading: false,
+                  style: selectedDate
+                    ? {
+                        backgroundColor: "#45669d",
+                        borderColor: "#45669d",
+                      }
+                    : {},
+                },
+                cancelButtonProps: {
+                  disabled: false,
+                  style: {
+                    borderColor: "#d9d9d9",
+                    color: "rgba(0, 0, 0, 0.88)",
+                  },
+                },
+              });
+            }
+
+            if (error.code === "ECONNABORTED") {
+              MyAlert(
+                "error",
+                "Request Timeout",
+                `The approval request is taking too long to process ${selectedApplications.length} applications. ` +
+                  `The process may still be running in the background. Please check back later.`,
+              );
+            } else if (error.response) {
+              MyAlert(
+                "error",
+                "Approval Failed",
+                `Error ${error.response.status}: ${error.response.data?.message || "Failed to approve applications"}`,
+              );
+            } else if (error.request) {
+              MyAlert(
+                "error",
+                "Network Error",
+                "No response from server. Please check your connection.",
+              );
+            } else {
+              MyAlert(
+                "error",
+                "Error",
+                `Failed to approve applications: ${error.message}`,
+              );
+            }
+            return Promise.reject();
           }
-          return Promise.reject();
-        }
-      },
-      onCancel: () => {
-        if (typeof MyAlert === "function") {
-          MyAlert("info", "Cancelled", "Approval process was cancelled.");
-        }
-      },
-    });
+        },
+        onCancel: () => {
+          if (typeof MyAlert === "function") {
+            MyAlert("info", "Cancelled", "Approval process was cancelled.");
+          }
+        },
+      });
+    };
+
+    openBulkApprovalProcessingModal();
   };
 
   const handleAssignIRO = async (selectedUser, selectedWorkLocations) => {
@@ -975,6 +1204,34 @@ function HeaderDetails({
   const batchSearchPaths = [];
   const isBatchSearchPage = batchSearchPaths.includes(location.pathname);
 
+  const menuItems = useMemo(() => {
+    if (nav === "/MembershipDashboard") {
+      return [
+        {
+          label: "Export PDF",
+          key: "export-pdf",
+          onClick: () => genaratePdf(),
+        },
+        { label: "Export CSV", key: "export-csv" },
+        { label: "Share", key: "share" },
+        { label: "Details view", key: "details-view" },
+      ];
+    }
+    if (nav === "/CasesSummary") {
+      return [...defaultMenuItems, editCasesItem];
+    }
+    if (
+      nav === "/worklocation" ||
+      nav === "/region" ||
+      nav === "/branch"
+    ) {
+      return defaultMenuItems.filter((item) =>
+        item.label.startsWith("Assign"),
+      );
+    }
+    return defaultMenuItems;
+  }, [nav, defaultMenuItems, editCasesItem]);
+
   return (
     <div className="" style={{ width: "100%", minWidth: 0 }}>
       {/* New Breadcrumb Component */}
@@ -1106,6 +1363,7 @@ function HeaderDetails({
 
           {(location?.pathname == "/ClaimSummary" ||
             location?.pathname == "/Applications" ||
+            location?.pathname == "/PaymentForms" ||
             location?.pathname == "/members" ||
             location?.pathname == "/" ||
             location?.pathname == "/Summary" ||
@@ -1113,7 +1371,6 @@ function HeaderDetails({
             location?.pathname == "/CasesSummary" ||
             location?.pathname == "/Transfers" ||
             location?.pathname == "/CorrespondencesSummary" ||
-            location?.pathname == "/Reports" ||
             location?.pathname == "/RosterSummary" ||
             location?.pathname == "/EventsDashboard" ||
             location?.pathname == "/CorrespondenceDashboard" ||
@@ -1146,6 +1403,12 @@ function HeaderDetails({
             location?.pathname == "/templeteSummary" ||
             location?.pathname == "/write-offs" ||
             location?.pathname == "/Refunds" ||
+            location?.pathname == "/CreditNotes" ||
+            location?.pathname == "/JournalAdjustments" ||
+            location?.pathname == "/GeneralLedger" ||
+            location?.pathname == "/MembershipListingReport" ||
+            location?.pathname == "/StatisticsReport" ||
+            location?.pathname == "/WorkplaceBreakdownReport" ||
             location?.pathname == "/InAppNotifications") && (
             <div className="search-main">
               <div className="title d-flex justify-content-between align-items-start">
@@ -1187,9 +1450,13 @@ function HeaderDetails({
                       {nav == "/" && location?.state == null
                         ? `Profile`
                         : nav === "/MembershipDashboard"
-                          ? "Membership Dashboard"
-                          : location?.state?.search ||
-                            (nav === "/DirectDebitAuthorization"
+                          ? "Executive Dashboard"
+                          : nav === "/StatisticsReport"
+                            ? "Statistics Report"
+                            : nav === "/WorkplaceBreakdownReport"
+                              ? "Workplace Membership Breakdown"
+                            : location?.state?.search ||
+                              (nav === "/DirectDebitAuthorization"
                               ? "Direct Debit Authorization"
                               : nav === "/DirectDebit"
                                 ? "Direct Debit"
@@ -1199,20 +1466,29 @@ function HeaderDetails({
                                     ? "Refunds"
                                     : nav === "/write-offs"
                                       ? "Write-offs"
-                                      : nav === "/onlinePayment"
-                                        ? "Finance"
-                                        : nav === "/EventsDashboard"
-                                          ? "Events Dashboard"
-                                          : nav === "/CorrespondenceDashboard"
-                                            ? "Campaign Dashboard"
-                                            : nav ===
-                                                "/IssuesManagementDashboard"
-                                              ? "Issues Management Dashboard"
-                                              : nav === "/EventsSummary"
-                                                ? "Events"
-                                                : nav === "/Attendees"
-                                                  ? "Attendees"
-                                                  : "")}
+                                      : nav === "/CreditNotes"
+                                        ? "Credit notes"
+                                        : nav === "/Reconciliation"
+                                          ? "Reconciliation"
+                                          : nav === "/JournalAdjustments"
+                                            ? "Journal adjustments"
+                                            : nav === "/GeneralLedger"
+                                              ? "General ledger"
+                                              : nav === "/onlinePayment"
+                                                ? "Finance"
+                                                : nav === "/EventsDashboard"
+                                                  ? "Events Dashboard"
+                                                  : nav ===
+                                                      "/CorrespondenceDashboard"
+                                                    ? "Campaign Dashboard"
+                                                    : nav ===
+                                                        "/IssuesManagementDashboard"
+                                                      ? "Issues Management Dashboard"
+                                                      : nav === "/EventsSummary"
+                                                        ? "Events"
+                                                        : nav === "/Attendees"
+                                                          ? "Attendees"
+                                                          : "")}
                     </h2>
                   )}
                 </div>
@@ -1259,11 +1535,19 @@ function HeaderDetails({
                           "/Cheque",
                           "/Refunds",
                           "/write-offs",
+                          "/CreditNotes",
+                          "/JournalAdjustments",
                           "/onlinePayment",
                           "/DirectDebit",
                         ].includes(nav) &&
                           !hasPermission("payments:create")) ||
-                        (["/Applications", "/Summary", "/members", "/Members"].includes(nav) &&
+                        ([
+                          "/Applications",
+                          "/PaymentForms",
+                          "/Summary",
+                          "/members",
+                          "/Members",
+                        ].includes(nav) &&
                           !hasPermission("application:create")) ||
                         ([
                           "/EventsDashboard",
@@ -1279,12 +1563,36 @@ function HeaderDetails({
                           !hasPermission("queries:create")) ||
                         (nav === "/InAppNotifications" &&
                           !hasPermission("notifications:create")) ||
-                        nav === "/UserNotifications" ? null : (
+                        nav === "/UserNotifications" ||
+                        isReportHeaderPath(nav)
+                          ? null
+                          : nav === "/PaymentForms" ? (
+                        <Button
+                          onClick={() =>
+                            openPaymentFormCreate("STANDING_ORDER")
+                          }
+                          style={paymentFormCreateBtnStyle}
+                          className="butn"
+                        >
+                          Create
+                        </Button>
+                      ) : nav === "/DirectDebitAuthorization" ? (
+                        <Button
+                          onClick={() => openPaymentFormCreate("DD_MANDATE")}
+                          style={paymentFormCreateBtnStyle}
+                          className="butn"
+                        >
+                          Create
+                        </Button>
+                      ) : (
                         <Button
                           onClick={() => {
                             if (nav == "/Applications") {
                               navigate("/applicationMgt");
-                            } else if (nav === "/members" || nav === "/Members") {
+                            } else if (
+                              nav === "/members" ||
+                              nav === "/Members"
+                            ) {
                               navigate("/applicationMgt");
                             } else if (nav == "/ClaimSummary") {
                               handlClaimDrawerChng();
@@ -1294,12 +1602,13 @@ function HeaderDetails({
                               setrosterDrawer(!rosterDrawer);
                             else if (nav === "/Summary")
                               navigate("/applicationMgt");
-                            else if (
+                            else if (nav === "/DirectDebit") {
+                              setDdRunCreateOpen(true);
+                            } else if (
                               nav === "/CornMarket" ||
                               nav === "/NewGraduate" ||
                               nav === "/CornMarketRewards" ||
                               nav === "/RecruitAFriend" ||
-                              nav === "/DirectDebit" ||
                               nav === "/InAppNotifications"
                             ) {
                               setIsSimpleBatchOpen(true);
@@ -1332,12 +1641,14 @@ function HeaderDetails({
                               setIsBatchOpen(true);
                             } else if (nav === "/ChangCateSumm") {
                               setisDrawerOpen(!isDrawerOpen);
-                            } else if (nav === "/DirectDebitAuthorization") {
-                              setDdDrawerOpen(true);
                             } else if (nav === "/Refunds") {
                               setRefundDrawerOpen(true);
                             } else if (nav === "/write-offs") {
                               setWriteOffDrawerOpen(true);
+                            } else if (nav === "/CreditNotes") {
+                              setCreditNoteDrawerOpen(true);
+                            } else if (nav === "/JournalAdjustments") {
+                              setJournalAdjustmentDrawerOpen(true);
                             } else if (nav === "/CasesSummary") {
                               setCasesDrawerOpen(true);
                             } else if (
@@ -1360,14 +1671,40 @@ function HeaderDetails({
                           {nav === "/Attendees" ? "Add Attendee" : "Create"}
                         </Button>
                       )}
-                      <SimpleMenu
-                        title="Export"
-                        triggerClassName="me-1 gray-btn butn"
-                        data={exportbtn}
-                        isSearched={true}
-                        isCheckBox={false}
-                        actions={genaratePdf}
-                      />
+                      {nav === "/Reconciliation" ? (
+                        <ReconciliationHeaderActions
+                          seedLoading={reconciliationSeedLoading}
+                          autoMatchLoading={reconciliationAutoMatchLoading}
+                          importLoading={reconciliationImportLoading}
+                          onSeed={handleReconciliationSeed}
+                          onAutoMatch={handleReconciliationAutoMatch}
+                          onImportOpen={handleReconciliationImportOpen}
+                        />
+                      ) : null}
+                      {nav === "/MembershipDashboard" ? (
+                        <Button
+                          type="default"
+                          className="me-1 gray-btn butn"
+                          icon={<PrinterOutlined />}
+                          onClick={() => {
+                            void handleMembershipDashboardPrint();
+                          }}
+                        >
+                          Print
+                        </Button>
+                      ) : null}
+                      {isReportHeaderPath(nav) ? (
+                        <ReportExportMenu triggerClassName="me-1 gray-btn butn" />
+                      ) : (
+                        <SimpleMenu
+                          title="Export"
+                          triggerClassName="me-1 gray-btn butn"
+                          data={exportbtn}
+                          isSearched={true}
+                          isCheckBox={false}
+                          actions={genaratePdf}
+                        />
+                      )}
 
                       {/* <Button className="me-1 gray-btn butn">Executive Council</Button> */}
                       <Button className="me-1 gray-btn butn">Share</Button>
@@ -1389,22 +1726,7 @@ function HeaderDetails({
                   )}
                 </div>
               </div>
-              {nav == "/Reconciliation" ? (
-                <div className="d-flex search-fliters align-items-baseline w-100 mt-2 mb-1">
-                  <Row className="align-items-baseline w-100">
-                    <DatePicker
-                      format="DD/MM/YYYY"
-                      placeholder="From Date"
-                      style={{ width: 220, marginRight: 12 }}
-                    />
-                    <DatePicker
-                      format="DD/MM/YYYY"
-                      placeholder="To Date"
-                      style={{ width: 220 }}
-                    />
-                  </Row>
-                </div>
-              ) : nav == "/RemindersSummary" ? (
+              {nav == "/RemindersSummary" ? (
                 <div
                   className="d-flex search-fliters align-items-center flex-wrap w-100 mt-2 mb-1"
                   style={{ gap: 8 }}
@@ -1521,7 +1843,7 @@ function HeaderDetails({
               ) : (
                 nav !== "/templeteSummary" &&
                 nav !== "/CommunicationBatchDetail" && (
-                  <div className="d-flex me-4 search-fliters align-items-baseline justify-content-between flex-wrap mt-2 mb-1">
+                  <div className="d-flex me-4 search-fliters align-items-center justify-content-between flex-wrap mt-2 mb-1">
                     {isBatchSearchPage ? (
                       <Search
                         placeholder="Search by Batch Number"
@@ -1536,60 +1858,53 @@ function HeaderDetails({
                         <Toolbar />
                       </div>
                     )}
-                    <div className="d-flex flex-shrink-0 align-items-center gap-2">
-                      {location?.pathname === "/worklocation" ||
-                      location?.pathname === "/region" ||
-                      location?.pathname === "/branch" ? null : (
-                        <>
-                          {nav !== "/MembershipDashboard" &&
-                            nav !== "/templeteConfig" &&
-                            !isHeaderDashboardRangeNav(nav) && (
-                              <SaveViewMenu className="ms-3" />
+                    {nav !== "/MembershipDashboard" ? (
+                      <div className="d-flex flex-shrink-0 align-items-center gap-2">
+                        {location?.pathname === "/worklocation" ||
+                        location?.pathname === "/region" ||
+                        location?.pathname === "/branch" ? null : (
+                          <>
+                            {nav !== "/templeteConfig" &&
+                              !isHeaderDashboardRangeNav(nav) && (
+                                <SaveViewMenu className="ms-3" />
+                              )}
+                            {isHeaderDashboardRangeNav(nav) && (
+                              <div
+                                className="events-header-range ms-3 flex-shrink-0"
+                                role="group"
+                                aria-label="Time range"
+                              >
+                                {HEADER_DASHBOARD_RANGE_KEYS.map((k) => (
+                                  <button
+                                    key={k}
+                                    type="button"
+                                    className={
+                                      headerDashboardRange === k
+                                        ? "is-active"
+                                        : ""
+                                    }
+                                    onClick={() =>
+                                      setSearchParams(
+                                        (prev) => {
+                                          const next = new URLSearchParams(
+                                            prev,
+                                          );
+                                          next.set("range", k);
+                                          return next;
+                                        },
+                                        { replace: true },
+                                      )
+                                    }
+                                  >
+                                    {k}
+                                  </button>
+                                ))}
+                              </div>
                             )}
-                          {nav === "/MembershipDashboard" && (
-                            <Button
-                              type="default"
-                              icon={<ReloadOutlined />}
-                              onClick={() => bumpMembershipDashboardApply()}
-                              className="me-1 gray-btn butn"
-                            >
-                              Refresh
-                            </Button>
-                          )}
-                          {isHeaderDashboardRangeNav(nav) && (
-                            <div
-                              className="events-header-range ms-3 flex-shrink-0"
-                              role="group"
-                              aria-label="Time range"
-                            >
-                              {HEADER_DASHBOARD_RANGE_KEYS.map((k) => (
-                                <button
-                                  key={k}
-                                  type="button"
-                                  className={
-                                    headerDashboardRange === k
-                                      ? "is-active"
-                                      : ""
-                                  }
-                                  onClick={() =>
-                                    setSearchParams(
-                                      (prev) => {
-                                        const next = new URLSearchParams(prev);
-                                        next.set("range", k);
-                                        return next;
-                                      },
-                                      { replace: true },
-                                    )
-                                  }
-                                >
-                                  {k}
-                                </button>
-                              ))}
-                            </div>
-                          )}
-                        </>
-                      )}
-                    </div>
+                          </>
+                        )}
+                      </div>
+                    ) : null}
                   </div>
                 )
               )}
@@ -2005,6 +2320,48 @@ function HeaderDetails({
               : "workLocation"
         }
       />
+      <MyDrawer
+        isPagination={false}
+        width="33%"
+        title="Create Direct Debit Run"
+        open={ddRunCreateOpen}
+        isDisable={false}
+        onClose={() => {
+          setDdRunCreateOpen(false);
+          ddRunFormRef.current?.reset?.();
+        }}
+        add={async () => {
+          if (
+            !ddRunFormRef.current ||
+            typeof ddRunFormRef.current.submit !== "function"
+          ) {
+            return;
+          }
+          let payload;
+          try {
+            payload = await ddRunFormRef.current.submit();
+          } catch {
+            return;
+          }
+          if (!payload) return;
+          try {
+            const res = await directDebitRunsApi.create(payload);
+            message.success(`Run ${res.run?.runNo || ""} created`);
+            setDdRunCreateOpen(false);
+            ddRunFormRef.current?.reset?.();
+            window.dispatchEvent(new CustomEvent("direct-debit-runs-changed"));
+            if (res.run?._id) {
+              navigate("/DirectDebitBatchDetails", {
+                state: { runId: res.run._id, run: res.run },
+              });
+            }
+          } catch (err) {
+            message.error(err.message || "Failed to create DD run");
+          }
+        }}
+      >
+        <CreateDirectDebitRunForm ref={ddRunFormRef} />
+      </MyDrawer>
       <SimpleBatch
         open={isSimpleBatchOpen}
         onClose={() => setIsSimpleBatchOpen(false)}
@@ -2016,8 +2373,6 @@ function HeaderDetails({
             batchType = "inmo-rewards";
           } else if (nav.toLowerCase().includes("recruitafriend")) {
             batchType = "recruit-friend";
-          } else if (nav.toLowerCase().includes("directdebit")) {
-            batchType = "direct-debit";
           } else if (
             nav.toLowerCase().includes("inappnotifications") ||
             nav.toLowerCase().includes("communicationbatchdetail")
@@ -2062,9 +2417,175 @@ function HeaderDetails({
       <WriteOffDrawer
         open={writeOffDrawerOpen}
         onClose={() => setWriteOffDrawerOpen(false)}
-        submitLoading={false}
-        onSubmit={async () => {
-          return true;
+        submitLoading={writeOffSubmitting}
+        onSubmit={async (values) => {
+          const memberId = String(values?.memberId || "").trim();
+          if (!memberId) {
+            message.error("Select a member before posting the write-off");
+            return false;
+          }
+          const amountEuros = Number(values?.amountEuros);
+          const amount = Number.isFinite(amountEuros)
+            ? Math.round(amountEuros * 100)
+            : NaN;
+          if (!Number.isFinite(amount) || amount <= 0) {
+            message.error("Enter a valid write-off amount");
+            return false;
+          }
+          setWriteOffSubmitting(true);
+          try {
+            const token = localStorage.getItem("token");
+            const docNoRaw = String(values?.docNo || "").trim();
+            const docNo =
+              docNoRaw ||
+              `WO-${Date.now().toString(36).toUpperCase()}${Math.random().toString(36).slice(2, 5).toUpperCase()}`;
+            await axios.post(
+              `${getAccountServiceBaseUrl()}/journal/writeoff`,
+              {
+                date: values?.date,
+                docNo,
+                memberId,
+                amount,
+                periodBucket: values?.periodBucket,
+                memo: values?.memo || "",
+              },
+              {
+                headers: {
+                  Authorization: `Bearer ${token}`,
+                  "Content-Type": "application/json",
+                },
+              },
+            );
+            message.success("Write-off posted");
+            bumpWriteOffsReload();
+            return true;
+          } catch (error) {
+            message.error(
+              error?.response?.data?.message ||
+                error?.message ||
+                "Could not post write-off",
+            );
+            return false;
+          } finally {
+            setWriteOffSubmitting(false);
+          }
+        }}
+      />
+      <Modal
+        title="Import bank / payout lines"
+        open={reconciliationImportOpen}
+        onCancel={() => {
+          setReconciliationImportOpen(false);
+          setReconciliationImportText("");
+        }}
+        confirmLoading={reconciliationImportLoading}
+        onOk={handleReconciliationImportConfirm}
+        okText="Import"
+        width={560}
+      >
+        <p style={{ fontSize: 13, color: "#595959" }}>
+          One line per entry: <code>reference, amount</code> (amount in euros,
+          e.g. <code>PO_abc123, 31.50</code>).
+        </p>
+        <Input.TextArea
+          rows={8}
+          value={reconciliationImportText}
+          onChange={(e) => setReconciliationImportText(e.target.value)}
+          placeholder="STRIPE_PO_123, 125.00&#10;REC-2026-010, 31.50"
+        />
+      </Modal>
+      <CreditNoteDrawer
+        open={creditNoteDrawerOpen}
+        onClose={() => setCreditNoteDrawerOpen(false)}
+        mode="create"
+        submitLoading={creditNoteSubmitting}
+        onSubmitCreate={async (payload) => {
+          setCreditNoteSubmitting(true);
+          try {
+            const token = localStorage.getItem("token");
+            await axios.post(
+              `${getAccountServiceBaseUrl()}/journal/credit-notes`,
+              payload,
+              {
+                headers: {
+                  Authorization: `Bearer ${token}`,
+                  "Content-Type": "application/json",
+                },
+              },
+            );
+            message.success("Draft credit note created");
+            bumpCreditNotesReload();
+            return true;
+          } catch (error) {
+            message.error(
+              error?.response?.data?.message ||
+                error?.message ||
+                "Could not create credit note",
+            );
+            return false;
+          } finally {
+            setCreditNoteSubmitting(false);
+          }
+        }}
+      />
+      <JournalAdjustmentDrawer
+        open={journalAdjustmentDrawerOpen}
+        onClose={() => setJournalAdjustmentDrawerOpen(false)}
+        submitLoading={journalAdjustmentSubmitting}
+        onSubmitDraft={async (payload) => {
+          setJournalAdjustmentSubmitting(true);
+          try {
+            const token = localStorage.getItem("token");
+            await axios.post(
+              `${getAccountServiceBaseUrl()}/finance/journal-adjustments`,
+              payload,
+              { headers: { Authorization: `Bearer ${token}` } },
+            );
+            message.success("Draft journal adjustment created");
+            bumpJournalAdjustmentsReload();
+            return true;
+          } catch (error) {
+            message.error(
+              error?.response?.data?.message ||
+                error?.message ||
+                "Create failed",
+            );
+            return false;
+          } finally {
+            setJournalAdjustmentSubmitting(false);
+          }
+        }}
+        onSubmitApprove={async (payload) => {
+          setJournalAdjustmentSubmitting(true);
+          try {
+            const token = localStorage.getItem("token");
+            const res = await axios.post(
+              `${getAccountServiceBaseUrl()}/finance/journal-adjustments`,
+              payload,
+              { headers: { Authorization: `Bearer ${token}` } },
+            );
+            const data = res.data?.data ?? res.data;
+            const docNo = data?.docNo || payload.docNo;
+            await axios.post(
+              `${getAccountServiceBaseUrl()}/finance/journal-adjustments/${encodeURIComponent(docNo)}/approve`,
+              {},
+              { headers: { Authorization: `Bearer ${token}` } },
+            );
+            message.success(
+              `Journal adjustment approved — GL posted for ${docNo}`,
+            );
+            bumpJournalAdjustmentsReload();
+            return true;
+          } catch (error) {
+            message.error(
+              error?.response?.data?.message ||
+                error?.message ||
+                "Approve failed",
+            );
+            return false;
+          } finally {
+            setJournalAdjustmentSubmitting(false);
+          }
         }}
       />
       <CreateCasesDrawer
@@ -2363,6 +2884,42 @@ function HeaderDetails({
           }
         />
       ) : null}
+      <PaymentFormDetailDrawer
+        open={paymentFormDetailOpen}
+        formId={paymentFormDetailId}
+        createMode={paymentFormCreateMode}
+        createFormType={paymentFormCreateType}
+        onClose={() => {
+          setPaymentFormDetailOpen(false);
+          setPaymentFormDetailId(null);
+          setPaymentFormCreateMode(false);
+          setPaymentFormCreateType(null);
+        }}
+        onPersisted={(created) => {
+          setPaymentFormCreateMode(false);
+          setPaymentFormDetailId(created?._id || null);
+          if (location.pathname === "/PaymentForms") {
+            dispatch(
+              getPaymentFormsWithFilter({
+                templateId: paymentFormsTemplateId || "",
+                page: 1,
+                limit: 500,
+              }),
+            );
+          }
+        }}
+        onUpdated={() => {
+          if (location.pathname === "/PaymentForms") {
+            dispatch(
+              getPaymentFormsWithFilter({
+                templateId: paymentFormsTemplateId || "",
+                page: 1,
+                limit: 500,
+              }),
+            );
+          }
+        }}
+      />
     </div>
   );
 }

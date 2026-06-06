@@ -11,18 +11,28 @@ const ReportsIndex = () => {
 
   const reportCards = [
     {
-      title: "Cancelled Members Report",
-      description: "View and export cancelled members data",
+      title: "Membership Listing Report",
+      description:
+        "Filterable membership listing with executive dashboard dimensions and date range",
       icon: <FileTextOutlined style={{ fontSize: "48px" }} />,
-      path: "/CancelledMembersReport",
-      color: "#1890ff",
+      path: "/MembershipListingReport",
+      color: "#722ed1",
     },
     {
-      title: "Report Viewer",
-      description: "View and manage various reports",
+      title: "Statistics Report",
+      description:
+        "Year membership movement: opening, joiners, reinstatements, leavers, closing — by Membership Category and region, branch and work location",
       icon: <BarChartOutlined style={{ fontSize: "48px" }} />,
-      path: "/ReportViewerDemo",
-      color: "#52c41a",
+      path: "/StatisticsReport",
+      color: "#13c2c2",
+    },
+    {
+      title: "Workplace Membership Breakdown",
+      description:
+        "Rolling monthly member counts per work location with MoM change and official assignment",
+      icon: <BarChartOutlined style={{ fontSize: "48px" }} />,
+      path: "/WorkplaceBreakdownReport",
+      color: "#2f54eb",
     },
   ];
 
@@ -30,7 +40,7 @@ const ReportsIndex = () => {
     <div className="reports-index">
       <div style={{ padding: "24px" }}>
         <Title level={2} style={{ marginBottom: "32px" }}>
-          Reports
+          Membership Reports
         </Title>
 
         <Row gutter={[24, 24]}>
@@ -39,7 +49,9 @@ const ReportsIndex = () => {
               <Card
                 hoverable
                 className="report-card"
-                onClick={() => navigate(report.path)}
+                onClick={() =>
+                  navigate(report.path, { state: { search: report.title } })
+                }
                 style={{
                   height: "100%",
                   textAlign: "center",
@@ -60,7 +72,10 @@ const ReportsIndex = () => {
                 <p style={{ color: "#666", marginBottom: "16px" }}>
                   {report.description}
                 </p>
-                <Button type="primary" style={{ backgroundColor: report.color }}>
+                <Button
+                  type="primary"
+                  style={{ backgroundColor: report.color }}
+                >
                   Open Report
                 </Button>
               </Card>
@@ -73,4 +88,3 @@ const ReportsIndex = () => {
 };
 
 export default ReportsIndex;
-

@@ -17,6 +17,10 @@ import { useNavigate, useLocation, Link } from "react-router-dom";
 import { useAuthorization } from "../../context/AuthorizationContext";
 import { PushpinOutlined, PushpinFilled } from "@ant-design/icons";
 import { updateMenuLbl } from "../../features/MenuLblSlice";
+import {
+  FINANCE_MENU_KEY,
+  shouldUseFinanceSidebarForPath,
+} from "../../utils/roleHomeModule";
 // import policy from "../../utils/react-policy-client";
 
 const Sidebar = () => {
@@ -50,12 +54,20 @@ const Sidebar = () => {
       "/DirectDebit",
       "/DirectDebitBatchDetails",
       "/Reconciliation",
+      "/CreditNotes",
+      "/JournalAdjustments",
+      "/GeneralLedger",
       "/BatchMemberSummary",
     ];
 
-    const isFinanceRoute = financePaths.some((p) => path.startsWith(p));
-    if (isFinanceRoute && activeKey !== "Finance") {
-      dispatch(updateMenuLbl({ key: "Finance", value: true }));
+    const isFinanceRoute =
+      financePaths.some((p) => path.startsWith(p)) ||
+      shouldUseFinanceSidebarForPath(path, location.state, {
+        activeMenuKey: activeKey,
+      });
+
+    if (isFinanceRoute && activeKey !== FINANCE_MENU_KEY) {
+      dispatch(updateMenuLbl({ key: FINANCE_MENU_KEY, value: true }));
       return;
     }
 
@@ -116,7 +128,7 @@ const Sidebar = () => {
     ) {
       dispatch(updateMenuLbl({ key: "Subscriptions & Rewards", value: true }));
     }
-  }, [location.pathname, activeKey, dispatch]);
+  }, [location.pathname, location.state, activeKey, dispatch]);
 
   // These are the menu links for various modules, imported from a constants file
   const itemsMap = useMemo(
@@ -198,7 +210,7 @@ const Sidebar = () => {
       case "Transfer Requests":
         return { path: "/Transfers", state: { search: "Transfers" } };
       case "System Configuration":
-        return { path: "/Configuratin", state: { search: "" } };
+        return { path: "/Configuration", state: { search: "" } };
       case "Roster":
         return { path: "/RosterSummary", state: { search: "Rosters" } };
       case "Events":
@@ -207,16 +219,18 @@ const Sidebar = () => {
         return { path: "/Applications", state: { search: "Applications" } };
       case "Membership":
         return { path: "/members", state: { search: "Members" } };
+      case "Payment Forms":
+        return { path: "/PaymentForms", state: { search: "Payment Forms" } };
       case "MembershipDashboard":
         return {
           path: "/MembershipDashboard",
-          state: { search: "Membership Dashboard" },
+          state: { search: "Executive Dashboard" },
         };
       case "Reminders":
         return { path: "/RemindersSummary", state: { search: "Reminders" } };
       case "Cancellations":
         return { path: "/Cancallation", state: { search: "Cancallation" } };
-      case "Change Category":
+      case "Category Changes":
         return {
           path: "/ChangCateSumm",
           state: { search: "Change Category Summary" },
@@ -228,6 +242,11 @@ const Sidebar = () => {
       case "Reconciliation":
       case "Reconciliations":
         return { path: "/Reconciliation", state: { search: "Reconciliation" } };
+      case "Journal adjustments":
+        return {
+          path: "/JournalAdjustments",
+          state: { search: "Journal adjustments" },
+        };
       case "Standing Orders":
         return { path: "/StandingOrders", state: { search: "Standing Orders" } };
       case "Cheque":
@@ -236,6 +255,13 @@ const Sidebar = () => {
         return { path: "/Refunds", state: { search: "Refunds" } };
       case "Write-offs":
         return { path: "/write-offs", state: { search: "Write-offs" } };
+      case "Credit notes":
+        return { path: "/CreditNotes", state: { search: "Credit notes" } };
+      case "General ledger":
+        return {
+          path: "/GeneralLedger",
+          state: { search: "General ledger" },
+        };
       case "DD Authorisations":
         return {
           path: "/DirectDebitAuthorization",
@@ -256,7 +282,7 @@ const Sidebar = () => {
         };
       case "Notes & Letters":
         return { path: "/Notes", state: { search: "Notes" } };
-      case "Communication History":
+      case "Correspondence":
         return {
           path: "/CorrespondencesSummary",
           state: { search: "CorrespondencesSummary" },
@@ -317,6 +343,38 @@ const Sidebar = () => {
         return {
           path: "/JoinersReport",
           state: { search: "Joiners Report" },
+        };
+      case "Comparison Report":
+        return {
+          path: "/ComparisonReport",
+          state: { search: "Comparison Report" },
+        };
+      case "Live Stats":
+        return {
+          path: "/LiveStatsReport",
+          state: { search: "Live Stats" },
+        };
+      case "Membership Reports":
+        return {
+          path: "/Reports",
+          state: { search: "Membership Reports" },
+        };
+      case "Statistics Report":
+      case "Statistics":
+        return {
+          path: "/StatisticsReport",
+          state: { search: "Statistics Report" },
+        };
+      case "Workplace Membership Breakdown":
+      case "Workplace Breakdown Report":
+        return {
+          path: "/WorkplaceBreakdownReport",
+          state: { search: "Workplace Membership Breakdown" },
+        };
+      case "Membership Listing Report":
+        return {
+          path: "/MembershipListingReport",
+          state: { search: "Membership Listing Report" },
         };
       case "Policy Client Example":
         return {
@@ -414,7 +472,7 @@ const Sidebar = () => {
       "/CasesById": "Cases",
       "/CorrespondencesSummary": "Correspondences",
       "/Transfers": "Transfer Requests",
-      "/Configuratin": "System Configuration",
+      "/Configuration": "System Configuration",
       "/RosterSummary": "Roster",
       "/EventsSummary": "Events",
       "/EventDetails": "Events",
@@ -427,7 +485,7 @@ const Sidebar = () => {
       "/RemindersDetails": "Reminders",
       "/Cancallation": "Cancellations",
       "/CancellationDetail": "Cancellations",
-      "/ChangCateSumm": "Change Category",
+      "/ChangCateSumm": "Category Changes",
       "/Import": "Imports",
       "/Deductions": "Deductions",
       "/Reconciliation": "Reconciliations",
@@ -440,8 +498,9 @@ const Sidebar = () => {
       "/InAppNotifications": "InAppNotifications",
       "/Notes": "Notes & Letters",
       "/Letters": "Notes & Letters",
-      "/CorspndncDetail": "Communication History",
+      "/CorspndncDetail": "Correspondence",
       "/members": "Membership",
+      "/PaymentForms": "Payment Forms",
       "/MembershipDashboard": "MembershipDashboard",
       "/TenantManagement": "Tenant Management",
       "/RoleManagement": "Role Management",
@@ -458,11 +517,20 @@ const Sidebar = () => {
       "/DirectDebitAuthorization": "DD Authorisations",
       "/DirectDebit": "Direct Debit",
       "/write-offs": "Write-offs",
+      "/CreditNotes": "Credit notes",
+      "/JournalAdjustments": "Journal adjustments",
+      "/GeneralLedger": "General ledger",
       "/SuspendedMembersReport": "Suspended Members Report",
       "/ResignedMembersReport": "Resigned Members Report",
       "/NewMembersReport": "New Members Report",
       "/LeaversReport": "Leavers Report",
       "/JoinersReport": "Joiners Report",
+      "/ComparisonReport": "Comparison Report",
+      "/LiveStatsReport": "Live Stats",
+      "/StatisticsReport": "Statistics Report",
+      "/WorkplaceBreakdownReport": "Workplace Membership Breakdown",
+      "/MembershipListingReport": "Membership Listing Report",
+      "/Reports": "Membership Reports",
       "/CorrespondenceDashboard": "Dashboard",
       "/IssuesManagementDashboard": "Dashboard",
       "/ReportsSettings": "Reports setting",

@@ -20,6 +20,7 @@ import { buildApplicationMgtSearch } from "../../utils/applicationMgtRoute";
 import {
   getSubscriptionByProfileId,
   getSubscriptionById,
+  profileDetailActiveSubscriptionArgs,
 } from "../../features/subscription/profileSubscriptionSlice";
 import { Triangle, AlertCircle } from "lucide-react";
 import { Tooltip } from "antd";
@@ -55,6 +56,7 @@ import { getProfileDetailsById } from "../../features/profiles/ProfileDetailsSli
 import { buildDetailsSearch } from "../../utils/detailsRoute";
 import UnifiedPagination, { getUnifiedPaginationConfig, getDefaultPageSize } from "./UnifiedPagination";
 import { getCornMarketBatchById } from "../../features/profiles/CornMarketBatchByIdSlice";
+import { isMembershipReportGridPath } from "../../constants/membershipReportRoutes";
 
 const EditableContext = React.createContext(null);
 
@@ -177,14 +179,25 @@ const TableComponent = ({
   selectedRowKeys,
   onSelectionChange,
   selectionType = "checkbox",
-  enableRowSelection = true,
+  enableRowSelection: enableRowSelectionProp = true,
+  hideLegacyRowChrome: hideLegacyRowChromeProp = false,
+  rowActionsInGridmenu = false,
+  selectionToolbar = null,
   onRowClick: externalOnRowClick = null,
   disableDefaultRowClick = false,
   disableRowFn = null,
+  onDuplicateReviewRequest = null,
   ...props
 }) => {
   const navigate = useNavigate();
   const location = useLocation();
+  const isReportGrid = isMembershipReportGridPath(location.pathname);
+  const enableRowSelection = isReportGrid
+    ? false
+    : enableRowSelectionProp;
+  const hideLegacyRowChrome = isReportGrid
+    ? true
+    : hideLegacyRowChromeProp;
   const {
     selectedRowIndex,
     setSelectedRowIndex,
@@ -313,22 +326,20 @@ const TableComponent = ({
   };
 
   const [columnsForFilter, setColumnsForFilter] = useState(() =>
-    (columns?.[screenName] || [])
-      ?.filter((item) => item?.isGride)
-      ?.map((item, index) => ({
-        ...item,
-        key: `${index}`,
-        onHeaderCell: () => ({ id: `${index}` }),
-        onCell: () => ({ id: `${index}` }),
-      })) || []
+    (columns?.[screenName] || [])?.map((item, index) => ({
+      ...item,
+      key: `${index}`,
+      onHeaderCell: () => ({ id: `${index}` }),
+      onCell: () => ({ id: `${index}` }),
+    })) || []
   );
 
   const getColumnStableKey = useCallback((col, fallbackIndex = 0) => {
     if (!col) return `idx:${fallbackIndex}`;
-    if (col.key) return `key:${col.key}`;
     if (Array.isArray(col.dataIndex)) return `data:${col.dataIndex.join(".")}`;
     if (col.dataIndex) return `data:${col.dataIndex}`;
     if (col.title) return `title:${col.title}`;
+    if (col.key) return `key:${col.key}`;
     return `idx:${fallbackIndex}`;
   }, []);
 
@@ -551,7 +562,19 @@ const TableComponent = ({
   ]);
 
   // Build columns
-  const draggableColumns = useMemo(() => [
+  const draggableColumns = useMemo(() => {
+    const actionsColumn = rowActionsInGridmenu
+      ? columnsDragbe.find(
+          (c) => c.dataIndex === "_actions" || c.key === "actions",
+        )
+      : null;
+    const dataColumns = rowActionsInGridmenu
+      ? columnsDragbe.filter(
+          (c) => c.dataIndex !== "_actions" && c.key !== "actions",
+        )
+      : columnsDragbe;
+
+    return [
     {
       title: (
         <Gridmenu
@@ -568,9 +591,14 @@ const TableComponent = ({
         />
       ),
       key: "gridmenu",
-      width: 75,
+      width: rowActionsInGridmenu ? 102 : 75,
       fixed: "left",
-      render: (record, index) => (
+      render: (record, index) => {
+        if (rowActionsInGridmenu && actionsColumn?.render) {
+          return actionsColumn.render(null, record, index);
+        }
+        if (hideLegacyRowChrome) return null;
+        return (
         <Space size="small">
           <CgAttachment
             style={{
@@ -600,7 +628,7 @@ const TableComponent = ({
               "Transfer Requests": false,
               "Career Break": false,
               "Generate NFC tag": false,
-              "Change Category": false,
+              "Category Changes": false,
             }}
             isCheckBox={false}
             isSearched={false}
@@ -622,9 +650,10 @@ const TableComponent = ({
             />
           )}
         </Space>
-      ),
+        );
+      },
     },
-    ...columnsDragbe.map((col) => ({
+    ...dataColumns.map((col) => ({
       ...col,
       title: (
         <DraggableHeaderCell id={col.key} key={col.key}>
@@ -636,7 +665,9 @@ const TableComponent = ({
         : (text, record, index) => {
 
           const currentPath = location.pathname.toLowerCase();
-          const isApplicationsPage = currentPath.includes('/applications');
+          const isApplicationsPage =
+            currentPath.includes('/applications') ||
+            currentPath.includes('/paymentforms');
           const isMembersPage = currentPath.includes('/members');
           const isProfilePage = currentPath.includes('/summary');
           const safeText = getRenderableCellValue(text, col, record);
@@ -730,7 +761,7 @@ const TableComponent = ({
                       dispatch(
                         getSubscriptionByProfileId({
                           profileId: idToUse,
-                          isCurrent: true,
+                          ...profileDetailActiveSubscriptionArgs,
                         })
                       );
                     }
@@ -804,7 +835,7 @@ const TableComponent = ({
                       dispatch(
                         getSubscriptionByProfileId({
                           profileId,
-                          isCurrent: true,
+                          ...profileDetailActiveSubscriptionArgs,
                         })
                       );
                     }
@@ -938,7 +969,7 @@ const TableComponent = ({
                         dispatch(
                           getSubscriptionByProfileId({
                             profileId: idToUse,
-                            isCurrent: true,
+                            ...profileDetailActiveSubscriptionArgs,
                           })
                         );
                       }
@@ -965,19 +996,50 @@ const TableComponent = ({
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                   {content}
                   {isPotentialDuplicate && (
-                    <Tooltip title="Potential Duplicate Detected">
+                    <Tooltip
+                      title={
+                        onDuplicateReviewRequest
+                          ? "Open Duplicate Profile Review — click to review"
+                          : record?.duplicateReviewStatus === "POTENTIAL_MATCH" ||
+                              record?.duplicateReviewStatus === "NOT_CHECKED"
+                            ? "Potential Duplicate — review required before approval"
+                            : "Potential Duplicate Detected"
+                      }
+                    >
                       <div
+                        role={onDuplicateReviewRequest ? "button" : undefined}
+                        tabIndex={onDuplicateReviewRequest ? 0 : undefined}
+                        onClick={
+                          onDuplicateReviewRequest
+                            ? (e) => {
+                                e.stopPropagation();
+                                onDuplicateReviewRequest(record);
+                              }
+                            : undefined
+                        }
+                        onKeyDown={
+                          onDuplicateReviewRequest
+                            ? (e) => {
+                                if (e.key === "Enter" || e.key === " ") {
+                                  e.preventDefault();
+                                  e.stopPropagation();
+                                  onDuplicateReviewRequest(record);
+                                }
+                              }
+                            : undefined
+                        }
                         style={{
                           display: "flex",
                           alignItems: "center",
                           justifyContent: "center",
                           width: "22px",
                           height: "22px",
-                          backgroundColor: "#fff1f0", // Soft red background (Ant red-1)
-                          border: "1px solid #ffa39e", // Soft red border (Ant red-3)
+                          backgroundColor: "#fff1f0",
+                          border: "1px solid #ffa39e",
                           borderRadius: "4px",
-                          color: "#f5222d", // Ant red-6
-                          flexShrink: 0
+                          color: "#f5222d",
+                          flexShrink: 0,
+                          cursor: onDuplicateReviewRequest ? "pointer" : "default",
                         }}
                       >
                         <AlertCircle size={14} fill="#f5222d" fillOpacity={0.1} />
@@ -1195,7 +1257,8 @@ const TableComponent = ({
         return true;
       },
     })),
-  ], [columnsDragbe, columnsForFilter, screenName, location?.pathname, handleRowClick, dispatch, navigate, getProfile]);
+  ];
+  }, [columnsDragbe, columnsForFilter, screenName, location?.pathname, handleRowClick, dispatch, navigate, getProfile, hideLegacyRowChrome, rowActionsInGridmenu, onDuplicateReviewRequest]);
 
   // Pagination logic with UnifiedPagination
   const defaultPageSize = useMemo(() => getDefaultPageSize(dataSource.length), [dataSource.length]);
@@ -1298,6 +1361,7 @@ const TableComponent = ({
             paddingBottom: "80px", // Add padding to ensure pagination is visible
           }}
         >
+          {selectionToolbar}
           <Table
             rowKey={(record) => record.applicationId || record.key || record.id || record._id}
             rowClassName={() => ""}

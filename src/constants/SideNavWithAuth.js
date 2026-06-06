@@ -24,6 +24,7 @@ import {
   FaMapMarkerAlt,
   FaUsers,
   FaFileImport,
+  FaFileAlt,
   FaClipboardList,
   FaExclamationTriangle,
   FaGavel,
@@ -92,9 +93,9 @@ export const correspondenceItems = [
     ["communication:read"]
   ),
   createMenuItem(
-    "Communication History",
+    "Correspondence",
     <FaHistory />,
-    "Communication History",
+    "Correspondence",
     ["communication:read"]
   ),
 ];
@@ -150,9 +151,27 @@ export const financeItems = [
     ["payments:read"]
   ),
   createMenuItem(
+    "Credit notes",
+    <FaFileAlt />,
+    "Credit notes",
+    ["payments:read"]
+  ),
+  createMenuItem(
     "Imports",
     <FaFileImport />,
     "Imports",
+    ["payments:read"]
+  ),
+  createMenuItem(
+    "General ledger",
+    <FaBalanceScale />,
+    "General ledger",
+    ["payments:read"]
+  ),
+  createMenuItem(
+    "Journal adjustments",
+    <FaCommentDollar />,
+    "Journal adjustments",
     ["payments:read"]
   ),
   createMenuItem(
@@ -201,7 +220,7 @@ export const subscriptionItems = [
   createMenuItem(
     "MembershipDashboard",
     <FaChartLine />,
-    "Membership Dashboard",
+    "Executive Dashboard",
     []
   ),
   createMenuItem(
@@ -223,6 +242,12 @@ export const subscriptionItems = [
     ["crm:member:read"]
   ),
   createMenuItem(
+    "Payment Forms",
+    <FaWallet />,
+    "Payment Forms",
+    ["crm:member:read"]
+  ),
+  createMenuItem(
     "Reminders",
     <FaRegClock />,
     "Reminders",
@@ -241,9 +266,9 @@ export const subscriptionItems = [
     ["transferrequests:read"]
   ),
   createMenuItem(
-    "Change Category",
+    "Category Changes",
     <FaTags />,
-    "Change Category",
+    "Category Changes",
     ["changeofcategory:read"]
   ),
   // createMenuItem(
@@ -330,16 +355,16 @@ export const configurationItems = [
 
 export const reportItems = [
   createMenuItem(
-    "Cancelled Members Report",
-    <FaUserTimes />,
-    "Cancelled Members Report",
-    ["subscriptions:read"]
+    "Membership Reports",
+    <FaFileAlt />,
+    "Membership Reports",
+    ["reporting:read"]
   ),
   createMenuItem(
     "Comparison Report",
     <FaBalanceScale />,
     "Comparison Report",
-    ["comparison:report:read"]
+    ["reporting:read"]
   ),
   createMenuItem(
     "Control Report",
@@ -364,42 +389,6 @@ export const reportItems = [
     <FaGavel />,
     "Executive Council Report + drill down listings",
     ["executive:council:report:read"]
-  ),
-  createMenuItem(
-    "Joiners Report",
-    <FaUserPlus />,
-    "Joiners Report",
-    []
-  ),
-  createMenuItem(
-    "Leavers Report",
-    <FaUserMinus />,
-    "Leavers Report",
-    []
-  ),
-  createMenuItem(
-    "Live Stats",
-    <FaChartPie />,
-    "Live Stats",
-    ["LIVE:STATS:REPORT:READ"]
-  ),
-  createMenuItem(
-    "New Members Report",
-    <FaUserEdit />,
-    "New Members Report",
-    []
-  ),
-  createMenuItem(
-    "Resigned Members Report",
-    <FaUserSlash />,
-    "Resigned Members Report",
-    []
-  ),
-  createMenuItem(
-    "Suspended Members Report",
-    <FaUserLock />,
-    "Suspended Members Report",
-    ["SUSPENDED:MEMBERS:REPORT:READ"]
   ),
 ];
 

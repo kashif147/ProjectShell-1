@@ -12,6 +12,8 @@ import { getAllLookups } from "./features/LookupsSlice";
 import { getHierarchicalLookups } from "./features/GetLocationWithHierarky";
 import "antd/dist/reset.css";
 import { NotificationProvider } from "./context/NotificationContext";
+import { ProfileRealtimeProvider } from "./context/ProfileRealtimeContext";
+import { TenantBrandingProvider } from "./context/TenantBrandingContext";
 
 function App() {
   const dispatch = useDispatch();
@@ -89,11 +91,15 @@ function App() {
       <AuthProvider>
         <FCMProvider>
           <NotificationProvider>
-            <ChatbotProvider>
-              <div className="App">
-                <Entry />
-              </div>
-            </ChatbotProvider>
+            <ProfileRealtimeProvider>
+              <ChatbotProvider>
+                <TenantBrandingProvider>
+                  <div className="App">
+                    <Entry />
+                  </div>
+                </TenantBrandingProvider>
+              </ChatbotProvider>
+            </ProfileRealtimeProvider>
           </NotificationProvider>
         </FCMProvider>
       </AuthProvider>

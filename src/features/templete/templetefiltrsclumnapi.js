@@ -1,17 +1,6 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import axios from "axios";
-import { getSubscriptionFilterTemplatesBaseUrl } from "../../config/serviceUrls";
-
-const PROFILE_TEMPLATES_API_URL = `${process.env.REACT_APP_PROFILE_SERVICE_URL}/templates`;
-const SUBSCRIPTION_TEMPLATES_API_URL = getSubscriptionFilterTemplatesBaseUrl();
-
-const resolveTemplatesApiUrl = (type) => {
-    const normalizedType = String(type || "").trim().toLowerCase();
-    if (normalizedType === "member" || normalizedType === "members") {
-        return SUBSCRIPTION_TEMPLATES_API_URL;
-    }
-    return PROFILE_TEMPLATES_API_URL;
-};
+import { resolveTemplatesApiUrl } from "../../config/gridTemplateRouting";
 
 // Async thunk to fetch templates
 export const getGridTemplates = createAsyncThunk(

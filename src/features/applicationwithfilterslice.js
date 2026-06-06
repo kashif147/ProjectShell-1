@@ -38,6 +38,9 @@ const applicationWithFilterSlice = createSlice({
         clearApplications: (state) => {
             state.applications = [];
         },
+        setApplicationsFromExternal: (state, action) => {
+            state.applications = Array.isArray(action.payload) ? action.payload : [];
+        },
         setTemplateId: (state, action) => {
             state.currentTemplateId = action.payload;
             state.activeTemplateId = action.payload;
@@ -79,5 +82,12 @@ const applicationWithFilterSlice = createSlice({
     },
 });
 
-export const { clearApplications, setTemplateId, setInitialized, initializeWithTemplate, resetInitialization } = applicationWithFilterSlice.actions;
+export const {
+    clearApplications,
+    setApplicationsFromExternal,
+    setTemplateId,
+    setInitialized,
+    initializeWithTemplate,
+    resetInitialization
+} = applicationWithFilterSlice.actions;
 export default applicationWithFilterSlice.reducer;

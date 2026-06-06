@@ -1,5 +1,5 @@
 import React, { useMemo, useState, useEffect, useCallback } from "react";
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import {
     Button,
     Card,
@@ -10,11 +10,11 @@ import {
     Table,
     message,
     Checkbox,
+    Empty,
 } from "antd";
 import {
     CalendarOutlined,
     UserOutlined,
-    ClockCircleOutlined,
     ExportOutlined,
     PlayCircleOutlined,
     CreditCardOutlined,
@@ -24,26 +24,33 @@ import {
     FileTextOutlined,
     MessageOutlined,
     MobileOutlined,
+    PlusOutlined,
+    DeleteOutlined,
+    DownloadOutlined,
+    LinkOutlined,
+    AppstoreOutlined,
+    BankOutlined,
+    MoneyCollectOutlined,
+    AccountBookOutlined,
+    SyncOutlined,
+    BarChartOutlined,
 } from "@ant-design/icons";
 import {
-    Bar,
-    BarChart,
+    PieChart,
+    Pie,
+    Cell,
     ResponsiveContainer,
-    Tooltip,
-    XAxis,
-    YAxis,
 } from "recharts";
 import CustomSelect from "../../component/common/CustomSelect";
 import { useReminders } from "../../context/CampaignDetailsProvider";
 import { useTableColumns } from "../../context/TableColumnsContext ";
 import { formatDateDdMmYyyy } from "../../utils/Utilities";
 import htmlDocx from "html-docx-js/dist/html-docx";
+import "../../styles/RemindersDetails.css";
 
-const AMBER_BG = "#fff7e6";
-const AMBER_BORDER = "#ffd591";
-const AMBER_TEXT = "#d48806";
-const INACTIVE_BORDER = "#d9d9d9";
-const INACTIVE_LABEL = "#8c8c8c";
+function paymentAnalysisBaseTotal() {
+    return PAYMENT_METHOD_ROWS.reduce((a, r) => a + r.amount, 0);
+}
 
 function parseMoney(s) {
     if (s == null) return 0;
@@ -114,69 +121,113 @@ const PAYMENT_METHOD_ROWS = [
         label: "Deductions",
         dataKey: "deductions",
         color: "#215e97",
-        pct: 42,
-        amount: 18500,
+        icon: AccountBookOutlined,
+        pct: 14,
+        amount: 110,
     },
     {
         label: "Standing Orders",
         dataKey: "standingOrders",
-        color: "#389e0d",
-        pct: 28,
-        amount: 12300,
+        color: "#1677ff",
+        icon: SyncOutlined,
+        pct: 31,
+        amount: 240,
     },
     {
         label: "Direct Debit",
         dataKey: "directDebit",
-        color: "#722ed1",
-        pct: 18,
-        amount: 7900,
+        color: "#597ef7",
+        icon: BankOutlined,
+        pct: 19,
+        amount: 149,
     },
     {
         label: "Credit Card",
         dataKey: "creditCard",
-        color: "#d48806",
-        pct: 8,
-        amount: 3500,
+        color: "#fa8c16",
+        icon: CreditCardOutlined,
+        pct: 30,
+        amount: 235,
     },
     {
         label: "Cheque",
         dataKey: "cheque",
         color: "#13c2c2",
-        pct: 3,
-        amount: 1300,
+        icon: FileTextOutlined,
+        pct: 0,
+        amount: 0,
     },
     {
         label: "Cash",
         dataKey: "cash",
         color: "#8c8c8c",
-        pct: 1,
-        amount: 500,
+        icon: MoneyCollectOutlined,
+        pct: 6,
+        amount: 45,
     },
 ];
+
+const TEMPLATE_PREVIEWS = {
+    email: {
+        label: "Email",
+        subject: "Outstanding Account Balance Reminder",
+        body: `Dear {{Name}},
+
+This is a friendly reminder that your account currently has an outstanding balance of {{Balance}} for your {{Category}} package.
+
+Please arrange payment at your earliest convenience to avoid any interruption to your membership benefits.
+
+Kind regards,
+Membership Team`,
+    },
+    inapp: {
+        label: "In-app",
+        subject: "Payment reminder",
+        body: `Hi {{Name}}, your membership account has an outstanding balance of {{Balance}}. Tap to view details and pay online.`,
+    },
+    letters: {
+        label: "Letters",
+        subject: "Outstanding balance notice",
+        body: `Dear {{Name}},
+
+We write to inform you that your account shows an outstanding balance of {{Balance}} relating to your {{Category}} membership.
+
+Please contact us or submit payment within 14 days.`,
+    },
+    sms: {
+        label: "SMS",
+        subject: "SMS preview",
+        body: `Hi {{Name}}, reminder: outstanding balance {{Balance}} on your {{Category}} membership. Pay online or call us. Reply STOP to opt out.`,
+    },
+};
 
 const DELIVERY_CHANNELS = [
     {
         key: "email",
         label: "Email",
         icon: MailOutlined,
+        iconClass: "email",
         status: "Pending",
     },
     {
         key: "inapp",
         label: "In-app",
         icon: MobileOutlined,
+        iconClass: "inapp",
         status: "Pending",
     },
     {
         key: "letters",
         label: "Letters",
         icon: FileTextOutlined,
+        iconClass: "letters",
         status: "Pending",
     },
     {
         key: "sms",
         label: "SMS",
         icon: MessageOutlined,
+        iconClass: "sms",
         status: "Pending",
     },
 ];
@@ -186,10 +237,24 @@ function scalePaymentAmounts(baseRows, targetTotal) {
     if (!baseSum || targetTotal <= 0) {
         return baseRows.map((r) => ({ ...r, amount: 0, pct: 0 }));
     }
-    return baseRows.map((r) => ({
+    const scaled = baseRows.map((r) => ({
         ...r,
         amount: Math.round((r.amount / baseSum) * targetTotal),
     }));
+    const scaledSum = scaled.reduce((a, r) => a + r.amount, 0);
+    return scaled.map((r) => ({
+        ...r,
+        pct: scaledSum ? Math.round((r.amount / scaledSum) * 100) : 0,
+    }));
+}
+
+function findDominantPaymentRow(rows) {
+    if (!rows?.length) return null;
+    return rows.reduce(
+        (best, row) =>
+            row.amount > (best?.amount ?? -1) ? row : best,
+        null,
+    );
 }
 
 const WAVE_ORDER = ["R1", "R2", "R3"];
@@ -260,6 +325,7 @@ function sanitizeDocxFileBase(name) {
 
 function RemindersDetails() {
     const location = useLocation();
+    const navigate = useNavigate();
     const { selectedId, getRemindersById } = useReminders();
     const { isDisable } = useTableColumns();
 
@@ -279,6 +345,15 @@ function RemindersDetails() {
     const [activeView, setActiveView] = useState("batch");
     const [selectedRowKeys, setSelectedRowKeys] = useState([]);
     const [isModalOpen, setIsModalOpen] = useState(false);
+    const [activeChannel, setActiveChannel] = useState("email");
+
+    const PreviewChannelIcon =
+        {
+            email: MailOutlined,
+            inapp: MobileOutlined,
+            letters: FileTextOutlined,
+            sms: MessageOutlined,
+        }[activeChannel] || MailOutlined;
 
     const includedWaves = useMemo(
         () => WAVE_ORDER.filter((w) => !excludedWaves.includes(w)),
@@ -302,6 +377,7 @@ function RemindersDetails() {
         setExcludedWaves([]);
         setActiveView("batch");
         setSelectedRowKeys([]);
+        setActiveChannel("email");
     }, [selectedId?.id]);
 
     const selectionKey = `${[...excludedWaves].sort().join(",")}|${activeView}`;
@@ -362,18 +438,25 @@ function RemindersDetails() {
         feeBatchTotal,
     ]);
 
+    const paymentAnalysisTotal =
+        selectedFeeTotal > 0 ? selectedFeeTotal : paymentAnalysisBaseTotal();
+
     const paymentRowsScaled = useMemo(
-        () => scalePaymentAmounts(PAYMENT_METHOD_ROWS, selectedFeeTotal),
-        [selectedFeeTotal],
+        () => scalePaymentAmounts(PAYMENT_METHOD_ROWS, paymentAnalysisTotal),
+        [paymentAnalysisTotal],
     );
 
-    const paymentStackChartData = useMemo(() => {
-        const row = { name: "mix" };
-        paymentRowsScaled.forEach((r) => {
-            row[r.dataKey] = Number(r.pct) || 0;
-        });
-        return [row];
-    }, [paymentRowsScaled]);
+    const dominantPaymentRow = useMemo(
+        () => findDominantPaymentRow(paymentRowsScaled),
+        [paymentRowsScaled],
+    );
+
+    const donutChartData = useMemo(
+        () => paymentRowsScaled.filter((r) => r.amount > 0),
+        [paymentRowsScaled],
+    );
+
+    const activeTemplate = TEMPLATE_PREVIEWS[activeChannel] || TEMPLATE_PREVIEWS.email;
 
     const memberListTitle = memberListHeading(activeView, includedWaves);
 
@@ -400,18 +483,21 @@ function RemindersDetails() {
             title: "Full name",
             dataIndex: "fullName",
             key: "fullName",
-            ellipsis: true,
+            width: 160,
+            ellipsis: { showTitle: true },
         },
         {
             title: "Email",
             dataIndex: "email",
             key: "email",
-            ellipsis: true,
+            width: 200,
+            ellipsis: { showTitle: true },
         },
         {
             title: "Address",
             key: "address",
-            ellipsis: true,
+            width: 220,
+            ellipsis: { showTitle: true },
             render: (_, row) => {
                 const full = addressText(row);
                 const max = 42;
@@ -424,16 +510,19 @@ function RemindersDetails() {
             title: "Membership no",
             dataIndex: "membershipNo",
             key: "membershipNo",
+            width: 140,
         },
         {
             title: "Category",
             dataIndex: "membershipCategory",
             key: "membershipCategory",
+            width: 120,
         },
         {
             title: "Status",
             dataIndex: "membershipStatus",
             key: "membershipStatus",
+            width: 110,
             render: (v) => {
                 const active = String(v).toLowerCase() === "active";
                 return (
@@ -445,12 +534,14 @@ function RemindersDetails() {
             title: "Start date",
             dataIndex: "joiningDate",
             key: "joiningDate",
+            width: 120,
             render: (v) => formatDateDdMmYyyy(v),
         },
         {
             title: "Balance",
             dataIndex: "outstandingBalance",
             key: "outstandingBalance",
+            width: 140,
             render: (v) => {
                 const { text, color } = formatOutstandingBalanceLikeHeader(v);
                 return <span style={{ color, fontWeight: 600 }}>{text}</span>;
@@ -460,6 +551,7 @@ function RemindersDetails() {
             title: "Last payment",
             dataIndex: "lastPaymentDate",
             key: "lastPaymentDate",
+            width: 130,
             render: (v) => formatDateDdMmYyyy(v),
         },
     ];
@@ -628,124 +720,48 @@ table { border-collapse: collapse; width: 100%; }
         setSelectedRowKeys([]);
     };
 
-    const renderReminderTile = (wave, label, count, feeAmount) => {
+    const renderReminderTile = (wave, label, count, iconClass) => {
         const included = !excludedWaves.includes(wave);
         const focused = activeView === wave;
-        const navHighlight = focused;
         return (
             <div
-                onClick={() => setActiveView(wave)}
-                title={`View ${label} members`}
-                style={{
-                    position: "relative",
-                    borderRadius: 8,
-                    padding: "12px 32px 12px 12px",
-                    background: "#fff",
-                    border: navHighlight
-                        ? "2px solid var(--mainBlue)"
-                        : included
-                          ? `1px solid #bfbfbf`
-                          : `1px solid ${INACTIVE_BORDER}`,
-                    borderBottom: navHighlight
-                        ? "4px solid var(--mainBlue)"
-                        : included
-                          ? "2px solid var(--mainBlue)"
-                          : `1px solid ${INACTIVE_BORDER}`,
-                    boxShadow: navHighlight
-                        ? "0 2px 10px rgba(33, 94, 151, 0.16)"
-                        : "0 1px 3px rgba(0,0,0,0.06)",
-                    height: "100%",
-                    cursor: "pointer",
-                    outline: "none",
+                className={[
+                    "reminder-details-kpi-card",
+                    focused ? "reminder-details-kpi-card--focused" : "",
+                    !included ? "reminder-details-kpi-card--excluded" : "",
+                ]
+                    .filter(Boolean)
+                    .join(" ")}
+                onClick={(e) => {
+                    if (e.target.closest(".reminder-details-kpi-check")) return;
+                    setActiveView(wave);
                 }}
+                title={`View ${label} members`}
             >
-                <ClockCircleOutlined
-                    style={{
-                        position: "absolute",
-                        top: 10,
-                        right: 10,
-                        color: navHighlight
-                            ? "var(--mainBlue)"
-                            : included
-                              ? "var(--mainBlue)"
-                              : "#bfbfbf",
-                        fontSize: 15,
-                        opacity: included ? 1 : 0.65,
-                    }}
-                />
                 <div
-                    style={{
-                        display: "flex",
-                        alignItems: "center",
-                        gap: 8,
-                        marginBottom: 6,
-                        minHeight: 22,
-                    }}
+                    className={`reminder-details-kpi-icon reminder-details-kpi-icon--${iconClass}`}
                 >
-                    <span
-                        onClick={(e) => e.stopPropagation()}
-                        onMouseDown={(e) => e.stopPropagation()}
-                    >
-                        <Checkbox
-                            checked={included}
-                            disabled={isDisable}
-                            onChange={() => toggleWaveExcluded(wave)}
-                        />
-                    </span>
-                    <div
-                        style={{
-                            fontSize: 11,
-                            fontWeight: 700,
-                            letterSpacing: "0.04em",
-                            color: included
-                                ? "var(--mainBlue)"
-                                : INACTIVE_LABEL,
-                            flex: 1,
-                        }}
-                    >
-                        {label}
-                    </div>
+                    <BellOutlined />
                 </div>
-                <div
-                    style={{
-                        display: "flex",
-                        flexWrap: "wrap",
-                        alignItems: "center",
-                        justifyContent: "space-between",
-                        gap: "4px 10px",
-                        lineHeight: 1.25,
-                    }}
-                >
-                    <span
-                        style={{
-                            fontSize: 14,
-                            fontWeight: 700,
-                            fontVariantNumeric: "tabular-nums",
-                            color: included ? "#262626" : "#8c8c8c",
-                        }}
-                    >
-                        {count.toLocaleString()}{" "}
-                        <span
-                            style={{
-                                fontSize: 11,
-                                fontWeight: 500,
-                                color: included ? "#8c8c8c" : "#bfbfbf",
-                            }}
-                        >
-                            members
+                <div className="reminder-details-kpi-body">
+                    <div className="reminder-details-kpi-label-row">
+                        <span className="reminder-details-kpi-check">
+                            <Checkbox
+                                checked={included}
+                                onClick={(e) => e.stopPropagation()}
+                                onChange={(e) => {
+                                    e.stopPropagation();
+                                    toggleWaveExcluded(wave);
+                                }}
+                            />
                         </span>
-                    </span>
-                    <span
-                        style={{
-                            fontSize: 13,
-                            fontWeight: 600,
-                            fontVariantNumeric: "tabular-nums",
-                            color: included ? "var(--mainBlue)" : "#8c8c8c",
-                            whiteSpace: "nowrap",
-                        }}
-                    >
-                        {formatCurrencyAmount(feeAmount)}
-                    </span>
+                        <span className="reminder-details-kpi-label">
+                            {label}
+                        </span>
+                        <span className="reminder-details-kpi-count">
+                            {count.toLocaleString()} members
+                        </span>
+                    </div>
                 </div>
             </div>
         );
@@ -758,6 +774,13 @@ table { border-collapse: collapse; width: 100%; }
             <div
                 role="button"
                 tabIndex={0}
+                className={[
+                    "reminder-details-kpi-card",
+                    focused ? "reminder-details-kpi-card--focused" : "",
+                    !allIn ? "reminder-details-kpi-card--excluded" : "",
+                ]
+                    .filter(Boolean)
+                    .join(" ")}
                 onClick={() => {
                     setActiveView("batch");
                     clearWaveExclusions();
@@ -770,773 +793,393 @@ table { border-collapse: collapse; width: 100%; }
                     }
                 }}
                 title="View full batch and include all reminders again"
-                style={{
-                    position: "relative",
-                    borderRadius: 8,
-                    padding: "12px 32px 12px 12px",
-                    background: "#fff",
-                    border: focused
-                        ? "2px solid var(--mainBlue)"
-                        : allIn
-                          ? `1px solid #bfbfbf`
-                          : `1px solid ${INACTIVE_BORDER}`,
-                    borderBottom: focused
-                        ? "4px solid var(--mainBlue)"
-                        : allIn
-                          ? "2px solid var(--mainBlue)"
-                          : `1px solid ${INACTIVE_BORDER}`,
-                    boxShadow: focused
-                        ? "0 2px 10px rgba(33, 94, 151, 0.16)"
-                        : "0 1px 3px rgba(0,0,0,0.06)",
-                    height: "100%",
-                    cursor: "pointer",
-                    outline: "none",
-                }}
             >
-                <ClockCircleOutlined
-                    style={{
-                        position: "absolute",
-                        top: 10,
-                        right: 10,
-                        color: focused
-                            ? "var(--mainBlue)"
-                            : allIn
-                              ? "var(--mainBlue)"
-                              : "#bfbfbf",
-                        fontSize: 15,
-                        opacity: allIn ? 1 : 0.65,
-                    }}
-                />
-                <div
-                    style={{
-                        fontSize: 11,
-                        fontWeight: 700,
-                        letterSpacing: "0.04em",
-                        color: focused
-                            ? "var(--mainBlue)"
-                            : allIn
-                              ? "var(--mainBlue)"
-                              : INACTIVE_LABEL,
-                        marginBottom: 6,
-                        minHeight: 22,
-                        display: "flex",
-                        alignItems: "center",
-                    }}
-                >
-                    Total batch
+                <div className="reminder-details-kpi-icon reminder-details-kpi-icon--batch">
+                    <AppstoreOutlined />
                 </div>
-                <div
-                    style={{
-                        display: "flex",
-                        flexWrap: "wrap",
-                        alignItems: "center",
-                        justifyContent: "space-between",
-                        gap: "4px 10px",
-                        lineHeight: 1.25,
-                    }}
-                >
-                    <span
-                        style={{
-                            fontSize: 14,
-                            fontWeight: 700,
-                            fontVariantNumeric: "tabular-nums",
-                            color: allIn ? "#262626" : "#8c8c8c",
-                        }}
-                    >
-                        {totalBatchCount.toLocaleString()}{" "}
-                        <span
-                            style={{
-                                fontSize: 11,
-                                fontWeight: 500,
-                                color: allIn ? "#8c8c8c" : "#bfbfbf",
-                            }}
-                        >
-                            members
+                <div className="reminder-details-kpi-body">
+                    <div className="reminder-details-kpi-label-row reminder-details-kpi-label-row--batch">
+                        <span className="reminder-details-kpi-label">
+                            Total batch
                         </span>
-                    </span>
-                    <span
-                        style={{
-                            fontSize: 13,
-                            fontWeight: 600,
-                            fontVariantNumeric: "tabular-nums",
-                            color: allIn ? "var(--mainBlue)" : "#8c8c8c",
-                            whiteSpace: "nowrap",
-                        }}
-                    >
-                        {formatCurrencyAmount(feeBatchTotal)}
-                    </span>
+                        <span className="reminder-details-kpi-count">
+                            {totalBatchCount.toLocaleString()} members
+                        </span>
+                    </div>
                 </div>
             </div>
         );
     };
 
+    const channelMemberCount = tableMembers.length;
+
+    const renderChannelTab = ({ key, label, icon: Icon, iconClass }) => {
+        const active = activeChannel === key;
+        return (
+            <button
+                key={key}
+                type="button"
+                className={[
+                    "reminder-details-channel-tab",
+                    active ? "reminder-details-channel-tab--active" : "",
+                ]
+                    .filter(Boolean)
+                    .join(" ")}
+                onClick={() => setActiveChannel(key)}
+            >
+                <Icon
+                    className={[
+                        "reminder-details-channel-tab-icon",
+                        `reminder-details-channel-tab-icon--${iconClass}`,
+                    ].join(" ")}
+                />
+                {label} ({channelMemberCount})
+            </button>
+        );
+    };
+
     return (
-        <div>
-            <style>{`
-        .reminder-details-payment-stack {
-          width: 100%;
-          min-width: 0;
-        }
-        .reminder-details-payment-stack .recharts-responsive-container {
-          width: 100% !important;
-        }
-        .reminder-details-analysis-row > .ant-col {
-          display: flex;
-        }
-        .reminder-details-analysis-row .reminder-details-twin-card.ant-card {
-          flex: 1;
-          width: 100%;
-          display: flex;
-          flex-direction: column;
-        }
-        .reminder-details-analysis-row .reminder-details-twin-card .ant-card-head {
-          flex-shrink: 0;
-        }
-        .reminder-details-analysis-row .reminder-details-twin-card .ant-card-body {
-          flex: 1;
-          display: flex;
-          flex-direction: column;
-          min-height: 0;
-        }
-      `}</style>
-            <div className="p-3">
-                <Card
-                  style={{ marginBottom: 16 }}
-                  styles={{ body: { padding: 20 } }}
-                >
-                    <Row gutter={[16, 16]} align="top">
-                        <Col xs={24} lg={14}>
-                            <h2
-                                style={{
-                                    margin: 0,
-                                    fontSize: 22,
-                                    fontWeight: 700,
-                                    color: "#262626",
-                                }}
-                            >
+        <div className="reminder-details-page">
+            <Card
+                className="reminder-details-header-card"
+                style={{ marginBottom: 16 }}
+            >
+                <Row gutter={[16, 16]} align="middle">
+                    <Col xs={24} lg={14}>
+                        <div className="reminder-details-header-main">
+                            <h2 className="reminder-details-title">
                                 {pageTitle}
                             </h2>
-                            <div
-                                style={{
-                                    marginTop: 10,
-                                    display: "flex",
-                                    flexWrap: "wrap",
-                                    gap: "16px 24px",
-                                    color: "#595959",
-                                    fontSize: 14,
-                                }}
-                            >
-                                <span>
-                                    <UserOutlined style={{ marginRight: 8 }} />
+                            <div className="reminder-details-meta">
+                                <span className="reminder-details-meta-item">
+                                    <UserOutlined />
                                     {selectedId?.user ?? "—"}
                                 </span>
-                                <span>
-                                    <CalendarOutlined
-                                        style={{ marginRight: 8 }}
-                                    />
+                                <span className="reminder-details-meta-item">
+                                    <CalendarOutlined />
                                     {formatDateDdMmYyyy(selectedId?.date)}
                                 </span>
-                            </div>
-                        </Col>
-                        <Col xs={24} lg={10}>
-                            <div
-                                style={{
-                                    display: "flex",
-                                    flexDirection: "column",
-                                    alignItems: "flex-end",
-                                    gap: 12,
-                                }}
-                            >
-                                <div
-                                    style={{
-                                        display: "flex",
-                                        alignItems: "center",
-                                        gap: 10,
-                                        flexWrap: "wrap",
-                                        justifyContent: "flex-end",
-                                    }}
-                                >
-                                    <span
-                                        style={{
-                                            fontSize: 11,
-                                            fontWeight: 700,
-                                            color: INACTIVE_LABEL,
-                                            letterSpacing: "0.06em",
-                                        }}
-                                    >
-                                        Global status
-                                    </span>
-                                    <span
-                                        style={{
-                                            margin: 0,
-                                            padding: "2px 10px",
-                                            borderRadius: 6,
-                                            fontSize: 12,
-                                            fontWeight: 700,
-                                            background: AMBER_BG,
-                                            border: `1px solid ${AMBER_BORDER}`,
-                                            color: AMBER_TEXT,
-                                        }}
-                                    >
-                                        Pending
-                                    </span>
-                                </div>
-                                <div
-                                    style={{
-                                        display: "flex",
-                                        flexWrap: "wrap",
-                                        gap: 8,
-                                        justifyContent: "flex-end",
-                                    }}
-                                >
-                                    <Button
-                                        className="butn secoundry-btn"
-                                        icon={<ExportOutlined />}
-                                        disabled={isDisable}
-                                        onClick={() =>
-                                            message.info("Export batch (demo)")
-                                        }
-                                    >
-                                        Export
-                                    </Button>
-                                    <Button
-                                        type="primary"
-                                        className="butn primary-btn"
-                                        icon={<PlayCircleOutlined />}
-                                        disabled={
-                                            isDisable ||
-                                            includedWaves.length === 0
-                                        }
-                                        onClick={handleTriggerSelected}
-                                    >
-                                        {triggerButtonLabel}
-                                    </Button>
-                                </div>
-                            </div>
-                        </Col>
-                    </Row>
-                </Card>
-
-                <Row gutter={[16, 16]} style={{ marginBottom: 16 }}>
-                    <Col xs={24} sm={12} xl={6}>
-                        {renderReminderTile("R1", "Reminder 1", totalR1, feeR1)}
-                    </Col>
-                    <Col xs={24} sm={12} xl={6}>
-                        {renderReminderTile("R2", "Reminder 2", totalR2, feeR2)}
-                    </Col>
-                    <Col xs={24} sm={12} xl={6}>
-                        {renderReminderTile("R3", "Reminder 3", totalR3, feeR3)}
-                    </Col>
-                    <Col xs={24} sm={12} xl={6}>
-                        {renderTotalTile()}
-                    </Col>
-                </Row>
-
-                <Row
-                    gutter={[16, 16]}
-                    className="reminder-details-analysis-row"
-                    style={{ marginBottom: 16 }}
-                    align="stretch"
-                >
-                    <Col xs={24} lg={12}>
-                        <Card
-                            className="reminder-details-twin-card"
-                            title={
-                                <span
-                                    style={{
-                                        fontSize: 15,
-                                        fontWeight: 700,
-                                        display: "inline-flex",
-                                        alignItems: "center",
-                                        gap: 8,
-                                    }}
-                                >
-                                    <CreditCardOutlined
-                                        style={{ color: "var(--mainBlue)" }}
-                                    />
-                                    Payment method analysis
+                                <span className="reminder-status-badge reminder-status-badge--pending">
+                                    <span className="reminder-status-dot" />
+                                    Pending
                                 </span>
-                            }
-                            styles={{
-                                body: {
-                                    paddingTop: 12,
-                                    display: "flex",
-                                    flexDirection: "column",
-                                    flex: 1,
-                                },
-                            }}
-                        >
-                            <div
-                                style={{
-                                    flex: 1,
-                                    width: "100%",
-                                    minWidth: 0,
-                                }}
-                            >
-                                <div
-                                    className="reminder-details-payment-stack"
-                                    style={{ height: 52, width: "100%" }}
-                                >
-                                    <ResponsiveContainer
-                                        width="100%"
-                                        height="100%"
-                                    >
-                                        <BarChart
-                                            data={paymentStackChartData}
-                                            layout="vertical"
-                                            margin={{
-                                                top: 2,
-                                                right: 4,
-                                                left: 4,
-                                                bottom: 2,
-                                            }}
-                                            barCategoryGap={0}
-                                            barGap={0}
-                                        >
-                                            <XAxis
-                                                type="number"
-                                                domain={[0, 100]}
-                                                hide
-                                            />
-                                            <YAxis
-                                                type="category"
-                                                dataKey="name"
-                                                width={0}
-                                                hide
-                                            />
-                                            <Tooltip
-                                                cursor={false}
-                                                content={({
-                                                    active,
-                                                    payload,
-                                                }) => {
-                                                    if (
-                                                        !active ||
-                                                        !payload?.length
-                                                    ) {
-                                                        return null;
-                                                    }
-                                                    const item = payload[0];
-                                                    const label = item.name;
-                                                    const row =
-                                                        paymentRowsScaled.find(
-                                                            (x) =>
-                                                                x.label ===
-                                                                label,
-                                                        );
-                                                    const pct = item.value;
-                                                    const m =
-                                                        tableMembers.length;
-                                                    const cnt =
-                                                        row && m > 0
-                                                            ? Math.round(
-                                                                  (Number(
-                                                                      pct,
-                                                                  ) /
-                                                                      100) *
-                                                                      m,
-                                                              )
-                                                            : null;
-                                                    return (
-                                                        <div
-                                                            style={{
-                                                                padding:
-                                                                    "8px 10px",
-                                                                background:
-                                                                    "#fff",
-                                                                border: "1px solid #f0f0f0",
-                                                                borderRadius: 6,
-                                                                boxShadow:
-                                                                    "0 2px 8px rgba(0,0,0,0.08)",
-                                                            }}
-                                                        >
-                                                            <div
-                                                                style={{
-                                                                    fontWeight: 700,
-                                                                    marginBottom: 4,
-                                                                    color: "#262626",
-                                                                }}
-                                                            >
-                                                                {label}
-                                                            </div>
-                                                            {cnt != null && (
-                                                                <div
-                                                                    style={{
-                                                                        fontSize: 12,
-                                                                        color: "#595959",
-                                                                    }}
-                                                                >
-                                                                    ~
-                                                                    {cnt.toLocaleString()}{" "}
-                                                                    members
-                                                                </div>
-                                                            )}
-                                                            <div
-                                                                style={{
-                                                                    fontSize: 12,
-                                                                    fontWeight: 600,
-                                                                    color: "var(--mainBlue)",
-                                                                }}
-                                                            >
-                                                                {formatPercentDisplay(
-                                                                    pct,
-                                                                )}
-                                                            </div>
-                                                            {row && (
-                                                                <div
-                                                                    style={{
-                                                                        fontSize: 12,
-                                                                        color: "#8c8c8c",
-                                                                        marginTop: 2,
-                                                                    }}
-                                                                >
-                                                                    {formatCurrencyAmount(
-                                                                        row.amount,
-                                                                    )}
-                                                                </div>
-                                                            )}
-                                                        </div>
-                                                    );
-                                                }}
-                                            />
-                                            {paymentRowsScaled.map((r) => (
-                                                <Bar
-                                                    key={r.dataKey}
-                                                    stackId="payment"
-                                                    dataKey={r.dataKey}
-                                                    fill={r.color}
-                                                    name={r.label}
-                                                    isAnimationActive={false}
-                                                />
-                                            ))}
-                                        </BarChart>
-                                    </ResponsiveContainer>
-                                </div>
-                                <div
-                                    style={{
-                                        display: "flex",
-                                        flexDirection: "row",
-                                        flexWrap: "wrap",
-                                        alignItems: "center",
-                                        justifyContent: "space-between",
-                                        gap: "8px 10px",
-                                        marginTop: 14,
-                                    }}
-                                >
-                                    {paymentRowsScaled.map((r) => {
-                                        const m = tableMembers.length;
-                                        const cnt =
-                                            m > 0
-                                                ? Math.round(
-                                                      (Number(r.pct) / 100) *
-                                                          m,
-                                                  )
-                                                : null;
-                                        return (
-                                            <span
-                                                key={r.dataKey}
-                                                style={{
-                                                    display: "inline-flex",
-                                                    alignItems: "center",
-                                                    gap: 6,
-                                                    fontSize: 12,
-                                                    color: "#595959",
-                                                    whiteSpace: "nowrap",
-                                                }}
-                                            >
-                                                <span
-                                                    style={{
-                                                        width: 10,
-                                                        height: 10,
-                                                        borderRadius: 2,
-                                                        backgroundColor:
-                                                            r.color,
-                                                        flexShrink: 0,
-                                                    }}
-                                                    aria-hidden
-                                                />
-                                                <span
-                                                    style={{
-                                                        fontWeight: 600,
-                                                        color: "#262626",
-                                                    }}
-                                                >
-                                                    {r.label}
-                                                </span>
-                                                <span
-                                                    style={{
-                                                        fontWeight: 600,
-                                                        fontVariantNumeric:
-                                                            "tabular-nums",
-                                                        color: "#595959",
-                                                    }}
-                                                >
-                                                    {cnt != null
-                                                        ? cnt.toLocaleString()
-                                                        : "—"}
-                                                </span>
-                                                <span
-                                                    style={{
-                                                        fontWeight: 700,
-                                                        fontSize: 11,
-                                                        fontVariantNumeric:
-                                                            "tabular-nums",
-                                                        color: "var(--mainBlue)",
-                                                    }}
-                                                >
-                                                    {formatPercentDisplay(
-                                                        r.pct,
-                                                    )}
-                                                </span>
-                                            </span>
-                                        );
-                                    })}
-                                </div>
                             </div>
-                        </Card>
+                        </div>
                     </Col>
-                    <Col xs={24} lg={12}>
-                        <Card
-                            className="reminder-details-twin-card"
-                            title={
-                                <span
-                                    style={{
-                                        fontSize: 15,
-                                        fontWeight: 700,
-                                        display: "inline-flex",
-                                        alignItems: "center",
-                                        gap: 8,
-                                    }}
-                                >
-                                    <BellOutlined
-                                        style={{ color: "var(--mainBlue)" }}
-                                    />
-                                    Delivery notifications
-                                </span>
-                            }
-                            styles={{
-                                body: {
-                                    paddingTop: 12,
-                                    display: "flex",
-                                    flexDirection: "column",
-                                    flex: 1,
-                                    minHeight: 0,
-                                },
-                            }}
-                        >
-                            <div
-                                style={{
-                                    flex: 1,
-                                    display: "flex",
-                                    flexDirection: "column",
-                                    minHeight: 0,
-                                    width: "100%",
-                                }}
-                            >
-                                <div
-                                    style={{
-                                        display: "flex",
-                                        flexDirection: "row",
-                                        alignItems: "flex-start",
-                                        justifyContent: "space-between",
-                                        gap: 6,
-                                        width: "100%",
-                                        flexWrap: "nowrap",
-                                    }}
-                                >
-                                    {DELIVERY_CHANNELS.map(
-                                        ({
-                                            key,
-                                            label,
-                                            icon: Icon,
-                                            status,
-                                        }) => (
-                                            <div
-                                                key={key}
-                                                style={{
-                                                    flex: 1,
-                                                    display: "flex",
-                                                    flexDirection: "column",
-                                                    alignItems: "center",
-                                                    gap: 6,
-                                                    minWidth: 0,
-                                                    textAlign: "center",
-                                                }}
-                                            >
-                                                <Icon
-                                                    style={{
-                                                        fontSize: 22,
-                                                        color: "var(--mainBlue)",
-                                                    }}
-                                                    aria-hidden
-                                                />
-                                                <span
-                                                    style={{
-                                                        fontSize: 11,
-                                                        fontWeight: 700,
-                                                        color: "#595959",
-                                                        lineHeight: 1.2,
-                                                    }}
-                                                >
-                                                    {label}
-                                                </span>
-                                                <Tag
-                                                    color="gold"
-                                                    style={{
-                                                        margin: 0,
-                                                        fontSize: 10,
-                                                        padding: "0 6px",
-                                                        lineHeight: 1.6,
-                                                    }}
-                                                >
-                                                    {status}
-                                                </Tag>
-                                            </div>
-                                        ),
-                                    )}
-                                </div>
-                                <div style={{ flex: 1, minHeight: 8 }} />
-                                <div
-                                    style={{
-                                        borderTop: "1px solid #f0f0f0",
-                                        paddingTop: 16,
-                                        marginTop: "auto",
-                                    }}
-                                >
-                                    <div
-                                        style={{
-                                            fontSize: 11,
-                                            fontWeight: 700,
-                                            color: INACTIVE_LABEL,
-                                            letterSpacing: "0.05em",
-                                            marginBottom: 8,
-                                        }}
-                                    >
-                                        Last action
-                                    </div>
-                                    <div
-                                        style={{
-                                            display: "flex",
-                                            alignItems: "center",
-                                            gap: 8,
-                                            color: "#595959",
-                                        }}
-                                    >
-                                        <ClockCircleOutlined />
-                                        Awaiting manual trigger
-                                    </div>
-                                </div>
-                            </div>
-                        </Card>
-                    </Col>
-                </Row>
-
-                <Card
-                    styles={{ body: { paddingTop: 0 } }}
-                    title={
-                        <span
-                            style={{
-                                fontSize: 16,
-                                fontWeight: 700,
-                                display: "inline-flex",
-                                alignItems: "center",
-                                gap: 8,
-                            }}
-                        >
-                            <TeamOutlined style={{ color: "var(--mainBlue)" }} />
-                            {memberListTitle}
-                        </span>
-                    }
-                    extra={
-                        <div
-                            style={{
-                                display: "flex",
-                                flexWrap: "wrap",
-                                alignItems: "center",
-                                gap: 10,
-                            }}
-                        >
-                            <span
-                                style={{
-                                    fontSize: 13,
-                                    fontWeight: 600,
-                                    color: "#595959",
-                                }}
-                            >
-                                Total: {tableMembers.length} members
-                            </span>
-                            <Button
-                                className="butn secoundry-btn"
-                                disabled={isDisable}
-                                onClick={() => setIsModalOpen(true)}
-                            >
-                                Add member
-                            </Button>
-                            <Button
-                                className="butn secoundry-btn"
-                                disabled={isDisable}
-                                onClick={handleExcludeMember}
-                            >
-                                Exclude member
-                            </Button>
-                            <Button
-                                type="link"
-                                disabled={isDisable}
-                                onClick={handleDownloadCsv}
-                                style={{
-                                    color: "var(--mainBlue)",
-                                    fontWeight: 600,
-                                    padding: "0 4px",
-                                }}
-                            >
-                                Download CSV
-                            </Button>
-                            {activeView === "R3" && (
+                    <Col xs={24} lg={10}>
+                        <div className="reminder-details-header-actions">
+                            <div className="reminder-details-header-buttons">
                                 <Button
-                                    type="link"
+                                    className="butn secoundry-btn"
+                                    icon={<ExportOutlined />}
                                     disabled={isDisable}
-                                    icon={<FileTextOutlined />}
-                                    onClick={handleDownloadReminder3Word}
-                                    style={{
-                                        color: "var(--mainBlue)",
-                                        fontWeight: 600,
-                                        padding: "0 4px",
-                                    }}
+                                    onClick={() =>
+                                        message.info("Export batch (demo)")
+                                    }
                                 >
-                                    Download Word
+                                    Export
                                 </Button>
+                                <Button
+                                    type="primary"
+                                    className="butn primary-btn"
+                                    icon={<PlayCircleOutlined />}
+                                    disabled={
+                                        isDisable || includedWaves.length === 0
+                                    }
+                                    onClick={handleTriggerSelected}
+                                >
+                                    {triggerButtonLabel}
+                                </Button>
+                            </div>
+                        </div>
+                    </Col>
+                </Row>
+            </Card>
+
+            <Row
+                gutter={[12, 8]}
+                className="reminder-details-summary-row"
+                align="stretch"
+            >
+                <Col xs={24} lg={12}>
+                    <div className="reminder-details-kpi-row">
+                        {renderReminderTile("R1", "Reminder 1", totalR1, "r1")}
+                        {renderReminderTile("R2", "Reminder 2", totalR2, "r2")}
+                        {renderReminderTile("R3", "Reminder 3", totalR3, "r3")}
+                        {renderTotalTile()}
+                    </div>
+                </Col>
+                <Col xs={24} lg={12}>
+                    <div className="reminder-details-channel-panel">
+                        <div className="reminder-details-channel-tabs">
+                            {DELIVERY_CHANNELS.map((channel) =>
+                                renderChannelTab(channel),
                             )}
                         </div>
-                    }
-                >
-                    <div
-                        className="common-table reminder-cancellation-members-wrap"
-                        style={{
-                            width: "100%",
-                            overflowX: "auto",
-                            paddingBottom: "16px",
+                    </div>
+                </Col>
+            </Row>
+
+            <Row
+                gutter={[16, 16]}
+                className="reminder-details-analysis-row"
+                style={{ marginBottom: 16 }}
+                align="stretch"
+            >
+                <Col xs={24} lg={12}>
+                    <Card
+                        className="reminder-details-twin-card reminder-details-payment-card"
+                        title={
+                            <span className="reminder-details-card-title">
+                                <BarChartOutlined
+                                    style={{ color: "var(--mainBlue)" }}
+                                />
+                                Payment method analysis
+                            </span>
+                        }
+                        extra={
+                            <span className="reminder-details-total-amount">
+                                Total amount{" "}
+                                {formatCurrencyAmount(paymentAnalysisTotal)}
+                            </span>
+                        }
+                        styles={{
+                            body: {
+                                padding: "12px 16px",
+                            },
                         }}
                     >
-                        <Table
-                            rowKey="_rowKey"
-                            rowSelection={rowSelection}
-                            columns={columns}
-                            dataSource={tableMembers}
-                            pagination={false}
-                            bordered
-                            tableLayout="fixed"
-                            sticky
-                            scroll={{ x: "max-content", y: 590 }}
-                            size="middle"
-                            locale={{
-                                emptyText: selectedId
-                                    ? "No members for this selection"
-                                    : "Open a batch from reminders to view details",
-                            }}
-                        />
+                        <div className="reminder-details-payment-layout">
+                            <div className="reminder-details-donut-wrap">
+                                <ResponsiveContainer width="100%" height="100%">
+                                    <PieChart margin={{ top: 0, right: 0, bottom: 0, left: 0 }}>
+                                        <Pie
+                                            data={donutChartData}
+                                            dataKey="amount"
+                                            nameKey="label"
+                                            cx="50%"
+                                            cy="50%"
+                                            innerRadius={62}
+                                            outerRadius={88}
+                                            paddingAngle={2}
+                                            stroke="none"
+                                            isAnimationActive={false}
+                                        >
+                                            {paymentRowsScaled.map((entry) => (
+                                                <Cell
+                                                    key={entry.dataKey}
+                                                    fill={entry.color}
+                                                />
+                                            ))}
+                                        </Pie>
+                                    </PieChart>
+                                </ResponsiveContainer>
+                                <div className="reminder-details-donut-center">
+                                    <div className="reminder-details-donut-center-label">
+                                        MAIN METHOD
+                                    </div>
+                                    <div className="reminder-details-donut-center-amount">
+                                        {dominantPaymentRow
+                                            ? formatCurrencyAmount(
+                                                  dominantPaymentRow.amount,
+                                              )
+                                            : "—"}
+                                    </div>
+                                    <div className="reminder-details-donut-center-sub">
+                                        Dominant
+                                    </div>
+                                </div>
+                            </div>
+                            <div className="reminder-details-payment-legend">
+                                {paymentRowsScaled.map((r) => {
+                                    const Icon = r.icon;
+                                    const m = tableMembers.length;
+                                    const cnt =
+                                        m > 0
+                                            ? Math.round(
+                                                  (Number(r.pct) / 100) * m,
+                                              )
+                                            : 0;
+                                    return (
+                                        <div
+                                            key={r.dataKey}
+                                            className="reminder-details-payment-stat"
+                                        >
+                                            <span
+                                                className="reminder-details-payment-legend-icon"
+                                                style={{
+                                                    background: `${r.color}18`,
+                                                    color: r.color,
+                                                }}
+                                            >
+                                                <Icon />
+                                            </span>
+                                            <div className="reminder-details-payment-stat-body">
+                                                <span className="reminder-details-payment-legend-label">
+                                                    {r.label}
+                                                </span>
+                                                <span className="reminder-details-payment-stat-meta">
+                                                    <span className="reminder-details-payment-legend-amount">
+                                                        {formatCurrencyAmount(
+                                                            r.amount,
+                                                        )}
+                                                    </span>
+                                                    <span className="reminder-details-payment-legend-pct">
+                                                        {formatPercentDisplay(
+                                                            r.pct,
+                                                        )}
+                                                        {m > 0
+                                                            ? ` · ${cnt}`
+                                                            : ""}
+                                                    </span>
+                                                </span>
+                                            </div>
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        </div>
+                    </Card>
+                </Col>
+                <Col xs={24} lg={12}>
+                    <Card
+                        className="reminder-details-twin-card reminder-details-template-card"
+                        title={
+                            <span className="reminder-details-card-title">
+                                <PreviewChannelIcon
+                                    style={{ color: "var(--mainBlue)" }}
+                                />
+                                Template preview ({activeTemplate.label})
+                            </span>
+                        }
+                        extra={
+                            <button
+                                type="button"
+                                className="reminder-details-preview-link"
+                                disabled={isDisable}
+                                onClick={() =>
+                                    message.info(
+                                        `Preview full ${activeTemplate.label.toLowerCase()} (demo)`,
+                                    )
+                                }
+                            >
+                                Preview full{" "}
+                                {activeTemplate.label.toLowerCase()}
+                                <LinkOutlined />
+                            </button>
+                        }
+                        styles={{
+                            body: {
+                                padding: "12px 16px",
+                            },
+                        }}
+                    >
+                        <div className="reminder-details-template-subject">
+                            Subject: {activeTemplate.subject}
+                        </div>
+                        <div className="reminder-details-template-body">
+                            {activeTemplate.body}
+                        </div>
+                    </Card>
+                </Col>
+            </Row>
+
+            <Card
+                className="reminder-details-members-card"
+                title={
+                    <span className="reminder-details-card-title">
+                        <TeamOutlined style={{ color: "var(--mainBlue)" }} />
+                        {memberListTitle}
+                    </span>
+                }
+                extra={
+                    <div className="reminder-details-members-actions">
+                        <span className="reminder-details-members-total">
+                            Total: {tableMembers.length} members
+                        </span>
+                        <Button
+                            className="reminder-details-action-add"
+                            icon={<PlusOutlined />}
+                            disabled={isDisable}
+                            onClick={() => setIsModalOpen(true)}
+                        >
+                            Add member
+                        </Button>
+                        <Button
+                            className="reminder-details-action-exclude"
+                            icon={<DeleteOutlined />}
+                            disabled={isDisable}
+                            onClick={handleExcludeMember}
+                        >
+                            Exclude member
+                        </Button>
+                        <Button
+                            className="reminder-details-action-download"
+                            icon={<DownloadOutlined />}
+                            disabled={isDisable}
+                            onClick={handleDownloadCsv}
+                        >
+                            Download CSV
+                        </Button>
+                        {activeView === "R3" && (
+                            <Button
+                                className="reminder-details-action-download"
+                                icon={<FileTextOutlined />}
+                                disabled={isDisable}
+                                onClick={handleDownloadReminder3Word}
+                            >
+                                Download Word
+                            </Button>
+                        )}
                     </div>
-                </Card>
-            </div>
+                }
+            >
+                <div className="common-table reminder-cancellation-members-wrap">
+                    <Table
+                        rowKey="_rowKey"
+                        rowSelection={rowSelection}
+                        columns={columns}
+                        dataSource={tableMembers}
+                        pagination={false}
+                        bordered
+                        sticky
+                        scroll={{ x: "max-content", y: 590 }}
+                        size="middle"
+                        locale={{
+                            emptyText: (
+                                <div className="reminder-details-empty-wrap">
+                                    <Empty
+                                        image={Empty.PRESENTED_IMAGE_SIMPLE}
+                                        description={
+                                            <div>
+                                                <div>
+                                                    {selectedId
+                                                        ? "No members in this batch"
+                                                        : "No members in this batch"}
+                                                </div>
+                                                <div className="reminder-details-empty-sub">
+                                                    Open a batch from reminders
+                                                    to view details.
+                                                </div>
+                                            </div>
+                                        }
+                                    >
+                                        <Button
+                                            className="butn secoundry-btn"
+                                            onClick={() =>
+                                                navigate("/RemindersSummary")
+                                            }
+                                        >
+                                            Go to Reminders
+                                        </Button>
+                                    </Empty>
+                                </div>
+                            ),
+                        }}
+                    />
+                </div>
+            </Card>
+
             <Modal
                 className="right-modal"
                 open={isModalOpen}

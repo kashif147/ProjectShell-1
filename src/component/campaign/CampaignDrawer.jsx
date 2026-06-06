@@ -154,7 +154,9 @@ export default function CampaignDrawer({
         message.success("Campaign created");
         onClose?.(true);
         if (campaignId) {
-          navigate(`/Email?campaignId=${encodeURIComponent(campaignId)}`);
+          navigate(
+            `/EmailCampaignDetail?campaignId=${encodeURIComponent(campaignId)}`
+          );
         }
       }
     } catch (e) {

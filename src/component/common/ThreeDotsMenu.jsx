@@ -2,6 +2,14 @@ import React, { memo, useCallback } from 'react';
 import { Dropdown } from 'antd';
 import { BsThreeDots } from 'react-icons/bs';
 
+function withIconColor(icon, iconColor) {
+  if (!icon || !iconColor || !React.isValidElement(icon)) return icon;
+  const prev = icon.props.style || {};
+  return React.cloneElement(icon, {
+    style: { ...prev, color: iconColor, fontSize: prev.fontSize ?? 14 },
+  });
+}
+
 const ThreeDotsMenu = memo(({ items = [], onSelect }) => {
   const handleClick = useCallback(
     ({ key }) => {
@@ -15,11 +23,11 @@ const ThreeDotsMenu = memo(({ items = [], onSelect }) => {
     [onSelect, items]
   );
 
-  const menuItems = items.map(({ key, label, icon }) => ({
+  const menuItems = items.map(({ key, label, icon, iconColor }) => ({
     key,
     label: (
       <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-        {icon}
+        {withIconColor(icon, iconColor)}
         {label}
       </span>
     ),

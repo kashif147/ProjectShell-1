@@ -88,6 +88,63 @@ export const updateTenant = createAsyncThunk(
   }
 );
 
+export const updateOrganisationProfile = createAsyncThunk(
+  "tenants/updateOrganisationProfile",
+  async ({ id, organisationProfile }, { rejectWithValue }) => {
+    try {
+      const token = localStorage.getItem("token");
+      const response = await axios.patch(
+        `${baseURL}/tenants/${id}/organisation-profile`,
+        organisationProfile,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(
+        error.response?.data?.message || "Failed to update organisation profile"
+      );
+    }
+  }
+);
+
+export const updateBranding = createAsyncThunk(
+  "tenants/updateBranding",
+  async ({ id, branding }, { rejectWithValue }) => {
+    try {
+      const token = localStorage.getItem("token");
+      const response = await axios.patch(
+        `${baseURL}/tenants/${id}/branding`,
+        branding,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(
+        error.response?.data?.message || "Failed to update branding"
+      );
+    }
+  }
+);
+
+export const updateRegionalSettings = createAsyncThunk(
+  "tenants/updateRegionalSettings",
+  async ({ id, regionalSettings }, { rejectWithValue }) => {
+    try {
+      const token = localStorage.getItem("token");
+      const response = await axios.patch(
+        `${baseURL}/tenants/${id}/regional-settings`,
+        regionalSettings,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(
+        error.response?.data?.message || "Failed to update regional settings"
+      );
+    }
+  }
+);
+
 // Delete tenant
 export const deleteTenant = createAsyncThunk(
   "tenants/deleteTenant",

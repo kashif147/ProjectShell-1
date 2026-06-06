@@ -261,7 +261,7 @@ function DateRang({ label, selectedValues = [], operator = "between", onApply })
       placement="bottomLeft"
     >
       <div className={`filter-button1 ${badgeCount > 0 ? "active" : ""}`}>
-        <Space size={6} className="filter-button1__inner">
+        <Space size={6} align="center" className="filter-button1__inner">
           <span className="filter-label">{label}</span>
           {badgeCount > 0 && (
             <Badge count={badgeCount} className="red-badge" />
