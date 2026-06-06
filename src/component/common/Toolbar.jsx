@@ -39,6 +39,8 @@ import { bumpWriteOffsReload } from "../../utils/writeOffsWorkspace";
 import { bumpGeneralLedgerReload } from "../../utils/generalLedgerWorkspace";
 import { bumpReconciliationReload } from "../../utils/reconciliationWorkspace";
 import { bumpMembershipListingReportReload } from "../../utils/membershipListingReportWorkspace";
+import { bumpMembershipStatisticsReportReload } from "../../utils/membershipStatisticsReportWorkspace";
+import { bumpWorkplaceBreakdownReportReload } from "../../utils/workplaceBreakdownReportWorkspace";
 import {
   clearReportGridSearchQuery,
   setReportGridSearchQuery,
@@ -57,12 +59,14 @@ import {
   parseMembershipCategoryOptionLabels,
   resolveDashboardMembershipCategoryFilterState,
 } from "../../pages/membership/executive/executiveDashboardUtils";
+import "../../styles/ExecutiveDashboard.css";
 import "../../styles/ToolbarFilters.css";
 import {
   markScreenChanged,
   resetScreenChanged,
 } from "../../features/views/ScreenFilterChangSlice";
 import { message } from "antd";
+import { formatMembershipMovementLabel } from "../../utils/membershipMovementLabels";
 
 const AI_FILTER_API_URL =
   process.env.REACT_APP_AI_PROFILE_FILTER_URL ||
@@ -282,6 +286,8 @@ const Toolbar = () => {
       "/generalledger": "GeneralLedger",
       "/reconciliation": "Reconciliation",
       "/membershiplistingreport": "MembershipListingReport",
+      "/statisticsreport": "StatisticsReport",
+      "/workplacebreakdownreport": "WorkplaceBreakdownReport",
     };
     return pathMap[key] || "";
   };
@@ -298,7 +304,14 @@ const Toolbar = () => {
   const isReconciliationScreen = normalizedPath === "/reconciliation";
   const isMembershipListingReportScreen =
     normalizedPath === "/membershiplistingreport";
+  const isStatisticsReportScreen = normalizedPath === "/statisticsreport";
+  const isWorkplaceBreakdownReportScreen =
+    normalizedPath === "/workplacebreakdownreport";
+  const isAggregateMembershipReportScreen =
+    isStatisticsReportScreen || isWorkplaceBreakdownReportScreen;
   const isMembershipDashboard = normalizedPath === "/membershipdashboard";
+  const isMembershipExecutiveScreen =
+    isMembershipDashboard || isAggregateMembershipReportScreen;
   const isMembersScreen =
     location.pathname === "/members" ||
     location.pathname === "/Members" ||
@@ -335,6 +348,10 @@ const Toolbar = () => {
         ? "reconciliation"
       : isMembershipListingReportScreen
         ? "membershiplisting"
+      : isStatisticsReportScreen
+        ? "statisticsreport"
+      : isWorkplaceBreakdownReportScreen
+        ? "workplacebreakdownreport"
       : isPaymentFormsPage
       ? "payment forms"
       : isApplicationsPage
@@ -423,7 +440,7 @@ const Toolbar = () => {
   const handleFilterApply = (filterData) => {
     const { label, operator, selectedValues } = filterData;
 
-    if (isMembershipDashboard && label === "Membership Category") {
+    if (isMembershipExecutiveScreen && label === "Membership Category") {
       const manualMembershipCategories = { operator, selectedValues };
       const nextHeader = {
         ...membershipDashboardHeader,
@@ -441,12 +458,21 @@ const Toolbar = () => {
         nextCategoryFilter.selectedValues,
       );
       markTemplateScreenDirty();
-      bumpMembershipDashboardApply();
+      if (isAggregateMembershipReportScreen) {
+        if (isStatisticsReportScreen) {
+          bumpMembershipStatisticsReportReload();
+        }
+      } else {
+        bumpMembershipDashboardApply();
+      }
       return;
     }
 
     updateFilter(label, operator, selectedValues);
     markTemplateScreenDirty();
+    if (isStatisticsReportScreen) {
+      bumpMembershipStatisticsReportReload();
+    }
   };
 
   const handleSearch = () => {
@@ -499,6 +525,10 @@ const Toolbar = () => {
       );
     } else if (isMembershipDashboard) {
       bumpMembershipDashboardApply();
+    } else if (isStatisticsReportScreen) {
+      bumpMembershipStatisticsReportReload();
+    } else if (isWorkplaceBreakdownReportScreen) {
+      bumpWorkplaceBreakdownReportReload({ ensureSnapshots: true });
     } else if (
       isEventsDashboard ||
       isCorrespondenceDashboard ||
@@ -542,6 +572,10 @@ const Toolbar = () => {
       bumpReconciliationReload();
     } else if (isMembershipListingReportScreen) {
       bumpMembershipListingReportReload();
+    } else if (isStatisticsReportScreen) {
+      bumpMembershipStatisticsReportReload();
+    } else if (isWorkplaceBreakdownReportScreen) {
+      bumpWorkplaceBreakdownReportReload({ ensureSnapshots: true });
     } else {
       if (Object.keys(cleanedFilters).length > 0) {
         dispatch(getAllApplications(cleanedFilters));
@@ -590,7 +624,8 @@ const Toolbar = () => {
       isWriteOffsScreen ||
       isGeneralLedgerScreen ||
       isReconciliationScreen ||
-      isMembershipListingReportScreen
+      isMembershipListingReportScreen ||
+      isAggregateMembershipReportScreen
     ) {
       const screen =
         getScreenFromPath() ||
@@ -623,7 +658,7 @@ const Toolbar = () => {
           limit: 500,
         }),
       );
-    } else if (isMembershipDashboard) {
+    } else if (isMembershipExecutiveScreen) {
       updateMembershipDashboardHeader({
         manualMembershipCategories: { operator: "==", selectedValues: [] },
       });
@@ -640,7 +675,15 @@ const Toolbar = () => {
         nextCategoryFilter.operator,
         nextCategoryFilter.selectedValues,
       );
-      bumpMembershipDashboardApply();
+      if (isAggregateMembershipReportScreen) {
+        if (isStatisticsReportScreen) {
+          bumpMembershipStatisticsReportReload();
+        } else {
+          bumpWorkplaceBreakdownReportReload();
+        }
+      } else {
+        bumpMembershipDashboardApply();
+      }
     } else if (
       location.pathname === "/EventsDashboard" ||
       location.pathname === "/CorrespondenceDashboard" ||
@@ -671,6 +714,10 @@ const Toolbar = () => {
       bumpReconciliationReload();
     } else if (isMembershipListingReportScreen) {
       bumpMembershipListingReportReload();
+    } else if (isStatisticsReportScreen) {
+      bumpMembershipStatisticsReportReload();
+    } else if (isWorkplaceBreakdownReportScreen) {
+      bumpWorkplaceBreakdownReportReload({ ensureSnapshots: true });
     } else {
       dispatch(getAllApplications({}));
     }
@@ -873,6 +920,10 @@ const Toolbar = () => {
         bumpReconciliationReload();
       } else if (isMembershipListingReportScreen) {
         bumpMembershipListingReportReload();
+      } else if (isStatisticsReportScreen) {
+        bumpMembershipStatisticsReportReload();
+      } else if (isWorkplaceBreakdownReportScreen) {
+        bumpWorkplaceBreakdownReportReload();
       }
     } catch (error) {
       console.error("Error updating template:", error);
@@ -932,7 +983,8 @@ const Toolbar = () => {
     >
       <div className="d-flex align-items-center flex-wrap toolbar-filter-row">
         {/* Search input */}
-        {location.pathname !== "/MembershipDashboard" &&
+        {!isAggregateMembershipReportScreen &&
+          location.pathname !== "/MembershipDashboard" &&
           location.pathname !== "/EventsDashboard" &&
           location.pathname !== "/CorrespondenceDashboard" &&
           location.pathname !== "/IssuesManagementDashboard" && (
@@ -1044,11 +1096,16 @@ const Toolbar = () => {
               selectedValues={selectedValues}
               operator={operator}
               onApply={handleFilterApply}
+              formatOptionLabel={
+                label === "Membership Movement"
+                  ? formatMembershipMovementLabel
+                  : undefined
+              }
             />
           );
         })}
 
-        {isMembershipDashboard && (
+        {isMembershipExecutiveScreen && (
           <MembershipDashboardHeaderControls variant="inline" />
         )}
 

@@ -231,6 +231,46 @@
         { "dataIndex": "workLocation", "title": "Work Location", "isGride": true, "isVisible": false, "ellipsis": true, "width": 140 }
       ]
     },
+    "statisticsreport": {
+      "screenKey": "StatisticsReport",
+      "templateType": "statisticsreport",
+      "service": "reporting-service",
+      "filters": {
+        "membershipCategories": { "operator": "equal_to", "values": [] },
+        "grades": { "operator": "equal_to", "values": [] },
+        "regions": { "operator": "equal_to", "values": [] },
+        "branches": { "operator": "equal_to", "values": [] }
+      },
+      "columns": [
+        { "dataIndex": "name", "title": "Name", "isGride": true, "isVisible": true, "ellipsis": true, "width": 200 },
+        { "dataIndex": "openingActive", "title": "Opening", "filterValueType": "number", "isGride": true, "isVisible": true, "ellipsis": true, "width": 90, "align": "right" },
+        { "dataIndex": "joined", "title": "Joined", "filterValueType": "number", "isGride": true, "isVisible": true, "ellipsis": true, "width": 80, "align": "right" },
+        { "dataIndex": "rejoin", "title": "Re-joined", "filterValueType": "number", "isGride": true, "isVisible": true, "ellipsis": true, "width": 90, "align": "right" },
+        { "dataIndex": "newJoin", "title": "New", "filterValueType": "number", "isGride": true, "isVisible": true, "ellipsis": true, "width": 70, "align": "right" },
+        { "dataIndex": "reinstatements", "title": "Reinstated", "filterValueType": "number", "isGride": true, "isVisible": true, "ellipsis": true, "width": 95, "align": "right" },
+        { "dataIndex": "resigned", "title": "Resigned", "filterValueType": "number", "isGride": true, "isVisible": true, "ellipsis": true, "width": 90, "align": "right" },
+        { "dataIndex": "lapsed", "title": "Lapsed", "filterValueType": "number", "isGride": true, "isVisible": true, "ellipsis": true, "width": 80, "align": "right" },
+        { "dataIndex": "closingActive", "title": "Closing", "filterValueType": "number", "isGride": true, "isVisible": true, "ellipsis": true, "width": 90, "align": "right" },
+        { "dataIndex": "calculatedClosing", "title": "Calc. closing", "filterValueType": "number", "isGride": true, "isVisible": true, "ellipsis": true, "width": 110, "align": "right" },
+        { "dataIndex": "variance", "title": "Variance", "filterValueType": "number", "isGride": true, "isVisible": false, "ellipsis": true, "width": 90, "align": "right" },
+        { "dataIndex": "balancesLabel", "title": "OK", "isGride": true, "isVisible": true, "ellipsis": true, "width": 72, "align": "center" }
+      ]
+    },
+    "workplacebreakdownreport": {
+      "screenKey": "WorkplaceBreakdownReport",
+      "templateType": "workplacebreakdownreport",
+      "service": "reporting-service",
+      "filters": {
+        "membershipStatuses": { "operator": "equal_to", "values": ["Active"] },
+        "regions": { "operator": "equal_to", "values": [] },
+        "workLocations": { "operator": "equal_to", "values": [] }
+      },
+      "columns": [
+        { "dataIndex": "workLocation", "title": "Work Location", "isGride": true, "isVisible": true, "ellipsis": true, "width": 220 },
+        { "dataIndex": "official", "title": "Official", "isGride": true, "isVisible": true, "ellipsis": true, "width": 80 },
+        { "dataIndex": "mom", "title": "MoM", "filterValueType": "number", "isGride": true, "isVisible": true, "ellipsis": true, "width": 72, "align": "right" }
+      ]
+    },
     "reconciliation": {
       "screenKey": "Reconciliation",
       "templateType": "reconciliation",

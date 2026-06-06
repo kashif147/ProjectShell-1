@@ -34,6 +34,8 @@ const LEGACY_TEMPLATE_TYPE_SERVICE = {
   generalledger: "account-service",
   reconciliation: "account-service",
   membershiplisting: "reporting-service",
+  statisticsreport: "reporting-service",
+  workplacebreakdownreport: "reporting-service",
   /** Correspondence / comms admin grids */
   correspondence: "notification-service",
   correspondences: "notification-service",

@@ -354,6 +354,23 @@ const Sidebar = () => {
           path: "/LiveStatsReport",
           state: { search: "Live Stats" },
         };
+      case "Membership Reports":
+        return {
+          path: "/Reports",
+          state: { search: "Membership Reports" },
+        };
+      case "Statistics Report":
+      case "Statistics":
+        return {
+          path: "/StatisticsReport",
+          state: { search: "Statistics Report" },
+        };
+      case "Workplace Membership Breakdown":
+      case "Workplace Breakdown Report":
+        return {
+          path: "/WorkplaceBreakdownReport",
+          state: { search: "Workplace Membership Breakdown" },
+        };
       case "Membership Listing Report":
         return {
           path: "/MembershipListingReport",
@@ -510,7 +527,10 @@ const Sidebar = () => {
       "/JoinersReport": "Joiners Report",
       "/ComparisonReport": "Comparison Report",
       "/LiveStatsReport": "Live Stats",
+      "/StatisticsReport": "Statistics Report",
+      "/WorkplaceBreakdownReport": "Workplace Membership Breakdown",
       "/MembershipListingReport": "Membership Listing Report",
+      "/Reports": "Membership Reports",
       "/CorrespondenceDashboard": "Dashboard",
       "/IssuesManagementDashboard": "Dashboard",
       "/ReportsSettings": "Reports setting",

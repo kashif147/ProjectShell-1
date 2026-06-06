@@ -3,6 +3,13 @@ import * as XLSX from "xlsx";
 import jsPDF from "jspdf";
 import { autoTable } from "jspdf-autotable";
 import { columnKeyToString } from "./filterUtils";
+import {
+  appendSheet,
+  buildGridReportDataSheet,
+  buildMetaInfoSheet,
+  createWorkbook,
+  writeStyledWorkbook,
+} from "./reportExcelExport";
 
 export function formatReportGeneratedAt() {
   return dayjs().format("DD/MM/YYYY HH:mm:ss");
@@ -130,19 +137,21 @@ export function exportReportToXlsx({
 }) {
   const exportColumns = getVisibleExportColumns(screenCols);
   const sheetRows = buildExportRows(data, exportColumns);
-  const { metaRows } = buildMetaSheetRows({
+  const metaRows = buildMetaSheetRows({
     reportTitle,
     filtersState,
     recordCount: sheetRows.length,
-  });
+  }).metaRows;
 
-  const metaWs = XLSX.utils.aoa_to_sheet(metaRows);
-  const dataWs = XLSX.utils.json_to_sheet(sheetRows);
-  const wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, metaWs, "Info");
-  XLSX.utils.book_append_sheet(wb, dataWs, "Data");
+  const wb = createWorkbook();
+  appendSheet(wb, buildMetaInfoSheet(metaRows), "Info");
+  appendSheet(
+    wb,
+    buildGridReportDataSheet(exportColumns, sheetRows),
+    "Data",
+  );
   const slug = reportTitle.replace(/\s+/g, "_").toLowerCase();
-  XLSX.writeFile(wb, `${slug}_${dayjs().format("YYYY-MM-DD")}.xlsx`);
+  writeStyledWorkbook(wb, `${slug}_${dayjs().format("YYYY-MM-DD")}.xlsx`);
 }
 
 export function exportReportToPdf({

@@ -21,6 +21,7 @@ import {
 } from "../../utils/reportGridSearchBridge";
 import { applyClientSideRowFilters } from "../../utils/filterUtils";
 import { useRegisterGridFilterRows } from "../../hooks/useRegisterGridFilterRows";
+import { useDebouncedReportFetch } from "../../hooks/useDebouncedReportFetch";
 import dayjs from "dayjs";
 import utc from "dayjs/plugin/utc";
 import "../../styles/MembershipReportPrint.css";
@@ -100,7 +101,7 @@ export default function MembershipListingReport() {
     screenCols,
   );
 
-  const fetchListing = useCallback(async () => {
+  const fetchListing = useCallback(async ({ isStale } = {}) => {
     setLoading(true);
     try {
       const body = buildMembershipListingRequest(filtersStateRef.current, {
@@ -109,27 +110,30 @@ export default function MembershipListingReport() {
         search: getReportGridSearchQuery(),
       });
       const data = await reportingApi.getMembershipListing(body);
+      if (isStale?.()) return;
       const rawRows = Array.isArray(data?.rows) ? data.rows : [];
       setSourceRows(rawRows.map(mapListingRow));
     } catch (error) {
+      if (isStale?.()) return;
       console.error("Membership listing report:", error);
       message.error(error?.message || "Failed to load membership listing");
       setSourceRows([]);
     } finally {
-      setLoading(false);
+      if (!isStale?.()) setLoading(false);
     }
   }, []);
 
-  useEffect(() => {
-    if (!isInitialized || templatesLoading) return;
-    fetchListing();
-  }, [activeTemplateId, fetchListing, isInitialized, templatesLoading]);
+  const reportReady = isInitialized && !templatesLoading;
+  const { reloadNow } = useDebouncedReportFetch({
+    enabled: reportReady,
+    fetchFn: fetchListing,
+    deps: [activeTemplateId],
+    debounceMs: 450,
+  });
 
   useEffect(() => {
-    return subscribeMembershipListingReportReload(() => {
-      fetchListing();
-    });
-  }, [fetchListing]);
+    return subscribeMembershipListingReportReload(reloadNow);
+  }, [reloadNow]);
 
   useEffect(() => subscribeReportGridSearch(setSearchQuery), []);
 

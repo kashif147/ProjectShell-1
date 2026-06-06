@@ -20,6 +20,7 @@ import {
   formatCurrency,
   formatMobileNumber,
 } from "../utils/Utilities";
+import { formatMembershipMovementLabel } from "../utils/membershipMovementLabels";
 import { markScreenChanged } from "../features/views/ScreenFilterChangSlice";
 import { getProfileDetailsById } from "../features/profiles/ProfileDetailsSlice";
 import {
@@ -970,6 +971,32 @@ function buildReconciliationColumns() {
   });
 }
 
+function buildStatisticsReportColumns() {
+  const withSort = (col) => ({
+    ...col,
+    sorter: (a, b) => {
+      const key = Array.isArray(col.dataIndex)
+        ? col.dataIndex.join(".")
+        : col.dataIndex;
+      const av = a?.[key];
+      const bv = b?.[key];
+      if (av == null && bv == null) return 0;
+      if (av == null) return 1;
+      if (bv == null) return -1;
+      if (typeof av === "number" && typeof bv === "number") return av - bv;
+      return String(av).localeCompare(String(bv), undefined, {
+        numeric: true,
+        sensitivity: "base",
+      });
+    },
+  });
+
+  return mergeGridColumnDefaults(
+    GRID_COLUMN_DEFAULTS.StatisticsReport || [],
+    {},
+  ).map((col) => withSort(col));
+}
+
 function buildMembershipListingReportColumns() {
   const dateRender = (value) => formatDateOnly(value) || "—";
   const amountRender = (value) => {
@@ -1029,12 +1056,22 @@ function buildMembershipListingReportColumns() {
   });
 }
 
+function buildWorkplaceBreakdownReportColumns() {
+  return mergeGridColumnDefaults(
+    GRID_COLUMN_DEFAULTS.WorkplaceBreakdownReport || [],
+    {},
+  );
+}
+
 const staticColumns = {
   OnlinePayment: buildOnlinePaymentColumns(),
   Refunds: buildRefundsColumns(),
   WriteOffs: buildWriteOffsColumns(),
   CreditNotes: buildCreditNotesColumns(),
   MembershipListingReport: buildMembershipListingReportColumns(),
+  StatisticsReport: buildStatisticsReportColumns(),
+  StatisticsReportRegion: buildStatisticsReportColumns(),
+  WorkplaceBreakdownReport: buildWorkplaceBreakdownReportColumns(),
   Reconciliation: buildReconciliationColumns(),
   JournalAdjustments: buildJournalAdjustmentsColumns(),
   GeneralLedger: buildGeneralLedgerColumns(),
@@ -1895,6 +1932,7 @@ const staticColumns = {
       isVisible: true,
       width: 180,
       editable: false,
+      render: (value) => formatMembershipMovementLabel(value) || "—",
     },
     {
       dataIndex: "paymentType",

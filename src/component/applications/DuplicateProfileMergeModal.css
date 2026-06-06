@@ -1,0 +1,12 @@
+.duplicate-profile-merge-modal .duplicate-merge-section-title {
+  font-size: 12px;
+  font-weight: 700;
+  color: #4b5563;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  margin: 0 0 8px 0;
+}
+
+.duplicate-profile-merge-modal .duplicate-merge-fields-table .ant-table {
+  margin-bottom: 0;
+}

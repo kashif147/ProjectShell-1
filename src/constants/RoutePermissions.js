@@ -55,6 +55,7 @@ export const RoutePermissions = {
   "PolicyClientExample": "portal:read",
 
   // Reports
+  "Reports": "reporting:read",
   "CancelledMembersReport": "reporting:read",
   "JoinersReport": "reporting:read",
   "LeaversReport": "crm:member:read",
@@ -63,6 +64,8 @@ export const RoutePermissions = {
   "ComparisonReport": "reporting:read",
   "LiveStatsReport": "reporting:read",
   "MembershipListingReport": "reporting:read",
+  "StatisticsReport": "reporting:read",
+  "WorkplaceBreakdownReport": "reporting:read",
   "SuspendedMembersReport": "crm:member:read",
 
   // Cases & Issues

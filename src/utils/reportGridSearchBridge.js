@@ -33,3 +33,14 @@ export function filterRowsByMembershipNoOrName(rows, query) {
     return no.includes(q) || name.includes(q);
   });
 }
+
+/** Statistics breakdown rows: match fee type / region name. */
+export function filterRowsByBreakdownName(rows, query) {
+  const q = String(query ?? "").trim().toLowerCase();
+  if (!q || !Array.isArray(rows)) return rows || [];
+  return rows.filter((row) =>
+    String(row?.name ?? "")
+      .toLowerCase()
+      .includes(q),
+  );
+}

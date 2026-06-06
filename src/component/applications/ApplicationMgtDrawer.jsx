@@ -11,15 +11,23 @@ import {
   Tooltip,
   Select,
   Input,
-  message
+  message,
 } from "antd";
-import { MailOutlined, EnvironmentOutlined, SearchOutlined } from "@ant-design/icons";
+import {
+  MailOutlined,
+  EnvironmentOutlined,
+  SearchOutlined,
+} from "@ant-design/icons";
 import { Link } from "react-router-dom";
 
 import MemberSearch from "../profile/MemberSearch";
 import dayjs from "dayjs";
 import axios from "axios";
-import { dateUtils, dayjsFromDateOnly } from "../../utils/Utilities";
+import {
+  calculateAgeFtn,
+  dateUtils,
+  dayjsFromDateOnly,
+} from "../../utils/Utilities";
 import CustomSelect from "../common/CustomSelect";
 import { useTableColumns } from "../../context/TableColumnsContext ";
 import MyInput from "../common/MyInput";
@@ -38,28 +46,133 @@ import { cleanPayload } from "../../utils/Utilities";
 import MyAlert from "../common/MyAlert";
 import { generatePatch } from "../../utils/Utilities";
 import { FaAngleLeft } from "react-icons/fa6";
-import { FaAngleRight } from "react-icons/fa";
+import { FaAngleRight, FaClone } from "react-icons/fa";
 import { fetchCountries } from "../../features/CountriesSlice";
 import MyFooter from "../common/MyFooter";
 import MyDatePicker1 from "../common/MyDatePicker1";
 import { getCategoryLookup } from "../../features/CategoryLookupSlice";
 import { useFilters } from "../../context/FilterContext";
-import { searchProfiles, clearResults } from '../../features/profiles/SearchProfile';
+import {
+  searchProfiles,
+  clearResults,
+} from "../../features/profiles/SearchProfile";
 import { getAllLookups } from "../../features/LookupsSlice";
 import {
   InsuranceScreen,
-  RewardsScreen
+  RewardsScreen,
 } from "../profile/IncomeProtectionTooltip";
 import debounce from "lodash.debounce";
 import { confirmRetrospectiveMembershipModal } from "../../utils/retrospectiveMembership";
 import {
   CRM_PAYMENT_FREQUENCY_OPTIONS,
-  isCreditCardPaymentType,
+  getDefaultPaymentFrequencyForPaymentMethod,
 } from "../../constants/paymentFrequency";
+import { fetchTenantTradingName } from "../../services/tenantBrandingService";
+import DuplicateProfileReview from "./DuplicateProfileReview";
 
 const baseURL = process.env.REACT_APP_PROFILE_SERVICE_URL;
 const { Search: AntdSearch } = Input;
 const { Option } = Select;
+
+const ApplicationMgtSelect = (props) => (
+  <CustomSelect showSearch sortOptions {...props} />
+);
+
+const SALARY_DEDUCTION_PAYMENT_TYPE = "Salary Deduction";
+
+const normalizeLookupMatchKey = (value) =>
+  String(value || "")
+    .trim()
+    .toLowerCase();
+
+const isWorkLocationLookupTypeName = (typeName) => {
+  const key = normalizeLookupMatchKey(typeName).replace(/\s+/g, "");
+  return key === "worklocation";
+};
+
+const getWorkLocationMatchKeys = (item) => {
+  if (!item || typeof item !== "object") return [];
+  return [
+    ...new Set(
+      [item.label, item.lookupname, item.DisplayName, item.name]
+        .filter(Boolean)
+        .map(normalizeLookupMatchKey),
+    ),
+  ];
+};
+
+const isSalaryDeductionPaymentOption = (option) =>
+  normalizeLookupMatchKey(option?.label) === "salary deduction" ||
+  normalizeLookupMatchKey(option?.value) === "salary deduction";
+
+const resolveWorkLocationProcessSalaryDeduction = (
+  locationLabel,
+  workLocationOptions,
+  rawLookups,
+  locationId = null,
+) => {
+  if (locationLabel === "Other") return false;
+
+  const labelKey = normalizeLookupMatchKey(locationLabel);
+
+  if (locationId) {
+    const id = String(locationId);
+    const fromOptionById = workLocationOptions?.find(
+      (opt) => String(opt.key || opt.value) === id,
+    );
+    if (fromOptionById) return !!fromOptionById.processSalaryDeduction;
+
+    const fromRawById = (rawLookups || []).find(
+      (item) => String(item._id || item.id) === id,
+    );
+    if (fromRawById) return !!fromRawById.processSalaryDeduction;
+
+    try {
+      const stored = localStorage.getItem("hierarchicalLookups");
+      const hierarchicalLookups = stored ? JSON.parse(stored) : [];
+      const fromHierarchy = hierarchicalLookups.find(
+        (item) =>
+          String(item.id || item._id) === id ||
+          String(item.lookup?._id) === id,
+      );
+      if (fromHierarchy) return !!fromHierarchy.processSalaryDeduction;
+    } catch {
+      // ignore parse errors
+    }
+  }
+
+  if (!labelKey) return false;
+
+  const fromOptions = workLocationOptions?.find((opt) =>
+    getWorkLocationMatchKeys(opt).includes(labelKey),
+  );
+  if (fromOptions) return !!fromOptions.processSalaryDeduction;
+
+  const fromRaw = (rawLookups || []).find((item) => {
+    const type =
+      item.lookuptypeName || item.lookuptypeId?.lookuptype || item.type || "";
+    if (!isWorkLocationLookupTypeName(type)) return false;
+    return getWorkLocationMatchKeys(item).includes(labelKey);
+  });
+  if (fromRaw) return !!fromRaw.processSalaryDeduction;
+
+  try {
+    const stored = localStorage.getItem("hierarchicalLookups");
+    const hierarchicalLookups = stored ? JSON.parse(stored) : [];
+    const fromHierarchy = hierarchicalLookups.find((item) => {
+      const type = item.type || item.lookuptypeName || "";
+      const isWorkLoc =
+        type === "workLocation" || isWorkLocationLookupTypeName(type);
+      if (!isWorkLoc) return false;
+      return getWorkLocationMatchKeys(item).includes(labelKey);
+    });
+    if (fromHierarchy) return !!fromHierarchy.processSalaryDeduction;
+  } catch {
+    // ignore parse errors
+  }
+
+  return false;
+};
 
 /** Product ids used for conditional retired / student fields (policy service products). */
 const RETIRED_MEMBERSHIP_CATEGORY_ID = "68dae699c5b15073d66b892c";
@@ -67,10 +180,7 @@ const STUDENT_MEMBERSHIP_CATEGORY_ID = "68dae699c5b15073d66b892d";
 
 function membershipCategoryCompareKey(s) {
   if (s == null || s === "") return "";
-  return String(s)
-    .trim()
-    .toLowerCase()
-    .replace(/\s+/g, " ");
+  return String(s).trim().toLowerCase().replace(/\s+/g, " ");
 }
 
 /** Normalize API/profile membership category to a string (id, name, or plain string). */
@@ -139,13 +249,13 @@ function normalizeMembershipCategoryToLabel(raw, categoryData) {
   }
 
   const byId = categoryData.find(
-    (o) => String(o.value) === str || String(o.key) === str
+    (o) => String(o.value) === str || String(o.key) === str,
   );
   if (byId?.label) return byId.label;
 
   const key = membershipCategoryCompareKey(str);
   const byLabel = categoryData.find(
-    (o) => o.label && membershipCategoryCompareKey(o.label) === key
+    (o) => o.label && membershipCategoryCompareKey(o.label) === key,
   );
   if (byLabel?.label) return byLabel.label;
 
@@ -164,14 +274,14 @@ function membershipCategoryLabelToId(labelOrId, categoryData) {
 
   const key = membershipCategoryCompareKey(str);
   const byLabel = categoryData.find(
-    (o) => o.label && membershipCategoryCompareKey(o.label) === key
+    (o) => o.label && membershipCategoryCompareKey(o.label) === key,
   );
   if (byLabel != null) {
     return String(byLabel.value ?? byLabel.key ?? "");
   }
 
   const byId = categoryData.find(
-    (o) => String(o.value) === str || String(o.key) === str
+    (o) => String(o.value) === str || String(o.key) === str,
   );
   if (byId != null) {
     return String(byId.value ?? byId.key ?? str);
@@ -183,12 +293,48 @@ function membershipCategoryLabelToId(labelOrId, categoryData) {
 function membershipCategoryMatchesProductId(
   storedValue,
   productId,
-  categoryData
+  categoryData,
 ) {
   if (!storedValue || !productId) return false;
   if (String(storedValue).trim() === productId) return true;
   const id = membershipCategoryLabelToId(storedValue, categoryData);
   return id === productId;
+}
+
+function isReducedRateMembershipCategory(storedValue, categoryData) {
+  const label = normalizeMembershipCategoryToLabel(storedValue, categoryData);
+  const key = membershipCategoryCompareKey(label);
+  if (!key) return false;
+  if (key.includes("retired associate")) return false;
+  if (
+    key.includes("affiliate") &&
+    (key.includes("non-practicing") || key.includes("non practicing"))
+  ) {
+    return true;
+  }
+  if (key.startsWith("associate")) return true;
+  if (
+    (key.includes("short-term") || key.includes("short term")) &&
+    key.includes("relief")
+  ) {
+    return true;
+  }
+  return false;
+}
+
+function confirmReducedRateMembershipCategoryModal() {
+  return new Promise((resolve) => {
+    Modal.confirm({
+      title: "Membership Category Confirmation",
+      content:
+        "You have selected a reduced-rate membership category. Please ensure you meet the eligibility criteria, as this category may provide different benefits and entitlements than a full membership.\n\nAre you sure you want to continue?",
+      okText: "Yes, continue",
+      cancelText: "Cancel",
+      centered: true,
+      onOk: () => resolve(true),
+      onCancel: () => resolve(false),
+    });
+  });
 }
 
 /** Map API discipline/study location (id, { _id }, or label) to canonical lookup label for selects. */
@@ -206,13 +352,13 @@ function normalizeLookupOptionToLabel(raw, options) {
   }
 
   const byId = options.find(
-    (o) => String(o.value) === str || String(o.key) === str
+    (o) => String(o.value) === str || String(o.key) === str,
   );
   if (byId?.label) return byId.label;
 
   const key = membershipCategoryCompareKey(str);
   const byLabel = options.find(
-    (o) => o.label && membershipCategoryCompareKey(o.label) === key
+    (o) => o.label && membershipCategoryCompareKey(o.label) === key,
   );
   if (byLabel?.label) return byLabel.label;
 
@@ -223,7 +369,7 @@ function normalizeLookupOptionToLabel(raw, options) {
 function getNavApplicationRowId(app) {
   if (app == null) return "";
   return String(
-    app.applicationId ?? app.ApplicationId ?? app._id ?? app.id ?? ""
+    app.applicationId ?? app.ApplicationId ?? app._id ?? app.id ?? "",
   );
 }
 
@@ -233,7 +379,7 @@ function ApplicationMgtDrawer({
   title = "Registration Request",
 }) {
   const { application, loading } = useSelector(
-    (state) => state.applicationDetails
+    (state) => state.applicationDetails,
   );
 
   const {
@@ -249,6 +395,7 @@ function ApplicationMgtDrawer({
     secondarySectionOptions,
     studyLocationOptions,
     disciplineOptions,
+    youthForumOptions,
     countryOptions,
     lookups: lookupsRaw,
     lookupsloading,
@@ -265,10 +412,19 @@ function ApplicationMgtDrawer({
     if (!emailConflictData?.hasConflict) return null;
 
     return (
-      <div className="p-3 w-60" style={{ width: '60%', backgroundColor: "#fef9c6", borderLeft: '5px solid #edb301' }}>
+      <div
+        className="p-3 w-60"
+        style={{
+          width: "60%",
+          backgroundColor: "#fef9c6",
+          borderLeft: "5px solid #edb301",
+        }}
+      >
         <div className="font-monospace">
-          <div className="text-danger fw-bold" style={{ color: '#772400' }}>Action Required: Email Conflict</div>
-          <div style={{ color: '#9E5600' }}>{emailConflictData.message}</div>
+          <div className="text-danger fw-bold" style={{ color: "#772400" }}>
+            Action Required: Email Conflict
+          </div>
+          <div style={{ color: "#9E5600" }}>{emailConflictData.message}</div>
         </div>
       </div>
     );
@@ -278,10 +434,24 @@ function ApplicationMgtDrawer({
     open: false,
     type: null, // 'approve' or 'reject'
   });
-  const [query, setQuery] = useState('');
-  const { profileSearchData } = useSelector(
-    (state) => state.searchProfile
-  );
+  const [duplicateReviewOpen, setDuplicateReviewOpen] = useState(false);
+  const [duplicateReviewAutoRun, setDuplicateReviewAutoRun] = useState(false);
+
+  const duplicateReviewStatus =
+    application?.personalDetails?.duplicateReview?.status ||
+    application?.duplicateReview?.status ||
+    "NOT_CHECKED";
+  const openDuplicateReviewDrawer = (autoRun = false) => {
+    setDuplicateReviewAutoRun(autoRun);
+    setDuplicateReviewOpen(true);
+  };
+  const duplicateReviewPending =
+    duplicateReviewStatus === "POTENTIAL_MATCH" ||
+    duplicateReviewStatus === "NOT_CHECKED";
+  const isPotentialDuplicate =
+    !!application?.personalDetails?.duplicateDetection?.isPotentialDuplicate;
+  const [query, setQuery] = useState("");
+  const { profileSearchData } = useSelector((state) => state.searchProfile);
   console.log("profileSearchData", profileSearchData);
   useEffect(() => {
     // Setup code runs on mount
@@ -308,7 +478,7 @@ function ApplicationMgtDrawer({
     console.log("Clearing search and form");
 
     // Clear search state
-    setQuery('');
+    setQuery("");
     dispatch(clearResults());
 
     // Clear selected member
@@ -327,6 +497,7 @@ function ApplicationMgtDrawer({
   const [selectedMember, setSelectedMember] = useState(null);
   const [addressSearchValue, setAddressSearchValue] = useState("");
   const [recruiterSearchValue, setRecruiterSearchValue] = useState("");
+  const [tenantTradeName, setTenantTradeName] = useState("");
   const [searchParams] = useSearchParams();
   const appIdFromUrl =
     searchParams.get("applicationId") || searchParams.get("id") || "";
@@ -334,10 +505,10 @@ function ApplicationMgtDrawer({
   /** Edit mode follows URL only so "new application" clears reliably (no stale location.state). */
   const isEdit = Boolean(appIdFromUrl || draftIdFromUrl);
   const { applications, applicationsLoading } = useSelector(
-    (state) => state.applications
+    (state) => state.applications,
   );
   const filteredApplications = useSelector(
-    (state) => state.applicationWithFilter?.applications || []
+    (state) => state.applicationWithFilter?.applications || [],
   );
 
   const applicationsForNav = useMemo(() => {
@@ -348,11 +519,10 @@ function ApplicationMgtDrawer({
         appIdFromUrl ||
         application?.applicationId ||
         application?.ApplicationId ||
-        ""
+        "",
     );
     const listContains = (list, id) =>
-      id &&
-      list.some((row) => getNavApplicationRowId(row) === String(id));
+      id && list.some((row) => getNavApplicationRowId(row) === String(id));
     if (urlKey && listContains(fromFilter, urlKey)) return fromFilter;
     if (urlKey && listContains(fromLegacy, urlKey)) return fromLegacy;
     if (fromFilter.length) return fromFilter;
@@ -385,7 +555,8 @@ function ApplicationMgtDrawer({
         forename: searchResult?.personalInfo?.forename || "",
         gender: searchResult?.personalInfo?.gender || "",
         dateOfBirth: toDayJS(searchResult?.personalInfo?.dateOfBirth),
-        countryPrimaryQualification: searchResult?.personalInfo?.countryPrimaryQualification || "",
+        countryPrimaryQualification:
+          searchResult?.personalInfo?.countryPrimaryQualification || "",
       },
       contactInfo: {
         preferredAddress: searchResult?.contactInfo?.preferredAddress || "",
@@ -394,7 +565,8 @@ function ApplicationMgtDrawer({
         buildingOrHouse: searchResult?.contactInfo?.buildingOrHouse || "",
         streetOrRoad: searchResult?.contactInfo?.streetOrRoad || "",
         areaOrTown: searchResult?.contactInfo?.areaOrTown || "",
-        countyCityOrPostCode: searchResult?.contactInfo?.countyCityOrPostCode || "",
+        countyCityOrPostCode:
+          searchResult?.contactInfo?.countyCityOrPostCode || "",
         country: searchResult?.contactInfo?.country || "",
         mobileNumber: searchResult?.contactInfo?.mobileNumber || "",
         telephoneNumber: searchResult?.contactInfo?.telephoneNumber || "",
@@ -404,20 +576,27 @@ function ApplicationMgtDrawer({
       },
       professionalDetails: {
         workLocation: searchResult?.professionalDetails?.workLocation || "",
-        otherWorkLocation: searchResult?.professionalDetails?.otherWorkLocation || "",
+        otherWorkLocation:
+          searchResult?.professionalDetails?.otherWorkLocation || "",
         grade: searchResult?.professionalDetails?.grade || "",
         otherGrade: searchResult?.professionalDetails?.otherGrade || "",
         nmbiNumber: searchResult?.professionalDetails?.nmbiNumber || "",
         nurseType: searchResult?.professionalDetails?.nurseType || null,
-        nursingAdaptationProgramme: searchResult?.professionalDetails?.nursingAdaptationProgramme || false,
+        nursingAdaptationProgramme:
+          searchResult?.professionalDetails?.nursingAdaptationProgramme ||
+          false,
         region: searchResult?.professionalDetails?.region || "",
         branch: searchResult?.professionalDetails?.branch || "",
-        isRetired: searchResult?.professionalDetails?.retiredDate ? true : false,
+        isRetired: searchResult?.professionalDetails?.retiredDate
+          ? true
+          : false,
         retiredDate: toDayJS(searchResult?.professionalDetails?.retiredDate),
         pensionNo: searchResult?.professionalDetails?.pensionNo || "",
         studyLocation: searchResult?.professionalDetails?.studyLocation || "",
         discipline: searchResult?.professionalDetails?.discipline || "",
-        graduationDate: toDayJS(searchResult?.professionalDetails?.graduationDate),
+        graduationDate: toDayJS(
+          searchResult?.professionalDetails?.graduationDate,
+        ),
         startDate: toDayJS(searchResult?.professionalDetails?.startDate),
       },
       subscriptionDetails: {
@@ -427,25 +606,37 @@ function ApplicationMgtDrawer({
           searchResult?.subscription?.paymentFrequency ||
           "Monthly",
         payrollNo: searchResult?.professionalDetails?.payrollNo || "",
-        membershipStatus: searchResult?.additionalInformation?.membershipStatus || "",
-        otherIrishTradeUnion: searchResult?.additionalInformation?.otherIrishTradeUnion || false,
-        otherIrishTradeUnionName: searchResult?.additionalInformation?.otherIrishTradeUnionName || "",
+        membershipStatus:
+          searchResult?.additionalInformation?.membershipStatus || "",
+        otherIrishTradeUnion:
+          searchResult?.additionalInformation?.otherIrishTradeUnion || false,
+        otherIrishTradeUnionName:
+          searchResult?.additionalInformation?.otherIrishTradeUnionName || "",
         otherScheme: searchResult?.additionalInformation?.otherScheme || false,
         recuritedBy: searchResult?.recruitmentDetails?.recuritedBy || "",
-        recuritedByMembershipNo: searchResult?.recruitmentDetails?.recuritedByMembershipNo || "",
+        recuritedByMembershipNo:
+          searchResult?.recruitmentDetails?.recuritedByMembershipNo || "",
         primarySection: searchResult?.professionalDetails?.primarySection || "",
-        otherPrimarySection: searchResult?.professionalDetails?.otherPrimarySection || "",
-        secondarySection: searchResult?.professionalDetails?.secondarySection || "",
-        otherSecondarySection: searchResult?.professionalDetails?.otherSecondarySection || "",
-        incomeProtectionScheme: searchResult?.cornMarket?.incomeProtectionScheme || false,
+        otherPrimarySection:
+          searchResult?.professionalDetails?.otherPrimarySection || "",
+        secondarySection:
+          searchResult?.professionalDetails?.secondarySection || "",
+        otherSecondarySection:
+          searchResult?.professionalDetails?.otherSecondarySection || "",
+        incomeProtectionScheme:
+          searchResult?.cornMarket?.incomeProtectionScheme || false,
         inmoRewards: searchResult?.cornMarket?.inmoRewards || false,
-        valueAddedServices: searchResult?.preferences?.valueAddedServices || false,
-        termsAndConditions: searchResult?.preferences?.termsAndConditions || false,
+        valueAddedServices:
+          searchResult?.preferences?.valueAddedServices || false,
+        termsAndConditions:
+          searchResult?.preferences?.termsAndConditions || false,
         membershipCategory: extractMembershipCategoryFromProfile(searchResult),
-        confirmedRecruiterProfileId: searchResult?.recruitmentDetails?.confirmedRecruiterProfileId || null,
+        confirmedRecruiterProfileId:
+          searchResult?.recruitmentDetails?.confirmedRecruiterProfileId || null,
         dateJoined: toDayJS(searchResult?.firstJoinedDate || new Date()),
         submissionDate: toDayJS(searchResult?.submissionDate),
-        exclusiveDiscountsAndOffers: searchResult?.cornMarket?.exclusiveDiscountsAndOffers || false,
+        exclusiveDiscountsAndOffers:
+          searchResult?.cornMarket?.exclusiveDiscountsAndOffers || false,
       },
     };
   };
@@ -453,8 +644,15 @@ function ApplicationMgtDrawer({
   // Add this useEffect after your existing useEffects
   useEffect(() => {
     // Auto-populate form when search results come back
-    if (selectedMember && profileSearchData?.results && profileSearchData.results.length > 0) {
-      console.log("Auto-populating form with search result:", profileSearchData.results[0]);
+    if (
+      selectedMember &&
+      profileSearchData?.results &&
+      profileSearchData.results.length > 0
+    ) {
+      console.log(
+        "Auto-populating form with search result:",
+        profileSearchData.results[0],
+      );
 
       // Take the first result from search
       const firstResult = profileSearchData.results[0];
@@ -498,29 +696,43 @@ function ApplicationMgtDrawer({
         appIdFromUrl ||
         application?.applicationId ||
         application?.ApplicationId ||
-        ""
+        "",
     );
     if (!urlOrAppKey) {
       setIndex(undefined);
       return;
     }
     const found = applicationsForNav.findIndex(
-      (app) => getNavApplicationRowId(app) === urlOrAppKey
+      (app) => getNavApplicationRowId(app) === urlOrAppKey,
     );
     setIndex(found === -1 ? undefined : found + 1);
-  }, [
-    open,
-    application,
-    applicationsForNav,
-    appIdFromUrl,
-    draftIdFromUrl,
-  ]);
+  }, [open, application, applicationsForNav, appIdFromUrl, draftIdFromUrl]);
 
   // Keep form stable while switching records; only block on the very first load.
   const showLoader = loading && !application;
   const { lookupsForSelect, isDisable, disableFtn } = useTableColumns();
 
   const dispatch = useDispatch();
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const name = await fetchTenantTradingName();
+        if (!cancelled && name) setTenantTradeName(name);
+      } catch {
+        /* optional tenant branding */
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  useEffect(() => {
+    const fromApi = String(application?.tradingName || "").trim();
+    if (fromApi) setTenantTradeName(fromApi);
+  }, [application?.tradingName]);
 
   useEffect(() => {
     if (draftIdFromUrl || appIdFromUrl) return;
@@ -565,7 +777,7 @@ function ApplicationMgtDrawer({
               edit: true,
             }),
           },
-          { replace: true }
+          { replace: true },
         );
         return;
       }
@@ -583,7 +795,7 @@ function ApplicationMgtDrawer({
             edit: true,
           }),
         },
-        { replace: true }
+        { replace: true },
       );
       return;
     }
@@ -591,7 +803,7 @@ function ApplicationMgtDrawer({
   }, [application, loading, navigate, searchParams]);
 
   const { countriesOptions, countriesData, loadingC, errorC } = useSelector(
-    (state) => state.countries
+    (state) => state.countries,
   );
   console.log(countriesOptions, "countriesOptions");
   const nextPrevData = { total: applicationsForNav?.length || 0 };
@@ -608,7 +820,7 @@ function ApplicationMgtDrawer({
         forename: apiData?.personalDetails?.personalInfo?.forename || "",
         gender: apiData?.personalDetails?.personalInfo?.gender || "",
         dateOfBirth: toDayJS(
-          apiData?.personalDetails?.personalInfo?.dateOfBirth
+          apiData?.personalDetails?.personalInfo?.dateOfBirth,
         ),
         countryPrimaryQualification:
           apiData?.personalDetails?.personalInfo?.countryPrimaryQualification ||
@@ -637,6 +849,13 @@ function ApplicationMgtDrawer({
       },
       professionalDetails: {
         workLocation: apiData?.professionalDetails?.workLocation,
+        processSalaryDeduction:
+          apiData?.professionalDetails?.processSalaryDeduction ??
+          resolveWorkLocationProcessSalaryDeduction(
+            apiData?.professionalDetails?.workLocation,
+            workLocationOptions,
+            lookupsRaw,
+          ),
         otherWorkLocation:
           apiData?.professionalDetails?.otherWorkLocation || "",
         grade: apiData?.professionalDetails?.grade || "",
@@ -671,6 +890,10 @@ function ApplicationMgtDrawer({
           apiData?.subscriptionDetails?.paymentFrequency || "Monthly",
         payrollNo: apiData?.subscriptionDetails?.payrollNo || "",
         membershipStatus: apiData?.subscriptionDetails?.membershipStatus || "",
+        previousMembershipNo:
+          apiData?.subscriptionDetails?.previousMembershipNo || "",
+        joinYouthForum: apiData?.subscriptionDetails?.joinYouthForum ?? null,
+        youthForum: apiData?.subscriptionDetails?.youthForum || "",
         otherIrishTradeUnion:
           apiData?.subscriptionDetails?.otherIrishTradeUnion || false,
         otherIrishTradeUnionName:
@@ -696,7 +919,7 @@ function ApplicationMgtDrawer({
         confirmedRecruiterProfileId:
           apiData?.subscriptionDetails?.confirmedRecruiterProfileId || null,
         dateJoined: toDayJS(
-          apiData?.subscriptionDetails?.dateJoined || new Date()
+          apiData?.subscriptionDetails?.dateJoined || new Date(),
         ),
         submissionDate: toDayJS(apiData?.subscriptionDetails?.submissionDate),
         exclusiveDiscountsAndOffers:
@@ -706,7 +929,7 @@ function ApplicationMgtDrawer({
   };
 
   const { categoryData, error, currentCategoryId } = useSelector(
-    (state) => state.categoryLookup
+    (state) => state.categoryLookup,
   );
   console.log(categoryData, "categoryData");
 
@@ -719,8 +942,7 @@ function ApplicationMgtDrawer({
       ...prepared,
       subscriptionDetails: {
         ...prepared.subscriptionDetails,
-        membershipCategory:
-          label !== "" ? label : raw,
+        membershipCategory: label !== "" ? label : raw,
       },
     };
   };
@@ -774,9 +996,7 @@ function ApplicationMgtDrawer({
     };
 
     setInfData((prev) => patchMembershipCategory(prev));
-    setOriginalData((prev) =>
-      prev ? patchMembershipCategory(prev) : prev
-    );
+    setOriginalData((prev) => (prev ? patchMembershipCategory(prev) : prev));
   }, [categoryData, application, isEdit, profileSearchData]);
 
   useEffect(() => {
@@ -789,11 +1009,11 @@ function ApplicationMgtDrawer({
       const pd = prev.professionalDetails;
       const dNorm = normalizeLookupOptionToLabel(
         pd.discipline,
-        disciplineOptions
+        disciplineOptions,
       );
       const slNorm = normalizeLookupOptionToLabel(
         pd.studyLocation,
-        studyLocationOptions
+        studyLocationOptions,
       );
       if (dNorm === pd.discipline && slNorm === pd.studyLocation) return prev;
       return {
@@ -808,7 +1028,7 @@ function ApplicationMgtDrawer({
 
     setInfData((prev) => patchDisciplineAndStudyLocation(prev));
     setOriginalData((prev) =>
-      prev ? patchDisciplineAndStudyLocation(prev) : prev
+      prev ? patchDisciplineAndStudyLocation(prev) : prev,
     );
   }, [disciplineOptions, studyLocationOptions, application, isEdit]);
 
@@ -837,7 +1057,13 @@ function ApplicationMgtDrawer({
     }
   }, [hierarchyData, workLocationLoading]);
 
-  const SectionHeader = ({ icon, title, backgroundColor, iconBackground, subTitle }) => (
+  const SectionHeader = ({
+    icon,
+    title,
+    backgroundColor,
+    iconBackground,
+    subTitle,
+  }) => (
     <Row gutter={18} className="p-3 mb-3 rounded" style={{ backgroundColor }}>
       <Col span={24}>
         <div className="d-flex align-items-center">
@@ -925,7 +1151,7 @@ function ApplicationMgtDrawer({
     });
 
     const contactInfoChanged = contactInfoFields.some(
-      (field) => original.contactInfo?.[field] !== current.contactInfo?.[field]
+      (field) => original.contactInfo?.[field] !== current.contactInfo?.[field],
     );
 
     return personalInfoChanged || contactInfoChanged;
@@ -985,6 +1211,7 @@ function ApplicationMgtDrawer({
     },
     professionalDetails: {
       workLocation: "",
+      processSalaryDeduction: false,
       otherWorkLocation: "",
       grade: "",
       otherGrade: "",
@@ -999,7 +1226,7 @@ function ApplicationMgtDrawer({
       studyLocation: "",
       discipline: "",
       graduationDate: null,
-      startDate: null
+      startDate: null,
     },
     subscriptionDetails: {
       membershipCategory: "",
@@ -1007,6 +1234,9 @@ function ApplicationMgtDrawer({
       paymentFrequency: "Monthly",
       payrollNo: "",
       membershipStatus: "",
+      previousMembershipNo: "",
+      joinYouthForum: null,
+      youthForum: "",
       otherIrishTradeUnion: null,
       otherScheme: null,
       recuritedBy: "",
@@ -1030,6 +1260,50 @@ function ApplicationMgtDrawer({
 
   const [InfData, setInfData] = useState(inputValue);
 
+  const workLocationAllowsSalaryDeduction = useMemo(
+    () =>
+      resolveWorkLocationProcessSalaryDeduction(
+        InfData.professionalDetails?.workLocation,
+        workLocationOptions,
+        lookupsRaw,
+      ),
+    [
+      InfData.professionalDetails?.workLocation,
+      workLocationOptions,
+      lookupsRaw,
+    ],
+  );
+
+  const filteredPaymentTypeOptions = useMemo(() => {
+    if (workLocationAllowsSalaryDeduction) return paymentTypeOptions;
+    return paymentTypeOptions.filter(
+      (opt) => !isSalaryDeductionPaymentOption(opt),
+    );
+  }, [paymentTypeOptions, workLocationAllowsSalaryDeduction]);
+
+  useEffect(() => {
+    if (lookupsloading) return;
+    if (
+      InfData.subscriptionDetails?.paymentType !==
+        SALARY_DEDUCTION_PAYMENT_TYPE ||
+      workLocationAllowsSalaryDeduction
+    ) {
+      return;
+    }
+    setInfData((prev) => ({
+      ...prev,
+      subscriptionDetails: {
+        ...prev.subscriptionDetails,
+        paymentType: "",
+        payrollNo: "",
+      },
+    }));
+  }, [
+    lookupsloading,
+    workLocationAllowsSalaryDeduction,
+    InfData.subscriptionDetails?.paymentType,
+  ]);
+
   useEffect(() => {
     if (appIdFromUrl || draftIdFromUrl) return;
     setInfData(inputValue);
@@ -1038,33 +1312,112 @@ function ApplicationMgtDrawer({
     setErrors({});
   }, [appIdFromUrl, draftIdFromUrl]);
 
-  const handleLocationChange = (selectedLookupId) => {
+  useEffect(() => {
+    if (lookupsloading || !InfData.professionalDetails?.workLocation) return;
+    const resolved = resolveWorkLocationProcessSalaryDeduction(
+      InfData.professionalDetails.workLocation,
+      workLocationOptions,
+      lookupsRaw,
+    );
+    if (resolved === !!InfData.professionalDetails.processSalaryDeduction) {
+      return;
+    }
+    setInfData((prev) => ({
+      ...prev,
+      professionalDetails: {
+        ...prev.professionalDetails,
+        processSalaryDeduction: resolved,
+      },
+    }));
+  }, [
+    lookupsloading,
+    InfData.professionalDetails?.workLocation,
+    workLocationOptions,
+    lookupsRaw,
+  ]);
+
+  const handleLocationChange = (
+    selectedLookupIdOrLabel,
+    processSalaryDeductionOverride,
+  ) => {
     const storedLookups = localStorage.getItem("hierarchicalLookups");
     const hierarchicalLookups = storedLookups ? JSON.parse(storedLookups) : [];
+    const labelKey = normalizeLookupMatchKey(selectedLookupIdOrLabel);
 
-    const foundObject = hierarchicalLookups.find(
-      (item) =>
-        item.id === selectedLookupId ||
-        item.lookup?._id === selectedLookupId
+    let matchedOption = workLocationOptions.find(
+      (opt) => String(opt.key || opt.value) === String(selectedLookupIdOrLabel),
     );
+    if (!matchedOption && labelKey) {
+      matchedOption = workLocationOptions.find((opt) =>
+        getWorkLocationMatchKeys(opt).includes(labelKey),
+      );
+    }
 
-    if (foundObject) {
-      const isSimple = foundObject.type === "workLocation";
-      setInfData((prevData) => ({
-        ...prevData,
-        professionalDetails: {
-          ...prevData.professionalDetails,
-          workLocation: isSimple
-            ? foundObject.name
-            : foundObject?.lookup?.lookupname,
-          region: isSimple
-            ? foundObject.branch?.region?.name || foundObject.region?.name || ""
-            : foundObject.region?.lookupname || "",
-          branch: isSimple
-            ? foundObject.branch?.name || ""
-            : foundObject.branch?.lookupname || "",
-        },
-      }));
+    const selectedLookupId =
+      matchedOption?.key || matchedOption?.value || selectedLookupIdOrLabel;
+
+    let foundObject = hierarchicalLookups.find(
+      (item) =>
+        String(item.id || item._id) === String(selectedLookupId) ||
+        String(item.lookup?._id) === String(selectedLookupId),
+    );
+    if (!foundObject && labelKey) {
+      foundObject = hierarchicalLookups.find((item) => {
+        const type = item.type || item.lookuptypeName || "";
+        const isWorkLoc =
+          type === "workLocation" || isWorkLocationLookupTypeName(type);
+        return isWorkLoc && getWorkLocationMatchKeys(item).includes(labelKey);
+      });
+    }
+
+    const workLocationLabel =
+      matchedOption?.label ||
+      (foundObject?.type === "workLocation"
+        ? foundObject.name
+        : foundObject?.lookup?.lookupname) ||
+      (typeof selectedLookupIdOrLabel === "string" ? selectedLookupIdOrLabel : "");
+
+    if (foundObject || matchedOption || workLocationLabel) {
+      const isSimple = foundObject?.type === "workLocation";
+      setInfData((prevData) => {
+        const allowsSalaryDeduction =
+          typeof processSalaryDeductionOverride === "boolean"
+            ? processSalaryDeductionOverride
+            : resolveWorkLocationProcessSalaryDeduction(
+                workLocationLabel,
+                workLocationOptions,
+                lookupsRaw,
+                selectedLookupId,
+              );
+        const next = {
+          ...prevData,
+          professionalDetails: {
+            ...prevData.professionalDetails,
+            workLocation: workLocationLabel,
+            processSalaryDeduction: allowsSalaryDeduction,
+            region: isSimple
+              ? foundObject?.branch?.region?.name ||
+                foundObject?.region?.name ||
+                ""
+              : foundObject?.region?.lookupname || "",
+            branch: isSimple
+              ? foundObject?.branch?.name || ""
+              : foundObject?.branch?.lookupname || "",
+          },
+        };
+        if (
+          !allowsSalaryDeduction &&
+          next.subscriptionDetails?.paymentType ===
+            SALARY_DEDUCTION_PAYMENT_TYPE
+        ) {
+          next.subscriptionDetails = {
+            ...next.subscriptionDetails,
+            paymentType: "",
+            payrollNo: "",
+          };
+        }
+        return next;
+      });
     }
   };
 
@@ -1089,6 +1442,7 @@ function ApplicationMgtDrawer({
       "countryPrimaryQualification",
       "otherIrishTradeUnion",
       "otherScheme",
+      "joinYouthForum",
       "membershipStatus",
       "nursingAdaptationProgramme",
     ];
@@ -1107,12 +1461,14 @@ function ApplicationMgtDrawer({
       membershipCategory: "Membership Category",
       workLocation: "Work Location",
       grade: "Grade",
-      paymentType: "Payment Type",
+      paymentType: "Payment Method",
       termsAndConditions: "Terms and Conditions",
       preferredAddress: "Preferred Address",
       countryPrimaryQualification: "Country Primary Qualification",
       otherIrishTradeUnion: "Other Irish Trade Union",
       otherScheme: "Other Scheme",
+      joinYouthForum: "Youth Forum",
+      youthForum: "Youth Forum selection",
       nurseType: "Nurse Type",
       membershipStatus: "Membership Status",
       nursingAdaptationProgramme: "Nursing Adaptation Programme",
@@ -1142,6 +1498,8 @@ function ApplicationMgtDrawer({
       gender: ["personalInfo", "gender"],
       otherIrishTradeUnion: ["subscriptionDetails", "otherIrishTradeUnion"],
       otherScheme: ["subscriptionDetails", "otherScheme"],
+      joinYouthForum: ["subscriptionDetails", "joinYouthForum"],
+      youthForum: ["subscriptionDetails", "youthForum"],
       countryPrimaryQualification: [
         "personalInfo",
         "countryPrimaryQualification",
@@ -1169,23 +1527,49 @@ function ApplicationMgtDrawer({
       otherSecondarySection: ["subscriptionDetails", "otherSecondarySection"],
       nurseType: ["professionalDetails", "nurseType"],
       membershipStatus: ["subscriptionDetails", "membershipStatus"],
-      nursingAdaptationProgramme: ["professionalDetails", "nursingAdaptationProgramme"],
+      nursingAdaptationProgramme: [
+        "professionalDetails",
+        "nursingAdaptationProgramme",
+      ],
     };
 
     const newErrors = {};
     const missingFieldNames = [];
+    const requiresTradeUnionQuestions = ["new", "graduate"].includes(
+      InfData?.subscriptionDetails?.membershipStatus,
+    );
+    const memberAge = calculateAgeFtn(InfData?.personalInfo?.dateOfBirth);
+    const requiresYouthForumQuestions =
+      memberAge !== "" && memberAge !== null && memberAge < 35;
 
     requiredFields.forEach((field) => {
+      if (
+        (field === "otherIrishTradeUnion" || field === "otherScheme") &&
+        !requiresTradeUnionQuestions
+      ) {
+        return;
+      }
+      if (field === "joinYouthForum" && !requiresYouthForumQuestions) {
+        return;
+      }
+
       const [section, key] = fieldMap[field] || [];
       const value = section ? InfData[section]?.[key] : null;
 
-      const booleanAllowed = ["otherIrishTradeUnion", "otherScheme", "nursingAdaptationProgramme"];
+      const booleanAllowed = [
+        "otherIrishTradeUnion",
+        "otherScheme",
+        "joinYouthForum",
+        "nursingAdaptationProgramme",
+      ];
 
       if (
         value === undefined ||
         value === null ||
         (typeof value === "string" && value.trim() === "") ||
-        (typeof value === "boolean" && value === false && !booleanAllowed.includes(field))
+        (typeof value === "boolean" &&
+          value === false &&
+          !booleanAllowed.includes(field))
       ) {
         newErrors[field] = "This field is required";
         missingFieldNames.push(fieldLabels[field] || field);
@@ -1232,18 +1616,31 @@ function ApplicationMgtDrawer({
         missingFieldNames.push(fieldLabels.otherPrimarySection);
       }
     }
-    if (InfData.subscriptionDetails?.otherIrishTradeUnion === true) {
+    if (
+      requiresTradeUnionQuestions &&
+      InfData.subscriptionDetails?.otherIrishTradeUnion === true
+    ) {
       if (!InfData.subscriptionDetails?.otherIrishTradeUnionName?.trim()) {
-        newErrors.otherIrishTradeUnionName = "Union name is required when 'Yes' is selected";
+        newErrors.otherIrishTradeUnionName =
+          "Union name is required when 'Yes' is selected";
         missingFieldNames.push(fieldLabels.otherIrishTradeUnionName);
       }
+    }
+
+    if (
+      requiresYouthForumQuestions &&
+      InfData.subscriptionDetails?.joinYouthForum === true &&
+      !InfData.subscriptionDetails?.youthForum?.trim()
+    ) {
+      newErrors.youthForum = "Please select a Youth Forum";
+      missingFieldNames.push(fieldLabels.youthForum);
     }
 
     if (
       membershipCategoryMatchesProductId(
         InfData?.subscriptionDetails?.membershipCategory,
         RETIRED_MEMBERSHIP_CATEGORY_ID,
-        categoryData
+        categoryData,
       )
     ) {
       if (!InfData.professionalDetails?.retiredDate) {
@@ -1260,7 +1657,7 @@ function ApplicationMgtDrawer({
       membershipCategoryMatchesProductId(
         InfData?.subscriptionDetails?.membershipCategory,
         STUDENT_MEMBERSHIP_CATEGORY_ID,
-        categoryData
+        categoryData,
       )
     ) {
       if (!InfData.professionalDetails?.studyLocation?.trim()) {
@@ -1277,7 +1674,9 @@ function ApplicationMgtDrawer({
       }
     }
 
-    if (InfData.subscriptionDetails.paymentType === "Salary Deduction") {
+    if (
+      InfData.subscriptionDetails.paymentType === SALARY_DEDUCTION_PAYMENT_TYPE
+    ) {
       if (!InfData.subscriptionDetails.payrollNo?.trim()) {
         newErrors.payrollNo = "Payroll number is required";
         missingFieldNames.push(fieldLabels.payrollNo);
@@ -1290,13 +1689,19 @@ function ApplicationMgtDrawer({
         missingFieldNames.push(fieldLabels.otherSecondarySection);
       }
     }
-    if (InfData.professionalDetails?.nursingAdaptationProgramme === true) {
+    if (InfData.professionalDetails?.nursingAdaptationProgramme === false) {
       if (!InfData.professionalDetails.nmbiNumber?.trim()) {
         newErrors.nmbiNumber = "NMBI No/An Board Altranais Number is required";
         missingFieldNames.push(fieldLabels.nmbiNumber);
       }
+    }
+    if (InfData.professionalDetails?.nursingAdaptationProgramme === true) {
       const nt = InfData.professionalDetails.nurseType;
-      if (nt === undefined || nt === null || (typeof nt === "string" && nt.trim() === "")) {
+      if (
+        nt === undefined ||
+        nt === null ||
+        (typeof nt === "string" && nt.trim() === "")
+      ) {
         newErrors.nurseType = "This field is required";
         missingFieldNames.push(fieldLabels.nurseType);
       }
@@ -1412,7 +1817,7 @@ function ApplicationMgtDrawer({
       }
 
       const apiData = withMembershipCategoryLabelsForApi(
-        dateUtils.prepareForAPI(InfData)
+        dateUtils.prepareForAPI(InfData),
       );
 
       const personalPayload = cleanPayload({
@@ -1428,7 +1833,7 @@ function ApplicationMgtDrawer({
             Authorization: `Bearer ${token}`,
             "Content-Type": "application/json",
           },
-        }
+        },
       );
 
       const applicationId = personalRes?.data?.data?.applicationId;
@@ -1449,7 +1854,7 @@ function ApplicationMgtDrawer({
             Authorization: `Bearer ${token}`,
             "Content-Type": "application/json",
           },
-        }
+        },
       );
 
       const subscriptionPayload = cleanPayload({
@@ -1464,7 +1869,7 @@ function ApplicationMgtDrawer({
             Authorization: `Bearer ${token}`,
             "Content-Type": "application/json",
           },
-        }
+        },
       );
 
       if (selected.Approve) {
@@ -1474,14 +1879,14 @@ function ApplicationMgtDrawer({
             MyAlert(
               "info",
               "Approval cancelled",
-              "The application was saved. Approve from the list when you are ready."
+              "The application was saved. Approve from the list when you are ready.",
             );
           } else {
             let approvalPayload;
 
             if (isEdit && originalData) {
               const apiOriginalData = withMembershipCategoryLabelsForApi(
-                dateUtils.prepareForAPI(originalData)
+                dateUtils.prepareForAPI(originalData),
               );
               const proposedPatch = generatePatch(apiOriginalData, apiData);
               approvalPayload = {
@@ -1506,21 +1911,34 @@ function ApplicationMgtDrawer({
                   "Content-Type": "application/json",
                   Authorization: `Bearer ${token}`,
                 },
-              }
+              },
             );
 
             MyAlert(
               "success",
-              "Application submitted and approved successfully!"
+              "Application submitted and approved successfully!",
             );
           }
         } catch (approveError) {
           console.error("Approval failed:", approveError);
-          MyAlert(
-            "warning",
-            "Application submitted successfully but approval failed",
-            "The application was created but could not be automatically approved. Please approve it manually."
-          );
+          const duplicateBlocked =
+            approveError.response?.data?.code === "DUPLICATE_REVIEW_REQUIRED" ||
+            approveError.response?.data?.error?.code === "DUPLICATE_REVIEW_REQUIRED";
+          if (duplicateBlocked) {
+            MyAlert(
+              "warning",
+              "Duplicate review required",
+              approveError.response?.data?.message ||
+                "Open Duplicate Profile Review before approving this application.",
+            );
+            openDuplicateReviewDrawer(true);
+          } else {
+            MyAlert(
+              "warning",
+              "Application submitted successfully but approval failed",
+              "The application was created but could not be automatically approved. Please approve it manually.",
+            );
+          }
         }
       } else {
         MyAlert("success", "Application submitted successfully!");
@@ -1552,7 +1970,8 @@ function ApplicationMgtDrawer({
           },
           subscriptionDetails: {
             // Only preserve these specific fields
-            membershipCategory: InfData.subscriptionDetails?.membershipCategory || "",
+            membershipCategory:
+              InfData.subscriptionDetails?.membershipCategory || "",
             paymentType: InfData.subscriptionDetails?.paymentType || "",
             paymentFrequency:
               InfData.subscriptionDetails?.paymentFrequency || "Monthly",
@@ -1601,13 +2020,15 @@ function ApplicationMgtDrawer({
         // Trigger handleLocationChange to refresh region/branch if workLocation exists
         if (preservedFields.professionalDetails.workLocation) {
           setTimeout(() => {
-            handleLocationChange(preservedFields.professionalDetails.workLocation);
+            handleLocationChange(
+              preservedFields.professionalDetails.workLocation,
+            );
           }, 100);
         }
 
         MyAlert(
           "success",
-          "Application submitted successfully! Form cleared (except preserved fields) and ready for next entry."
+          "Application submitted successfully! Form cleared (except preserved fields) and ready for next entry.",
         );
       }
     } catch (error) {
@@ -1615,7 +2036,7 @@ function ApplicationMgtDrawer({
       MyAlert(
         "error",
         "Failed to submit application",
-        error?.response?.data?.error?.message || error.message
+        error?.response?.data?.error?.message || error.message,
       );
     } finally {
       setIsProcessing(false);
@@ -1628,7 +2049,6 @@ function ApplicationMgtDrawer({
   //   handleEmailBlur();
   // }, [InfData?.contactInfo?.preferredEmail]);
   const checkEmailConflict = async (email) => {
-
     if (!email || email.trim() === "") {
       setEmailConflictData(null);
       return false;
@@ -1648,13 +2068,16 @@ function ApplicationMgtDrawer({
             Authorization: `Bearer ${token}`,
             "Content-Type": "application/json",
           },
-        }
+        },
       );
 
-      if (response.data?.status === "success" && response.data.data?.status === true) {
+      if (
+        response.data?.status === "success" &&
+        response.data.data?.status === true
+      ) {
         setEmailConflictData({
           hasConflict: true,
-          message: response.data.data.message || "Email already in use"
+          message: response.data.data.message || "Email already in use",
         });
         return true;
       } else {
@@ -1679,6 +2102,9 @@ function ApplicationMgtDrawer({
       "paymentType",
       "payrollNo",
       "membershipStatus",
+      "previousMembershipNo",
+      "joinYouthForum",
+      "youthForum",
       "otherIrishTradeUnion",
       "otherIrishTradeUnionName",
       "otherScheme",
@@ -1737,7 +2163,7 @@ function ApplicationMgtDrawer({
         throw new Error("No authentication token found");
       }
       const apiData = withMembershipCategoryLabelsForApi(
-        dateUtils.prepareForAPI(InfData)
+        dateUtils.prepareForAPI(InfData),
       );
       if (!isEdit || !originalData) {
         throw new Error("Save operation requires edit mode and original data");
@@ -1749,70 +2175,69 @@ function ApplicationMgtDrawer({
       }
 
       const apiOriginalData = withMembershipCategoryLabelsForApi(
-        dateUtils.prepareForAPI(originalData)
+        dateUtils.prepareForAPI(originalData),
       );
-      const savePromises = [];
+      let savedAny = false;
+      const putHeaders = {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      };
 
-      if (applicationId && hasPersonalDetailsChanged(apiData, apiOriginalData)) {
+      if (
+        applicationId &&
+        hasPersonalDetailsChanged(apiData, apiOriginalData)
+      ) {
         const personalPayload = cleanPayload({
           personalInfo: apiData.personalInfo,
           contactInfo: apiData.contactInfo,
         });
-
-        savePromises.push(
-          axios.put(
-            `${baseURL}/personal-details/${applicationId}`,
-            personalPayload,
-            {
-              headers: {
-                "Content-Type": "application/json",
-                Authorization: `Bearer ${token}`,
-              },
-            }
-          )
+        await axios.put(
+          `${baseURL}/personal-details/${applicationId}`,
+          personalPayload,
+          { headers: putHeaders },
         );
+        savedAny = true;
       }
 
-      if (applicationId && hasProfessionalDetailsChanged(apiData, apiOriginalData)) {
+      const subscriptionChanging =
+        applicationId &&
+        hasSubscriptionDetailsChanged(apiData, apiOriginalData);
+      const professionalChanging =
+        applicationId &&
+        hasProfessionalDetailsChanged(apiData, apiOriginalData);
+      const salaryDeductionSelected =
+        apiData.subscriptionDetails?.paymentType ===
+        SALARY_DEDUCTION_PAYMENT_TYPE;
+
+      if (
+        applicationId &&
+        (professionalChanging ||
+          (subscriptionChanging && salaryDeductionSelected))
+      ) {
         const professionalPayload = cleanPayload({
           professionalDetails: apiData.professionalDetails,
         });
-
-        savePromises.push(
-          axios.put(
-            `${baseURL}/professional-details/${applicationId}`,
-            professionalPayload,
-            {
-              headers: {
-                "Content-Type": "application/json",
-                Authorization: `Bearer ${token}`,
-              },
-            }
-          )
+        await axios.put(
+          `${baseURL}/professional-details/${applicationId}`,
+          professionalPayload,
+          { headers: putHeaders },
         );
+        savedAny = true;
       }
 
-      if (applicationId && hasSubscriptionDetailsChanged(apiData, apiOriginalData)) {
+      if (subscriptionChanging) {
         const subscriptionPayload = cleanPayload({
           subscriptionDetails: apiData.subscriptionDetails,
         });
-
-        savePromises.push(
-          axios.put(
-            `${baseURL}/subscription-details/${applicationId}`,
-            subscriptionPayload,
-            {
-              headers: {
-                "Content-Type": "application/json",
-                Authorization: `Bearer ${token}`,
-              },
-            }
-          )
+        await axios.put(
+          `${baseURL}/subscription-details/${applicationId}`,
+          subscriptionPayload,
+          { headers: putHeaders },
         );
+        savedAny = true;
       }
 
-      if (savePromises.length > 0) {
-        await Promise.all(savePromises);
+      if (savedAny) {
         MyAlert("success", "Application Updated successfully!");
         setOriginalData(InfData);
       } else {
@@ -1823,7 +2248,7 @@ function ApplicationMgtDrawer({
       MyAlert(
         "error",
         "Failed to save changes",
-        error?.response?.data?.error?.message || error.message
+        error?.response?.data?.error?.message || error.message,
       );
     } finally {
       setIsProcessing(false);
@@ -1857,26 +2282,66 @@ function ApplicationMgtDrawer({
           });
         });
 
+        if (!["new", "graduate"].includes(value)) {
+          updated.subscriptionDetails.otherIrishTradeUnion = null;
+          updated.subscriptionDetails.otherScheme = null;
+          updated.subscriptionDetails.otherIrishTradeUnionName = "";
+          updated.subscriptionDetails.inmoRewards = false;
+          updated.subscriptionDetails.exclusiveDiscountsAndOffers = false;
+          updated.subscriptionDetails.incomeProtectionScheme = false;
+        }
+        if (!["rejoin", "careerBreak"].includes(value)) {
+          updated.subscriptionDetails.previousMembershipNo = "";
+        }
+
+        return updated;
+      });
+    } else if (
+      section === "subscriptionDetails" &&
+      field === "joinYouthForum"
+    ) {
+      setInfData((prev) => {
+        const updated = {
+          ...prev,
+          subscriptionDetails: {
+            ...prev.subscriptionDetails,
+            [field]: value,
+            youthForum:
+              value === true ? prev.subscriptionDetails?.youthForum : "",
+          },
+        };
+        return updated;
+      });
+    } else if (section === "subscriptionDetails" && field === "otherScheme") {
+      setInfData((prev) => {
+        const updated = {
+          ...prev,
+          subscriptionDetails: {
+            ...prev.subscriptionDetails,
+            [field]: value,
+          },
+        };
+        if (value !== false) {
+          updated.subscriptionDetails.inmoRewards = false;
+          updated.subscriptionDetails.exclusiveDiscountsAndOffers = false;
+          updated.subscriptionDetails.incomeProtectionScheme = false;
+        }
         return updated;
       });
     } else if (section === "subscriptionDetails" && field === "paymentType") {
       setInfData((prev) => {
-        const prevType = prev.subscriptionDetails?.paymentType;
         const nextSub = {
           ...prev.subscriptionDetails,
           paymentType: value,
         };
-        const isCard = isCreditCardPaymentType(value);
-        const wasCard = isCreditCardPaymentType(prevType);
-        if (isCard) {
-          nextSub.paymentFrequency = "Annually";
-        } else if (
-          wasCard ||
-          !String(nextSub.paymentFrequency || "").trim()
-        ) {
+        const defaultFrequency =
+          getDefaultPaymentFrequencyForPaymentMethod(value);
+        if (defaultFrequency) {
+          nextSub.paymentFrequency = defaultFrequency;
+        } else if (!String(nextSub.paymentFrequency || "").trim()) {
           nextSub.paymentFrequency = "Monthly";
         }
-        if (value !== "Salary Deduction") {
+        if (value !== SALARY_DEDUCTION_PAYMENT_TYPE) {
           nextSub.payrollNo = "";
         }
         return {
@@ -1885,29 +2350,45 @@ function ApplicationMgtDrawer({
         };
       });
     } else if (field === "workLocation") {
-      if (typeof value === "object" && value !== null) {
-        const locationId = value.key || value.id || value.value;
-        const locationLabel = value.label || value.name || "";
+      const locationId =
+        typeof value === "object" && value !== null
+          ? value.key || value.id || value.value
+          : value;
+      const locationLabel =
+        typeof value === "object" && value !== null
+          ? value.label || value.name || ""
+          : value;
+      const allowsSalaryDeduction = resolveWorkLocationProcessSalaryDeduction(
+        locationLabel,
+        workLocationOptions,
+        lookupsRaw,
+        locationId,
+      );
 
-        setInfData((prev) => ({
+      setInfData((prev) => {
+        const next = {
           ...prev,
           professionalDetails: {
             ...prev.professionalDetails,
-            workLocation: locationLabel,
+            workLocation: locationLabel || value,
+            processSalaryDeduction: allowsSalaryDeduction,
           },
-        }));
+        };
+        if (
+          !allowsSalaryDeduction &&
+          next.subscriptionDetails?.paymentType ===
+            SALARY_DEDUCTION_PAYMENT_TYPE
+        ) {
+          next.subscriptionDetails = {
+            ...next.subscriptionDetails,
+            paymentType: "",
+            payrollNo: "",
+          };
+        }
+        return next;
+      });
 
-        handleLocationChange(locationId);
-      } else {
-        setInfData((prev) => ({
-          ...prev,
-          professionalDetails: {
-            ...prev.professionalDetails,
-            workLocation: value,
-          },
-        }));
-        handleLocationChange(value);
-      }
+      handleLocationChange(locationId, allowsSalaryDeduction);
     } else {
       setInfData((prev) => {
         let updated = {
@@ -1930,6 +2411,16 @@ function ApplicationMgtDrawer({
             },
           };
         }
+        if (section === "personalInfo" && field === "dateOfBirth") {
+          const age = calculateAgeFtn(value);
+          if (age === "" || age >= 35) {
+            updated.subscriptionDetails = {
+              ...updated.subscriptionDetails,
+              joinYouthForum: null,
+              youthForum: "",
+            };
+          }
+        }
         return updated;
       });
     }
@@ -1940,12 +2431,40 @@ function ApplicationMgtDrawer({
         const { [field]: removed, ...rest } = prevErrors;
         next = rest;
       }
+      if (field === "nursingAdaptationProgramme") {
+        if (value === false && next?.nurseType) {
+          const { nurseType: _removedNt, ...rest } = next;
+          next = rest;
+        }
+        if (value === true && next?.nmbiNumber) {
+          const { nmbiNumber: _removedNmbi, ...rest } = next;
+          next = rest;
+        }
+      }
+      if (field === "joinYouthForum" && value !== true && next?.youthForum) {
+        const { youthForum: _removedYf, ...rest } = next;
+        next = rest;
+      }
+      if (field === "dateOfBirth") {
+        const age = calculateAgeFtn(value);
+        if (age === "" || age >= 35) {
+          const { joinYouthForum: _jyf, youthForum: _yf, ...rest } = next || {};
+          next = rest;
+        }
+      }
       if (
-        field === "nursingAdaptationProgramme" &&
-        value === false &&
-        next?.nurseType
+        field === "membershipStatus" &&
+        !["new", "graduate"].includes(value)
       ) {
-        const { nurseType: _removedNt, ...rest } = next;
+        const {
+          otherIrishTradeUnion: _oitu,
+          otherScheme: _os,
+          otherIrishTradeUnionName: _oitun,
+          inmoRewards: _ir,
+          exclusiveDiscountsAndOffers: _edao,
+          incomeProtectionScheme: _ips,
+          ...rest
+        } = next || {};
         next = rest;
       }
       return next;
@@ -1968,12 +2487,12 @@ function ApplicationMgtDrawer({
       }
 
       const service = new window.google.maps.places.PlacesService(
-        document.createElement('div'),
+        document.createElement("div"),
       );
 
       const request = {
         placeId: placeId,
-        fields: ['address_components', 'name', 'formatted_address'],
+        fields: ["address_components", "name", "formatted_address"],
       };
 
       service.getDetails(request, (details, status) => {
@@ -1982,24 +2501,24 @@ function ApplicationMgtDrawer({
           details
         ) {
           const components = details.address_components;
-          console.log('components=========>', components);
+          console.log("components=========>", components);
 
-          const getComponent = type =>
-            components.find(c => c.types.includes(type))?.long_name || '';
+          const getComponent = (type) =>
+            components.find((c) => c.types.includes(type))?.long_name || "";
 
-          const getComponentShortName = type =>
-            components.find(c => c.types.includes(type))?.short_name || '';
+          const getComponentShortName = (type) =>
+            components.find((c) => c.types.includes(type))?.short_name || "";
 
-          const streetNumber = getComponent('street_number');
-          const route = getComponent('route');
-          const neighborhood = getComponent('neighborhood') || '';
-          const sublocality = getComponent('sublocality') || '';
+          const streetNumber = getComponent("street_number");
+          const route = getComponent("route");
+          const neighborhood = getComponent("neighborhood") || "";
+          const sublocality = getComponent("sublocality") || "";
           const town =
-            getComponent('locality') || getComponent('postal_town') || '';
-          const county = getComponent('administrative_area_level_1') || '';
-          const postalCode = getComponent('postal_code');
-          const countryLongName = getComponent('country');
-          const countryShortName = getComponentShortName('country');
+            getComponent("locality") || getComponent("postal_town") || "";
+          const county = getComponent("administrative_area_level_1") || "";
+          const postalCode = getComponent("postal_code");
+          const countryLongName = getComponent("country");
+          const countryShortName = getComponentShortName("country");
 
           const buildingOrHouse = `${streetNumber} ${route}`.trim();
           const streetOrRoad = neighborhood || sublocality; // Use neighborhood first, fallback to sublocality
@@ -2012,13 +2531,13 @@ function ApplicationMgtDrawer({
           // Default to Ireland if not found
           if (countryLongName || countryShortName) {
             console.log(
-              'Country from API - Long Name:',
+              "Country from API - Long Name:",
               countryLongName,
-              'Short Name:',
+              "Short Name:",
               countryShortName,
             );
             const matchedCountry = countriesOptions?.find(
-              c =>
+              (c) =>
                 c?.code === countryLongName ||
                 c?.code === countryShortName ||
                 c?.name === countryLongName ||
@@ -2026,9 +2545,9 @@ function ApplicationMgtDrawer({
             );
             if (matchedCountry) {
               countryDisplayName = matchedCountry.displayname;
-              console.log('Matched country:', matchedCountry);
+              console.log("Matched country:", matchedCountry);
             } else {
-              console.log('No matching country found in lookup');
+              console.log("No matching country found in lookup");
             }
           }
 
@@ -2054,16 +2573,10 @@ function ApplicationMgtDrawer({
               // country,
             },
           }));
-
         }
       });
     }
   };
-
-
-
-
-
 
   const [errors, setErrors] = useState({});
   const { isLoaded } = useJsApiLoader({
@@ -2168,15 +2681,24 @@ function ApplicationMgtDrawer({
       }
 
       const apiInfData = withMembershipCategoryLabelsForApi(
-        dateUtils.prepareForAPI(InfData)
+        dateUtils.prepareForAPI(InfData),
       );
       const apiOriginalData = withMembershipCategoryLabelsForApi(
-        dateUtils.prepareForAPI(originalData)
+        dateUtils.prepareForAPI(originalData),
       );
 
-      const subscriptionChanged = hasSubscriptionDetailsChanged(apiOriginalData, apiInfData);
-      const personalChanged = hasPersonalDetailsChanged(apiOriginalData, apiInfData);
-      const professionalChanged = hasProfessionalDetailsChanged(apiOriginalData, apiInfData);
+      const subscriptionChanged = hasSubscriptionDetailsChanged(
+        apiOriginalData,
+        apiInfData,
+      );
+      const personalChanged = hasPersonalDetailsChanged(
+        apiOriginalData,
+        apiInfData,
+      );
+      const professionalChanged = hasProfessionalDetailsChanged(
+        apiOriginalData,
+        apiInfData,
+      );
       const applicationId = application?.applicationId;
 
       const proposedPatch = generatePatch(apiOriginalData, apiInfData);
@@ -2185,6 +2707,20 @@ function ApplicationMgtDrawer({
       const hasChanges = proposedPatch && proposedPatch.length > 0;
 
       if (action === "approved") {
+        if (duplicateReviewPending) {
+          message.warning(
+            "Duplicate review is required before approval. Open Duplicate Profile Review and choose Link, Merge, Create New Profile, or Ignore Match.",
+          );
+          openDuplicateReviewDrawer(false);
+          setIsProcessing(false);
+          disableFtn(false);
+          setSelected((prev) => ({
+            ...prev,
+            Approve: false,
+          }));
+          return;
+        }
+
         const submissionForRetroCheck = {
           subscriptionDetails: {
             ...(apiOriginalData?.subscriptionDetails || {}),
@@ -2195,8 +2731,9 @@ function ApplicationMgtDrawer({
             ...(apiInfData?.professionalDetails || {}),
           },
         };
-        const okRetro =
-          await confirmRetrospectiveMembershipModal(submissionForRetroCheck);
+        const okRetro = await confirmRetrospectiveMembershipModal(
+          submissionForRetroCheck,
+        );
         if (!okRetro) {
           setIsProcessing(false);
           disableFtn(false);
@@ -2208,7 +2745,7 @@ function ApplicationMgtDrawer({
         }
 
         const approvalPayload = {
-          submission: apiOriginalData || {}
+          submission: apiOriginalData || {},
         };
 
         if (hasChanges) {
@@ -2223,7 +2760,7 @@ function ApplicationMgtDrawer({
               "Content-Type": "application/json",
               Authorization: `Bearer ${token}`,
             },
-          }
+          },
         );
 
         if (isEdit && hasChanges) {
@@ -2238,9 +2775,9 @@ function ApplicationMgtDrawer({
               {
                 headers: {
                   "Content-Type": "application/json",
-                  Authorization: `Bearer ${token}`
-                }
-              }
+                  Authorization: `Bearer ${token}`,
+                },
+              },
             );
           }
 
@@ -2254,9 +2791,9 @@ function ApplicationMgtDrawer({
               {
                 headers: {
                   "Content-Type": "application/json",
-                  Authorization: `Bearer ${token}`
-                }
-              }
+                  Authorization: `Bearer ${token}`,
+                },
+              },
             );
           }
 
@@ -2270,9 +2807,9 @@ function ApplicationMgtDrawer({
               {
                 headers: {
                   "Content-Type": "application/json",
-                  Authorization: `Bearer ${token}`
-                }
-              }
+                  Authorization: `Bearer ${token}`,
+                },
+              },
             );
           }
         }
@@ -2286,7 +2823,7 @@ function ApplicationMgtDrawer({
         const rejectionPayload = {
           submission: apiOriginalData || {},
           proposedPatch: hasChanges ? proposedPatch : [],
-          reason: rejectionData.reason
+          reason: rejectionData.reason,
         };
 
         await axios.post(
@@ -2297,7 +2834,7 @@ function ApplicationMgtDrawer({
               "Content-Type": "application/json",
               Authorization: `Bearer ${token}`,
             },
-          }
+          },
         );
       }
 
@@ -2325,13 +2862,27 @@ function ApplicationMgtDrawer({
       }
     } catch (error) {
       console.error(`❌ Error ${action} application:`, error);
-      console.error('Error details:', error.response?.data || error.message);
+      console.error("Error details:", error.response?.data || error.message);
 
-      MyAlert(
-        "error",
-        `Failed to ${action} application`,
-        error?.response?.data?.error?.message || error.message
-      );
+      const duplicateBlocked =
+        error.response?.data?.code === "DUPLICATE_REVIEW_REQUIRED" ||
+        error.response?.data?.error?.code === "DUPLICATE_REVIEW_REQUIRED";
+
+      if (duplicateBlocked) {
+        MyAlert(
+          "warning",
+          "Duplicate review required",
+          error.response?.data?.message ||
+            "Open Duplicate Profile Review before approving this application.",
+        );
+        openDuplicateReviewDrawer(false);
+      } else {
+        MyAlert(
+          "error",
+          `Failed to ${action} application`,
+          error?.response?.data?.error?.message || error.message,
+        );
+      }
 
       setSelected((prev) => ({
         ...prev,
@@ -2345,11 +2896,7 @@ function ApplicationMgtDrawer({
   };
 
   function navigateApplication(direction) {
-    if (
-      index == null ||
-      index < 1 ||
-      !applicationsForNav?.length
-    ) {
+    if (index == null || index < 1 || !applicationsForNav?.length) {
       return;
     }
 
@@ -2378,8 +2925,7 @@ function ApplicationMgtDrawer({
       if (rawId) {
         const isDraftRow =
           String(newApplication.applicationStatus || "").toLowerCase() ===
-            "draft" ||
-          newApplication.type === "draft";
+            "draft" || newApplication.type === "draft";
         navigate(
           {
             pathname: "/applicationMgt",
@@ -2390,12 +2936,12 @@ function ApplicationMgtDrawer({
                   edit: true,
                 }),
           },
-          { replace: true }
+          { replace: true },
         );
       }
 
       const status = newApplication.applicationStatus?.toLowerCase();
-      const readOnlyStatuses = ['approved', 'in-progress'];
+      const readOnlyStatuses = ["approved", "in-progress"];
 
       if (readOnlyStatuses.includes(status)) {
         disableFtn(true);
@@ -2424,7 +2970,7 @@ function ApplicationMgtDrawer({
     if (formData) {
       setInfData(formData);
       setErrors({});
-      disableFtn(false)
+      disableFtn(false);
       if (formData.professionalDetails?.workLocation) {
         handleLocationChange(formData.professionalDetails.workLocation);
       }
@@ -2442,8 +2988,7 @@ function ApplicationMgtDrawer({
 
     if (emailToCheck) {
       await checkEmailConflict(emailToCheck);
-    }
-    else {
+    } else {
       setEmailConflictData(null);
     }
   };
@@ -2475,7 +3020,7 @@ function ApplicationMgtDrawer({
       }));
 
       setRecruiterSearchValue(
-        `${recruiterName} (${memberData.membershipNumber || ""})`.trim()
+        `${recruiterName} (${memberData.membershipNumber || ""})`.trim(),
       );
     }
   };
@@ -2492,15 +3037,15 @@ function ApplicationMgtDrawer({
     setInfData(inputValue);
     setSelectedMember(null);
 
-    const nameParts = searchTerm.split(' ');
+    const nameParts = searchTerm.split(" ");
     if (nameParts.length >= 2) {
-      setInfData(prev => ({
+      setInfData((prev) => ({
         ...prev,
         personalInfo: {
           ...prev.personalInfo,
           forename: nameParts[0],
-          surname: nameParts.slice(1).join(' ')
-        }
+          surname: nameParts.slice(1).join(" "),
+        },
       }));
     }
 
@@ -2510,15 +3055,72 @@ function ApplicationMgtDrawer({
   const isUndergraduateStudentCategory = membershipCategoryMatchesProductId(
     InfData?.subscriptionDetails?.membershipCategory,
     STUDENT_MEMBERSHIP_CATEGORY_ID,
-    categoryData
+    categoryData,
   );
 
+  const membershipStatusValue =
+    InfData?.subscriptionDetails?.membershipStatus || "";
+  const isNewOrGraduateMembershipStatus = ["new", "graduate"].includes(
+    membershipStatusValue,
+  );
+  const showPreviousMembershipNo = ["rejoin", "careerBreak"].includes(
+    membershipStatusValue,
+  );
+  const otherSchemeAnsweredNo =
+    isNewOrGraduateMembershipStatus &&
+    InfData?.subscriptionDetails?.otherScheme === false;
+  const showGraduateCornMarketOptions =
+    otherSchemeAnsweredNo && membershipStatusValue === "graduate";
+  const showNewMemberRewardsOption =
+    otherSchemeAnsweredNo && membershipStatusValue === "new";
+
+  const memberAge = useMemo(() => {
+    const age = calculateAgeFtn(InfData?.personalInfo?.dateOfBirth);
+    return age === "" ? null : age;
+  }, [InfData?.personalInfo?.dateOfBirth]);
+
+  const showYouthForumSection = memberAge !== null && memberAge < 35;
+
+  const handleMembershipCategoryChange = async (nextValue) => {
+    const currentValue = InfData?.subscriptionDetails?.membershipCategory;
+    const currentKey = membershipCategoryCompareKey(
+      normalizeMembershipCategoryToLabel(currentValue, categoryData),
+    );
+    const nextKey = membershipCategoryCompareKey(
+      normalizeMembershipCategoryToLabel(nextValue, categoryData),
+    );
+    if (nextKey && nextKey === currentKey) return;
+
+    if (isReducedRateMembershipCategory(nextValue, categoryData)) {
+      const confirmed = await confirmReducedRateMembershipCategoryModal();
+      if (!confirmed) return;
+    }
+
+    handleInputChange("subscriptionDetails", "membershipCategory", nextValue);
+  };
+
   return (
-    <div>
-      <div style={{ backgroundColor: "#f6f7f8" }}>
+    <div
+      style={{
+        height: "100%",
+        display: "flex",
+        flexDirection: "column",
+        overflow: "hidden",
+      }}
+    >
+      <div
+        style={{
+          backgroundColor: "#f6f7f8",
+          display: "flex",
+          flexDirection: "column",
+          flex: 1,
+          minHeight: 0,
+          overflow: "hidden",
+        }}
+      >
         <div
-          style={{ marginRight: "2.25rem" }}
-          className="d-flex justify-content-end align-items-center py-3"
+          style={{ marginRight: "2.25rem", flexShrink: 0 }}
+          className="d-flex justify-content-end align-items-center py-2"
         >
           <div className="d-flex align-items-center gap-3">
             {!isEdit && (
@@ -2570,6 +3172,22 @@ function ApplicationMgtDrawer({
             >
               Save
             </Button>
+            {application?.applicationId &&
+              !["approved", "rejected"].includes(
+                (
+                  application?.applicationStatus ||
+                  application?.personalDetails?.applicationStatus ||
+                  ""
+                ).toLowerCase(),
+              ) && (
+              <Button
+                className="butn"
+                disabled={!application?.applicationId}
+                onClick={() => openDuplicateReviewDrawer(true)}
+              >
+                Detect Duplicate
+              </Button>
+            )}
             {!isEdit && (
               <>
                 <Button
@@ -2584,9 +3202,9 @@ function ApplicationMgtDrawer({
                     onClick={() => {
                       setSelectedMember(null);
                       setInfData(inputValue);
-                      setInfData(inputValue)
+                      setInfData(inputValue);
                       dispatch(clearResults());
-                      disableFtn(true)
+                      disableFtn(true);
                       message.info("Form cleared");
                     }}
                     className="butn gray-btn"
@@ -2600,11 +3218,7 @@ function ApplicationMgtDrawer({
               <div className="d-flex align-items-center">
                 <Button
                   className="me-1 gray-btn butn"
-                  disabled={
-                    index == null ||
-                    index <= 1 ||
-                    !nextPrevData?.total
-                  }
+                  disabled={index == null || index <= 1 || !nextPrevData?.total}
                   onClick={() => navigateApplication("prev")}
                 >
                   <FaAngleLeft className="deatil-header-icon" />
@@ -2632,17 +3246,55 @@ function ApplicationMgtDrawer({
             )}
           </div>
         </div>
-        {
-          emailConflictData?.hasConflict && <EmailConflictScreen />
-        }
+        {emailConflictData?.hasConflict && <EmailConflictScreen />}
+        {isEdit && isPotentialDuplicate && duplicateReviewPending && (
+          <div
+            style={{
+              margin: "0 1.5rem 0.5rem",
+              padding: "6px 12px",
+              backgroundColor: "#fff1f0",
+              borderLeft: "4px solid #f5222d",
+              borderRadius: "4px",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              gap: 12,
+              flexShrink: 0,
+              flexWrap: "wrap",
+            }}
+          >
+            <div style={{ flex: 1, minWidth: 0, lineHeight: 1.4 }}>
+              <span
+                className="fw-bold"
+                style={{ color: "#a8071a", marginRight: 8, fontSize: 13 }}
+              >
+                Potential duplicate detected
+              </span>
+              <span style={{ color: "#820014", fontSize: 13 }}>
+                Review matches (Link, Merge, Create New Profile, or Ignore) before
+                approval.
+              </span>
+            </div>
+            <Button
+              size="small"
+              type="primary"
+              danger
+              icon={<FaClone />}
+              style={{ flexShrink: 0 }}
+              onClick={() => openDuplicateReviewDrawer(false)}
+            >
+              Open Duplicate Profile Review
+            </Button>
+          </div>
+        )}
         <div
           className="hide-scroll-webkit"
           style={{
             borderRadius: "15px",
             boxShadow: "0 2px 6px rgba(0,0,0,0.04)",
-            margin: "1.5rem",
-            maxHeight: "80.5vh",
-            height: "80.5vh",
+            margin: "0 1.5rem 1.5rem",
+            flex: 1,
+            minHeight: 0,
             overflowY: "auto",
             backgroundColor: "white",
             padding: "1.5rem",
@@ -2651,7 +3303,6 @@ function ApplicationMgtDrawer({
             transition: "0.3s ease",
           }}
         >
-
           {/* Personal Information Section */}
           <div className="mb-3">
             <SectionHeader
@@ -2666,7 +3317,7 @@ function ApplicationMgtDrawer({
 
             <Row gutter={[16, 12]} className="mt-2">
               <Col xs={24} md={8}>
-                <CustomSelect
+                <ApplicationMgtSelect
                   label="Title"
                   name="title"
                   value={InfData?.personalInfo?.title}
@@ -2690,7 +3341,7 @@ function ApplicationMgtDrawer({
                     handleInputChange(
                       "personalInfo",
                       "forename",
-                      e.target.value
+                      e.target.value,
                     )
                   }
                   hasError={!!errors?.forename}
@@ -2711,7 +3362,7 @@ function ApplicationMgtDrawer({
               </Col>
 
               <Col xs={24} md={8}>
-                <CustomSelect
+                <ApplicationMgtSelect
                   label="Gender"
                   name="gender"
                   value={InfData.personalInfo?.gender}
@@ -2739,7 +3390,7 @@ function ApplicationMgtDrawer({
                 />
               </Col>
               <Col xs={24} md={8}>
-                <CustomSelect
+                <ApplicationMgtSelect
                   label="Country Primary Qualification"
                   name="countryPrimaryQualification"
                   value={InfData?.personalInfo?.countryPrimaryQualification}
@@ -2750,7 +3401,7 @@ function ApplicationMgtDrawer({
                     handleInputChange(
                       "personalInfo",
                       "countryPrimaryQualification",
-                      e.target.value
+                      e.target.value,
                     )
                   }
                   hasError={!!errors?.countryPrimaryQualification}
@@ -2784,14 +3435,17 @@ function ApplicationMgtDrawer({
                         borderRadius: "4px",
                         height: "100%",
                         backgroundColor: "#1173d41a",
-                        border: errors?.preferredAddress ? "1px solid #ff4d4f" : "1px solid #97c5efff",
+                        border: errors?.preferredAddress
+                          ? "1px solid #ff4d4f"
+                          : "1px solid #97c5efff",
                       }}
                     >
                       <div className="d-flex justify-content-between align-items-center">
                         <label
                           // style={{ color: errors?.preferredAddress ? "#ff4d4f" : "#215e97" }}
-                          className={`my-input-label ${errors?.preferredAddress ? "error-text1" : ""
-                            }`}
+                          className={`my-input-label ${
+                            errors?.preferredAddress ? "error-text1" : ""
+                          }`}
                         >
                           Preferred Address{" "}
                           <span className="text-danger">*</span>
@@ -2802,7 +3456,7 @@ function ApplicationMgtDrawer({
                             handleInputChange(
                               "contactInfo",
                               "preferredAddress",
-                              e.target.value
+                              e.target.value,
                             )
                           }
                           value={InfData?.contactInfo?.preferredAddress}
@@ -2833,15 +3487,17 @@ function ApplicationMgtDrawer({
                           handleInputChange(
                             "contactInfo",
                             "consent",
-                            e.target.checked
+                            e.target.checked,
                           )
                         }
                       >
-                        Consent to receive Correspondence from INMO
+                        Consent to receive Correspondence from{" "}
+                        {tenantTradeName || "the organisation"}
                       </Checkbox>
                       <p style={{ color: "#78350f" }} className="m-0 !ms-0">
-                        Please un-tick this box if you would not like to receive
-                        correspondence from us to this address.
+                        Please un-tick this box if you would{" "}
+                        <strong>NOT like </strong> to receive correspondence via
+                        email or phone.
                       </p>
                     </div>
                   </Col>
@@ -2880,7 +3536,7 @@ function ApplicationMgtDrawer({
                     handleInputChange(
                       "contactInfo",
                       "buildingOrHouse",
-                      e.target.value
+                      e.target.value,
                     )
                   }
                   hasError={!!errors?.buildingOrHouse}
@@ -2897,7 +3553,7 @@ function ApplicationMgtDrawer({
                     handleInputChange(
                       "contactInfo",
                       "streetOrRoad",
-                      e.target.value
+                      e.target.value,
                     )
                   }
                 />
@@ -2913,7 +3569,7 @@ function ApplicationMgtDrawer({
                     handleInputChange(
                       "contactInfo",
                       "areaOrTown",
-                      e.target.value
+                      e.target.value,
                     )
                   }
                 />
@@ -2930,7 +3586,7 @@ function ApplicationMgtDrawer({
                     handleInputChange(
                       "contactInfo",
                       "countyCityOrPostCode",
-                      e.target.value
+                      e.target.value,
                     )
                   }
                   hasError={!!errors?.countyCityOrPostCode}
@@ -2951,7 +3607,7 @@ function ApplicationMgtDrawer({
               </Col>
 
               <Col xs={24} md={12}>
-                <CustomSelect
+                <ApplicationMgtSelect
                   label="Country"
                   name="country"
                   value={InfData.contactInfo?.country}
@@ -3002,7 +3658,7 @@ function ApplicationMgtDrawer({
                     handleInputChange(
                       "contactInfo",
                       "mobileNumber",
-                      e.target.value
+                      e.target.value,
                     )
                   }
                 />
@@ -3019,7 +3675,7 @@ function ApplicationMgtDrawer({
                     handleInputChange(
                       "contactInfo",
                       "telephoneNumber",
-                      e.target.value
+                      e.target.value,
                     )
                   }
                   hasError={!!errors?.telephoneNumber}
@@ -3033,15 +3689,18 @@ function ApplicationMgtDrawer({
                     borderRadius: "4px",
                     height: "100%",
                     backgroundColor: "#1173d41a",
-                    border: errors?.preferredEmail ? "1px solid #ff4d4f" : "1px solid #97c5efff",
+                    border: errors?.preferredEmail
+                      ? "1px solid #ff4d4f"
+                      : "1px solid #97c5efff",
                     borderRadius: "4px",
                   }}
                 >
                   <div className="d-flex justify-content-between align-items-center">
                     <label
                       // style={{ color: errors?.preferredEmail ? "#ff4d4f" : "#215e97" }}
-                      className={`my-input-label ${errors?.preferredEmail ? "error-text1" : ""
-                        }`}
+                      className={`my-input-label ${
+                        errors?.preferredEmail ? "error-text1" : ""
+                      }`}
                     >
                       Preferred Email{" "}
                       <span className="text-danger ms-1">*</span>
@@ -3052,12 +3711,12 @@ function ApplicationMgtDrawer({
                         handleInputChange(
                           "contactInfo",
                           "preferredEmail",
-                          e.target.value
+                          e.target.value,
                         )
                       }
                       value={InfData?.contactInfo?.preferredEmail}
                       disabled={isDisable}
-                    // className={errors?.preferredEmail ? "radio-error" : ""}
+                      // className={errors?.preferredEmail ? "radio-error" : ""}
                     >
                       <Radio style={{ color: "#215e97" }} value="personal">
                         Personal
@@ -3084,7 +3743,7 @@ function ApplicationMgtDrawer({
                     handleInputChange(
                       "contactInfo",
                       "personalEmail",
-                      e.target.value
+                      e.target.value,
                     )
                   }
                   onBlur={handleEmailBlur} // Add this
@@ -3104,7 +3763,7 @@ function ApplicationMgtDrawer({
                     handleInputChange(
                       "contactInfo",
                       "workEmail",
-                      e.target.value
+                      e.target.value,
                     )
                   }
                   onBlur={handleEmailBlur} // Add this
@@ -3129,7 +3788,7 @@ function ApplicationMgtDrawer({
 
             <Row gutter={[16, 12]} className="mt-2">
               <Col xs={24} md={12}>
-                <CustomSelect
+                <ApplicationMgtSelect
                   label="Membership Category"
                   name="membershipCategory"
                   value={InfData.subscriptionDetails?.membershipCategory}
@@ -3138,11 +3797,7 @@ function ApplicationMgtDrawer({
                   required
                   disabled={isDisable}
                   onChange={(e) =>
-                    handleInputChange(
-                      "subscriptionDetails",
-                      "membershipCategory",
-                      e.target.value
-                    )
+                    handleMembershipCategoryChange(e.target.value)
                   }
                   hasError={!!errors?.membershipCategory}
                 />
@@ -3150,7 +3805,7 @@ function ApplicationMgtDrawer({
               {membershipCategoryMatchesProductId(
                 InfData.subscriptionDetails?.membershipCategory,
                 RETIRED_MEMBERSHIP_CATEGORY_ID,
-                categoryData
+                categoryData,
               ) ? (
                 <Col xs={24} md={12}>
                   <Row gutter={[8, 8]}>
@@ -3164,21 +3819,19 @@ function ApplicationMgtDrawer({
                           !membershipCategoryMatchesProductId(
                             InfData?.subscriptionDetails?.membershipCategory,
                             RETIRED_MEMBERSHIP_CATEGORY_ID,
-                            categoryData
+                            categoryData,
                           )
                         }
-                        required={
-                          membershipCategoryMatchesProductId(
-                            InfData?.subscriptionDetails?.membershipCategory,
-                            RETIRED_MEMBERSHIP_CATEGORY_ID,
-                            categoryData
-                          )
-                        }
+                        required={membershipCategoryMatchesProductId(
+                          InfData?.subscriptionDetails?.membershipCategory,
+                          RETIRED_MEMBERSHIP_CATEGORY_ID,
+                          categoryData,
+                        )}
                         onChange={(date, dateString) => {
                           handleInputChange(
                             "professionalDetails",
                             "retiredDate",
-                            date
+                            date,
                           );
                         }}
                         hasError={!!errors?.retiredDate}
@@ -3194,21 +3847,19 @@ function ApplicationMgtDrawer({
                           !membershipCategoryMatchesProductId(
                             InfData?.subscriptionDetails?.membershipCategory,
                             RETIRED_MEMBERSHIP_CATEGORY_ID,
-                            categoryData
+                            categoryData,
                           )
                         }
-                        required={
-                          membershipCategoryMatchesProductId(
-                            InfData?.subscriptionDetails?.membershipCategory,
-                            RETIRED_MEMBERSHIP_CATEGORY_ID,
-                            categoryData
-                          )
-                        }
+                        required={membershipCategoryMatchesProductId(
+                          InfData?.subscriptionDetails?.membershipCategory,
+                          RETIRED_MEMBERSHIP_CATEGORY_ID,
+                          categoryData,
+                        )}
                         onChange={(e) =>
                           handleInputChange(
                             "professionalDetails",
                             "pensionNo",
-                            e.target.value
+                            e.target.value,
                           )
                         }
                         hasError={!!errors?.pensionNo}
@@ -3225,12 +3876,12 @@ function ApplicationMgtDrawer({
                     <Col xs={24} md={12}>
                       <Row gutter={[16, 12]}>
                         <Col xs={24} sm={12}>
-                          <CustomSelect
+                          <ApplicationMgtSelect
                             onChange={(e) =>
                               handleInputChange(
                                 "professionalDetails",
                                 "studyLocation",
-                                e.target.value
+                                e.target.value,
                               )
                             }
                             label="Study Location"
@@ -3242,7 +3893,7 @@ function ApplicationMgtDrawer({
                           />
                         </Col>
                         <Col xs={24} sm={12}>
-                          <CustomSelect
+                          <ApplicationMgtSelect
                             label="Discipline"
                             name="discipline"
                             disabled={isDisable}
@@ -3253,7 +3904,7 @@ function ApplicationMgtDrawer({
                               handleInputChange(
                                 "professionalDetails",
                                 "discipline",
-                                e.target.value
+                                e.target.value,
                               )
                             }
                             hasError={!!errors?.discipline}
@@ -3270,7 +3921,7 @@ function ApplicationMgtDrawer({
                               handleInputChange(
                                 "professionalDetails",
                                 "startDate",
-                                date
+                                date,
                               );
                             }}
                             disabled={isDisable}
@@ -3286,7 +3937,7 @@ function ApplicationMgtDrawer({
                               handleInputChange(
                                 "professionalDetails",
                                 "graduationDate",
-                                date
+                                date,
                               );
                             }}
                             value={InfData?.professionalDetails?.graduationDate}
@@ -3301,7 +3952,7 @@ function ApplicationMgtDrawer({
 
               {/* Work Location */}
               <Col xs={24} md={12}>
-                <CustomSelect
+                <ApplicationMgtSelect
                   label="Work Location"
                   name="workLocation"
                   isObjectValue={true}
@@ -3314,7 +3965,7 @@ function ApplicationMgtDrawer({
                     handleInputChange(
                       "professionalDetails",
                       "workLocation",
-                      e.target.value
+                      e.target.value,
                     );
                   }}
                   hasError={!!errors?.workLocation}
@@ -3337,7 +3988,7 @@ function ApplicationMgtDrawer({
                     handleInputChange(
                       "professionalDetails",
                       "otherWorkLocation",
-                      e.target.value
+                      e.target.value,
                     )
                   }
                   hasError={!!errors?.otherWorkLocation}
@@ -3345,18 +3996,19 @@ function ApplicationMgtDrawer({
               </Col>
 
               <Col xs={24} md={12}>
-                <CustomSelect
+                <ApplicationMgtSelect
                   label="Branch"
                   name="branch"
                   value={InfData.professionalDetails.branch}
                   disabled={true}
-                  placeholder={`${workLocationLoading ? "Loading..." : "Select"
-                    }`}
+                  placeholder={`${
+                    workLocationLoading ? "Loading..." : "Select"
+                  }`}
                   onChange={(e) =>
                     handleInputChange(
                       "professionalDetails",
                       "branch",
-                      e.target.value
+                      e.target.value,
                     )
                   }
                   options={branchOptions}
@@ -3365,18 +4017,19 @@ function ApplicationMgtDrawer({
               </Col>
 
               <Col xs={24} md={12}>
-                <CustomSelect
+                <ApplicationMgtSelect
                   label="Region"
                   name="Region"
-                  placeholder={`${workLocationLoading ? "Loading..." : "Select"
-                    }`}
+                  placeholder={`${
+                    workLocationLoading ? "Loading..." : "Select"
+                  }`}
                   value={InfData.professionalDetails?.region}
                   disabled={true}
                   onChange={(e) =>
                     handleInputChange(
                       "professionalDetails",
                       "region",
-                      e.target.value
+                      e.target.value,
                     )
                   }
                   options={regionOptions}
@@ -3384,7 +4037,7 @@ function ApplicationMgtDrawer({
                 />
               </Col>
               <Col xs={24} md={12}>
-                <CustomSelect
+                <ApplicationMgtSelect
                   label="Grade"
                   name="grade"
                   value={InfData?.professionalDetails?.grade}
@@ -3394,7 +4047,7 @@ function ApplicationMgtDrawer({
                     handleInputChange(
                       "professionalDetails",
                       "grade",
-                      e.target.value
+                      e.target.value,
                     )
                   }
                   options={gradeOptions}
@@ -3415,7 +4068,7 @@ function ApplicationMgtDrawer({
                     handleInputChange(
                       "professionalDetails",
                       "otherGrade",
-                      e.target.value
+                      e.target.value,
                     )
                   }
                   hasError={!!errors?.otherGrade}
@@ -3430,17 +4083,22 @@ function ApplicationMgtDrawer({
                     borderRadius: "4px",
                     height: "100%",
                     backgroundColor: "#1173d41a",
-                    border: errors?.nursingAdaptationProgramme ? "1px solid #ff4d4f" : "1px solid #97c5efff",
+                    border: errors?.nursingAdaptationProgramme
+                      ? "1px solid #ff4d4f"
+                      : "1px solid #97c5efff",
                   }}
                 >
                   <label
                     style={{
-                      color: errors?.nursingAdaptationProgramme ? "#ff4d4f" : "#215e97",
+                      color: errors?.nursingAdaptationProgramme
+                        ? "#ff4d4f"
+                        : "#215e97",
                       display: "block",
                       marginBottom: "8px",
                     }}
-                    className={`my-input-label ${errors?.nursingAdaptationProgramme ? "error-text1" : ""
-                      }`}
+                    className={`my-input-label ${
+                      errors?.nursingAdaptationProgramme ? "error-text1" : ""
+                    }`}
                   >
                     Are you currently undertaking a nursing adaptation
                     programme? <span className="text-danger">*</span>
@@ -3453,7 +4111,7 @@ function ApplicationMgtDrawer({
                         ?.nursingAdaptationProgramme === true
                         ? true
                         : InfData.professionalDetails
-                          ?.nursingAdaptationProgramme === false
+                              ?.nursingAdaptationProgramme === false
                           ? false
                           : null
                     }
@@ -3461,7 +4119,7 @@ function ApplicationMgtDrawer({
                       handleInputChange(
                         "professionalDetails",
                         "nursingAdaptationProgramme",
-                        e.target.value
+                        e.target.value,
                       )
                     }
                     disabled={isDisable}
@@ -3487,18 +4145,21 @@ function ApplicationMgtDrawer({
                   name="nmbiNumber"
                   value={InfData?.professionalDetails?.nmbiNumber}
                   disabled={
-                    InfData?.professionalDetails?.nursingAdaptationProgramme !==
-                    true || isDisable
+                    (InfData?.professionalDetails
+                      ?.nursingAdaptationProgramme !== true &&
+                      InfData?.professionalDetails
+                        ?.nursingAdaptationProgramme !== false) ||
+                    isDisable
                   }
                   required={
                     InfData?.professionalDetails?.nursingAdaptationProgramme ===
-                    true
+                    false
                   }
                   onChange={(e) =>
                     handleInputChange(
                       "professionalDetails",
                       "nmbiNumber",
-                      e.target.value
+                      e.target.value,
                     )
                   }
                   hasError={!!errors?.nmbiNumber}
@@ -3512,7 +4173,9 @@ function ApplicationMgtDrawer({
                   style={{
                     backgroundColor: "#f0fdf4",
                     borderRadius: "4px",
-                    border: errors?.nurseType ? "1px solid #ff4d4f" : "1px solid #a4e3ba",
+                    border: errors?.nurseType
+                      ? "1px solid #ff4d4f"
+                      : "1px solid #a4e3ba",
                   }}
                 >
                   <label
@@ -3520,7 +4183,8 @@ function ApplicationMgtDrawer({
                     style={{ color: errors?.nurseType ? "#ff4d4f" : "#14532d" }}
                   >
                     Please tick one of the following{" "}
-                    {InfData?.professionalDetails?.nursingAdaptationProgramme === true ? (
+                    {InfData?.professionalDetails
+                      ?.nursingAdaptationProgramme === true ? (
                       <span className="text-danger">*</span>
                     ) : null}
                   </label>
@@ -3532,12 +4196,12 @@ function ApplicationMgtDrawer({
                       handleInputChange(
                         "professionalDetails",
                         "nurseType",
-                        e.target.value
+                        e.target.value,
                       )
                     }
                     disabled={
-                      InfData?.professionalDetails?.nursingAdaptationProgramme !==
-                        true || isDisable
+                      InfData?.professionalDetails
+                        ?.nursingAdaptationProgramme !== true || isDisable
                     }
                     style={{
                       color: "#14532d",
@@ -3601,6 +4265,87 @@ function ApplicationMgtDrawer({
             </Row>
           </div>
 
+          {showYouthForumSection && (
+            <div className="mb-3">
+              <Row gutter={[16, 12]} className="mt-2">
+                <Col xs={24} md={12}>
+                  <div
+                    className="p-3 bg-lb"
+                    style={{
+                      backgroundColor: "#1173d41a",
+                      border: errors?.joinYouthForum
+                        ? "1px solid #ff4d4f"
+                        : "1px solid #97c5efff",
+                      borderRadius: "4px",
+                      height: "100%",
+                    }}
+                  >
+                    <label
+                      className="my-input-label mb-2"
+                      style={{
+                        color: errors?.joinYouthForum ? "#ff4d4f" : "#215e97",
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "4px",
+                      }}
+                    >
+                      Would you like to join Youth Forum?
+                      <span className="text-danger">*</span>
+                    </label>
+                    <Radio.Group
+                      name="joinYouthForum"
+                      value={
+                        InfData.subscriptionDetails?.joinYouthForum !== null
+                          ? InfData.subscriptionDetails?.joinYouthForum
+                          : null
+                      }
+                      onChange={(e) =>
+                        handleInputChange(
+                          "subscriptionDetails",
+                          "joinYouthForum",
+                          e.target?.value,
+                        )
+                      }
+                      style={{ color: "#215e97" }}
+                      disabled={isDisable}
+                    >
+                      <Radio style={{ color: "#215e97" }} value={true}>
+                        Yes
+                      </Radio>
+                      <Radio style={{ color: "#215e97" }} value={false}>
+                        No
+                      </Radio>
+                    </Radio.Group>
+                  </div>
+                </Col>
+                <Col xs={24} md={12}>
+                  <ApplicationMgtSelect
+                    label="Youth Forum"
+                    name="youthForum"
+                    required={
+                      InfData.subscriptionDetails?.joinYouthForum === true
+                    }
+                    options={youthForumOptions}
+                    value={InfData.subscriptionDetails?.youthForum}
+                    disabled={
+                      isDisable ||
+                      InfData.subscriptionDetails?.joinYouthForum !== true
+                    }
+                    placeholder="Select Youth Forum"
+                    onChange={(e) =>
+                      handleInputChange(
+                        "subscriptionDetails",
+                        "youthForum",
+                        e.target.value,
+                      )
+                    }
+                    hasError={!!errors?.youthForum}
+                  />
+                </Col>
+              </Row>
+            </div>
+          )}
+
           {/* Subscription Details Section */}
           <div className="mb-3">
             <SectionHeader
@@ -3633,7 +4378,7 @@ function ApplicationMgtDrawer({
                       handleInputChange(
                         "subscriptionDetails",
                         "dateJoined",
-                        date
+                        date,
                       );
                     }}
                     hasError={!!errors?.dateJoined}
@@ -3649,7 +4394,7 @@ function ApplicationMgtDrawer({
                       handleInputChange(
                         "subscriptionDetails",
                         "submissionDate",
-                        date
+                        date,
                       );
                     }}
                     hasError={!!errors?.submissionDate}
@@ -3666,17 +4411,17 @@ function ApplicationMgtDrawer({
                     gap: "8px",
                   }}
                 >
-                  <CustomSelect
-                    label="Payment Type"
+                  <ApplicationMgtSelect
+                    label="Payment Method"
                     name="paymentType"
                     required
-                    options={paymentTypeOptions}
+                    options={filteredPaymentTypeOptions}
                     disabled={isDisable}
                     onChange={(e) =>
                       handleInputChange(
                         "subscriptionDetails",
                         "paymentType",
-                        e.target.value
+                        e.target.value,
                       )
                     }
                     value={InfData.subscriptionDetails?.paymentType}
@@ -3688,14 +4433,26 @@ function ApplicationMgtDrawer({
                     name="payrollNo"
                     value={InfData?.subscriptionDetails?.payrollNo}
                     hasError={!!errors?.payrollNo}
-                    required={InfData?.subscriptionDetails?.paymentType === "Salary Deduction"}
-                    disabled={InfData?.subscriptionDetails?.paymentType !== "Salary Deduction" || isDisable}
-                    onChange={(e) => handleInputChange("subscriptionDetails", "payrollNo", e.target.value)}
+                    required={
+                      InfData?.subscriptionDetails?.paymentType ===
+                      SALARY_DEDUCTION_PAYMENT_TYPE
+                    }
+                    disabled={
+                      InfData?.subscriptionDetails?.paymentType !==
+                        SALARY_DEDUCTION_PAYMENT_TYPE || isDisable
+                    }
+                    onChange={(e) =>
+                      handleInputChange(
+                        "subscriptionDetails",
+                        "payrollNo",
+                        e.target.value,
+                      )
+                    }
                   />
                 </div>
               </Col>
               <Col xs={24} md={12}>
-                <CustomSelect
+                <ApplicationMgtSelect
                   label="Payment Frequency"
                   name="paymentFrequency"
                   options={CRM_PAYMENT_FREQUENCY_OPTIONS}
@@ -3718,14 +4475,19 @@ function ApplicationMgtDrawer({
                   style={{
                     backgroundColor: "#f0fdf4",
                     borderRadius: "4px",
-                    border: errors?.membershipStatus ? "1px solid #ff4d4f" : "1px solid #a4e3ba",
+                    border: errors?.membershipStatus
+                      ? "1px solid #ff4d4f"
+                      : "1px solid #a4e3ba",
                   }}
                 >
                   <label
                     className="my-input-label mb-1"
-                    style={{ color: errors?.membershipStatus ? "#ff4d4f" : "#14532d" }}
+                    style={{
+                      color: errors?.membershipStatus ? "#ff4d4f" : "#14532d",
+                    }}
                   >
-                    Please select the most appropriate option below <span className="text-danger">*</span>
+                    Please select the most appropriate option below{" "}
+                    <span className="text-danger">*</span>
                   </label>
 
                   <Radio.Group
@@ -3735,7 +4497,7 @@ function ApplicationMgtDrawer({
                       handleInputChange(
                         "subscriptionDetails",
                         "membershipStatus",
-                        e.target.value
+                        e.target.value,
                       )
                     }
                     disabled={isDisable}
@@ -3752,14 +4514,14 @@ function ApplicationMgtDrawer({
                         value="new"
                         style={{ color: "#14532d", width: "14%" }}
                       >
-                        You are a new member
+                        New member
                       </Radio>
 
                       <Radio
                         value="graduate"
                         style={{ color: "#14532d", width: "14%" }}
                       >
-                        You are newly graduated
+                        Newly graduated
                       </Radio>
 
                       <Radio
@@ -3771,8 +4533,8 @@ function ApplicationMgtDrawer({
                           lineHeight: "1.2",
                         }}
                       >
-                        You were previously a member of the INMO, and are
-                        rejoining
+                        Rejoining - Previous{"  "}
+                        {tenantTradeName || "the organisation"} Member"
                       </Radio>
 
                       <Radio
@@ -3784,7 +4546,7 @@ function ApplicationMgtDrawer({
                           lineHeight: "1.2",
                         }}
                       >
-                        You are returning from a career break
+                        Returning from a career break
                       </Radio>
 
                       <Radio
@@ -3796,309 +4558,328 @@ function ApplicationMgtDrawer({
                           lineHeight: "1.2",
                         }}
                       >
-                        You are returning from nursing abroad
+                        Returning from nursing abroad
                       </Radio>
                     </div>
                   </Radio.Group>
                 </div>
               </Col>
-              {["graduate"].includes(
-                InfData?.subscriptionDetails?.membershipStatus
-              ) && (
-                  <>
-                    <Col xs={24} md={24}>
-                      <div
-                        className="pe-3 ps-3 pt-2 pb-2 h-100"
-                        style={{
-                          borderRadius: "4px",
-                          backgroundColor: "#fffbeb",
-                          border: "1px solid #fde68a",
-                        }}
-                      >
-                        <Checkbox
-                          checked={
-                            InfData?.subscriptionDetails
-                              ?.exclusiveDiscountsAndOffers
-                          }
-                          style={{ color: "#78350f" }}
-                          onChange={(e) =>
-                            handleInputChange(
-                              "subscriptionDetails",
-                              "exclusiveDiscountsAndOffers",
-                              e.target.checked
-                            )
-                          }
-                          disabled={
-                            isDisable ||
-                            !["new", "graduate"].includes(
-                              InfData?.subscriptionDetails?.membershipStatus
-                            )
-                          }
-                        >
-                          Would you like to hear about exclusive discounts and
-                          offers for INMO members?
-                        </Checkbox>
-                      </div>
-                    </Col>
-                    <Col xs={24} md={24}>
-                      <div
-                        className="pe-3 ps-3 pt-2 pb-2 h-100"
-                        style={{
-                          borderRadius: "4px",
-                          backgroundColor: "#fffbeb",
-                          border: "1px solid #fde68a",
-                        }}
-                      >
-                        <Checkbox
-                          checked={InfData?.subscriptionDetails?.incomeProtectionScheme}
-                          style={{ color: "#78350f" }}
-                          onChange={(e) =>
-                            handleInputChange(
-                              "subscriptionDetails",
-                              "incomeProtectionScheme",
-                              e.target.checked
-                            )
-                          }
-                          disabled={
-                            isDisable ||
-                            !["new", "graduate"].includes(
-                              InfData?.subscriptionDetails?.membershipStatus
-                            )
-                          }
-                        >
-                          I consent to{" "}
-                          <a
-                            href={`http://localhost:3000/rewards/insurance`}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            style={{
-                              color: "#78350f",
-                              textDecoration: "underline",
-                            }}
-                            onClick={(e) => e.stopPropagation()}
-                          >
-                            INMO Income Protection Scheme
-                          </a>
-                        </Checkbox>
-                        <p>
-                          By selecting 'I consent' below, you are agreeing to the
-                          INMO, sharing your Trade Union membership details with
-                          Cornmarket. Cornmarket as Scheme Administrator will
-                          process and retain details of your Trade Union
-                          membership for the purposes of assessing eligibility and
-                          admitting eligible members (automatically) to the Income
-                          Protection Scheme (with 9 Months' Free Cover), and for
-                          the ongoing administration of the Scheme. Where you have
-                          also opted in to receiving marketing communications,
-                          Cornmarket will provide you with information on
-                          discounts and offers they have for INMO members. This
-                          consent can be withdrawn at any time by emailing
-                          Cornmarket at dataprotection@cornmarket.ie. Please note,
-                          if you do consent below, your data will be shared with
-                          Cornmarket, and you will be assessed for eligibility for
-                          automatic Income Protection Scheme membership. If you do
-                          not consent, your data will not be shared with
-                          Cornmarket for this purpose, you will not be assessed
-                          for automatic Scheme membership (including 9 Months'
-                          Free Cover) and you will have to contact Cornmarket
-                          separately should you wish to apply for Scheme
-                          membership. This offer will run on a pilot basis. Terms
-                          and conditions apply and are subject to change.
-                          Important: If you do not give your consent, your Trade
-                          union membership data will not be shared with Cornmarket
-                          for this purpose. This means you will not be assessed
-                          for Automatic Access to the Scheme.
-                        </p>
-                      </div>
-                    </Col>
-                  </>
-                )}
-              {["new"].includes(
-                InfData?.subscriptionDetails?.membershipStatus
-              ) && (
-                  <>
-                    <Col xs={24} md={24}>
-                      <div
-                        className="pe-3 ps-3 pt-2 pb-2 h-100"
-                        style={{
-                          borderRadius: "4px",
-                          backgroundColor: "#fffbeb",
-                          border: "1px solid #fde68a",
-                        }}
-                      >
-                        <Checkbox
-                          checked={InfData?.subscriptionDetails?.inmoRewards}
-                          style={{ color: "#78350f" }}
-                          onChange={(e) =>
-                            handleInputChange(
-                              "subscriptionDetails",
-                              "inmoRewards",
-                              e.target.checked
-                            )
-                          }
-                          disabled={isDisable}
-                        >
-                          Tick here to join{" "}
-                          <Tooltip
-                            placement="top"
-                            styles={{
-                              body: {
-                                maxWidth: "600px",
-                                width: "600px",
-                                maxHeight: "650px",
-                                overflow: "hidden",
-                                padding: "0",
-                              },
-                            }}
-                          // title={
-                          //   <div
-                          //     style={{
-                          //       maxHeight: "650px",
-                          //       overflowY: "auto",
-                          //       marginTop: "5px",
-                          //       marginBottom: "5px",
-                          //     }}
-                          //   >
-                          //     <RewardsScreen />
-                          //   </div>
-                          // }
-                          >
-                            <a
-                              href={`http://localhost:3000/rewards/rewards`}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              style={{
-                                color: "#78350f",
-                                textDecoration: "underline",
-                              }}
-                              onClick={(e) => e.stopPropagation()}
-                            >
-                              Rewards
-                            </a>
-                          </Tooltip>{" "}
-                          for INMO members
-                        </Checkbox>
-                        <p>
-                          By ticking here, you confirm that you agree to the Terms
-                          & Conditions available on
-                          Cornmarket.ie/rewards-club-terms and the Data Protection
-                          Statement available on Cornmarket.ie/rewards-dps.
-                          Cornmarket will contact you about your Rewards Benefits.
-                          You can opt out at any time.
-                        </p>
-                      </div>
-                    </Col>
-                  </>
-                )}
 
-              <Col xs={24} md={12}>
-                <div
-                  className="p-3 bg-lb"
-                  style={{
-                    backgroundColor: "#1173d41a",
-                    border: errors?.otherIrishTradeUnion ? "1px solid #ff4d4f" : "1px solid #97c5efff",
-                    borderRadius: "4px",
-                    height: "100%",
-                  }}
-                >
-                  <label
-                    className="my-input-label mb-2"
+              {isNewOrGraduateMembershipStatus && (
+                <>
+                  <Col xs={24} md={12}>
+                    <div
+                      className="p-3 bg-lb"
+                      style={{
+                        backgroundColor: "#1173d41a",
+                        border: errors?.otherIrishTradeUnion
+                          ? "1px solid #ff4d4f"
+                          : "1px solid #97c5efff",
+                        borderRadius: "4px",
+                        height: "100%",
+                      }}
+                    >
+                      <label
+                        className="my-input-label mb-2"
+                        style={{
+                          color: errors?.otherIrishTradeUnion
+                            ? "#ff4d4f"
+                            : "#215e97",
+                          display: "flex",
+                          alignItems: "center",
+                          gap: "4px",
+                        }}
+                      >
+                        If you are a member of another Trade Union. If yes,
+                        which Union?
+                        <span className="text-danger">*</span>
+                      </label>
+                      <Radio.Group
+                        style={{ color: "#215e97" }}
+                        name="otherIrishTradeUnion"
+                        value={
+                          InfData.subscriptionDetails?.otherIrishTradeUnion !==
+                          null
+                            ? InfData.subscriptionDetails?.otherIrishTradeUnion
+                            : null
+                        }
+                        onChange={(e) =>
+                          handleInputChange(
+                            "subscriptionDetails",
+                            "otherIrishTradeUnion",
+                            e.target?.value,
+                          )
+                        }
+                        disabled={isDisable}
+                      >
+                        <Radio style={{ color: "#215e97" }} value={true}>
+                          Yes
+                        </Radio>
+                        <Radio style={{ color: "#215e97" }} value={false}>
+                          No
+                        </Radio>
+                      </Radio.Group>
+                      {InfData.subscriptionDetails?.otherIrishTradeUnion ===
+                        true && (
+                        <MyInput
+                          value={
+                            InfData.subscriptionDetails
+                              ?.otherIrishTradeUnionName
+                          }
+                          onChange={(e) =>
+                            handleInputChange(
+                              "subscriptionDetails",
+                              "otherIrishTradeUnionName",
+                              e.target?.value,
+                            )
+                          }
+                          placeholder="Enter Union name"
+                          className="mt-2"
+                          hasError={!!errors?.otherIrishTradeUnionName}
+                        />
+                      )}
+                    </div>
+                  </Col>
+
+                  <Col xs={24} md={12}>
+                    <div
+                      className="p-3 bg-lb"
+                      style={{
+                        backgroundColor: "#1173d41a",
+                        border: errors?.otherScheme
+                          ? "1px solid #ff4d4f"
+                          : "1px solid #97c5efff",
+                        borderRadius: "4px",
+                        height: "100%",
+                      }}
+                    >
+                      <label
+                        className="my-input-label mb-2"
+                        style={{
+                          color: errors?.otherScheme ? "#ff4d4f" : "#215e97",
+                          display: "flex",
+                          alignItems: "center",
+                          gap: "4px",
+                        }}
+                      >
+                        Are you or were you a member of another Irish trade
+                        Union salary or Income Protection Scheme?
+                        <span className="text-danger">*</span>
+                      </label>
+                      <Radio.Group
+                        name="otherScheme"
+                        value={
+                          InfData.subscriptionDetails?.otherScheme !== null
+                            ? InfData.subscriptionDetails?.otherScheme
+                            : null
+                        }
+                        onChange={(e) =>
+                          handleInputChange(
+                            "subscriptionDetails",
+                            "otherScheme",
+                            e.target?.value,
+                          )
+                        }
+                        style={{ color: "#215e97" }}
+                        disabled={isDisable}
+                      >
+                        <Radio style={{ color: "#215e97" }} value={true}>
+                          Yes
+                        </Radio>
+                        <Radio style={{ color: "#215e97" }} value={false}>
+                          No
+                        </Radio>
+                      </Radio.Group>
+                    </div>
+                  </Col>
+                </>
+              )}
+
+              {showGraduateCornMarketOptions && (
+                <>
+                  <Col xs={24} md={24}>
+                    <div
+                      className="pe-3 ps-3 pt-2 pb-2 h-100"
+                      style={{
+                        borderRadius: "4px",
+                        backgroundColor: "#fffbeb",
+                        border: "1px solid #fde68a",
+                      }}
+                    >
+                      <Checkbox
+                        checked={
+                          InfData?.subscriptionDetails
+                            ?.exclusiveDiscountsAndOffers
+                        }
+                        style={{ color: "#78350f" }}
+                        onChange={(e) =>
+                          handleInputChange(
+                            "subscriptionDetails",
+                            "exclusiveDiscountsAndOffers",
+                            e.target.checked,
+                          )
+                        }
+                        disabled={isDisable}
+                      >
+                        Would you like to hear about exclusive discounts and
+                        offers for {tenantTradeName || "organisation"} members?
+                      </Checkbox>
+                    </div>
+                  </Col>
+                  <Col xs={24} md={24}>
+                    <div
+                      className="pe-3 ps-3 pt-2 pb-2 h-100"
+                      style={{
+                        borderRadius: "4px",
+                        backgroundColor: "#fffbeb",
+                        border: "1px solid #fde68a",
+                      }}
+                    >
+                      <Checkbox
+                        checked={
+                          InfData?.subscriptionDetails?.incomeProtectionScheme
+                        }
+                        style={{ color: "#78350f" }}
+                        onChange={(e) =>
+                          handleInputChange(
+                            "subscriptionDetails",
+                            "incomeProtectionScheme",
+                            e.target.checked,
+                          )
+                        }
+                        disabled={isDisable}
+                      >
+                        I consent to{" "}
+                        <a
+                          href={`http://localhost:3000/rewards/insurance`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          style={{
+                            color: "#78350f",
+                            textDecoration: "underline",
+                          }}
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          {tenantTradeName || "Organisation"} Income Protection
+                          Scheme
+                        </a>
+                      </Checkbox>
+                      <p>
+                        By selecting 'I consent' below, you are agreeing to the
+                        {tenantTradeName || "The organisation"}, sharing your
+                        Trade Union membership details with Cornmarket.
+                        Cornmarket as Scheme Administrator will process and
+                        retain details of your Trade Union membership for the
+                        purposes of assessing eligibility and admitting eligible
+                        members (automatically) to the Income Protection Scheme
+                        (with 9 Months' Free Cover), and for the ongoing
+                        administration of the Scheme. Where you have also opted
+                        in to receiving marketing communications, Cornmarket
+                        will provide you with information on discounts and
+                        offers they have for {tenantTradeName || "organisation"}{" "}
+                        members. This consent can be withdrawn at any time by
+                        emailing Cornmarket at dataprotection@cornmarket.ie.
+                        Please note, if you do consent below, your data will be
+                        shared with Cornmarket, and you will be assessed for
+                        eligibility for automatic Income Protection Scheme
+                        membership. If you do not consent, your data will not be
+                        shared with Cornmarket for this purpose, you will not be
+                        assessed for automatic Scheme membership (including 9
+                        Months' Free Cover) and you will have to contact
+                        Cornmarket separately should you wish to apply for
+                        Scheme membership. This offer will run on a pilot basis.
+                        Terms and conditions apply and are subject to change.
+                        Important: If you do not give your consent, your Trade
+                        union membership data will not be shared with Cornmarket
+                        for this purpose. This means you will not be assessed
+                        for Automatic Access to the Scheme.
+                      </p>
+                    </div>
+                  </Col>
+                </>
+              )}
+              {showNewMemberRewardsOption && (
+                <Col xs={24} md={24}>
+                  <div
+                    className="pe-3 ps-3 pt-2 pb-2 h-100"
                     style={{
-                      color: errors?.otherIrishTradeUnion ? "#ff4d4f" : "#215e97",
-                      display: "flex",
-                      alignItems: "center",
-                      gap: "4px"
+                      borderRadius: "4px",
+                      backgroundColor: "#fffbeb",
+                      border: "1px solid #fde68a",
                     }}
                   >
-                    If you are a member of another Trade Union. If yes, which Union?
-                    <span className="text-danger">*</span>
+                    <Checkbox
+                      checked={InfData?.subscriptionDetails?.inmoRewards}
+                      style={{ color: "#78350f" }}
+                      onChange={(e) =>
+                        handleInputChange(
+                          "subscriptionDetails",
+                          "inmoRewards",
+                          e.target.checked,
+                        )
+                      }
+                      disabled={isDisable}
+                    >
+                      Tick here to join{" "}
+                      <Tooltip
+                        placement="top"
+                        styles={{
+                          body: {
+                            maxWidth: "600px",
+                            width: "600px",
+                            maxHeight: "650px",
+                            overflow: "hidden",
+                            padding: "0",
+                          },
+                        }}
+                      >
+                        <a
+                          href={`http://localhost:3000/rewards/rewards`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          style={{
+                            color: "#78350f",
+                            textDecoration: "underline",
+                          }}
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          Rewards
+                        </a>
+                      </Tooltip>{" "}
+                      for {tenantTradeName || "organisation"} members
+                    </Checkbox>
+                    <p>
+                      By ticking here, you confirm that you agree to the Terms &
+                      Conditions available on Cornmarket.ie/rewards-club-terms
+                      and the Data Protection Statement available on
+                      Cornmarket.ie/rewards-dps. Cornmarket will contact you
+                      about your Rewards Benefits. You can opt out at any time.
+                    </p>
+                  </div>
+                </Col>
+              )}
 
-                  </label>
-                  <Radio.Group
-                    style={{ color: "#215e97" }}
-                    name="otherIrishTradeUnion"
-                    value={
-                      InfData.subscriptionDetails?.otherIrishTradeUnion !== null
-                        ? InfData.subscriptionDetails?.otherIrishTradeUnion
-                        : null
-                    }
-                    onChange={(e) =>
-                      handleInputChange(
-                        "subscriptionDetails",
-                        "otherIrishTradeUnion",
-                        e.target?.value
-                      )
-                    }
-                    disabled={isDisable}
-                  >
-                    <Radio style={{ color: "#215e97" }} value={true}>
-                      Yes
-                    </Radio>
-                    <Radio style={{ color: "#215e97" }} value={false}>
-                      No
-                    </Radio>
-                  </Radio.Group>
-                  {InfData.subscriptionDetails?.otherIrishTradeUnion === true && (
+              {showPreviousMembershipNo && (
+                <>
+                  <Col xs={24} md={12}>
                     <MyInput
-                      value={InfData.subscriptionDetails?.otherIrishTradeUnionName}
-                      onChange={(e) => handleInputChange("subscriptionDetails", "otherIrishTradeUnionName", e.target?.value)}
-                      placeholder="Enter Union name"
-                      className="mt-2"
-                      hasError={!!errors?.otherIrishTradeUnionName}
+                      label="Previous Membership No."
+                      name="previousMembershipNo"
+                      value={InfData?.subscriptionDetails?.previousMembershipNo}
+                      placeholder="Enter previous membership number"
+                      disabled={isDisable}
+                      onChange={(e) =>
+                        handleInputChange(
+                          "subscriptionDetails",
+                          "previousMembershipNo",
+                          e.target.value,
+                        )
+                      }
                     />
-                  )}
-
-                </div>
-              </Col>
-
-              <Col xs={24} md={12}>
-                <div
-                  className="p-3 bg-lb"
-                  style={{
-                    backgroundColor: "#1173d41a",
-                    border: errors?.otherScheme ? "1px solid #ff4d4f" : "1px solid #97c5efff",
-                    borderRadius: "4px",
-                    height: "100%",
-                  }}
-                >
-                  <label
-                    className="my-input-label mb-2"
-                    style={{
-                      color: errors?.otherScheme ? "#ff4d4f" : "#215e97",
-                      display: "flex",
-                      alignItems: "center",
-                      gap: "4px"
-                    }}
-                  >
-                    Are you or were you a member of another Irish trade Union salary or Income Protection Scheme?
-                    <span className="text-danger">*</span>
-                  </label>
-                  <Radio.Group
-                    name="otherScheme"
-                    value={
-                      InfData.subscriptionDetails?.otherScheme !== null
-                        ? InfData.subscriptionDetails?.otherScheme
-                        : null
-                    }
-                    onChange={(e) =>
-                      handleInputChange(
-                        "subscriptionDetails",
-                        "otherScheme",
-                        e.target?.value
-                      )
-                    }
-                    style={{ color: "#215e97" }}
-                    disabled={isDisable}
-                  >
-                    <Radio style={{ color: "#215e97" }} value={true}>
-                      Yes
-                    </Radio>
-                    <Radio style={{ color: "#215e97" }} value={false}>
-                      No
-                    </Radio>
-                  </Radio.Group>
-                </div>
-              </Col>
+                  </Col>
+                  <Col xs={0} md={12} aria-hidden />
+                </>
+              )}
 
               {/* Recruited By */}
               <Col xs={24} md={6}>
@@ -4111,7 +4892,7 @@ function ApplicationMgtDrawer({
                     handleInputChange(
                       "subscriptionDetails",
                       "recuritedBy",
-                      e.target.value
+                      e.target.value,
                     )
                   }
                 />
@@ -4127,7 +4908,7 @@ function ApplicationMgtDrawer({
                     handleInputChange(
                       "subscriptionDetails",
                       "recuritedByMembershipNo",
-                      e.target.value
+                      e.target.value,
                     )
                   }
                 />
@@ -4197,7 +4978,7 @@ function ApplicationMgtDrawer({
               </Col>
               {/* Sections */}
               <Col xs={24} md={12}>
-                <CustomSelect
+                <ApplicationMgtSelect
                   label="Primary Section"
                   name="primarySection"
                   value={InfData.subscriptionDetails?.primarySection}
@@ -4206,7 +4987,7 @@ function ApplicationMgtDrawer({
                     handleInputChange(
                       "subscriptionDetails",
                       "primarySection",
-                      e.target.value
+                      e.target.value,
                     )
                   }
                   options={sectionOptions}
@@ -4222,7 +5003,7 @@ function ApplicationMgtDrawer({
                     handleInputChange(
                       "subscriptionDetails",
                       "otherPrimarySection",
-                      e.target.value
+                      e.target.value,
                     )
                   }
                   required={
@@ -4236,7 +5017,7 @@ function ApplicationMgtDrawer({
               </Col>
 
               <Col xs={24} md={12}>
-                <CustomSelect
+                <ApplicationMgtSelect
                   label="Secondary Section"
                   name="secondarySection"
                   value={InfData.subscriptionDetails?.secondarySection}
@@ -4246,7 +5027,7 @@ function ApplicationMgtDrawer({
                     handleInputChange(
                       "subscriptionDetails",
                       "secondarySection",
-                      e.target.value
+                      e.target.value,
                     )
                   }
                 />
@@ -4269,7 +5050,7 @@ function ApplicationMgtDrawer({
                     handleInputChange(
                       "subscriptionDetails",
                       "otherSecondarySection",
-                      e.target.value
+                      e.target.value,
                     )
                   }
                   hasError={!!errors?.otherSecondarySection}
@@ -4294,7 +5075,7 @@ function ApplicationMgtDrawer({
                       handleInputChange(
                         "subscriptionDetails",
                         "valueAddedServices",
-                        e.target.checked
+                        e.target.checked,
                       )
                     }
                     disabled={isDisable}
@@ -4320,7 +5101,7 @@ function ApplicationMgtDrawer({
                       handleInputChange(
                         "subscriptionDetails",
                         "termsAndConditions",
-                        e.target.checked
+                        e.target.checked,
                       )
                     }
                     style={{ color: "#78350f" }}
@@ -4331,21 +5112,23 @@ function ApplicationMgtDrawer({
                       href="#"
                       style={{ color: "#78350f", textDecoration: "underline" }}
                     >
-                      INMO Data Protection Statement,
+                      {tenantTradeName || "Organisation"} Data Protection
+                      Statement,
                     </a>{" "}
                     the{" "}
                     <a
                       href="#"
                       style={{ color: "#78350f", textDecoration: "underline" }}
                     >
-                      INMO Privacy Statement
+                      {tenantTradeName || "Organisation"} Privacy Statement
                     </a>{" "}
                     and the{" "}
                     <a
                       href="#"
                       style={{ color: "#78350f", textDecoration: "underline" }}
                     >
-                      INMO Conditions of Membership
+                      {tenantTradeName || "Organisation"} Conditions of
+                      Membership
                     </a>
                     {errors?.termsAndConditions && (
                       <span style={{ color: "red" }}> (Required)</span>
@@ -4403,7 +5186,7 @@ function ApplicationMgtDrawer({
         confirmLoading={isProcessing}
       >
         <div className="drawer-main-container">
-          <CustomSelect
+          <ApplicationMgtSelect
             label="Reason"
             name="Reason"
             required
@@ -4435,6 +5218,18 @@ function ApplicationMgtDrawer({
           />
         </div>
       </Modal>
+
+      <DuplicateProfileReview
+        open={duplicateReviewOpen}
+        onClose={() => setDuplicateReviewOpen(false)}
+        applicationId={application?.applicationId}
+        runDetectionOnOpen={duplicateReviewAutoRun}
+        onReviewUpdated={() => {
+          if (application?.applicationId) {
+            dispatch(getApplicationById({ id: application.applicationId }));
+          }
+        }}
+      />
     </div>
   );
 }

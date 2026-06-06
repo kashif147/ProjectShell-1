@@ -186,6 +186,7 @@ const TableComponent = ({
   onRowClick: externalOnRowClick = null,
   disableDefaultRowClick = false,
   disableRowFn = null,
+  onDuplicateReviewRequest = null,
   ...props
 }) => {
   const navigate = useNavigate();
@@ -995,19 +996,50 @@ const TableComponent = ({
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                   {content}
                   {isPotentialDuplicate && (
-                    <Tooltip title="Potential Duplicate Detected">
+                    <Tooltip
+                      title={
+                        onDuplicateReviewRequest
+                          ? "Open Duplicate Profile Review — click to review"
+                          : record?.duplicateReviewStatus === "POTENTIAL_MATCH" ||
+                              record?.duplicateReviewStatus === "NOT_CHECKED"
+                            ? "Potential Duplicate — review required before approval"
+                            : "Potential Duplicate Detected"
+                      }
+                    >
                       <div
+                        role={onDuplicateReviewRequest ? "button" : undefined}
+                        tabIndex={onDuplicateReviewRequest ? 0 : undefined}
+                        onClick={
+                          onDuplicateReviewRequest
+                            ? (e) => {
+                                e.stopPropagation();
+                                onDuplicateReviewRequest(record);
+                              }
+                            : undefined
+                        }
+                        onKeyDown={
+                          onDuplicateReviewRequest
+                            ? (e) => {
+                                if (e.key === "Enter" || e.key === " ") {
+                                  e.preventDefault();
+                                  e.stopPropagation();
+                                  onDuplicateReviewRequest(record);
+                                }
+                              }
+                            : undefined
+                        }
                         style={{
                           display: "flex",
                           alignItems: "center",
                           justifyContent: "center",
                           width: "22px",
                           height: "22px",
-                          backgroundColor: "#fff1f0", // Soft red background (Ant red-1)
-                          border: "1px solid #ffa39e", // Soft red border (Ant red-3)
+                          backgroundColor: "#fff1f0",
+                          border: "1px solid #ffa39e",
                           borderRadius: "4px",
-                          color: "#f5222d", // Ant red-6
-                          flexShrink: 0
+                          color: "#f5222d",
+                          flexShrink: 0,
+                          cursor: onDuplicateReviewRequest ? "pointer" : "default",
                         }}
                       >
                         <AlertCircle size={14} fill="#f5222d" fillOpacity={0.1} />
@@ -1226,7 +1258,7 @@ const TableComponent = ({
       },
     })),
   ];
-  }, [columnsDragbe, columnsForFilter, screenName, location?.pathname, handleRowClick, dispatch, navigate, getProfile, hideLegacyRowChrome, rowActionsInGridmenu]);
+  }, [columnsDragbe, columnsForFilter, screenName, location?.pathname, handleRowClick, dispatch, navigate, getProfile, hideLegacyRowChrome, rowActionsInGridmenu, onDuplicateReviewRequest]);
 
   // Pagination logic with UnifiedPagination
   const defaultPageSize = useMemo(() => getDefaultPageSize(dataSource.length), [dataSource.length]);

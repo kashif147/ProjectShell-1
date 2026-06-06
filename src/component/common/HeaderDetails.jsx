@@ -1371,7 +1371,6 @@ function HeaderDetails({
             location?.pathname == "/CasesSummary" ||
             location?.pathname == "/Transfers" ||
             location?.pathname == "/CorrespondencesSummary" ||
-            location?.pathname == "/Reports" ||
             location?.pathname == "/RosterSummary" ||
             location?.pathname == "/EventsDashboard" ||
             location?.pathname == "/CorrespondenceDashboard" ||
@@ -1408,6 +1407,8 @@ function HeaderDetails({
             location?.pathname == "/JournalAdjustments" ||
             location?.pathname == "/GeneralLedger" ||
             location?.pathname == "/MembershipListingReport" ||
+            location?.pathname == "/StatisticsReport" ||
+            location?.pathname == "/WorkplaceBreakdownReport" ||
             location?.pathname == "/InAppNotifications") && (
             <div className="search-main">
               <div className="title d-flex justify-content-between align-items-start">
@@ -1450,8 +1451,12 @@ function HeaderDetails({
                         ? `Profile`
                         : nav === "/MembershipDashboard"
                           ? "Executive Dashboard"
-                          : location?.state?.search ||
-                            (nav === "/DirectDebitAuthorization"
+                          : nav === "/StatisticsReport"
+                            ? "Statistics Report"
+                            : nav === "/WorkplaceBreakdownReport"
+                              ? "Workplace Membership Breakdown"
+                            : location?.state?.search ||
+                              (nav === "/DirectDebitAuthorization"
                               ? "Direct Debit Authorization"
                               : nav === "/DirectDebit"
                                 ? "Direct Debit"

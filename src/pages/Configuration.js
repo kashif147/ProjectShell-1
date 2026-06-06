@@ -95,6 +95,7 @@ import {
   resolveConfigurationDrawerKey,
   getLookupsForLookupType,
   getLookupTypeFieldPropsForRecord,
+  isWorkLocationLookupType,
   withDynamicLookupTypeId,
 } from "../utils/configurationLookupHelpers";
 import {
@@ -1426,6 +1427,7 @@ const Configuration = () => {
         country: "",
         fullAddress: "",
       },
+      processSalaryDeduction: false,
     },
     Cities: {
       lookuptypeId: "68c85f22302e5600dc8477ed",
@@ -1560,6 +1562,7 @@ const Configuration = () => {
       userid: "67f3f9d812b014a0a7a94081",
       isactive: true,
       isDeleted: false,
+      processSalaryDeduction: false,
     },
     StandardLookup: {
       lookuptypeId: "",
@@ -1571,6 +1574,7 @@ const Configuration = () => {
       userid: "67f3f9d812b014a0a7a94081",
       isactive: true,
       isDeleted: false,
+      processSalaryDeduction: false,
     },
     Gender: {
       lookuptypeId: "68c85f21302e5600dc8477da",
@@ -2554,6 +2558,16 @@ const Configuration = () => {
             .join(", ") || "-"
         );
       },
+    },
+    {
+      title: "Process Salary Deduction",
+      key: "processSalaryDeduction",
+      render: (_, record) => (
+        <Checkbox
+          disabled
+          checked={!!record?.processSalaryDeduction}
+        />
+      ),
     },
     {
       title: "Active",
@@ -7305,6 +7319,21 @@ const Configuration = () => {
                   Active
                 </Checkbox>
               </Col>
+              <Col span={12}>
+                <Checkbox
+                  disabled={isDisable}
+                  checked={!!drawerIpnuts?.Station?.processSalaryDeduction}
+                  onChange={(e) =>
+                    drawrInptChng(
+                      "Station",
+                      "processSalaryDeduction",
+                      e.target.checked,
+                    )
+                  }
+                >
+                  Process Salary Deduction
+                </Checkbox>
+              </Col>
             </Row>
 
             <Row gutter={24} style={{ marginTop: 16 }}>
@@ -8103,6 +8132,10 @@ const Configuration = () => {
                 required
                 onChange={(value) => {
                   const nextTypeId = String(value.target.value);
+                  const isWorkLoc = isWorkLocationLookupType(
+                    nextTypeId,
+                    lookupsTypes,
+                  );
                   setdrawerIpnuts((prev) => ({
                     ...prev,
                     Lookup: {
@@ -8110,6 +8143,9 @@ const Configuration = () => {
                       lookuptypeId: nextTypeId,
                       Parentlookupid: null,
                       Parentlookup: "",
+                      ...(isWorkLoc
+                        ? {}
+                        : { processSalaryDeduction: false }),
                     },
                   }));
                 }}
@@ -8193,6 +8229,27 @@ const Configuration = () => {
                 Active
               </Checkbox>
             </Col>
+            {isWorkLocationLookupType(
+              drawerIpnuts?.Lookup?.lookuptypeId,
+              lookupsTypes,
+            ) ? (
+              <Col span={12}>
+                <Checkbox
+                  disabled={isDisable}
+                  checked={!!drawerIpnuts?.Lookup?.processSalaryDeduction}
+                  onChange={(e) =>
+                    drawrInptChng(
+                      "Lookup",
+                      "processSalaryDeduction",
+                      e.target.checked,
+                    )
+                  }
+                  style={{ marginTop: "0px" }}
+                >
+                  Process Salary Deduction
+                </Checkbox>
+              </Col>
+            ) : null}
           </Row>
 
           <div className="mt-4 config-tbl-container">
@@ -8366,6 +8423,24 @@ const Configuration = () => {
                 Active
               </Checkbox>
             </Col>
+            {isWorkLocationLookupType(activeStandardLookupType) ? (
+              <Col span={12}>
+                <Checkbox
+                  disabled={isDisable}
+                  checked={!!drawerIpnuts?.StandardLookup?.processSalaryDeduction}
+                  onChange={(e) =>
+                    drawrInptChng(
+                      "StandardLookup",
+                      "processSalaryDeduction",
+                      e.target.checked,
+                    )
+                  }
+                  style={{ marginTop: "26px" }}
+                >
+                  Process Salary Deduction
+                </Checkbox>
+              </Col>
+            ) : null}
           </Row>
 
           <div className="mt-4 config-tbl-container">

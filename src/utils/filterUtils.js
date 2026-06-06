@@ -580,6 +580,12 @@ const MEMBERSHIP_LISTING_TEMPLATE_TYPES = new Set([
     "membershiplisting",
     "MembershipListing",
     "membershipListing",
+    "statisticsreport",
+    "StatisticsReport",
+    "statisticsReport",
+    "workplacebreakdownreport",
+    "WorkplaceBreakdownReport",
+    "workplaceBreakdownReport",
 ]);
 
 /** UI / column keys → reporting-service template filter keys. */

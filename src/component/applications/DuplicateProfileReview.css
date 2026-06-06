@@ -1,0 +1,43 @@
+.duplicate-profile-review-drawer .ant-drawer-body {
+  padding: 0 !important;
+  overflow-x: hidden;
+}
+
+.duplicate-profile-review-drawer .duplicate-review-drawer-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.duplicate-profile-review-drawer .duplicate-review-drawer-content {
+  padding: 24px 34px;
+}
+
+.duplicate-profile-review-drawer .duplicate-review-status {
+  margin-bottom: 16px;
+}
+
+.duplicate-profile-review-drawer .duplicate-review-section {
+  margin-bottom: 24px;
+}
+
+.duplicate-profile-review-drawer .duplicate-review-section:last-child {
+  margin-bottom: 0;
+}
+
+.duplicate-profile-review-drawer .duplicate-review-section-title {
+  font-size: 12px;
+  font-weight: 700;
+  color: #4b5563;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  margin: 0 0 12px 0;
+}
+
+.duplicate-profile-review-drawer .common-table .tbl-footer {
+  margin-top: 0;
+}
+
+.duplicate-profile-review-drawer .duplicate-review-actions .ant-btn {
+  padding: 0 4px;
+}

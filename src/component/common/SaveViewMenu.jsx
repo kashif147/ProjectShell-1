@@ -63,6 +63,8 @@ import { bumpWriteOffsReload } from "../../utils/writeOffsWorkspace";
 import { bumpGeneralLedgerReload } from "../../utils/generalLedgerWorkspace";
 import { bumpReconciliationReload } from "../../utils/reconciliationWorkspace";
 import { bumpMembershipListingReportReload } from "../../utils/membershipListingReportWorkspace";
+import { bumpMembershipStatisticsReportReload } from "../../utils/membershipStatisticsReportWorkspace";
+import { bumpWorkplaceBreakdownReportReload } from "../../utils/workplaceBreakdownReportWorkspace";
 import {
   GRID_SYSTEM_DEFAULT_PAGES,
   buildVisibleColumnKeys,
@@ -166,6 +168,8 @@ const SaveViewMenu = ({ className, style }) => {
     generalledger: "generalledger",
     reconciliation: "reconciliation",
     membershiplistingreport: "membershiplisting",
+    statisticsreport: "statisticsreport",
+    workplacebreakdownreport: "workplacebreakdownreport",
     correspondencesummary: "notification",
     correspondencedashboard: "notification",
     communication: "notification",
@@ -278,6 +282,12 @@ const SaveViewMenu = ({ className, style }) => {
     }
     if (activePage === "MembershipListingReport") {
       bumpMembershipListingReportReload();
+    }
+    if (activePage === "StatisticsReport") {
+      bumpMembershipStatisticsReportReload();
+    }
+    if (activePage === "WorkplaceBreakdownReport") {
+      bumpWorkplaceBreakdownReportReload();
     }
   };
 

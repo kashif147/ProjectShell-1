@@ -26,5 +26,9 @@ export function resolveReportExportPayload() {
     screenCols: base.screenCols || [],
     filtersState: base.filtersState || {},
     disabled: Boolean(base.disabled ?? reg.disabled),
+    exportKind: base.exportKind,
+    statisticsSnapshot: base.statisticsSnapshot,
+    workplaceBreakdownSnapshot: base.workplaceBreakdownSnapshot,
+    extraHeaderLines: base.extraHeaderLines || [],
   };
 }

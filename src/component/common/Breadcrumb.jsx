@@ -309,6 +309,11 @@ const Breadcrumb = () => {
       page: "Live Stats",
       icon: "📊",
     },
+    "/StatisticsReport": {
+      module: "Reports",
+      page: "Statistics Report",
+      icon: "📊",
+    },
     "/MembershipListingReport": {
       module: "Reports",
       page: "Membership Listing Report",
@@ -316,7 +321,7 @@ const Breadcrumb = () => {
     },
     "/Reports": {
       module: "Reports",
-      page: "Reports",
+      page: "Membership Reports",
       icon: "📊",
     },
 

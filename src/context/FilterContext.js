@@ -34,6 +34,58 @@ const FilterContext = createContext();
 // 🔹 Common filters that should appear on all screens
 const COMMON_FILTERS = ["Grade", "Work Location", "Region", "Branch"];
 
+/** Statistics report: membership / executive filters only (no application/profile fields). */
+const STATISTICS_REPORT_ALLOWED_FILTERS = [
+  "Membership Category",
+  "Membership Status",
+  "Membership Movement",
+  "Grade",
+  "Work Location",
+  "Section (Primary Section)",
+  "Region",
+  "Branch",
+  "Payment Type",
+  "Payment Frequency",
+  "Membership Start Date",
+  "Expiry Date",
+  "Cancelled Date",
+  "Resigned Date",
+  "Processed At Date",
+  "Renewal Date",
+  "Last Payment Date",
+  "Invoice Amount",
+  "Arrears Amount",
+  "Deferred Amount",
+  "Balance",
+];
+
+const STATISTICS_REPORT_ALLOWED_SET = new Set(
+  STATISTICS_REPORT_ALLOWED_FILTERS,
+);
+
+/** Toolbar chips shown on first visit / reset. Month, Year, Student, Honorary are header controls. */
+const STATISTICS_REPORT_DEFAULT_VISIBLE_FILTERS = [
+  "Membership Category",
+  "Grade",
+  "Branch",
+  "Region",
+];
+
+const WORKPLACE_BREAKDOWN_REPORT_DEFAULT_VISIBLE_FILTERS = [
+  "Membership Status",
+  "Work Location",
+  "Region",
+];
+
+const AGGREGATE_MEMBERSHIP_REPORT_SCREENS = new Set([
+  "StatisticsReport",
+  "WorkplaceBreakdownReport",
+]);
+
+function isAggregateMembershipReportScreen(screen) {
+  return AGGREGATE_MEMBERSHIP_REPORT_SCREENS.has(screen);
+}
+
 export const FilterProvider = ({ children }) => {
   const dispatch = useDispatch();
 
@@ -145,6 +197,14 @@ export const FilterProvider = ({ children }) => {
       visibleFilters: [],
       filtersState: {},
     },
+    StatisticsReport: {
+      visibleFilters: [],
+      filtersState: {},
+    },
+    WorkplaceBreakdownReport: {
+      visibleFilters: [],
+      filtersState: {},
+    },
     EmailCampaigns: {
       visibleFilters: [],
       filtersState: {},
@@ -197,6 +257,11 @@ export const FilterProvider = ({ children }) => {
       month: now.getUTCMonth() + 1,
       includeStudents: true,
       includeHonorary: true,
+      includeBreakdown: true,
+      includeEmptyRows: false,
+      rollingMonths: 12,
+      audienceScope: "full",
+      scopeUserId: null,
       manualMembershipCategories: { operator: "==", selectedValues: [] },
     };
   };
@@ -231,7 +296,11 @@ export const FilterProvider = ({ children }) => {
   /** Always use live filter state. Falling back to `screenFilterStates` when live was empty caused stale template values and broken Save / dirty behavior. */
   const getFiltersStateForSave = useCallback(() => {
     const live = { ...(filtersStateRef.current || {}) };
-    if (activePageRef.current === "MembershipListingReport") {
+    if (
+      activePageRef.current === "MembershipListingReport" ||
+      activePageRef.current === "StatisticsReport" ||
+      activePageRef.current === "WorkplaceBreakdownReport"
+    ) {
       return consolidateMembershipListingFilters(live, []).filtersState;
     }
     return live;
@@ -577,6 +646,8 @@ export const FilterProvider = ({ children }) => {
       "/attendees": "Attendees",
       "/membershipdashboard": "MembershipDashboard",
       "/membershiplistingreport": "MembershipListingReport",
+      "/statisticsreport": "StatisticsReport",
+      "/workplacebreakdownreport": "WorkplaceBreakdownReport",
       "/email": "EmailCampaigns",
       "/emailcampaigndetail": "EmailCampaigns",
       "/creditnotes": "CreditNotes",
@@ -759,6 +830,8 @@ export const FilterProvider = ({ children }) => {
         "Deferred Amount",
         "Balance",
       ],
+      StatisticsReport: [...STATISTICS_REPORT_ALLOWED_FILTERS],
+      WorkplaceBreakdownReport: [...STATISTICS_REPORT_ALLOWED_FILTERS],
       EmailCampaigns: [
         "Membership Category",
         "Submission Date",
@@ -881,6 +954,8 @@ export const FilterProvider = ({ children }) => {
       "Section (Primary Section)",
       "Payment Type",
     ],
+    StatisticsReport: [...STATISTICS_REPORT_DEFAULT_VISIBLE_FILTERS],
+    WorkplaceBreakdownReport: [...WORKPLACE_BREAKDOWN_REPORT_DEFAULT_VISIBLE_FILTERS],
     EmailCampaigns: ["Membership Category"],
     CreditNotes: ["CN Status"],
     JournalAdjustments: ["JA Status"],
@@ -890,13 +965,67 @@ export const FilterProvider = ({ children }) => {
     Reconciliation: ["Rec Status", "Clearing Account"],
   };
 
+  /** Preserve order; drop duplicate labels (e.g. Grade in both screen defaults and COMMON_FILTERS). */
+  const dedupeFilterLabels = (labels = []) => {
+    const seen = new Set();
+    return labels.filter((label) => {
+      if (!label || seen.has(label)) return false;
+      seen.add(label);
+      return true;
+    });
+  };
+
+  const restrictStatisticsReportFilters = (
+    visible = [],
+    state = {},
+  ) => {
+    const visibleFilters = dedupeFilterLabels(
+      visible.filter((label) => STATISTICS_REPORT_ALLOWED_SET.has(label)),
+    );
+    const filtersState = {};
+    Object.entries(state || {}).forEach(([key, value]) => {
+      if (STATISTICS_REPORT_ALLOWED_SET.has(key)) {
+        filtersState[key] = value;
+      }
+    });
+    return { visibleFilters, filtersState };
+  };
+
+  const buildAggregateReportVisibleFilters = (screen, state = {}) => {
+    const defaults =
+      screen === "WorkplaceBreakdownReport"
+        ? WORKPLACE_BREAKDOWN_REPORT_DEFAULT_VISIBLE_FILTERS
+        : STATISTICS_REPORT_DEFAULT_VISIBLE_FILTERS;
+    const withValues = Object.keys(state || {}).filter(
+      (key) =>
+        STATISTICS_REPORT_ALLOWED_SET.has(key) &&
+        (state[key]?.selectedValues || []).length > 0,
+    );
+    return dedupeFilterLabels([
+      ...defaults,
+      ...withValues.filter((key) => !defaults.includes(key)),
+    ]);
+  };
+
+  const buildStatisticsReportVisibleFilters = (state = {}) =>
+    buildAggregateReportVisibleFilters("StatisticsReport", state);
+
+  const buildWorkplaceBreakdownReportVisibleFilters = (state = {}) =>
+    buildAggregateReportVisibleFilters("WorkplaceBreakdownReport", state);
+
   // 🔹 Helper to get default visible filters for a screen
   const getDefaultVisibleFilters = (screen) => {
+    if (screen === "StatisticsReport") {
+      return [...STATISTICS_REPORT_DEFAULT_VISIBLE_FILTERS];
+    }
+    if (screen === "WorkplaceBreakdownReport") {
+      return [...WORKPLACE_BREAKDOWN_REPORT_DEFAULT_VISIBLE_FILTERS];
+    }
     const screenSpecific = screenSpecificDefaultFilters[screen] || [];
     const availableCommonFilters = COMMON_FILTERS.filter((filter) =>
       viewFilters[screen]?.includes(filter),
     );
-    return [...screenSpecific, ...availableCommonFilters];
+    return dedupeFilterLabels([...screenSpecific, ...availableCommonFilters]);
   };
 
   // 🔹 Default visible filters for each screen
@@ -914,6 +1043,8 @@ export const FilterProvider = ({ children }) => {
       Attendees: getDefaultVisibleFilters("Attendees"),
       MembershipDashboard: getDefaultVisibleFilters("MembershipDashboard"),
       MembershipListingReport: getDefaultVisibleFilters("MembershipListingReport"),
+      StatisticsReport: getDefaultVisibleFilters("StatisticsReport"),
+      WorkplaceBreakdownReport: getDefaultVisibleFilters("WorkplaceBreakdownReport"),
       EmailCampaigns: getDefaultVisibleFilters("EmailCampaigns"),
       CreditNotes: getDefaultVisibleFilters("CreditNotes"),
       JournalAdjustments: getDefaultVisibleFilters("JournalAdjustments"),
@@ -1200,6 +1331,146 @@ export const FilterProvider = ({ children }) => {
         "Membership Status": {
           operator: "==",
           selectedValues: [],
+        },
+        "Membership Movement": {
+          operator: "==",
+          selectedValues: [],
+        },
+        Grade: {
+          operator: "==",
+          selectedValues: [],
+        },
+        "Work Location": {
+          operator: "==",
+          selectedValues: [],
+        },
+        "Section (Primary Section)": {
+          operator: "==",
+          selectedValues: [],
+        },
+        Region: {
+          operator: "==",
+          selectedValues: [],
+        },
+        Branch: {
+          operator: "==",
+          selectedValues: [],
+        },
+        "Payment Type": {
+          operator: "==",
+          selectedValues: [],
+        },
+        "Payment Frequency": {
+          operator: "==",
+          selectedValues: [],
+        },
+        "Membership Start Date": {
+          operator: "between",
+          selectedValues: [],
+        },
+        "Expiry Date": {
+          operator: "between",
+          selectedValues: [],
+        },
+        "Cancelled Date": {
+          operator: "between",
+          selectedValues: [],
+        },
+        "Resigned Date": {
+          operator: "between",
+          selectedValues: [],
+        },
+        "Processed At Date": {
+          operator: "between",
+          selectedValues: [],
+        },
+        "Renewal Date": {
+          operator: "between",
+          selectedValues: [],
+        },
+        "Last Payment Date": {
+          operator: "between",
+          selectedValues: [],
+        },
+      },
+      StatisticsReport: {
+        "Membership Category": {
+          operator: "==",
+          selectedValues: [],
+        },
+        "Membership Status": {
+          operator: "==",
+          selectedValues: [],
+        },
+        "Membership Movement": {
+          operator: "==",
+          selectedValues: [],
+        },
+        Grade: {
+          operator: "==",
+          selectedValues: [],
+        },
+        "Work Location": {
+          operator: "==",
+          selectedValues: [],
+        },
+        "Section (Primary Section)": {
+          operator: "==",
+          selectedValues: [],
+        },
+        Region: {
+          operator: "==",
+          selectedValues: [],
+        },
+        Branch: {
+          operator: "==",
+          selectedValues: [],
+        },
+        "Payment Type": {
+          operator: "==",
+          selectedValues: [],
+        },
+        "Payment Frequency": {
+          operator: "==",
+          selectedValues: [],
+        },
+        "Membership Start Date": {
+          operator: "between",
+          selectedValues: [],
+        },
+        "Expiry Date": {
+          operator: "between",
+          selectedValues: [],
+        },
+        "Cancelled Date": {
+          operator: "between",
+          selectedValues: [],
+        },
+        "Resigned Date": {
+          operator: "between",
+          selectedValues: [],
+        },
+        "Processed At Date": {
+          operator: "between",
+          selectedValues: [],
+        },
+        "Renewal Date": {
+          operator: "between",
+          selectedValues: [],
+        },
+        "Last Payment Date": {
+          operator: "between",
+          selectedValues: [],
+        },
+      },
+      WorkplaceBreakdownReport: {
+        "Membership Category": {
+          operator: "==",
+          selectedValues: [],
+        },
+        "Membership Status": {
+          operator: "==",
+          selectedValues: ["Active"],
         },
         "Membership Movement": {
           operator: "==",
@@ -1595,10 +1866,23 @@ export const FilterProvider = ({ children }) => {
               filtersState: savedState.filtersState,
               visibleFilters: savedState.visibleFilters,
             };
-      if (activeScreen === "MembershipListingReport") {
+      if (
+        activeScreen === "MembershipListingReport" ||
+        isAggregateMembershipReportScreen(activeScreen)
+      ) {
         loaded = consolidateMembershipListingFilters(
           loaded.filtersState,
           loaded.visibleFilters,
+        );
+      }
+      if (isAggregateMembershipReportScreen(activeScreen)) {
+        loaded = restrictStatisticsReportFilters(
+          loaded.visibleFilters,
+          loaded.filtersState,
+        );
+        loaded.visibleFilters = buildAggregateReportVisibleFilters(
+          activeScreen,
+          loaded.filtersState,
         );
       }
       setVisibleFilters(loaded.visibleFilters);
@@ -1610,9 +1894,63 @@ export const FilterProvider = ({ children }) => {
     }
   }, [activeScreen]);
 
+  // Drop duplicate or non-membership chips (saved state / templates from other screens).
+  useEffect(() => {
+    if (!isAggregateMembershipReportScreen(activePage)) return;
+    const restricted = restrictStatisticsReportFilters(
+      visibleFilters,
+      filtersState,
+    );
+    const visSame =
+      restricted.visibleFilters.length === visibleFilters.length &&
+      restricted.visibleFilters.every((l, i) => l === visibleFilters[i]);
+    const stateKeys = Object.keys(filtersState);
+    const restrictedKeys = Object.keys(restricted.filtersState);
+    const stateSame =
+      stateKeys.length === restrictedKeys.length &&
+      stateKeys.every((k) => restricted.filtersState[k] === filtersState[k]);
+    if (visSame && stateSame) return;
+    setVisibleFilters(restricted.visibleFilters);
+    setFiltersState(restricted.filtersState);
+    filtersStateRef.current = restricted.filtersState;
+    setScreenFilterStates((prev) => ({
+      ...prev,
+      [activePage]: {
+        visibleFilters: restricted.visibleFilters,
+        filtersState: restricted.filtersState,
+      },
+    }));
+  }, [activePage, visibleFilters, filtersState]);
+
+  // Aggregate membership reports: default toolbar chips only (extras only when filter has values).
+  useEffect(() => {
+    if (!isAggregateMembershipReportScreen(activePage)) return;
+    const normalized = buildAggregateReportVisibleFilters(
+      activePage,
+      filtersStateRef.current,
+    );
+    const visSame =
+      normalized.length === visibleFilters.length &&
+      normalized.every((label, i) => label === visibleFilters[i]);
+    if (visSame) return;
+    setVisibleFilters(normalized);
+    setScreenFilterStates((prev) => ({
+      ...prev,
+      [activePage]: {
+        visibleFilters: normalized,
+        filtersState: filtersStateRef.current,
+      },
+    }));
+  }, [activePage]);
+
   // Strip legacy "Date Range" chip when already on the listing report (no route change).
   useEffect(() => {
-    if (activePage !== "MembershipListingReport") return;
+    if (
+      activePage !== "MembershipListingReport" &&
+      !isAggregateMembershipReportScreen(activePage)
+    ) {
+      return;
+    }
     const hasLegacyChip =
       visibleFilters.includes("Date Range") ||
       filtersState["Date Range"] ||
@@ -1629,6 +1967,14 @@ export const FilterProvider = ({ children }) => {
     setScreenFilterStates((prev) => ({
       ...prev,
       MembershipListingReport: {
+        visibleFilters: cleaned.visibleFilters,
+        filtersState: cleaned.filtersState,
+      },
+      StatisticsReport: {
+        visibleFilters: cleaned.visibleFilters,
+        filtersState: cleaned.filtersState,
+      },
+      WorkplaceBreakdownReport: {
         visibleFilters: cleaned.visibleFilters,
         filtersState: cleaned.filtersState,
       },
@@ -1993,11 +2339,25 @@ export const FilterProvider = ({ children }) => {
 
   // 🔹 Helper functions
   const toggleFilter = (filter, checked) => {
-    const newVisibleFilters = checked
+    if (
+      isAggregateMembershipReportScreen(activePage) &&
+      !STATISTICS_REPORT_ALLOWED_SET.has(filter)
+    ) {
+      return;
+    }
+
+    let newVisibleFilters = checked
       ? visibleFilters.includes(filter)
         ? visibleFilters
         : [...visibleFilters, filter]
       : visibleFilters.filter((f) => f !== filter);
+
+    if (isAggregateMembershipReportScreen(activePage)) {
+      newVisibleFilters = restrictStatisticsReportFilters(
+        newVisibleFilters,
+        filtersState,
+      ).visibleFilters;
+    }
 
     setVisibleFilters(newVisibleFilters);
 
@@ -2104,12 +2464,22 @@ export const FilterProvider = ({ children }) => {
     if (activePage === "Applications") {
       return visibleFilters.filter((label) => label !== "Status");
     }
+    if (isAggregateMembershipReportScreen(activePage)) {
+      return restrictStatisticsReportFilters(
+        visibleFilters.filter(
+          (label) => label !== "Date Range" && label !== "Payment Date",
+        ),
+        filtersState,
+      ).visibleFilters;
+    }
     if (activePage === "MembershipListingReport") {
-      return visibleFilters.filter(
-        (label) => label !== "Date Range" && label !== "Payment Date",
+      return dedupeFilterLabels(
+        visibleFilters.filter(
+          (label) => label !== "Date Range" && label !== "Payment Date",
+        ),
       );
     }
-    return visibleFilters;
+    return dedupeFilterLabels(visibleFilters);
   };
 
   const orderedVisibleFilters = getOrderedVisibleFilters();
@@ -2149,10 +2519,19 @@ export const FilterProvider = ({ children }) => {
         ? consolidateApplicationsStatusFilter(newFiltersState, visibleFilters)
         : { filtersState: newFiltersState, visibleFilters };
 
-    if (activePage === "MembershipListingReport") {
+    if (
+      activePage === "MembershipListingReport" ||
+      isAggregateMembershipReportScreen(activePage)
+    ) {
       consolidated = consolidateMembershipListingFilters(
         consolidated.filtersState,
         consolidated.visibleFilters,
+      );
+    }
+    if (isAggregateMembershipReportScreen(activePage)) {
+      consolidated = restrictStatisticsReportFilters(
+        consolidated.visibleFilters,
+        consolidated.filtersState,
       );
     }
 
@@ -2166,23 +2545,43 @@ export const FilterProvider = ({ children }) => {
       },
     }));
 
-    // Also ensure all filters in the template are visible
     const templateKeys = Object.keys(sanitizedTemplateFilters);
-    const mergedVisible = [
-      ...consolidated.visibleFilters,
-      ...templateKeys.filter((key) => !consolidated.visibleFilters.includes(key)),
-    ];
-    let newVisible =
-      activePage === "Applications"
-        ? mergedVisible.filter((label) => label !== "Status")
-        : mergedVisible;
-    if (activePage === "MembershipListingReport") {
-      newVisible = consolidateMembershipListingFilters(
+    let newVisible;
+    if (isAggregateMembershipReportScreen(activePage)) {
+      newVisible = buildAggregateReportVisibleFilters(
+        activePage,
         consolidated.filtersState,
-        newVisible,
+      );
+      const keysWithValues = templateKeys.filter(
+        (key) =>
+          (sanitizedTemplateFilters[key]?.selectedValues || []).length > 0,
+      );
+      newVisible = restrictStatisticsReportFilters(
+        dedupeFilterLabels([
+          ...newVisible,
+          ...keysWithValues.filter((key) => !newVisible.includes(key)),
+        ]),
+        consolidated.filtersState,
       ).visibleFilters;
+    } else {
+      const mergedVisible = [
+        ...consolidated.visibleFilters,
+        ...templateKeys.filter(
+          (key) => !consolidated.visibleFilters.includes(key),
+        ),
+      ];
+      newVisible =
+        activePage === "Applications"
+          ? mergedVisible.filter((label) => label !== "Status")
+          : mergedVisible;
+      if (activePage === "MembershipListingReport") {
+        newVisible = consolidateMembershipListingFilters(
+          consolidated.filtersState,
+          newVisible,
+        ).visibleFilters;
+      }
     }
-    setVisibleFilters(newVisible);
+    setVisibleFilters(dedupeFilterLabels(newVisible));
 
     userOverrodeTemplateFiltersRef.current = false;
   };

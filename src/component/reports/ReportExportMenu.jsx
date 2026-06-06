@@ -13,6 +13,20 @@ import {
   printReportDocument,
 } from "../../utils/reportExportToolkit";
 import { resolveReportExportPayload } from "../../utils/reportExportBridge";
+import {
+  exportStatisticsReportToCsv,
+  exportStatisticsReportToPdf,
+  exportStatisticsReportToXlsx,
+  printStatisticsReportDom,
+  statisticsExportHasData,
+} from "../../pages/reports/statisticsReportExport";
+import {
+  exportWorkplaceBreakdownReportToCsv,
+  exportWorkplaceBreakdownReportToPdf,
+  exportWorkplaceBreakdownReportToXlsx,
+  printWorkplaceBreakdownReportDom,
+  workplaceBreakdownExportHasData,
+} from "../../pages/reports/workplaceBreakdownReportExport";
 
 const MENU_ITEMS = [
   { key: "csv", label: "Export CSV", icon: <DownloadOutlined /> },
@@ -25,15 +39,6 @@ export default function ReportExportMenu({ triggerClassName = "me-1 gray-btn but
   const [busy, setBusy] = useState(false);
 
   const run = async (fn, successMsg) => {
-    const payload = resolveReportExportPayload();
-    if (!payload) {
-      message.warning("Report export is not ready");
-      return;
-    }
-    if (!payload.data?.length) {
-      message.warning("No rows to export");
-      return;
-    }
     setBusy(true);
     try {
       await fn();
@@ -52,6 +57,60 @@ export default function ReportExportMenu({ triggerClassName = "me-1 gray-btn but
       message.warning("Report export is not ready");
       return;
     }
+
+    if (payload.exportKind === "statistics") {
+      const snapshot = payload.statisticsSnapshot;
+      if (!statisticsExportHasData(snapshot)) {
+        message.warning("No data to export");
+        return;
+      }
+      if (key === "csv") {
+        run(() => exportStatisticsReportToCsv(snapshot), "CSV downloaded");
+      } else if (key === "xlsx") {
+        run(() => exportStatisticsReportToXlsx(snapshot), "Excel downloaded");
+      } else if (key === "pdf") {
+        run(() => exportStatisticsReportToPdf(snapshot), "PDF downloaded");
+      } else if (key === "print") {
+        run(() => Promise.resolve(printStatisticsReportDom()), "Print dialog opened");
+      }
+      return;
+    }
+
+    if (payload.exportKind === "workplaceBreakdown") {
+      const snapshot = payload.workplaceBreakdownSnapshot;
+      if (!workplaceBreakdownExportHasData(snapshot)) {
+        message.warning("No data to export");
+        return;
+      }
+      if (key === "csv") {
+        run(
+          () => exportWorkplaceBreakdownReportToCsv(snapshot),
+          "CSV downloaded",
+        );
+      } else if (key === "xlsx") {
+        run(
+          () => exportWorkplaceBreakdownReportToXlsx(snapshot),
+          "Excel downloaded",
+        );
+      } else if (key === "pdf") {
+        run(
+          () => exportWorkplaceBreakdownReportToPdf(snapshot),
+          "PDF downloaded",
+        );
+      } else if (key === "print") {
+        run(
+          () => Promise.resolve(printWorkplaceBreakdownReportDom()),
+          "Print dialog opened",
+        );
+      }
+      return;
+    }
+
+    if (!payload.data?.length) {
+      message.warning("No rows to export");
+      return;
+    }
+
     const base = {
       reportTitle: payload.reportTitle,
       data: payload.data,
@@ -64,9 +123,9 @@ export default function ReportExportMenu({ triggerClassName = "me-1 gray-btn but
     } else if (key === "xlsx") {
       run(() => exportReportToXlsx(base), "Excel downloaded");
     } else if (key === "pdf") {
-      run(() => exportReportToPdf(base), "PDF downloaded");
+      run(() => exportReportToPdf({ ...base, layout: "landscape" }), "PDF downloaded");
     } else if (key === "print") {
-      run(() => printReportDocument(base), "Print dialog opened");
+      run(() => printReportDocument({ ...base, layout: "landscape" }), "Print dialog opened");
     }
   };
 
@@ -74,14 +133,16 @@ export default function ReportExportMenu({ triggerClassName = "me-1 gray-btn but
   const disabled = busy || payload?.disabled;
 
   return (
-    <Dropdown
-      menu={{ items: MENU_ITEMS, onClick: onMenuClick }}
-      trigger={["click"]}
-      disabled={disabled && !payload}
-    >
-      <Button className={triggerClassName} loading={busy}>
-        Export
-      </Button>
-    </Dropdown>
+    <span className="report-export-toolbar no-print">
+      <Dropdown
+        menu={{ items: MENU_ITEMS, onClick: onMenuClick }}
+        trigger={["click"]}
+        disabled={disabled && !payload}
+      >
+        <Button className={triggerClassName} loading={busy}>
+          Export
+        </Button>
+      </Dropdown>
+    </span>
   );
 }
