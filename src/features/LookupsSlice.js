@@ -5,6 +5,7 @@ import {
   getLookupId,
   getLookupName,
   getLookupTypeName,
+  normalizeLookup,
   normalizeLookups,
 } from "../utils/lookupHierarchy";
 
@@ -48,6 +49,25 @@ export const getAllLookups = createAsyncThunk(
   }
 );
 
+export const getLookupById = createAsyncThunk(
+  "lookups/fetchLookupById",
+  async (id, { rejectWithValue }) => {
+    try {
+      const { data } = await axios.get(`${API_URL}/lookup/${id}`, {
+        headers: getAuthHeaders(),
+      });
+      const payload = data?.data ?? data;
+      return normalizeLookup(payload);
+    } catch (error) {
+      return rejectWithValue(
+        error.response?.data?.message ||
+          error.message ||
+          "Failed to fetch lookup",
+      );
+    }
+  },
+);
+
 const lookupsSlice = createSlice({
   name: "lookups",
   initialState: {
@@ -72,6 +92,8 @@ const lookupsSlice = createSlice({
     // Raw API response (optional - remove if not needed)
     lookups: [],
     lookupsloading: false,
+    lookupDetailLoading: false,
+    lookupDetailError: null,
     error: null,
     lastErrorTime: null,
   },
@@ -252,6 +274,17 @@ const lookupsSlice = createSlice({
         state.lookupsloading = false;
         state.error = action.payload;
         state.lastErrorTime = Date.now();
+      })
+      .addCase(getLookupById.pending, (state) => {
+        state.lookupDetailLoading = true;
+        state.lookupDetailError = null;
+      })
+      .addCase(getLookupById.fulfilled, (state) => {
+        state.lookupDetailLoading = false;
+      })
+      .addCase(getLookupById.rejected, (state, action) => {
+        state.lookupDetailLoading = false;
+        state.lookupDetailError = action.payload;
       });
   },
 });

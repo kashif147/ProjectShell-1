@@ -4,6 +4,7 @@ import axios from "axios";
 import { baseURL } from "../utils/Utilities";
 import {
   extractLookupTypesArray,
+  normalizeLookupType,
   normalizeLookupTypes,
 } from "../utils/lookupHierarchy";
 
@@ -49,6 +50,36 @@ export const getLookupTypes = createAsyncThunk(
   },
 );
 
+export const getLookupTypeById = createAsyncThunk(
+  "lookupsType/fetchLookupTypeById",
+  async (id, { rejectWithValue }) => {
+    try {
+      const token = localStorage.getItem("token");
+      const apiBaseUrl = process.env.REACT_APP_POLICY_SERVICE_URL || baseURL;
+
+      if (!apiBaseUrl) {
+        return rejectWithValue("API base URL is not configured");
+      }
+
+      const response = await axios.get(`${apiBaseUrl}/lookuptype/${id}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      });
+
+      const payload = response.data?.data ?? response.data;
+      return normalizeLookupType(payload);
+    } catch (error) {
+      return rejectWithValue(
+        error.response?.data?.message ||
+          error.message ||
+          "Failed to fetch lookup type",
+      );
+    }
+  },
+);
+
 const lookupsTypeSlice = createSlice({
   name: "lookupsType",
   initialState: {
@@ -56,6 +87,8 @@ const lookupsTypeSlice = createSlice({
     lookupsTypesloading: false,
     lookupsTypesFetched: false,
     lookupsTypeerror: null,
+    lookupTypeDetailLoading: false,
+    lookupTypeDetailError: null,
   },
   reducers: {
     clearLookupTypes: (state) => {
@@ -83,6 +116,17 @@ const lookupsTypeSlice = createSlice({
         state.lookupsTypesFetched = true;
         state.lookupsTypeerror = action.payload;
         state.lookupsTypes = [];
+      })
+      .addCase(getLookupTypeById.pending, (state) => {
+        state.lookupTypeDetailLoading = true;
+        state.lookupTypeDetailError = null;
+      })
+      .addCase(getLookupTypeById.fulfilled, (state) => {
+        state.lookupTypeDetailLoading = false;
+      })
+      .addCase(getLookupTypeById.rejected, (state, action) => {
+        state.lookupTypeDetailLoading = false;
+        state.lookupTypeDetailError = action.payload;
       });
   },
 });

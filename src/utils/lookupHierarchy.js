@@ -66,37 +66,165 @@ export const getLookupTypeId = (item) =>
   item?.typeId || item?.lookuptypeId?._id || item?.lookuptypeId || item?._id || item?.id;
 
 export const normalizeLookup = (item) => {
-  if (!item || item._id) return item;
+  if (!item) return item;
+
+  if (isSimpleRecord(item)) {
+    return {
+      ...item,
+      _id: item.id,
+      lookupname: item.name,
+      DisplayName: item.name,
+      lookuptypeName: item.type,
+      lookuptypeId: item.typeId
+        ? { _id: item.typeId, lookuptype: item.type, code: item.code }
+        : item.lookuptypeId,
+      Parentlookupid:
+        item.branch?.id || item.region?.id || item.Parentlookupid || null,
+      Parentlookup:
+        item.branch?.name || item.region?.name || item.Parentlookup || null,
+    };
+  }
+
+  const id = item._id || item.id;
+  const lookuptypeRef = item.lookuptypeId;
 
   return {
     ...item,
-    _id: item.id,
-    lookupname: item.name,
-    DisplayName: item.name,
-    lookuptypeName: item.type,
-    lookuptypeId: item.typeId
-      ? { _id: item.typeId, lookuptype: item.type, code: item.code }
-      : item.lookuptypeId,
+    _id: id,
+    id,
+    lookupname: item.lookupname ?? item.name ?? "",
+    DisplayName:
+      item.DisplayName ?? item.displayname ?? item.displayName ?? "",
+    lookuptypeName:
+      item.lookuptypeName ??
+      (typeof lookuptypeRef === "object" ? lookuptypeRef?.lookuptype : "") ??
+      item.type ??
+      "",
+    lookuptypeId: lookuptypeRef,
     Parentlookupid:
-      item.branch?.id || item.region?.id || item.Parentlookupid || null,
+      item.Parentlookupid ?? item.branch?.id ?? item.region?.id ?? null,
     Parentlookup:
-      item.branch?.name || item.region?.name || item.Parentlookup || null,
+      typeof item.Parentlookup === "string"
+        ? item.Parentlookup
+        : item.Parentlookup?.lookupname ??
+          item.branch?.name ??
+          item.region?.name ??
+          null,
+    ParentlookuptypeId:
+      item.ParentlookuptypeId ?? lookuptypeRef?.ParentlookuptypeId ?? null,
+    Parentlookuptype:
+      item.Parentlookuptype ?? lookuptypeRef?.Parentlookuptype ?? null,
   };
 };
 
-export const normalizeLookupType = (item) => {
-  if (!item || item._id) return item;
+export const resolveLookuptypeIdFromRecord = (record) => {
+  const val = record?.lookuptypeId;
+  if (val == null || val === "") return "";
+  if (typeof val === "object" && val._id) return String(val._id);
+  return String(val);
+};
 
+/** Map GET /lookup/:id (or list row) into Lookup drawer form state. */
+export const mapLookupToFormValues = (record, lookupsTypes = []) => {
+  const normalized = normalizeLookup(record);
+  const nestedType = normalized.lookuptypeId;
+
+  const parentTypeId =
+    resolveParentLookupTypeIdFromRecord(normalized) ||
+    resolveParentLookupTypeIdFromRecord(nestedType);
+  const parentTypeLabel =
+    resolveParentLookupTypeLabelFromRecord(normalized, lookupsTypes) ||
+    resolveParentLookupTypeLabelFromRecord(nestedType, lookupsTypes) ||
+    normalized.Parentlookuptype ||
+    nestedType?.Parentlookuptype ||
+    "";
+
+  const mapped = {
+    _id: normalized._id || normalized.id || null,
+    id: normalized._id || normalized.id || null,
+    lookuptypeId: resolveLookuptypeIdFromRecord(normalized),
+    code: normalized.code || "",
+    lookupname: normalized.lookupname || "",
+    DisplayName: normalized.DisplayName || "",
+    Parentlookupid: resolveParentLookupIdFromRecord(normalized),
+    Parentlookup: resolveParentLookupLabelFromRecord(normalized),
+    ParentlookuptypeId: parentTypeId,
+    Parentlookuptype: parentTypeLabel,
+    userid: normalized.userid,
+    isactive: normalized.isactive !== false,
+    isDeleted: normalized.isdeleted ?? normalized.isDeleted ?? false,
+  };
+
+  if (normalized.officer !== undefined) {
+    mapped.officer =
+      typeof normalized.officer === "object" && normalized.officer?._id
+        ? normalized.officer._id
+        : normalized.officer;
+  }
+  if (normalized.worklocationAddress) {
+    mapped.worklocationAddress = normalized.worklocationAddress;
+  }
+  if (normalized.cityId != null) {
+    mapped.cityId = normalized.cityId;
+  }
+
+  return mapped;
+};
+
+export const normalizeLookupType = (item) => {
+  if (!item) return item;
+
+  const id = item._id || item.id;
   return {
     ...item,
-    _id: item.id,
-    code: item.code,
-    lookuptype: item.name || item.lookuptype,
-    DisplayName: item.displayname || item.name,
-    ParentlookuptypeId: item.parent?.id || item.ParentlookuptypeId || null,
-    Parentlookuptype: item.parent?.name || item.Parentlookuptype || null,
-    isactive: item.isactive,
-    isDeleted: item.isdeleted ?? item.isDeleted,
+    _id: id,
+    id,
+    code: item.code ?? "",
+    lookuptype: item.lookuptype || item.name || "",
+    DisplayName:
+      item.DisplayName ||
+      item.displayname ||
+      item.displayName ||
+      item.name ||
+      "",
+    ParentlookuptypeId:
+      item.ParentlookuptypeId?._id ||
+      item.ParentlookuptypeId ||
+      item.parent?.id ||
+      null,
+    Parentlookuptype:
+      item.Parentlookuptype ||
+      item.parent?.name ||
+      item.parentlookuptype ||
+      null,
+    isactive:
+      typeof item.isactive === "boolean"
+        ? item.isactive
+        : item.isActive !== false,
+    isDeleted: item.isdeleted ?? item.isDeleted ?? false,
+  };
+};
+
+/** Map GET /lookuptype/:id (or list row) into Lookup Type drawer form state. */
+export const mapLookupTypeToFormValues = (record, lookupsTypes = []) => {
+  const normalized = normalizeLookupType(record);
+  const parentTypeId = resolveParentLookupTypeIdFromRecord(normalized);
+  const parentTypeLabel = resolveParentLookupTypeLabelFromRecord(
+    normalized,
+    lookupsTypes,
+  );
+
+  return {
+    _id: normalized._id || normalized.id || null,
+    id: normalized._id || normalized.id || null,
+    lookuptype: normalized.lookuptype || "",
+    code: normalized.code || "",
+    DisplayName: normalized.DisplayName || "",
+    ParentlookuptypeId: parentTypeId,
+    Parentlookuptype: parentTypeLabel || normalized.Parentlookuptype || null,
+    userid: normalized.userid,
+    isactive: normalized.isactive !== false,
+    isDeleted: normalized.isDeleted ?? false,
   };
 };
 
