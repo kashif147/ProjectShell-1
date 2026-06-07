@@ -3284,7 +3284,7 @@ function ApplicationMgtDrawer({
               style={{ flexShrink: 0 }}
               onClick={() => openDuplicateReviewDrawer(false)}
             >
-              Open Duplicate Profile Review
+              Open Duplicate Profiles
             </Button>
           </div>
         )}

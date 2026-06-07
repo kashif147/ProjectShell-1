@@ -38,7 +38,27 @@ const CLASSIFICATION_COLORS = {
   "Strong Match": "orange",
   "Possible Match": "gold",
   "Weak Match": "blue",
+  Ignore: "default",
 };
+
+/** Map duplicate-detection score to classification label. */
+function classificationFromScore(score) {
+  if (score === null || score === undefined || score === "") return null;
+  const n = Number(score);
+  if (!Number.isFinite(n)) return null;
+  if (n >= 100) return "Exact Duplicate";
+  if (n >= 80) return "Strong Match";
+  if (n >= 60) return "Possible Match";
+  if (n >= 40) return "Weak Match";
+  return "Ignore";
+}
+
+function resolveMatchClassification(record = {}) {
+  const fromScore = classificationFromScore(record.score);
+  if (fromScore) return fromScore;
+  const fromApi = String(record.classification || "").trim();
+  return fromApi || "—";
+}
 
 function membershipCategoryCompareKey(s) {
   if (s == null || s === "") return "";
@@ -68,10 +88,40 @@ function resolveMembershipCategoryLabel(raw, categoryOptions = []) {
 }
 
 function withRowKeys(rows = []) {
-  return rows.map((row) => ({
-    ...row,
-    key: `${row.sourceType}-${row.sourceId}`,
-  }));
+  const seen = new Set();
+  return rows.reduce((acc, row) => {
+    const key = `${row.sourceType}-${row.sourceId}`;
+    if (seen.has(key)) return acc;
+    seen.add(key);
+    acc.push({ ...row, key });
+    return acc;
+  }, []);
+}
+
+/** Avoid repeating matched field names when matchReason already lists them. */
+function formatMatchDetail(record = {}) {
+  const reason = String(record.matchReason || "").trim();
+  const fields = Array.isArray(record.matchedFields)
+    ? [
+        ...new Set(
+          record.matchedFields
+            .map((field) => String(field || "").trim())
+            .filter(Boolean),
+        ),
+      ]
+    : [];
+
+  if (!reason && fields.length === 0) return "";
+  if (!reason) return fields.join(", ");
+  if (fields.length === 0) return reason;
+
+  const reasonLower = reason.toLowerCase();
+  const extraFields = fields.filter(
+    (field) => !reasonLower.includes(field.toLowerCase()),
+  );
+
+  if (extraFields.length === 0) return reason;
+  return `${reason} · ${extraFields.join(", ")}`;
 }
 
 function MatchTable({
@@ -87,28 +137,22 @@ function MatchTable({
 }) {
   const columns = [
     {
-      title: "Score",
-      dataIndex: "score",
-      key: "score",
-      width: 70,
-      align: "center",
-      render: (score) => <Text strong>{score}</Text>,
-    },
-    {
-      title: "Match",
-      dataIndex: "classification",
+      title: "Classification",
       key: "classification",
-      width: 130,
-      render: (value) => (
-        <Tag color={CLASSIFICATION_COLORS[value] || "default"}>{value}</Tag>
-      ),
+      width: 150,
+      render: (_, record) => {
+        const label = resolveMatchClassification(record);
+        if (label === "—") return "—";
+        return (
+          <Tag color={CLASSIFICATION_COLORS[label] || "default"}>{label}</Tag>
+        );
+      },
     },
     {
       title: "Name",
       dataIndex: "name",
       key: "name",
       width: 160,
-      ellipsis: true,
       render: (value) => value || "—",
     },
     {
@@ -116,15 +160,7 @@ function MatchTable({
       dataIndex: "membershipCategory",
       key: "membershipCategory",
       width: 140,
-      ellipsis: true,
-      render: (value) => {
-        const label = resolveCategoryLabel(value);
-        return (
-          <Tooltip title={label} placement="topLeft">
-            <span>{label}</span>
-          </Tooltip>
-        );
-      },
+      render: (value) => resolveCategoryLabel(value),
     },
     {
       title: "Mem. No",
@@ -138,7 +174,6 @@ function MatchTable({
       dataIndex: "email",
       key: "email",
       width: 180,
-      ellipsis: true,
       render: (value) => value || "—",
     },
     {
@@ -151,23 +186,14 @@ function MatchTable({
     {
       title: "Why matched",
       key: "matchDetails",
-      ellipsis: true,
-      render: (_, record) => {
-        const fields = record.matchedFields?.length
-          ? record.matchedFields.join(", ")
-          : "";
-        const detail = [record.matchReason, fields].filter(Boolean).join(" · ");
-        return (
-          <Tooltip title={detail || "—"} placement="topLeft">
-            <span>{detail || "—"}</span>
-          </Tooltip>
-        );
-      },
+      width: 280,
+      render: (_, record) => formatMatchDetail(record) || "—",
     },
     {
       title: "Actions",
       key: "actions",
       width: showProfileActions ? 148 : 88,
+      align: "center",
       fixed: "right",
       render: (_, record) => (
         <Space size={4} className="duplicate-review-actions">
@@ -218,14 +244,19 @@ function MatchTable({
   return (
     <div className="duplicate-review-section">
       <h4 className="duplicate-review-section-title">{title}</h4>
-      <MyTable
-        columns={columns}
-        dataSource={dataSource}
-        loading={loading}
-        selection={false}
-        tablePadding={{ paddingLeft: "0", paddingRight: "0" }}
-        scroll={{ x: "max-content" }}
-      />
+      <div className="duplicate-review-table-wrap">
+        <MyTable
+          columns={columns}
+          dataSource={dataSource}
+          loading={loading}
+          selection={false}
+          tablePadding={{ paddingLeft: "0", paddingRight: "0", paddingBottom: "0" }}
+          scroll={{
+            x: showProfileActions ? 1180 : 1110,
+            y: "min(420px, calc(100vh - 380px))",
+          }}
+        />
+      </div>
     </div>
   );
 }
@@ -456,7 +487,7 @@ const DuplicateProfileReview = ({
         title={
           <div className="duplicate-review-drawer-title">
             <FaClone />
-            <span>Duplicate Profile Review</span>
+            <span>Duplicate Profiles</span>
           </div>
         }
         open={open}
