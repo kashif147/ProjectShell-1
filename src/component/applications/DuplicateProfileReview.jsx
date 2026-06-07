@@ -15,6 +15,7 @@ import {
   CloseCircleOutlined,
   EyeOutlined,
   MergeCellsOutlined,
+  PlusCircleOutlined,
   ReloadOutlined,
   TagOutlined,
 } from "@ant-design/icons";
@@ -25,7 +26,7 @@ import { buildApplicationMgtSearch } from "../../utils/applicationMgtRoute";
 import { buildDetailsSearch } from "../../utils/detailsRoute";
 import { getApplicationById } from "../../features/ApplicationDetailsSlice";
 import MyTable from "../common/MyTable";
-import DuplicateProfileMergeModal from "./DuplicateProfileMergeModal";
+import DuplicateProfileMergeDrawer from "./DuplicateProfileMergeDrawer";
 import "../../styles/MyDrawer.css";
 import "./DuplicateProfileReview.css";
 import "./DuplicateProfileMergeModal.css";
@@ -389,7 +390,7 @@ const DuplicateProfileReview = ({
     Modal.confirm({
       title: "Tag this Profile",
       content:
-        "On approval, this application will be linked to the selected profile and application details will override the existing profile data.",
+        "On approval, this application will be linked to the selected profile. Application details will override the existing profile data. Any active subscription on the profile will be cancelled and a new subscription will be created from this application.",
       okText: "Tag this Profile",
       centered: true,
       onOk: () =>
@@ -425,6 +426,17 @@ const DuplicateProfileReview = ({
       record,
       "Ignore Match",
     );
+  };
+
+  const handleCreateNewProfile = () => {
+    Modal.confirm({
+      title: "Create New Profile",
+      content:
+        "Confirm this application is for a new member. All listed matches will be dismissed and a new profile will be created on approval.",
+      okText: "Create New Profile",
+      centered: true,
+      onOk: () => submitDecision({ action: "MARKED_NEW" }),
+    });
   };
 
   const matchingApplications = useMemo(
@@ -470,6 +482,25 @@ const DuplicateProfileReview = ({
               </div>
             )}
 
+            <div className="duplicate-review-actions-bar">
+              <p className="duplicate-review-actions-bar-text">
+                <strong>Ignore Match</strong> dismisses one row at a time (use when
+                some matches are false positives). <strong>Create New Profile</strong>{" "}
+                dismisses all matches at once and records that this is a new member.
+                Both allow approval once complete; Tag and Merge link to an existing
+                profile instead.
+              </p>
+              <Button
+                type="primary"
+                className="duplicate-review-create-new-btn"
+                icon={<PlusCircleOutlined />}
+                loading={submitting}
+                onClick={handleCreateNewProfile}
+              >
+                Create New Profile
+              </Button>
+            </div>
+
             <MatchTable
               title="Matching Profiles"
               rows={matchingProfiles}
@@ -497,12 +528,11 @@ const DuplicateProfileReview = ({
         </div>
       </Drawer>
 
-      <DuplicateProfileMergeModal
+      <DuplicateProfileMergeDrawer
         open={mergeModal.open}
         onClose={() => setMergeModal({ open: false, record: null })}
         applicationId={applicationId}
         profileId={mergeModal.record?.sourceId}
-        profileLabel={mergeModal.record?.name}
         onConfirm={handleMergeConfirm}
         confirming={submitting}
       />

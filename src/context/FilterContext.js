@@ -13,6 +13,7 @@ import { getAllLookups } from "../features/LookupsSlice";
 import { getCategoryLookup } from "../features/CategoryLookupSlice";
 import { getWorkLocationHierarchy } from "../features/LookupsWorkLocationSlice";
 import { resetInitialization } from "../features/applicationwithfilterslice";
+import { markScreenChanged } from "../features/views/ScreenFilterChangSlice";
 import { fetchSubscriptionYears } from "../features/subscription/subscriptionSlice";
 import {
   isDateFilterLabel,
@@ -1028,6 +1029,34 @@ export const FilterProvider = ({ children }) => {
     return dedupeFilterLabels([...screenSpecific, ...availableCommonFilters]);
   };
 
+  const buildMembershipListingReportVisibleFilters = (
+    state = {},
+    savedVisible = null,
+  ) => {
+    const allowed = new Set(viewFilters.MembershipListingReport || []);
+    const defaults = getDefaultVisibleFilters("MembershipListingReport");
+
+    if (Array.isArray(savedVisible) && savedVisible.length > 0) {
+      return dedupeFilterLabels(
+        savedVisible.filter(
+          (label) =>
+            allowed.has(label) &&
+            label !== "Date Range" &&
+            label !== "Payment Date",
+        ),
+      );
+    }
+
+    const withValues = Object.keys(state || {}).filter(
+      (key) =>
+        allowed.has(key) && (state[key]?.selectedValues || []).length > 0,
+    );
+    return dedupeFilterLabels([
+      ...defaults,
+      ...withValues.filter((key) => !defaults.includes(key)),
+    ]);
+  };
+
   // 🔹 Default visible filters for each screen
   const defaultVisibleFilters = useMemo(
     () => ({
@@ -1875,6 +1904,13 @@ export const FilterProvider = ({ children }) => {
           loaded.visibleFilters,
         );
       }
+      if (activeScreen === "MembershipListingReport") {
+        const persistedVisible = savedState.visibleFilters || [];
+        loaded.visibleFilters = buildMembershipListingReportVisibleFilters(
+          loaded.filtersState,
+          persistedVisible.length > 0 ? persistedVisible : null,
+        );
+      }
       if (isAggregateMembershipReportScreen(activeScreen)) {
         loaded = restrictStatisticsReportFilters(
           loaded.visibleFilters,
@@ -2368,6 +2404,9 @@ export const FilterProvider = ({ children }) => {
         visibleFilters: newVisibleFilters,
       },
     }));
+
+    userOverrodeTemplateFiltersRef.current = true;
+    dispatch(markScreenChanged({ screen: activePage }));
   };
 
   const resetFilters = () => {
@@ -2484,7 +2523,16 @@ export const FilterProvider = ({ children }) => {
 
   const orderedVisibleFilters = getOrderedVisibleFilters();
 
-  const applyTemplateFilters = (templateFilters) => {
+  const getVisibleFiltersForSave = useCallback(() => {
+    return dedupeFilterLabels(
+      visibleFilters.filter(
+        (label) => label !== "Date Range" && label !== "Payment Date",
+      ),
+    );
+  }, [visibleFilters]);
+
+  const applyTemplateFilters = (templateFilters, options = {}) => {
+    const { savedVisibleFilters = null } = options;
     // 🛡️ Sanitize selectedValues (strictly non-empty strings)
     const sanitize = (values) =>
       (values || [])
@@ -2535,16 +2583,6 @@ export const FilterProvider = ({ children }) => {
       );
     }
 
-    setFiltersState(consolidated.filtersState);
-    filtersStateRef.current = consolidated.filtersState;
-    setScreenFilterStates((prev) => ({
-      ...prev,
-      [activePage]: {
-        ...prev[activePage],
-        filtersState: consolidated.filtersState,
-      },
-    }));
-
     const templateKeys = Object.keys(sanitizedTemplateFilters);
     let newVisible;
     if (isAggregateMembershipReportScreen(activePage)) {
@@ -2563,6 +2601,14 @@ export const FilterProvider = ({ children }) => {
         ]),
         consolidated.filtersState,
       ).visibleFilters;
+    } else if (activePage === "MembershipListingReport") {
+      newVisible = consolidateMembershipListingFilters(
+        consolidated.filtersState,
+        buildMembershipListingReportVisibleFilters(
+          consolidated.filtersState,
+          savedVisibleFilters,
+        ),
+      ).visibleFilters;
     } else {
       const mergedVisible = [
         ...consolidated.visibleFilters,
@@ -2574,14 +2620,20 @@ export const FilterProvider = ({ children }) => {
         activePage === "Applications"
           ? mergedVisible.filter((label) => label !== "Status")
           : mergedVisible;
-      if (activePage === "MembershipListingReport") {
-        newVisible = consolidateMembershipListingFilters(
-          consolidated.filtersState,
-          newVisible,
-        ).visibleFilters;
-      }
     }
-    setVisibleFilters(dedupeFilterLabels(newVisible));
+    const resolvedVisible = dedupeFilterLabels(newVisible);
+
+    setFiltersState(consolidated.filtersState);
+    filtersStateRef.current = consolidated.filtersState;
+    setVisibleFilters(resolvedVisible);
+    setScreenFilterStates((prev) => ({
+      ...prev,
+      [activePage]: {
+        ...prev[activePage],
+        filtersState: consolidated.filtersState,
+        visibleFilters: resolvedVisible,
+      },
+    }));
 
     userOverrodeTemplateFiltersRef.current = false;
   };
@@ -2605,6 +2657,7 @@ export const FilterProvider = ({ children }) => {
         acknowledgeUserChoseNewTemplate,
         hasUserOverriddenTemplateFilters,
         getFiltersStateForSave,
+        getVisibleFiltersForSave,
         COMMON_FILTERS,
         getDefaultVisibleFilters,
         screenSpecificDefaultFilters,

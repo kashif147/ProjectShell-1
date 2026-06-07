@@ -17,6 +17,7 @@ import { MdKeyboard } from "react-icons/md";
 import { ExcelContext } from "../../context/ExcelContext";
 import { getApplicationById } from "../../features/ApplicationDetailsSlice";
 import { buildApplicationMgtSearch } from "../../utils/applicationMgtRoute";
+import { isDuplicateReviewBlockingApproval } from "../../utils/duplicateReviewApproval";
 import {
   getSubscriptionByProfileId,
   getSubscriptionById,
@@ -1000,8 +1001,9 @@ const TableComponent = ({
                       title={
                         onDuplicateReviewRequest
                           ? "Open Duplicate Profile Review — click to review"
-                          : record?.duplicateReviewStatus === "POTENTIAL_MATCH" ||
-                              record?.duplicateReviewStatus === "NOT_CHECKED"
+                          : isDuplicateReviewBlockingApproval(
+                                record?.duplicateReviewStatus,
+                              )
                             ? "Potential Duplicate — review required before approval"
                             : "Potential Duplicate Detected"
                       }

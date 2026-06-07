@@ -6,7 +6,10 @@ import MultiFilterDropdown from "./MultiFilterDropdown";
 import DateRang from "./DateRang";
 import NumberFilter from "./NumberFilter";
 import TextFilter from "./TextFilter";
-import { Button, Input } from "antd";
+import { Button, Input, Modal } from "antd";
+import axios from "axios";
+import { resolveTemplatesApiUrl } from "../../config/gridTemplateRouting";
+import MyInput from "./MyInput";
 import { EnterOutlined } from "@ant-design/icons";
 import { useDispatch, useSelector } from "react-redux";
 import {
@@ -67,6 +70,11 @@ import {
 } from "../../features/views/ScreenFilterChangSlice";
 import { message } from "antd";
 import { formatMembershipMovementLabel } from "../../utils/membershipMovementLabels";
+import {
+  buildTemplateMetaWithVisibleFilters,
+  persistVisibleFiltersToStorage,
+  resolveTemplateVisibleFilters,
+} from "../../utils/gridTemplateVisibleFilters";
 
 const AI_FILTER_API_URL =
   process.env.REACT_APP_AI_PROFILE_FILTER_URL ||
@@ -239,6 +247,7 @@ const Toolbar = () => {
     resetFilters,
     applyTemplateFilters,
     getFiltersStateForSave,
+    getVisibleFiltersForSave,
     bumpMembershipDashboardApply,
     membershipDashboardHeader,
     updateMembershipDashboardHeader,
@@ -247,7 +256,8 @@ const Toolbar = () => {
   const tableColumnScreen =
     activePage === "Membership" ? "Members" : activePage;
 
-  const { columns } = useTableColumns();
+  const { columns, applyTemplate } = useTableColumns();
+  const { templates } = useSelector((state) => state.templetefiltrsclumnapi);
   const { hasAnyRole } = useAuthorization();
   const canEditGridTemplates = hasAnyRole(["SU", "ASU"]);
   const { currentTemplateId } = useSelector(
@@ -257,7 +267,10 @@ const Toolbar = () => {
     (state) => state.paymentFormsWithFilter || {},
   );
   const { activeTemplateId } = useSelector((state) => state.activeTemplate);
+  const { selectedView } = useSelector((state) => state.viewById);
   const [isSaving, setIsSaving] = useState(false);
+  const [saveAsNewModalOpen, setSaveAsNewModalOpen] = useState(false);
+  const [saveAsNewViewName, setSaveAsNewViewName] = useState("");
   const screenChanges = useSelector(
     (state) => state.screenFilter.screenFilterChanged,
   );
@@ -327,6 +340,16 @@ const Toolbar = () => {
     paymentFormsTemplateId ||
     currentTemplateId ||
     "";
+
+  const isActiveSystemDefault = useMemo(() => {
+    const id = String(resolvedGridTemplateId || "").trim();
+    if (!id) return true;
+    if (!templates) return false;
+    if (String(templates.systemDefault?._id) === id) return true;
+    return (templates.userTemplates || []).some(
+      (t) => String(t._id) === id && t.systemDefault === true,
+    );
+  }, [resolvedGridTemplateId, templates]);
   const isPaymentFormsPage = normalizedPath === "/paymentforms";
   const isApplicationsPage = normalizedPath === "/applications";
   const isApplicationLikePage = isApplicationsPage || isPaymentFormsPage;
@@ -812,45 +835,140 @@ const Toolbar = () => {
     }
   };
 
-  const handleSave = async () => {
-    const id = String(resolvedGridTemplateId || "").trim();
-    if (!id) {
-      message.warning(
-        "No view is selected. Choose a template from the view menu, then try again.",
+  const buildTemplateSavePayload = () => {
+    const filterSnapshot = getFiltersStateForSave();
+    const currentApiFilters = transformFiltersForApi(
+      filterSnapshot,
+      columns[tableColumnScreen] || [],
+      gridTemplateType ? { templateType: gridTemplateType } : {},
+    );
+    const screenColumns = columns[tableColumnScreen] || [];
+    const currentColumnLabels = screenColumns.reduce((acc, col) => {
+      const key = Array.isArray(col?.dataIndex)
+        ? col.dataIndex.join(".")
+        : col?.dataIndex;
+      if (key) acc[String(key)] = String(col?.title || key);
+      return acc;
+    }, {});
+    const visibleColumnKeys = screenColumns
+      .filter((col) => col.isGride === true)
+      .map((col) =>
+        Array.isArray(col.dataIndex)
+          ? col.dataIndex.join(".")
+          : col.dataIndex,
       );
+
+    const visibleFilterLabels = getVisibleFiltersForSave();
+    const existingMeta =
+      selectedView?.meta ||
+      (templates?.userTemplates || []).find(
+        (t) => String(t._id) === String(resolvedGridTemplateId),
+      )?.meta ||
+      templates?.systemDefault?.meta;
+
+    return {
+      filters: currentApiFilters,
+      columnLabels: currentColumnLabels,
+      columns: visibleColumnKeys,
+      visibleFilters: visibleFilterLabels,
+      meta: buildTemplateMetaWithVisibleFilters(
+        existingMeta,
+        visibleFilterLabels,
+      ),
+      ...(gridTemplateType ? { templateType: gridTemplateType } : {}),
+    };
+  };
+
+  const reloadGridAfterTemplateSave = (templateId) => {
+    if (isApplicationLikePage) {
+      fetchApplicationLikeList({
+        templateId,
+        page: 1,
+        limit: 500,
+      });
+    } else if (isProfileScreen) {
+      dispatch(
+        getProfilesWithFilter({
+          templateId,
+          page: 1,
+          limit: 500,
+        }),
+      );
+    } else if (isMembersScreen) {
+      dispatch(
+        getSubscriptionsWithTemplate({
+          templateId,
+          page: 1,
+          limit: 500,
+        }),
+      );
+    } else if (isCreditNotesScreen) {
+      bumpCreditNotesReload();
+    } else if (isJournalAdjustmentsScreen) {
+      bumpJournalAdjustmentsReload();
+    } else if (isOnlinePaymentScreen) {
+      bumpOnlinePaymentsReload();
+    } else if (isRefundsScreen) {
+      bumpRefundsReload();
+    } else if (isWriteOffsScreen) {
+      bumpWriteOffsReload();
+    } else if (isGeneralLedgerScreen) {
+      bumpGeneralLedgerReload();
+    } else if (isReconciliationScreen) {
+      bumpReconciliationReload();
+    } else if (isMembershipListingReportScreen) {
+      bumpMembershipListingReportReload();
+    } else if (isStatisticsReportScreen) {
+      bumpMembershipStatisticsReportReload();
+    } else if (isWorkplaceBreakdownReportScreen) {
+      bumpWorkplaceBreakdownReportReload();
+    }
+  };
+
+  const applySavedTemplateState = (view, { preserveVisibleFilters = null } = {}) => {
+    const nextFilters = transformFiltersFromApi(
+      view?.filters || {},
+      columns[tableColumnScreen] || [],
+      gridTemplateType ? { templateType: gridTemplateType } : {},
+    );
+    const savedVisible =
+      resolveTemplateVisibleFilters(view, gridTemplateType) ||
+      preserveVisibleFilters;
+    applyTemplateFilters(nextFilters, {
+      savedVisibleFilters: savedVisible,
+    });
+  };
+
+  const handleSave = () => {
+    if (!gridTemplateType) {
+      message.warning("This screen does not support saving views.");
+      return;
+    }
+    if (isActiveSystemDefault) {
+      setSaveAsNewViewName(
+        activeScreen ? `${activeScreen} View` : "Custom View",
+      );
+      setSaveAsNewModalOpen(true);
       return;
     }
 
+    const id = String(resolvedGridTemplateId || "").trim();
+    if (!id) {
+      setSaveAsNewViewName(
+        activeScreen ? `${activeScreen} View` : "Custom View",
+      );
+      setSaveAsNewModalOpen(true);
+      return;
+    }
+
+    handleUpdateExistingTemplate(id);
+  };
+
+  const handleUpdateExistingTemplate = async (id) => {
     setIsSaving(true);
     try {
-      const filterSnapshot = getFiltersStateForSave();
-      const currentApiFilters = transformFiltersForApi(
-        filterSnapshot,
-        columns[tableColumnScreen] || [],
-        gridTemplateType ? { templateType: gridTemplateType } : {},
-      );
-      const screenColumns = columns[tableColumnScreen] || [];
-      const currentColumnLabels = screenColumns.reduce((acc, col) => {
-        const key = Array.isArray(col?.dataIndex)
-          ? col.dataIndex.join(".")
-          : col?.dataIndex;
-        if (key) acc[String(key)] = String(col?.title || key);
-        return acc;
-      }, {});
-      const visibleColumnKeys = screenColumns
-        .filter((col) => col.isGride === true)
-        .map((col) =>
-          Array.isArray(col.dataIndex)
-            ? col.dataIndex.join(".")
-            : col.dataIndex,
-        );
-
-      const payload = {
-        filters: currentApiFilters,
-        columnLabels: currentColumnLabels,
-        columns: visibleColumnKeys,
-        ...(gridTemplateType ? { templateType: gridTemplateType } : {}),
-      };
+      const payload = buildTemplateSavePayload();
+      const preservedVisibleFilters = getVisibleFiltersForSave();
 
       await dispatch(
         updateGridTemplate({
@@ -868,12 +986,15 @@ const Toolbar = () => {
         }),
       ).unwrap();
 
-      const nextFilters = transformFiltersFromApi(
-        freshView?.filters || {},
-        columns[tableColumnScreen] || [],
-        gridTemplateType ? { templateType: gridTemplateType } : {},
+      persistVisibleFiltersToStorage(
+        gridTemplateType,
+        id,
+        preservedVisibleFilters,
       );
-      applyTemplateFilters(nextFilters);
+
+      applySavedTemplateState(freshView, {
+        preserveVisibleFilters: preservedVisibleFilters,
+      });
 
       setApplicationLikeTemplateId(id);
       dispatch(resetScreenChanged({ screen: activeScreen.toLowerCase() }));
@@ -882,52 +1003,103 @@ const Toolbar = () => {
         getGridTemplates(gridTemplateType ? { type: gridTemplateType } : {}),
       );
 
-      if (isApplicationLikePage) {
-        fetchApplicationLikeList({
-          templateId: id,
-          page: 1,
-          limit: 500,
-        });
-      } else if (isProfileScreen) {
-        dispatch(
-          getProfilesWithFilter({
-            templateId: id,
-            page: 1,
-            limit: 500,
-          }),
-        );
-      } else if (isMembersScreen) {
-        dispatch(
-          getSubscriptionsWithTemplate({
-            templateId: id,
-            page: 1,
-            limit: 500,
-          }),
-        );
-      } else if (isCreditNotesScreen) {
-        bumpCreditNotesReload();
-      } else if (isJournalAdjustmentsScreen) {
-        bumpJournalAdjustmentsReload();
-      } else if (isOnlinePaymentScreen) {
-        bumpOnlinePaymentsReload();
-      } else if (isRefundsScreen) {
-        bumpRefundsReload();
-      } else if (isWriteOffsScreen) {
-        bumpWriteOffsReload();
-      } else if (isGeneralLedgerScreen) {
-        bumpGeneralLedgerReload();
-      } else if (isReconciliationScreen) {
-        bumpReconciliationReload();
-      } else if (isMembershipListingReportScreen) {
-        bumpMembershipListingReportReload();
-      } else if (isStatisticsReportScreen) {
-        bumpMembershipStatisticsReportReload();
-      } else if (isWorkplaceBreakdownReportScreen) {
-        bumpWorkplaceBreakdownReportReload();
-      }
+      reloadGridAfterTemplateSave(id);
     } catch (error) {
       console.error("Error updating template:", error);
       MyAlert("error", "Error", error?.message || "Failed to update template");
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleSaveAsNewView = async () => {
+    if (!saveAsNewViewName.trim()) {
+      message.error("Please enter a view name");
+      return;
+    }
+    if (!gridTemplateType) {
+      message.warning("This screen does not support saving views.");
+      return;
+    }
+
+    const savedViewName = saveAsNewViewName.trim();
+    setIsSaving(true);
+    try {
+      const payload = {
+        name: savedViewName,
+        ...buildTemplateSavePayload(),
+        isDefault: true,
+      };
+      const preservedVisibleFilters = getVisibleFiltersForSave();
+      const token = localStorage.getItem("token");
+      const API_URL = resolveTemplatesApiUrl(gridTemplateType);
+
+      await axios.post(API_URL, payload, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      MyAlert(
+        "success",
+        "Success",
+        `View "${savedViewName}" saved and set as your default`,
+      );
+      setSaveAsNewModalOpen(false);
+      setSaveAsNewViewName("");
+
+      const templatesResponse = await dispatch(
+        getGridTemplates({ type: gridTemplateType }),
+      ).unwrap();
+
+      const savedTemplate = templatesResponse.userTemplates?.find(
+        (t) =>
+          t.name === savedViewName &&
+          String(t.templateType || "").toLowerCase() ===
+            String(gridTemplateType).toLowerCase(),
+      );
+
+      if (savedTemplate?._id) {
+        persistVisibleFiltersToStorage(
+          gridTemplateType,
+          savedTemplate._id,
+          preservedVisibleFilters,
+        );
+
+        dispatch(setActiveTemplateId(savedTemplate._id));
+        setApplicationLikeTemplateId(savedTemplate._id);
+
+        const freshView = await dispatch(
+          getViewById({
+            id: savedTemplate._id,
+            type: gridTemplateType,
+          }),
+        ).unwrap();
+
+        applyTemplate(
+          tableColumnScreen,
+          savedTemplate.columns || freshView?.columns || [],
+          templatesResponse?.systemDefault?.columns || [],
+          savedTemplate.columnLabels || freshView?.columnLabels || {},
+          templatesResponse?.systemDefault?.columnLabels || {},
+        );
+        applySavedTemplateState(freshView || savedTemplate, {
+          preserveVisibleFilters: preservedVisibleFilters,
+        });
+        reloadGridAfterTemplateSave(savedTemplate._id);
+      }
+
+      dispatch(resetScreenChanged({ screen: activeScreen.toLowerCase() }));
+    } catch (error) {
+      console.error("Error saving new view:", error);
+      const apiMsg =
+        error.response?.data?.message ||
+        error.response?.data?.error?.message ||
+        error.response?.data?.data ||
+        (typeof error.response?.data === "string"
+          ? error.response.data
+          : null);
+      MyAlert("error", "Error", apiMsg || error.message || "Failed to save view");
     } finally {
       setIsSaving(false);
     }
@@ -1245,6 +1417,39 @@ const Toolbar = () => {
           </div>
         </div>
       )}
+      <Modal
+        title="Save as New View"
+        open={saveAsNewModalOpen}
+        onCancel={() => setSaveAsNewModalOpen(false)}
+        closable={false}
+        maskClosable={false}
+        footer={[
+          <Button key="cancel" onClick={() => setSaveAsNewModalOpen(false)}>
+            Cancel
+          </Button>,
+          <Button
+            key="save"
+            className="butn primary-btn"
+            style={{ marginRight: 4 }}
+            onClick={handleSaveAsNewView}
+            loading={isSaving}
+          >
+            Save
+          </Button>,
+        ]}
+      >
+        <div style={{ margin: 16 }}>
+          <p style={{ marginBottom: 12, color: "#666" }}>
+            System default cannot be changed directly. Save your settings as a
+            new view — it will become your default on this screen.
+          </p>
+          <MyInput
+            label="View Name"
+            value={saveAsNewViewName}
+            onChange={(e) => setSaveAsNewViewName(e.target.value)}
+          />
+        </div>
+      </Modal>
     </div>
   );
 };

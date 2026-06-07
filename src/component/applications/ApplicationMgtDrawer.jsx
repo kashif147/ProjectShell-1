@@ -41,6 +41,10 @@ import {
   getApplicationById,
 } from "../../features/ApplicationDetailsSlice";
 import { getAllApplications } from "../../features/ApplicationSlice";
+import {
+  DUPLICATE_REVIEW_REQUIRED_MESSAGE,
+  isDuplicateReviewBlockingApproval,
+} from "../../utils/duplicateReviewApproval";
 import { buildApplicationMgtSearch } from "../../utils/applicationMgtRoute";
 import { cleanPayload } from "../../utils/Utilities";
 import MyAlert from "../common/MyAlert";
@@ -446,8 +450,7 @@ function ApplicationMgtDrawer({
     setDuplicateReviewOpen(true);
   };
   const duplicateReviewPending =
-    duplicateReviewStatus === "POTENTIAL_MATCH" ||
-    duplicateReviewStatus === "NOT_CHECKED";
+    isDuplicateReviewBlockingApproval(duplicateReviewStatus);
   const isPotentialDuplicate =
     !!application?.personalDetails?.duplicateDetection?.isPotentialDuplicate;
   const [query, setQuery] = useState("");
@@ -2708,9 +2711,7 @@ function ApplicationMgtDrawer({
 
       if (action === "approved") {
         if (duplicateReviewPending) {
-          message.warning(
-            "Duplicate review is required before approval. Open Duplicate Profile Review and choose Link, Merge, Create New Profile, or Ignore Match.",
-          );
+          message.warning(DUPLICATE_REVIEW_REQUIRED_MESSAGE);
           openDuplicateReviewDrawer(false);
           setIsProcessing(false);
           disableFtn(false);
@@ -3271,8 +3272,8 @@ function ApplicationMgtDrawer({
                 Potential duplicate detected
               </span>
               <span style={{ color: "#820014", fontSize: 13 }}>
-                Review matches (Link, Merge, Create New Profile, or Ignore) before
-                approval.
+                Resolve all matches (Create New Profile, Ignore Match, Tag this
+                Profile, or Merge this Profile) before approval.
               </span>
             </div>
             <Button
