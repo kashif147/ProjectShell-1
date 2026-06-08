@@ -117,6 +117,104 @@ export const normalizeLookup = (item) => {
   };
 };
 
+/** Extract assigned officer user id from lookup record or form state. */
+export const resolveOfficerIdFromRecord = (record) => {
+  const officer = record?.officer;
+  if (officer == null || officer === "") return null;
+  if (typeof officer === "string") return officer;
+  return officer._id || officer.id || null;
+};
+
+/** Display label for populated officer object from lookup API. */
+export const resolveOfficerLabelFromRecord = (record) => {
+  const officer = record?.officer;
+  if (!officer || typeof officer !== "object") {
+    return record?.officerLabel || "";
+  }
+  return (
+    officer.userFullName ||
+    [officer.userFirstName, officer.userLastName].filter(Boolean).join(" ") ||
+    officer.userEmail ||
+    ""
+  );
+};
+
+const EMPTY_WORKLOCATION_ADDRESS = {
+  eircode: "",
+  buildingOrHouse: "",
+  streetOrRoad: "",
+  areaOrTown: "",
+  countyCityOrPostCode: "",
+  country: "",
+  fullAddress: "",
+};
+
+const WORKLOCATION_ADDRESS_REQUIRED = [
+  "buildingOrHouse",
+  "countyCityOrPostCode",
+  "country",
+];
+
+export const getWorklocationAddressFormValues = (address) => {
+  if (!address || typeof address !== "object") {
+    return { ...EMPTY_WORKLOCATION_ADDRESS };
+  }
+  return { ...EMPTY_WORKLOCATION_ADDRESS, ...address };
+};
+
+/** Send null unless all required work-location address fields are populated. */
+export const normalizeWorklocationAddressForApi = (address) => {
+  if (!address || typeof address !== "object") return null;
+
+  const hasRequiredFields = WORKLOCATION_ADDRESS_REQUIRED.every(
+    (key) => address[key] != null && String(address[key]).trim() !== "",
+  );
+  if (!hasRequiredFields) return null;
+
+  return {
+    eircode: address.eircode || "",
+    buildingOrHouse: address.buildingOrHouse || "",
+    streetOrRoad: address.streetOrRoad || "",
+    areaOrTown: address.areaOrTown || "",
+    countyCityOrPostCode: address.countyCityOrPostCode || "",
+    country: address.country || "",
+    fullAddress: address.fullAddress || "",
+  };
+};
+
+/** Build PUT/POST payload for /lookup including normalized officer id. */
+export const buildLookupApiPayload = (formValues = {}) => {
+  const recordId = formValues._id || formValues.id;
+
+  const payload = {
+    ...formValues,
+    lookuptypeId: resolveLookuptypeIdFromRecord(formValues),
+    Parentlookupid: formValues.Parentlookupid ?? null,
+    Parentlookup: formValues.Parentlookup ?? null,
+    ParentlookuptypeId: formValues.ParentlookuptypeId ?? null,
+    Parentlookuptype: formValues.Parentlookuptype ?? null,
+    officer: resolveOfficerIdFromRecord(formValues),
+    isactive: formValues.isactive !== false,
+    isDeleted: formValues.isDeleted ?? formValues.isdeleted ?? false,
+  };
+
+  if (recordId) {
+    payload.id = String(recordId);
+  }
+
+  if (Object.prototype.hasOwnProperty.call(formValues, "worklocationAddress")) {
+    payload.worklocationAddress = normalizeWorklocationAddressForApi(
+      formValues.worklocationAddress,
+    );
+  }
+
+  delete payload.officerLabel;
+  delete payload.lookuptypeName;
+  delete payload._id;
+
+  return payload;
+};
+
 export const resolveLookuptypeIdFromRecord = (record) => {
   const val = record?.lookuptypeId;
   if (val == null || val === "") return "";
@@ -153,17 +251,16 @@ export const mapLookupToFormValues = (record, lookupsTypes = []) => {
     userid: normalized.userid,
     isactive: normalized.isactive !== false,
     isDeleted: normalized.isdeleted ?? normalized.isDeleted ?? false,
+    officer: resolveOfficerIdFromRecord(normalized),
+    officerLabel: resolveOfficerLabelFromRecord(normalized),
   };
 
-  if (normalized.officer !== undefined) {
-    mapped.officer =
-      typeof normalized.officer === "object" && normalized.officer?._id
-        ? normalized.officer._id
-        : normalized.officer;
+  if (Object.prototype.hasOwnProperty.call(normalized, "worklocationAddress")) {
+    mapped.worklocationAddress = getWorklocationAddressFormValues(
+      normalized.worklocationAddress,
+    );
   }
-  if (normalized.worklocationAddress) {
-    mapped.worklocationAddress = normalized.worklocationAddress;
-  }
+
   if (normalized.cityId != null) {
     mapped.cityId = normalized.cityId;
   }

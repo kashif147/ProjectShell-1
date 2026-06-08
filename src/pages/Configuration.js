@@ -118,6 +118,7 @@ import {
   resolveParentLookupTypeLabelFromRecord,
   mapLookupTypeToFormValues,
   mapLookupToFormValues,
+  buildLookupApiPayload,
 } from "../utils/lookupHierarchy";
 import ParentLookupSelect from "../component/configuration/ParentLookupSelect";
 import ParentLookupTypeSelect from "../component/configuration/ParentLookupTypeSelect";
@@ -127,8 +128,11 @@ import { useNavigate } from "react-router-dom";
 import { fetchCountries, clearCountriesData } from "../features/CountriesSlice";
 import { getBookmarks } from "../features/templete/BookmarkActions";
 import { useJsApiLoader, StandaloneSearchBox } from "@react-google-maps/api";
-
-const IRO_ROLE_ID = "68c6b4d1e42306a6836622fa";
+import { useOfficerRoleUsers } from "../hooks/useOfficerRoleUsers";
+import {
+  buildOfficerSelectOptions,
+  resolveOfficerSelectValue,
+} from "../utils/officerRoles";
 
 // Helper function to get unique filter values
 const getUniqueFilterValues = (dataSource, getValue) => {
@@ -259,29 +263,11 @@ const createFilterDropdown = (dataSource, getValue) => {
 // i have different drwers for configuration of lookups for the system
 
 const Configuration = () => {
-  const [iroUsers, setIroUsers] = useState([]);
-
-  useEffect(() => {
-    const fetchIroUsers = async () => {
-      const token = localStorage.getItem("token");
-      try {
-        const response = await axios.get(
-          `${baseURL}/roles/${IRO_ROLE_ID}/users`,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-              "Content-Type": "application/json",
-            },
-          },
-        );
-        const data = response.data?.data || response.data || [];
-        setIroUsers(Array.isArray(data) ? data : []);
-      } catch (error) {
-        console.error("Failed to fetch IRO users:", error);
-      }
-    };
-    fetchIroUsers();
-  }, []);
+  const {
+    iroOptions: officerIroOptions,
+    branchOptions: officerBranchOptions,
+    regionOptions: officerRegionOptions,
+  } = useOfficerRoleUsers();
 
   const dispatch = useDispatch();
   const { bookmarks, bookmarksLoading, bookmarksError } = useSelector(
@@ -601,12 +587,8 @@ const Configuration = () => {
       const token = localStorage.getItem("token");
       const baseUrl = isCoum ? process.env.REACT_APP_CUMM : baseURL;
 
-      let finalEndPoint = endPoint;
-      // const { id, ...finalData } = data1;
-      // const { id, ...finalData } = data1;
-
       setButtonLoading((prev) => ({ ...prev, update: true }));
-      const response = await axios.put(`${baseUrl}${finalEndPoint}`, data1, {
+      const response = await axios.put(`${baseUrl}${endPoint}`, data1, {
         headers: {
           Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
@@ -1449,6 +1431,7 @@ const Configuration = () => {
       isactive: true,
       isDeleted: false,
       officer: null,
+      officerLabel: "",
       worklocationAddress: {
         eircode: "",
         buildingOrHouse: "",
@@ -1485,6 +1468,7 @@ const Configuration = () => {
       isactive: true,
       isDeleted: false,
       officer: null,
+      officerLabel: "",
     },
     // Region
     Divisions: {
@@ -1500,6 +1484,7 @@ const Configuration = () => {
       isactive: true,
       isDeleted: false,
       officer: null,
+      officerLabel: "",
     },
     Councils: {
       lookuptypeId: "68c85f22302e5600dc8477f6",
@@ -1899,6 +1884,66 @@ const Configuration = () => {
       },
     }));
   };
+
+  const getLookupDrawerPayload = (drawerKey) =>
+    buildLookupApiPayload(drawerIpnuts?.[drawerKey] || {});
+
+  const handleOfficerChange = (drawer, options, e) => {
+    const selectedId = e.target.value === "" ? null : e.target.value;
+    const selected = options.find(
+      (opt) => String(opt.key) === String(selectedId),
+    );
+    setdrawerIpnuts((prev) => ({
+      ...prev,
+      [drawer]: {
+        ...prev[drawer],
+        officer: selectedId,
+        officerLabel: selected?.label || "",
+      },
+    }));
+  };
+
+  const stationOfficerOptions = useMemo(
+    () =>
+      buildOfficerSelectOptions(
+        officerIroOptions,
+        drawerIpnuts?.Station?.officer,
+        drawerIpnuts?.Station?.officerLabel,
+      ),
+    [
+      officerIroOptions,
+      drawerIpnuts?.Station?.officer,
+      drawerIpnuts?.Station?.officerLabel,
+    ],
+  );
+
+  const branchOfficerOptions = useMemo(
+    () =>
+      buildOfficerSelectOptions(
+        officerBranchOptions,
+        drawerIpnuts?.Districts?.officer,
+        drawerIpnuts?.Districts?.officerLabel,
+      ),
+    [
+      officerBranchOptions,
+      drawerIpnuts?.Districts?.officer,
+      drawerIpnuts?.Districts?.officerLabel,
+    ],
+  );
+
+  const regionOfficerOptions = useMemo(
+    () =>
+      buildOfficerSelectOptions(
+        officerRegionOptions,
+        drawerIpnuts?.Divisions?.officer,
+        drawerIpnuts?.Divisions?.officerLabel,
+      ),
+    [
+      officerRegionOptions,
+      drawerIpnuts?.Divisions?.officer,
+      drawerIpnuts?.Divisions?.officerLabel,
+    ],
+  );
 
   const handleParentLookupTypeChange = ({ parentTypeId, parentTypeLabel }) => {
     setdrawerIpnuts((prev) => ({
@@ -6706,7 +6751,7 @@ const Configuration = () => {
         isContact={true}
         update={async () => {
           if (!validateForm("Districts")) return;
-          await updateFtn("/lookup", drawerIpnuts?.Districts, () => {
+          await updateFtn("/lookup", getLookupDrawerPayload("Districts"), () => {
             resetCounteries("Districts");
             refreshLookups();
           });
@@ -6716,7 +6761,7 @@ const Configuration = () => {
           if (!validateForm("Districts")) return;
           insertDataFtn(
             `/lookup`,
-            drawerIpnuts?.Districts,
+            getLookupDrawerPayload("Districts"),
             "Data inserted successfully:",
             "Data did not insert:",
             () => {
@@ -6727,33 +6772,6 @@ const Configuration = () => {
         }}
       >
         <div className="drawer-main-cntainer p-4 me-2 ms-2">
-          <Row gutter={24}>
-            <Col span={24}>
-              <CustomSelect
-                label="Branch Officer"
-                placeholder="Select Branch Manager"
-                options={iroUsers.map((user) => ({
-                  key: user._id,
-                  label:
-                    `${user.userFirstName || ""} ${user.userLastName || ""} (${user.userEmail || "No Email"})`.trim(),
-                }))}
-                value={
-                  drawerIpnuts?.Districts?.officer?._id ||
-                  drawerIpnuts?.Districts?.officer
-                }
-                // onChange={(e) => drawrInptChng("Districts", "officer", e.target.value)}
-                onChange={(e) =>
-                  drawrInptChng(
-                    "Districts",
-                    "officer",
-                    e.target.value === "" ? null : e.target.value,
-                  )
-                }
-                isIDs={true}
-              />
-            </Col>
-          </Row>
-
           <Row gutter={24}>
             <Col span={12}>
               <MyInput
@@ -6770,6 +6788,21 @@ const Configuration = () => {
               />
             </Col>
             <Col span={12}>
+              <CustomSelect
+                label="Branch Officer"
+                placeholder="Select Branch Manager"
+                options={branchOfficerOptions}
+                value={resolveOfficerSelectValue(drawerIpnuts?.Districts?.officer)}
+                onChange={(e) =>
+                  handleOfficerChange("Districts", branchOfficerOptions, e)
+                }
+                isIDs={true}
+              />
+            </Col>
+          </Row>
+
+          <Row gutter={24}>
+            <Col span={12}>
               <MyInput
                 label="Branch"
                 name="lookupname"
@@ -6783,9 +6816,6 @@ const Configuration = () => {
                 disabled={isDisable}
               />
             </Col>
-          </Row>
-
-          <Row gutter={24}>
             <Col span={12}>
               <MyInput
                 label="Display Name"
@@ -6917,7 +6947,7 @@ const Configuration = () => {
             if (!validateForm("Divisions")) return;
             insertDataFtn(
               `/lookup`,
-              drawerIpnuts?.Divisions,
+              getLookupDrawerPayload("Divisions"),
               "Data inserted successfully:",
               "Data did not insert:",
               () => {
@@ -6928,7 +6958,7 @@ const Configuration = () => {
           }}
           update={async () => {
             if (!validateForm("Divisions")) return;
-            await updateFtn("/lookup", drawerIpnuts?.Divisions, () => {
+            await updateFtn("/lookup", getLookupDrawerPayload("Divisions"), () => {
               resetCounteries("Divisions");
               refreshLookups();
             });
@@ -6937,33 +6967,6 @@ const Configuration = () => {
           isEdit={isUpdateRec?.Divisions}
         >
           <div className="drawer-main-cntainer p-4 me-2 ms-2">
-            <Row gutter={24}>
-              <Col span={12}>
-                <CustomSelect
-                  label="Region Officer"
-                  placeholder="Select Region Officer"
-                  options={iroUsers.map((user) => ({
-                    key: user._id,
-                    label:
-                      `${user.userFirstName || ""} ${user.userLastName || ""} (${user.userEmail || "No Email"})`.trim(),
-                  }))}
-                  value={
-                    drawerIpnuts?.Divisions?.officer?._id ||
-                    drawerIpnuts?.Divisions?.officer
-                  }
-                  // onChange={(e) => drawrInptChng("Divisions", "officer", e.target.value)}
-                  onChange={(e) =>
-                    drawrInptChng(
-                      "Divisions",
-                      "officer",
-                      e.target.value === "" ? null : e.target.value,
-                    )
-                  }
-                  isIDs={true}
-                />
-              </Col>
-            </Row>
-
             <Row gutter={24}>
               <Col span={12}>
                 <MyInput
@@ -6980,6 +6983,21 @@ const Configuration = () => {
                 />
               </Col>
               <Col span={12}>
+                <CustomSelect
+                  label="Region Officer"
+                  placeholder="Select Region Officer"
+                  options={regionOfficerOptions}
+                  value={resolveOfficerSelectValue(drawerIpnuts?.Divisions?.officer)}
+                  onChange={(e) =>
+                    handleOfficerChange("Divisions", regionOfficerOptions, e)
+                  }
+                  isIDs={true}
+                />
+              </Col>
+            </Row>
+
+            <Row gutter={24}>
+              <Col span={12}>
                 <MyInput
                   label="Region"
                   name="lookupname"
@@ -6993,9 +7011,6 @@ const Configuration = () => {
                   disabled={isDisable}
                 />
               </Col>
-            </Row>
-
-            <Row gutter={24}>
               <Col span={12}>
                 <MyInput
                   label="Display Name"
@@ -7008,6 +7023,9 @@ const Configuration = () => {
                   disabled={isDisable}
                 />
               </Col>
+            </Row>
+
+            <Row gutter={24}>
               <Col span={12}>
                 {/* <CustomSelect
                   label="County"
@@ -7112,7 +7130,7 @@ const Configuration = () => {
           if (!validateForm("Divisions")) return;
           insertDataFtn(
             `/lookup`,
-            drawerIpnuts?.Divisions,
+            getLookupDrawerPayload("Divisions"),
             "Data inserted successfully:",
             "Data did not insert:",
             () => {
@@ -7123,7 +7141,7 @@ const Configuration = () => {
         }}
         update={async () => {
           if (!validateForm("Divisions")) return;
-          await updateFtn("/lookup", drawerIpnuts?.Divisions, () => {
+          await updateFtn("/lookup", getLookupDrawerPayload("Divisions"), () => {
             resetCounteries("Divisions");
             refreshLookups();
           });
@@ -7131,27 +7149,6 @@ const Configuration = () => {
         }}
       >
         <div className="drawer-main-cntainer p-4 me-2 ms-2">
-          <Row gutter={24}>
-            <Col span={12}>
-              <CustomSelect
-                label="Region Officer"
-                placeholder="Select Region Officer"
-                options={iroUsers.map((user) => ({
-                  key: user._id,
-                  label:
-                    `${user.userFirstName || ""} ${user.userLastName || ""} (${user.userEmail || "No Email"})`.trim(),
-                }))}
-                value={
-                  drawerIpnuts?.Divisions?.officer?._id ||
-                  drawerIpnuts?.Divisions?.officer
-                }
-                onChange={(e) =>
-                  drawrInptChng("Divisions", "officer", e.target.value)
-                }
-                isIDs={true}
-              />
-            </Col>
-          </Row>
           <Row gutter={24}>
             <Col span={12}>
               <MyInput
@@ -7166,6 +7163,20 @@ const Configuration = () => {
               />
             </Col>
             <Col span={12}>
+              <CustomSelect
+                label="Region Officer"
+                placeholder="Select Region Officer"
+                options={regionOfficerOptions}
+                value={resolveOfficerSelectValue(drawerIpnuts?.Divisions?.officer)}
+                onChange={(e) =>
+                  handleOfficerChange("Divisions", regionOfficerOptions, e)
+                }
+                isIDs={true}
+              />
+            </Col>
+          </Row>
+          <Row gutter={24}>
+            <Col span={12}>
               <MyInput
                 label="Region"
                 required
@@ -7177,8 +7188,6 @@ const Configuration = () => {
                 hasError={!!errors?.Divisions?.lookupname}
               />
             </Col>
-          </Row>
-          <Row gutter={24}>
             <Col span={12}>
               <MyInput
                 label="Display Name"
@@ -7190,6 +7199,8 @@ const Configuration = () => {
                 hasError={!!errors?.Divisions?.DisplayName}
               />
             </Col>
+          </Row>
+          <Row gutter={24}>
             <ParentLookupSelect
               drawerKey="Divisions"
               lookuptypeId={drawerIpnuts?.Divisions?.lookuptypeId}
@@ -7291,7 +7302,7 @@ const Configuration = () => {
           if (!validateForm("Station")) return;
           insertDataFtn(
             `/lookup`,
-            drawerIpnuts?.Station,
+            getLookupDrawerPayload("Station"),
             "Data inserted successfully:",
             "Data did not insert:",
             () => {
@@ -7303,7 +7314,7 @@ const Configuration = () => {
         isEdit={isUpdateRec?.Station}
         update={async () => {
           if (!validateForm("Station")) return;
-          await updateFtn("/lookup", drawerIpnuts?.Station, () => {
+          await updateFtn("/lookup", getLookupDrawerPayload("Station"), () => {
             resetCounteries("Station");
             refreshLookups();
           });
@@ -7331,22 +7342,10 @@ const Configuration = () => {
                 <CustomSelect
                   label="Officer (IRO)"
                   placeholder="Select Officer"
-                  options={iroUsers.map((user) => ({
-                    key: user._id,
-                    label:
-                      `${user.userFirstName || ""} ${user.userLastName || ""} (${user.userEmail || "No Email"})`.trim(),
-                  }))}
-                  value={
-                    drawerIpnuts?.Station?.officer?._id ||
-                    drawerIpnuts?.Station?.officer
-                  }
-                  // onChange={(e) => drawrInptChng("Station", "officer", e.target.value)}
+                  options={stationOfficerOptions}
+                  value={resolveOfficerSelectValue(drawerIpnuts?.Station?.officer)}
                   onChange={(e) =>
-                    drawrInptChng(
-                      "Station",
-                      "officer",
-                      e.target.value === "" ? null : e.target.value,
-                    )
+                    handleOfficerChange("Station", stationOfficerOptions, e)
                   }
                   isIDs={true}
                 />
@@ -7642,7 +7641,7 @@ const Configuration = () => {
           if (!validateForm("Station")) return;
           insertDataFtn(
             `/lookup`,
-            drawerIpnuts?.Station,
+            getLookupDrawerPayload("Station"),
             "Data inserted successfully:",
             "Data did not insert:",
             () => {
@@ -7654,7 +7653,7 @@ const Configuration = () => {
         isEdit={isUpdateRec?.Station}
         update={async () => {
           if (!validateForm("Station")) return;
-          await updateFtn("/lookup", drawerIpnuts?.Station, () =>
+          await updateFtn("/lookup", getLookupDrawerPayload("Station"), () =>
             resetCounteries("Station", () => dispatch(getAllLookups())),
           );
           dispatch(getAllLookups());

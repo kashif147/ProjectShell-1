@@ -2,20 +2,12 @@
 import React, { useEffect, useState } from "react";
 import { Drawer, Table, Button, Card, Typography, Space, Tag } from "antd";
 import { useDispatch, useSelector } from "react-redux";
-import axios from "axios";
 import { UserPlus, MapPin, Send, ChevronDown, ChevronRight } from "lucide-react";
 import MyConfirm from "./MyConfirm";
+import { fetchCatalogRoles, fetchUsersByRoleId } from "../../services/roleUsersService";
+import { resolveOfficerRoleIdForDrawer } from "../../utils/officerRoles";
 
 const { Text } = Typography;
-
-const USER_SERVICE_URL = process.env.REACT_APP_POLICY_SERVICE_URL;
-
-// Role ID mapping
-const ROLE_IDS = {
-  BRANCH: "68c6b4d1e42306a6836622fd",
-  REGION: "68c6b4d1e42306a6836622fa",
-  IRO: "68c6b4d1e42306a6836622f1",
-};
 
 function ContactDrawer({ open, onClose, title = "Contacts", onAssign, onUnassign, type = "workLocation" }) {
   const dispatch = useDispatch();
@@ -33,30 +25,19 @@ function ContactDrawer({ open, onClose, title = "Contacts", onAssign, onUnassign
   }, [open, type]);
 
   const fetchUsers = async () => {
-    const roleId = type === "Branch" ? ROLE_IDS.BRANCH :
-      type === "Region" ? ROLE_IDS.REGION :
-        ROLE_IDS.IRO;
     setUsersLoading(true);
     try {
       const token = localStorage.getItem("token");
-      const { data } = await axios.get(
-        `${USER_SERVICE_URL}/roles/${roleId}/users`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-        }
-      );
-      // Accept array directly or wrapped in data/users
-      const userList = Array.isArray(data)
-        ? data
-        : Array.isArray(data?.data)
-          ? data.data
-          : [];
+      const catalogRoles = await fetchCatalogRoles(token);
+      const roleId = resolveOfficerRoleIdForDrawer(catalogRoles, type);
+      if (!roleId) {
+        setUsers([]);
+        return;
+      }
+      const userList = await fetchUsersByRoleId(roleId, token);
       setUsers(userList);
     } catch (err) {
-      console.error(`Failed to fetch users for role ${roleId}:`, err);
+      console.error(`Failed to fetch users for ${type} officer role:`, err);
       setUsers([]);
     } finally {
       setUsersLoading(false);
