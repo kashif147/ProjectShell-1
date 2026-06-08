@@ -1,3 +1,42 @@
+.configuration-page {
+  padding: 20px 45px;
+  background-color: #fafafa;
+}
+
+.configuration-page-header h4 {
+  color: var(--primary-color);
+  font-weight: 500;
+  margin-bottom: 8px;
+  font-size: 20px;
+}
+
+.configuration-page-header .text-muted {
+  color: #666;
+  font-size: 14px;
+}
+
+.configuration-page-header .ant-input-affix-wrapper {
+  height: 40px;
+  border-radius: 4px;
+  border: 1px solid #d9d9d9;
+  transition: all 0.3s ease;
+  padding-left: 12px;
+  padding-right: 12px;
+}
+
+.configuration-page-header .ant-input-affix-wrapper:focus,
+.configuration-page-header .ant-input-affix-wrapper:hover {
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 2px rgba(33, 94, 151, 0.2);
+}
+
+.configuration-page-header .ant-input-affix-wrapper .ant-input {
+  border: none;
+  box-shadow: none;
+  height: 38px;
+  padding-left: 8px;
+}
+
 .config-heading {
   font-size: 20px;
   font-weight: 500;
@@ -31,6 +70,44 @@
 .icon-container {
   display: flex;
   justify-content: center;
+}
+
+.configuration-cards-grid {
+  --bs-gutter-x: 0.5rem;
+  --bs-gutter-y: 0.5rem;
+  margin-bottom: 0;
+}
+
+.configuration-card {
+  padding: 0.45rem 0.3rem;
+  min-height: 64px;
+  transition: box-shadow 0.15s ease, border-color 0.15s ease;
+  border-color: #e5e7eb !important;
+}
+
+.configuration-card:hover {
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.07);
+  border-color: #cbd5e1 !important;
+}
+
+.configuration-card__icon {
+  margin-bottom: 0.2rem;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.configuration-card__icon svg {
+  width: 18px;
+  height: 18px;
+}
+
+.configuration-card__label {
+  font-size: 11px;
+  line-height: 1.2;
+  font-weight: 500;
+  word-break: break-word;
 }
 
 /* Custom grid for 8 tiles per row */

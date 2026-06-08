@@ -5267,43 +5267,34 @@ const Configuration = () => {
 
   return (
     <div
-      className="bg-gray-50 mb-4 configuration-main"
+      className="configuration-main configuration-page"
       style={{ paddingBottom: "120px" }}
     >
-      {/* <div className="text-center mb-4">
-        <h1 className="fw-bold mb-1">Configuration</h1>
-        <p className="text-muted mb-0">System configuration and lookup management</p>
-      </div> */}
-      {/* Search Bar */}
-      <div
-        className="d-flex flex-column mb-4 pb-4"
-        style={{ minHeight: "100vh" }}
-      >
-        <div
-          className="text-center "
-          style={{ flexShrink: 0, marginTop: "-4px" }}
-        >
-          <h1 className="fw-bold">Configuration</h1>
-          <p className="text-muted mb-0">
-            System configuration and lookup management
-          </p>
-          <div className="row justify-content-center">
-            <div className="col-md-6 mt-3 mb-3">
-              <input
-                type="text"
-                className="form-control form-control-lg"
-                placeholder="Search lookups..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-              />
+      <div className="d-flex flex-column" style={{ minHeight: "100vh" }}>
+        <div className="configuration-page-header">
+          <div className="d-flex justify-content-between align-items-center mb-3">
+            <div>
+              <h4 className="mb-1">Configuration</h4>
+              <p className="text-muted mb-0">
+                System configuration and lookup management
+              </p>
             </div>
+          </div>
+          <div className="mb-3">
+            <Input
+              placeholder="Search lookups..."
+              prefix={<SearchOutlined />}
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              allowClear
+            />
           </div>
         </div>
         <div
-          className="bg-white rounded shadow-sm p-4 flex-grow-1 hide-scroll-webkit"
+          className="bg-white rounded shadow-sm p-3 flex-grow-1 hide-scroll-webkit configuration-cards-panel"
           style={{
             overflowY: "auto",
-            maxHeight: "calc(100vh - 200px)",
+            maxHeight: "calc(100vh - 160px)",
             paddingBottom: "100px",
             scrollbarWidth: "none",
             msOverflowStyle: "none",
@@ -5315,19 +5306,19 @@ const Configuration = () => {
             );
 
             return filteredItems.length > 0 ? (
-              <div className="row gx-3 gy-3 mb-4 pb-4">
+              <div className="row configuration-cards-grid">
                 {filteredItems.map((item) => (
                   <div
                     key={item.lookupTypeId || item.key}
-                    className="col-6 col-sm-4 col-md-3 col-lg-1-5 d-flex"
+                    className="col-4 col-sm-3 col-md-2 col-lg-1-5 d-flex"
                   >
                     <div
                       onClick={() => openConfigurationCard(item)}
-                      className="d-flex flex-column align-items-center justify-content-center border rounded bg-white p-4 w-100 text-center hover-shadow"
+                      className="configuration-card d-flex flex-column align-items-center justify-content-center border rounded bg-white w-100 text-center"
                       style={{ cursor: "pointer" }}
                     >
-                      <div className="mb-2">{item.icon}</div>
-                      <p className="mb-0 small fw-medium text-dark">
+                      <div className="configuration-card__icon">{item.icon}</div>
+                      <p className="configuration-card__label mb-0 text-dark">
                         {item.label}
                       </p>
                     </div>
