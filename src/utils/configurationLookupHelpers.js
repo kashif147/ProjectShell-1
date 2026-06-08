@@ -71,6 +71,24 @@ export const CONFIGURATION_DRAWER_KEYS = new Set([
   "StandardLookup",
 ]);
 
+/** Drawers that do not use GET/PUT /lookup for records. */
+export const NON_LOOKUP_DRAWER_KEYS = new Set([
+  "Bookmarks",
+  "Solicitors",
+  "RegionType",
+  "ContactType",
+  "Countries",
+  "LookupType",
+]);
+
+export function isLookupDrawerKey(drawerKey) {
+  return (
+    !!drawerKey &&
+    CONFIGURATION_DRAWER_KEYS.has(drawerKey) &&
+    !NON_LOOKUP_DRAWER_KEYS.has(drawerKey)
+  );
+}
+
 const LOOKUP_TYPE_NAME_TO_DRAWER_KEY = {
   boards: "Boards",
   bookmarks: "Bookmarks",
@@ -323,6 +341,14 @@ export const SYSTEM_CONFIGURATION_CARDS = [
     lookupTypeId: "system-card-lookup",
     label: "Lookup",
     icon: <Search size={24} color="#fb7185" />,
+    lookupType: null,
+    isSystem: true,
+  },
+  {
+    key: "Bookmarks",
+    lookupTypeId: "system-card-bookmarks",
+    label: "Bookmark",
+    icon: <Bookmark size={24} color="#818cf8" />,
     lookupType: null,
     isSystem: true,
   },

@@ -7,6 +7,18 @@ function trimTrailingSlashes(url) {
   return String(url || "").replace(/\/+$/, "");
 }
 
+/** User / policy service API base (e.g. https://host/user-service/api) */
+export function getUserServiceBaseUrl() {
+  const policyUrl = trimTrailingSlashes(
+    process.env.REACT_APP_POLICY_SERVICE_URL,
+  );
+  if (policyUrl) return policyUrl;
+
+  const devUrl = trimTrailingSlashes(process.env.REACT_APP_BASE_URL_DEV);
+  if (!devUrl) return "";
+  return devUrl.endsWith("/api") ? devUrl : `${devUrl}/api`;
+}
+
 /** Account service API base (e.g. https://host/account-service/api) */
 export function getAccountServiceBaseUrl() {
   return trimTrailingSlashes(process.env.REACT_APP_ACCOUNT_SERVICE_URL);

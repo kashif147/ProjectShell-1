@@ -1,4 +1,10 @@
-import React, { useEffect, useState, useMemo, useCallback, useRef } from "react";
+import React, {
+  useEffect,
+  useState,
+  useMemo,
+  useCallback,
+  useRef,
+} from "react";
 import { SiActigraph } from "react-icons/si";
 import { FaLeaf, FaRegMap, FaRocketchat } from "react-icons/fa6";
 import MyDrawer from "../component/common/MyDrawer";
@@ -15,6 +21,7 @@ import {
   Checkbox,
   Button,
   Modal,
+  Spin,
 } from "antd";
 import { SearchOutlined } from "@ant-design/icons";
 import {
@@ -53,7 +60,11 @@ import { AiFillDelete } from "react-icons/ai";
 import { FaEdit } from "react-icons/fa";
 import { FaArrowUpRightFromSquare } from "react-icons/fa6";
 import { FaRegCircleQuestion } from "react-icons/fa6";
-import { getAllLookups, resetLookups } from "../features/LookupsSlice";
+import {
+  getAllLookups,
+  getLookupById,
+  resetLookups,
+} from "../features/LookupsSlice";
 import axios from "axios";
 import { useDispatch, useSelector } from "react-redux";
 import { useTableColumns } from "../context/TableColumnsContext ";
@@ -84,6 +95,7 @@ import {
 import { getContacts, resetContacts } from "../features/ContactSlice";
 import {
   getLookupTypes,
+  getLookupTypeById,
   clearLookupTypes,
 } from "../features/LookupTypeSlice";
 import {
@@ -97,6 +109,7 @@ import {
   getLookupTypeFieldPropsForRecord,
   isWorkLocationLookupType,
   withDynamicLookupTypeId,
+  isLookupDrawerKey,
 } from "../utils/configurationLookupHelpers";
 import {
   lookupTypeRequiresParent,
@@ -104,6 +117,9 @@ import {
   resolveParentLookupLabelFromRecord,
   resolveParentLookupTypeIdFromRecord,
   resolveParentLookupTypeLabelFromRecord,
+  mapLookupTypeToFormValues,
+  mapLookupToFormValues,
+  buildLookupApiPayload,
 } from "../utils/lookupHierarchy";
 import ParentLookupSelect from "../component/configuration/ParentLookupSelect";
 import ParentLookupTypeSelect from "../component/configuration/ParentLookupTypeSelect";
@@ -113,8 +129,11 @@ import { useNavigate } from "react-router-dom";
 import { fetchCountries, clearCountriesData } from "../features/CountriesSlice";
 import { getBookmarks } from "../features/templete/BookmarkActions";
 import { useJsApiLoader, StandaloneSearchBox } from "@react-google-maps/api";
-
-const IRO_ROLE_ID = "68c6b4d1e42306a6836622fa";
+import { useOfficerRoleUsers } from "../hooks/useOfficerRoleUsers";
+import {
+  buildOfficerSelectOptions,
+  resolveOfficerSelectValue,
+} from "../utils/officerRoles";
 
 // Helper function to get unique filter values
 const getUniqueFilterValues = (dataSource, getValue) => {
@@ -245,38 +264,21 @@ const createFilterDropdown = (dataSource, getValue) => {
 // i have different drwers for configuration of lookups for the system
 
 const Configuration = () => {
-  const [iroUsers, setIroUsers] = useState([]);
-
-  useEffect(() => {
-    const fetchIroUsers = async () => {
-      const token = localStorage.getItem("token");
-      try {
-        const response = await axios.get(
-          `${baseURL}/roles/${IRO_ROLE_ID}/users`,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-              "Content-Type": "application/json",
-            },
-          },
-        );
-        const data = response.data?.data || response.data || [];
-        setIroUsers(Array.isArray(data) ? data : []);
-      } catch (error) {
-        console.error("Failed to fetch IRO users:", error);
-      }
-    };
-    fetchIroUsers();
-  }, []);
+  const {
+    iroOptions: officerIroOptions,
+    branchOptions: officerBranchOptions,
+    regionOptions: officerRegionOptions,
+  } = useOfficerRoleUsers();
 
   const dispatch = useDispatch();
   const { bookmarks, bookmarksLoading, bookmarksError } = useSelector(
     (state) => state.bookmarks,
   );
-  const { lookups, lookupsloading } = useSelector((state) => state.lookups);
-  const { lookupsTypes, lookupsTypesloading } = useSelector(
-    (state) => state.lookupsTypes,
+  const { lookups, lookupsloading, lookupDetailLoading } = useSelector(
+    (state) => state.lookups,
   );
+  const { lookupsTypes, lookupsTypesloading, lookupTypeDetailLoading } =
+    useSelector((state) => state.lookupsTypes);
   const { regions, loading: regionsLoading } = useSelector(
     (state) => state.regions,
   );
@@ -303,7 +305,10 @@ const Configuration = () => {
   const groupedLookups = useMemo(() => {
     if (!lookups || !Array.isArray(lookups)) return {};
     return lookups.reduce((acc, item) => {
-      const type = item.lookuptypeName || item.lookuptypeId?.lookuptype || item.lookuptype?.name;
+      const type =
+        item.lookuptypeName ||
+        item.lookuptypeId?.lookuptype ||
+        item.lookuptype?.name;
       if (type) {
         if (!acc[type]) acc[type] = [];
         acc[type].push(item);
@@ -583,12 +588,8 @@ const Configuration = () => {
       const token = localStorage.getItem("token");
       const baseUrl = isCoum ? process.env.REACT_APP_CUMM : baseURL;
 
-      let finalEndPoint = endPoint;
-      // const { id, ...finalData } = data1;
-      // const { id, ...finalData } = data1;
-
       setButtonLoading((prev) => ({ ...prev, update: true }));
-      const response = await axios.put(`${baseUrl}${finalEndPoint}`, data1, {
+      const response = await axios.put(`${baseUrl}${endPoint}`, data1, {
         headers: {
           Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
@@ -923,12 +924,19 @@ const Configuration = () => {
     if (place.formatted_address) setAddressSearchValue(place.formatted_address);
 
     const service = new window.google.maps.places.PlacesService(
-      document.createElement("div")
+      document.createElement("div"),
     );
     service.getDetails(
-      { placeId: place.place_id, fields: ["address_components", "formatted_address"] },
+      {
+        placeId: place.place_id,
+        fields: ["address_components", "formatted_address"],
+      },
       (details, status) => {
-        if (status !== window.google.maps.places.PlacesServiceStatus.OK || !details) return;
+        if (
+          status !== window.google.maps.places.PlacesServiceStatus.OK ||
+          !details
+        )
+          return;
 
         const components = details.address_components;
         const getComp = (type) =>
@@ -936,12 +944,14 @@ const Configuration = () => {
 
         const streetNumber = getComp("street_number");
         const route = getComp("route");
-        const neighborhood = getComp("neighborhood") || getComp("sublocality") || "";
+        const neighborhood =
+          getComp("neighborhood") || getComp("sublocality") || "";
         const town = getComp("locality") || getComp("postal_town") || "";
         const county = getComp("administrative_area_level_1") || "";
         const postalCode = getComp("postal_code");
         const countryName = getComp("country");
-        const countryShort = components.find((c) => c.types.includes("country"))?.short_name || "";
+        const countryShort =
+          components.find((c) => c.types.includes("country"))?.short_name || "";
 
         let finalCountry = countryName;
         const matchedCountry = countriesOptions?.find(
@@ -950,11 +960,14 @@ const Configuration = () => {
             c?.value?.toLowerCase() === countryName.toLowerCase() ||
             c?.label?.toLowerCase() === countryShort.toLowerCase() ||
             c?.value?.toLowerCase() === countryShort.toLowerCase() ||
-            c?.displayname?.toLowerCase() === countryName.toLowerCase()
+            c?.displayname?.toLowerCase() === countryName.toLowerCase(),
         );
 
         if (matchedCountry) {
-          finalCountry = matchedCountry.displayname || matchedCountry.label || matchedCountry.value;
+          finalCountry =
+            matchedCountry.displayname ||
+            matchedCountry.label ||
+            matchedCountry.value;
         }
 
         setdrawerIpnuts((prev) => ({
@@ -973,7 +986,7 @@ const Configuration = () => {
             },
           },
         }));
-      }
+      },
     );
   };
   // ---- End Work Location Eircode Search ----
@@ -1008,8 +1021,6 @@ const Configuration = () => {
     DisplayName: "",
   });
 
-
-
   const {
     titleOptions,
     genderOptions,
@@ -1026,7 +1037,6 @@ const Configuration = () => {
   } = useSelector((state) => state.lookups);
   console.log("lookups", lookups);
   // const { countriesData, countriesOptions } = useSelector((state) => state.countries);
-
 
   const [contactTypelookup, setcontactTypelookup] = useState([]);
   useEffect(() => {
@@ -1125,6 +1135,7 @@ const Configuration = () => {
     update: false,
     delete: false,
   });
+  const [editingLookupDrawer, setEditingLookupDrawer] = useState(null);
   function transformData(originalData) {
     return originalData.map((item) => ({
       id: item._id,
@@ -1204,7 +1215,8 @@ const Configuration = () => {
     [lookupsTypes],
   );
 
-  const [activeStandardLookupType, setActiveStandardLookupType] = useState(null);
+  const [activeStandardLookupType, setActiveStandardLookupType] =
+    useState(null);
 
   const standardLookupTableData = useMemo(
     () => getLookupsForLookupType(activeStandardLookupType, lookups),
@@ -1414,10 +1426,13 @@ const Configuration = () => {
       code: "",
       Parentlookupid: null,
       Parentlookup: "",
+      ParentlookuptypeId: null,
+      Parentlookuptype: "",
       userid: "67f3f9d812b014a0a7a94081",
       isactive: true,
       isDeleted: false,
       officer: null,
+      officerLabel: "",
       worklocationAddress: {
         eircode: "",
         buildingOrHouse: "",
@@ -1436,6 +1451,8 @@ const Configuration = () => {
       code: "",
       Parentlookupid: null,
       Parentlookup: "",
+      ParentlookuptypeId: null,
+      Parentlookuptype: "",
       userid: "67f3f9d812b014a0a7a94081",
       isactive: true,
       isDeleted: false,
@@ -1447,10 +1464,13 @@ const Configuration = () => {
       code: "",
       Parentlookupid: null,
       Parentlookup: "",
+      ParentlookuptypeId: null,
+      Parentlookuptype: "",
       userid: "67f3f9d812b014a0a7a94081",
       isactive: true,
       isDeleted: false,
       officer: null,
+      officerLabel: "",
     },
     // Region
     Divisions: {
@@ -1460,10 +1480,13 @@ const Configuration = () => {
       code: "",
       Parentlookupid: null,
       Parentlookup: "",
+      ParentlookuptypeId: null,
+      Parentlookuptype: "",
       userid: "67f3f9d812b014a0a7a94081",
       isactive: true,
       isDeleted: false,
       officer: null,
+      officerLabel: "",
     },
     Councils: {
       lookuptypeId: "68c85f22302e5600dc8477f6",
@@ -1472,6 +1495,8 @@ const Configuration = () => {
       code: "",
       Parentlookupid: null,
       Parentlookup: "",
+      ParentlookuptypeId: null,
+      Parentlookuptype: "",
       userid: "67f3f9d812b014a0a7a94081",
       isactive: true,
       isDeleted: false,
@@ -1483,6 +1508,8 @@ const Configuration = () => {
       code: "",
       Parentlookupid: null,
       Parentlookup: "",
+      ParentlookuptypeId: null,
+      Parentlookuptype: "",
       userid: "67f3f9d812b014a0a7a94081",
       isactive: true,
       isDeleted: false,
@@ -1494,6 +1521,8 @@ const Configuration = () => {
       code: "",
       Parentlookupid: null,
       Parentlookup: "",
+      ParentlookuptypeId: null,
+      Parentlookuptype: "",
       userid: "67f3f9d812b014a0a7a94081",
       isactive: true,
       isDeleted: false,
@@ -1505,6 +1534,8 @@ const Configuration = () => {
       code: "",
       Parentlookupid: null,
       Parentlookup: "",
+      ParentlookuptypeId: null,
+      Parentlookuptype: "",
       userid: "67f3f9d812b014a0a7a94081",
       isactive: true,
       isDeleted: false,
@@ -1516,6 +1547,8 @@ const Configuration = () => {
       code: "",
       Parentlookupid: null,
       Parentlookup: "",
+      ParentlookuptypeId: null,
+      Parentlookuptype: "",
       userid: "67f3f9d812b014a0a7a94081",
       isactive: true,
       isDeleted: false,
@@ -1527,6 +1560,8 @@ const Configuration = () => {
       code: "",
       Parentlookupid: null,
       Parentlookup: "",
+      ParentlookuptypeId: null,
+      Parentlookuptype: "",
       userid: "67f3f9d812b014a0a7a94081",
       isactive: true,
       isDeleted: false,
@@ -1538,6 +1573,8 @@ const Configuration = () => {
       code: "",
       Parentlookupid: null,
       Parentlookup: "",
+      ParentlookuptypeId: null,
+      Parentlookuptype: "",
       userid: "67f3f9d812b014a0a7a94081",
       isactive: true,
       isDeleted: false,
@@ -1559,6 +1596,8 @@ const Configuration = () => {
       code: "",
       Parentlookupid: null,
       Parentlookup: "",
+      ParentlookuptypeId: null,
+      Parentlookuptype: "",
       userid: "67f3f9d812b014a0a7a94081",
       isactive: true,
       isDeleted: false,
@@ -1571,6 +1610,8 @@ const Configuration = () => {
       code: "",
       Parentlookupid: null,
       Parentlookup: "",
+      ParentlookuptypeId: null,
+      Parentlookuptype: "",
       userid: "67f3f9d812b014a0a7a94081",
       isactive: true,
       isDeleted: false,
@@ -1583,6 +1624,8 @@ const Configuration = () => {
       code: "",
       Parentlookupid: null,
       Parentlookup: "",
+      ParentlookuptypeId: null,
+      Parentlookuptype: "",
       userid: "67f3f9d812b014a0a7a94081",
       isactive: true,
       isDeleted: false,
@@ -1594,6 +1637,8 @@ const Configuration = () => {
       code: "",
       Parentlookupid: null,
       Parentlookup: "",
+      ParentlookuptypeId: null,
+      Parentlookuptype: "",
       userid: "67f3f9d812b014a0a7a94081",
       isactive: true,
       isDeleted: false,
@@ -1605,6 +1650,8 @@ const Configuration = () => {
       code: "",
       Parentlookupid: null,
       Parentlookup: "",
+      ParentlookuptypeId: null,
+      Parentlookuptype: "",
       userid: "67f3f9d812b014a0a7a94081",
       isactive: true,
       isDeleted: false,
@@ -1616,6 +1663,8 @@ const Configuration = () => {
       code: "",
       Parentlookupid: null,
       Parentlookup: "",
+      ParentlookuptypeId: null,
+      Parentlookuptype: "",
       userid: "67f3f9d812b014a0a7a94081",
       isactive: true,
       isDeleted: false,
@@ -1627,6 +1676,8 @@ const Configuration = () => {
       code: "",
       Parentlookupid: "674a195dcc0986f64ca36fc2",
       Parentlookup: "",
+      ParentlookuptypeId: null,
+      Parentlookuptype: "",
       userid: "67f3f9d812b014a0a7a94081",
       isactive: true,
       isDeleted: false,
@@ -1638,6 +1689,8 @@ const Configuration = () => {
       code: "",
       Parentlookupid: null,
       Parentlookup: "",
+      ParentlookuptypeId: null,
+      Parentlookuptype: "",
       userid: "67f3f9d812b014a0a7a94081",
       isactive: true,
       isDeleted: false,
@@ -1649,6 +1702,8 @@ const Configuration = () => {
       code: "",
       Parentlookupid: null,
       Parentlookup: "",
+      ParentlookuptypeId: null,
+      Parentlookuptype: "",
       userid: "67f3f9d812b014a0a7a94081",
       isactive: true,
       isDeleted: false,
@@ -1660,6 +1715,8 @@ const Configuration = () => {
       lookupname: "",
       Parentlookupid: null,
       Parentlookup: "",
+      ParentlookuptypeId: null,
+      Parentlookuptype: "",
       userid: "67f3f9d812b014a0a7a94081",
       isactive: true,
       isDeleted: false,
@@ -1671,6 +1728,8 @@ const Configuration = () => {
       code: "",
       Parentlookupid: null,
       Parentlookup: "",
+      ParentlookuptypeId: null,
+      Parentlookuptype: "",
       userid: "67f3f9d812b014a0a7a94081",
       isactive: true,
       isDeleted: false,
@@ -1682,6 +1741,8 @@ const Configuration = () => {
       code: "",
       Parentlookupid: null,
       Parentlookup: "",
+      ParentlookuptypeId: null,
+      Parentlookuptype: "",
       userid: "67f3f9d812b014a0a7a94081",
       isactive: true,
       isDeleted: false,
@@ -1699,6 +1760,8 @@ const Configuration = () => {
       code: "",
       Parentlookupid: null,
       Parentlookup: "",
+      ParentlookuptypeId: null,
+      Parentlookuptype: "",
       userid: "67f3f9d812b014a0a7a94081",
       isactive: true,
       isDeleted: false,
@@ -1709,6 +1772,10 @@ const Configuration = () => {
       RegionCode: "",
       RegionName: "",
       DisplayName: "",
+      Parentlookupid: null,
+      Parentlookup: "",
+      ParentlookuptypeId: null,
+      Parentlookuptype: "",
       isactive: true,
       isDeleted: false,
     },
@@ -1719,6 +1786,8 @@ const Configuration = () => {
       code: "",
       Parentlookupid: null,
       Parentlookup: "",
+      ParentlookuptypeId: null,
+      Parentlookuptype: "",
       userid: "67f3f9d812b014a0a7a94081",
       isactive: true,
       isDeleted: false,
@@ -1730,6 +1799,8 @@ const Configuration = () => {
       code: "",
       Parentlookupid: null,
       Parentlookup: "",
+      ParentlookuptypeId: null,
+      Parentlookuptype: "",
       userid: "67f3f9d812b014a0a7a94081",
       isactive: true,
       isDeleted: false,
@@ -1741,6 +1812,8 @@ const Configuration = () => {
       code: "",
       Parentlookupid: null,
       Parentlookup: "",
+      ParentlookuptypeId: null,
+      Parentlookuptype: "",
       userid: "67f3f9d812b014a0a7a94081",
       isactive: true,
       isDeleted: false,
@@ -1753,7 +1826,9 @@ const Configuration = () => {
     },
   };
 
-  const [drawerIpnuts, setdrawerIpnuts] = useState(baseDrawerInputsInitalValues);
+  const [drawerIpnuts, setdrawerIpnuts] = useState(
+    baseDrawerInputsInitalValues,
+  );
 
   useEffect(() => {
     if (!Array.isArray(lookupsTypes) || lookupsTypes.length === 0) return;
@@ -1814,6 +1889,66 @@ const Configuration = () => {
     }));
   };
 
+  const getLookupDrawerPayload = (drawerKey) =>
+    buildLookupApiPayload(drawerIpnuts?.[drawerKey] || {});
+
+  const handleOfficerChange = (drawer, options, e) => {
+    const selectedId = e.target.value === "" ? null : e.target.value;
+    const selected = options.find(
+      (opt) => String(opt.key) === String(selectedId),
+    );
+    setdrawerIpnuts((prev) => ({
+      ...prev,
+      [drawer]: {
+        ...prev[drawer],
+        officer: selectedId,
+        officerLabel: selected?.label || "",
+      },
+    }));
+  };
+
+  const stationOfficerOptions = useMemo(
+    () =>
+      buildOfficerSelectOptions(
+        officerIroOptions,
+        drawerIpnuts?.Station?.officer,
+        drawerIpnuts?.Station?.officerLabel,
+      ),
+    [
+      officerIroOptions,
+      drawerIpnuts?.Station?.officer,
+      drawerIpnuts?.Station?.officerLabel,
+    ],
+  );
+
+  const branchOfficerOptions = useMemo(
+    () =>
+      buildOfficerSelectOptions(
+        officerBranchOptions,
+        drawerIpnuts?.Districts?.officer,
+        drawerIpnuts?.Districts?.officerLabel,
+      ),
+    [
+      officerBranchOptions,
+      drawerIpnuts?.Districts?.officer,
+      drawerIpnuts?.Districts?.officerLabel,
+    ],
+  );
+
+  const regionOfficerOptions = useMemo(
+    () =>
+      buildOfficerSelectOptions(
+        officerRegionOptions,
+        drawerIpnuts?.Divisions?.officer,
+        drawerIpnuts?.Divisions?.officerLabel,
+      ),
+    [
+      officerRegionOptions,
+      drawerIpnuts?.Divisions?.officer,
+      drawerIpnuts?.Divisions?.officerLabel,
+    ],
+  );
+
   const handleParentLookupTypeChange = ({ parentTypeId, parentTypeLabel }) => {
     setdrawerIpnuts((prev) => ({
       ...prev,
@@ -1825,8 +1960,84 @@ const Configuration = () => {
     }));
   };
 
-  const IsUpdateFtn = (drawer, value, data) => {
+  const loadLookupTypeForEdit = async (record) => {
+    const id = record?._id || record?.id;
+    if (!id) return;
 
+    if (!drawerOpen?.LookupType) {
+      openCloseDrawerFtn("LookupType");
+    }
+    disableFtn(false);
+    setisUpdateRec((prev) => ({ ...prev, LookupType: true }));
+
+    try {
+      const detail = await dispatch(getLookupTypeById(id)).unwrap();
+      const formValues = mapLookupTypeToFormValues(detail, lookupsTypes);
+      setdrawerIpnuts((prev) => ({
+        ...prev,
+        LookupType: {
+          ...(prev.LookupType || baseDrawerInputsInitalValues.LookupType),
+          ...formValues,
+        },
+      }));
+    } catch (error) {
+      const formValues = mapLookupTypeToFormValues(record, lookupsTypes);
+      setdrawerIpnuts((prev) => ({
+        ...prev,
+        LookupType: {
+          ...(prev.LookupType || baseDrawerInputsInitalValues.LookupType),
+          ...formValues,
+        },
+      }));
+      MyAlert(
+        "warning",
+        "Could not load full lookup type details",
+        error?.message || error || "Using table row data instead.",
+      );
+    }
+  };
+
+  const loadLookupForEdit = async (drawerKey, record) => {
+    const id = record?._id || record?.id;
+    if (!id || !isLookupDrawerKey(drawerKey)) return;
+
+    if (!drawerOpen?.[drawerKey]) {
+      openCloseDrawerFtn(drawerKey);
+    }
+    disableFtn(false);
+    setEditingLookupDrawer(drawerKey);
+    setisUpdateRec((prev) => ({ ...prev, [drawerKey]: true }));
+
+    try {
+      const detail = await dispatch(getLookupById(id)).unwrap();
+      const formValues = mapLookupToFormValues(detail, lookupsTypes);
+      setdrawerIpnuts((prev) => ({
+        ...prev,
+        [drawerKey]: {
+          ...(prev[drawerKey] || baseDrawerInputsInitalValues[drawerKey] || {}),
+          ...formValues,
+        },
+      }));
+    } catch (error) {
+      const formValues = mapLookupToFormValues(record, lookupsTypes);
+      setdrawerIpnuts((prev) => ({
+        ...prev,
+        [drawerKey]: {
+          ...(prev[drawerKey] || baseDrawerInputsInitalValues[drawerKey] || {}),
+          ...formValues,
+        },
+      }));
+      MyAlert(
+        "warning",
+        "Could not load full lookup details",
+        error?.message || error || "Using table row data instead.",
+      );
+    } finally {
+      setEditingLookupDrawer(null);
+    }
+  };
+
+  const IsUpdateFtn = (drawer, value, data) => {
     if (value === false) {
       setisUpdateRec((prev) => ({
         ...prev,
@@ -1841,37 +2052,36 @@ const Configuration = () => {
       [drawer]: value,
     }));
 
-    const filteredData = Object.keys(baseDrawerInputsInitalValues[drawer] || {}).reduce(
-      (acc, key) => {
-        if (key === "lookuptypeId") {
-          if (data.lookuptypeId != null && data.lookuptypeId !== "") {
-            const val = data.lookuptypeId;
-            acc.lookuptypeId =
-              typeof val === "object" && val !== null && val._id
-                ? String(val._id)
-                : String(val);
-          }
-          return acc;
-        }
-
-        if (data.hasOwnProperty(key)) {
-          const val = data[key];
-          if (
-            typeof val === "object" &&
-            val !== null &&
-            val._id &&
-            key !== "worklocationAddress" &&
-            key !== "contactAddress"
-          ) {
-            acc[key] = val._id;
-          } else {
-            acc[key] = val;
-          }
+    const filteredData = Object.keys(
+      baseDrawerInputsInitalValues[drawer] || {},
+    ).reduce((acc, key) => {
+      if (key === "lookuptypeId") {
+        if (data.lookuptypeId != null && data.lookuptypeId !== "") {
+          const val = data.lookuptypeId;
+          acc.lookuptypeId =
+            typeof val === "object" && val !== null && val._id
+              ? String(val._id)
+              : String(val);
         }
         return acc;
-      },
-      {},
-    );
+      }
+
+      if (data.hasOwnProperty(key)) {
+        const val = data[key];
+        if (
+          typeof val === "object" &&
+          val !== null &&
+          val._id &&
+          key !== "worklocationAddress" &&
+          key !== "contactAddress"
+        ) {
+          acc[key] = val._id;
+        } else {
+          acc[key] = val;
+        }
+      }
+      return acc;
+    }, {});
 
     const parentId = resolveParentLookupIdFromRecord(data);
     const parentLabel = resolveParentLookupLabelFromRecord(data);
@@ -1893,6 +2103,30 @@ const Configuration = () => {
       );
       filteredData.Parentlookuptype =
         data.Parentlookuptype ?? parentTypeLabel ?? null;
+    }
+
+    if (drawer === "LookupType") {
+      const mapped = mapLookupTypeToFormValues(data, lookupsTypes);
+      setdrawerIpnuts((prev) => ({
+        ...prev,
+        LookupType: {
+          ...(prev.LookupType || baseDrawerInputsInitalValues.LookupType),
+          ...mapped,
+        },
+      }));
+      return;
+    }
+
+    if (isLookupDrawerKey(drawer)) {
+      const mapped = mapLookupToFormValues(data, lookupsTypes);
+      setdrawerIpnuts((prev) => ({
+        ...prev,
+        [drawer]: {
+          ...(prev[drawer] || baseDrawerInputsInitalValues[drawer] || {}),
+          ...mapped,
+        },
+      }));
+      return;
     }
 
     setdrawerIpnuts((prev) => ({
@@ -2102,11 +2336,7 @@ const Configuration = () => {
           <FaEdit
             size={16}
             style={{ marginRight: "10px" }}
-            onClick={() => {
-              IsUpdateFtn("Provinces", true, record);
-              addIdKeyToLookup(record?._id, "Provinces");
-              disableFtn(false);
-            }}
+            onClick={() => loadLookupForEdit("Provinces", record)}
           />
           <AiFillDelete
             size={16}
@@ -2252,10 +2482,7 @@ const Configuration = () => {
           <FaEdit
             size={16}
             style={{ marginRight: "10px" }}
-            onClick={() => {
-              IsUpdateFtn("Countries", !isUpdateRec?.Countries, record);
-              addIdKeyToLookup(record?._id, "Countries");
-            }}
+            onClick={() => loadLookupForEdit("counties", record)}
           />
           <AiFillDelete
             size={16}
@@ -2321,7 +2548,11 @@ const Configuration = () => {
       align: "center",
       render: (_, record) => (
         <Space size="middle">
-          <FaEdit size={16} style={{ marginRight: "10px" }} />
+          <FaEdit
+            size={16}
+            style={{ marginRight: "10px" }}
+            onClick={() => loadLookupForEdit("PostCode", record)}
+          />
           <AiFillDelete size={16} />
         </Space>
       ),
@@ -2333,7 +2564,10 @@ const Configuration = () => {
       dataIndex: "code",
       key: "code",
       sorter: (a, b) => (a.code || "").localeCompare(b.code || ""),
-      filterDropdown: createFilterDropdown(groupedLookups?.Branch, (record) => record.code),
+      filterDropdown: createFilterDropdown(
+        groupedLookups?.Branch,
+        (record) => record.code,
+      ),
       onFilter: (value, record) => (record.code || "").toString() === value,
       filterIcon: (filtered) => (
         <SearchOutlined style={{ color: filtered ? "#1890ff" : undefined }} />
@@ -2344,8 +2578,12 @@ const Configuration = () => {
       dataIndex: "lookupname",
       key: "lookupname",
       sorter: (a, b) => (a.lookupname || "").localeCompare(b.lookupname || ""),
-      filterDropdown: createFilterDropdown(groupedLookups?.Branch, (record) => record.lookupname),
-      onFilter: (value, record) => (record.lookupname || "").toString() === value,
+      filterDropdown: createFilterDropdown(
+        groupedLookups?.Branch,
+        (record) => record.lookupname,
+      ),
+      onFilter: (value, record) =>
+        (record.lookupname || "").toString() === value,
       filterIcon: (filtered) => (
         <SearchOutlined style={{ color: filtered ? "#1890ff" : undefined }} />
       ),
@@ -2364,18 +2602,22 @@ const Configuration = () => {
       title: "Branch Manager",
       key: "officer",
       sorter: (a, b) => {
-        const emailA = a.officer?.userEmail || (typeof a.officer === 'string' ? a.officer : "");
-        const emailB = b.officer?.userEmail || (typeof b.officer === 'string' ? b.officer : "");
+        const emailA =
+          a.officer?.userEmail ||
+          (typeof a.officer === "string" ? a.officer : "");
+        const emailB =
+          b.officer?.userEmail ||
+          (typeof b.officer === "string" ? b.officer : "");
         return emailA.localeCompare(emailB);
       },
       filterDropdown: createFilterDropdown(groupedLookups?.Branch, (record) => {
         const o = record?.officer;
         if (!o) return "";
-        return o.userEmail || (typeof o === 'string' ? o : "");
+        return o.userEmail || (typeof o === "string" ? o : "");
       }),
       onFilter: (value, record) => {
         const o = record?.officer;
-        const email = o?.userEmail || (typeof o === 'string' ? o : "");
+        const email = o?.userEmail || (typeof o === "string" ? o : "");
         return (email || "").toString() === value;
       },
       filterIcon: (filtered) => (
@@ -2384,7 +2626,12 @@ const Configuration = () => {
       render: (_, record) => {
         const o = record?.officer;
         if (!o) return "-";
-        if (typeof o === "object") return o.userEmail || `${o.userFirstName || ""} ${o.userLastName || ""}`.trim() || "-";
+        if (typeof o === "object")
+          return (
+            o.userEmail ||
+            `${o.userFirstName || ""} ${o.userLastName || ""}`.trim() ||
+            "-"
+          );
         return String(o);
       },
     },
@@ -2415,10 +2662,7 @@ const Configuration = () => {
           <FaEdit
             size={16}
             style={{ marginRight: "10px" }}
-            onClick={() => {
-              IsUpdateFtn("Districts", !isUpdateRec?.Districts, record);
-              addIdKeyToLookup(record?._id, "Districts");
-            }}
+            onClick={() => loadLookupForEdit("Districts", record)}
           />
           <AiFillDelete
             size={16}
@@ -2447,7 +2691,7 @@ const Configuration = () => {
       sorter: (a, b) => (a.code || "").localeCompare(b.code || ""),
       filterDropdown: createFilterDropdown(
         groupedLookups?.workLocation,
-        (record) => record.code
+        (record) => record.code,
       ),
       onFilter: (value, record) => (record.code || "").toString() === value,
       filterIcon: (filtered) => (
@@ -2461,7 +2705,7 @@ const Configuration = () => {
       sorter: (a, b) => (a.lookupname || "").localeCompare(b.lookupname || ""),
       filterDropdown: createFilterDropdown(
         groupedLookups?.workLocation,
-        (record) => record.lookupname
+        (record) => record.lookupname,
       ),
       onFilter: (value, record) =>
         (record.lookupname || "").toString() === value,
@@ -2473,10 +2717,11 @@ const Configuration = () => {
       title: "Display Name",
       dataIndex: "DisplayName",
       key: "DisplayName",
-      sorter: (a, b) => (a.DisplayName || "").localeCompare(b.DisplayName || ""),
+      sorter: (a, b) =>
+        (a.DisplayName || "").localeCompare(b.DisplayName || ""),
       filterDropdown: createFilterDropdown(
         groupedLookups?.workLocation,
-        (record) => record.DisplayName
+        (record) => record.DisplayName,
       ),
       onFilter: (value, record) =>
         (record.DisplayName || "").toString() === value,
@@ -2492,7 +2737,7 @@ const Configuration = () => {
         (a.Parentlookup || "").localeCompare(b.Parentlookup || ""),
       filterDropdown: createFilterDropdown(
         groupedLookups?.workLocation,
-        (record) => record.Parentlookup
+        (record) => record.Parentlookup,
       ),
       onFilter: (value, record) =>
         (record.Parentlookup || "").toString() === value,
@@ -2505,9 +2750,11 @@ const Configuration = () => {
       key: "officer",
       sorter: (a, b) => {
         const emailA =
-          a.officer?.userEmail || (typeof a.officer === "string" ? a.officer : "");
+          a.officer?.userEmail ||
+          (typeof a.officer === "string" ? a.officer : "");
         const emailB =
-          b.officer?.userEmail || (typeof b.officer === "string" ? b.officer : "");
+          b.officer?.userEmail ||
+          (typeof b.officer === "string" ? b.officer : "");
         return emailA.localeCompare(emailB);
       },
       filterDropdown: createFilterDropdown(
@@ -2516,7 +2763,7 @@ const Configuration = () => {
           const o = record?.officer;
           if (!o) return "";
           return o.userEmail || (typeof o === "string" ? o : "");
-        }
+        },
       ),
       onFilter: (value, record) => {
         const o = record?.officer;
@@ -2595,10 +2842,7 @@ const Configuration = () => {
           <FaEdit
             size={16}
             style={{ marginRight: "10px", cursor: "pointer" }}
-            onClick={() => {
-              IsUpdateFtn("Station", !isUpdateRec?.Station, record);
-              addIdKeyToLookup(record?._id, "Station");
-            }}
+            onClick={() => loadLookupForEdit("Station", record)}
           />
           <AiFillDelete
             size={16}
@@ -2626,7 +2870,10 @@ const Configuration = () => {
       dataIndex: "code",
       key: "code",
       sorter: (a, b) => (a.code || "").localeCompare(b.code || ""),
-      filterDropdown: createFilterDropdown(groupedLookups?.Region, (record) => record.code),
+      filterDropdown: createFilterDropdown(
+        groupedLookups?.Region,
+        (record) => record.code,
+      ),
       onFilter: (value, record) => (record.code || "").toString() === value,
       filterIcon: (filtered) => (
         <SearchOutlined style={{ color: filtered ? "#1890ff" : undefined }} />
@@ -2637,8 +2884,12 @@ const Configuration = () => {
       dataIndex: "lookupname",
       key: "lookupname",
       sorter: (a, b) => (a.lookupname || "").localeCompare(b.lookupname || ""),
-      filterDropdown: createFilterDropdown(groupedLookups?.Region, (record) => record.lookupname),
-      onFilter: (value, record) => (record.lookupname || "").toString() === value,
+      filterDropdown: createFilterDropdown(
+        groupedLookups?.Region,
+        (record) => record.lookupname,
+      ),
+      onFilter: (value, record) =>
+        (record.lookupname || "").toString() === value,
       filterIcon: (filtered) => (
         <SearchOutlined style={{ color: filtered ? "#1890ff" : undefined }} />
       ),
@@ -2657,18 +2908,22 @@ const Configuration = () => {
       title: "Assigned Officer",
       key: "officer",
       sorter: (a, b) => {
-        const emailA = a.officer?.userEmail || (typeof a.officer === 'string' ? a.officer : "");
-        const emailB = b.officer?.userEmail || (typeof b.officer === 'string' ? b.officer : "");
+        const emailA =
+          a.officer?.userEmail ||
+          (typeof a.officer === "string" ? a.officer : "");
+        const emailB =
+          b.officer?.userEmail ||
+          (typeof b.officer === "string" ? b.officer : "");
         return emailA.localeCompare(emailB);
       },
       filterDropdown: createFilterDropdown(groupedLookups?.Region, (record) => {
         const o = record?.officer;
         if (!o) return "";
-        return o.userEmail || (typeof o === 'string' ? o : "");
+        return o.userEmail || (typeof o === "string" ? o : "");
       }),
       onFilter: (value, record) => {
         const o = record?.officer;
-        const email = o?.userEmail || (typeof o === 'string' ? o : "");
+        const email = o?.userEmail || (typeof o === "string" ? o : "");
         return (email || "").toString() === value;
       },
       filterIcon: (filtered) => (
@@ -2677,7 +2932,12 @@ const Configuration = () => {
       render: (_, record) => {
         const o = record?.officer;
         if (!o) return "-";
-        if (typeof o === "object") return o.userEmail || `${o.userFirstName || ""} ${o.userLastName || ""}`.trim() || "-";
+        if (typeof o === "object")
+          return (
+            o.userEmail ||
+            `${o.userFirstName || ""} ${o.userLastName || ""}`.trim() ||
+            "-"
+          );
         return String(o);
       },
     },
@@ -2708,10 +2968,7 @@ const Configuration = () => {
           <FaEdit
             size={16}
             style={{ marginRight: "10px" }}
-            onClick={() => {
-              IsUpdateFtn("Divisions", !isUpdateRec?.Divisions, record);
-              addIdKeyToLookup(record?._id, "Divisions");
-            }}
+            onClick={() => loadLookupForEdit("Divisions", record)}
           />
           <AiFillDelete
             size={16}
@@ -2774,10 +3031,7 @@ const Configuration = () => {
           <FaEdit
             size={16}
             style={{ marginRight: "10px" }}
-            onClick={() => {
-              IsUpdateFtn("Cities", !isUpdateRec?.Cities, record);
-              addIdKeyToLookup(record?._id, "Cities");
-            }}
+            onClick={() => loadLookupForEdit("Cities", record)}
           />
           <AiFillDelete
             size={16}
@@ -2874,15 +3128,18 @@ const Configuration = () => {
       dataIndex: "lookuptype",
       key: "lookuptype",
       defaultSortOrder: "ascend",
-      sorter: (a, b) =>
-        (a.lookuptype || "").localeCompare(b.lookuptype || ""),
+      sorter: (a, b) => (a.lookuptype || "").localeCompare(b.lookuptype || ""),
     },
     {
       title: "Display Name",
       dataIndex: "DisplayName",
       key: "DisplayName",
+      render: (_, record) =>
+        record?.DisplayName || record?.displayname || record?.displayName || "",
       sorter: (a, b) =>
-        (a.DisplayName || "").localeCompare(b.DisplayName || ""),
+        (a.DisplayName || a.displayname || "").localeCompare(
+          b.DisplayName || b.displayname || "",
+        ),
     },
 
     {
@@ -2913,10 +3170,7 @@ const Configuration = () => {
           <FaEdit
             size={16}
             style={{ marginRight: "10px" }}
-            onClick={() => {
-              IsUpdateFtn("LookupType", !IsUpdateFtn?.LookupType, record);
-              addIdKeyToLookup(record?._id, "LookupType");
-            }}
+            onClick={() => loadLookupTypeForEdit(record)}
           />
           <AiFillDelete
             size={16}
@@ -3076,10 +3330,7 @@ const Configuration = () => {
           <FaEdit
             size={16}
             style={{ marginRight: "10px" }}
-            onClick={() => {
-              IsUpdateFtn("Lookup", !IsUpdateFtn?.Lookup, record);
-              addIdKeyToLookup(record?._id, "Lookup");
-            }}
+            onClick={() => loadLookupForEdit("Lookup", record)}
           />
           <AiFillDelete
             size={16}
@@ -3155,10 +3406,7 @@ const Configuration = () => {
           <FaEdit
             size={16}
             style={{ marginRight: "10px" }}
-            onClick={() => {
-              IsUpdateFtn("Gender", !IsUpdateFtn?.Gender, record);
-              addIdKeyToLookup(record?._id, "Gender");
-            }}
+            onClick={() => loadLookupForEdit("Gender", record)}
           />
           <AiFillDelete
             size={16}
@@ -3228,10 +3476,7 @@ const Configuration = () => {
           <FaEdit
             size={16}
             style={{ marginRight: "10px" }}
-            onClick={() => {
-              IsUpdateFtn("Ranks", !IsUpdateFtn?.Ranks, record);
-              addIdKeyToLookup(record?._id, "Ranks");
-            }}
+            onClick={() => loadLookupForEdit("Ranks", record)}
           />
           <AiFillDelete
             size={16}
@@ -3291,10 +3536,7 @@ const Configuration = () => {
           <FaEdit
             size={16}
             style={{ marginRight: "10px" }}
-            onClick={() => {
-              IsUpdateFtn("Sections", !IsUpdateFtn?.Sections, record);
-              addIdKeyToLookup(record?._id, "Sections");
-            }}
+            onClick={() => loadLookupForEdit("Sections", record)}
           />
           <AiFillDelete
             size={16}
@@ -3364,14 +3606,7 @@ const Configuration = () => {
           <FaEdit
             size={16}
             style={{ marginRight: "10px" }}
-            onClick={() => {
-              IsUpdateFtn(
-                "SpokenLanguages",
-                !IsUpdateFtn?.SpokenLanguages,
-                record,
-              );
-              addIdKeyToLookup(record?._id, "SpokenLanguages");
-            }}
+            onClick={() => loadLookupForEdit("SpokenLanguages", record)}
           />
           <AiFillDelete
             size={16}
@@ -3441,10 +3676,7 @@ const Configuration = () => {
           <FaEdit
             size={16}
             style={{ marginRight: "10px" }}
-            onClick={() => {
-              IsUpdateFtn("ProjectTypes", !IsUpdateFtn?.ProjectTypes, record);
-              addIdKeyToLookup(record?._id, "ProjectTypes");
-            }}
+            onClick={() => loadLookupForEdit("ProjectTypes", record)}
           />
           <AiFillDelete
             size={16}
@@ -3514,10 +3746,7 @@ const Configuration = () => {
           <FaEdit
             size={16}
             style={{ marginRight: "10px" }}
-            onClick={() => {
-              IsUpdateFtn("Trainings", !IsUpdateFtn?.Trainings, record);
-              addIdKeyToLookup(record?._id, "Trainings");
-            }}
+            onClick={() => loadLookupForEdit("Trainings", record)}
           />
           <AiFillDelete
             size={16}
@@ -3587,10 +3816,7 @@ const Configuration = () => {
           <FaEdit
             size={16}
             style={{ marginRight: "10px" }}
-            onClick={() => {
-              IsUpdateFtn("Boards", !IsUpdateFtn?.Boards, record);
-              addIdKeyToLookup(record?._id, "Boards");
-            }}
+            onClick={() => loadLookupForEdit("Boards", record)}
           />
           <AiFillDelete
             size={16}
@@ -3658,10 +3884,7 @@ const Configuration = () => {
           <FaEdit
             size={16}
             style={{ marginRight: "10px" }}
-            onClick={() => {
-              IsUpdateFtn("StandardLookup", !isUpdateRec?.StandardLookup, record);
-              addIdKeyToLookup(record?._id, "StandardLookup");
-            }}
+            onClick={() => loadLookupForEdit("StandardLookup", record)}
           />
           <AiFillDelete
             size={16}
@@ -3729,10 +3952,7 @@ const Configuration = () => {
           <FaEdit
             size={16}
             style={{ marginRight: "10px" }}
-            onClick={() => {
-              IsUpdateFtn("Councils", !IsUpdateFtn?.Councils, record);
-              addIdKeyToLookup(record?._id, "Councils");
-            }}
+            onClick={() => loadLookupForEdit("Councils", record)}
           />
           <AiFillDelete
             size={16}
@@ -3800,14 +4020,7 @@ const Configuration = () => {
           <FaEdit
             size={16}
             style={{ marginRight: "10px" }}
-            onClick={() => {
-              IsUpdateFtn(
-                "CorrespondenceType",
-                !IsUpdateFtn?.CorrespondenceType,
-                record,
-              );
-              addIdKeyToLookup(record?._id, "CorrespondenceType");
-            }}
+            onClick={() => loadLookupForEdit("CorrespondenceType", record)}
           />
           <AiFillDelete
             size={16}
@@ -3883,10 +4096,7 @@ const Configuration = () => {
           <FaEdit
             size={16}
             style={{ marginRight: "10px" }}
-            onClick={() => {
-              IsUpdateFtn("Title", !IsUpdateFtn?.Title, record);
-              addIdKeyToLookup(record?._id, "Title");
-            }}
+            onClick={() => loadLookupForEdit("Title", record)}
           />
           <AiFillDelete
             size={16}
@@ -3963,10 +4173,7 @@ const Configuration = () => {
           <FaEdit
             size={16}
             style={{ marginRight: "10px" }}
-            onClick={() => {
-              IsUpdateFtn("Duties", !IsUpdateFtn?.Title, record);
-              addIdKeyToLookup(record?._id, "Duties");
-            }}
+            onClick={() => loadLookupForEdit("Duties", record)}
           />
           <AiFillDelete
             size={16}
@@ -4039,10 +4246,7 @@ const Configuration = () => {
           <FaEdit
             size={16}
             style={{ marginRight: "10px" }}
-            onClick={() => {
-              IsUpdateFtn("MaritalStatus", !isUpdateRec?.MaritalStatus, record);
-              addIdKeyToLookup(record?._id, "MaritalStatus");
-            }}
+            onClick={() => loadLookupForEdit("MaritalStatus", record)}
           />
           <AiFillDelete
             size={16}
@@ -4118,10 +4322,7 @@ const Configuration = () => {
           <FaEdit
             size={16}
             style={{ marginRight: "10px" }}
-            onClick={() => {
-              IsUpdateFtn("Lookup", !IsUpdateFtn?.Lookup, record);
-              addIdKeyToLookup(record?._id, "Lookup");
-            }}
+            onClick={() => loadLookupForEdit("Committees", record)}
           />
           <AiFillDelete
             size={16}
@@ -4189,10 +4390,7 @@ const Configuration = () => {
           <FaEdit
             size={16}
             style={{ marginRight: "10px" }}
-            onClick={() => {
-              IsUpdateFtn("DocumentType", !IsUpdateFtn?.DocumentType, record);
-              addIdKeyToLookup(record?._id, "DocumentType");
-            }}
+            onClick={() => loadLookupForEdit("DocumentType", record)}
           />
           <AiFillDelete
             size={16}
@@ -4260,10 +4458,7 @@ const Configuration = () => {
           <FaEdit
             size={16}
             style={{ marginRight: "10px" }}
-            onClick={() => {
-              IsUpdateFtn("Reasons", !IsUpdateFtn?.Reasons, record);
-              addIdKeyToLookup(record?._id, "Reasons");
-            }}
+            onClick={() => loadLookupForEdit("Reasons", record)}
           />
           <AiFillDelete
             size={16}
@@ -4512,10 +4707,7 @@ const Configuration = () => {
           <FaEdit
             size={16}
             style={{ marginRight: "10px", cursor: "pointer" }}
-            onClick={() => {
-              IsUpdateFtn("RosterType", !IsUpdateFtn?.RosterType, record);
-              addIdKeyToLookup(record?._id, "RosterType");
-            }}
+            onClick={() => loadLookupForEdit("RosterType", record)}
           />
           <AiFillDelete
             size={16}
@@ -4801,10 +4993,7 @@ const Configuration = () => {
           <FaEdit
             size={16}
             style={{ marginRight: "10px" }}
-            onClick={() => {
-              IsUpdateFtn("Schemes", !IsUpdateFtn?.Schemes, record);
-              addIdKeyToLookup(record?._id, "Schemes");
-            }}
+            onClick={() => loadLookupForEdit("Schemes", record)}
           />
           <AiFillDelete
             size={16}
@@ -4826,7 +5015,7 @@ const Configuration = () => {
   const [selectionType, setSelectionType] = useState("checkbox");
   const [errors, setErrors] = useState({});
   const rowSelection = {
-    onChange: (selectedRowKeys, selectedRows) => { },
+    onChange: (selectedRowKeys, selectedRows) => {},
     getCheckboxProps: (record) => ({
       disabled: record.name === "Disabled User",
       name: record.name,
@@ -4856,8 +5045,7 @@ const Configuration = () => {
       if (!currentInput.contactType) {
         newErrors[drawerType].contactType = true;
       }
-    }
-    else if (drawerType === "LookupType") {
+    } else if (drawerType === "LookupType") {
       if (!currentInput.lookuptype) {
         newErrors[drawerType].lookuptype = true;
       }
@@ -4951,17 +5139,17 @@ const Configuration = () => {
     setisContactTypeModal(!isContactTypeModal);
   const addContactTypeModalOpenCloseFtn = () =>
     setisAddContactTypeModal(!isAddContactTypeModal);
-  const addmembershipFtn = () => { };
+  const addmembershipFtn = () => {};
 
-  const AddpartnershipFtn = () => { };
+  const AddpartnershipFtn = () => {};
 
-  const AddprofileModalFtn = () => { };
+  const AddprofileModalFtn = () => {};
 
-  const AddRegionTypeModalFtn = () => { };
+  const AddRegionTypeModalFtn = () => {};
 
-  const AddContactTypeModalFtn = () => { };
+  const AddContactTypeModalFtn = () => {};
 
-  const AddSubscriptionsFtn = () => { };
+  const AddSubscriptionsFtn = () => {};
 
   const columnClaimType = [
     {
@@ -5005,10 +5193,7 @@ const Configuration = () => {
           <FaEdit
             size={16}
             style={{ marginRight: "10px" }}
-            onClick={() => {
-              IsUpdateFtn("ClaimType", !IsUpdateFtn?.ClaimType, record);
-              addIdKeyToLookup(record?._id, "ClaimType");
-            }}
+            onClick={() => loadLookupForEdit("ClaimType", record)}
           />
           <AiFillDelete
             size={16}
@@ -5034,7 +5219,6 @@ const Configuration = () => {
   };
   // const { Search } = Input;
 
-
   // Updated table columns with Region filter
   const uniqueRegionNames = useMemo(() => {
     if (!branchesWithRegionData.length) return [];
@@ -5059,8 +5243,12 @@ const Configuration = () => {
       dataIndex: "regionName",
       key: "regionName",
       sorter: (a, b) => (a.regionName || "").localeCompare(b.regionName || ""),
-      filterDropdown: createFilterDropdown(branchesWithRegionData, (record) => record.regionName),
-      onFilter: (value, record) => (record.regionName || "").toString() === value,
+      filterDropdown: createFilterDropdown(
+        branchesWithRegionData,
+        (record) => record.regionName,
+      ),
+      onFilter: (value, record) =>
+        (record.regionName || "").toString() === value,
       filterIcon: (filtered) => (
         <SearchOutlined style={{ color: filtered ? "#1890ff" : undefined }} />
       ),
@@ -5154,11 +5342,12 @@ const Configuration = () => {
               </p>
             );
           })()}
-          {lookupsTypesloading && (!lookupsTypes || lookupsTypes.length === 0) && (
-            <p className="text-muted small mb-0 text-center">
-              Loading lookup types...
-            </p>
-          )}
+          {lookupsTypesloading &&
+            (!lookupsTypes || lookupsTypes.length === 0) && (
+              <p className="text-muted small mb-0 text-center">
+                Loading lookup types...
+              </p>
+            )}
         </div>
       </div>
       <MyDrawer
@@ -5871,6 +6060,7 @@ const Configuration = () => {
         total={data?.county?.length}
         title="counties"
         open={drawerOpen?.counties}
+        isLoading={lookupDetailLoading && editingLookupDrawer === "counties"}
         onClose={() => openCloseDrawerFtn("counties")}
         isEdit={isUpdateRec?.counties}
         add={async () => {
@@ -5895,20 +6085,6 @@ const Configuration = () => {
         updateLoading={buttonLoading.update}
       >
         <div className="drawer-main-cntainer p-4 me-2 ms-2">
-          <Row>
-            <Col span={24}>
-              <CustomSelect
-                label="Type:"
-                placeholder="County"
-                value="County"
-                options={[{ label: "County", value: "County" }]}
-                isSimple
-                disabled
-                required
-                hasError={!!errors?.counties?.type}
-              />
-            </Col>
-          </Row>
           <Row gutter={12}>
             <Col span={12}>
               <MyInput
@@ -5961,13 +6137,17 @@ const Configuration = () => {
               lookupsTypes={lookupsTypes}
               value={drawerIpnuts?.counties?.Parentlookupid}
               parentLabel={drawerIpnuts?.counties?.Parentlookup}
+              parentLookupTypeId={drawerIpnuts?.counties?.ParentlookuptypeId}
+              parentLookupTypeName={drawerIpnuts?.counties?.Parentlookuptype}
               disabled={isDisable}
               required={lookupTypeRequiresParent(
                 lookupsTypes,
                 drawerIpnuts?.counties?.lookuptypeId,
               )}
               hasError={!!errors?.counties?.Parentlookupid}
-              onChange={(payload) => handleParentLookupChange("counties", payload)}
+              onChange={(payload) =>
+                handleParentLookupChange("counties", payload)
+              }
             />
           </Row>
 
@@ -6008,6 +6188,7 @@ const Configuration = () => {
       <MyDrawer
         title="Provinces"
         open={drawerOpen?.Provinces}
+        isLoading={lookupDetailLoading && editingLookupDrawer === "Provinces"}
         isPagination={true}
         onClose={() => openCloseDrawerFtn("Provinces")}
         add={async () => {
@@ -6037,20 +6218,6 @@ const Configuration = () => {
         }}
       >
         <div className="drawer-main-cntainer p-4 me-2 ms-2">
-          <Row>
-            <Col span={24}>
-              <CustomSelect
-                label="Type:"
-                placeholder="Province"
-                value={"Province"}
-                options={[{ label: "Province", value: "Province" }]}
-                isSimple={true}
-                disabled={true}
-                required
-                hasError={!!errors?.lookuptypeId}
-              />
-            </Col>
-          </Row>
           <Row gutter={24}>
             <Col span={12}>
               <MyInput
@@ -6101,13 +6268,17 @@ const Configuration = () => {
               lookupsTypes={lookupsTypes}
               value={drawerIpnuts?.Provinces?.Parentlookupid}
               parentLabel={drawerIpnuts?.Provinces?.Parentlookup}
+              parentLookupTypeId={drawerIpnuts?.Provinces?.ParentlookuptypeId}
+              parentLookupTypeName={drawerIpnuts?.Provinces?.Parentlookuptype}
               disabled={isDisable}
               required={lookupTypeRequiresParent(
                 lookupsTypes,
                 drawerIpnuts?.Provinces?.lookuptypeId,
               )}
               hasError={!!errors?.Provinces?.Parentlookupid}
-              onChange={(payload) => handleParentLookupChange("Provinces", payload)}
+              onChange={(payload) =>
+                handleParentLookupChange("Provinces", payload)
+              }
             />
           </Row>
           <Row gutter={24}>
@@ -6179,20 +6350,6 @@ const Configuration = () => {
         updateLoading={buttonLoading.update}
       >
         <div className="drawer-main-cntainer p-4 me-2 ms-2">
-          <Row>
-            <Col span={24}>
-              <CustomSelect
-                label="Type:"
-                placeholder="Countries"
-                value={"Countries"}
-                options={[{ label: "Countries", value: "Countries" }]}
-                isSimple={true}
-                disabled={true}
-                required
-                hasError={!!errors?.lookuptypeId}
-              />
-            </Col>
-          </Row>
           <Row gutter={24}>
             <Col span={12}>
               <MyInput
@@ -6292,6 +6449,7 @@ const Configuration = () => {
       <MyDrawer
         title="City"
         open={drawerOpen?.Cities}
+        isLoading={lookupDetailLoading && editingLookupDrawer === "Cities"}
         isPagination={true}
         isEdit={isUpdateRec?.Cities}
         onClose={() => openCloseDrawerFtn("Cities")}
@@ -6405,6 +6563,8 @@ const Configuration = () => {
                 lookupsTypes={lookupsTypes}
                 value={drawerIpnuts?.Cities?.Parentlookupid}
                 parentLabel={drawerIpnuts?.Cities?.Parentlookup}
+                parentLookupTypeId={drawerIpnuts?.Cities?.ParentlookuptypeId}
+                parentLookupTypeName={drawerIpnuts?.Cities?.Parentlookuptype}
                 disabled={isDisable}
                 required={lookupTypeRequiresParent(
                   lookupsTypes,
@@ -6412,7 +6572,9 @@ const Configuration = () => {
                 )}
                 hasError={!!errors?.Cities?.Parentlookupid}
                 span={24}
-                onChange={(payload) => handleParentLookupChange("Cities", payload)}
+                onChange={(payload) =>
+                  handleParentLookupChange("Cities", payload)
+                }
               />
             </Row>
             <div className="drawer-inpts-container">
@@ -6462,6 +6624,7 @@ const Configuration = () => {
       <MyDrawer
         title="Post Code"
         open={drawerOpen?.PostCode}
+        isLoading={lookupDetailLoading && editingLookupDrawer === "PostCode"}
         isPagination={true}
         isEdit={isUpdateRec?.PostCode}
         onClose={() => {
@@ -6489,22 +6652,6 @@ const Configuration = () => {
         }}
       >
         <div className="drawer-main-cntainer p-4 me-2 ms-2">
-          {/* Lookup Type */}
-          <Row>
-            <Col span={24}>
-              <CustomSelect
-                label="Type:"
-                name="lookuptypeId"
-                value={lookupTypeSelectProps("PostCode").value}
-                options={lookupTypeSelectProps("PostCode").options}
-                isSimple={true}
-                disabled={true}
-                required
-                hasError={!!errors?.PostCode?.lookuptypeId}
-              />
-            </Col>
-          </Row>
-
           {/* Code + Post Code */}
           <Row gutter={24}>
             <Col span={12}>
@@ -6611,13 +6758,14 @@ const Configuration = () => {
       <MyDrawer
         title="Branch"
         open={drawerOpen?.Districts}
+        isLoading={lookupDetailLoading && editingLookupDrawer === "Districts"}
         // isPagination={true}
         onClose={() => openCloseDrawerFtn("Districts")}
         isEdit={isUpdateRec?.Districts}
         isContact={true}
         update={async () => {
           if (!validateForm("Districts")) return;
-          await updateFtn("/lookup", drawerIpnuts?.Districts, () => {
+          await updateFtn("/lookup", getLookupDrawerPayload("Districts"), () => {
             resetCounteries("Districts");
             refreshLookups();
           });
@@ -6627,7 +6775,7 @@ const Configuration = () => {
           if (!validateForm("Districts")) return;
           insertDataFtn(
             `/lookup`,
-            drawerIpnuts?.Districts,
+            getLookupDrawerPayload("Districts"),
             "Data inserted successfully:",
             "Data did not insert:",
             () => {
@@ -6638,41 +6786,6 @@ const Configuration = () => {
         }}
       >
         <div className="drawer-main-cntainer p-4 me-2 ms-2">
-          <Row gutter={24}>
-            <Col span={12}>
-              <CustomSelect
-                label="Type"
-                placeholder="Branch"
-                value={"Branch"}
-                options={[{ label: "Branch", value: "Branch" }]}
-                isSimple={true}
-                disabled={true}
-                required
-                hasError={!!errors?.Districts?.lookuptypeId}
-              />
-            </Col>
-            <Col span={12}>
-              <CustomSelect
-                label="Branch Manager"
-                placeholder="Select Branch Manager"
-                options={iroUsers.map((user) => ({
-                  key: user._id,
-                  label: `${user.userFirstName || ""} ${user.userLastName || ""} (${user.userEmail || "No Email"})`.trim(),
-                }))}
-                value={drawerIpnuts?.Districts?.officer?._id || drawerIpnuts?.Districts?.officer}
-                // onChange={(e) => drawrInptChng("Districts", "officer", e.target.value)}
-                onChange={(e) =>
-                  drawrInptChng(
-                    "Districts",
-                    "officer",
-                    e.target.value === "" ? null : e.target.value
-                  )
-                }
-                isIDs={true}
-              />
-            </Col>
-          </Row>
-
           <Row gutter={24}>
             <Col span={12}>
               <MyInput
@@ -6689,6 +6802,21 @@ const Configuration = () => {
               />
             </Col>
             <Col span={12}>
+              <CustomSelect
+                label="Branch Officer"
+                placeholder="Select Branch Manager"
+                options={branchOfficerOptions}
+                value={resolveOfficerSelectValue(drawerIpnuts?.Districts?.officer)}
+                onChange={(e) =>
+                  handleOfficerChange("Districts", branchOfficerOptions, e)
+                }
+                isIDs={true}
+              />
+            </Col>
+          </Row>
+
+          <Row gutter={24}>
+            <Col span={12}>
               <MyInput
                 label="Branch"
                 name="lookupname"
@@ -6702,9 +6830,6 @@ const Configuration = () => {
                 disabled={isDisable}
               />
             </Col>
-          </Row>
-
-          <Row gutter={24}>
             <Col span={12}>
               <MyInput
                 label="Display Name"
@@ -6720,14 +6845,16 @@ const Configuration = () => {
             </Col>
           </Row>
 
-          <Row gutter={24} align="bottom">
+          <Row gutter={24} className="config-drawer-parent-action-row" wrap={false}>
             <ParentLookupSelect
               drawerKey="Districts"
               lookuptypeId={drawerIpnuts?.Districts?.lookuptypeId}
               lookups={lookups}
               lookupsTypes={lookupsTypes}
               value={drawerIpnuts?.Districts?.Parentlookupid}
-              parentLabel={drawerIpnuts?.Parentlookup}
+              parentLabel={drawerIpnuts?.Districts?.Parentlookup}
+              parentLookupTypeId={drawerIpnuts?.Districts?.ParentlookuptypeId}
+              parentLookupTypeName={drawerIpnuts?.Districts?.Parentlookuptype}
               disabled={isDisable}
               required={lookupTypeRequiresParent(
                 lookupsTypes,
@@ -6739,13 +6866,9 @@ const Configuration = () => {
                 handleParentLookupChange("Districts", payload)
               }
             />
-            <Col span={4}>
-              <label style={{ height: 20, visibility: "hidden" }}>
-                label
-              </label>
+            <Col span={4} className="config-drawer-add-col">
               <Button
-                className="butn primary-btn detail-btn"
-                style={{ height: 40 }}
+                className="butn primary-btn detail-btn config-drawer-add-btn"
                 onClick={() => openCloseDrawerFtn("DivisionsForDistrict")}
               >
                 +
@@ -6768,10 +6891,23 @@ const Configuration = () => {
           </Row>
 
           <div className="mt-4 config-tbl-container">
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "12px" }}>
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                marginBottom: "12px",
+              }}
+            >
               <h6 className="m-0 text-primary">Existing Branches</h6>
               <Button
-                style={{ height: 32, display: "flex", alignItems: "center", justifyContent: "center", padding: "4px 10px" }}
+                style={{
+                  height: 32,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  padding: "4px 10px",
+                }}
                 onClick={() =>
                   navigate("/branch", { state: { search: "Branch" } })
                 }
@@ -6814,6 +6950,10 @@ const Configuration = () => {
         <MyDrawer
           title="Regions"
           open={drawerOpen?.DivisionsForDistrict}
+          isLoading={
+            lookupDetailLoading &&
+            editingLookupDrawer === "DivisionsForDistrict"
+          }
           isPagination={true}
           isContact={true}
           onClose={() => openCloseDrawerFtn("DivisionsForDistrict")}
@@ -6821,7 +6961,7 @@ const Configuration = () => {
             if (!validateForm("Divisions")) return;
             insertDataFtn(
               `/lookup`,
-              drawerIpnuts?.Divisions,
+              getLookupDrawerPayload("Divisions"),
               "Data inserted successfully:",
               "Data did not insert:",
               () => {
@@ -6832,7 +6972,7 @@ const Configuration = () => {
           }}
           update={async () => {
             if (!validateForm("Divisions")) return;
-            await updateFtn("/lookup", drawerIpnuts?.Divisions, () => {
+            await updateFtn("/lookup", getLookupDrawerPayload("Divisions"), () => {
               resetCounteries("Divisions");
               refreshLookups();
             });
@@ -6841,41 +6981,6 @@ const Configuration = () => {
           isEdit={isUpdateRec?.Divisions}
         >
           <div className="drawer-main-cntainer p-4 me-2 ms-2">
-            <Row gutter={24}>
-              <Col span={12}>
-                <CustomSelect
-                  label="Type"
-                  placeholder="Region"
-                  value={"Region"}
-                  options={[{ label: "Region", value: "Region" }]}
-                  isSimple={true}
-                  disabled={true}
-                  required
-                  hasError={!!errors?.Divisions?.lookuptypeId}
-                />
-              </Col>
-              <Col span={12}>
-                <CustomSelect
-                  label="Region Officer"
-                  placeholder="Select Region Officer"
-                  options={iroUsers.map((user) => ({
-                    key: user._id,
-                    label: `${user.userFirstName || ""} ${user.userLastName || ""} (${user.userEmail || "No Email"})`.trim(),
-                  }))}
-                  value={drawerIpnuts?.Divisions?.officer?._id || drawerIpnuts?.Divisions?.officer}
-                  // onChange={(e) => drawrInptChng("Divisions", "officer", e.target.value)}
-                  onChange={(e) =>
-                    drawrInptChng(
-                      "Divisions",
-                      "officer",
-                      e.target.value === "" ? null : e.target.value
-                    )
-                  }
-                  isIDs={true}
-                />
-              </Col>
-            </Row>
-
             <Row gutter={24}>
               <Col span={12}>
                 <MyInput
@@ -6892,6 +6997,21 @@ const Configuration = () => {
                 />
               </Col>
               <Col span={12}>
+                <CustomSelect
+                  label="Region Officer"
+                  placeholder="Select Region Officer"
+                  options={regionOfficerOptions}
+                  value={resolveOfficerSelectValue(drawerIpnuts?.Divisions?.officer)}
+                  onChange={(e) =>
+                    handleOfficerChange("Divisions", regionOfficerOptions, e)
+                  }
+                  isIDs={true}
+                />
+              </Col>
+            </Row>
+
+            <Row gutter={24}>
+              <Col span={12}>
                 <MyInput
                   label="Region"
                   name="lookupname"
@@ -6905,9 +7025,6 @@ const Configuration = () => {
                   disabled={isDisable}
                 />
               </Col>
-            </Row>
-
-            <Row gutter={24}>
               <Col span={12}>
                 <MyInput
                   label="Display Name"
@@ -6920,6 +7037,9 @@ const Configuration = () => {
                   disabled={isDisable}
                 />
               </Col>
+            </Row>
+
+            <Row gutter={24}>
               <Col span={12}>
                 {/* <CustomSelect
                   label="County"
@@ -6952,9 +7072,18 @@ const Configuration = () => {
             </Row>
 
             <div className="mt-4 config-tbl-container">
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "12px" }}>
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  marginBottom: "12px",
+                }}
+              >
                 <h6 className="m-0 text-primary">Existing Regions</h6>
-                <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                <div
+                  style={{ display: "flex", gap: "8px", alignItems: "center" }}
+                >
                   <Input
                     placeholder="Search Regions..."
                     prefix={<SearchOutlined />}
@@ -6964,7 +7093,13 @@ const Configuration = () => {
                     allowClear
                   />
                   <Button
-                    style={{ height: 32, display: "flex", alignItems: "center", justifyContent: "center", padding: "4px 10px" }}
+                    style={{
+                      height: 32,
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      padding: "4px 10px",
+                    }}
                     onClick={() =>
                       navigate("/region", { state: { search: "Region" } })
                     }
@@ -7000,6 +7135,7 @@ const Configuration = () => {
       <MyDrawer
         title="Regions"
         open={drawerOpen?.Divisions}
+        isLoading={lookupDetailLoading && editingLookupDrawer === "Divisions"}
         isPagination={true}
         isContact={true}
         onClose={() => openCloseDrawerFtn("Divisions")}
@@ -7008,7 +7144,7 @@ const Configuration = () => {
           if (!validateForm("Divisions")) return;
           insertDataFtn(
             `/lookup`,
-            drawerIpnuts?.Divisions,
+            getLookupDrawerPayload("Divisions"),
             "Data inserted successfully:",
             "Data did not insert:",
             () => {
@@ -7019,7 +7155,7 @@ const Configuration = () => {
         }}
         update={async () => {
           if (!validateForm("Divisions")) return;
-          await updateFtn("/lookup", drawerIpnuts?.Divisions, () => {
+          await updateFtn("/lookup", getLookupDrawerPayload("Divisions"), () => {
             resetCounteries("Divisions");
             refreshLookups();
           });
@@ -7027,38 +7163,6 @@ const Configuration = () => {
         }}
       >
         <div className="drawer-main-cntainer p-4 me-2 ms-2">
-          <Row gutter={24}>
-            <Col span={12}>
-              <CustomSelect
-                label="Type"
-                placeholder="Region"
-                value={"Region"}
-                options={[{ label: "Region", value: "Region" }]}
-                isSimple={true}
-                disabled={true}
-                required
-                hasError={!!errors?.Divisions?.lookuptypeId}
-              />
-            </Col>
-            <Col span={12}>
-              <CustomSelect
-                label="Region Officer"
-                placeholder="Select Region Officer"
-                options={iroUsers.map((user) => ({
-                  key: user._id,
-                  label: `${user.userFirstName || ""} ${user.userLastName || ""} (${user.userEmail || "No Email"})`.trim(),
-                }))}
-                value={
-                  drawerIpnuts?.Divisions?.officer?._id ||
-                  drawerIpnuts?.Divisions?.officer
-                }
-                onChange={(e) =>
-                  drawrInptChng("Divisions", "officer", e.target.value)
-                }
-                isIDs={true}
-              />
-            </Col>
-          </Row>
           <Row gutter={24}>
             <Col span={12}>
               <MyInput
@@ -7073,6 +7177,20 @@ const Configuration = () => {
               />
             </Col>
             <Col span={12}>
+              <CustomSelect
+                label="Region Officer"
+                placeholder="Select Region Officer"
+                options={regionOfficerOptions}
+                value={resolveOfficerSelectValue(drawerIpnuts?.Divisions?.officer)}
+                onChange={(e) =>
+                  handleOfficerChange("Divisions", regionOfficerOptions, e)
+                }
+                isIDs={true}
+              />
+            </Col>
+          </Row>
+          <Row gutter={24}>
+            <Col span={12}>
               <MyInput
                 label="Region"
                 required
@@ -7084,8 +7202,6 @@ const Configuration = () => {
                 hasError={!!errors?.Divisions?.lookupname}
               />
             </Col>
-          </Row>
-          <Row gutter={24}>
             <Col span={12}>
               <MyInput
                 label="Display Name"
@@ -7097,6 +7213,8 @@ const Configuration = () => {
                 hasError={!!errors?.Divisions?.DisplayName}
               />
             </Col>
+          </Row>
+          <Row gutter={24}>
             <ParentLookupSelect
               drawerKey="Divisions"
               lookuptypeId={drawerIpnuts?.Divisions?.lookuptypeId}
@@ -7104,6 +7222,8 @@ const Configuration = () => {
               lookupsTypes={lookupsTypes}
               value={drawerIpnuts?.Divisions?.Parentlookupid}
               parentLabel={drawerIpnuts?.Divisions?.Parentlookup}
+              parentLookupTypeId={drawerIpnuts?.Divisions?.ParentlookuptypeId}
+              parentLookupTypeName={drawerIpnuts?.Divisions?.Parentlookuptype}
               disabled={isDisable}
               required={lookupTypeRequiresParent(
                 lookupsTypes,
@@ -7127,9 +7247,18 @@ const Configuration = () => {
           </Checkbox>
 
           <div className="mt-4 config-tbl-container">
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "12px" }}>
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                marginBottom: "12px",
+              }}
+            >
               <h6 className="m-0 text-primary">Existing Regions</h6>
-              <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+              <div
+                style={{ display: "flex", gap: "8px", alignItems: "center" }}
+              >
                 <Input
                   placeholder="Search Regions..."
                   prefix={<SearchOutlined />}
@@ -7139,7 +7268,13 @@ const Configuration = () => {
                   allowClear
                 />
                 <Button
-                  style={{ height: 32, display: "flex", alignItems: "center", justifyContent: "center", padding: "4px 10px" }}
+                  style={{
+                    height: 32,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    padding: "4px 10px",
+                  }}
                   onClick={() =>
                     navigate("/region", { state: { search: "Region" } })
                   }
@@ -7174,13 +7309,14 @@ const Configuration = () => {
         title="Work Location"
         isContact={true}
         open={drawerOpen?.Station}
+        isLoading={lookupDetailLoading && editingLookupDrawer === "Station"}
         // isPagination={true}
         onClose={() => openCloseDrawerFtn("Station")}
         add={() => {
           if (!validateForm("Station")) return;
           insertDataFtn(
             `/lookup`,
-            drawerIpnuts?.Station,
+            getLookupDrawerPayload("Station"),
             "Data inserted successfully:",
             "Data did not insert:",
             () => {
@@ -7192,7 +7328,7 @@ const Configuration = () => {
         isEdit={isUpdateRec?.Station}
         update={async () => {
           if (!validateForm("Station")) return;
-          await updateFtn("/lookup", drawerIpnuts?.Station, () => {
+          await updateFtn("/lookup", getLookupDrawerPayload("Station"), () => {
             resetCounteries("Station");
             refreshLookups();
           });
@@ -7203,11 +7339,16 @@ const Configuration = () => {
           <div className="mb-2">
             <Row gutter={24}>
               <Col span={12}>
-                <CustomSelect
-                  label="Type"
-                  name="type"
-                  placeholder="Work Location"
-                  disabled={true}
+                <MyInput
+                  label="Code"
+                  name="code"
+                  value={drawerIpnuts?.Station?.code}
+                  onChange={(val) =>
+                    drawrInptChng("Station", "code", val.target.value)
+                  }
+                  disabled={isDisable}
+                  hasError={!!errors?.Station?.code}
+                  errorMessage={errors?.Station?.code}
                   required
                 />
               </Col>
@@ -7215,18 +7356,10 @@ const Configuration = () => {
                 <CustomSelect
                   label="Officer (IRO)"
                   placeholder="Select Officer"
-                  options={iroUsers.map((user) => ({
-                    key: user._id,
-                    label: `${user.userFirstName || ""} ${user.userLastName || ""} (${user.userEmail || "No Email"})`.trim(),
-                  }))}
-                  value={drawerIpnuts?.Station?.officer?._id || drawerIpnuts?.Station?.officer}
-                  // onChange={(e) => drawrInptChng("Station", "officer", e.target.value)}
+                  options={stationOfficerOptions}
+                  value={resolveOfficerSelectValue(drawerIpnuts?.Station?.officer)}
                   onChange={(e) =>
-                    drawrInptChng(
-                      "Station",
-                      "officer",
-                      e.target.value === "" ? null : e.target.value
-                    )
+                    handleOfficerChange("Station", stationOfficerOptions, e)
                   }
                   isIDs={true}
                 />
@@ -7250,21 +7383,6 @@ const Configuration = () => {
               </Col>
               <Col span={12}>
                 <MyInput
-                  label="Code"
-                  name="code"
-                  value={drawerIpnuts?.Station?.code}
-                  onChange={(val) => drawrInptChng("Station", "code", val.target.value)}
-                  disabled={isDisable}
-                  hasError={!!errors?.Station?.code}
-                  errorMessage={errors?.Station?.code}
-                  required
-                />
-              </Col>
-            </Row>
-
-            <Row gutter={24}>
-              <Col span={12}>
-                <MyInput
                   label="Display Name"
                   name="DisplayName"
                   value={drawerIpnuts?.Station?.DisplayName}
@@ -7276,7 +7394,7 @@ const Configuration = () => {
               </Col>
             </Row>
 
-            <Row gutter={24} align="bottom">
+            <Row gutter={24} className="config-drawer-parent-action-row" wrap={false}>
               <ParentLookupSelect
                 drawerKey="Station"
                 lookuptypeId={drawerIpnuts?.Station?.lookuptypeId}
@@ -7284,6 +7402,8 @@ const Configuration = () => {
                 lookupsTypes={lookupsTypes}
                 value={drawerIpnuts?.Station?.Parentlookupid}
                 parentLabel={drawerIpnuts?.Station?.Parentlookup}
+                parentLookupTypeId={drawerIpnuts?.Station?.ParentlookuptypeId}
+                parentLookupTypeName={drawerIpnuts?.Station?.Parentlookuptype}
                 disabled={isDisable}
                 required={lookupTypeRequiresParent(
                   lookupsTypes,
@@ -7291,15 +7411,13 @@ const Configuration = () => {
                 )}
                 hasError={!!errors?.Station?.Parentlookupid}
                 span={12}
-                onChange={(payload) => handleParentLookupChange("Station", payload)}
+                onChange={(payload) =>
+                  handleParentLookupChange("Station", payload)
+                }
               />
-              <Col span={4}>
-                <label style={{ height: 20, visibility: "hidden" }}>
-                  label
-                </label>
+              <Col span={4} className="config-drawer-add-col">
                 <Button
-                  className="butn primary-btn detail-btn"
-                  style={{ height: 40 }}
+                  className="butn primary-btn detail-btn config-drawer-add-btn"
                   onClick={() => openCloseDrawerFtn("Districts")}
                 >
                   +
@@ -7377,9 +7495,15 @@ const Configuration = () => {
                 <MyInput
                   label="Address Line 1 (Building or House)"
                   name="buildingOrHouse"
-                  value={drawerIpnuts?.Station?.worklocationAddress?.buildingOrHouse}
+                  value={
+                    drawerIpnuts?.Station?.worklocationAddress?.buildingOrHouse
+                  }
                   onChange={(val) =>
-                    drawrInptChng("Station", "worklocationAddress.buildingOrHouse", val.target.value)
+                    drawrInptChng(
+                      "Station",
+                      "worklocationAddress.buildingOrHouse",
+                      val.target.value,
+                    )
                   }
                   disabled={isDisable}
                 />
@@ -7389,9 +7513,15 @@ const Configuration = () => {
                 <MyInput
                   label="Address Line 2 (Street or Road)"
                   name="streetOrRoad"
-                  value={drawerIpnuts?.Station?.worklocationAddress?.streetOrRoad}
+                  value={
+                    drawerIpnuts?.Station?.worklocationAddress?.streetOrRoad
+                  }
                   onChange={(val) =>
-                    drawrInptChng("Station", "worklocationAddress.streetOrRoad", val.target.value)
+                    drawrInptChng(
+                      "Station",
+                      "worklocationAddress.streetOrRoad",
+                      val.target.value,
+                    )
                   }
                   disabled={isDisable}
                 />
@@ -7403,7 +7533,11 @@ const Configuration = () => {
                   name="areaOrTown"
                   value={drawerIpnuts?.Station?.worklocationAddress?.areaOrTown}
                   onChange={(val) =>
-                    drawrInptChng("Station", "worklocationAddress.areaOrTown", val.target.value)
+                    drawrInptChng(
+                      "Station",
+                      "worklocationAddress.areaOrTown",
+                      val.target.value,
+                    )
                   }
                   disabled={isDisable}
                 />
@@ -7413,9 +7547,16 @@ const Configuration = () => {
                 <MyInput
                   label="Address Line 4 (County, City or Postcode)"
                   name="countyCityOrPostCode"
-                  value={drawerIpnuts?.Station?.worklocationAddress?.countyCityOrPostCode}
+                  value={
+                    drawerIpnuts?.Station?.worklocationAddress
+                      ?.countyCityOrPostCode
+                  }
                   onChange={(val) =>
-                    drawrInptChng("Station", "worklocationAddress.countyCityOrPostCode", val.target.value)
+                    drawrInptChng(
+                      "Station",
+                      "worklocationAddress.countyCityOrPostCode",
+                      val.target.value,
+                    )
                   }
                   disabled={isDisable}
                 />
@@ -7428,7 +7569,11 @@ const Configuration = () => {
                   placeholder="Enter Eircode (e.g., D01X4X0)"
                   value={drawerIpnuts?.Station?.worklocationAddress?.eircode}
                   onChange={(val) =>
-                    drawrInptChng("Station", "worklocationAddress.eircode", val.target.value)
+                    drawrInptChng(
+                      "Station",
+                      "worklocationAddress.eircode",
+                      val.target.value,
+                    )
                   }
                   disabled={isDisable}
                 />
@@ -7441,7 +7586,11 @@ const Configuration = () => {
                   value={drawerIpnuts?.Station?.worklocationAddress?.country}
                   options={countriesOptions}
                   onChange={(val) =>
-                    drawrInptChng("Station", "worklocationAddress.country", val.target.value)
+                    drawrInptChng(
+                      "Station",
+                      "worklocationAddress.country",
+                      val.target.value,
+                    )
                   }
                   disabled={isDisable}
                 />
@@ -7451,12 +7600,27 @@ const Configuration = () => {
 
           {/* Table Header and Popout Btn */}
           <div className="mt-2 config-tbl-container">
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "12px" }}>
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                marginBottom: "12px",
+              }}
+            >
               <h6 className="m-0 text-primary">Existing Work Locations</h6>
               <Button
-                style={{ height: 32, display: "flex", alignItems: "center", justifyContent: "center", padding: "4px 10px" }}
+                style={{
+                  height: 32,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  padding: "4px 10px",
+                }}
                 onClick={() =>
-                  navigate("/worklocation", { state: { search: "Work Location" } })
+                  navigate("/worklocation", {
+                    state: { search: "Work Location" },
+                  })
                 }
               >
                 <FaArrowUpRightFromSquare size={14} />
@@ -7497,13 +7661,16 @@ const Configuration = () => {
         title="Study Location"
         // isContact={true}
         open={drawerOpen?.StudyLocation}
+        isLoading={
+          lookupDetailLoading && editingLookupDrawer === "StudyLocation"
+        }
         isPagination={true}
         onClose={() => openCloseDrawerFtn("StudyLocation")}
         add={() => {
           if (!validateForm("Station")) return;
           insertDataFtn(
             `/lookup`,
-            drawerIpnuts?.Station,
+            getLookupDrawerPayload("Station"),
             "Data inserted successfully:",
             "Data did not insert:",
             () => {
@@ -7515,7 +7682,7 @@ const Configuration = () => {
         isEdit={isUpdateRec?.Station}
         update={async () => {
           if (!validateForm("Station")) return;
-          await updateFtn("/lookup", drawerIpnuts?.Station, () =>
+          await updateFtn("/lookup", getLookupDrawerPayload("Station"), () =>
             resetCounteries("Station", () => dispatch(getAllLookups())),
           );
           dispatch(getAllLookups());
@@ -7524,18 +7691,6 @@ const Configuration = () => {
       >
         <div className="drawer-main-cntainer p-4 me-2 ms-2">
           <div className="mb-4 pb-4">
-            <Row gutter={24}>
-              <Col span={24}>
-                <CustomSelect
-                  label="Type"
-                  name="type"
-                  placeholder="Work Location"
-                  disabled={true}
-                  required
-                />
-              </Col>
-            </Row>
-
             <Row gutter={24}>
               <Col span={12}>
                 <MyInput
@@ -7556,7 +7711,9 @@ const Configuration = () => {
                   label="Code"
                   name="code"
                   value={drawerIpnuts?.Station?.code}
-                  onChange={(val) => drawrInptChng("Station", "code", val.target.value)}
+                  onChange={(val) =>
+                    drawrInptChng("Station", "code", val.target.value)
+                  }
                   disabled={isDisable}
                   hasError={!!errors?.Station?.code}
                   errorMessage={errors?.Station?.code}
@@ -7577,6 +7734,9 @@ const Configuration = () => {
                   disabled={isDisable}
                 />
               </Col>
+            </Row>
+
+            <Row gutter={24} className="config-drawer-parent-action-row" wrap={false}>
               <ParentLookupSelect
                 drawerKey="Station"
                 lookuptypeId={drawerIpnuts?.Station?.lookuptypeId}
@@ -7584,6 +7744,8 @@ const Configuration = () => {
                 lookupsTypes={lookupsTypes}
                 value={drawerIpnuts?.Station?.Parentlookupid}
                 parentLabel={drawerIpnuts?.Station?.Parentlookup}
+                parentLookupTypeId={drawerIpnuts?.Station?.ParentlookuptypeId}
+                parentLookupTypeName={drawerIpnuts?.Station?.Parentlookuptype}
                 disabled={isDisable}
                 required={lookupTypeRequiresParent(
                   lookupsTypes,
@@ -7591,15 +7753,13 @@ const Configuration = () => {
                 )}
                 hasError={!!errors?.Station?.Parentlookupid}
                 span={12}
-                onChange={(payload) => handleParentLookupChange("Station", payload)}
+                onChange={(payload) =>
+                  handleParentLookupChange("Station", payload)
+                }
               />
-              <Col span={4}>
-                <label style={{ height: 20, visibility: "hidden" }}>
-                  label
-                </label>
+              <Col span={4} className="config-drawer-add-col">
                 <Button
-                  className="butn primary-btn detail-btn"
-                  style={{ height: 40 }}
+                  className="butn primary-btn detail-btn config-drawer-add-btn"
                   onClick={() => openCloseDrawerFtn("DivisionsForDistrict")}
                 >
                   +
@@ -7633,7 +7793,9 @@ const Configuration = () => {
             <Button
               style={{ height: 40, marginBottom: 4 }}
               onClick={() =>
-                navigate("/worklocation", { state: { search: "Work Location" } })
+                navigate("/worklocation", {
+                  state: { search: "Work Location" },
+                })
               }
             >
               <FaArrowUpRightFromSquare />
@@ -7796,21 +7958,26 @@ const Configuration = () => {
         title="Lookup Type"
         open={drawerOpen?.LookupType}
         isPagination={false}
+        isLoading={lookupTypeDetailLoading}
         onClose={() => {
+          if (lookupTypeDetailLoading) return;
           openCloseDrawerFtn("LookupType");
           IsUpdateFtn("LookupType", false);
         }}
         isEdit={isUpdateRec?.LookupType}
         update={async () => {
           if (!validateForm("LookupType")) return;
-          await updateFtn(
-            "/lookuptype",
-            drawerIpnuts?.LookupType,
-            () => {
-              resetCounteries("LookupType");
-              refreshLookupTypes();
-            },
-          );
+          const lookupTypePayload = {
+            ...drawerIpnuts?.LookupType,
+            displayname:
+              drawerIpnuts?.LookupType?.DisplayName ||
+              drawerIpnuts?.LookupType?.displayname ||
+              "",
+          };
+          await updateFtn("/lookuptype", lookupTypePayload, () => {
+            resetCounteries("LookupType");
+            refreshLookupTypes();
+          });
           IsUpdateFtn("LookupType", false);
         }}
         add={async () => {
@@ -7819,6 +7986,10 @@ const Configuration = () => {
             `/lookuptype`,
             {
               ...drawerIpnuts?.LookupType,
+              displayname:
+                drawerIpnuts?.LookupType?.DisplayName ||
+                drawerIpnuts?.LookupType?.displayname ||
+                "",
               userid: "67f3f9d812b014a0a7a94081",
             },
             "Data inserted successfully",
@@ -7829,115 +8000,118 @@ const Configuration = () => {
             },
           );
         }}
-      //   onChange={handlePageChange}
-      // total={lookupsTypes?.length}
+        //   onChange={handlePageChange}
+        // total={lookupsTypes?.length}
       >
-        <div className="drawer-main-cntainer p-4">
-          <Row gutter={24}>
-            <Col span={24}>
-              <MyInput
-                label="Lookup Type"
-                name="lookuptype"
-                value={drawerIpnuts?.LookupType?.lookuptype || ""}
-                options={[{ label: "Lookup Type", value: "Lookup Type" }]}
-                onChange={(e) =>
-                  drawrInptChng("LookupType", "lookuptype", e.target.value)
-                }
-                isSimple={true}
-                disabled={isDisable}
-                required
-                hasError={!!errors?.LookupType?.lookuptype}
-              />
-            </Col>
-          </Row>
+        <Spin spinning={lookupTypeDetailLoading} tip="Loading lookup type...">
+          <div className="drawer-main-cntainer p-4">
+            <Row gutter={24}>
+              <Col span={24}>
+                <MyInput
+                  label="Lookup Type"
+                  name="lookuptype"
+                  value={drawerIpnuts?.LookupType?.lookuptype || ""}
+                  options={[{ label: "Lookup Type", value: "Lookup Type" }]}
+                  onChange={(e) =>
+                    drawrInptChng("LookupType", "lookuptype", e.target.value)
+                  }
+                  isSimple={true}
+                  disabled={isDisable || lookupTypeDetailLoading}
+                  required
+                  hasError={!!errors?.LookupType?.lookuptype}
+                />
+              </Col>
+            </Row>
 
-          <Row gutter={24} className="mt-3">
-            <Col span={12}>
-              <MyInput
-                label="Code"
-                name="code"
-                value={drawerIpnuts?.LookupType?.code || ""}
-                onChange={(e) =>
-                  drawrInptChng("LookupType", "code", e.target.value)
+            <Row gutter={24} className="mt-3">
+              <Col span={12}>
+                <MyInput
+                  label="Code"
+                  name="code"
+                  value={drawerIpnuts?.LookupType?.code || ""}
+                  onChange={(e) =>
+                    drawrInptChng("LookupType", "code", e.target.value)
+                  }
+                  placeholder="Enter code"
+                  disabled={isDisable || lookupTypeDetailLoading}
+                  required
+                  hasError={!!errors?.LookupType?.code}
+                />
+              </Col>
+              <Col span={12}>
+                <MyInput
+                  label="Display Name"
+                  name="DisplayName"
+                  value={drawerIpnuts?.LookupType?.DisplayName || ""}
+                  onChange={(e) =>
+                    drawrInptChng("LookupType", "DisplayName", e.target.value)
+                  }
+                  placeholder="Enter display name"
+                  disabled={isDisable || lookupTypeDetailLoading}
+                  hasError={!!errors?.LookupType?.DisplayName}
+                />
+              </Col>
+              <ParentLookupTypeSelect
+                lookupsTypes={lookupsTypes}
+                value={drawerIpnuts?.LookupType?.ParentlookuptypeId}
+                parentLabel={drawerIpnuts?.LookupType?.Parentlookuptype}
+                excludeTypeId={
+                  drawerIpnuts?.LookupType?._id || drawerIpnuts?.LookupType?.id
                 }
-                placeholder="Enter code"
-                disabled={isDisable}
-                required
-                hasError={!!errors?.LookupType?.code}
+                excludeTypeName={drawerIpnuts?.LookupType?.lookuptype}
+                hasError={!!errors?.LookupType?.ParentlookuptypeId}
+                disabled={lookupTypeDetailLoading}
+                onChange={handleParentLookupTypeChange}
               />
-            </Col>
-            <Col span={12}>
-              <MyInput
-                label="Display Name"
-                name="DisplayName"
-                value={drawerIpnuts?.LookupType?.DisplayName || ""}
-                onChange={(e) =>
-                  drawrInptChng("LookupType", "DisplayName", e.target.value)
-                }
-                placeholder="Enter display name"
-                disabled={isDisable}
-                hasError={!!errors?.LookupType?.DisplayName}
-              />
-            </Col>
-            <ParentLookupTypeSelect
-              lookupsTypes={lookupsTypes}
-              value={drawerIpnuts?.LookupType?.ParentlookuptypeId}
-              parentLabel={drawerIpnuts?.LookupType?.Parentlookuptype}
-              excludeTypeId={
-                drawerIpnuts?.LookupType?._id || drawerIpnuts?.LookupType?.id
-              }
-              excludeTypeName={drawerIpnuts?.LookupType?.lookuptype}
-              hasError={!!errors?.LookupType?.ParentlookuptypeId}
-              onChange={handleParentLookupTypeChange}
-            />
-          </Row>
+            </Row>
 
-          <Row gutter={24} className="mt-3">
-            <Col span={12}>
-              <Checkbox
-                disabled={isDisable}
-                onChange={(e) =>
-                  drawrInptChng("LookupType", "isactive", e.target.checked)
-                }
-                checked={drawerIpnuts?.LookupType?.isactive}
-                style={{ marginTop: "26px" }}
-              >
-                Active
-              </Checkbox>
-            </Col>
-          </Row>
+            <Row gutter={24} className="mt-3">
+              <Col span={12}>
+                <Checkbox
+                  disabled={isDisable || lookupTypeDetailLoading}
+                  onChange={(e) =>
+                    drawrInptChng("LookupType", "isactive", e.target.checked)
+                  }
+                  checked={drawerIpnuts?.LookupType?.isactive}
+                  style={{ marginTop: "26px" }}
+                >
+                  Active
+                </Checkbox>
+              </Col>
+            </Row>
+          </div>
+        </Spin>
 
-          <div className="mt-4 config-tbl-container">
-            <h6 className="mb-3 text-primary">Existing Lookup Types</h6>
-            <div className="mb-3">
-              <MyInput
-                label="Search Lookup Types"
-                name="searchLookupTypes"
-                placeholder="Search by type, code, or display name..."
-                onChange={(e) => handleSearchLookupTypes(e.target.value)}
-                isSimple={true}
-                allowClear
-                style={{ marginBottom: "16px" }}
-              />
-            </div>
-            <Table
-              pagination={true}
-              columns={columnLookupType}
-              dataSource={filteredLookupsTypes}
-              className="drawer-tbl"
-              size="small"
-              rowKey={(record, index) =>
-                record._id || record.id || record.key || index
-              }
-              rowClassName={(record, index) =>
-                index % 2 !== 0 ? "odd-row" : "even-row"
-              }
-              rowSelection={{ type: selectionType, ...rowSelection }}
-              bordered
-              scroll={{ y: 270 }}
-              loading={lookupsTypesloading}
+        <div className="mt-4 config-tbl-container">
+          <h6 className="mb-3 text-primary">Existing Lookup Types</h6>
+          <div className="mb-3">
+            <MyInput
+              label="Search Lookup Types"
+              name="searchLookupTypes"
+              placeholder="Search by type, code, or display name..."
+              onChange={(e) => handleSearchLookupTypes(e.target.value)}
+              isSimple={true}
+              allowClear
+              style={{ marginBottom: "16px" }}
             />
           </div>
+          <Table
+            pagination={true}
+            columns={columnLookupType}
+            dataSource={filteredLookupsTypes}
+            className="drawer-tbl"
+            size="small"
+            rowKey={(record, index) =>
+              record._id || record.id || record.key || index
+            }
+            rowClassName={(record, index) =>
+              index % 2 !== 0 ? "odd-row" : "even-row"
+            }
+            rowSelection={{ type: selectionType, ...rowSelection }}
+            bordered
+            scroll={{ y: 270 }}
+            loading={lookupsTypesloading}
+          />
         </div>
       </MyDrawer>
 
@@ -8095,7 +8269,9 @@ const Configuration = () => {
         title="Lookup"
         open={drawerOpen?.Lookup}
         isPagination={false}
+        isLoading={lookupDetailLoading && editingLookupDrawer === "Lookup"}
         onClose={() => {
+          if (lookupDetailLoading) return;
           openCloseDrawerFtn("Lookup");
           IsUpdateFtn("Lookup", false);
         }}
@@ -8105,7 +8281,8 @@ const Configuration = () => {
             drawerIpnuts?.Lookup,
             "Data inserted successfully",
             "Data did not insert",
-            () => resetLookupDrawerForNextEntry(() => dispatch(getAllLookups())),
+            () =>
+              resetLookupDrawerForNextEntry(() => dispatch(getAllLookups())),
           );
           dispatch(getAllLookups());
         }}
@@ -8251,43 +8428,46 @@ const Configuration = () => {
               </Col>
             ) : null}
           </Row>
+        </div>
 
-          <div className="mt-4 config-tbl-container">
-            <Row gutter={24} className="">
-              <Col span={24}>
-                <MyInput
-                  placeholder="Search by Code, Name, Display Name or Type..."
-                  prefix={<SearchOutlined />}
-                  value={searchTermLookup}
-                  onChange={(e) => handleLookupSearch(e.target.value)}
-                  allowClear
-                  style={{ marginBottom: 16 }}
-                />
-              </Col>
-            </Row>
-            <Table
-              pagination={true}
-              columns={columnLookup}
-              dataSource={filteredLookups}
-              loading={lookupsloading}
-              className="drawer-tbl"
-              size="small"
-              rowKey={(record, index) =>
-                record._id || record.id || record.key || index
-              }
-              rowClassName={(record, index) =>
-                index % 2 !== 0 ? "odd-row" : "even-row"
-              }
-              rowSelection={{ type: selectionType, ...rowSelection }}
-              scroll={{ y: 270 }}
-              bordered
-            />
-          </div>
+        <div className="mt-4 config-tbl-container">
+          <Row gutter={24} className="">
+            <Col span={24}>
+              <MyInput
+                placeholder="Search by Code, Name, Display Name or Type..."
+                prefix={<SearchOutlined />}
+                value={searchTermLookup}
+                onChange={(e) => handleLookupSearch(e.target.value)}
+                allowClear
+                style={{ marginBottom: 16 }}
+              />
+            </Col>
+          </Row>
+          <Table
+            pagination={true}
+            columns={columnLookup}
+            dataSource={filteredLookups}
+            loading={lookupsloading}
+            className="drawer-tbl"
+            size="small"
+            rowKey={(record, index) =>
+              record._id || record.id || record.key || index
+            }
+            rowClassName={(record, index) =>
+              index % 2 !== 0 ? "odd-row" : "even-row"
+            }
+            rowSelection={{ type: selectionType, ...rowSelection }}
+            scroll={{ y: 270 }}
+            bordered
+          />
         </div>
       </MyDrawer>
       <MyDrawer
         title={activeStandardLookupType?.lookuptype || "Lookup"}
         open={drawerOpen?.StandardLookup}
+        isLoading={
+          lookupDetailLoading && editingLookupDrawer === "StandardLookup"
+        }
         isPagination={true}
         isEdit={isUpdateRec?.StandardLookup}
         onClose={() => {
@@ -8303,7 +8483,9 @@ const Configuration = () => {
             "Data inserted successfully",
             "Data did not insert",
             () =>
-              resetCounteries("StandardLookup", () => dispatch(getAllLookups())),
+              resetCounteries("StandardLookup", () =>
+                dispatch(getAllLookups()),
+              ),
           );
           dispatch(getAllLookups());
         }}
@@ -8317,31 +8499,6 @@ const Configuration = () => {
         }}
       >
         <div className="drawer-main-cntainer p-4 me-2 ms-2">
-          <Row>
-            <Col span={24}>
-              <CustomSelect
-                label="Type:"
-                name="lookuptypeId"
-                value={
-                  getLookupTypeFieldPropsForRecord(
-                    activeStandardLookupType,
-                    drawerIpnuts?.StandardLookup?.lookuptypeId,
-                  ).value
-                }
-                options={
-                  getLookupTypeFieldPropsForRecord(
-                    activeStandardLookupType,
-                    drawerIpnuts?.StandardLookup?.lookuptypeId,
-                  ).options
-                }
-                isSimple={true}
-                disabled={true}
-                required
-                hasError={!!errors?.StandardLookup?.lookuptypeId}
-              />
-            </Col>
-          </Row>
-
           <Row gutter={24}>
             <Col span={12}>
               <MyInput
@@ -8397,6 +8554,12 @@ const Configuration = () => {
               lookupsTypes={lookupsTypes}
               value={drawerIpnuts?.StandardLookup?.Parentlookupid}
               parentLabel={drawerIpnuts?.StandardLookup?.Parentlookup}
+              parentLookupTypeId={
+                drawerIpnuts?.StandardLookup?.ParentlookuptypeId
+              }
+              parentLookupTypeName={
+                drawerIpnuts?.StandardLookup?.Parentlookuptype
+              }
               disabled={isDisable}
               required={lookupTypeRequiresParent(
                 lookupsTypes,
@@ -8622,6 +8785,7 @@ const Configuration = () => {
       <MyDrawer
         title="Gender"
         open={drawerOpen?.Gender}
+        isLoading={lookupDetailLoading && editingLookupDrawer === "Gender"}
         isPagination={true}
         onClose={() => {
           openCloseDrawerFtn("Gender");
@@ -8649,22 +8813,6 @@ const Configuration = () => {
         }}
       >
         <div className="drawer-main-cntainer p-4 me-2 ms-2">
-          {/* Lookup Type */}
-          <Row>
-            <Col span={24}>
-              <CustomSelect
-                label="Type:"
-                placeholder="Gender"
-                value={"Gender"}
-                options={[{ label: "Gender", value: "Gender" }]}
-                isSimple={true}
-                disabled={true}
-                required
-                hasError={!!errors?.lookuptypeId}
-              />
-            </Col>
-          </Row>
-
           {/* Code + Gender Name */}
           <Row gutter={24}>
             <Col span={12}>
@@ -8719,13 +8867,17 @@ const Configuration = () => {
               lookupsTypes={lookupsTypes}
               value={drawerIpnuts?.Gender?.Parentlookupid}
               parentLabel={drawerIpnuts?.Gender?.Parentlookup}
+              parentLookupTypeId={drawerIpnuts?.Gender?.ParentlookuptypeId}
+              parentLookupTypeName={drawerIpnuts?.Gender?.Parentlookuptype}
               disabled={isDisable}
               required={lookupTypeRequiresParent(
                 lookupsTypes,
                 drawerIpnuts?.Gender?.lookuptypeId,
               )}
               hasError={!!errors?.Gender?.Parentlookupid}
-              onChange={(payload) => handleParentLookupChange("Gender", payload)}
+              onChange={(payload) =>
+                handleParentLookupChange("Gender", payload)
+              }
             />
           </Row>
 
@@ -8773,6 +8925,7 @@ const Configuration = () => {
       <MyDrawer
         title="City"
         open={drawerOpen?.Cities}
+        isLoading={lookupDetailLoading && editingLookupDrawer === "Cities"}
         isPagination={true}
         isEdit={isUpdateRec?.Cities}
         onClose={() => {
@@ -8800,22 +8953,6 @@ const Configuration = () => {
         }}
       >
         <div className="drawer-main-cntainer p-4 me-2 ms-2">
-          {/* Lookup Type */}
-          <Row>
-            <Col span={24}>
-              <CustomSelect
-                label="Type:"
-                name="lookuptypeId"
-                value={lookupTypeSelectProps("Cities").value}
-                options={lookupTypeSelectProps("Cities").options}
-                isSimple={true}
-                disabled={true}
-                required
-                hasError={!!errors?.Cities?.lookuptypeId}
-              />
-            </Col>
-          </Row>
-
           {/* Code + City Name */}
           <Row gutter={24}>
             <Col span={12}>
@@ -8870,13 +9007,17 @@ const Configuration = () => {
               lookupsTypes={lookupsTypes}
               value={drawerIpnuts?.Cities?.Parentlookupid}
               parentLabel={drawerIpnuts?.Cities?.Parentlookup}
+              parentLookupTypeId={drawerIpnuts?.Cities?.ParentlookuptypeId}
+              parentLookupTypeName={drawerIpnuts?.Cities?.Parentlookuptype}
               disabled={isDisable}
               required={lookupTypeRequiresParent(
                 lookupsTypes,
                 drawerIpnuts?.Cities?.lookuptypeId,
               )}
               hasError={!!errors?.Cities?.Parentlookupid}
-              onChange={(payload) => handleParentLookupChange("Cities", payload)}
+              onChange={(payload) =>
+                handleParentLookupChange("Cities", payload)
+              }
             />
           </Row>
 
@@ -8925,6 +9066,7 @@ const Configuration = () => {
       <MyDrawer
         title="Title"
         open={drawerOpen?.Title}
+        isLoading={lookupDetailLoading && editingLookupDrawer === "Title"}
         isPagination={true}
         onClose={() => {
           openCloseDrawerFtn("Title");
@@ -8952,22 +9094,6 @@ const Configuration = () => {
         }}
       >
         <div className="drawer-main-cntainer p-4 me-2 ms-2">
-          {/* Lookup Type */}
-          <Row>
-            <Col span={24}>
-              <CustomSelect
-                label="Type:"
-                name="lookuptypeId"
-                value={lookupTypeSelectProps("Title").value}
-                options={lookupTypeSelectProps("Title").options}
-                isSimple={true}
-                disabled={true}
-                required
-                hasError={!!errors?.Title?.lookuptypeId}
-              />
-            </Col>
-          </Row>
-
           <Row gutter={24}>
             <Col span={12}>
               <MyInput
@@ -9019,6 +9145,8 @@ const Configuration = () => {
               lookupsTypes={lookupsTypes}
               value={drawerIpnuts?.Title?.Parentlookupid}
               parentLabel={drawerIpnuts?.Title?.Parentlookup}
+              parentLookupTypeId={drawerIpnuts?.Title?.ParentlookuptypeId}
+              parentLookupTypeName={drawerIpnuts?.Title?.Parentlookuptype}
               disabled={isDisable}
               required={lookupTypeRequiresParent(
                 lookupsTypes,
@@ -9072,6 +9200,7 @@ const Configuration = () => {
       <MyDrawer
         title="Roster Type"
         open={drawerOpen?.RosterType}
+        isLoading={lookupDetailLoading && editingLookupDrawer === "RosterType"}
         isPagination={true}
         onClose={() => {
           openCloseDrawerFtn("RosterType");
@@ -9101,19 +9230,6 @@ const Configuration = () => {
       >
         <div className="drawer-main-cntainer p-4 me-2 ms-2">
           <div className="mb-4 pb-4">
-            {/* Row 1: Lookup Type */}
-            <Row gutter={24}>
-              <Col span={24}>
-                <CustomSelect
-                  label="Lookup Type"
-                  placeholder="Roster Type"
-                  options={lookupsType}
-                  disabled={true}
-                  value="Roster Type"
-                />
-              </Col>
-            </Row>
-
             {/* Row 2: Code + Roster Type Name */}
             <Row gutter={24}>
               <Col span={12}>
@@ -9158,6 +9274,12 @@ const Configuration = () => {
                 lookupsTypes={lookupsTypes}
                 value={drawerIpnuts?.RosterType?.Parentlookupid}
                 parentLabel={drawerIpnuts?.RosterType?.Parentlookup}
+                parentLookupTypeId={
+                  drawerIpnuts?.RosterType?.ParentlookuptypeId
+                }
+                parentLookupTypeName={
+                  drawerIpnuts?.RosterType?.Parentlookuptype
+                }
                 disabled={isDisable}
                 required={lookupTypeRequiresParent(
                   lookupsTypes,
@@ -9213,6 +9335,9 @@ const Configuration = () => {
       <MyDrawer
         title="Marital Status"
         open={drawerOpen?.MaritalStatus}
+        isLoading={
+          lookupDetailLoading && editingLookupDrawer === "MaritalStatus"
+        }
         isPagination={true}
         onClose={() => {
           openCloseDrawerFtn("MaritalStatus");
@@ -9242,21 +9367,6 @@ const Configuration = () => {
         }}
       >
         <div className="drawer-main-cntainer p-4 me-2 ms-2">
-          <Row>
-            <Col span={24}>
-              <CustomSelect
-                label="Lookup Type"
-                isSimple={true}
-                disabled={true}
-                value={"Marital Status"}
-                options={[{ label: "Marital Status", value: "Marital Status" }]}
-                onChange={(value) =>
-                  drawrInptChng("Lookup", "lookuptypeId", String(value))
-                }
-                required
-              />
-            </Col>
-          </Row>
           <Row gutter={24}>
             <Col span={12}>
               <MyInput
@@ -9304,6 +9414,12 @@ const Configuration = () => {
               lookupsTypes={lookupsTypes}
               value={drawerIpnuts?.MaritalStatus?.Parentlookupid}
               parentLabel={drawerIpnuts?.MaritalStatus?.Parentlookup}
+              parentLookupTypeId={
+                drawerIpnuts?.MaritalStatus?.ParentlookuptypeId
+              }
+              parentLookupTypeName={
+                drawerIpnuts?.MaritalStatus?.Parentlookuptype
+              }
               disabled={isDisable}
               required={lookupTypeRequiresParent(
                 lookupsTypes,
@@ -9359,6 +9475,9 @@ const Configuration = () => {
       <MyDrawer
         title="Project Types"
         open={drawerOpen?.ProjectTypes}
+        isLoading={
+          lookupDetailLoading && editingLookupDrawer === "ProjectTypes"
+        }
         isPagination={true}
         onClose={() => {
           openCloseDrawerFtn("ProjectTypes");
@@ -9387,22 +9506,6 @@ const Configuration = () => {
         }}
       >
         <div className="drawer-main-cntainer p-4 me-2 ms-2">
-          {/* Lookup Type */}
-          <Row>
-            <Col span={24}>
-              <CustomSelect
-                label="Type:"
-                name="lookuptypeId"
-                value={lookupTypeSelectProps("ProjectTypes").value}
-                options={lookupTypeSelectProps("ProjectTypes").options}
-                isSimple={true}
-                disabled={true}
-                required
-                hasError={!!errors?.ProjectTypes?.lookuptypeId}
-              />
-            </Col>
-          </Row>
-
           {/* Code + Project Type */}
           <Row gutter={24}>
             <Col span={12}>
@@ -9457,13 +9560,21 @@ const Configuration = () => {
               lookupsTypes={lookupsTypes}
               value={drawerIpnuts?.ProjectTypes?.Parentlookupid}
               parentLabel={drawerIpnuts?.ProjectTypes?.Parentlookup}
+              parentLookupTypeId={
+                drawerIpnuts?.ProjectTypes?.ParentlookuptypeId
+              }
+              parentLookupTypeName={
+                drawerIpnuts?.ProjectTypes?.Parentlookuptype
+              }
               disabled={isDisable}
               required={lookupTypeRequiresParent(
                 lookupsTypes,
                 drawerIpnuts?.ProjectTypes?.lookuptypeId,
               )}
               hasError={!!errors?.ProjectTypes?.Parentlookupid}
-              onChange={(payload) => handleParentLookupChange("ProjectTypes", payload)}
+              onChange={(payload) =>
+                handleParentLookupChange("ProjectTypes", payload)
+              }
             />
           </Row>
 
@@ -9511,6 +9622,7 @@ const Configuration = () => {
       <MyDrawer
         title="Trainings"
         open={drawerOpen?.Trainings}
+        isLoading={lookupDetailLoading && editingLookupDrawer === "Trainings"}
         isPagination={true}
         onClose={() => {
           openCloseDrawerFtn("Trainings");
@@ -9541,20 +9653,6 @@ const Configuration = () => {
       >
         <div className="drawer-main-container">
           <Row gutter={24}>
-            {/* Lookup Type - full width */}
-            <Col span={24}>
-              <CustomSelect
-                label="Lookup Type"
-                name="lookuptypeId"
-                value={lookupTypeSelectProps("Trainings").value}
-                options={lookupTypeSelectProps("Trainings").options}
-                isSimple={true}
-                disabled={true}
-                required
-                hasError={!!errors?.Trainings?.lookuptypeId}
-              />
-            </Col>
-
             {/* Code - half width */}
             <Col span={12}>
               <CustomSelect
@@ -9603,6 +9701,8 @@ const Configuration = () => {
               lookupsTypes={lookupsTypes}
               value={drawerIpnuts?.Trainings?.Parentlookupid}
               parentLabel={drawerIpnuts?.Trainings?.Parentlookup}
+              parentLookupTypeId={drawerIpnuts?.Trainings?.ParentlookuptypeId}
+              parentLookupTypeName={drawerIpnuts?.Trainings?.Parentlookuptype}
               disabled={isDisable}
               required={lookupTypeRequiresParent(
                 lookupsTypes,
@@ -9657,6 +9757,9 @@ const Configuration = () => {
       <MyDrawer
         title="Document Type"
         open={drawerOpen?.DocumentType}
+        isLoading={
+          lookupDetailLoading && editingLookupDrawer === "DocumentType"
+        }
         isPagination={true}
         onClose={() => {
           openCloseDrawerFtn("DocumentType");
@@ -9685,22 +9788,6 @@ const Configuration = () => {
         }}
       >
         <div className="drawer-main-cntainer p-4 me-2 ms-2">
-          {/* Lookup Type */}
-          <Row>
-            <Col span={24}>
-              <CustomSelect
-                label="Lookup Type"
-                name="lookuptypeId"
-                value={lookupTypeSelectProps("DocumentType").value}
-                options={lookupTypeSelectProps("DocumentType").options}
-                isSimple={true}
-                disabled={true}
-                required
-                hasError={!!errors?.DocumentType?.lookuptypeId}
-              />
-            </Col>
-          </Row>
-
           {/* Code + Document Type */}
           <Row gutter={24}>
             <Col span={12}>
@@ -9755,13 +9842,21 @@ const Configuration = () => {
               lookupsTypes={lookupsTypes}
               value={drawerIpnuts?.DocumentType?.Parentlookupid}
               parentLabel={drawerIpnuts?.DocumentType?.Parentlookup}
+              parentLookupTypeId={
+                drawerIpnuts?.DocumentType?.ParentlookuptypeId
+              }
+              parentLookupTypeName={
+                drawerIpnuts?.DocumentType?.Parentlookuptype
+              }
               disabled={isDisable}
               required={lookupTypeRequiresParent(
                 lookupsTypes,
                 drawerIpnuts?.DocumentType?.lookuptypeId,
               )}
               hasError={!!errors?.DocumentType?.Parentlookupid}
-              onChange={(payload) => handleParentLookupChange("DocumentType", payload)}
+              onChange={(payload) =>
+                handleParentLookupChange("DocumentType", payload)
+              }
             />
           </Row>
 
@@ -9810,6 +9905,7 @@ const Configuration = () => {
       <MyDrawer
         title="Claim Type"
         open={drawerOpen?.ClaimType}
+        isLoading={lookupDetailLoading && editingLookupDrawer === "ClaimType"}
         isPagination={true}
         onClose={() => {
           openCloseDrawerFtn("ClaimType");
@@ -9836,21 +9932,6 @@ const Configuration = () => {
         }}
       >
         <div className="drawer-main-cntainer p-4 me-2 ms-2">
-          <Row>
-            <Col span={24}>
-              <CustomSelect
-                label="Lookup Type"
-                name="lookuptypeId"
-                value={lookupTypeSelectProps("ClaimType").value}
-                options={lookupTypeSelectProps("ClaimType").options}
-                isSimple={true}
-                disabled={true}
-                required
-                hasError={!!errors?.ClaimType?.lookuptypeId}
-              />
-            </Col>
-          </Row>
-
           <Row gutter={24}>
             <Col span={12}>
               <MyInput
@@ -9903,13 +9984,17 @@ const Configuration = () => {
               lookupsTypes={lookupsTypes}
               value={drawerIpnuts?.ClaimType?.Parentlookupid}
               parentLabel={drawerIpnuts?.ClaimType?.Parentlookup}
+              parentLookupTypeId={drawerIpnuts?.ClaimType?.ParentlookuptypeId}
+              parentLookupTypeName={drawerIpnuts?.ClaimType?.Parentlookuptype}
               disabled={isDisable}
               required={lookupTypeRequiresParent(
                 lookupsTypes,
                 drawerIpnuts?.ClaimType?.lookuptypeId,
               )}
               hasError={!!errors?.ClaimType?.Parentlookupid}
-              onChange={(payload) => handleParentLookupChange("ClaimType", payload)}
+              onChange={(payload) =>
+                handleParentLookupChange("ClaimType", payload)
+              }
             />
           </Row>
 
@@ -9954,6 +10039,7 @@ const Configuration = () => {
       <MyDrawer
         title="Schemes"
         open={drawerOpen?.Schemes}
+        isLoading={lookupDetailLoading && editingLookupDrawer === "Schemes"}
         isPagination={true}
         onClose={() => {
           openCloseDrawerFtn("Schemes");
@@ -9980,21 +10066,6 @@ const Configuration = () => {
         }}
       >
         <div className="drawer-main-cntainer p-4 me-2 ms-2">
-          <Row>
-            <Col span={24}>
-              <CustomSelect
-                label="Lookup Type"
-                name="lookuptypeId"
-                value={lookupTypeSelectProps("Schemes").value}
-                options={lookupTypeSelectProps("Schemes").options}
-                isSimple={true}
-                disabled={true}
-                required
-                hasError={!!errors?.Schemes?.lookuptypeId}
-              />
-            </Col>
-          </Row>
-
           <Row gutter={24}>
             <Col span={12}>
               <MyInput
@@ -10047,13 +10118,17 @@ const Configuration = () => {
               lookupsTypes={lookupsTypes}
               value={drawerIpnuts?.Schemes?.Parentlookupid}
               parentLabel={drawerIpnuts?.Schemes?.Parentlookup}
+              parentLookupTypeId={drawerIpnuts?.Schemes?.ParentlookuptypeId}
+              parentLookupTypeName={drawerIpnuts?.Schemes?.Parentlookuptype}
               disabled={isDisable}
               required={lookupTypeRequiresParent(
                 lookupsTypes,
                 drawerIpnuts?.Schemes?.lookuptypeId,
               )}
               hasError={!!errors?.Schemes?.Parentlookupid}
-              onChange={(payload) => handleParentLookupChange("Schemes", payload)}
+              onChange={(payload) =>
+                handleParentLookupChange("Schemes", payload)
+              }
             />
           </Row>
 
@@ -10098,6 +10173,7 @@ const Configuration = () => {
       <MyDrawer
         title="Reasons"
         open={drawerOpen?.Reasons}
+        isLoading={lookupDetailLoading && editingLookupDrawer === "Reasons"}
         isPagination={true}
         onClose={() => {
           openCloseDrawerFtn("Reasons");
@@ -10125,21 +10201,6 @@ const Configuration = () => {
         }}
       >
         <div className="drawer-main-cntainer p-4 me-2 ms-2">
-          <Row>
-            <Col span={24}>
-              <CustomSelect
-                label="Lookup Type"
-                name="lookuptypeId"
-                value={lookupTypeSelectProps("Reasons").value}
-                options={lookupTypeSelectProps("Reasons").options}
-                isSimple={true}
-                disabled={true}
-                required
-                hasError={!!errors?.Reasons?.lookuptypeId}
-              />
-            </Col>
-          </Row>
-
           <Row gutter={24}>
             <Col span={12}>
               <MyInput
@@ -10192,13 +10253,17 @@ const Configuration = () => {
               lookupsTypes={lookupsTypes}
               value={drawerIpnuts?.Reasons?.Parentlookupid}
               parentLabel={drawerIpnuts?.Reasons?.Parentlookup}
+              parentLookupTypeId={drawerIpnuts?.Reasons?.ParentlookuptypeId}
+              parentLookupTypeName={drawerIpnuts?.Reasons?.Parentlookuptype}
               disabled={isDisable}
               required={lookupTypeRequiresParent(
                 lookupsTypes,
                 drawerIpnuts?.Reasons?.lookuptypeId,
               )}
               hasError={!!errors?.Reasons?.Parentlookupid}
-              onChange={(payload) => handleParentLookupChange("Reasons", payload)}
+              onChange={(payload) =>
+                handleParentLookupChange("Reasons", payload)
+              }
             />
           </Row>
 
@@ -10318,6 +10383,7 @@ const Configuration = () => {
       <MyDrawer
         title="Duties"
         open={drawerOpen?.Duties}
+        isLoading={lookupDetailLoading && editingLookupDrawer === "Duties"}
         isPagination={true}
         onClose={() => {
           openCloseDrawerFtn("Duties");
@@ -10346,19 +10412,6 @@ const Configuration = () => {
       >
         <div className="drawer-main-cntainer p-4 me-2 ms-2">
           <div className="mb-4 pb-4">
-            {/* Row 1: Lookup Type */}
-            <Row gutter={24}>
-              <Col span={24}>
-                <CustomSelect
-                  label="Lookup Type"
-                  placeholder="Duties"
-                  options={lookupsType}
-                  disabled={true}
-                  value="Duties"
-                />
-              </Col>
-            </Row>
-
             {/* Row 2: Code + Duties Name */}
             <Row gutter={24}>
               <Col span={12}>
@@ -10401,13 +10454,17 @@ const Configuration = () => {
                 lookupsTypes={lookupsTypes}
                 value={drawerIpnuts?.Duties?.Parentlookupid}
                 parentLabel={drawerIpnuts?.Duties?.Parentlookup}
+                parentLookupTypeId={drawerIpnuts?.Duties?.ParentlookuptypeId}
+                parentLookupTypeName={drawerIpnuts?.Duties?.Parentlookuptype}
                 disabled={isDisable}
                 required={lookupTypeRequiresParent(
                   lookupsTypes,
                   drawerIpnuts?.Duties?.lookuptypeId,
                 )}
                 hasError={!!errors?.Duties?.Parentlookupid}
-                onChange={(payload) => handleParentLookupChange("Duties", payload)}
+                onChange={(payload) =>
+                  handleParentLookupChange("Duties", payload)
+                }
               />
             </Row>
             <Row gutter={24}>
@@ -10454,6 +10511,7 @@ const Configuration = () => {
       <MyDrawer
         title="Grade"
         open={drawerOpen?.Ranks}
+        isLoading={lookupDetailLoading && editingLookupDrawer === "Ranks"}
         isPagination={true}
         onClose={() => {
           openCloseDrawerFtn("Ranks");
@@ -10482,19 +10540,6 @@ const Configuration = () => {
       >
         <div className="drawer-main-cntainer p-4 me-2 ms-2">
           <div className="mb-4 pb-4">
-            {/* Row 1: Lookup Type */}
-            <Row gutter={24}>
-              <Col span={24}>
-                <CustomSelect
-                  label="Lookup Type"
-                  placeholder="Lookup Type"
-                  options={lookupsType}
-                  disabled={true}
-                  value="Ranks"
-                />
-              </Col>
-            </Row>
-
             {/* Row 2: Code + Rank */}
             <Row gutter={24}>
               <Col span={12}>
@@ -10535,13 +10580,17 @@ const Configuration = () => {
                 lookupsTypes={lookupsTypes}
                 value={drawerIpnuts?.Ranks?.Parentlookupid}
                 parentLabel={drawerIpnuts?.Ranks?.Parentlookup}
+                parentLookupTypeId={drawerIpnuts?.Ranks?.ParentlookuptypeId}
+                parentLookupTypeName={drawerIpnuts?.Ranks?.Parentlookuptype}
                 disabled={isDisable}
                 required={lookupTypeRequiresParent(
                   lookupsTypes,
                   drawerIpnuts?.Ranks?.lookuptypeId,
                 )}
                 hasError={!!errors?.Ranks?.Parentlookupid}
-                onChange={(payload) => handleParentLookupChange("Ranks", payload)}
+                onChange={(payload) =>
+                  handleParentLookupChange("Ranks", payload)
+                }
               />
             </Row>
             <Row gutter={24}>
@@ -10588,6 +10637,7 @@ const Configuration = () => {
       <MyDrawer
         title="Boards"
         open={drawerOpen?.Boards}
+        isLoading={lookupDetailLoading && editingLookupDrawer === "Boards"}
         isPagination={true}
         isEdit={isUpdateRec?.Boards}
         onClose={() => {
@@ -10615,22 +10665,6 @@ const Configuration = () => {
         }}
       >
         <div className="drawer-main-cntainer p-4 me-2 ms-2">
-          {/* Lookup Type */}
-          <Row>
-            <Col span={24}>
-              <CustomSelect
-                label="Type:"
-                name="lookuptypeId"
-                value={lookupTypeSelectProps("Boards").value}
-                options={lookupTypeSelectProps("Boards").options}
-                isSimple={true}
-                disabled={true}
-                required
-                hasError={!!errors?.Boards?.lookuptypeId}
-              />
-            </Col>
-          </Row>
-
           {/* Code + Board Name */}
           <Row gutter={24}>
             <Col span={12}>
@@ -10685,13 +10719,17 @@ const Configuration = () => {
               lookupsTypes={lookupsTypes}
               value={drawerIpnuts?.Boards?.Parentlookupid}
               parentLabel={drawerIpnuts?.Boards?.Parentlookup}
+              parentLookupTypeId={drawerIpnuts?.Boards?.ParentlookuptypeId}
+              parentLookupTypeName={drawerIpnuts?.Boards?.Parentlookuptype}
               disabled={isDisable}
               required={lookupTypeRequiresParent(
                 lookupsTypes,
                 drawerIpnuts?.Boards?.lookuptypeId,
               )}
               hasError={!!errors?.Boards?.Parentlookupid}
-              onChange={(payload) => handleParentLookupChange("Boards", payload)}
+              onChange={(payload) =>
+                handleParentLookupChange("Boards", payload)
+              }
             />
           </Row>
 
@@ -10739,6 +10777,7 @@ const Configuration = () => {
       <MyDrawer
         title="Councils"
         open={drawerOpen?.Councils}
+        isLoading={lookupDetailLoading && editingLookupDrawer === "Councils"}
         isPagination={true}
         onClose={() => {
           openCloseDrawerFtn("Councils");
@@ -10766,22 +10805,6 @@ const Configuration = () => {
         }}
       >
         <div className="drawer-main-cntainer p-4 me-2 ms-2">
-          {/* Lookup Type */}
-          <Row>
-            <Col span={24}>
-              <CustomSelect
-                label="Type:"
-                name="lookuptypeId"
-                value={lookupTypeSelectProps("Councils").value}
-                options={lookupTypeSelectProps("Councils").options}
-                isSimple={true}
-                disabled={true}
-                required
-                hasError={!!errors?.Councils?.lookuptypeId}
-              />
-            </Col>
-          </Row>
-
           {/* Code + Council Name */}
           <Row gutter={24}>
             <Col span={12}>
@@ -10836,13 +10859,17 @@ const Configuration = () => {
               lookupsTypes={lookupsTypes}
               value={drawerIpnuts?.Councils?.Parentlookupid}
               parentLabel={drawerIpnuts?.Councils?.Parentlookup}
+              parentLookupTypeId={drawerIpnuts?.Councils?.ParentlookuptypeId}
+              parentLookupTypeName={drawerIpnuts?.Councils?.Parentlookuptype}
               disabled={isDisable}
               required={lookupTypeRequiresParent(
                 lookupsTypes,
                 drawerIpnuts?.Councils?.lookuptypeId,
               )}
               hasError={!!errors?.Councils?.Parentlookupid}
-              onChange={(payload) => handleParentLookupChange("Councils", payload)}
+              onChange={(payload) =>
+                handleParentLookupChange("Councils", payload)
+              }
             />
           </Row>
 
@@ -10890,6 +10917,9 @@ const Configuration = () => {
       <MyDrawer
         title="Correspondence Type"
         open={drawerOpen?.CorrespondenceType}
+        isLoading={
+          lookupDetailLoading && editingLookupDrawer === "CorrespondenceType"
+        }
         isPagination={true}
         onClose={() => {
           openCloseDrawerFtn("CorrespondenceType");
@@ -10922,22 +10952,6 @@ const Configuration = () => {
         }}
       >
         <div className="drawer-main-cntainer p-4 me-2 ms-2">
-          {/* Lookup Type */}
-          <Row>
-            <Col span={24}>
-              <CustomSelect
-                label="Lookup Type"
-                name="lookuptypeId"
-                value={lookupTypeSelectProps("CorrespondenceType").value}
-                options={lookupTypeSelectProps("CorrespondenceType").options}
-                isSimple={true}
-                disabled={true}
-                required
-                hasError={!!errors?.CorrespondenceType?.lookuptypeId}
-              />
-            </Col>
-          </Row>
-
           {/* Code + Correspondence Type */}
           <Row gutter={24}>
             <Col span={12}>
@@ -11000,6 +11014,12 @@ const Configuration = () => {
               lookupsTypes={lookupsTypes}
               value={drawerIpnuts?.CorrespondenceType?.Parentlookupid}
               parentLabel={drawerIpnuts?.CorrespondenceType?.Parentlookup}
+              parentLookupTypeId={
+                drawerIpnuts?.CorrespondenceType?.ParentlookuptypeId
+              }
+              parentLookupTypeName={
+                drawerIpnuts?.CorrespondenceType?.Parentlookuptype
+              }
               disabled={isDisable}
               required={lookupTypeRequiresParent(
                 lookupsTypes,
@@ -11060,6 +11080,9 @@ const Configuration = () => {
       <MyDrawer
         title="Spoken Languages"
         open={drawerOpen?.SpokenLanguages}
+        isLoading={
+          lookupDetailLoading && editingLookupDrawer === "SpokenLanguages"
+        }
         isPagination={true}
         onClose={() => {
           openCloseDrawerFtn("SpokenLanguages");
@@ -11090,22 +11113,6 @@ const Configuration = () => {
         }}
       >
         <div className="drawer-main-cntainer p-4 me-2 ms-2">
-          {/* Lookup Type */}
-          <Row>
-            <Col span={24}>
-              <CustomSelect
-                label="Type:"
-                name="lookuptypeId"
-                value={lookupTypeSelectProps("SpokenLanguages").value}
-                options={lookupTypeSelectProps("SpokenLanguages").options}
-                isSimple={true}
-                disabled={true}
-                required
-                hasError={!!errors?.SpokenLanguages?.lookuptypeId}
-              />
-            </Col>
-          </Row>
-
           {/* Code + Spoken Language */}
           <Row gutter={24}>
             <Col span={12}>
@@ -11164,13 +11171,21 @@ const Configuration = () => {
               lookupsTypes={lookupsTypes}
               value={drawerIpnuts?.SpokenLanguages?.Parentlookupid}
               parentLabel={drawerIpnuts?.SpokenLanguages?.Parentlookup}
+              parentLookupTypeId={
+                drawerIpnuts?.SpokenLanguages?.ParentlookuptypeId
+              }
+              parentLookupTypeName={
+                drawerIpnuts?.SpokenLanguages?.Parentlookuptype
+              }
               disabled={isDisable}
               required={lookupTypeRequiresParent(
                 lookupsTypes,
                 drawerIpnuts?.SpokenLanguages?.lookuptypeId,
               )}
               hasError={!!errors?.SpokenLanguages?.Parentlookupid}
-              onChange={(payload) => handleParentLookupChange("SpokenLanguages", payload)}
+              onChange={(payload) =>
+                handleParentLookupChange("SpokenLanguages", payload)
+              }
             />
           </Row>
 
@@ -11448,6 +11463,7 @@ const Configuration = () => {
       <MyDrawer
         title="Committees"
         open={drawerOpen?.Committees}
+        isLoading={lookupDetailLoading && editingLookupDrawer === "Committees"}
         isPagination={true}
         onClose={() => {
           openCloseDrawerFtn("Committees");
@@ -11472,30 +11488,9 @@ const Configuration = () => {
           dispatch(getAllLookups());
           IsUpdateFtn("Lookup", false);
         }}
-      // width="680"
+        // width="680"
       >
         <div className="drawer-main-cntainer p-4">
-          {" "}
-          {/* Type */}
-          <Row gutter={24}>
-            {" "}
-            <Col span={24}>
-              {" "}
-              <CustomSelect
-                label="Type:"
-                isSimple={true}
-                placeholder="Committee"
-                disabled={true}
-                options={lookupsType}
-                value={drawerIpnuts?.Committees?.RegionTypeID}
-                onChange={(value) =>
-                  drawrInptChng("Committees", "RegionTypeID", String(value))
-                }
-                required
-                hasError={!!errors?.Committees?.RegionTypeID}
-              />{" "}
-            </Col>{" "}
-          </Row>
           {/* Code + Committee Name */}
           <Row gutter={24}>
             {" "}
@@ -11606,6 +11601,7 @@ const Configuration = () => {
       <MyDrawer
         title="Sections"
         open={drawerOpen?.Sections}
+        isLoading={lookupDetailLoading && editingLookupDrawer === "Sections"}
         isPagination={true}
         onClose={() => {
           openCloseDrawerFtn("Sections");
@@ -11634,19 +11630,6 @@ const Configuration = () => {
       >
         <div className="drawer-main-cntainer p-4 me-2 ms-2">
           <div className="mb-4 pb-4">
-            {/* Row 1: Lookup Type */}
-            <Row gutter={24}>
-              <Col span={24}>
-                <CustomSelect
-                  label="Lookup Type"
-                  placeholder="Sections"
-                  options={lookupsType}
-                  disabled={true}
-                  value="Sections"
-                />
-              </Col>
-            </Row>
-
             {/* Row 2: Code + Section Name */}
             <Row gutter={24}>
               <Col span={12}>
@@ -11691,13 +11674,17 @@ const Configuration = () => {
                 lookupsTypes={lookupsTypes}
                 value={drawerIpnuts?.Sections?.Parentlookupid}
                 parentLabel={drawerIpnuts?.Sections?.Parentlookup}
+                parentLookupTypeId={drawerIpnuts?.Sections?.ParentlookuptypeId}
+                parentLookupTypeName={drawerIpnuts?.Sections?.Parentlookuptype}
                 disabled={isDisable}
                 required={lookupTypeRequiresParent(
                   lookupsTypes,
                   drawerIpnuts?.Sections?.lookuptypeId,
                 )}
                 hasError={!!errors?.Sections?.Parentlookupid}
-                onChange={(payload) => handleParentLookupChange("Sections", payload)}
+                onChange={(payload) =>
+                  handleParentLookupChange("Sections", payload)
+                }
               />
             </Row>
             <Row gutter={24}>
@@ -11743,6 +11730,6 @@ const Configuration = () => {
     </div>
     // </div>
   );
-}
+};
 
 export default Configuration;
