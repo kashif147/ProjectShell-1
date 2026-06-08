@@ -110,6 +110,25 @@ export async function fetchTenantOrganisationProfile(tenantId) {
   return tenant?.organisationProfile || null;
 }
 
+export function resolveTenantTradingName(org = {}, tenant = {}) {
+  return String(
+    org.tradingName ||
+      org.legalName ||
+      tenant?.name ||
+      tenant?.tenantName ||
+      tenant?.code ||
+      "",
+  ).trim();
+}
+
+export async function fetchTenantTradingName(tenantId) {
+  const tenant = await fetchTenantRecord(tenantId);
+  return resolveTenantTradingName(
+    tenant?.organisationProfile || {},
+    tenant || {},
+  );
+}
+
 export const fetchTenantBranding = async (tenantId) => {
   const tenant = await fetchTenantRecord(tenantId);
   const branding = tenant?.branding || {};

@@ -90,6 +90,10 @@ import MyConfirm from "./MyConfirm";
 import MyAlert from "./MyAlert";
 import axios from "axios";
 import { bulkSelectionHasRetrospective } from "../../utils/retrospectiveMembership";
+import {
+  DUPLICATE_REVIEW_REQUIRED_MESSAGE,
+  getPendingDuplicateReviewApplications,
+} from "../../utils/duplicateReviewApproval";
 import Toolbar from "./Toolbar";
 import { useFilters } from "../../context/FilterContext";
 import { useAuthorization } from "../../context/AuthorizationContext";
@@ -103,6 +107,8 @@ import CreditNoteDrawer from "../../component/finanace/CreditNoteDrawer";
 import JournalAdjustmentDrawer from "../../component/finanace/JournalAdjustmentDrawer";
 import { getAccountServiceBaseUrl } from "../../config/serviceUrls";
 import reconciliationWorkspace from "../../utils/reconciliationWorkspace";
+import { isReportHeaderPath } from "../../constants/membershipReportRoutes";
+import ReportExportMenu from "../reports/ReportExportMenu";
 import { bumpJournalAdjustmentsReload } from "../../utils/journalAdjustmentsWorkspace";
 import { bumpCreditNotesReload } from "../../utils/creditNotesWorkspace";
 import { bumpWriteOffsReload } from "../../utils/writeOffsWorkspace";
@@ -597,6 +603,19 @@ function HeaderDetails({
         "error",
         "Selection Required",
         "Please select at least one application to approve.",
+      );
+      return;
+    }
+
+    const pendingDuplicateReview = getPendingDuplicateReviewApplications(
+      gridData,
+      selectedApplications,
+    );
+    if (pendingDuplicateReview.length > 0) {
+      MyAlert(
+        "warning",
+        "Duplicate review required",
+        `${pendingDuplicateReview.length} selected application(s) still need duplicate review before approval. ${DUPLICATE_REVIEW_REQUIRED_MESSAGE}`,
       );
       return;
     }
@@ -1369,7 +1388,6 @@ function HeaderDetails({
             location?.pathname == "/CasesSummary" ||
             location?.pathname == "/Transfers" ||
             location?.pathname == "/CorrespondencesSummary" ||
-            location?.pathname == "/Reports" ||
             location?.pathname == "/RosterSummary" ||
             location?.pathname == "/EventsDashboard" ||
             location?.pathname == "/CorrespondenceDashboard" ||
@@ -1406,6 +1424,8 @@ function HeaderDetails({
             location?.pathname == "/JournalAdjustments" ||
             location?.pathname == "/GeneralLedger" ||
             location?.pathname == "/MembershipListingReport" ||
+            location?.pathname == "/StatisticsReport" ||
+            location?.pathname == "/WorkplaceBreakdownReport" ||
             location?.pathname == "/InAppNotifications") && (
             <div className="search-main">
               <div className="title d-flex justify-content-between align-items-start">
@@ -1448,8 +1468,12 @@ function HeaderDetails({
                         ? `Profile`
                         : nav === "/MembershipDashboard"
                           ? "Executive Dashboard"
-                          : location?.state?.search ||
-                            (nav === "/DirectDebitAuthorization"
+                          : nav === "/StatisticsReport"
+                            ? "Statistics Report"
+                            : nav === "/WorkplaceBreakdownReport"
+                              ? "Workplace Membership Breakdown"
+                            : location?.state?.search ||
+                              (nav === "/DirectDebitAuthorization"
                               ? "Direct Debit Authorization"
                               : nav === "/DirectDebit"
                                 ? "Direct Debit"
@@ -1556,8 +1580,10 @@ function HeaderDetails({
                           !hasPermission("queries:create")) ||
                         (nav === "/InAppNotifications" &&
                           !hasPermission("notifications:create")) ||
-                        nav === "/UserNotifications" ? null : nav ===
-                        "/PaymentForms" ? (
+                        nav === "/UserNotifications" ||
+                        isReportHeaderPath(nav)
+                          ? null
+                          : nav === "/PaymentForms" ? (
                         <Button
                           onClick={() =>
                             openPaymentFormCreate("STANDING_ORDER")
@@ -1684,14 +1710,18 @@ function HeaderDetails({
                           Print
                         </Button>
                       ) : null}
-                      <SimpleMenu
-                        title="Export"
-                        triggerClassName="me-1 gray-btn butn"
-                        data={exportbtn}
-                        isSearched={true}
-                        isCheckBox={false}
-                        actions={genaratePdf}
-                      />
+                      {isReportHeaderPath(nav) ? (
+                        <ReportExportMenu triggerClassName="me-1 gray-btn butn" />
+                      ) : (
+                        <SimpleMenu
+                          title="Export"
+                          triggerClassName="me-1 gray-btn butn"
+                          data={exportbtn}
+                          isSearched={true}
+                          isCheckBox={false}
+                          actions={genaratePdf}
+                        />
+                      )}
 
                       {/* <Button className="me-1 gray-btn butn">Executive Council</Button> */}
                       <Button className="me-1 gray-btn butn">Share</Button>

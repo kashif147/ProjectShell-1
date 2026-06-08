@@ -371,8 +371,6 @@ const CancelledMembersReport = () => {
                 onPaginationChanged={onPaginationChanged}
                 loading={loading}
                 animateRows={true}
-                rowSelection="multiple"
-                suppressRowClickSelection={true}
                 suppressHorizontalScroll={false}
                 defaultColDef={{
                   resizable: true,

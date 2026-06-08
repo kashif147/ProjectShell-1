@@ -63,6 +63,18 @@ import { bumpWriteOffsReload } from "../../utils/writeOffsWorkspace";
 import { bumpGeneralLedgerReload } from "../../utils/generalLedgerWorkspace";
 import { bumpReconciliationReload } from "../../utils/reconciliationWorkspace";
 import { bumpMembershipListingReportReload } from "../../utils/membershipListingReportWorkspace";
+import { bumpMembershipStatisticsReportReload } from "../../utils/membershipStatisticsReportWorkspace";
+import { bumpWorkplaceBreakdownReportReload } from "../../utils/workplaceBreakdownReportWorkspace";
+import {
+  GRID_SYSTEM_DEFAULT_PAGES,
+  buildVisibleColumnKeys,
+  buildColumnLabelsMap,
+} from "../../config/gridColumnDefaults";
+import {
+  buildTemplateMetaWithVisibleFilters,
+  persistVisibleFiltersToStorage,
+  resolveTemplateVisibleFilters,
+} from "../../utils/gridTemplateVisibleFilters";
 
 const SaveViewMenu = ({ className, style }) => {
   const dispatch = useDispatch();
@@ -109,6 +121,8 @@ const SaveViewMenu = ({ className, style }) => {
     v
       ? `${String(v._id)}|${JSON.stringify(v?.filters)}|${JSON.stringify(
           v?.columns,
+        )}|${JSON.stringify(
+          v?.meta?.visibleToolbarFilters || v?.visibleFilters,
         )}`
       : "";
   const viewTemplateDetailKey = useMemo(
@@ -121,6 +135,7 @@ const SaveViewMenu = ({ className, style }) => {
     activePage,
     filtersState,
     applyTemplateFilters,
+    getVisibleFiltersForSave,
     acknowledgeUserChoseNewTemplate,
     hasUserOverriddenTemplateFilters,
   } = useFilters();
@@ -161,6 +176,8 @@ const SaveViewMenu = ({ className, style }) => {
     generalledger: "generalledger",
     reconciliation: "reconciliation",
     membershiplistingreport: "membershiplisting",
+    statisticsreport: "statisticsreport",
+    workplacebreakdownreport: "workplacebreakdownreport",
     correspondencesummary: "notification",
     correspondencedashboard: "notification",
     communication: "notification",
@@ -185,9 +202,19 @@ const SaveViewMenu = ({ className, style }) => {
     (normalizeTemplateType(targetTemplateType) === "members" &&
       normalizeTemplateType(template?.templateType) === "subscription");
 
-  const resolvedCurrentTemplateId = isPaymentFormsPage
-    ? paymentFormsTemplateId
-    : currentTemplateId;
+  const resolvedCurrentTemplateId =
+    activeTemplateId ||
+    (isPaymentFormsPage ? paymentFormsTemplateId : currentTemplateId);
+
+  const isActiveSystemDefault = useMemo(() => {
+    const id = String(resolvedCurrentTemplateId || "").trim();
+    if (!id) return true;
+    if (!templates) return false;
+    if (String(templates.systemDefault?._id) === id) return true;
+    return (templates.userTemplates || []).some(
+      (t) => String(t._id) === id && t.systemDefault === true,
+    );
+  }, [resolvedCurrentTemplateId, templates]);
 
   const initializeScreenWithTemplate = (templateId) => {
     if (isPaymentFormsPage) {
@@ -274,6 +301,12 @@ const SaveViewMenu = ({ className, style }) => {
     if (activePage === "MembershipListingReport") {
       bumpMembershipListingReportReload();
     }
+    if (activePage === "StatisticsReport") {
+      bumpMembershipStatisticsReportReload();
+    }
+    if (activePage === "WorkplaceBreakdownReport") {
+      bumpWorkplaceBreakdownReportReload();
+    }
   };
 
   const transformFiltersForApply = useCallback(
@@ -281,9 +314,10 @@ const SaveViewMenu = ({ className, style }) => {
       return transformFiltersFromApi(
         apiFilters,
         columns[tableColumnScreen] || [],
+        { templateType: targetTemplateType },
       );
     },
-    [columns, tableColumnScreen],
+    [columns, tableColumnScreen, targetTemplateType],
   );
 
   /** Apply a template (list item or getViewById detail) to columns + filter chips + fetches. */
@@ -309,7 +343,12 @@ const SaveViewMenu = ({ className, style }) => {
         t.columnLabels || {},
         templates?.systemDefault?.columnLabels || {},
       );
-      applyTemplateFilters(transformedFilters);
+      applyTemplateFilters(transformedFilters, {
+        savedVisibleFilters: resolveTemplateVisibleFilters(
+          t,
+          targetTemplateType,
+        ),
+      });
       setActiveView(t.name);
       initializeScreenWithTemplate(t._id || "");
       fetchListingByTemplate(t._id || "");
@@ -388,7 +427,19 @@ const SaveViewMenu = ({ className, style }) => {
       dispatch(setActiveTemplateId(systemView._id));
       handleApplyView(systemView);
     } else {
-      setActiveView("System Template");
+      const page = GRID_SYSTEM_DEFAULT_PAGES[targetTemplateType];
+      const colScreen = tableColumnScreen;
+      if (page?.columns?.length) {
+        const columnKeys = buildVisibleColumnKeys(page.columns);
+        const labels = buildColumnLabelsMap(page.columns);
+        applyTemplate(colScreen, columnKeys, columnKeys, labels, labels);
+        applyTemplateFilters(transformFiltersForApply(page.filters || {}), {
+          savedVisibleFilters: Array.isArray(page.visibleFilters)
+            ? page.visibleFilters
+            : null,
+        });
+      }
+      setActiveView("System default (local)");
       dispatch(setActiveTemplateId(null));
       initializeScreenWithTemplate("");
       dispatch(resetScreenChanged({ screen: activePage }));
@@ -526,6 +577,7 @@ const SaveViewMenu = ({ className, style }) => {
       const activeFilters = transformFiltersForApi(
         filtersState,
         columns[tableColumnScreen] || [],
+        { templateType: targetTemplateType },
       );
 
       // 2. Gather visible columns
@@ -539,13 +591,19 @@ const SaveViewMenu = ({ className, style }) => {
         );
 
       // 3. Construct payload
+      const preservedVisibleFilters = getVisibleFiltersForSave();
       const payload = {
         name: savedViewName,
         templateType: targetTemplateType,
         filters: activeFilters,
         columns: visibleColumns,
         columnLabels: buildColumnLabelsMap(screenColumns),
-        isDefault: false,
+        visibleFilters: preservedVisibleFilters,
+        meta: buildTemplateMetaWithVisibleFilters(
+          selectedView?.meta,
+          preservedVisibleFilters,
+        ),
+        isDefault: isActiveSystemDefault,
       };
 
       const token = localStorage.getItem("token");
@@ -572,19 +630,36 @@ const SaveViewMenu = ({ className, style }) => {
       );
 
       if (savedTemplate) {
-        handleApplyView(savedTemplate, true, { userPickedView: true });
+        persistVisibleFiltersToStorage(
+          targetTemplateType,
+          savedTemplate._id,
+          preservedVisibleFilters,
+        );
+        const enrichedTemplate = {
+          ...savedTemplate,
+          visibleFilters: preservedVisibleFilters,
+          meta: buildTemplateMetaWithVisibleFilters(
+            savedTemplate.meta,
+            preservedVisibleFilters,
+          ),
+        };
+        handleApplyView(enrichedTemplate, true, { userPickedView: true });
         // Re-apply from the template payload: getViewById effect can skip when
         // hasUserOverriddenTemplateFilters is still true, leaving the chip UI out of sync.
-        const tFilters = transformFiltersForApply(savedTemplate.filters || {});
+        const tFilters = transformFiltersForApply(enrichedTemplate.filters || {});
         const colScreen = tableColumnScreen;
         applyTemplate(
           colScreen,
-          savedTemplate.columns || [],
+          enrichedTemplate.columns || [],
           templatesResponse?.systemDefault?.columns || [],
-          savedTemplate.columnLabels || {},
+          enrichedTemplate.columnLabels || {},
           templatesResponse?.systemDefault?.columnLabels || {},
         );
-        applyTemplateFilters(tFilters);
+        applyTemplateFilters(tFilters, {
+          savedVisibleFilters:
+            resolveTemplateVisibleFilters(enrichedTemplate, targetTemplateType) ||
+            preservedVisibleFilters,
+        });
         setActiveView(savedViewName);
         lastAppliedTemplateIdRef.current = keyForView(savedTemplate);
         initializeScreenWithTemplate(savedTemplate._id || "");
@@ -595,11 +670,14 @@ const SaveViewMenu = ({ className, style }) => {
       fetchListingByTemplate(savedTemplate?._id || resolvedCurrentTemplateId || "");
     } catch (error) {
       console.error("Error saving template:", error);
-      MyAlert(
-        "error",
-        "Error",
-        error.response?.data?.message || "Failed to save template",
-      );
+      const apiMsg =
+        error.response?.data?.message ||
+        error.response?.data?.error?.message ||
+        error.response?.data?.data ||
+        (typeof error.response?.data === "string"
+          ? error.response.data
+          : null);
+      MyAlert("error", "Error", apiMsg || error.message || "Failed to save template");
     } finally {
       setSaving(false);
     }
@@ -787,6 +865,7 @@ const SaveViewMenu = ({ className, style }) => {
             Cancel
           </Button>,
           <Button
+            key="save"
             className="butn primary-btn"
             style={{ marginRight: 4 }}
             onClick={handleSaveView}

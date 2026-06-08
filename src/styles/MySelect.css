@@ -1,15 +1,6 @@
 /* Add these styles to your existing MySelect.css */
 
-/* Error state for select */
-.my-input-container.error .my-input-field-select {
-  border-color: #ff4d4f !important;
-  box-shadow: 0 0 0 2px rgba(255, 77, 79, 0.15) !important;
-}
-
-.my-input-container.error .my-input-field-select:focus {
-  border-color: #ff4d4f !important;
-  box-shadow: 0 0 0 2px rgba(255, 77, 79, 0.2) !important;
-}
+/* Error state for select — border on container, not the field */
 
 /* Placeholder error color */
 .placeholder-error {
@@ -29,11 +20,9 @@
 }
 
 .my-input-container.disabled .my-input-field-select {
-  background-color: #f5f5f5;
-  /* color: #bfbfbf; */
+  background-color: transparent;
+  color: #212529;
   font-weight: 400;
-  border-color: #d9d9d9;
-  box-shadow: none;
   cursor: not-allowed;
 }
 
@@ -105,32 +94,53 @@
   margin-left: 4px;
 }
 
-.my-input-container {
+.my-input-wrapper .my-input-container {
+  display: flex;
+  align-items: center;
   position: relative;
+  width: 100%;
+  height: 40px;
+  background-color: #fff;
+  border: 1px solid #ced4da;
+  border-radius: 6px;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  overflow: hidden;
+}
+
+.my-input-wrapper .my-input-container.focused {
+  background-color: #f0f8ff;
+  border-color: #40a9ff;
+  outline: none;
+  box-shadow: none;
+}
+
+.my-input-wrapper .my-input-container.error {
+  border-color: #dc3545;
+}
+
+.my-input-wrapper .my-input-container.disabled {
+  background-color: #f5f5f5;
+  border-color: #d9d9d9;
+  cursor: not-allowed;
 }
 
 .my-input-container .my-input-field-select {
   width: 100%;
-  padding: 10px 36px 10px 12px;
+  height: 100%;
+  flex: 1;
+  padding: 0 36px 0 12px;
   font-size: 14px;
-  border: 1px solid #ced4da;
+  border: none !important;
   outline: none;
   color: #212529;
-  background-color: #fff;
-  transition: border-color 0.2s ease, box-shadow 0.2s ease;
-  box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.03);
+  background-color: transparent;
+  box-shadow: none !important;
   appearance: none;
   background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 1024 1024' fill='%236c757d' height='14' width='14' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M512 624L160 272h704z'/%3E%3C/svg%3E");
   background-repeat: no-repeat;
   background-position: right 12px center;
   background-size: 14px;
-  border-radius: 6px !important;
-}
-
-.my-input-container.focused .my-input-field-select {
-  background-color: #f0f8ff;
-  border-color: #40a9ff !important;
-  outline: none;
+  border-radius: 0 !important;
 }
 .my-input-container.focused .my-input-field {
   border-color: #40a9ff;
@@ -168,15 +178,59 @@
 }
 
 
-.my-input-container.disabled .ant-select-disabled {
-  background-color: #f5f5f5;
-  color: #a0a0a0;
-  border-color: #d9d9d9;
-  cursor: not-allowed;
+/* Searchable selects: borderless inside .my-input-container (matches MyInput fields) */
+.my-input-container .my-input-ant-select {
+  width: 100%;
+  height: 100%;
+  flex: 1;
 }
 
-.my-input-container.disabled .ant-select-disabled .ant-select-selector {
-  background-color: #f5f5f5 !important;
-  color: #a0a0a0 !important;
+.my-input-container .my-input-ant-select .ant-select-selector {
+  height: 100% !important;
+  min-height: 38px !important;
+  padding: 0 32px 0 12px !important;
+  border: none !important;
+  box-shadow: none !important;
+  background: transparent !important;
+  border-radius: 0 !important;
+}
+
+.my-input-container .my-input-ant-select .ant-select-selection-wrap,
+.my-input-container .my-input-ant-select .ant-select-selection-search {
+  height: 100%;
+}
+
+.my-input-container .my-input-ant-select .ant-select-selection-item,
+.my-input-container .my-input-ant-select .ant-select-selection-placeholder,
+.my-input-container .my-input-ant-select .ant-select-selection-search-input {
+  font-size: 14px !important;
+  line-height: 38px !important;
+  color: #212529 !important;
+}
+
+.my-input-container .my-input-ant-select .ant-select-selection-placeholder {
+  color: #6c757d !important;
+}
+
+.my-input-container .my-input-ant-select .ant-select-arrow {
+  inset-inline-end: 12px;
+  color: #6c757d;
+}
+
+.my-input-container .my-input-ant-select .ant-select-clear {
+  inset-inline-end: 28px;
+}
+
+.my-input-container.disabled .my-input-ant-select.ant-select-disabled .ant-select-selector {
+  background: transparent !important;
+  color: #212529 !important;
   cursor: not-allowed !important;
+}
+
+.my-input-container.disabled .my-input-ant-select.ant-select-disabled .ant-select-selection-item {
+  color: #212529 !important;
+}
+
+.my-input-ant-select-dropdown .ant-select-item {
+  font-size: 14px;
 }

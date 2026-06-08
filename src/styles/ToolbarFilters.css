@@ -5,7 +5,8 @@
   align-items: center !important;
 }
 
-.search-fliters .toolbar-filter-row {
+.search-fliters .toolbar-filter-row,
+.toolbar-filter-row {
   display: flex;
   align-items: center;
   flex-wrap: wrap;
@@ -15,7 +16,8 @@
   width: 100%;
 }
 
-.search-fliters .toolbar-filter-row > * {
+.search-fliters .toolbar-filter-row > *,
+.toolbar-filter-row > * {
   flex-shrink: 0;
 }
 
@@ -24,17 +26,13 @@
   border-radius: 3px !important;
 }
 
-.search-fliters .exec-dashboard-header-controls--inline {
-  display: inline-flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 8px;
-  margin: 0;
-}
-
 /* Shared chip surface (dimension dropdowns + year/month/toggles) */
 .search-fliters .filter-button1,
-.search-fliters .exec-dashboard-filter-chip {
+.search-fliters .exec-dashboard-filter-chip,
+.toolbar-filter-row .filter-button1,
+.toolbar-filter-row .exec-dashboard-filter-chip {
+  display: inline-flex;
+  align-items: center;
   margin-left: 0 !important;
   min-height: 34px;
   height: 34px;
@@ -43,10 +41,30 @@
   border: 1px solid #e2e8f0;
   background-color: #fff;
   box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+  flex-shrink: 0;
   transition:
     background-color 0.15s ease,
     border-color 0.15s ease,
     box-shadow 0.15s ease;
+}
+
+.toolbar-filter-row .exec-dashboard-filter-chip {
+  gap: 4px;
+}
+
+.toolbar-filter-row .exec-dashboard-filter-chip__select.ant-select {
+  height: 34px;
+}
+
+.toolbar-filter-row .exec-dashboard-filter-chip__select .ant-select-selector {
+  display: flex !important;
+  align-items: center !important;
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  padding: 0 16px 0 0 !important;
+  height: 34px !important;
+  min-height: 34px !important;
 }
 
 .search-fliters .filter-button1:hover,
@@ -148,29 +166,46 @@
 }
 
 /* Include Student / Include Honorary checkboxes */
-.search-fliters .exec-dashboard-filter-checkbox {
+.search-fliters .exec-dashboard-filter-checkbox,
+.toolbar-filter-row .exec-dashboard-filter-checkbox {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   cursor: default;
   padding: 0 12px;
 }
 
-.search-fliters .exec-dashboard-filter-checkbox__input.ant-checkbox-wrapper {
+.search-fliters .exec-dashboard-filter-checkbox__input.ant-checkbox-wrapper,
+.toolbar-filter-row .exec-dashboard-filter-checkbox__input.ant-checkbox-wrapper {
   display: inline-flex;
   align-items: center;
-  margin: 0;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  min-height: 34px;
+  margin: 0 !important;
   line-height: 1;
   cursor: pointer;
 }
 
-.search-fliters .exec-dashboard-filter-checkbox__input .ant-checkbox {
+.search-fliters .exec-dashboard-filter-checkbox__input .ant-checkbox,
+.toolbar-filter-row .exec-dashboard-filter-checkbox__input .ant-checkbox {
   top: 0;
+  align-self: center;
+  flex-shrink: 0;
 }
 
-.search-fliters .exec-dashboard-filter-checkbox__input .ant-checkbox + span {
+.search-fliters .exec-dashboard-filter-checkbox__input .ant-checkbox + span,
+.toolbar-filter-row .exec-dashboard-filter-checkbox__input .ant-checkbox + span {
+  display: inline-flex;
+  align-items: center;
   padding-inline-start: 8px;
   padding-inline-end: 0;
+  line-height: 1;
 }
 
-.search-fliters .exec-dashboard-filter-checkbox__input .ant-checkbox .ant-checkbox-inner {
+.search-fliters .exec-dashboard-filter-checkbox__input .ant-checkbox .ant-checkbox-inner,
+.toolbar-filter-row .exec-dashboard-filter-checkbox__input .ant-checkbox .ant-checkbox-inner {
   width: 16px;
   height: 16px;
   border-radius: 3px;
@@ -180,6 +215,10 @@
 .search-fliters
   .exec-dashboard-filter-checkbox__input
   .ant-checkbox-checked
+  .ant-checkbox-inner,
+.toolbar-filter-row
+  .exec-dashboard-filter-checkbox__input
+  .ant-checkbox-checked
   .ant-checkbox-inner {
   background-color: #45669d;
   border-color: #45669d;
@@ -187,12 +226,25 @@
 
 .search-fliters
   .exec-dashboard-filter-checkbox__input:hover
+  .ant-checkbox-inner,
+.toolbar-filter-row
+  .exec-dashboard-filter-checkbox__input:hover
   .ant-checkbox-inner {
   border-color: #45669d;
 }
 
-.search-fliters .exec-dashboard-filter-checkbox__input .filter-label {
+.search-fliters .exec-dashboard-filter-checkbox__input .filter-label,
+.toolbar-filter-row .exec-dashboard-filter-checkbox__input .filter-label {
   padding-right: 0;
+}
+
+.search-fliters .exec-dashboard-header-controls--inline,
+.toolbar-filter-row .exec-dashboard-header-controls--inline {
+  display: inline-flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0;
 }
 
 /* Toolbar actions: More, Reset, Filter */

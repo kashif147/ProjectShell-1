@@ -316,7 +316,17 @@ export function getLookupTypeRecordById(id, lookupsTypes = []) {
   return lookupsTypes.find((lt) => String(lt._id) === String(id)) || null;
 }
 
-/** Fixed cards for system drawers (not driven solely by GET /lookuptype). */
+/** True when lookup type is work location (Station drawer / WORKLOC). */
+export function isWorkLocationLookupType(lookupTypeOrId, lookupsTypes = []) {
+  const record =
+    typeof lookupTypeOrId === "object" && lookupTypeOrId !== null
+      ? lookupTypeOrId
+      : getLookupTypeRecordById(lookupTypeOrId, lookupsTypes);
+  if (!record) return false;
+  return getDrawerKeyForLookupType(record) === "Station";
+}
+
+/** Fixed cards for system drawers (manage lookup types / generic lookups). */
 export const SYSTEM_CONFIGURATION_CARDS = [
   {
     key: "LookupType",

@@ -35,7 +35,7 @@ function formatReportingError(error) {
   if (status === 502 || status === 503 || status === 504) {
     return new Error(
       upstream ||
-        "Reporting service is unavailable (gateway error). On the server, check that the reporting-service container is running and review its logs.",
+        "Reporting service timed out (gateway error). For workplace breakdown, use Filter with fewer rolling months, or build snapshots via the admin snapshot job first.",
     );
   }
   if (status === 401 || status === 403) {
@@ -83,6 +83,12 @@ export const reportingApi = {
   getComparisonReport: (body) => post("/reports/membership/compare", body),
 
   getLiveStats: (body) => post("/reports/membership/live-stats", body),
+
+  getMembershipStatistics: (body) =>
+    post("/reports/membership/statistics", body),
+
+  getWorkplaceBreakdown: (body) =>
+    post("/reports/membership/workplace-breakdown", body),
 
   buildSnapshot: (period) =>
     post("/reports/membership/snapshots/build", { period }),

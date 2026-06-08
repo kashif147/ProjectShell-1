@@ -1,12 +1,13 @@
-import React, { useEffect, useState, useCallback } from "react";
+import React, { useEffect, useState, useCallback, useMemo } from "react";
 import { useDispatch, useSelector } from "react-redux";
 // import TableComponent from "../../component/common/TableComponent";
 import TableComponent from "../../component/common/TableComponent";
 import { getApplicationsWithFilter } from "../../features/applicationwithfilterslice";
 import { getPaymentFormsWithFilter } from "../../features/paymentFormsWithFilterSlice";
 import MultiFilterDropdown from "../../component/common/MultiFilterDropdown";
-import { Spin } from "antd";
+import { Button, Space, Spin } from "antd";
 import { useFilters } from "../../context/FilterContext";
+import DuplicateProfileReview from "../../component/applications/DuplicateProfileReview";
 import dayjs from "dayjs";
 import utc from "dayjs/plugin/utc";
 import { useSelectedIds } from "../../context/SelectedIdsContext";
@@ -41,6 +42,8 @@ function MembershipApplication() {
   const [selectedRows, setSelectedRows] = useState(null);
   const [paymentFormDetailId, setPaymentFormDetailId] = useState(null);
   const [paymentFormDetailOpen, setPaymentFormDetailOpen] = useState(false);
+  const [duplicateReviewAppId, setDuplicateReviewAppId] = useState(null);
+  const [duplicateReviewOpen, setDuplicateReviewOpen] = useState(false);
   const { activeTemplateId } = useSelector((state) => state.activeTemplate);
   console.log(activeTemplateId, "activeTemplateId activeTemplateId");
 
@@ -120,7 +123,44 @@ function MembershipApplication() {
     // Map selectedRows to get application IDs
     const ids = selectedRows.map(row => row.applicationId || row._id);
     setSelectedIds(ids);
+  }, [setSelectedIds]);
+
+  const refreshApplicationsList = useCallback(() => {
+    dispatch(
+      getApplicationsWithFilter({
+        templateId: activeTemplateId || currentTemplateId || "",
+        page: 1,
+        limit: 500,
+      }),
+    );
+  }, [dispatch, activeTemplateId, currentTemplateId]);
+
+  const selectedSubmittedApplication = useMemo(() => {
+    if (isPaymentFormsPage || selectedKeys.length !== 1) return null;
+    const key = selectedKeys[0];
+    const row = formattedApplications.find(
+      (app) =>
+        String(app.applicationId || app.key || app._id) === String(key),
+    );
+    if (!row || row.applicationStatus !== "submitted") return null;
+    return row;
+  }, [formattedApplications, isPaymentFormsPage, selectedKeys]);
+
+  const openDuplicateReview = useCallback((applicationId) => {
+    if (!applicationId) return;
+    setDuplicateReviewAppId(applicationId);
+    setDuplicateReviewOpen(true);
   }, []);
+
+  const handleDuplicateReviewRequest = useCallback(
+    (record) => {
+      const applicationId = record?.applicationId || record?._id;
+      if (applicationId && record?.applicationStatus === "submitted") {
+        openDuplicateReview(applicationId);
+      }
+    },
+    [openDuplicateReview],
+  );
 
   const handleRowClick = useCallback(
     (record) => {
@@ -183,7 +223,59 @@ function MembershipApplication() {
         disableDefaultRowClick={!isPaymentFormsPage}
         onRowClick={isPaymentFormsPage ? handleRowClick : undefined}
         disableRowFn={shouldDisableRow}
+        onDuplicateReviewRequest={
+          isPaymentFormsPage ? undefined : handleDuplicateReviewRequest
+        }
+        selectionToolbar={
+          !isPaymentFormsPage && selectedSubmittedApplication ? (
+            <div
+              style={{
+                marginBottom: 8,
+                display: "flex",
+                flexWrap: "wrap",
+                gap: 8,
+                alignItems: "center",
+              }}
+            >
+              <span
+                style={{
+                  padding: "8px 12px",
+                  background: "#f0f0f0",
+                  borderRadius: 4,
+                }}
+              >
+                1 submitted application selected
+              </span>
+              <Space size="small">
+                <Button
+                  size="small"
+                  type="primary"
+                  onClick={() =>
+                    openDuplicateReview(
+                      selectedSubmittedApplication.applicationId,
+                    )
+                  }
+                >
+                  Detect Duplicate
+                </Button>
+              </Space>
+            </div>
+          ) : null
+        }
       />
+
+      {!isPaymentFormsPage && (
+        <DuplicateProfileReview
+          open={duplicateReviewOpen}
+          onClose={() => {
+            setDuplicateReviewOpen(false);
+            setDuplicateReviewAppId(null);
+          }}
+          applicationId={duplicateReviewAppId}
+          runDetectionOnOpen
+          onReviewUpdated={refreshApplicationsList}
+        />
+      )}
 
       {isPaymentFormsPage && (
         <PaymentFormDetailDrawer

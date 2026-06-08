@@ -23,6 +23,7 @@ import { getProfileApplications } from "../../features/profiles/profileApplicati
 import { Tabs, Spin, Drawer, Button, Dropdown } from "antd";
 import axios from "axios";
 import { MoreOutlined } from "@ant-design/icons";
+import { formatMembershipMovementLabel } from "../../utils/membershipMovementLabels";
 import MyTable from "./MyTable";
 import {
   FaFolder,
@@ -541,6 +542,7 @@ function AppTabs() {
       title: "Movement",
       dataIndex: "membershipMovement",
       key: "membershipMovement",
+      render: (value) => formatMembershipMovementLabel(value) || "—",
     },
     {
       title: "Actions",

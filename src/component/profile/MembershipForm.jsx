@@ -34,7 +34,7 @@ import {
 import { useMembershipTabToolbar } from "../../context/MembershipTabToolbarContext";
 import {
   CRM_PAYMENT_FREQUENCY_OPTIONS,
-  isCreditCardPaymentType,
+  getDefaultPaymentFrequencyForPaymentMethod,
 } from "../../constants/paymentFrequency";
 import utc from "dayjs/plugin/utc";
 import timezone from "dayjs/plugin/timezone";
@@ -742,14 +742,11 @@ const MembershipForm = ({
       }
     }
     if (field === "paymentType") {
-      const wasCard = isCreditCardPaymentType(formData.paymentType);
-      const isCard = isCreditCardPaymentType(value);
-      if (isCard) {
-        updatedData.paymentFrequency = "Annually";
-      } else if (
-        wasCard ||
-        !String(updatedData.paymentFrequency || "").trim()
-      ) {
+      const defaultFrequency =
+        getDefaultPaymentFrequencyForPaymentMethod(value);
+      if (defaultFrequency) {
+        updatedData.paymentFrequency = defaultFrequency;
+      } else if (!String(updatedData.paymentFrequency || "").trim()) {
         updatedData.paymentFrequency = "Monthly";
       }
       if (!isPayrollOrSalaryDeduction(value)) {
@@ -1814,7 +1811,7 @@ const MembershipForm = ({
                 label="Membership Movement"
                 placeholder="Select Movement..."
                 options={[
-                  { value: "NewJoin", label: "NewJoin" },
+                  { value: "NewJoin", label: "New" },
                   { value: "Renewal", label: "Renewal" },
                   { value: "Reinstatement", label: "Reinstatement" },
                   { value: "Transfer", label: "Transfer" },

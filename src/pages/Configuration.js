@@ -107,6 +107,7 @@ import {
   resolveConfigurationDrawerKey,
   getLookupsForLookupType,
   getLookupTypeFieldPropsForRecord,
+  isWorkLocationLookupType,
   withDynamicLookupTypeId,
   isLookupDrawerKey,
 } from "../utils/configurationLookupHelpers";
@@ -1441,6 +1442,7 @@ const Configuration = () => {
         country: "",
         fullAddress: "",
       },
+      processSalaryDeduction: false,
     },
     Cities: {
       lookuptypeId: "68c85f22302e5600dc8477ed",
@@ -1599,6 +1601,7 @@ const Configuration = () => {
       userid: "67f3f9d812b014a0a7a94081",
       isactive: true,
       isDeleted: false,
+      processSalaryDeduction: false,
     },
     StandardLookup: {
       lookuptypeId: "",
@@ -1612,6 +1615,7 @@ const Configuration = () => {
       userid: "67f3f9d812b014a0a7a94081",
       isactive: true,
       isDeleted: false,
+      processSalaryDeduction: false,
     },
     Gender: {
       lookuptypeId: "68c85f21302e5600dc8477da",
@@ -2801,6 +2805,16 @@ const Configuration = () => {
             .join(", ") || "-"
         );
       },
+    },
+    {
+      title: "Process Salary Deduction",
+      key: "processSalaryDeduction",
+      render: (_, record) => (
+        <Checkbox
+          disabled
+          checked={!!record?.processSalaryDeduction}
+        />
+      ),
     },
     {
       title: "Active",
@@ -7423,6 +7437,21 @@ const Configuration = () => {
                   Active
                 </Checkbox>
               </Col>
+              <Col span={12}>
+                <Checkbox
+                  disabled={isDisable}
+                  checked={!!drawerIpnuts?.Station?.processSalaryDeduction}
+                  onChange={(e) =>
+                    drawrInptChng(
+                      "Station",
+                      "processSalaryDeduction",
+                      e.target.checked,
+                    )
+                  }
+                >
+                  Process Salary Deduction
+                </Checkbox>
+              </Col>
             </Row>
 
             <Row gutter={24} style={{ marginTop: 16 }}>
@@ -8266,120 +8295,140 @@ const Configuration = () => {
           IsUpdateFtn("Lookup", false);
         }}
       >
-        <Spin spinning={lookupDetailLoading} tip="Loading lookup...">
-          <div className="drawer-main-container p-4">
-            <Row gutter={24}>
-              <Col span={24}>
-                <CustomSelect
-                  label="Lookup Type"
-                  disabled={isDisable || lookupDetailLoading}
-                  name="lookuptype"
-                  isIDs={true}
-                  value={drawerIpnuts?.Lookup?.lookuptypeId || ""}
-                  options={lookupsTypesSelect}
-                  isSimple={true}
-                  required
-                  onChange={(value) => {
-                    const nextTypeId = String(value.target.value);
-                    setdrawerIpnuts((prev) => ({
-                      ...prev,
-                      Lookup: {
-                        ...(prev.Lookup || {}),
-                        lookuptypeId: nextTypeId,
-                        Parentlookupid: null,
-                        Parentlookup: "",
-                        ParentlookuptypeId: null,
-                        Parentlookuptype: "",
-                      },
-                    }));
-                  }}
-                  hasError={!!errors?.Lookup?.lookuptypeId}
-                />
-              </Col>
-            </Row>
-
-            <Row gutter={24} className="mt-3">
-              <Col span={12}>
-                <MyInput
-                  label="Code"
-                  name="code"
-                  value={drawerIpnuts?.Lookup?.code || ""}
-                  onChange={(e) =>
-                    drawrInptChng("Lookup", "code", e.target.value)
-                  }
-                  placeholder="Enter code"
-                  disabled={isDisable || lookupDetailLoading}
-                  required
-                  hasError={!!errors?.Lookup?.code}
-                />
-              </Col>
-              <Col span={12}>
-                <MyInput
-                  label="Lookup Name"
-                  name="lookupname"
-                  value={drawerIpnuts?.Lookup?.lookupname || ""}
-                  onChange={(e) =>
-                    drawrInptChng("Lookup", "lookupname", e.target.value)
-                  }
-                  placeholder="Enter lookup name"
-                  disabled={isDisable || lookupDetailLoading}
-                  required
-                  hasError={!!errors?.Lookup?.lookupname}
-                />
-              </Col>
-            </Row>
-
-            <Row gutter={24} className="mt-3">
-              <Col span={12}>
-                <MyInput
-                  label="Display Name"
-                  name="DisplayName"
-                  value={drawerIpnuts?.Lookup?.DisplayName || ""}
-                  onChange={(e) =>
-                    drawrInptChng("Lookup", "DisplayName", e.target.value)
-                  }
-                  placeholder="Enter display name"
-                  disabled={isDisable || lookupDetailLoading}
-                  hasError={!!errors?.Lookup?.DisplayName}
-                />
-              </Col>
-              <ParentLookupSelect
-                drawerKey="Lookup"
-                lookuptypeId={drawerIpnuts?.Lookup?.lookuptypeId}
-                lookups={lookups}
-                lookupsTypes={lookupsTypes}
-                value={drawerIpnuts?.Lookup?.Parentlookupid}
-                parentLabel={drawerIpnuts?.Lookup?.Parentlookup}
-                parentLookupTypeId={drawerIpnuts?.Lookup?.ParentlookuptypeId}
-                parentLookupTypeName={drawerIpnuts?.Lookup?.Parentlookuptype}
-                disabled={isDisable || lookupDetailLoading}
-                required={lookupTypeRequiresParent(
-                  lookupsTypes,
-                  drawerIpnuts?.Lookup?.lookuptypeId,
-                )}
-                hasError={!!errors?.Lookup?.Parentlookupid}
-                onChange={(payload) =>
-                  handleParentLookupChange("Lookup", payload)
-                }
+        <div className="drawer-main-container p-4">
+          <Row gutter={24}>
+            <Col span={24}>
+              <CustomSelect
+                label="Lookup Type"
+                disabled={isDisable}
+                name="lookuptype"
+                isIDs={true}
+                value={drawerIpnuts?.Lookup?.lookuptypeId || ""}
+                options={lookupsTypesSelect}
+                isSimple={true}
+                required
+                onChange={(value) => {
+                  const nextTypeId = String(value.target.value);
+                  const isWorkLoc = isWorkLocationLookupType(
+                    nextTypeId,
+                    lookupsTypes,
+                  );
+                  setdrawerIpnuts((prev) => ({
+                    ...prev,
+                    Lookup: {
+                      ...(prev.Lookup || {}),
+                      lookuptypeId: nextTypeId,
+                      Parentlookupid: null,
+                      Parentlookup: "",
+                      ...(isWorkLoc
+                        ? {}
+                        : { processSalaryDeduction: false }),
+                    },
+                  }));
+                }}
+                hasError={!!errors?.Lookup?.lookuptypeId}
               />
-            </Row>
+            </Col>
+          </Row>
 
-            <Row gutter={24} className="">
+          <Row gutter={24} className="mt-3">
+            <Col span={12}>
+              <MyInput
+                label="Code"
+                name="code"
+                value={drawerIpnuts?.Lookup?.code || ""}
+                onChange={(e) =>
+                  drawrInptChng("Lookup", "code", e.target.value)
+                }
+                placeholder="Enter code"
+                disabled={isDisable}
+                required
+                hasError={!!errors?.Lookup?.code}
+              />
+            </Col>
+            <Col span={12}>
+              <MyInput
+                label="Lookup Name"
+                name="lookupname"
+                value={drawerIpnuts?.Lookup?.lookupname || ""}
+                onChange={(e) =>
+                  drawrInptChng("Lookup", "lookupname", e.target.value)
+                }
+                placeholder="Enter lookup name"
+                disabled={isDisable}
+                required
+                hasError={!!errors?.Lookup?.lookupname}
+              />
+            </Col>
+          </Row>
+
+          <Row gutter={24} className="mt-3">
+            <Col span={12}>
+              <MyInput
+                label="Display Name"
+                name="DisplayName"
+                value={drawerIpnuts?.Lookup?.DisplayName || ""}
+                onChange={(e) =>
+                  drawrInptChng("Lookup", "DisplayName", e.target.value)
+                }
+                placeholder="Enter display name"
+                disabled={isDisable}
+                hasError={!!errors?.Lookup?.DisplayName}
+              />
+            </Col>
+            <ParentLookupSelect
+              drawerKey="Lookup"
+              lookuptypeId={drawerIpnuts?.Lookup?.lookuptypeId}
+              lookups={lookups}
+              lookupsTypes={lookupsTypes}
+              value={drawerIpnuts?.Lookup?.Parentlookupid}
+              parentLabel={drawerIpnuts?.Lookup?.Parentlookup}
+              disabled={isDisable}
+              required={lookupTypeRequiresParent(
+                lookupsTypes,
+                drawerIpnuts?.Lookup?.lookuptypeId,
+              )}
+              hasError={!!errors?.Lookup?.Parentlookupid}
+              onChange={(payload) => handleParentLookupChange("Lookup", payload)}
+            />
+          </Row>
+
+          <Row gutter={24} className="">
+            <Col span={12}>
+              <Checkbox
+                disabled={isDisable}
+                onChange={(e) =>
+                  drawrInptChng("Lookup", "isactive", e.target.checked)
+                }
+                checked={drawerIpnuts?.Lookup?.isactive}
+                style={{ marginTop: "0px" }}
+              >
+                Active
+              </Checkbox>
+            </Col>
+            {isWorkLocationLookupType(
+              drawerIpnuts?.Lookup?.lookuptypeId,
+              lookupsTypes,
+            ) ? (
               <Col span={12}>
                 <Checkbox
-                  disabled={isDisable || lookupDetailLoading}
+                  disabled={isDisable}
+                  checked={!!drawerIpnuts?.Lookup?.processSalaryDeduction}
                   onChange={(e) =>
-                    drawrInptChng("Lookup", "isactive", e.target.checked)
+                    drawrInptChng(
+                      "Lookup",
+                      "processSalaryDeduction",
+                      e.target.checked,
+                    )
                   }
-                  checked={drawerIpnuts?.Lookup?.isactive}
                   style={{ marginTop: "0px" }}
                 >
-                  Active
+                  Process Salary Deduction
                 </Checkbox>
               </Col>
-            </Row>
-          </div>
-        </Spin>
+            ) : null}
+          </Row>
+        </div>
 
         <div className="mt-4 config-tbl-container">
           <Row gutter={24} className="">
@@ -8537,6 +8586,24 @@ const Configuration = () => {
                 Active
               </Checkbox>
             </Col>
+            {isWorkLocationLookupType(activeStandardLookupType) ? (
+              <Col span={12}>
+                <Checkbox
+                  disabled={isDisable}
+                  checked={!!drawerIpnuts?.StandardLookup?.processSalaryDeduction}
+                  onChange={(e) =>
+                    drawrInptChng(
+                      "StandardLookup",
+                      "processSalaryDeduction",
+                      e.target.checked,
+                    )
+                  }
+                  style={{ marginTop: "26px" }}
+                >
+                  Process Salary Deduction
+                </Checkbox>
+              </Col>
+            ) : null}
           </Row>
 
           <div className="mt-4 config-tbl-container">

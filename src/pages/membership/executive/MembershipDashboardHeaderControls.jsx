@@ -9,6 +9,8 @@ import {
   resolveDashboardMembershipCategoryFilterState,
   MEMBERSHIP_MONTH_OPTIONS,
 } from "./executiveDashboardUtils";
+import { bumpMembershipStatisticsReportReload } from "../../../utils/membershipStatisticsReportWorkspace";
+import { bumpWorkplaceBreakdownReportReload } from "../../../utils/workplaceBreakdownReportWorkspace";
 
 function FilterSelectChip({ label, value, options, onChange, className = "" }) {
   return (
@@ -59,9 +61,16 @@ export default function MembershipDashboardHeaderControls({
   variant = "default",
 }) {
   const location = useLocation();
+  const normalizedPath = (location.pathname || "")
+    .replace(/\/$/, "")
+    .toLowerCase();
+  const isStatisticsReport = normalizedPath === "/statisticsreport";
+  const isWorkplaceBreakdownReport =
+    normalizedPath === "/workplacebreakdownreport";
+  const isAggregateMembershipReport =
+    isStatisticsReport || isWorkplaceBreakdownReport;
   const isMembershipDashboard =
-    (location.pathname || "").replace(/\/$/, "").toLowerCase() ===
-    "/membershipdashboard";
+    normalizedPath === "/membershipdashboard" || isAggregateMembershipReport;
 
   const {
     membershipDashboardHeader,
@@ -99,13 +108,22 @@ export default function MembershipDashboardHeaderControls({
       }
       return changed;
     },
-    [
-      allCategoryLabels,
-      filtersState,
-      isMembershipDashboard,
-      updateFilter,
-    ],
+    [allCategoryLabels, filtersState, isMembershipDashboard, updateFilter],
   );
+
+  const bumpDataRefresh = useCallback(() => {
+    if (isStatisticsReport) {
+      bumpMembershipStatisticsReportReload();
+    } else if (isWorkplaceBreakdownReport) {
+      bumpWorkplaceBreakdownReportReload();
+    } else {
+      bumpMembershipDashboardApply();
+    }
+  }, [
+    isStatisticsReport,
+    isWorkplaceBreakdownReport,
+    bumpMembershipDashboardApply,
+  ]);
 
   const applyHeaderChange = useCallback(
     (patch) => {
@@ -114,13 +132,13 @@ export default function MembershipDashboardHeaderControls({
       if (isMembershipDashboard) {
         syncMembershipCategoryWithHeader(nextHeader);
       }
-      bumpMembershipDashboardApply();
+      bumpDataRefresh();
     },
     [
       membershipDashboardHeader,
       updateMembershipDashboardHeader,
       syncMembershipCategoryWithHeader,
-      bumpMembershipDashboardApply,
+      bumpDataRefresh,
       isMembershipDashboard,
     ],
   );
@@ -130,8 +148,8 @@ export default function MembershipDashboardHeaderControls({
     if (!allCategoryLabels.length) return;
 
     const changed = syncMembershipCategoryWithHeader(membershipDashboardHeader);
-    if (changed) {
-      bumpMembershipDashboardApply();
+    if (changed && !isAggregateMembershipReport) {
+      bumpDataRefresh();
     }
   }, [
     variant,
@@ -140,7 +158,8 @@ export default function MembershipDashboardHeaderControls({
     membershipDashboardHeader.includeStudents,
     membershipDashboardHeader.includeHonorary,
     syncMembershipCategoryWithHeader,
-    bumpMembershipDashboardApply,
+    bumpDataRefresh,
+    isAggregateMembershipReport,
   ]);
 
   if (variant !== "inline" || !isMembershipDashboard) {
@@ -172,6 +191,55 @@ export default function MembershipDashboardHeaderControls({
         checked={membershipDashboardHeader.includeHonorary}
         onChange={(includeHonorary) => applyHeaderChange({ includeHonorary })}
       />
+      {isStatisticsReport && (
+        <>
+          <FilterCheckboxChip
+            label="Breakdown"
+            checked={membershipDashboardHeader.includeBreakdown !== false}
+            onChange={(includeBreakdown) =>
+              updateMembershipDashboardHeader({ includeBreakdown })
+            }
+          />
+          <FilterCheckboxChip
+            label="Incl Empty Rows"
+            checked={membershipDashboardHeader.includeEmptyRows === true}
+            onChange={(includeEmptyRows) =>
+              updateMembershipDashboardHeader({ includeEmptyRows })
+            }
+          />
+        </>
+      )}
+      {isWorkplaceBreakdownReport && (
+        <>
+          <FilterSelectChip
+            label="Rolling"
+            value={membershipDashboardHeader.rollingMonths || 12}
+            options={[
+              { value: 6, label: "6 months" },
+              { value: 12, label: "12 months" },
+              { value: 13, label: "13 months" },
+            ]}
+            onChange={(rollingMonths) => applyHeaderChange({ rollingMonths })}
+          />
+          <FilterSelectChip
+            label="Audience"
+            value={membershipDashboardHeader.audienceScope || "full"}
+            options={[
+              { value: "full", label: "Full overview" },
+              { value: "official", label: "Individual official" },
+              { value: "manager", label: "Manager summary" },
+            ]}
+            onChange={(audienceScope) => applyHeaderChange({ audienceScope })}
+          />
+          <FilterCheckboxChip
+            label="Incl Empty Rows"
+            checked={membershipDashboardHeader.includeEmptyRows === true}
+            onChange={(includeEmptyRows) =>
+              updateMembershipDashboardHeader({ includeEmptyRows })
+            }
+          />
+        </>
+      )}
     </div>
   );
 }

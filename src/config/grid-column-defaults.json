@@ -185,33 +185,90 @@
     "membershiplisting": {
       "screenKey": "MembershipListingReport",
       "templateType": "membershiplisting",
-      "service": "profile-service",
+      "service": "reporting-service",
       "filters": {
         "membershipCategories": { "operator": "equal_to", "values": [] },
+        "membershipStatuses": { "operator": "equal_to", "values": [] },
+        "membershipMovements": { "operator": "equal_to", "values": [] },
         "grades": { "operator": "equal_to", "values": [] },
+        "workLocations": { "operator": "equal_to", "values": [] },
         "sections": { "operator": "equal_to", "values": [] },
         "regions": { "operator": "equal_to", "values": [] },
         "branches": { "operator": "equal_to", "values": [] },
-        "membershipStatuses": { "operator": "equal_to", "values": [] },
-        "dateRange": { "operator": "between", "values": [] }
+        "paymentTypes": { "operator": "equal_to", "values": [] },
+        "paymentFrequencies": { "operator": "equal_to", "values": [] },
+        "startDateRange": { "operator": "between", "values": [] },
+        "expiryDateRange": { "operator": "between", "values": [] },
+        "cancelledDateRange": { "operator": "between", "values": [] },
+        "resignedDateRange": { "operator": "between", "values": [] },
+        "processedDateRange": { "operator": "between", "values": [] }
       },
       "columns": [
-        { "dataIndex": "fullName", "title": "Full Name", "isGride": true, "isVisible": true, "ellipsis": true, "width": 200 },
-        { "dataIndex": "membershipNo", "title": "Membership Number", "isGride": true, "isVisible": true, "ellipsis": true, "width": 150 },
-        { "dataIndex": "membershipCategory", "title": "Membership Category", "isGride": true, "isVisible": true, "ellipsis": true, "width": 180 },
-        { "dataIndex": "grade", "title": "Grade", "isGride": true, "isVisible": true, "ellipsis": true, "width": 140 },
-        { "dataIndex": "workLocation", "title": "Work Location", "isGride": true, "isVisible": true, "ellipsis": true, "width": 160 },
-        { "dataIndex": "branch", "title": "Branch", "isGride": true, "isVisible": true, "ellipsis": true, "width": 140 },
-        { "dataIndex": "region", "title": "Region", "isGride": true, "isVisible": true, "ellipsis": true, "width": 140 },
-        { "dataIndex": "section", "title": "Primary Section", "isGride": true, "isVisible": true, "ellipsis": true, "width": 160 },
-        { "dataIndex": "startDate", "title": "Start Date", "filterValueType": "date", "isGride": true, "isVisible": true, "ellipsis": true, "width": 120 },
-        { "dataIndex": "expiryDate", "title": "Expiry Date", "filterValueType": "date", "isGride": true, "isVisible": true, "ellipsis": true, "width": 120 },
-        { "dataIndex": "cancelledAt", "title": "Cancelled", "filterValueType": "date", "isGride": true, "isVisible": true, "ellipsis": true, "width": 120 },
-        { "dataIndex": "resignedAt", "title": "Resigned", "filterValueType": "date", "isGride": true, "isVisible": true, "ellipsis": true, "width": 120 },
-        { "dataIndex": "processedAt", "title": "Processed At", "filterValueType": "date", "isGride": true, "isVisible": true, "ellipsis": true, "width": 120 },
-        { "dataIndex": "membershipStatus", "title": "Membership Status", "isGride": true, "isVisible": true, "ellipsis": true, "width": 140 },
-        { "dataIndex": "subscriptionYear", "title": "Sub Year", "isGride": true, "isVisible": true, "ellipsis": true, "width": 100 },
-        { "dataIndex": "isCurrent", "title": "isCurrent", "isGride": true, "isVisible": true, "ellipsis": true, "width": 90 }
+        { "dataIndex": "membershipNo", "title": "Membership No", "isGride": true, "isVisible": true, "ellipsis": true, "width": 130 },
+        { "dataIndex": "fullName", "title": "Name", "isGride": true, "isVisible": true, "ellipsis": true, "width": 200 },
+        { "dataIndex": "membershipCategory", "title": "Membership Category", "isGride": true, "isVisible": true, "ellipsis": true, "width": 170 },
+        { "dataIndex": "grade", "title": "Grade", "isGride": true, "isVisible": true, "ellipsis": true, "width": 120 },
+        { "dataIndex": "region", "title": "Region", "isGride": true, "isVisible": true, "ellipsis": true, "width": 120 },
+        { "dataIndex": "branch", "title": "Branch", "isGride": true, "isVisible": true, "ellipsis": true, "width": 120 },
+        { "dataIndex": "section", "title": "Primary Section", "isGride": true, "isVisible": true, "ellipsis": true, "width": 150 },
+        { "dataIndex": "subscriptionYear", "title": "Subs Year", "isGride": true, "isVisible": true, "ellipsis": true, "width": 90 },
+        { "dataIndex": "isCurrent", "title": "isCurrent", "isGride": true, "isVisible": true, "ellipsis": true, "width": 80 },
+        { "dataIndex": "startDate", "title": "Membership Start Date", "filterValueType": "date", "isGride": true, "isVisible": true, "ellipsis": true, "width": 130 },
+        { "dataIndex": "expiryDate", "title": "Expiry Date", "filterValueType": "date", "isGride": true, "isVisible": true, "ellipsis": true, "width": 110 },
+        { "dataIndex": "cancelledAt", "title": "Cancelled Date", "filterValueType": "date", "isGride": true, "isVisible": true, "ellipsis": true, "width": 120 },
+        { "dataIndex": "resignedAt", "title": "Resigned Date", "filterValueType": "date", "isGride": true, "isVisible": true, "ellipsis": true, "width": 120 },
+        { "dataIndex": "processedAt", "title": "Processed At Date", "filterValueType": "date", "isGride": true, "isVisible": true, "ellipsis": true, "width": 130 },
+        { "dataIndex": "renewalDate", "title": "Renewal Date", "filterValueType": "date", "isGride": true, "isVisible": true, "ellipsis": true, "width": 110 },
+        { "dataIndex": "paymentDate", "title": "Last Payment Date", "filterValueType": "date", "isGride": true, "isVisible": true, "ellipsis": true, "width": 130 },
+        { "dataIndex": "membershipStatus", "title": "Membership Status", "isGride": true, "isVisible": true, "ellipsis": true, "width": 130 },
+        { "dataIndex": "membershipMovement", "title": "Membership Movement", "isGride": true, "isVisible": true, "ellipsis": true, "width": 150 },
+        { "dataIndex": "paymentType", "title": "Payment Method", "isGride": true, "isVisible": true, "ellipsis": true, "width": 140 },
+        { "dataIndex": "paymentFrequency", "title": "Frequency", "isGride": true, "isVisible": true, "ellipsis": true, "width": 110 },
+        { "dataIndex": "invoiceAmount", "title": "Invoice Amount", "filterValueType": "number", "isGride": true, "isVisible": true, "ellipsis": true, "width": 110, "align": "right" },
+        { "dataIndex": "arrearsAmount", "title": "Arrears Amount", "filterValueType": "number", "isGride": true, "isVisible": true, "ellipsis": true, "width": 110, "align": "right" },
+        { "dataIndex": "deferredAmount", "title": "Deferred Amount", "filterValueType": "number", "isGride": true, "isVisible": true, "ellipsis": true, "width": 110, "align": "right" },
+        { "dataIndex": "balance", "title": "Balance", "filterValueType": "number", "isGride": true, "isVisible": true, "ellipsis": true, "width": 100, "align": "right" },
+        { "dataIndex": "workLocation", "title": "Work Location", "isGride": true, "isVisible": false, "ellipsis": true, "width": 140 }
+      ]
+    },
+    "statisticsreport": {
+      "screenKey": "StatisticsReport",
+      "templateType": "statisticsreport",
+      "service": "reporting-service",
+      "filters": {
+        "membershipCategories": { "operator": "equal_to", "values": [] },
+        "grades": { "operator": "equal_to", "values": [] },
+        "regions": { "operator": "equal_to", "values": [] },
+        "branches": { "operator": "equal_to", "values": [] }
+      },
+      "columns": [
+        { "dataIndex": "name", "title": "Name", "isGride": true, "isVisible": true, "ellipsis": true, "width": 200 },
+        { "dataIndex": "openingActive", "title": "Opening", "filterValueType": "number", "isGride": true, "isVisible": true, "ellipsis": true, "width": 90, "align": "right" },
+        { "dataIndex": "joined", "title": "Joined", "filterValueType": "number", "isGride": true, "isVisible": true, "ellipsis": true, "width": 80, "align": "right" },
+        { "dataIndex": "rejoin", "title": "Re-joined", "filterValueType": "number", "isGride": true, "isVisible": true, "ellipsis": true, "width": 90, "align": "right" },
+        { "dataIndex": "newJoin", "title": "New", "filterValueType": "number", "isGride": true, "isVisible": true, "ellipsis": true, "width": 70, "align": "right" },
+        { "dataIndex": "reinstatements", "title": "Reinstated", "filterValueType": "number", "isGride": true, "isVisible": true, "ellipsis": true, "width": 95, "align": "right" },
+        { "dataIndex": "resigned", "title": "Resigned", "filterValueType": "number", "isGride": true, "isVisible": true, "ellipsis": true, "width": 90, "align": "right" },
+        { "dataIndex": "lapsed", "title": "Lapsed", "filterValueType": "number", "isGride": true, "isVisible": true, "ellipsis": true, "width": 80, "align": "right" },
+        { "dataIndex": "closingActive", "title": "Closing", "filterValueType": "number", "isGride": true, "isVisible": true, "ellipsis": true, "width": 90, "align": "right" },
+        { "dataIndex": "calculatedClosing", "title": "Calc. closing", "filterValueType": "number", "isGride": true, "isVisible": true, "ellipsis": true, "width": 110, "align": "right" },
+        { "dataIndex": "variance", "title": "Variance", "filterValueType": "number", "isGride": true, "isVisible": false, "ellipsis": true, "width": 90, "align": "right" },
+        { "dataIndex": "balancesLabel", "title": "OK", "isGride": true, "isVisible": true, "ellipsis": true, "width": 72, "align": "center" }
+      ]
+    },
+    "workplacebreakdownreport": {
+      "screenKey": "WorkplaceBreakdownReport",
+      "templateType": "workplacebreakdownreport",
+      "service": "reporting-service",
+      "filters": {
+        "membershipStatuses": { "operator": "equal_to", "values": ["Active"] },
+        "regions": { "operator": "equal_to", "values": [] },
+        "workLocations": { "operator": "equal_to", "values": [] }
+      },
+      "columns": [
+        { "dataIndex": "workLocation", "title": "Work Location", "isGride": true, "isVisible": true, "ellipsis": true, "width": 220 },
+        { "dataIndex": "official", "title": "Official", "isGride": true, "isVisible": true, "ellipsis": true, "width": 80 },
+        { "dataIndex": "mom", "title": "MoM", "filterValueType": "number", "isGride": true, "isVisible": true, "ellipsis": true, "width": 72, "align": "right" }
       ]
     },
     "reconciliation": {

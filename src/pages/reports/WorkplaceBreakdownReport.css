@@ -1,0 +1,248 @@
+.wp-breakdown-report__header {
+  margin-bottom: 24px;
+  padding: 16px 12px 0;
+}
+
+.wp-breakdown-report__org {
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin: 0 0 4px;
+}
+
+.wp-breakdown-report__title {
+  font-size: 1.35rem;
+  font-weight: 700;
+  margin: 0 0 12px;
+}
+
+.wp-breakdown-report__header-details {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px 32px;
+  margin-bottom: 12px;
+  font-size: 0.9rem;
+}
+
+.wp-breakdown-report__params {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 20px;
+}
+
+.wp-breakdown-report__meta-label {
+  font-weight: 600;
+  color: #595959;
+}
+
+.wp-breakdown-report__filter-summary {
+  margin-top: 8px;
+  font-size: 0.85rem;
+}
+
+.wp-breakdown-report__filter-list {
+  margin: 4px 0 0;
+  padding-left: 18px;
+}
+
+.wp-breakdown-report__region {
+  margin-bottom: 32px;
+}
+
+.wp-breakdown-report__region-title {
+  text-align: center;
+  font-size: 1rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  margin: 0 0 12px;
+  padding: 8px 0;
+  border-bottom: 2px solid #d9d9d9;
+}
+
+.wp-breakdown-report__table-wrap {
+  overflow-x: auto;
+  width: 100%;
+}
+
+.wp-breakdown-report__table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.85rem;
+}
+
+.wp-breakdown-report__table th,
+.wp-breakdown-report__table td {
+  border: 1px solid #e8e8e8;
+  padding: 6px 10px;
+  white-space: nowrap;
+}
+
+.wp-breakdown-report__table thead th {
+  background: #fafafa;
+  font-weight: 600;
+  text-align: center;
+}
+
+.wp-breakdown-report__sticky-col {
+  position: sticky;
+  left: 0;
+  z-index: 1;
+  background: #fff;
+  min-width: 220px;
+  max-width: 320px;
+  text-align: left;
+}
+
+.wp-breakdown-report__table thead .wp-breakdown-report__sticky-col {
+  background: #fafafa;
+  z-index: 2;
+}
+
+.wp-breakdown-report__num {
+  text-align: right;
+  min-width: 64px;
+}
+
+.wp-breakdown-report__official-col {
+  text-align: center;
+  min-width: 72px;
+}
+
+.wp-breakdown-report__delta--up {
+  color: #389e0d;
+  font-weight: 600;
+}
+
+.wp-breakdown-report__delta--down {
+  color: #cf1322;
+  font-weight: 600;
+}
+
+.wp-breakdown-report__total-row td {
+  background: #f5f5f5;
+}
+
+.wp-breakdown-report__empty {
+  padding: 24px;
+  color: #595959;
+  text-align: center;
+}
+
+.wp-breakdown-report__summary {
+  margin-bottom: 20px;
+}
+
+.wp-breakdown-report__kpi-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 12px;
+}
+
+.wp-breakdown-report__kpi-card {
+  background: #fafafa;
+  border: 1px solid #e8e8e8;
+  border-radius: 8px;
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.wp-breakdown-report__kpi-label {
+  font-size: 0.78rem;
+  color: #595959;
+  font-weight: 600;
+}
+
+.wp-breakdown-report__kpi-value {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #262626;
+}
+
+.wp-breakdown-report__kpi-delta {
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.wp-breakdown-report__section-title,
+.wp-breakdown-report__official-summary .wp-breakdown-report__section-title {
+  font-size: 1rem;
+  font-weight: 700;
+  margin: 0 0 12px;
+}
+
+.wp-breakdown-report__official-summary {
+  margin-bottom: 28px;
+}
+
+.wp-breakdown-report__official-initials {
+  color: #8c8c8c;
+  font-size: 0.85em;
+}
+
+.wp-breakdown-report__charts {
+  margin-bottom: 28px;
+}
+
+.wp-breakdown-report__charts-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 16px;
+}
+
+.wp-breakdown-report__chart-card {
+  border-radius: 8px;
+}
+
+.wp-breakdown-report__chart-card .ant-card-head {
+  min-height: 40px;
+  padding: 0 12px;
+}
+
+.wp-breakdown-report__chart-card .ant-card-head-title {
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.wp-breakdown-report__chart-card .ant-card-body {
+  padding: 8px 12px 12px;
+}
+
+.wp-breakdown-report__chart-tooltip {
+  background: #fff;
+  border: 1px solid #e8e8e8;
+  border-radius: 4px;
+  padding: 8px 10px;
+  font-size: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.wp-breakdown-report__chart-tooltip-label {
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+@media print {
+  .wp-breakdown-report__table-wrap {
+    overflow: visible;
+  }
+
+  .wp-breakdown-report__sticky-col {
+    position: static;
+  }
+
+  .wp-breakdown-report__region:not(:last-child) {
+    break-after: page;
+    page-break-after: always;
+  }
+
+  .wp-breakdown-report__region {
+    break-inside: auto;
+    page-break-inside: auto;
+  }
+
+  .wp-breakdown-report__table tr {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+}

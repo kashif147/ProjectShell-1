@@ -130,7 +130,7 @@ const LeaversReport = () => {
                         </Col>
                     </Row>
                     <div className="ag-theme-alpine" style={{ height: "600px", width: "100%" }}>
-                        <AgGridReact columnDefs={columnDefs} rowData={rowData} pagination={true} paginationPageSize={pagination.pageSize} paginationPageSizeSelector={[500, 1000, 2000, 5000]} onGridReady={onGridReady} onPaginationChanged={onPaginationChanged} loading={loading} animateRows={true} rowSelection="multiple" suppressRowClickSelection={true} defaultColDef={{ resizable: true, sortable: true, filter: true }} />
+                        <AgGridReact columnDefs={columnDefs} rowData={rowData} pagination={true} paginationPageSize={pagination.pageSize} paginationPageSizeSelector={[500, 1000, 2000, 5000]} onGridReady={onGridReady} onPaginationChanged={onPaginationChanged} loading={loading} animateRows={true} defaultColDef={{ resizable: true, sortable: true, filter: true }} />
                     </div>
                 </Card>
             </div>

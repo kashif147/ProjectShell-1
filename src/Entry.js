@@ -229,6 +229,12 @@ const ComparisonReport = lazyWithRetry(
 const LiveStatsReport = lazyWithRetry(
   () => import("./pages/reports/LiveStatsReport"),
 );
+const StatisticsReport = lazyWithRetry(
+  () => import("./pages/reports/StatisticsReport"),
+);
+const WorkplaceBreakdownReport = lazyWithRetry(
+  () => import("./pages/reports/WorkplaceBreakdownReport"),
+);
 const MembershipListingReport = lazyWithRetry(
   () => import("./pages/reports/MembershipListingReport"),
 );
@@ -304,7 +310,12 @@ function Entry() {
   ];
 
   const showSidebar = !noSidebarRoutes.includes(location.pathname);
-  const showHeaderDetails = showSidebar;
+
+  /** Reports hub — cards only; no breadcrumb, toolbar, templates, or header actions. */
+  const noHeaderDetailsRoutes = ["/Reports"];
+  const normalizedPath = String(location.pathname || "").replace(/\/$/, "") || "/";
+  const showHeaderDetails =
+    showSidebar && !noHeaderDetailsRoutes.includes(normalizedPath);
 
   // Debug logging
   console.log("Entry Debug - Current pathname:", location.pathname);
@@ -366,6 +377,8 @@ function Entry() {
                   style={{
                     flex: 1,
                     minHeight: 0,
+                    overflowY:
+                      location.pathname === "/applicationMgt" ? "hidden" : undefined,
                     scrollbarWidth:
                       location.pathname === "/CasesDetails" ||
                       location.pathname === "/RemindersDetails" ||
@@ -637,7 +650,11 @@ function Entry() {
                       <Route
                         path="Reports"
                         element={
-                          <ProtectedRoute>
+                          <ProtectedRoute
+                            requiredPermission={
+                              RoutePermissions["Reports"]
+                            }
+                          >
                             <ReportsIndex />
                           </ProtectedRoute>
                         }
@@ -1162,6 +1179,28 @@ function Entry() {
                         element={
                           <ProtectedRoute requiredPermission={RoutePermissions["LiveStatsReport"]}>
                             <LiveStatsReport />
+                          </ProtectedRoute>
+                        }
+                      />
+                      <Route
+                        path="StatisticsReport"
+                        element={
+                          <ProtectedRoute
+                            requiredPermission={RoutePermissions["StatisticsReport"]}
+                          >
+                            <StatisticsReport />
+                          </ProtectedRoute>
+                        }
+                      />
+                      <Route
+                        path="WorkplaceBreakdownReport"
+                        element={
+                          <ProtectedRoute
+                            requiredPermission={
+                              RoutePermissions["WorkplaceBreakdownReport"]
+                            }
+                          >
+                            <WorkplaceBreakdownReport />
                           </ProtectedRoute>
                         }
                       />

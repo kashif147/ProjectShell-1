@@ -15,7 +15,14 @@ const MultiFilterDropdown = ({
   selectedValues = [],
   operator: propOperator = "==",
   onApply,
+  formatOptionLabel,
 }) => {
+  const renderOptionLabel = (option) => {
+    if (typeof formatOptionLabel === "function") {
+      return formatOptionLabel(option);
+    }
+    return option;
+  };
   const [open, setOpen] = useState(false);
   const [tempSelectedValues, setTempSelectedValues] = useState(selectedValues);
 
@@ -184,7 +191,7 @@ const MultiFilterDropdown = ({
                 checked={isChecked}
                 onChange={() => handleCheckboxChange(option)}
               >
-                {option}
+                {renderOptionLabel(option)}
               </Checkbox>
             );
           })}

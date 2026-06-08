@@ -355,10 +355,10 @@ export const configurationItems = [
 
 export const reportItems = [
   createMenuItem(
-    "Cancelled Members Report",
-    <FaUserTimes />,
-    "Cancelled Members Report",
-    ["subscriptions:read"]
+    "Membership Reports",
+    <FaFileAlt />,
+    "Membership Reports",
+    ["reporting:read"]
   ),
   createMenuItem(
     "Comparison Report",
@@ -389,42 +389,6 @@ export const reportItems = [
     <FaGavel />,
     "Executive Council Report + drill down listings",
     ["executive:council:report:read"]
-  ),
-  createMenuItem(
-    "Joiners Report",
-    <FaUserPlus />,
-    "Joiners Report",
-    []
-  ),
-  createMenuItem(
-    "Leavers Report",
-    <FaUserMinus />,
-    "Leavers Report",
-    []
-  ),
-  createMenuItem(
-    "Live Stats",
-    <FaChartPie />,
-    "Live Stats",
-    ["reporting:read"]
-  ),
-  createMenuItem(
-    "New Members Report",
-    <FaUserEdit />,
-    "New Members Report",
-    []
-  ),
-  createMenuItem(
-    "Resigned Members Report",
-    <FaUserSlash />,
-    "Resigned Members Report",
-    []
-  ),
-  createMenuItem(
-    "Suspended Members Report",
-    <FaUserLock />,
-    "Suspended Members Report",
-    ["SUSPENDED:MEMBERS:REPORT:READ"]
   ),
 ];
 

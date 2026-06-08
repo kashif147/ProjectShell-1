@@ -22,6 +22,8 @@ import { bumpWriteOffsReload } from "../../utils/writeOffsWorkspace";
 import { bumpGeneralLedgerReload } from "../../utils/generalLedgerWorkspace";
 import { bumpReconciliationReload } from "../../utils/reconciliationWorkspace";
 import { bumpMembershipListingReportReload } from "../../utils/membershipListingReportWorkspace";
+import { bumpMembershipStatisticsReportReload } from "../../utils/membershipStatisticsReportWorkspace";
+import { bumpWorkplaceBreakdownReportReload } from "../../utils/workplaceBreakdownReportWorkspace";
 
 function Gridmenu({ title, screenName, setColumnsDragbe, columnsForFilter, setColumnsForFilter }) {
   const dispatch = useDispatch();
@@ -48,8 +50,14 @@ function Gridmenu({ title, screenName, setColumnsDragbe, columnsForFilter, setCo
     (location.pathname || "").toLowerCase() === "/generalledger";
   const isReconciliationScreen =
     (location.pathname || "").toLowerCase() === "/reconciliation";
+  const normalizedGridPath = (location.pathname || "")
+    .replace(/\/$/, "")
+    .toLowerCase();
   const isMembershipListingReportScreen =
-    (location.pathname || "").toLowerCase() === "/membershiplistingreport";
+    normalizedGridPath === "/membershiplistingreport";
+  const isStatisticsReportScreen = normalizedGridPath === "/statisticsreport";
+  const isWorkplaceBreakdownReportScreen =
+    normalizedGridPath === "/workplacebreakdownreport";
   const { hasAnyRole } = useAuthorization();
   const canEditGridTemplates = hasAnyRole(["SU", "ASU"]);
   const screenChanges = useSelector(
@@ -86,6 +94,10 @@ function Gridmenu({ title, screenName, setColumnsDragbe, columnsForFilter, setCo
         ? "reconciliation"
       : isMembershipListingReportScreen
         ? "membershiplisting"
+      : isStatisticsReportScreen
+        ? "statisticsreport"
+      : isWorkplaceBreakdownReportScreen
+        ? "workplacebreakdownreport"
       : isPaymentFormsScreen
       ? "payment forms"
       : isApplicationsScreen
@@ -193,6 +205,10 @@ function Gridmenu({ title, screenName, setColumnsDragbe, columnsForFilter, setCo
         bumpReconciliationReload();
       } else if (isMembershipListingReportScreen) {
         bumpMembershipListingReportReload();
+      } else if (isStatisticsReportScreen) {
+        bumpMembershipStatisticsReportReload();
+      } else if (isWorkplaceBreakdownReportScreen) {
+        bumpWorkplaceBreakdownReportReload();
       }
     } catch (error) {
       console.error("Error updating template:", error);
