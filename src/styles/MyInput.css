@@ -271,6 +271,31 @@
   letter-spacing: 0.05em;
 }
 
+.my-input-clear {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  margin-right: 8px;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: #bfbfbf;
+  font-size: 14px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.my-input-clear:hover {
+  color: #8c8c8c;
+}
+
+.my-input-container.disabled .my-input-clear {
+  display: none;
+}
+
 .my-input-field--iban {
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono",
     "Courier New", monospace;

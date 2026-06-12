@@ -621,10 +621,42 @@ function HeaderDetails({
     }
 
     const openBulkApprovalProcessingModal = () => {
-      // State to manage date and processing
-      let selectedDate = null;
+      const isValidProcessingDate = (date) =>
+        date && dayjs.isDayjs(date) && date.isValid();
+
+      const initialDate = isValidProcessingDate(tempSelectedDate)
+        ? tempSelectedDate
+        : dayjs().startOf("day");
+
+      let selectedDate = initialDate;
       let isProcessing = false;
       let modalRef = null;
+
+      const syncApproveButton = (date, { loading = false } = {}) => {
+        if (!modalRef) return;
+        const enabled = isValidProcessingDate(date);
+        modalRef.update({
+          okButtonProps: {
+            disabled: !enabled || loading,
+            loading,
+            style: {
+              backgroundColor: "#45669d",
+              borderColor: "#45669d",
+              color: "white",
+              opacity: loading ? 0.7 : 1,
+            },
+          },
+          cancelButtonProps: {
+            disabled: loading,
+            style: {
+              borderColor: "#d9d9d9",
+              color: "rgba(0, 0, 0, 0.88)",
+              opacity: loading ? 0.5 : 1,
+              pointerEvents: loading ? "none" : "auto",
+            },
+          },
+        });
+      };
 
       // Create the modal
       modalRef = Modal.confirm({
@@ -637,23 +669,11 @@ function HeaderDetails({
             <MyDatePicker1
               label="Processing Date"
               name="processingDate"
-              value={tempSelectedDate}
+              value={initialDate}
               onChange={(date) => {
+                selectedDate = date;
                 setTempSelectedDate(date);
-                selectedDate = date; // Also store in the closure variable
-                if (modalRef) {
-                  modalRef.update({
-                    okButtonProps: {
-                      disabled: !date,
-                      style: date
-                        ? {
-                            backgroundColor: "#45669d",
-                            borderColor: "#45669d",
-                          }
-                        : {},
-                    },
-                  });
-                }
+                syncApproveButton(date);
               }}
               required={true}
               placeholder="Select processing date"
@@ -686,7 +706,7 @@ function HeaderDetails({
         okText: "Approve",
         cancelText: "Cancel",
         okButtonProps: {
-          disabled: true,
+          disabled: !isValidProcessingDate(initialDate),
           style: {
             backgroundColor: "#45669d",
             borderColor: "#45669d",
@@ -700,7 +720,7 @@ function HeaderDetails({
           },
         },
         onOk: async () => {
-          if (!selectedDate) {
+          if (!isValidProcessingDate(selectedDate)) {
             MyAlert(
               "error",
               "Date Required",
@@ -711,26 +731,7 @@ function HeaderDetails({
 
           // Set processing state
           isProcessing = true;
-          if (modalRef) {
-            modalRef.update({
-              okButtonProps: {
-                disabled: true,
-                loading: true,
-                style: {
-                  backgroundColor: "#45669d",
-                  borderColor: "#45669d",
-                  opacity: 0.7,
-                },
-              },
-              cancelButtonProps: {
-                disabled: true,
-                style: {
-                  opacity: 0.5,
-                  pointerEvents: "none",
-                },
-              },
-            });
-          }
+          syncApproveButton(selectedDate, { loading: true });
 
           try {
             const applicationIds = selectedApplications; // It's already an array of IDs
@@ -757,27 +758,7 @@ function HeaderDetails({
               });
               if (!proceed) {
                 isProcessing = false;
-                if (modalRef) {
-                  modalRef.update({
-                    okButtonProps: {
-                      disabled: !selectedDate,
-                      loading: false,
-                      style: selectedDate
-                        ? {
-                            backgroundColor: "#45669d",
-                            borderColor: "#45669d",
-                          }
-                        : {},
-                    },
-                    cancelButtonProps: {
-                      disabled: false,
-                      style: {
-                        borderColor: "#d9d9d9",
-                        color: "rgba(0, 0, 0, 0.88)",
-                      },
-                    },
-                  });
-                }
+                syncApproveButton(selectedDate, { loading: false });
                 return Promise.reject();
               }
             }
@@ -815,11 +796,45 @@ function HeaderDetails({
             message.destroy(processingKey);
 
             if (response.status === 200 || response.status === 204) {
-              MyAlert(
-                "success",
-                "Approval Successful",
-                `Successfully approved ${applicationIds.length} application(s) with processing date ${dayjs(selectedDate).format("DD/MM/YYYY")}!`,
+              const { successful = 0, failed = 0, results = [] } =
+                response.data || {};
+              const processingDateLabel = dayjs(selectedDate).format(
+                "DD/MM/YYYY",
               );
+
+              if (successful > 0 && failed === 0) {
+                MyAlert(
+                  "success",
+                  "Approval Successful",
+                  `Successfully approved ${successful} application(s) with processing date ${processingDateLabel}!`,
+                );
+              } else if (successful > 0 && failed > 0) {
+                const failedDetails = results
+                  .filter((r) => !r.success)
+                  .map((r) => `${r.applicationId}: ${r.error || "failed"}`)
+                  .slice(0, 5)
+                  .join("; ");
+                MyAlert(
+                  "warning",
+                  "Partial Approval",
+                  `Approved ${successful} application(s); ${failed} failed. ${failedDetails}`,
+                );
+              } else {
+                const failedDetails = results
+                  .map((r) => `${r.applicationId}: ${r.error || "failed"}`)
+                  .slice(0, 5)
+                  .join("; ");
+                MyAlert(
+                  "error",
+                  "Approval Failed",
+                  failedDetails ||
+                    response.data?.message ||
+                    "No applications were approved.",
+                );
+                isProcessing = false;
+                syncApproveButton(selectedDate, { loading: false });
+                return Promise.reject();
+              }
 
               // Clear selected IDs context
               setSelectedIds([]);
@@ -865,27 +880,7 @@ function HeaderDetails({
 
             // Reset modal state on error
             isProcessing = false;
-            if (modalRef) {
-              modalRef.update({
-                okButtonProps: {
-                  disabled: !selectedDate,
-                  loading: false,
-                  style: selectedDate
-                    ? {
-                        backgroundColor: "#45669d",
-                        borderColor: "#45669d",
-                      }
-                    : {},
-                },
-                cancelButtonProps: {
-                  disabled: false,
-                  style: {
-                    borderColor: "#d9d9d9",
-                    color: "rgba(0, 0, 0, 0.88)",
-                  },
-                },
-              });
-            }
+            syncApproveButton(selectedDate, { loading: false });
 
             if (error.code === "ECONNABORTED") {
               MyAlert(

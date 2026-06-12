@@ -39,7 +39,10 @@ import {
 import utc from "dayjs/plugin/utc";
 import timezone from "dayjs/plugin/timezone";
 import dayjs from "dayjs";
+import { useJsApiLoader, StandaloneSearchBox } from "@react-google-maps/api";
 import "../../styles/MembershipForm.css";
+
+const GOOGLE_MAPS_LIBRARIES = ["places", "maps"];
 
 /** CustomSelect uses option label as <select> value; API often stores gender lowercase (e.g. male). */
 function normalizeGenderToSelectLabel(raw, options) {
@@ -485,18 +488,20 @@ function collectMembershipFormValidationErrors(formData, options = {}) {
     requireText(formData.discipline, "discipline", "Discipline");
   }
 
-  if (formData.nursingProgramme === "Yes") {
-    requireText(
-      formData.nursingSpecialization,
-      "nursingSpecialization",
-      "Primary Nurse Type",
-    );
-  } else if (formData.nursingProgramme === "No") {
-    requireText(
-      formData.nmbiNumber,
-      "nmbiNumber",
-      "NMBI No. / An Bord Altranais Number",
-    );
+  if (!undergradEducationalActive) {
+    if (formData.nursingProgramme === "Yes") {
+      requireText(
+        formData.nursingSpecialization,
+        "nursingSpecialization",
+        "Primary Nurse Type",
+      );
+    } else if (formData.nursingProgramme === "No") {
+      requireText(
+        formData.nmbiNumber,
+        "nmbiNumber",
+        "NMBI No. / An Bord Altranais Number",
+      );
+    }
   }
 
   requireText(formData.primarySection, "primarySection", "Primary Section");
@@ -517,6 +522,10 @@ function collectMembershipFormValidationErrors(formData, options = {}) {
     requireDate(formData.startDate, "startDate", "Start Date");
   }
 
+  if (showPaymentInformation) {
+    requireText(formData.paymentType, "paymentType", "Payment Type");
+  }
+
   if (payrollDeductionPayment && showPaymentInformation) {
     if (!workLocationAllowsSalaryDeduction) {
       addIssue(
@@ -525,7 +534,9 @@ function collectMembershipFormValidationErrors(formData, options = {}) {
           ? `Salary Deduction is not enabled for work location "${formData.workLocation}"`
           : "Work Location (required for Salary Deduction)",
       );
-      addIssue("paymentType", "Payment Type");
+      if (hasRequiredText(formData.paymentType)) {
+        addIssue("paymentType", "Payment Type");
+      }
     }
     requireText(formData.payrollNumber, "payrollNumber", "Payroll No.");
   }
@@ -590,6 +601,13 @@ const MembershipForm = ({
     (state) => state.countries,
   );
 
+  const addressSearchRef = useRef(null);
+  const { isLoaded: isMapsLoaded } = useJsApiLoader({
+    id: "google-map-script",
+    googleMapsApiKey: "AIzaSyCJYpj8WV5Rzof7O3jGhW9XabD0J4Yqe1o",
+    libraries: GOOGLE_MAPS_LIBRARIES,
+  });
+
   const { categoryData, currentCategoryId } = useSelector(
     (state) => state.categoryLookup,
   );
@@ -610,6 +628,8 @@ const MembershipForm = ({
   const [saveLoading, setSaveLoading] = useState(false);
   const paymentTypeSectionRef = useRef(null);
   const shouldFocusPaymentTypeRef = useRef(false);
+  const [paymentTypeReselectRequired, setPaymentTypeReselectRequired] =
+    useState(false);
   const [fieldErrors, setFieldErrors] = useState({});
   const [initialMembershipCategory, setInitialMembershipCategory] =
     useState("");
@@ -705,6 +725,8 @@ const MembershipForm = ({
     // Choose source dynamically
     const source = profileDetails || searchAoiRes;
     if (!source) return;
+
+    setPaymentTypeReselectRequired(false);
 
     const subDoc = pickPrimarySubscription(ProfileSubData?.data || []);
 
@@ -1122,6 +1144,7 @@ const MembershipForm = ({
   };
 
   const handleChange = (field, value) => {
+    let paymentTypeCleared = false;
     const updatedData = { ...formData, [field]: value };
     if (field === "workLocation") {
       if (typeof value === "object" && value !== null) {
@@ -1142,11 +1165,8 @@ const MembershipForm = ({
       ) {
         updatedData.paymentType = "";
         updatedData.payrollNumber = "";
-      }
-      if (
-        !allowsSalaryDeduction &&
-        String(updatedData.workLocation || "").trim()
-      ) {
+        paymentTypeCleared = true;
+        setPaymentTypeReselectRequired(true);
         shouldFocusPaymentTypeRef.current = true;
       }
 
@@ -1243,8 +1263,8 @@ const MembershipForm = ({
         ) {
           updatedData.paymentType = "";
           updatedData.payrollNumber = "";
-        }
-        if (!allowsSalaryDeduction) {
+          paymentTypeCleared = true;
+          setPaymentTypeReselectRequired(true);
           shouldFocusPaymentTypeRef.current = true;
         }
       }
@@ -1266,6 +1286,9 @@ const MembershipForm = ({
       }
       if (!isPayrollOrSalaryDeduction(value)) {
         updatedData.payrollNumber = "";
+      }
+      if (hasRequiredText(value)) {
+        setPaymentTypeReselectRequired(false);
       }
     }
     if (
@@ -1294,8 +1317,100 @@ const MembershipForm = ({
           changed = true;
         }
       }
+      if (paymentTypeCleared) {
+        next.paymentType = true;
+        changed = true;
+      }
       return changed ? next : prev;
     });
+  };
+
+  const handleClearAddressSearch = () => {
+    handleChange("searchAddress", "");
+  };
+
+  const handlePlacesChanged = () => {
+    const places = addressSearchRef.current?.getPlaces?.();
+    if (!places?.length) return;
+
+    const place = places[0];
+    const placeId = place.place_id;
+    if (!placeId || !window.google?.maps?.places) return;
+
+    const service = new window.google.maps.places.PlacesService(
+      document.createElement("div"),
+    );
+
+    service.getDetails(
+      {
+        placeId,
+        fields: ["address_components", "name", "formatted_address"],
+      },
+      (details, status) => {
+        if (
+          status !== window.google.maps.places.PlacesServiceStatus.OK ||
+          !details
+        ) {
+          return;
+        }
+
+        const components = details.address_components || [];
+        const getComponent = (type) =>
+          components.find((c) => c.types.includes(type))?.long_name || "";
+        const getComponentShortName = (type) =>
+          components.find((c) => c.types.includes(type))?.short_name || "";
+
+        const streetNumber = getComponent("street_number");
+        const route = getComponent("route");
+        const neighborhood = getComponent("neighborhood") || "";
+        const sublocality = getComponent("sublocality") || "";
+        const town =
+          getComponent("locality") || getComponent("postal_town") || "";
+        const county = getComponent("administrative_area_level_1") || "";
+        const postalCode = getComponent("postal_code");
+        const countryLongName = getComponent("country");
+        const countryShortName = getComponentShortName("country");
+
+        let countryDisplayName = "";
+        if (countryLongName || countryShortName) {
+          const matchedCountry = countriesOptions?.find(
+            (c) =>
+              c?.code === countryLongName ||
+              c?.code === countryShortName ||
+              c?.name === countryLongName ||
+              c?.displayname === countryLongName,
+          );
+          countryDisplayName =
+            matchedCountry?.displayname ||
+            matchedCountry?.label ||
+            countryLongName ||
+            "";
+        }
+
+        setFormData((prev) => ({
+          ...prev,
+          searchAddress: details.formatted_address || prev.searchAddress,
+          addressLine1: `${streetNumber} ${route}`.trim(),
+          addressLine2: neighborhood || sublocality,
+          townCity: town,
+          countyState: county.trim(),
+          eircode: postalCode.trim(),
+          country: countryDisplayName || prev.country,
+          nata: false,
+        }));
+        setFieldErrors((prev) => {
+          const next = { ...prev };
+          let changed = false;
+          ["addressLine1", "townCity", "country"].forEach((field) => {
+            if (next[field]) {
+              delete next[field];
+              changed = true;
+            }
+          });
+          return changed ? next : prev;
+        });
+      },
+    );
   };
 
   // Sync isDeceased prop with formData and apply deceased logic
@@ -1347,44 +1462,6 @@ const MembershipForm = ({
     [formData.paymentType],
   );
 
-  const showPaymentTypeSalaryDeductionNotice =
-    !isFormReadOnly &&
-    Boolean(String(formData.workLocation || "").trim()) &&
-    !workLocationAllowsSalaryDeduction;
-
-  const paymentTypeHighlightStyle = showPaymentTypeSalaryDeductionNotice
-    ? {
-        border: "2px solid #faad14",
-        borderRadius: "8px",
-        padding: "8px",
-        backgroundColor: "#fffbe6",
-        marginBottom: "8px",
-      }
-    : undefined;
-
-  useEffect(() => {
-    if (
-      !showPaymentTypeSalaryDeductionNotice ||
-      !shouldFocusPaymentTypeRef.current
-    ) {
-      return;
-    }
-    shouldFocusPaymentTypeRef.current = false;
-
-    const section = paymentTypeSectionRef.current;
-    if (!section) return;
-
-    const scrollContainer = section.closest(".membership-form-container");
-    if (scrollContainer) {
-      scrollElementWithinContainer(section, scrollContainer);
-    }
-
-    requestAnimationFrame(() => {
-      const select = section.querySelector("select:not([disabled])");
-      select?.focus({ preventScroll: true });
-    });
-  }, [showPaymentTypeSalaryDeductionNotice, formData.workLocation]);
-
   const undergradEducationalActive = useMemo(
     () =>
       isUndergraduateStudentMembershipCategory(
@@ -1414,6 +1491,52 @@ const MembershipForm = ({
 
   const showPaymentInformation =
     !honoraryMembershipActive && !undergradEducationalActive;
+
+  const showPaymentTypeSalaryDeductionNotice =
+    !isFormReadOnly &&
+    showPaymentInformation &&
+    Boolean(String(formData.workLocation || "").trim()) &&
+    !workLocationAllowsSalaryDeduction &&
+    isPayrollOrSalaryDeduction(formData.paymentType);
+
+  const showPaymentTypeReselectHighlight =
+    !isFormReadOnly &&
+    showPaymentInformation &&
+    paymentTypeReselectRequired &&
+    !hasRequiredText(formData.paymentType);
+
+  const showPaymentTypeAttention =
+    showPaymentTypeSalaryDeductionNotice || showPaymentTypeReselectHighlight;
+
+  const paymentTypeHighlightStyle = showPaymentTypeAttention
+    ? {
+        border: "2px solid #faad14",
+        borderRadius: "8px",
+        padding: "8px",
+        backgroundColor: "#fffbe6",
+        marginBottom: "8px",
+      }
+    : undefined;
+
+  useEffect(() => {
+    if (!showPaymentTypeAttention || !shouldFocusPaymentTypeRef.current) {
+      return;
+    }
+    shouldFocusPaymentTypeRef.current = false;
+
+    const section = paymentTypeSectionRef.current;
+    if (!section) return;
+
+    const scrollContainer = section.closest(".membership-form-container");
+    if (scrollContainer) {
+      scrollElementWithinContainer(section, scrollContainer);
+    }
+
+    requestAnimationFrame(() => {
+      const select = section.querySelector("select:not([disabled])");
+      select?.focus({ preventScroll: true });
+    });
+  }, [showPaymentTypeAttention, formData.workLocation, formData.paymentType]);
 
   const showRemindersCancellations =
     !undergradEducationalActive && !honoraryMembershipActive;
@@ -1697,13 +1820,41 @@ const MembershipForm = ({
                   </Radio.Group>
                 </div>
               </MembershipFormField>
-              <MyInput
-                label="Search for your address"
-                placeholder="Search address"
-                value={formData.searchAddress}
-                onChange={(e) => handleChange("searchAddress", e.target.value)}
-                disabled={isFormReadOnly}
-              />
+              {isMapsLoaded ? (
+                <div className="membership-address-search-field">
+                  <StandaloneSearchBox
+                    onLoad={(ref) => {
+                      addressSearchRef.current = ref;
+                    }}
+                    onPlacesChanged={handlePlacesChanged}
+                  >
+                    <MyInput
+                      label="Search for your address"
+                      name="searchAddress"
+                      placeholder="Search address or Eircode"
+                      value={formData.searchAddress}
+                      onChange={(e) =>
+                        handleChange("searchAddress", e.target.value)
+                      }
+                      onClear={handleClearAddressSearch}
+                      allowClear
+                      disabled={isFormReadOnly}
+                    />
+                  </StandaloneSearchBox>
+                </div>
+              ) : (
+                <MyInput
+                  label="Search for your address"
+                  placeholder="Search address or Eircode"
+                  value={formData.searchAddress}
+                  onChange={(e) =>
+                    handleChange("searchAddress", e.target.value)
+                  }
+                  onClear={handleClearAddressSearch}
+                  allowClear
+                  disabled={isFormReadOnly}
+                />
+              )}
               <MembershipFormGrid>
                 <MembershipFormField field="addressLine1" fieldErrors={fieldErrors}>
                   <MyInput
@@ -2088,7 +2239,9 @@ const MembershipForm = ({
                   value={formData.nmbiNumber}
                   onChange={(e) => handleChange("nmbiNumber", e.target.value)}
                   required={
-                    !isFormReadOnly && formData.nursingProgramme === "No"
+                    !isFormReadOnly &&
+                    !undergradEducationalActive &&
+                    formData.nursingProgramme === "No"
                   }
                 />
               </MembershipFormField>
@@ -2102,7 +2255,8 @@ const MembershipForm = ({
                     className={`my-input-label mb-1 ${fieldErrors.nursingSpecialization ? "error" : ""}`}
                   >
                     Primary Nurse Type
-                    {formData.nursingProgramme === "Yes" ? (
+                    {!undergradEducationalActive &&
+                    formData.nursingProgramme === "Yes" ? (
                       <span className="text-danger"> *</span>
                     ) : null}
                   </label>
@@ -2330,12 +2484,21 @@ const MembershipForm = ({
 
             {showPaymentInformation && (
               <MembershipFormCard title="Payment Information">
-                <div ref={paymentTypeSectionRef}>
+                <div
+                  ref={paymentTypeSectionRef}
+                  style={paymentTypeHighlightStyle}
+                >
                   {showPaymentTypeSalaryDeductionNotice && (
                     <div className="membership-form-notice">
                       Salary Deduction is not available for work location &quot;
                       {formData.workLocation}&quot;. Please choose another
                       payment method.
+                    </div>
+                  )}
+                  {showPaymentTypeReselectHighlight && (
+                    <div className="membership-form-notice">
+                      Payment type was cleared after changing work location.
+                      Please select a payment type before saving.
                     </div>
                   )}
                   <MembershipFormField field="paymentType" fieldErrors={fieldErrors}>
@@ -2347,9 +2510,10 @@ const MembershipForm = ({
                         handleChange("paymentType", e.target.value)
                       }
                       disabled={isFormReadOnly}
+                      required={!isFormReadOnly}
                       isIDs={false}
                       options={filteredPaymentTypeOptions}
-                      isMarginBtm={!showPaymentTypeSalaryDeductionNotice}
+                      isMarginBtm={!showPaymentTypeAttention}
                     />
                   </MembershipFormField>
                 </div>

@@ -150,6 +150,8 @@ const MyInput = ({
   maxLength,
   prefix,
   success = false,
+  allowClear = false,
+  onClear,
 }) => {
   const uid = useId().replace(/:/g, "");
   const inputId = id ?? (name ? String(name) : `myinput-${uid}`);
@@ -404,6 +406,26 @@ const MyInput = ({
           />
         ) : (
           <input type={type} {...commonProps} />
+        )}
+        {allowClear && value && !disabled && type !== "mobile" && (
+          <button
+            type="button"
+            className="my-input-clear"
+            aria-label="Clear"
+            tabIndex={-1}
+            onMouseDown={(e) => e.preventDefault()}
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              if (onClear) {
+                onClear();
+                return;
+              }
+              onChange({ target: { name, value: "" } });
+            }}
+          >
+            ×
+          </button>
         )}
         {showError && <span className="error-icon">ⓘ</span>}
         {!showError && success && <span className="success-icon">✓</span>}

@@ -365,20 +365,18 @@
   align-items: flex-end;
 }
 
-.application-form.compact .form-control-band--nurse-type {
-  height: auto !important;
-  min-height: 36px;
-  max-height: none !important;
-  padding: 8px 12px;
-  align-items: flex-start;
-  background-color: #f0fdf4;
-  border: 1px solid #a4e3ba;
+.application-form.compact .nurse-type-box {
+  background-color: #1173d41a;
+  border: 1px solid #97c5efff;
+  min-height: 0;
 }
 
-.application-form.compact
-  .info-box--nurse-type.info-box--error
-  .form-control-band--nurse-type {
+.application-form.compact .nurse-type-box.info-box--error {
   border-color: #ff4d4f;
+}
+
+.application-form.compact .nurse-type-box .my-input-label {
+  margin-bottom: 8px;
 }
 
 .application-form.compact .form-grid--contact-phones,

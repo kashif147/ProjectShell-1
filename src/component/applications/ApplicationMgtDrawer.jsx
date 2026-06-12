@@ -104,7 +104,13 @@ function AppFormCell({ children, span = 1, className = "" }) {
 }
 
 const ApplicationMgtSelect = (props) => (
-  <CustomSelect showSearch sortOptions isMarginBtm={false} {...props} />
+  <CustomSelect
+    showSearch
+    sortOptions
+    allowClear
+    isMarginBtm={false}
+    {...props}
+  />
 );
 
 const SALARY_DEDUCTION_PAYMENT_TYPE = "Salary Deduction";
@@ -1015,7 +1021,7 @@ function ApplicationMgtDrawer({
     } else {
       disableFtn(true);
     }
-  }, []);
+  }, [isEdit, disableFtn]);
 
   useEffect(() => {
     loadedApplicationKeyRef.current = null;
@@ -1334,7 +1340,17 @@ function ApplicationMgtDrawer({
   );
   const isSalaryDeductionPayment =
     InfData.subscriptionDetails?.paymentType === SALARY_DEDUCTION_PAYMENT_TYPE;
+  const isUndergraduateStudentCategory = useMemo(
+    () =>
+      membershipCategoryMatchesProductId(
+        InfData?.subscriptionDetails?.membershipCategory,
+        STUDENT_MEMBERSHIP_CATEGORY_ID,
+        categoryData,
+      ),
+    [InfData?.subscriptionDetails?.membershipCategory, categoryData],
+  );
   const isNmbiNumberRequired =
+    !isUndergraduateStudentCategory &&
     InfData.professionalDetails?.nursingAdaptationProgramme === false;
   const showNurseTypeField =
     InfData.professionalDetails?.nursingAdaptationProgramme === true;
@@ -1488,6 +1504,11 @@ function ApplicationMgtDrawer({
   };
 
   const validateForm = () => {
+    const isUndergraduateStudent = membershipCategoryMatchesProductId(
+      InfData?.subscriptionDetails?.membershipCategory,
+      STUDENT_MEMBERSHIP_CATEGORY_ID,
+      categoryData,
+    );
     const requiredFields = [
       "title",
       "forename",
@@ -1616,6 +1637,9 @@ function ApplicationMgtDrawer({
         return;
       }
       if (field === "joinYouthForum" && !requiresYouthForumQuestions) {
+        return;
+      }
+      if (field === "nursingAdaptationProgramme" && isUndergraduateStudent) {
         return;
       }
 
@@ -1768,13 +1792,19 @@ function ApplicationMgtDrawer({
         missingFieldNames.push(fieldLabels.otherSecondarySection);
       }
     }
-    if (InfData.professionalDetails?.nursingAdaptationProgramme === false) {
+    if (
+      !isUndergraduateStudent &&
+      InfData.professionalDetails?.nursingAdaptationProgramme === false
+    ) {
       if (!InfData.professionalDetails.nmbiNumber?.trim()) {
         newErrors.nmbiNumber = "NMBI No/An Board Altranais Number is required";
         missingFieldNames.push(fieldLabels.nmbiNumber);
       }
     }
-    if (InfData.professionalDetails?.nursingAdaptationProgramme === true) {
+    if (
+      !isUndergraduateStudent &&
+      InfData.professionalDetails?.nursingAdaptationProgramme === true
+    ) {
       const nt = InfData.professionalDetails.nurseType;
       if (
         nt === undefined ||
@@ -3233,12 +3263,6 @@ function ApplicationMgtDrawer({
     message.success("Ready to add new member");
   };
 
-  const isUndergraduateStudentCategory = membershipCategoryMatchesProductId(
-    InfData?.subscriptionDetails?.membershipCategory,
-    STUDENT_MEMBERSHIP_CATEGORY_ID,
-    categoryData,
-  );
-
   const membershipStatusValue =
     InfData?.subscriptionDetails?.membershipStatus || "";
   const isNewOrGraduateMembershipStatus = ["new", "graduate"].includes(
@@ -4310,7 +4334,10 @@ function ApplicationMgtDrawer({
                         }}
                       >
                         Are you currently undertaking a nursing adaptation
-                        programme? <span className="text-danger">*</span>
+                        programme?
+                        {!isUndergraduateStudentCategory ? (
+                          <span className="text-danger"> *</span>
+                        ) : null}
                       </label>
                       <div className="form-control-band">
                         <Radio.Group
@@ -4373,7 +4400,7 @@ function ApplicationMgtDrawer({
               {showNurseTypeField && (
               <AppFormCell span="full">
                 <div
-                  className={`info-box info-box--field-aligned info-box--field-aligned--wrap info-box--nurse-type ${
+                  className={`question-box nurse-type-box ${
                     errors?.nurseType ? "info-box--error" : ""
                   }`}
                 >
@@ -4389,28 +4416,29 @@ function ApplicationMgtDrawer({
                     }}
                   >
                     Please tick one of the following
-                    <span className="text-danger">*</span>
+                    {!isUndergraduateStudentCategory ? (
+                      <span className="text-danger">*</span>
+                    ) : null}
                   </label>
-                  <div className="form-control-band form-control-band--nurse-type">
-                    <Radio.Group
-                      name="nurseType"
-                      value={InfData.professionalDetails?.nurseType}
-                      onChange={(e) =>
-                        handleInputChange(
-                          "professionalDetails",
-                          "nurseType",
-                          e.target.value,
-                        )
-                      }
-                      disabled={
-                        InfData?.professionalDetails
-                          ?.nursingAdaptationProgramme !== true || isDisable
-                      }
-                      style={{
-                        color: "#215e97",
-                        width: "100%",
-                      }}
-                    >
+                  <Radio.Group
+                    name="nurseType"
+                    value={InfData.professionalDetails?.nurseType}
+                    onChange={(e) =>
+                      handleInputChange(
+                        "professionalDetails",
+                        "nurseType",
+                        e.target.value,
+                      )
+                    }
+                    disabled={
+                      InfData?.professionalDetails
+                        ?.nursingAdaptationProgramme !== true || isDisable
+                    }
+                    style={{
+                      color: "#215e97",
+                      width: "100%",
+                    }}
+                  >
                     <div
                       className="d-flex justify-content-between align-items-baseline flex-wrap"
                       style={{ gap: "8px" }}
@@ -4462,8 +4490,7 @@ function ApplicationMgtDrawer({
                         Registered Nurse for Intellectual Disability
                       </Radio>
                     </div>
-                    </Radio.Group>
-                  </div>
+                  </Radio.Group>
                 </div>
               </AppFormCell>
               )}
@@ -5040,24 +5067,28 @@ function ApplicationMgtDrawer({
               )}
 
               {showPreviousMembershipNo && (
-                <>
-                  <AppFormCell>
-                    <MyInput
-                      label="Previous Membership No."
-                      name="previousMembershipNo"
-                      value={InfData?.professionalDetails?.previousMembershipNo}
-                      placeholder="Enter previous membership number"
-                      disabled={isDisable}
-                      onChange={(e) =>
-                        handleInputChange(
-                          "professionalDetails",
-                          "previousMembershipNo",
-                          e.target.value,
-                        )
-                      }
-                    />
-                  </AppFormCell>
-                </>
+                <AppFormCell span="full">
+                  <AppFormGrid cols={3}>
+                    <AppFormCell>
+                      <MyInput
+                        label="Previous Membership No."
+                        name="previousMembershipNo"
+                        value={
+                          InfData?.professionalDetails?.previousMembershipNo
+                        }
+                        placeholder="Enter previous membership number"
+                        disabled={isDisable}
+                        onChange={(e) =>
+                          handleInputChange(
+                            "professionalDetails",
+                            "previousMembershipNo",
+                            e.target.value,
+                          )
+                        }
+                      />
+                    </AppFormCell>
+                  </AppFormGrid>
+                </AppFormCell>
               )}
 
               {/* Recruited By */}
