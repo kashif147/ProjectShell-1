@@ -1063,6 +1063,64 @@ function buildWorkplaceBreakdownReportColumns() {
   );
 }
 
+function buildCreditorsListReportColumns() {
+  return buildAccountsListReportColumns("CreditorsListReport", ["amount"]);
+}
+
+function buildDebtorsListReportColumns() {
+  return buildAccountsListReportColumns("DebtorsListReport", [
+    "amount",
+    "current",
+    "days30",
+    "days60",
+    "days90",
+    "over90",
+  ]);
+}
+
+function buildAccountsListReportColumns(screenKey, currencyKeys = []) {
+  const amountRender = (value) => {
+    if (value == null || value === "" || value === "—") return "—";
+    const n = Number(value);
+    if (!Number.isFinite(n)) return "—";
+    return formatCurrency(n);
+  };
+  const withSort = (col) => ({
+    ...col,
+    sorter: (a, b) => {
+      const key = Array.isArray(col.dataIndex)
+        ? col.dataIndex.join(".")
+        : col.dataIndex;
+      const av = a?.[key];
+      const bv = b?.[key];
+      if (av == null && bv == null) return 0;
+      if (av == null) return 1;
+      if (bv == null) return -1;
+      if (typeof av === "number" && typeof bv === "number") return av - bv;
+      return String(av).localeCompare(String(bv), undefined, {
+        numeric: true,
+        sensitivity: "base",
+      });
+    },
+  });
+
+  const currencyKeySet = new Set(currencyKeys);
+
+  return mergeGridColumnDefaults(
+    GRID_COLUMN_DEFAULTS[screenKey] || [],
+    {},
+  ).map((col) => {
+    const key = Array.isArray(col.dataIndex)
+      ? col.dataIndex.join(".")
+      : col.dataIndex;
+    const base = withSort(col);
+    if (currencyKeySet.has(key)) {
+      return { ...base, render: amountRender };
+    }
+    return base;
+  });
+}
+
 const staticColumns = {
   OnlinePayment: buildOnlinePaymentColumns(),
   Refunds: buildRefundsColumns(),
@@ -1072,6 +1130,8 @@ const staticColumns = {
   StatisticsReport: buildStatisticsReportColumns(),
   StatisticsReportRegion: buildStatisticsReportColumns(),
   WorkplaceBreakdownReport: buildWorkplaceBreakdownReportColumns(),
+  CreditorsListReport: buildCreditorsListReportColumns(),
+  DebtorsListReport: buildDebtorsListReportColumns(),
   Reconciliation: buildReconciliationColumns(),
   JournalAdjustments: buildJournalAdjustmentsColumns(),
   GeneralLedger: buildGeneralLedgerColumns(),

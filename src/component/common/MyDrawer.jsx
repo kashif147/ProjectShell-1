@@ -809,6 +809,8 @@ function MyDrawer({
             ) : (
               <Button
                 className="butn primary-btn"
+                loading={isLoading}
+                disabled={isLoading}
                 onClick={() => {
                   if (!isEdit) {
                     add();

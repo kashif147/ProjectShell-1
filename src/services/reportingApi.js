@@ -25,12 +25,12 @@ export function getReportingAuthHeaders() {
 
 function formatReportingError(error) {
   const status = error?.response?.status;
+  const data = error?.response?.data;
   const upstream =
-    error?.response?.data?.message ||
-    error?.response?.data?.error ||
-    (typeof error?.response?.data === "string"
-      ? error.response.data
-      : null);
+    (typeof data?.message === "string" && data.message) ||
+    (typeof data?.error?.message === "string" && data.error.message) ||
+    (typeof data?.error === "string" && data.error) ||
+    (typeof data === "string" ? data : null);
 
   if (status === 502 || status === 503 || status === 504) {
     return new Error(
@@ -89,6 +89,12 @@ export const reportingApi = {
 
   getWorkplaceBreakdown: (body) =>
     post("/reports/membership/workplace-breakdown", body),
+
+  getCreditorsList: (body) =>
+    post("/reports/membership/creditors-list", body),
+
+  getDebtorsList: (body) =>
+    post("/reports/membership/debtors-list", body),
 
   buildSnapshot: (period) =>
     post("/reports/membership/snapshots/build", { period }),

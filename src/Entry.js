@@ -238,11 +238,20 @@ const WorkplaceBreakdownReport = lazyWithRetry(
 const MembershipListingReport = lazyWithRetry(
   () => import("./pages/reports/MembershipListingReport"),
 );
+const CreditorsListReport = lazyWithRetry(
+  () => import("./pages/reports/CreditorsListReport"),
+);
+const DebtorsListReport = lazyWithRetry(
+  () => import("./pages/reports/DebtorsListReport"),
+);
 const ReportViewerDemo = lazyWithRetry(
   () => import("./features/reports/report-viewer/ReportViewerDemo"),
 );
 const ReportsIndex = lazyWithRetry(
   () => import("./features/reports/ReportsIndex"),
+);
+const AccountsReportsIndex = lazyWithRetry(
+  () => import("./features/reports/AccountsReportsIndex"),
 );
 const DashboardPage = lazyWithRetry(
   () => import("./features/dashboards/membership/DashboardPage"),
@@ -312,7 +321,7 @@ function Entry() {
   const showSidebar = !noSidebarRoutes.includes(location.pathname);
 
   /** Reports hub — cards only; no breadcrumb, toolbar, templates, or header actions. */
-  const noHeaderDetailsRoutes = ["/Reports"];
+  const noHeaderDetailsRoutes = ["/Reports", "/AccountsReports"];
   const normalizedPath = String(location.pathname || "").replace(/\/$/, "") || "/";
   const showHeaderDetails =
     showSidebar && !noHeaderDetailsRoutes.includes(normalizedPath);
@@ -656,6 +665,18 @@ function Entry() {
                             }
                           >
                             <ReportsIndex />
+                          </ProtectedRoute>
+                        }
+                      />
+                      <Route
+                        path="AccountsReports"
+                        element={
+                          <ProtectedRoute
+                            requiredPermission={
+                              RoutePermissions["AccountsReports"]
+                            }
+                          >
+                            <AccountsReportsIndex />
                           </ProtectedRoute>
                         }
                       />
@@ -1213,6 +1234,30 @@ function Entry() {
                             }
                           >
                             <MembershipListingReport />
+                          </ProtectedRoute>
+                        }
+                      />
+                      <Route
+                        path="CreditorsListReport"
+                        element={
+                          <ProtectedRoute
+                            requiredPermission={
+                              RoutePermissions["CreditorsListReport"]
+                            }
+                          >
+                            <CreditorsListReport />
+                          </ProtectedRoute>
+                        }
+                      />
+                      <Route
+                        path="DebtorsListReport"
+                        element={
+                          <ProtectedRoute
+                            requiredPermission={
+                              RoutePermissions["DebtorsListReport"]
+                            }
+                          >
+                            <DebtorsListReport />
                           </ProtectedRoute>
                         }
                       />

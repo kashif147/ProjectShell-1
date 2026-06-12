@@ -5,6 +5,7 @@ import {
   getLookupId,
   getLookupName,
   getLookupTypeName,
+  normalizeLookup,
   normalizeLookups,
 } from "../utils/lookupHierarchy";
 
@@ -23,12 +24,12 @@ const isWorkLocationLookupTypeName = (typeName) => {
   return key === "worklocation";
 };
 
-const isPaymentMethodLookupTypeName = (typeName) => {
+const isPaymentTypeLookupTypeName = (typeName) => {
   const key = String(typeName || "")
     .trim()
     .toLowerCase()
     .replace(/\s+/g, "");
-  return key === "paymenttype" || key === "paymentmethod";
+  return key === "paymenttype";
 };
 
 const sortArray = (array, key, order = 'asc') => {
@@ -64,6 +65,25 @@ export const getAllLookups = createAsyncThunk(
   }
 );
 
+export const getLookupById = createAsyncThunk(
+  "lookups/fetchLookupById",
+  async (id, { rejectWithValue }) => {
+    try {
+      const { data } = await axios.get(`${API_URL}/lookup/${id}`, {
+        headers: getAuthHeaders(),
+      });
+      const payload = data?.data ?? data;
+      return normalizeLookup(payload);
+    } catch (error) {
+      return rejectWithValue(
+        error.response?.data?.message ||
+          error.message ||
+          "Failed to fetch lookup",
+      );
+    }
+  },
+);
+
 const lookupsSlice = createSlice({
   name: "lookups",
   initialState: {
@@ -89,6 +109,8 @@ const lookupsSlice = createSlice({
     // Raw API response (optional - remove if not needed)
     lookups: [],
     lookupsloading: false,
+    lookupDetailLoading: false,
+    lookupDetailError: null,
     error: null,
     lastErrorTime: null,
   },
@@ -181,8 +203,6 @@ const lookupsSlice = createSlice({
                 state.membershipCategoryOptions.push(optionItem);
                 break;
               case "Payment Type":
-              case "Payment Method":
-              case "paymentMethod":
                 state.paymentTypeOptions.push(optionItem);
                 break;
               case "Branch":
@@ -214,7 +234,7 @@ const lookupsSlice = createSlice({
               default:
                 if (isWorkLocationLookupTypeName(lookuptype)) {
                   state.workLocationOptions.push(optionItem);
-                } else if (isPaymentMethodLookupTypeName(lookuptype)) {
+                } else if (isPaymentTypeLookupTypeName(lookuptype)) {
                   state.paymentTypeOptions.push(optionItem);
                 }
                 break;
@@ -287,6 +307,17 @@ const lookupsSlice = createSlice({
         state.lookupsloading = false;
         state.error = action.payload;
         state.lastErrorTime = Date.now();
+      })
+      .addCase(getLookupById.pending, (state) => {
+        state.lookupDetailLoading = true;
+        state.lookupDetailError = null;
+      })
+      .addCase(getLookupById.fulfilled, (state) => {
+        state.lookupDetailLoading = false;
+      })
+      .addCase(getLookupById.rejected, (state, action) => {
+        state.lookupDetailLoading = false;
+        state.lookupDetailError = action.payload;
       });
   },
 });

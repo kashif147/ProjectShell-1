@@ -532,7 +532,7 @@ function SimpleMenu({
   return (
     <>
       <Dropdown
-        dropdownRender={() => menu}
+        popupRender={() => menu}
         trigger={["hover"]}
         placement="bottomLeft"
         overlayStyle={{ width: 220, padding: "0px" }}

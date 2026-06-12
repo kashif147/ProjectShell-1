@@ -17,6 +17,42 @@
   margin-bottom: 16px;
 }
 
+.duplicate-profile-review-drawer .duplicate-review-actions-bar {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-bottom: 20px;
+  padding: 12px 16px;
+  background: #f6f8fa;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  position: sticky;
+  top: 0;
+  z-index: 30;
+}
+
+.duplicate-profile-review-drawer .duplicate-review-actions-bar-text {
+  flex: 1;
+  min-width: 220px;
+  margin: 0;
+  color: #4b5563;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.duplicate-profile-review-drawer .duplicate-review-create-new-btn.ant-btn-primary {
+  background: #45669d;
+  border-color: #45669d;
+}
+
+.duplicate-profile-review-drawer .duplicate-review-create-new-btn.ant-btn-primary:hover,
+.duplicate-profile-review-drawer .duplicate-review-create-new-btn.ant-btn-primary:focus {
+  background: #3a5685;
+  border-color: #3a5685;
+}
+
 .duplicate-profile-review-drawer .duplicate-review-section {
   margin-bottom: 24px;
 }
@@ -40,4 +76,62 @@
 
 .duplicate-profile-review-drawer .duplicate-review-actions .ant-btn {
   padding: 0 4px;
+}
+
+.duplicate-profile-review-drawer .duplicate-review-table-wrap {
+  width: 100%;
+  min-width: 0;
+}
+
+.duplicate-profile-review-drawer
+  .duplicate-review-table-wrap
+  .common-table
+  .ant-table-thead
+  > tr
+  > th,
+.duplicate-profile-review-drawer
+  .duplicate-review-table-wrap
+  .common-table
+  .ant-table-tbody
+  > tr
+  > td {
+  white-space: nowrap;
+}
+
+.duplicate-profile-review-drawer .duplicate-review-table-wrap .common-table {
+  overflow-x: hidden;
+  padding-bottom: 0 !important;
+}
+
+.duplicate-profile-review-drawer
+  .duplicate-review-table-wrap
+  .common-table
+  .ant-table-cell-fix-right {
+  position: sticky !important;
+}
+
+.duplicate-profile-review-drawer
+  .duplicate-review-table-wrap
+  .common-table
+  .ant-table-thead
+  .ant-table-cell-fix-right {
+  z-index: 18 !important;
+  background-color: var(--mainBlue, #45669d) !important;
+}
+
+.duplicate-profile-review-drawer
+  .duplicate-review-table-wrap
+  .common-table
+  .ant-table-tbody
+  .ant-table-cell-fix-right {
+  z-index: 12 !important;
+  background: #fff !important;
+}
+
+.duplicate-profile-review-drawer
+  .duplicate-review-table-wrap
+  .common-table
+  .odd-row
+  .ant-table-cell-fix-right {
+  background: var(--table-row, #f8f9fa) !important;
 }

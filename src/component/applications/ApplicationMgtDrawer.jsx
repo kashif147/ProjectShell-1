@@ -41,6 +41,10 @@ import {
   getApplicationById,
 } from "../../features/ApplicationDetailsSlice";
 import { getAllApplications } from "../../features/ApplicationSlice";
+import {
+  DUPLICATE_REVIEW_REQUIRED_MESSAGE,
+  isDuplicateReviewBlockingApproval,
+} from "../../utils/duplicateReviewApproval";
 import { buildApplicationMgtSearch } from "../../utils/applicationMgtRoute";
 import { cleanPayload } from "../../utils/Utilities";
 import MyAlert from "../common/MyAlert";
@@ -446,8 +450,7 @@ function ApplicationMgtDrawer({
     setDuplicateReviewOpen(true);
   };
   const duplicateReviewPending =
-    duplicateReviewStatus === "POTENTIAL_MATCH" ||
-    duplicateReviewStatus === "NOT_CHECKED";
+    isDuplicateReviewBlockingApproval(duplicateReviewStatus);
   const isPotentialDuplicate =
     !!application?.personalDetails?.duplicateDetection?.isPotentialDuplicate;
   const [query, setQuery] = useState("");
@@ -502,6 +505,8 @@ function ApplicationMgtDrawer({
   const appIdFromUrl =
     searchParams.get("applicationId") || searchParams.get("id") || "";
   const draftIdFromUrl = searchParams.get("draftId") || "";
+  /** Avoid resetting in-progress edits when Redux application object refreshes. */
+  const loadedApplicationKeyRef = useRef(null);
   /** Edit mode follows URL only so "new application" clears reliably (no stale location.state). */
   const isEdit = Boolean(appIdFromUrl || draftIdFromUrl);
   const { applications, applicationsLoading } = useSelector(
@@ -849,13 +854,6 @@ function ApplicationMgtDrawer({
       },
       professionalDetails: {
         workLocation: apiData?.professionalDetails?.workLocation,
-        processSalaryDeduction:
-          apiData?.professionalDetails?.processSalaryDeduction ??
-          resolveWorkLocationProcessSalaryDeduction(
-            apiData?.professionalDetails?.workLocation,
-            workLocationOptions,
-            lookupsRaw,
-          ),
         otherWorkLocation:
           apiData?.professionalDetails?.otherWorkLocation || "",
         grade: apiData?.professionalDetails?.grade || "",
@@ -883,17 +881,32 @@ function ApplicationMgtDrawer({
         })(),
         graduationDate: toDayJS(apiData?.professionalDetails?.graduationDate),
         startDate: toDayJS(apiData?.professionalDetails?.startDate),
+        previousMembershipNo:
+          apiData?.professionalDetails?.previousMembershipNo ||
+          apiData?.subscriptionDetails?.previousMembershipNo ||
+          "",
+        joinYouthForum:
+          apiData?.professionalDetails?.joinYouthForum ??
+          apiData?.subscriptionDetails?.joinYouthForum ??
+          null,
+        youthForum:
+          apiData?.professionalDetails?.youthForum ||
+          apiData?.subscriptionDetails?.youthForum ||
+          "",
       },
       subscriptionDetails: {
         paymentType: apiData?.subscriptionDetails?.paymentType || "",
+        processSalaryDeduction:
+          apiData?.subscriptionDetails?.processSalaryDeduction ??
+          resolveWorkLocationProcessSalaryDeduction(
+            apiData?.professionalDetails?.workLocation,
+            workLocationOptions,
+            lookupsRaw,
+          ),
         paymentFrequency:
           apiData?.subscriptionDetails?.paymentFrequency || "Monthly",
         payrollNo: apiData?.subscriptionDetails?.payrollNo || "",
         membershipStatus: apiData?.subscriptionDetails?.membershipStatus || "",
-        previousMembershipNo:
-          apiData?.subscriptionDetails?.previousMembershipNo || "",
-        joinYouthForum: apiData?.subscriptionDetails?.joinYouthForum ?? null,
-        youthForum: apiData?.subscriptionDetails?.youthForum || "",
         otherIrishTradeUnion:
           apiData?.subscriptionDetails?.otherIrishTradeUnion || false,
         otherIrishTradeUnionName:
@@ -971,12 +984,24 @@ function ApplicationMgtDrawer({
   }, []);
 
   useEffect(() => {
-    if (application && isEdit) {
-      const mappedData = mapApiToState(application);
-      setInfData(mappedData);
-      setOriginalData(mappedData);
-    }
-  }, [isEdit, application]);
+    loadedApplicationKeyRef.current = null;
+  }, [appIdFromUrl, draftIdFromUrl]);
+
+  useEffect(() => {
+    if (!application || !isEdit) return;
+
+    const aid = String(
+      application.applicationId || application.ApplicationId || "",
+    );
+    const urlKey = String(draftIdFromUrl || appIdFromUrl || "");
+    if (!aid || !urlKey || aid !== urlKey) return;
+    if (loadedApplicationKeyRef.current === aid) return;
+
+    loadedApplicationKeyRef.current = aid;
+    const mappedData = mapApiToState(application);
+    setInfData(mappedData);
+    setOriginalData(mappedData);
+  }, [application, isEdit, appIdFromUrl, draftIdFromUrl]);
 
   useEffect(() => {
     if (!Array.isArray(categoryData) || categoryData.length === 0) return;
@@ -997,7 +1022,7 @@ function ApplicationMgtDrawer({
 
     setInfData((prev) => patchMembershipCategory(prev));
     setOriginalData((prev) => (prev ? patchMembershipCategory(prev) : prev));
-  }, [categoryData, application, isEdit, profileSearchData]);
+  }, [categoryData, isEdit, profileSearchData]);
 
   useEffect(() => {
     if (!Array.isArray(disciplineOptions) || disciplineOptions.length === 0)
@@ -1175,6 +1200,9 @@ function ApplicationMgtDrawer({
       "discipline",
       "graduationDate",
       "startDate",
+      "previousMembershipNo",
+      "joinYouthForum",
+      "youthForum",
     ];
 
     return professionalFields.some((field) => {
@@ -1211,7 +1239,6 @@ function ApplicationMgtDrawer({
     },
     professionalDetails: {
       workLocation: "",
-      processSalaryDeduction: false,
       otherWorkLocation: "",
       grade: "",
       otherGrade: "",
@@ -1227,16 +1254,17 @@ function ApplicationMgtDrawer({
       discipline: "",
       graduationDate: null,
       startDate: null,
+      previousMembershipNo: "",
+      joinYouthForum: null,
+      youthForum: "",
     },
     subscriptionDetails: {
       membershipCategory: "",
       paymentType: "",
+      processSalaryDeduction: false,
       paymentFrequency: "Monthly",
       payrollNo: "",
       membershipStatus: "",
-      previousMembershipNo: "",
-      joinYouthForum: null,
-      youthForum: "",
       otherIrishTradeUnion: null,
       otherScheme: null,
       recuritedBy: "",
@@ -1319,13 +1347,13 @@ function ApplicationMgtDrawer({
       workLocationOptions,
       lookupsRaw,
     );
-    if (resolved === !!InfData.professionalDetails.processSalaryDeduction) {
+    if (resolved === !!InfData.subscriptionDetails.processSalaryDeduction) {
       return;
     }
     setInfData((prev) => ({
       ...prev,
-      professionalDetails: {
-        ...prev.professionalDetails,
+      subscriptionDetails: {
+        ...prev.subscriptionDetails,
         processSalaryDeduction: resolved,
       },
     }));
@@ -1394,7 +1422,6 @@ function ApplicationMgtDrawer({
           professionalDetails: {
             ...prevData.professionalDetails,
             workLocation: workLocationLabel,
-            processSalaryDeduction: allowsSalaryDeduction,
             region: isSimple
               ? foundObject?.branch?.region?.name ||
                 foundObject?.region?.name ||
@@ -1403,6 +1430,10 @@ function ApplicationMgtDrawer({
             branch: isSimple
               ? foundObject?.branch?.name || ""
               : foundObject?.branch?.lookupname || "",
+          },
+          subscriptionDetails: {
+            ...prevData.subscriptionDetails,
+            processSalaryDeduction: allowsSalaryDeduction,
           },
         };
         if (
@@ -1498,8 +1529,8 @@ function ApplicationMgtDrawer({
       gender: ["personalInfo", "gender"],
       otherIrishTradeUnion: ["subscriptionDetails", "otherIrishTradeUnion"],
       otherScheme: ["subscriptionDetails", "otherScheme"],
-      joinYouthForum: ["subscriptionDetails", "joinYouthForum"],
-      youthForum: ["subscriptionDetails", "youthForum"],
+      joinYouthForum: ["professionalDetails", "joinYouthForum"],
+      youthForum: ["professionalDetails", "youthForum"],
       countryPrimaryQualification: [
         "personalInfo",
         "countryPrimaryQualification",
@@ -1629,8 +1660,8 @@ function ApplicationMgtDrawer({
 
     if (
       requiresYouthForumQuestions &&
-      InfData.subscriptionDetails?.joinYouthForum === true &&
-      !InfData.subscriptionDetails?.youthForum?.trim()
+      InfData.professionalDetails?.joinYouthForum === true &&
+      !InfData.professionalDetails?.youthForum?.trim()
     ) {
       newErrors.youthForum = "Please select a Youth Forum";
       missingFieldNames.push(fieldLabels.youthForum);
@@ -1677,6 +1708,12 @@ function ApplicationMgtDrawer({
     if (
       InfData.subscriptionDetails.paymentType === SALARY_DEDUCTION_PAYMENT_TYPE
     ) {
+      if (!workLocationAllowsSalaryDeduction) {
+        newErrors.paymentType = InfData.professionalDetails?.workLocation
+          ? `Salary Deduction is not enabled for work location "${InfData.professionalDetails.workLocation}"`
+          : "Salary Deduction requires a work location with payroll deduction enabled";
+        missingFieldNames.push(fieldLabels.paymentType);
+      }
       if (!InfData.subscriptionDetails.payrollNo?.trim()) {
         newErrors.payrollNo = "Payroll number is required";
         missingFieldNames.push(fieldLabels.payrollNo);
@@ -2102,9 +2139,6 @@ function ApplicationMgtDrawer({
       "paymentType",
       "payrollNo",
       "membershipStatus",
-      "previousMembershipNo",
-      "joinYouthForum",
-      "youthForum",
       "otherIrishTradeUnion",
       "otherIrishTradeUnionName",
       "otherScheme",
@@ -2204,42 +2238,97 @@ function ApplicationMgtDrawer({
         hasSubscriptionDetailsChanged(apiData, apiOriginalData);
       const professionalChanging =
         applicationId &&
-        hasProfessionalDetailsChanged(apiData, apiOriginalData);
-      const salaryDeductionSelected =
-        apiData.subscriptionDetails?.paymentType ===
-        SALARY_DEDUCTION_PAYMENT_TYPE;
+        hasProfessionalDetailsChanged(apiOriginalData, apiData);
 
-      if (
-        applicationId &&
-        (professionalChanging ||
-          (subscriptionChanging && salaryDeductionSelected))
-      ) {
+      const upsertProfessionalDetails = async () => {
         const professionalPayload = cleanPayload({
           professionalDetails: apiData.professionalDetails,
         });
-        await axios.put(
+        const putRes = await axios.put(
           `${baseURL}/professional-details/${applicationId}`,
           professionalPayload,
           { headers: putHeaders },
         );
+        if (putRes?.data?.data == null) {
+          await axios.post(
+            `${baseURL}/professional-details/${applicationId}`,
+            professionalPayload,
+            { headers: putHeaders },
+          );
+        }
+      };
+
+      if (applicationId && (subscriptionChanging || professionalChanging)) {
+        await upsertProfessionalDetails();
         savedAny = true;
       }
 
       if (subscriptionChanging) {
+        const categoryForApi =
+          apiData.subscriptionDetails?.membershipCategory ??
+          InfData.subscriptionDetails?.membershipCategory;
         const subscriptionPayload = cleanPayload({
-          subscriptionDetails: apiData.subscriptionDetails,
+          subscriptionDetails: {
+            ...apiData.subscriptionDetails,
+            ...(categoryForApi != null && categoryForApi !== ""
+              ? { membershipCategory: categoryForApi }
+              : {}),
+          },
         });
-        await axios.put(
+        let savedSubscriptionRecord = null;
+        const putRes = await axios.put(
           `${baseURL}/subscription-details/${applicationId}`,
           subscriptionPayload,
           { headers: putHeaders },
         );
+        if (putRes?.data?.data) {
+          savedSubscriptionRecord = putRes.data.data;
+        }
+        if (putRes?.data?.data == null) {
+          const postRes = await axios.post(
+            `${baseURL}/subscription-details/${applicationId}`,
+            subscriptionPayload,
+            { headers: putHeaders },
+          );
+          if (postRes?.data?.data == null) {
+            throw new Error(
+              postRes?.data?.message || "Subscription details were not saved",
+            );
+          }
+          savedSubscriptionRecord = postRes.data.data;
+        }
         savedAny = true;
+
+        const refreshed = await dispatch(
+          getApplicationById({ id: applicationId }),
+        ).unwrap();
+        const mappedData = mapApiToState(refreshed);
+        const savedCategory =
+          savedSubscriptionRecord?.subscriptionDetails?.membershipCategory;
+        if (savedCategory != null && String(savedCategory).trim() !== "") {
+          mappedData.subscriptionDetails = {
+            ...mappedData.subscriptionDetails,
+            membershipCategory:
+              normalizeMembershipCategoryToLabel(savedCategory, categoryData) ||
+              savedCategory,
+          };
+        }
+        loadedApplicationKeyRef.current = String(applicationId);
+        setInfData(mappedData);
+        setOriginalData(mappedData);
       }
 
       if (savedAny) {
+        if (!subscriptionChanging) {
+          const refreshed = await dispatch(
+            getApplicationById({ id: applicationId }),
+          ).unwrap();
+          const mappedData = mapApiToState(refreshed);
+          loadedApplicationKeyRef.current = String(applicationId);
+          setInfData(mappedData);
+          setOriginalData(mappedData);
+        }
         MyAlert("success", "Application Updated successfully!");
-        setOriginalData(InfData);
       } else {
         MyAlert("info", "No changes detected to save.");
       }
@@ -2291,23 +2380,26 @@ function ApplicationMgtDrawer({
           updated.subscriptionDetails.incomeProtectionScheme = false;
         }
         if (!["rejoin", "careerBreak"].includes(value)) {
-          updated.subscriptionDetails.previousMembershipNo = "";
+          updated.professionalDetails = {
+            ...updated.professionalDetails,
+            previousMembershipNo: "",
+          };
         }
 
         return updated;
       });
     } else if (
-      section === "subscriptionDetails" &&
+      section === "professionalDetails" &&
       field === "joinYouthForum"
     ) {
       setInfData((prev) => {
         const updated = {
           ...prev,
-          subscriptionDetails: {
-            ...prev.subscriptionDetails,
+          professionalDetails: {
+            ...prev.professionalDetails,
             [field]: value,
             youthForum:
-              value === true ? prev.subscriptionDetails?.youthForum : "",
+              value === true ? prev.professionalDetails?.youthForum : "",
           },
         };
         return updated;
@@ -2371,6 +2463,9 @@ function ApplicationMgtDrawer({
           professionalDetails: {
             ...prev.professionalDetails,
             workLocation: locationLabel || value,
+          },
+          subscriptionDetails: {
+            ...prev.subscriptionDetails,
             processSalaryDeduction: allowsSalaryDeduction,
           },
         };
@@ -2414,8 +2509,8 @@ function ApplicationMgtDrawer({
         if (section === "personalInfo" && field === "dateOfBirth") {
           const age = calculateAgeFtn(value);
           if (age === "" || age >= 35) {
-            updated.subscriptionDetails = {
-              ...updated.subscriptionDetails,
+            updated.professionalDetails = {
+              ...updated.professionalDetails,
               joinYouthForum: null,
               youthForum: "",
             };
@@ -2688,8 +2783,8 @@ function ApplicationMgtDrawer({
       );
 
       const subscriptionChanged = hasSubscriptionDetailsChanged(
-        apiOriginalData,
         apiInfData,
+        apiOriginalData,
       );
       const personalChanged = hasPersonalDetailsChanged(
         apiOriginalData,
@@ -2708,9 +2803,7 @@ function ApplicationMgtDrawer({
 
       if (action === "approved") {
         if (duplicateReviewPending) {
-          message.warning(
-            "Duplicate review is required before approval. Open Duplicate Profile Review and choose Link, Merge, Create New Profile, or Ignore Match.",
-          );
+          message.warning(DUPLICATE_REVIEW_REQUIRED_MESSAGE);
           openDuplicateReviewDrawer(false);
           setIsProcessing(false);
           disableFtn(false);
@@ -3271,8 +3364,8 @@ function ApplicationMgtDrawer({
                 Potential duplicate detected
               </span>
               <span style={{ color: "#820014", fontSize: 13 }}>
-                Review matches (Link, Merge, Create New Profile, or Ignore) before
-                approval.
+                Resolve all matches (Create New Profile, Ignore Match, Tag this
+                Profile, or Merge this Profile) before approval.
               </span>
             </div>
             <Button
@@ -3283,7 +3376,7 @@ function ApplicationMgtDrawer({
               style={{ flexShrink: 0 }}
               onClick={() => openDuplicateReviewDrawer(false)}
             >
-              Open Duplicate Profile Review
+              Open Duplicate Profiles
             </Button>
           </div>
         )}
@@ -4295,13 +4388,13 @@ function ApplicationMgtDrawer({
                     <Radio.Group
                       name="joinYouthForum"
                       value={
-                        InfData.subscriptionDetails?.joinYouthForum !== null
-                          ? InfData.subscriptionDetails?.joinYouthForum
+                        InfData.professionalDetails?.joinYouthForum !== null
+                          ? InfData.professionalDetails?.joinYouthForum
                           : null
                       }
                       onChange={(e) =>
                         handleInputChange(
-                          "subscriptionDetails",
+                          "professionalDetails",
                           "joinYouthForum",
                           e.target?.value,
                         )
@@ -4323,18 +4416,18 @@ function ApplicationMgtDrawer({
                     label="Youth Forum"
                     name="youthForum"
                     required={
-                      InfData.subscriptionDetails?.joinYouthForum === true
+                      InfData.professionalDetails?.joinYouthForum === true
                     }
                     options={youthForumOptions}
-                    value={InfData.subscriptionDetails?.youthForum}
+                    value={InfData.professionalDetails?.youthForum}
                     disabled={
                       isDisable ||
-                      InfData.subscriptionDetails?.joinYouthForum !== true
+                      InfData.professionalDetails?.joinYouthForum !== true
                     }
                     placeholder="Select Youth Forum"
                     onChange={(e) =>
                       handleInputChange(
-                        "subscriptionDetails",
+                        "professionalDetails",
                         "youthForum",
                         e.target.value,
                       )
@@ -4865,12 +4958,12 @@ function ApplicationMgtDrawer({
                     <MyInput
                       label="Previous Membership No."
                       name="previousMembershipNo"
-                      value={InfData?.subscriptionDetails?.previousMembershipNo}
+                      value={InfData?.professionalDetails?.previousMembershipNo}
                       placeholder="Enter previous membership number"
                       disabled={isDisable}
                       onChange={(e) =>
                         handleInputChange(
-                          "subscriptionDetails",
+                          "professionalDetails",
                           "previousMembershipNo",
                           e.target.value,
                         )

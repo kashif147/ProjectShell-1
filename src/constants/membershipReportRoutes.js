@@ -1,6 +1,8 @@
 /** Paths that use the membership report grid (no row select / attachment / ⋮ menu). */
 export const MEMBERSHIP_REPORT_GRID_PATHS = new Set([
   "/MembershipListingReport",
+  "/CreditorsListReport",
+  "/DebtorsListReport",
   "/StatisticsReport",
   "/CancelledMembersReport",
   "/NewMembersReport",
@@ -12,7 +14,7 @@ export const MEMBERSHIP_REPORT_GRID_PATHS = new Set([
 ]);
 
 /** Hub screens with no HeaderDetails chrome (toolbar, Save View, etc.). */
-export const REPORTS_HUB_PATHS = new Set(["/Reports"]);
+export const REPORTS_HUB_PATHS = new Set(["/Reports", "/AccountsReports"]);
 
 /** Report screens: no Create action in HeaderDetails. */
 export const REPORT_HEADER_PATHS = new Set([

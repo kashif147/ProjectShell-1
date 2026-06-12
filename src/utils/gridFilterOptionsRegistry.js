@@ -15,6 +15,8 @@ export const CLIENT_SIDE_GRID_FILTER_SCREENS = new Set([
   "GeneralLedger",
   "Reconciliation",
   "MembershipListingReport",
+  "CreditorsListReport",
+  "DebtorsListReport",
 ]);
 
 const registry = new Map();

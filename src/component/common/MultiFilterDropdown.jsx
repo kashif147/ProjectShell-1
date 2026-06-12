@@ -236,7 +236,7 @@ const MultiFilterDropdown = ({
   return (
     <div>
       <Dropdown
-        dropdownRender={getMenuContent}
+        popupRender={getMenuContent}
         open={open}
         onOpenChange={setOpen}
         placement="bottomLeft"

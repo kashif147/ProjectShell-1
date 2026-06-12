@@ -90,6 +90,10 @@ import MyConfirm from "./MyConfirm";
 import MyAlert from "./MyAlert";
 import axios from "axios";
 import { bulkSelectionHasRetrospective } from "../../utils/retrospectiveMembership";
+import {
+  DUPLICATE_REVIEW_REQUIRED_MESSAGE,
+  getPendingDuplicateReviewApplications,
+} from "../../utils/duplicateReviewApproval";
 import Toolbar from "./Toolbar";
 import { useFilters } from "../../context/FilterContext";
 import { useAuthorization } from "../../context/AuthorizationContext";
@@ -599,6 +603,19 @@ function HeaderDetails({
         "error",
         "Selection Required",
         "Please select at least one application to approve.",
+      );
+      return;
+    }
+
+    const pendingDuplicateReview = getPendingDuplicateReviewApplications(
+      gridData,
+      selectedApplications,
+    );
+    if (pendingDuplicateReview.length > 0) {
+      MyAlert(
+        "warning",
+        "Duplicate review required",
+        `${pendingDuplicateReview.length} selected application(s) still need duplicate review before approval. ${DUPLICATE_REVIEW_REQUIRED_MESSAGE}`,
       );
       return;
     }
@@ -1409,6 +1426,8 @@ function HeaderDetails({
             location?.pathname == "/MembershipListingReport" ||
             location?.pathname == "/StatisticsReport" ||
             location?.pathname == "/WorkplaceBreakdownReport" ||
+            location?.pathname == "/CreditorsListReport" ||
+            location?.pathname == "/DebtorsListReport" ||
             location?.pathname == "/InAppNotifications") && (
             <div className="search-main">
               <div className="title d-flex justify-content-between align-items-start">
@@ -1455,6 +1474,10 @@ function HeaderDetails({
                             ? "Statistics Report"
                             : nav === "/WorkplaceBreakdownReport"
                               ? "Workplace Membership Breakdown"
+                              : nav === "/CreditorsListReport"
+                                ? "Creditors List Report"
+                              : nav === "/DebtorsListReport"
+                                ? "Debtors List Report"
                             : location?.state?.search ||
                               (nav === "/DirectDebitAuthorization"
                               ? "Direct Debit Authorization"

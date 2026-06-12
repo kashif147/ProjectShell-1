@@ -601,15 +601,19 @@ const MemberSearch = ({
         defaultActiveFirstOption={false}
         backfill={false}
         getPopupContainer={getPopupContainer || (trigger => trigger.parentNode)}
-        dropdownStyle={{
-          maxHeight: "400px",
-          overflowY: "auto",
-          borderRadius: "4px",
-          boxShadow: "0 2px 8px rgba(0,0,0,0.15)",
-          padding: "0",
-          backgroundColor: "#ffffff",
-          position: "absolute",
-          zIndex: 1050
+        styles={{
+          popup: {
+            root: {
+              maxHeight: "400px",
+              overflowY: "auto",
+              borderRadius: "4px",
+              boxShadow: "0 2px 8px rgba(0,0,0,0.15)",
+              padding: "0",
+              backgroundColor: "#ffffff",
+              position: "absolute",
+              zIndex: 1050,
+            },
+          },
         }}
       >
         <Input

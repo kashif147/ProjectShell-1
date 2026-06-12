@@ -2,14 +2,18 @@ import React, { useMemo } from "react";
 import { Col } from "antd";
 import CustomSelect from "../common/CustomSelect";
 import {
+  findLookupTypeById,
+  findLookupTypeByName,
+  getLookupId,
+  getLookupName,
   getParentLookupType,
-  getParentLookupOptions,
-  getParentLookupLabel,
+  lookupBelongsToType,
   lookupTypeRequiresParent,
 } from "../../utils/lookupHierarchy";
 
 /**
  * Hierarchy-aware parent lookup dropdown for Configuration lookup drawers.
+ * When the API returns a parent type (e.g. Branch), that name is used as the field label.
  */
 function ParentLookupSelect({
   drawerKey,
@@ -18,27 +22,52 @@ function ParentLookupSelect({
   lookupsTypes = [],
   value,
   parentLabel = "",
+  parentLookupTypeId = null,
+  parentLookupTypeName = "",
   disabled = false,
   required = false,
   hasError = false,
   span = 12,
   onChange,
 }) {
-  const parentType = useMemo(
-    () => getParentLookupType(lookupsTypes, lookuptypeId, drawerKey),
-    [lookupsTypes, lookuptypeId, drawerKey],
-  );
+  const parentType = useMemo(() => {
+    if (parentLookupTypeId) {
+      const fromId = findLookupTypeById(lookupsTypes, parentLookupTypeId);
+      if (fromId) return fromId;
+    }
+    if (parentLookupTypeName) {
+      const fromName = findLookupTypeByName(lookupsTypes, parentLookupTypeName);
+      if (fromName) return fromName;
+    }
+    return getParentLookupType(lookupsTypes, lookuptypeId, drawerKey);
+  }, [
+    lookupsTypes,
+    lookuptypeId,
+    drawerKey,
+    parentLookupTypeId,
+    parentLookupTypeName,
+  ]);
 
   const options = useMemo(() => {
-    const base = getParentLookupOptions(
-      lookups,
-      lookupsTypes,
-      lookuptypeId,
-      drawerKey,
-    );
+    const base = parentType
+      ? (lookups || [])
+          .filter((item) => lookupBelongsToType(item, parentType))
+          .map((item) => ({
+            value: getLookupId(item),
+            key: getLookupId(item),
+            label: getLookupName(item) || item.code,
+          }))
+          .sort((a, b) =>
+            String(a.label || "")
+              .toLowerCase()
+              .localeCompare(String(b.label || "").toLowerCase()),
+          )
+      : [];
     if (!value) return base;
     const hasValue = base.some(
-      (opt) => String(opt.value) === String(value) || String(opt.key) === String(value),
+      (opt) =>
+        String(opt.value) === String(value) ||
+        String(opt.key) === String(value),
     );
     if (hasValue) return base;
     return [
@@ -49,17 +78,28 @@ function ParentLookupSelect({
       },
       ...base,
     ];
-  }, [lookups, lookupsTypes, lookuptypeId, drawerKey, value, parentLabel]);
-
-  const requiresParent = lookupTypeRequiresParent(
+  }, [
+    lookups,
     lookupsTypes,
     lookuptypeId,
     drawerKey,
-  );
-  const isDisabled = disabled || !requiresParent || !parentType;
+    value,
+    parentLabel,
+  ]);
 
-  // const label = getParentLookupLabel(parentType);
-  const label = "Parent Lookup Type";
+  const hasParentFromApi =
+    !!value || !!parentLookupTypeId || !!parentLookupTypeName;
+  const requiresParent =
+    lookupTypeRequiresParent(lookupsTypes, lookuptypeId, drawerKey) ||
+    hasParentFromApi;
+  const showField = requiresParent && (!!parentType || hasParentFromApi);
+  const isDisabled = disabled || !showField;
+
+  const fieldLabel =
+    parentLookupTypeName ||
+    parentType?.lookuptype ||
+    parentType?.DisplayName ||
+    "Parent Lookup";
 
   const handleChange = (e) => {
     const selectedId = e?.target?.value ?? e?.value ?? "";
@@ -77,14 +117,14 @@ function ParentLookupSelect({
   return (
     <Col span={span}>
       <CustomSelect
-        label={label}
+        label={fieldLabel}
         name="Parentlookupid"
         placeholder={
           isDisabled
             ? "No parent lookup for this type"
             : options.length === 0
-              ? `No ${parentType?.lookuptype || "parent"} records found`
-              : `Select ${parentType?.lookuptype || "parent"}`
+              ? `No ${fieldLabel} records found`
+              : `Select ${fieldLabel}`
         }
         value={value || ""}
         options={options}
