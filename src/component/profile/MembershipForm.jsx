@@ -173,6 +173,65 @@ const resolveWorkLocationProcessSalaryDeduction = (
   return false;
 };
 
+function resolveBranchRegionFromWorkLocation(
+  selectedLookupIdOrLabel,
+  workLocationOptions,
+) {
+  try {
+    const storedLookups = localStorage.getItem("hierarchicalLookups");
+    const hierarchicalLookups = storedLookups ? JSON.parse(storedLookups) : [];
+    const labelKey = normalizeLookupMatchKey(selectedLookupIdOrLabel);
+
+    let matchedOption = workLocationOptions?.find(
+      (opt) => String(opt.key || opt.value) === String(selectedLookupIdOrLabel),
+    );
+    if (!matchedOption && labelKey) {
+      matchedOption = workLocationOptions?.find((opt) =>
+        getWorkLocationMatchKeys(opt).includes(labelKey),
+      );
+    }
+
+    const selectedLookupId =
+      matchedOption?.key || matchedOption?.value || selectedLookupIdOrLabel;
+
+    let foundObject = hierarchicalLookups.find(
+      (item) =>
+        String(item.id || item._id) === String(selectedLookupId) ||
+        String(item.lookup?._id) === String(selectedLookupId),
+    );
+    if (!foundObject && labelKey) {
+      foundObject = hierarchicalLookups.find((item) => {
+        const type = item.type || item.lookuptypeName || "";
+        const isWorkLoc =
+          type === "workLocation" || isWorkLocationLookupTypeName(type);
+        return isWorkLoc && getWorkLocationMatchKeys(item).includes(labelKey);
+      });
+    }
+
+    if (!foundObject && !matchedOption) {
+      return { branch: "", region: "" };
+    }
+
+    const isSimple = foundObject?.type === "workLocation";
+    return {
+      branch: isSimple
+        ? foundObject?.branch?.name || ""
+        : foundObject?.branch?.lookupname ||
+          foundObject?.branch?.label ||
+          "",
+      region: isSimple
+        ? foundObject?.branch?.region?.name ||
+          foundObject?.region?.name ||
+          ""
+        : foundObject?.region?.lookupname ||
+          foundObject?.region?.label ||
+          "",
+    };
+  } catch {
+    return { branch: "", region: "" };
+  }
+}
+
 /** Membership category value may be product _id or display name from API. */
 function isUndergraduateStudentMembershipCategory(selected, categoryOptions) {
   const sel = (selected || "").trim();
@@ -1090,6 +1149,21 @@ const MembershipForm = ({
       ) {
         shouldFocusPaymentTypeRef.current = true;
       }
+
+      const workLocationLabel = String(updatedData.workLocation || "").trim();
+      if (workLocationLabel && workLocationLabel !== "Other") {
+        const { branch, region } = resolveBranchRegionFromWorkLocation(
+          typeof value === "object" && value !== null
+            ? value.key || value.value || workLocationLabel
+            : value,
+          workLocationOptions,
+        );
+        updatedData.branch = branch;
+        updatedData.region = region;
+      } else if (!workLocationLabel) {
+        updatedData.branch = "";
+        updatedData.region = "";
+      }
     }
     if (field === "consentCorrespondence") {
       updatedData.consent = value;
@@ -1154,6 +1228,7 @@ const MembershipForm = ({
     if (field === "branch" || field === "region") {
       const nextBranch = field === "branch" ? value : updatedData.branch;
       const nextRegion = field === "region" ? value : updatedData.region;
+      if (String(updatedData.workLocation || "").trim() !== "Other") {
       const resolved = resolveWorkLocationFromHierarchy(nextBranch, nextRegion);
       if (resolved) {
         updatedData.workLocation = resolved;
@@ -1172,6 +1247,7 @@ const MembershipForm = ({
         if (!allowsSalaryDeduction) {
           shouldFocusPaymentTypeRef.current = true;
         }
+      }
       }
     }
     if (field === "nursingProgramme" && value !== "Yes") {
@@ -1871,7 +1947,9 @@ const MembershipForm = ({
                   options={branchOptions}
                   value={formData.branch}
                   onChange={(e) => handleChange("branch", e.target.value)}
-                  disabled={isFormReadOnly}
+                  disabled={
+                    isFormReadOnly || formData.workLocation !== "Other"
+                  }
                 />
                 <CustomSelect
                   label="Region"
@@ -1879,7 +1957,9 @@ const MembershipForm = ({
                   options={regionOptions}
                   value={formData.region}
                   onChange={(e) => handleChange("region", e.target.value)}
-                  disabled={isFormReadOnly}
+                  disabled={
+                    isFormReadOnly || formData.workLocation !== "Other"
+                  }
                 />
                 <MembershipFormGridFull>
                   <MembershipFormField field="grade" fieldErrors={fieldErrors}>

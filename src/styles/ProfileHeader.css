@@ -297,7 +297,9 @@
 }
 
 .member-header-top-band .member-avatar-hero,
-.member-header-card-top .member-header-top-band .member-avatar.member-avatar-hero,
+.member-header-card-top
+  .member-header-top-band
+  .member-avatar.member-avatar-hero,
 .member-header-card-top
   .member-header-top-band
   .member-avatar.member-avatar-initials {
@@ -480,8 +482,7 @@
 }
 
 .member-balance-value.member-balance-value-dr,
-.member-compact-value.member-balance-value.member-balance-value-dr,
-.detail-value.member-balance-value.member-balance-value-dr {
+.member-compact-value.member-balance-value.member-balance-value-dr {
   color: #cf1322;
   background: rgba(255, 255, 255, 0.92);
   padding: 1px 6px;
@@ -497,10 +498,22 @@
 .member-header-top-band .member-compact-value.member-balance-value-dr,
 .member-header-card-top
   .member-header-top-band
-  .member-compact-value.member-balance-value-dr,
-.member-details-block .detail-value.member-balance-value-dr {
+  .member-compact-value.member-balance-value-dr {
   color: #cf1322;
   background: rgba(255, 255, 255, 0.92);
+}
+
+.member-details-block .detail-value.member-balance-value,
+.member-details-block .detail-value.member-balance-value-dr {
+  background: transparent;
+  padding: 0;
+  border-radius: 0;
+  box-shadow: none;
+  display: inline;
+}
+
+.member-details-block .detail-value.member-balance-value-dr {
+  color: #cf1322;
 }
 
 .member-header-card-top .member-compact-value.member-balance-value-dr {
