@@ -316,12 +316,27 @@ const Breadcrumb = () => {
     },
     "/MembershipListingReport": {
       module: "Reports",
-      page: "Membership Listing Report",
+      page: "Membership Listing Reports",
+      icon: "📊",
+    },
+    "/CreditorsListReport": {
+      module: "Reports",
+      page: "Creditors List Report",
+      icon: "📊",
+    },
+    "/DebtorsListReport": {
+      module: "Reports",
+      page: "Debtors List Report",
       icon: "📊",
     },
     "/Reports": {
       module: "Reports",
       page: "Membership Reports",
+      icon: "📊",
+    },
+    "/AccountsReports": {
+      module: "Reports",
+      page: "Accounts Reports",
       icon: "📊",
     },
 

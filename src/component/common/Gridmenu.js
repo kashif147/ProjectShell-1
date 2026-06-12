@@ -22,6 +22,8 @@ import { bumpWriteOffsReload } from "../../utils/writeOffsWorkspace";
 import { bumpGeneralLedgerReload } from "../../utils/generalLedgerWorkspace";
 import { bumpReconciliationReload } from "../../utils/reconciliationWorkspace";
 import { bumpMembershipListingReportReload } from "../../utils/membershipListingReportWorkspace";
+import { bumpCreditorsListReportReload } from "../../utils/creditorsListReportWorkspace";
+import { bumpDebtorsListReportReload } from "../../utils/debtorsListReportWorkspace";
 import { bumpMembershipStatisticsReportReload } from "../../utils/membershipStatisticsReportWorkspace";
 import { bumpWorkplaceBreakdownReportReload } from "../../utils/workplaceBreakdownReportWorkspace";
 
@@ -58,6 +60,10 @@ function Gridmenu({ title, screenName, setColumnsDragbe, columnsForFilter, setCo
   const isStatisticsReportScreen = normalizedGridPath === "/statisticsreport";
   const isWorkplaceBreakdownReportScreen =
     normalizedGridPath === "/workplacebreakdownreport";
+  const isCreditorsListReportScreen =
+    normalizedGridPath === "/creditorslistreport";
+  const isDebtorsListReportScreen =
+    normalizedGridPath === "/debtorslistreport";
   const { hasAnyRole } = useAuthorization();
   const canEditGridTemplates = hasAnyRole(["SU", "ASU"]);
   const screenChanges = useSelector(
@@ -98,6 +104,10 @@ function Gridmenu({ title, screenName, setColumnsDragbe, columnsForFilter, setCo
         ? "statisticsreport"
       : isWorkplaceBreakdownReportScreen
         ? "workplacebreakdownreport"
+      : isCreditorsListReportScreen
+        ? "creditorslistreport"
+      : isDebtorsListReportScreen
+        ? "debtorslistreport"
       : isPaymentFormsScreen
       ? "payment forms"
       : isApplicationsScreen
@@ -209,6 +219,10 @@ function Gridmenu({ title, screenName, setColumnsDragbe, columnsForFilter, setCo
         bumpMembershipStatisticsReportReload();
       } else if (isWorkplaceBreakdownReportScreen) {
         bumpWorkplaceBreakdownReportReload();
+      } else if (isCreditorsListReportScreen) {
+        bumpCreditorsListReportReload();
+      } else if (isDebtorsListReportScreen) {
+        bumpDebtorsListReportReload();
       }
     } catch (error) {
       console.error("Error updating template:", error);
@@ -417,7 +431,7 @@ function Gridmenu({ title, screenName, setColumnsDragbe, columnsForFilter, setCo
   );
   return (
     <Dropdown
-      dropdownRender={() => menu}
+      popupRender={() => menu}
       trigger={["click"]}
       placement="bottomRight"
       open={menuOpen}

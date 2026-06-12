@@ -10,9 +10,10 @@ import {
 import { useTableColumns } from "../../context/TableColumnsContext ";
 import reportingApi from "../../services/reportingApi";
 import {
-  buildMembershipListingRequest,
-  subscribeMembershipListingReportReload,
-} from "../../utils/membershipListingReportWorkspace";
+  buildCreditorsListRequest,
+  formatCreditorsReportPeriodLabel,
+  subscribeCreditorsListReportReload,
+} from "../../utils/creditorsListReportWorkspace";
 import {
   clearReportGridSearchQuery,
   filterRowsByMembershipNoOrName,
@@ -22,52 +23,28 @@ import {
 import { applyClientSideRowFilters } from "../../utils/filterUtils";
 import { useRegisterGridFilterRows } from "../../hooks/useRegisterGridFilterRows";
 import { useDebouncedReportFetch } from "../../hooks/useDebouncedReportFetch";
-import dayjs from "dayjs";
-import utc from "dayjs/plugin/utc";
 import "../../styles/MembershipReportPrint.css";
 
-dayjs.extend(utc);
+const REPORT_TITLE = "Creditors List Report";
 
-const REPORT_TITLE = "Membership Listing Reports";
-
-function mapListingRow(row, index) {
-  const id = row.subscriptionId || row.id || `listing-${index}`;
+function mapCreditorRow(row, index) {
+  const id = row.id || row.memberId || `creditor-${index}`;
   return {
     key: id,
     id,
     membershipNo: row.membershipNo || "—",
     fullName: row.fullName || "—",
-    membershipCategory: row.membershipCategory || "—",
+    fullAddress: row.fullAddress || "—",
     grade: row.grade || "—",
     workLocation: row.workLocation || "—",
-    branch: row.branch || "—",
-    region: row.region || "—",
-    section: row.section || "—",
-    subscriptionYear: row.subscriptionYear ?? "—",
-    isCurrent:
-      row.isCurrent === true ? "Yes" : row.isCurrent === false ? "No" : "—",
-    startDate: row.startDate,
-    expiryDate: row.expiryDate,
-    cancelledAt: row.cancelledAt,
-    resignedAt: row.resignedAt,
-    processedAt: row.processedAt,
-    renewalDate: row.renewalDate || null,
-    paymentDate: row.paymentDate || null,
-    membershipStatus: row.membershipStatus || "—",
-    membershipMovement: row.membershipMovement || "—",
-    paymentType: row.paymentType || "—",
-    paymentFrequency: row.paymentFrequency || "—",
-    invoiceAmount: row.invoiceAmount ?? null,
-    arrearsAmount: row.arrearsAmount ?? null,
-    deferredAmount: row.deferredAmount ?? null,
-    balance: row.balance ?? null,
+    amount: row.amount ?? null,
   };
 }
 
-export default function MembershipListingReport() {
+export default function CreditorsListReport() {
   const { filtersState } = useFilters();
   const { columns } = useTableColumns();
-  const screenCols = columns.MembershipListingReport || [];
+  const screenCols = columns.CreditorsListReport || [];
 
   const { isInitialized } = useSelector((state) => state.applicationWithFilter);
   const { activeTemplateId } = useSelector((state) => state.activeTemplate);
@@ -76,12 +53,12 @@ export default function MembershipListingReport() {
   );
 
   const [sourceRows, setSourceRows] = useState([]);
+  const [reportMeta, setReportMeta] = useState(null);
   const [loading, setLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState(() =>
     getReportGridSearchQuery(),
   );
 
-  /** Live toolbar filters — client-side only until user clicks Filter (reload event). */
   const filtersStateRef = useRef(filtersState);
   filtersStateRef.current = filtersState;
 
@@ -95,29 +72,29 @@ export default function MembershipListingReport() {
     [filteredRows, searchQuery],
   );
 
-  useRegisterGridFilterRows(
-    "MembershipListingReport",
-    sourceRows,
-    screenCols,
-  );
+  useRegisterGridFilterRows("CreditorsListReport", sourceRows, screenCols);
 
-  const fetchListing = useCallback(async ({ isStale } = {}) => {
+  const fetchReport = useCallback(async ({ isStale } = {}) => {
     setLoading(true);
     try {
-      const body = buildMembershipListingRequest(filtersStateRef.current, {
+      const body = buildCreditorsListRequest(filtersStateRef.current, {
         offset: 0,
         limit: 5000,
         search: getReportGridSearchQuery(),
       });
-      const data = await reportingApi.getMembershipListing(body);
+      const data = await reportingApi.getCreditorsList(body);
       if (isStale?.()) return;
       const rawRows = Array.isArray(data?.rows) ? data.rows : [];
-      setSourceRows(rawRows.map(mapListingRow));
+      setSourceRows(rawRows.map(mapCreditorRow));
+      setReportMeta({
+        asOfDate: data?.asOfDate,
+      });
     } catch (error) {
       if (isStale?.()) return;
-      console.error("Membership listing report:", error);
-      message.error(error?.message || "Failed to load membership listing");
+      console.error("Creditors list report:", error);
+      message.error(error?.message || "Failed to load creditors list");
       setSourceRows([]);
+      setReportMeta(null);
     } finally {
       if (!isStale?.()) setLoading(false);
     }
@@ -126,13 +103,13 @@ export default function MembershipListingReport() {
   const reportReady = isInitialized && !templatesLoading;
   const { reloadNow } = useDebouncedReportFetch({
     enabled: reportReady,
-    fetchFn: fetchListing,
+    fetchFn: fetchReport,
     deps: [activeTemplateId],
     debounceMs: 450,
   });
 
   useEffect(() => {
-    return subscribeMembershipListingReportReload(reloadNow);
+    return subscribeCreditorsListReportReload(reloadNow);
   }, [reloadNow]);
 
   useEffect(() => subscribeReportGridSearch(setSearchQuery), []);
@@ -141,11 +118,18 @@ export default function MembershipListingReport() {
     return () => clearReportGridSearchQuery();
   }, []);
 
+  const periodSummary = formatCreditorsReportPeriodLabel(
+    filtersState,
+    reportMeta || {},
+  );
+
   useEffect(() => {
     registerReportExport({
       reportTitle: REPORT_TITLE,
       getPayload: () => ({
-        reportTitle: REPORT_TITLE,
+        reportTitle: periodSummary
+          ? `${REPORT_TITLE} — ${periodSummary}`
+          : REPORT_TITLE,
         data: displayRows,
         screenCols,
         filtersState,
@@ -153,7 +137,7 @@ export default function MembershipListingReport() {
       }),
     });
     return () => unregisterReportExport();
-  }, [displayRows, screenCols, filtersState, loading]);
+  }, [displayRows, screenCols, filtersState, loading, periodSummary]);
 
   if (!isInitialized || templatesLoading) {
     return (
@@ -174,11 +158,19 @@ export default function MembershipListingReport() {
   }
 
   return (
-    <div className="membership-listing-report" style={{ width: "100%" }}>
+    <div className="creditors-list-report" style={{ width: "100%" }}>
+      {periodSummary ? (
+        <p
+          className="no-print"
+          style={{ margin: "0 0 8px 0", color: "#595959", fontSize: 13 }}
+        >
+          Balances as at: {periodSummary}
+        </p>
+      ) : null}
       <TableComponent
         data={displayRows}
         isGrideLoading={loading}
-        screenName="MembershipListingReport"
+        screenName="CreditorsListReport"
         enableRowSelection={false}
         hideLegacyRowChrome
         disableDefaultRowClick

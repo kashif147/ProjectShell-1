@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from "react";
 import { Checkbox, Row, Col, Radio, Input } from "antd";
-import dayjs from 'dayjs';
+import dayjs from "dayjs";
 import moment from "moment";
 import CustomSelect from "../common/CustomSelect";
 import MyInput from "../common/MyInput";
@@ -8,31 +8,35 @@ import MyDatePicker from "../common/MyDatePicker";
 import MyDrawer from "../common/MyDrawer";
 import { useSelector, useDispatch } from "react-redux";
 import { useTableColumns } from "../../context/TableColumnsContext ";
-import { useJsApiLoader, StandaloneSearchBox } from '@react-google-maps/api'
+import { useJsApiLoader, StandaloneSearchBox } from "@react-google-maps/api";
 import { fetchCountries } from "../../features/CountrySlice";
 import { CatOptions, workLocations } from "../../Data";
 import { getAllLookups } from "../../features/LookupsSlice";
 import { calculateAgeFtn } from "../../utils/Utilities";
-import '../../styles/MyInput.css'
+import "../../styles/MyInput.css";
 import { insertDataFtn } from "../../utils/Utilities";
 import { updateFtn } from "../../utils/Utilities";
 import { v4 as uuidv4 } from "uuid";
-import { notification } from 'antd'
-import axios from 'axios';
+import { notification } from "antd";
+import axios from "axios";
 import { cleanPayload } from "../../utils/Utilities";
 import { convertToLocalTime } from "../../utils/Utilities";
 import { getAllApplications } from "../../features/ApplicationSlice";
-import '../../styles/MyDrawer.css'
+import "../../styles/MyDrawer.css";
 import { data } from "autoprefixer";
 import { MailOutlined, EnvironmentOutlined } from "@ant-design/icons";
 import { IoBagRemoveOutline } from "react-icons/io5";
 import { CiCreditCard1 } from "react-icons/ci";
 
-const libraries = ['places', 'maps'];
+const libraries = ["places", "maps"];
 
 function AddNewGarda({ open, onClose, isGard }) {
-  const { application, loading } = useSelector((state) => state.applicationDetails);
-  const { applications, applicationsLoading } = useSelector((state) => state.applications);
+  const { application, loading } = useSelector(
+    (state) => state.applicationDetails,
+  );
+  const { applications, applicationsLoading } = useSelector(
+    (state) => state.applications,
+  );
 
   const inputsInitValue = {
     age: null,
@@ -48,7 +52,7 @@ function AddNewGarda({ open, onClose, isGard }) {
     eirCode: "",
     eircode: "",
     mobile: "",
-    country: 'Ireland',
+    country: "Ireland",
     termsAndConditions: false,
     valueAddedServices: false,
     HomeOrWorkTel: "",
@@ -102,7 +106,7 @@ function AddNewGarda({ open, onClose, isGard }) {
   };
   const [InfData, setInfData] = useState(inputsInitValue);
   const [value, setValue] = useState(false);
-  console.log("tet", value)
+  console.log("tet", value);
   const mapApplicationDetailToInfData = (applicationDetail) => {
     if (!applicationDetail) return {};
 
@@ -113,7 +117,10 @@ function AddNewGarda({ open, onClose, isGard }) {
     const subscriptionDetails = applicationDetail?.subscriptionDetails || {};
     return {
       applicationStatus: applicationDetail?.applicationStatus,
-      ApplicationId: applicationDetail?.ApplicationId == 'undefined' ? applicationDetail?.applicationId : applicationDetail?.ApplicationId,
+      ApplicationId:
+        applicationDetail?.ApplicationId == "undefined"
+          ? applicationDetail?.applicationId
+          : applicationDetail?.ApplicationId,
       forename: personal.forename || "",
       surname: personal.surname || "",
       countryPrimaryQualification: personal.countryPrimaryQualification || "",
@@ -140,7 +147,8 @@ function AddNewGarda({ open, onClose, isGard }) {
       ConsentEmail: contact.consentEmail || false,
       graduationDate: professionalDetails?.graduationDate,
       workLocation: professionalDetails?.workLocation,
-      nursingAdaptationProgramme: professionalDetails?.nursingAdaptationProgramme,
+      nursingAdaptationProgramme:
+        professionalDetails?.nursingAdaptationProgramme,
       nmbiNumber: professionalDetails?.nmbiNumber,
       branch: professionalDetails?.branch,
       grade: professionalDetails?.grade,
@@ -153,25 +161,27 @@ function AddNewGarda({ open, onClose, isGard }) {
       ApprovalComments: approval.comments || "",
 
       membershipCategory: subscriptionDetails?.membershipCategory,
-      "payrollNo": subscriptionDetails?.payrollNo,
-      "membershipStatus": null,
-      "otherIrishTradeUnion": subscriptionDetails?.otherIrishTradeUnion,
-      "otherScheme": subscriptionDetails?.otherScheme,
-      "recuritedBy": subscriptionDetails?.recuritedBy,
-      "recuritedByMembershipNo": subscriptionDetails?.recuritedByMembershipNo,
-      "primarySection": subscriptionDetails?.primarySection,
-      "otherPrimarySection": null,
-      "secondarySection": null,
-      "otherSecondarySection": null,
-      "incomeProtectionScheme": subscriptionDetails.incomeProtectionScheme,
-      "inmoRewards": subscriptionDetails?.inmoRewards,
-      "valueAddedServices": subscriptionDetails?.valueAddedServices,
-      "termsAndConditions": subscriptionDetails?.termsAndConditions,
-      "membershipCategory": "Short-term/ Relief (under 15 hrs/wk average)",
+      payrollNo: subscriptionDetails?.payrollNo,
+      membershipStatus: null,
+      otherIrishTradeUnion: subscriptionDetails?.otherIrishTradeUnion,
+      otherScheme: subscriptionDetails?.otherScheme,
+      recuritedBy: subscriptionDetails?.recuritedBy,
+      recuritedByMembershipNo: subscriptionDetails?.recuritedByMembershipNo,
+      primarySection: subscriptionDetails?.primarySection,
+      otherPrimarySection: null,
+      secondarySection: null,
+      otherSecondarySection: null,
+      incomeProtectionScheme: subscriptionDetails.incomeProtectionScheme,
+      inmoRewards: subscriptionDetails?.inmoRewards,
+      valueAddedServices: subscriptionDetails?.valueAddedServices,
+      termsAndConditions: subscriptionDetails?.termsAndConditions,
+      membershipCategory: "Short-term/ Relief (under 15 hrs/wk average)",
       // dateJoined: subscriptionDetails?.dateJoined ? moment(subscriptionDetails?.dateJoined) : null,
-      "paymentType": "Payroll Deduction",
-      "paymentFrequency": "Monthly",
-      "submissionDate": subscriptionDetails?.submissionDate ? convertToLocalTime(subscriptionDetails?.submissionDate) : null,
+      paymentType: "Payroll Deduction",
+      paymentFrequency: "Monthly",
+      submissionDate: subscriptionDetails?.submissionDate
+        ? convertToLocalTime(subscriptionDetails?.submissionDate)
+        : null,
     };
   };
   // const { data: countryOptions, } = useSelector(
@@ -179,25 +189,20 @@ function AddNewGarda({ open, onClose, isGard }) {
   // );
   const inputRef = useRef(null);
   const { isLoaded } = useJsApiLoader({
-    id: 'google-map-script',
-    googleMapsApiKey: 'AIzaSyCJYpj8WV5Rzof7O3jGhW9XabD0J4Yqe1o',
+    id: "google-map-script",
+    googleMapsApiKey: "AIzaSyCJYpj8WV5Rzof7O3jGhW9XabD0J4Yqe1o",
     libraries: libraries,
   });
   const dispatch = useDispatch();
-  const {
-    lookupsForSelect,
-    isDisable,
-    disableFtn
-
-  } = useTableColumns();
+  const { lookupsForSelect, isDisable, disableFtn } = useTableColumns();
 
   useEffect(() => {
     dispatch(fetchCountries());
-    dispatch(getAllLookups())
+    dispatch(getAllLookups());
   }, [dispatch]);
   const submitApplicationData = async () => {
     try {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem("token");
 
       const applicationPayload = cleanPayload({
         personalInfo: {
@@ -205,8 +210,8 @@ function AddNewGarda({ open, onClose, isGard }) {
           forename: InfData.forename,
           dateOfBirth: moment(InfData.dateOfBirth).utc().toISOString(),
           countryPrimaryQualification: InfData.countryPrimaryQualification,
-          title: InfData.title || '',
-          gender: InfData.gender || '',
+          title: InfData.title || "",
+          gender: InfData.gender || "",
         },
         contactInfo: {
           preferredAddress: InfData.preferredAddress,
@@ -231,14 +236,14 @@ function AddNewGarda({ open, onClose, isGard }) {
         {
           headers: {
             Authorization: `Bearer ${token}`,
-            'Content-Type': 'application/json',
+            "Content-Type": "application/json",
           },
-        }
+        },
       );
 
       const applicationId = personalRes?.data?.data?.ApplicationId;
       if (!applicationId) {
-        throw new Error('ApplicationId not returned from personal details API');
+        throw new Error("ApplicationId not returned from personal details API");
       }
 
       // 2. Professional Info
@@ -270,9 +275,9 @@ function AddNewGarda({ open, onClose, isGard }) {
         {
           headers: {
             Authorization: `Bearer ${token}`,
-            'Content-Type': 'application/json',
+            "Content-Type": "application/json",
           },
-        }
+        },
       );
 
       // 3. Subscription Info
@@ -303,16 +308,17 @@ function AddNewGarda({ open, onClose, isGard }) {
         {
           headers: {
             Authorization: `Bearer ${token}`,
-            'Content-Type': 'application/json',
+            "Content-Type": "application/json",
           },
-        }
+        },
       );
       notification.success({
-        message: 'Application submitted successfully!',
+        message: "Application submitted successfully!",
       });
-      setInfData(inputsInitValue)
+      setInfData(inputsInitValue);
       if (value === true) {
-        const apiWorkLocation = professionalRes?.data?.data?.professionalDetails?.workLocation;
+        const apiWorkLocation =
+          professionalRes?.data?.data?.professionalDetails?.workLocation;
         if (apiWorkLocation) {
           setInfData((prev) => ({
             ...prev,
@@ -320,11 +326,10 @@ function AddNewGarda({ open, onClose, isGard }) {
           }));
         }
       }
-
     } catch (error) {
-      console.error('Error during application submission:', error);
+      console.error("Error during application submission:", error);
       notification.error({
-        message: 'Submission failed!',
+        message: "Submission failed!",
         description: error?.response?.data?.message || error.message,
       });
     }
@@ -343,12 +348,15 @@ function AddNewGarda({ open, onClose, isGard }) {
             surname: InfData.surname,
             forename: InfData.forename,
             gender: InfData.gender || "",
-            dateOfBirth: InfData.dateOfBirth ? moment(InfData.dateOfBirth).utc().toISOString() : null,
-            age: InfData.dateOfBirth ? moment().diff(moment(InfData.dateOfBirth), "years") : null,
+            dateOfBirth: InfData.dateOfBirth
+              ? moment(InfData.dateOfBirth).utc().toISOString()
+              : null,
+            age: InfData.dateOfBirth
+              ? moment().diff(moment(InfData.dateOfBirth), "years")
+              : null,
             countryPrimaryQualification: InfData.countryPrimaryQualification,
             deceased: false,
             deceasedDate: null,
-
           },
           contactInfo: {
             preferredAddress: InfData.preferredAddress,
@@ -376,14 +384,17 @@ function AddNewGarda({ open, onClose, isGard }) {
           otherGrade: InfData.otherGrade || null,
           nmbiNumber: InfData.nmbiNumber || null,
           nurseType: InfData.nurseType || null,
-          nursingAdaptationProgramme: InfData.nursingAdaptationProgramme || false,
+          nursingAdaptationProgramme:
+            InfData.nursingAdaptationProgramme || false,
           region: InfData.region,
           branch: InfData.branch,
           pensionNo: InfData.pensionNo || null,
           isRetired: InfData.isRetired || false,
           retiredDate: InfData.retiredDate || null,
           studyLocation: InfData.studyLocation || null,
-          graduationDate: InfData.graduationDate ? moment(InfData.graduationDate).utc().toISOString() : null,
+          graduationDate: InfData.graduationDate
+            ? moment(InfData.graduationDate).utc().toISOString()
+            : null,
         },
         subscriptionDetails: {
           payrollNo: InfData.payrollNo,
@@ -411,9 +422,13 @@ function AddNewGarda({ open, onClose, isGard }) {
         createdAt: now,
         updatedAt: now,
       };
-      const existingDrafts = JSON.parse(localStorage.getItem("gardaApplicationDrafts")) || [];
+      const existingDrafts =
+        JSON.parse(localStorage.getItem("gardaApplicationDrafts")) || [];
       const updatedDrafts = [...existingDrafts, draftPayload];
-      localStorage.setItem("gardaApplicationDrafts", JSON.stringify(updatedDrafts));
+      localStorage.setItem(
+        "gardaApplicationDrafts",
+        JSON.stringify(updatedDrafts),
+      );
       notification.success({ message: "Draft saved successfully!" });
       setInfData(inputsInitValue);
       onClose();
@@ -423,13 +438,11 @@ function AddNewGarda({ open, onClose, isGard }) {
     }
   };
 
-
   const [errors, setErrors] = useState({});
-
 
   const handleInputChange = (eventOrName, value) => {
     if (eventOrName === "dateOfBirth") {
-      const formattedValue = moment(value)
+      const formattedValue = moment(value);
       setInfData((prev) => {
         const updated = {
           ...prev,
@@ -445,46 +458,39 @@ function AddNewGarda({ open, onClose, isGard }) {
       });
 
       setErrors((prev) => ({ ...prev, [eventOrName]: "" }));
+    } else if (eventOrName?.target) {
+      const { name, type, value, checked } = eventOrName.target;
+      const finalValue = type === "checkbox" ? checked : value;
+      setInfData((prev) => {
+        const updated = {
+          ...prev,
+          [name]: finalValue,
+        };
+        // Handle WorkLocation → branch & region
+        if (eventOrName === "workLocation" && workLocationDetails[value]) {
+          updated.branch = workLocationDetails[value].branch;
+          updated.region = workLocationDetails[value].region;
+        }
+        return updated;
+      });
+      setErrors((prev) => ({ ...prev, [eventOrName.target.name]: "" }));
+    } else {
+      // const { name, type, value, checked } = eventOrName.target;
+      // const finalValue = type === "checkbox" ? checked : value;
+      setInfData((prev) => {
+        const updated = {
+          ...prev,
+          [eventOrName]: value,
+        };
+        // Handle WorkLocation → branch & region
+        if (eventOrName === "workLocation" && workLocationDetails[value]) {
+          updated.branch = workLocationDetails[value].branch;
+          updated.region = workLocationDetails[value].region;
+        }
+        return updated;
+      });
+      setErrors((prev) => ({ ...prev, [eventOrName]: "" }));
     }
-    else
-      if (eventOrName?.target) {
-
-        const { name, type, value, checked } = eventOrName.target;
-        const finalValue = type === "checkbox" ? checked : value;
-        setInfData((prev) => {
-          const updated = {
-            ...prev,
-            [name]: finalValue,
-          };
-          // Handle WorkLocation → branch & region
-          if (eventOrName === "workLocation" && workLocationDetails[value]) {
-
-            updated.branch = workLocationDetails[value].branch;
-            updated.region = workLocationDetails[value].region;
-          }
-          return updated;
-        });
-        setErrors((prev) => ({ ...prev, [eventOrName.target.name]: "" }));
-      }
-      else {
-
-        // const { name, type, value, checked } = eventOrName.target;
-        // const finalValue = type === "checkbox" ? checked : value;
-        setInfData((prev) => {
-          const updated = {
-            ...prev,
-            [eventOrName]: value,
-          };
-          // Handle WorkLocation → branch & region
-          if (eventOrName === "workLocation" && workLocationDetails[value]) {
-
-            updated.branch = workLocationDetails[value].branch;
-            updated.region = workLocationDetails[value].region;
-          }
-          return updated;
-        });
-        setErrors((prev) => ({ ...prev, [eventOrName]: "" }));
-      }
   };
 
   let newdata;
@@ -494,7 +500,7 @@ function AddNewGarda({ open, onClose, isGard }) {
       setInfData((prev) => ({ ...prev, ...newdata }));
     }
   }, [application]);
-  console.log(application, "bonai")
+  console.log(application, "bonai");
   const handleSubmit = () => {
     const requiredFields = [
       "title",
@@ -510,10 +516,10 @@ function AddNewGarda({ open, onClose, isGard }) {
       "membershipCategory",
       "workLocation",
       "grade",
-      'PaymentType',
-      'termsAndConditions',
-      'preferredAddress',
-      'payrollNo',
+      "PaymentType",
+      "termsAndConditions",
+      "preferredAddress",
+      "payrollNo",
       // 'otherPrimarySection',
       // 'otherSecondarySection'
     ];
@@ -544,7 +550,7 @@ function AddNewGarda({ open, onClose, isGard }) {
       return;
     }
     setErrors({});
-    submitApplicationData()
+    submitApplicationData();
   };
 
   const handlePlacesChanged = () => {
@@ -553,11 +559,11 @@ function AddNewGarda({ open, onClose, isGard }) {
       const place = places[0];
       const placeId = place.place_id;
       const service = new window.google.maps.places.PlacesService(
-        document.createElement('div')
+        document.createElement("div"),
       );
       const request = {
         placeId: placeId,
-        fields: ['address_components', 'name', 'formatted_address'],
+        fields: ["address_components", "name", "formatted_address"],
       };
       service.getDetails(request, (details, status) => {
         if (
@@ -566,16 +572,16 @@ function AddNewGarda({ open, onClose, isGard }) {
         ) {
           const components = details.address_components;
 
-          const getComponent = type =>
-            components.find(c => c.types.includes(type))?.long_name || '';
+          const getComponent = (type) =>
+            components.find((c) => c.types.includes(type))?.long_name || "";
 
-          const streetNumber = getComponent('street_number');
-          const route = getComponent('route');
-          const sublocality = getComponent('sublocality') || '';
-          const town = getComponent('locality') || getComponent('postal_town') || '';
-          const county =
-            getComponent('administrative_area_level_1') || '';
-          const postalCode = getComponent('postal_code');
+          const streetNumber = getComponent("street_number");
+          const route = getComponent("route");
+          const sublocality = getComponent("sublocality") || "";
+          const town =
+            getComponent("locality") || getComponent("postal_town") || "";
+          const county = getComponent("administrative_area_level_1") || "";
+          const postalCode = getComponent("postal_code");
 
           const buildingOrHouse = `${streetNumber} ${route}`.trim();
           const streetOrRoad = sublocality;
@@ -596,160 +602,160 @@ function AddNewGarda({ open, onClose, isGard }) {
     }
   };
   const workLocationDetails = {
-    '24 Hour Care Services': { branch: 'Meath', region: 'Dublin North East' },
-    '24 Hour Care Services (Mid-West)': {
-      branch: 'Clare',
-      region: 'Mid-West, West and North West',
+    "24 Hour Care Services": { branch: "Meath", region: "Dublin North East" },
+    "24 Hour Care Services (Mid-West)": {
+      branch: "Clare",
+      region: "Mid-West, West and North West",
     },
-    '24 Hour Care Services (North West)': {
-      branch: 'Sligo',
-      region: 'Mid-West, West and North West',
+    "24 Hour Care Services (North West)": {
+      branch: "Sligo",
+      region: "Mid-West, West and North West",
     },
-    'BLANCHARDSTOWN INSTITUTE OF TECHNOLOGY': {
-      branch: 'Dublin Northern Branch',
-      region: 'Dublin Mid Leinster',
+    "BLANCHARDSTOWN INSTITUTE OF TECHNOLOGY": {
+      branch: "Dublin Northern Branch",
+      region: "Dublin Mid Leinster",
     },
-    'CAREDOC (CORK)': {
-      branch: 'Cork Vol/Private Branch',
-      region: 'South - South East',
+    "CAREDOC (CORK)": {
+      branch: "Cork Vol/Private Branch",
+      region: "South - South East",
     },
-    'DUBLIN INSTITUTE OF TECHNOLOGY': {
-      branch: 'Dublin South West Branch',
-      region: 'Dublin Mid Leinster',
+    "DUBLIN INSTITUTE OF TECHNOLOGY": {
+      branch: "Dublin South West Branch",
+      region: "Dublin Mid Leinster",
     },
-    'GLENDALE NURSING HOME (TULLOW)': {
-      branch: 'Carlow',
-      region: 'South - South East',
+    "GLENDALE NURSING HOME (TULLOW)": {
+      branch: "Carlow",
+      region: "South - South East",
     },
-    'HOME INSTEAD (WESTERN REGION)': { branch: 'Roscommon', region: 'West' },
-    'LETTERKENNY INSTITUTE OF TECHNOLOGY': {
-      branch: 'Letterkenny',
-      region: 'Letterkenny',
+    "HOME INSTEAD (WESTERN REGION)": { branch: "Roscommon", region: "West" },
+    "LETTERKENNY INSTITUTE OF TECHNOLOGY": {
+      branch: "Letterkenny",
+      region: "Letterkenny",
     },
-    'LIMERICK INSTITUTE OF TECHNOLOGY': {
-      branch: 'Limerick',
-      region: 'Limerick',
+    "LIMERICK INSTITUTE OF TECHNOLOGY": {
+      branch: "Limerick",
+      region: "Limerick",
     },
-    'SLIGO INSTITUTE OF TECHNOLOGY': { branch: 'Sligo', region: 'Sligo' },
-    'ST JOSEPHS HOSPITAL- MOUNT DESERT': {
-      branch: 'Cork Vol/Private Branch',
-      region: 'South - South East',
+    "SLIGO INSTITUTE OF TECHNOLOGY": { branch: "Sligo", region: "Sligo" },
+    "ST JOSEPHS HOSPITAL- MOUNT DESERT": {
+      branch: "Cork Vol/Private Branch",
+      region: "South - South East",
     },
-    'TALLAGHT INSTITUTE OF TECHNOLOGY': {
-      branch: 'Dublin South West Branch',
-      region: 'Dublin Mid Leinster',
+    "TALLAGHT INSTITUTE OF TECHNOLOGY": {
+      branch: "Dublin South West Branch",
+      region: "Dublin Mid Leinster",
     },
-    'Atu (Letterkenny)': { branch: 'Letterkenny', region: 'Letterkenny' },
-    'Regional Centre Of Nursing & Midwifery Education': {
-      branch: 'Offaly',
-      region: 'Mid Leinster',
+    "Atu (Letterkenny)": { branch: "Letterkenny", region: "Letterkenny" },
+    "Regional Centre Of Nursing & Midwifery Education": {
+      branch: "Offaly",
+      region: "Mid Leinster",
     },
-    'Newtown School': { branch: 'Waterford', region: 'South - South East' },
-    'Tipperary Education & Training Board': {
-      branch: 'Tipperary-North-Mwhb',
-      region: 'Mid-West, West and North West',
+    "Newtown School": { branch: "Waterford", region: "South - South East" },
+    "Tipperary Education & Training Board": {
+      branch: "Tipperary-North-Mwhb",
+      region: "Mid-West, West and North West",
     },
-    'National University Ireland Galway': {
-      branch: 'Galway',
-      region: 'Mid-West, West and North West',
+    "National University Ireland Galway": {
+      branch: "Galway",
+      region: "Mid-West, West and North West",
     },
-    'South East Technological University (Setu)': {
-      branch: 'Carlow',
-      region: 'South - South East',
+    "South East Technological University (Setu)": {
+      branch: "Carlow",
+      region: "South - South East",
     },
-    'Tud (Tallaght)': {
-      branch: 'Dublin South West Branch',
-      region: 'Dublin Mid Leinster',
+    "Tud (Tallaght)": {
+      branch: "Dublin South West Branch",
+      region: "Dublin Mid Leinster",
     },
-    'College Of Anaesthetists': {
-      branch: 'Dublin South West Branch',
-      region: 'Dublin Mid Leinster',
+    "College Of Anaesthetists": {
+      branch: "Dublin South West Branch",
+      region: "Dublin Mid Leinster",
     },
-    'Tud (Blanchardstown)': {
-      branch: 'Dublin Northern Branch',
-      region: 'Dublin North East',
+    "Tud (Blanchardstown)": {
+      branch: "Dublin Northern Branch",
+      region: "Dublin North East",
     },
-    'Gmit (Galway)': {
-      branch: 'Galway',
-      region: 'Mid-West, West and North West',
+    "Gmit (Galway)": {
+      branch: "Galway",
+      region: "Mid-West, West and North West",
     },
-    'Cork University College': {
-      branch: 'Cork Vol/Private Branch',
-      region: 'South - South East',
+    "Cork University College": {
+      branch: "Cork Vol/Private Branch",
+      region: "South - South East",
     },
-    'Mtu (Cork)': {
-      branch: 'Cork Vol/Private Branch',
-      region: 'South - South East',
+    "Mtu (Cork)": {
+      branch: "Cork Vol/Private Branch",
+      region: "South - South East",
     },
-    Student: { branch: 'Student', region: 'Student' },
-    'St Columbas College (Dublin)': {
-      branch: 'Dublin East Coast Branch',
-      region: 'Dublin Mid Leinster',
+    Student: { branch: "Student", region: "Student" },
+    "St Columbas College (Dublin)": {
+      branch: "Dublin East Coast Branch",
+      region: "Dublin Mid Leinster",
     },
-    'Setu (Waterford)': { branch: 'Waterford', region: 'South - South East' },
-    'Nui Galway': {
-      branch: 'Galway City',
-      region: 'Mid-West, West and North West',
+    "Setu (Waterford)": { branch: "Waterford", region: "South - South East" },
+    "Nui Galway": {
+      branch: "Galway City",
+      region: "Mid-West, West and North West",
     },
-    'Roscrea College': {
-      branch: 'Tipperary-North-Mwhb',
-      region: 'Mid-West, West and North West',
+    "Roscrea College": {
+      branch: "Tipperary-North-Mwhb",
+      region: "Mid-West, West and North West",
     },
-    'Dun Laoghaire Institute Of Art & Design': {
-      branch: 'Dunlaoghaire',
-      region: 'Dublin Mid Leinster',
+    "Dun Laoghaire Institute Of Art & Design": {
+      branch: "Dunlaoghaire",
+      region: "Dublin Mid Leinster",
     },
-    'Mtu (Kerry)': { branch: 'Kerry', region: 'South - South East' },
-    'Tus (Limerick)': {
-      branch: 'Limerick',
-      region: 'Mid-West, West and North West',
+    "Mtu (Kerry)": { branch: "Kerry", region: "South - South East" },
+    "Tus (Limerick)": {
+      branch: "Limerick",
+      region: "Mid-West, West and North West",
     },
-    'Dundalk Institute Of Technology (Dkit)': {
-      branch: 'Dundalk',
-      region: 'Dublin North East',
+    "Dundalk Institute Of Technology (Dkit)": {
+      branch: "Dundalk",
+      region: "Dublin North East",
     },
-    'Atu (Sligo)': { branch: 'Sligo', region: 'Mid-West, West and North West' },
-    'Tud (Bolton Street)': {
-      branch: 'Dublin South West Branch',
-      region: 'Dublin Mid Leinster',
+    "Atu (Sligo)": { branch: "Sligo", region: "Mid-West, West and North West" },
+    "Tud (Bolton Street)": {
+      branch: "Dublin South West Branch",
+      region: "Dublin Mid Leinster",
     },
-    'Dublin City University': {
-      branch: 'Dublin Northern Branch',
-      region: 'Dublin North East',
+    "Dublin City University": {
+      branch: "Dublin Northern Branch",
+      region: "Dublin North East",
     },
-    'National University Ireland Maynooth': {
-      branch: 'Kildare/Naas',
-      region: 'Dublin Mid Leinster',
+    "National University Ireland Maynooth": {
+      branch: "Kildare/Naas",
+      region: "Dublin Mid Leinster",
     },
-    'University College Dublin': {
-      branch: 'Dublin East Coast Branch',
-      region: 'Dublin Mid Leinster',
+    "University College Dublin": {
+      branch: "Dublin East Coast Branch",
+      region: "Dublin Mid Leinster",
     },
-    'Limerick University': { branch: 'Limerick', region: 'Limerick' },
-    'Trinity College': {
-      branch: 'Dublin East Coast Branch',
-      region: 'Dublin Mid Leinster',
+    "Limerick University": { branch: "Limerick", region: "Limerick" },
+    "Trinity College": {
+      branch: "Dublin East Coast Branch",
+      region: "Dublin Mid Leinster",
     },
-    'St Angelas College (Sligo)': { branch: 'Sligo', region: 'Sligo' },
-    'Royal College Of Surgeons': {
-      branch: 'Dublin East Coast Branch',
-      region: 'Dublin North East',
+    "St Angelas College (Sligo)": { branch: "Sligo", region: "Sligo" },
+    "Royal College Of Surgeons": {
+      branch: "Dublin East Coast Branch",
+      region: "Dublin North East",
     },
-    'Tus (Technological University Of The Shannon)': {
-      branch: 'Athlone',
-      region: 'Dublin North East',
+    "Tus (Technological University Of The Shannon)": {
+      branch: "Athlone",
+      region: "Dublin North East",
     },
     "Galway Mayo Institute Of Tech(C'Bar)": {
-      branch: 'Castlebar',
-      region: 'Mid-West, West and North West',
+      branch: "Castlebar",
+      region: "Mid-West, West and North West",
     },
   };
 
   const allBranches = Array.from(
-    new Set(Object.values(workLocationDetails).map(d => d.branch)),
+    new Set(Object.values(workLocationDetails).map((d) => d.branch)),
   );
   const allRegions = Array.from(
-    new Set(Object.values(workLocationDetails).map(d => d.region)),
+    new Set(Object.values(workLocationDetails).map((d) => d.region)),
   );
   const applicationStatusUpdate = (status) => {
     updateFtn(
@@ -765,12 +771,14 @@ function AddNewGarda({ open, onClose, isGard }) {
         onClose();
         dispatch(getAllApplications("submitted"));
       },
-      `You have successfully ${status}`
+      `You have successfully ${status}`,
     );
   };
 
   function navigateApplication(direction) {
-    const index = applications.findIndex(app => app.ApplicationId === application?.applicationId);
+    const index = applications.findIndex(
+      (app) => app.ApplicationId === application?.applicationId,
+    );
     if (index === -1) return;
     let newIndex = index;
     if (direction === "prev") {
@@ -786,19 +794,21 @@ function AddNewGarda({ open, onClose, isGard }) {
   return (
     <>
       <MyDrawer
-        title={`${isGard === true
-          ? `Bulk Registration ${InfData?.submissionDate ? `  Submitted on: ${convertToLocalTime(InfData?.submissionDate)}` : ""}`
-          : "Registration Request"}`}
+        title={`${
+          isGard === true
+            ? `Bulk Registration ${InfData?.submissionDate ? `  Submitted on: ${convertToLocalTime(InfData?.submissionDate)}` : ""}`
+            : "Registration Request"
+        }`}
         open={open}
         onClose={() => {
           setErrors({});
           setInfData(inputsInitValue);
-          onClose()
-          disableFtn(true)
+          onClose();
+          disableFtn(true);
         }}
-        nextPrevData={{ total: applications?.length, }}
-        nextFtn={() => navigateApplication('next')}
-        PrevFtn={() => navigateApplication('prev')}
+        nextPrevData={{ total: applications?.length }}
+        nextFtn={() => navigateApplication("next")}
+        PrevFtn={() => navigateApplication("prev")}
         handleChangeApprove={() => applicationStatusUpdate("approved")}
         isAppRej={true}
         rejFtn={() => applicationStatusUpdate("rejected")}
@@ -818,8 +828,9 @@ function AddNewGarda({ open, onClose, isGard }) {
         status={InfData?.applicationStatus}
         draftFtn={saveToLocalStorage}
         isDisable={isDisable}
-        width='1500px'>
-        <div className="" style={{ backgroundColor: '#f6f9fc' }} >
+        width="1500px"
+      >
+        <div className="" style={{ backgroundColor: "#f6f9fc" }}>
           <div>
             <Row
               gutter={18}
@@ -827,7 +838,6 @@ function AddNewGarda({ open, onClose, isGard }) {
               style={{
                 backgroundColor: "#eef4ff",
                 borderRadius: "4px",
-
               }}
             >
               <Col span={24}>
@@ -843,7 +853,9 @@ function AddNewGarda({ open, onClose, isGard }) {
                       justifyContent: "center",
                     }}
                   >
-                    <MailOutlined style={{ color: "#2f6bff", fontSize: "18px" }} />
+                    <MailOutlined
+                      style={{ color: "#2f6bff", fontSize: "18px" }}
+                    />
                   </div>
                   <h2
                     style={{
@@ -858,7 +870,11 @@ function AddNewGarda({ open, onClose, isGard }) {
                 </div>
               </Col>
             </Row>
-            <Row className="bg-white p-1 ms-1 me-1 pt-2" gutter={18} style={{ boxShadow: "0 2px 6px rgba(0,0,0,0.04)", }}>
+            <Row
+              className="bg-white p-1 ms-1 me-1 pt-2"
+              gutter={18}
+              style={{ boxShadow: "0 2px 6px rgba(0,0,0,0.04)" }}
+            >
               <Col span={8}>
                 <CustomSelect
                   label="Title"
@@ -878,7 +894,9 @@ function AddNewGarda({ open, onClose, isGard }) {
                   value={InfData.forename}
                   required
                   disabled={isDisable}
-                  onChange={(e) => handleInputChange("forename", e.target.value)}
+                  onChange={(e) =>
+                    handleInputChange("forename", e.target.value)
+                  }
                   hasError={!!errors?.forename}
                 />
               </Col>
@@ -913,8 +931,8 @@ function AddNewGarda({ open, onClose, isGard }) {
                   value={InfData?.dateOfBirth} // ✅ just string like "01/07/2019"
                   disabled={isDisable}
                   onChange={(date, dateString) => {
-                    console.log(date, "dte")
-                    handleInputChange("dateOfBirth", date)
+                    console.log(date, "dte");
+                    handleInputChange("dateOfBirth", date);
                   }}
                   hasError={!!errors?.dateOfBirth}
                 />
@@ -937,13 +955,22 @@ function AddNewGarda({ open, onClose, isGard }) {
                   // options={countryOptions}
                   required
                   disabled={isDisable}
-                  onChange={(e) => handleInputChange("countryPrimaryQualification", e.target.value)}
+                  onChange={(e) =>
+                    handleInputChange(
+                      "countryPrimaryQualification",
+                      e.target.value,
+                    )
+                  }
                   hasError={!!errors?.countryPrimaryQualification}
                 />
               </Col>
               <Col span={12}></Col>
-            </Row >
-            <Row gutter={18} className="p-1 ms-1 me-1 mt-1" style={{ backgroundColor: '#edfdf5' }}>
+            </Row>
+            <Row
+              gutter={18}
+              className="p-1 ms-1 me-1 mt-1"
+              style={{ backgroundColor: "#edfdf5" }}
+            >
               <Col span={24}>
                 <div className="d-flex align-items-center pt-1 pb-1">
                   <div
@@ -955,10 +982,11 @@ function AddNewGarda({ open, onClose, isGard }) {
                       display: "flex",
                       alignItems: "center",
                       justifyContent: "center",
-
                     }}
                   >
-                    <EnvironmentOutlined style={{ color: "green", fontSize: "18px" }} />
+                    <EnvironmentOutlined
+                      style={{ color: "green", fontSize: "18px" }}
+                    />
                   </div>
                   <div>
                     <h2
@@ -967,11 +995,10 @@ function AddNewGarda({ open, onClose, isGard }) {
                         margin: 0,
                         fontWeight: 500,
                         color: "#1a1a1a",
-
                       }}
                     >
                       Correspondence Details
-                      <Checkbox className="" style={{ marginLeft: '7.5rem' }}>
+                      <Checkbox className="" style={{ marginLeft: "7.5rem" }}>
                         Consent to receive Correspondence from INMO
                       </Checkbox>
                     </h2>
@@ -979,29 +1006,42 @@ function AddNewGarda({ open, onClose, isGard }) {
                 </div>
               </Col>
             </Row>
-            <Row gutter={18} className="bg-white p-1 ms-1 me-1" style={{ boxShadow: "0 2px 6px rgba(0,0,0,0.04)", }}>
-              <Col span={12}>
-              </Col>
+            <Row
+              gutter={18}
+              className="bg-white p-1 ms-1 me-1"
+              style={{ boxShadow: "0 2px 6px rgba(0,0,0,0.04)" }}
+            >
+              <Col span={12}></Col>
               <Col span={24} className="">
                 <div className="my-input-group">
                   <Row className="bg-white p-1 ms-1 me-1">
                     <Col span={12}>
-                      <label className={`my-input-label ${errors?.preferredAddress ? "error-text1" : ""}`}>
+                      <label
+                        className={`my-input-label ${errors?.preferredAddress ? "error-text1" : ""}`}
+                      >
                         Preferred Address <span className="text-danger">*</span>
                       </label>
                       <div
-                        className={`d-flex justify-content-between align-items-start ${errors?.preferredAddress ? 'has-error' : ''
-                          }`}
+                        className={`d-flex justify-content-between align-items-start ${
+                          errors?.preferredAddress ? "has-error" : ""
+                        }`}
                       >
                         <Radio.Group
-                          onChange={(e) => handleInputChange("preferredAddress", e.target.value)}
+                          onChange={(e) =>
+                            handleInputChange(
+                              "preferredAddress",
+                              e.target.value,
+                            )
+                          }
                           value={InfData?.preferredAddress}
                           disabled={isDisable}
                           options={[
-                            { value: 'home', label: 'Home' },
-                            { value: 'work', label: 'Work' },
+                            { value: "home", label: "Home" },
+                            { value: "work", label: "Work" },
                           ]}
-                          className={errors?.preferredAddress ? 'radio-error' : ''}
+                          className={
+                            errors?.preferredAddress ? "radio-error" : ""
+                          }
                         />
                       </div>
                     </Col>
@@ -1034,7 +1074,6 @@ function AddNewGarda({ open, onClose, isGard }) {
                   disabled={isDisable}
                   onChange={handleInputChange}
                   hasError={!!errors?.buildingOrHouse}
-
                 />
               </Col>
 
@@ -1044,8 +1083,9 @@ function AddNewGarda({ open, onClose, isGard }) {
                   name="streetOrRoad"
                   value={InfData.streetOrRoad}
                   disabled={isDisable}
-
-                  onChange={(e) => handleInputChange("streetOrRoad", e.target.value)}
+                  onChange={(e) =>
+                    handleInputChange("streetOrRoad", e.target.value)
+                  }
                 />
               </Col>
 
@@ -1067,7 +1107,9 @@ function AddNewGarda({ open, onClose, isGard }) {
                   value={InfData.countyCityOrPostCode}
                   required
                   disabled={isDisable}
-                  onChange={(e) => handleInputChange("countyCityOrPostCode", e.target.value)}
+                  onChange={(e) =>
+                    handleInputChange("countyCityOrPostCode", e.target.value)
+                  }
                   hasError={!!errors?.countyCityOrPostCode}
                 />
               </Col>
@@ -1115,7 +1157,9 @@ function AddNewGarda({ open, onClose, isGard }) {
                   value={InfData.telephoneNumber}
                   disabled={isDisable}
                   // onChange={handleInputChange}
-                  onChange={(e) => handleInputChange("telephoneNumber", e.target.value)}
+                  onChange={(e) =>
+                    handleInputChange("telephoneNumber", e.target.value)
+                  }
                   hasError={!!errors?.telephoneNumber}
                 />
               </Col>
@@ -1123,12 +1167,18 @@ function AddNewGarda({ open, onClose, isGard }) {
               {/* Preferred Email (Full Width) */}
               <Col span={12} className="mt-1 mb-3">
                 <div className="d-flex justify-content-between">
-                  <label className={`my-input-label ${errors?.preferredEmail ? "error-text1" : ""}`}>Preferred Email<span className="text-danger ms-1">*</span></label>
+                  <label
+                    className={`my-input-label ${errors?.preferredEmail ? "error-text1" : ""}`}
+                  >
+                    Preferred Email<span className="text-danger ms-1">*</span>
+                  </label>
                   <Radio.Group
-                    onChange={(e) => handleInputChange("preferredEmail", e.target.value)}
+                    onChange={(e) =>
+                      handleInputChange("preferredEmail", e.target.value)
+                    }
                     value={InfData?.preferredEmail}
                     disabled={isDisable}
-                    className={errors?.preferredEmail ? 'radio-error' : ''}
+                    className={errors?.preferredEmail ? "radio-error" : ""}
                   >
                     <Radio value="personal">Personal</Radio>
                     <Radio value="work">Work</Radio>
@@ -1158,13 +1208,19 @@ function AddNewGarda({ open, onClose, isGard }) {
                   value={InfData.WorkEmail}
                   required={InfData.preferredEmail === "work"}
                   disabled={isDisable}
-                  onChange={(e) => handleInputChange("WorkEmail", e.target.value)}
+                  onChange={(e) =>
+                    handleInputChange("WorkEmail", e.target.value)
+                  }
                   hasError={!!errors?.WorkEmail}
                 />
               </Col>
             </Row>
           </div>
-          <Row gutter={18} className="p-1 ms-1 me-1 mt-1" style={{ backgroundColor: '#f7f4ff' }}>
+          <Row
+            gutter={18}
+            className="p-1 ms-1 me-1 mt-1"
+            style={{ backgroundColor: "#f7f4ff" }}
+          >
             <Col span={24}>
               {/* <h2 style={{ fontSize: '22px', marginBottom: '20px' }}>Professional Details</h2> */}
               <div className="d-flex pt-1 pb-1">
@@ -1179,7 +1235,9 @@ function AddNewGarda({ open, onClose, isGard }) {
                     justifyContent: "center",
                   }}
                 >
-                  <IoBagRemoveOutline style={{ color: "#bf86f3", fontSize: "18px" }} />
+                  <IoBagRemoveOutline
+                    style={{ color: "#bf86f3", fontSize: "18px" }}
+                  />
                 </div>
                 <h2
                   style={{
@@ -1194,7 +1252,11 @@ function AddNewGarda({ open, onClose, isGard }) {
               </div>
             </Col>
           </Row>
-          <Row gutter={18} className="bg-white ms-1 me-1 pt-2 " style={{ boxShadow: "0 2px 6px rgba(0,0,0,0.04)", }}>
+          <Row
+            gutter={18}
+            className="bg-white ms-1 me-1 pt-2 "
+            style={{ boxShadow: "0 2px 6px rgba(0,0,0,0.04)" }}
+          >
             <Col span={12}>
               <CustomSelect
                 label="Membership Category"
@@ -1203,7 +1265,9 @@ function AddNewGarda({ open, onClose, isGard }) {
                 options={CatOptions}
                 required
                 disabled={isDisable}
-                onChange={(e) => handleInputChange("membershipCategory", e.target.value)}
+                onChange={(e) =>
+                  handleInputChange("membershipCategory", e.target.value)
+                }
                 hasError={!!errors?.membershipCategory}
               />
             </Col>
@@ -1222,20 +1286,22 @@ function AddNewGarda({ open, onClose, isGard }) {
               /> */}
             </Col>
           </Row>
-          {InfData.membershipCategory === 'Undergraduate Student' && (
+          {InfData.membershipCategory === "Undergraduate Student" && (
             <Row gutter={18} className="bg-white p-1 ms-1 me-1">
               <Col span={12}>
                 <CustomSelect
                   label="Study Location"
                   name="studyLocation"
-                  disabled={InfData.membershipCategory !== 'Undergraduate Student'}
-                  value={InfData?.studyLocation || ''}
+                  disabled={
+                    InfData.membershipCategory !== "Undergraduate Student"
+                  }
+                  value={InfData?.studyLocation || ""}
                   onChange={handleInputChange}
                   placeholder="Select study location"
                   options={[
-                    { value: 'location1', label: 'Location 1' },
-                    { value: 'location2', label: 'Location 2' },
-                    { value: 'location3', label: 'Location 3' },
+                    { value: "location1", label: "Location 1" },
+                    { value: "location2", label: "Location 2" },
+                    { value: "location3", label: "Location 3" },
                   ]}
                   hasError={!!errors?.studyLocation}
                 />
@@ -1248,8 +1314,8 @@ function AddNewGarda({ open, onClose, isGard }) {
                   value={moment(InfData?.graduationDate)} // ✅ just string like "01/07/2019"
                   disabled={isDisable}
                   onChange={(date, dateString) => {
-                    console.log(date, "dte")
-                    handleInputChange("graduationDate", date)
+                    console.log(date, "dte");
+                    handleInputChange("graduationDate", date);
                   }}
                   hasError={!!errors?.graduationDate}
                 />
@@ -1263,26 +1329,29 @@ function AddNewGarda({ open, onClose, isGard }) {
                 name="workLocation"
                 value={InfData.workLocation}
                 options={[
-                  ...workLocations.map(loc => ({ value: loc, label: loc })),
-                  { value: 'other', label: 'other' },
+                  ...workLocations.map((loc) => ({ value: loc, label: loc })),
+                  { value: "other", label: "other" },
                 ]}
                 required
                 disabled={isDisable}
-                onChange={(e) => handleInputChange("workLocation", e.target.value)}
+                onChange={(e) =>
+                  handleInputChange("workLocation", e.target.value)
+                }
                 hasError={!!errors?.workLocation}
               />
             </Col>
 
             {/* Other Work Location | Grade */}
             <Col span={12}>
-
               <MyInput
                 label="Other Work Location"
                 name="Other Work Location"
                 value={InfData.OtherWorkLocation}
-                required={InfData.WorkLocation == 'other'}
-                disabled={isDisable || InfData.WorkLocation != 'other'}
-                onChange={(e) => handleInputChange("OtherWorkLocation", e.target.value)}
+                required={InfData.WorkLocation == "other"}
+                disabled={isDisable || InfData.WorkLocation != "other"}
+                onChange={(e) =>
+                  handleInputChange("OtherWorkLocation", e.target.value)
+                }
                 hasError={!!errors?.OtherWorkLocation}
               />
             </Col>
@@ -1293,7 +1362,7 @@ function AddNewGarda({ open, onClose, isGard }) {
                 value={InfData.branch}
                 disabled={true}
                 onChange={(e) => handleInputChange("branch", e.target.value)}
-                options={allBranches.map(branch => ({
+                options={allBranches.map((branch) => ({
                   value: branch,
                   label: branch,
                 }))}
@@ -1307,7 +1376,10 @@ function AddNewGarda({ open, onClose, isGard }) {
                 value={InfData.region}
                 disabled={true}
                 onChange={(e) => handleInputChange("region", e.target.value)}
-                options={allRegions.map(region => ({ value: region, label: region }))}
+                options={allRegions.map((region) => ({
+                  value: region,
+                  label: region,
+                }))}
               />
             </Col>
           </Row>
@@ -1319,7 +1391,12 @@ function AddNewGarda({ open, onClose, isGard }) {
               <Radio.Group
                 name="nursingAdaptationProgramme"
                 value={InfData.nursingAdaptationProgramme}
-                onChange={(e) => handleInputChange("nursingAdaptationProgramme", e.target.value)}
+                onChange={(e) =>
+                  handleInputChange(
+                    "nursingAdaptationProgramme",
+                    e.target.value,
+                  )
+                }
               >
                 <Radio value={true}>Yes</Radio>
                 <Radio value={false}>No</Radio>
@@ -1333,12 +1410,16 @@ function AddNewGarda({ open, onClose, isGard }) {
                 // disabled={isDisable}
                 disabled={InfData?.nursingAdaptationProgramme !== true}
                 required={InfData?.nursingAdaptationProgramme === true}
-                onChange={(e) => handleInputChange("nmbiNumber", e.target.value)}
+                onChange={(e) =>
+                  handleInputChange("nmbiNumber", e.target.value)
+                }
               />
             </Col>
           </Row>
           <Row className="bg-white p-1 ms-1 me-1" gutter={18}>
-            <label className="my-input-label mt-2">Please tick one of the following</label>
+            <label className="my-input-label mt-2">
+              Please tick one of the following
+            </label>
             <Col span={24}>
               <Radio.Group
                 name="nursingType"
@@ -1346,13 +1427,15 @@ function AddNewGarda({ open, onClose, isGard }) {
                 onChange={handleInputChange}
                 required={InfData?.nursingAdaptationProgramme === true}
                 disabled={InfData?.nursingAdaptationProgramme !== true}
-                style={{ display: 'flex', flexWrap: 'wrap', gap: '16px' }} // FLEX layout here
+                style={{ display: "flex", flexWrap: "wrap", gap: "16px" }} // FLEX layout here
               >
                 <Radio value="General Nursing">General Nursing</Radio>
                 <Radio value="Public Health Nurse">Public Health Nurse</Radio>
                 <Radio value="Mental Health Nurse">Mental Health Nurse</Radio>
                 <Radio value="Midwife">Midwife</Radio>
-                <Radio value="Sick Children's Nurse">Sick Children's Nurse</Radio>
+                <Radio value="Sick Children's Nurse">
+                  Sick Children's Nurse
+                </Radio>
                 <Radio value="Registered Nurse for Intellectual Disability">
                   Registered Nurse for Intellectual Disability
                 </Radio>
@@ -1361,33 +1444,35 @@ function AddNewGarda({ open, onClose, isGard }) {
           </Row>
           <Row className="bg-white p-1 ms-1 me-1">
             <Col span={24}>
-              <label className="my-input-label mt-4 mb-2">Please select the most appropriate option below</label>
+              <label className="my-input-label mt-4 mb-2">
+                Please select the most appropriate option below
+              </label>
               <Radio.Group
                 label="Please select the most appropriate option below"
                 name="memberStatus"
-                value={InfData?.memberStatus || ''}
+                value={InfData?.memberStatus || ""}
                 onChange={handleInputChange}
                 options={[
-                  { value: 'new', label: 'You are a new member' },
-                  { value: 'graduate', label: 'You are newly graduated' },
+                  { value: "new", label: "You are a new member" },
+                  { value: "graduate", label: "You are newly graduated" },
                   {
-                    value: 'rejoin',
+                    value: "rejoin",
                     label:
-                      'You were previously a member of the INMO, and are rejoining',
+                      "You were previously a member of the INMO, and are rejoining",
                   },
                   {
-                    value: 'careerBreak',
-                    label: 'You are returning from a career break',
+                    value: "careerBreak",
+                    label: "You are returning from a career break",
                   },
                   {
-                    value: 'nursingAbroad',
-                    label: 'You are returning from nursing abroad',
+                    value: "nursingAbroad",
+                    label: "You are returning from nursing abroad",
                   },
                 ]}
               />
             </Col>
           </Row>
-          <Row className="bg-white p-1 pt-3 ms-1 me-1" gutter={18} >
+          <Row className="bg-white p-1 pt-3 ms-1 me-1" gutter={18}>
             <Col span={12}>
               <CustomSelect
                 label="Grade"
@@ -1397,11 +1482,11 @@ function AddNewGarda({ open, onClose, isGard }) {
                 disabled={isDisable}
                 onChange={(e) => handleInputChange("grade", e.target.value)}
                 options={[
-                  { value: 'junior', label: 'Junior' },
-                  { value: 'senior', label: 'Senior' },
-                  { value: 'lead', label: 'Lead' },
-                  { value: 'manager', label: 'Manager' },
-                  { value: 'other', label: 'Other' },
+                  { value: "junior", label: "Junior" },
+                  { value: "senior", label: "Senior" },
+                  { value: "lead", label: "Lead" },
+                  { value: "manager", label: "Manager" },
+                  { value: "other", label: "Other" },
                 ]}
                 hasError={!!errors?.grade}
               />
@@ -1412,10 +1497,12 @@ function AddNewGarda({ open, onClose, isGard }) {
                 label="Other Grade"
                 name="otherGrade"
                 value={InfData.otherGrade}
-                required={InfData?.grade === 'other'}
-                disabled={InfData?.grade !== 'other' || isDisable}
+                required={InfData?.grade === "other"}
+                disabled={InfData?.grade !== "other" || isDisable}
                 // disabled={isDisable}
-                onChange={(e) => handleInputChange("otherGrade", e.target.value)}
+                onChange={(e) =>
+                  handleInputChange("otherGrade", e.target.value)
+                }
                 hasError={!!errors?.otherGrade}
               />
             </Col>
@@ -1423,12 +1510,21 @@ function AddNewGarda({ open, onClose, isGard }) {
               <MyDatePicker
                 label="Retired Date"
                 name="retiredDate"
-                value={InfData.retiredDate ? moment(InfData.retiredDate, "DD/MM/YYYY") : null}
-                disabled={isDisable || InfData?.membershipCategory != 'Retired Associate'}
-                required={InfData?.membershipCategory == 'Retired Associate'}
+                value={
+                  InfData.retiredDate
+                    ? moment(InfData.retiredDate, "DD/MM/YYYY")
+                    : null
+                }
+                disabled={
+                  isDisable ||
+                  InfData?.membershipCategory != "Retired Associate"
+                }
+                required={InfData?.membershipCategory == "Retired Associate"}
                 onChange={(date) =>
-                  handleInputChange("retiredDate", date ? date.format("DD/MM/YYYY") : null)
-
+                  handleInputChange(
+                    "retiredDate",
+                    date ? date.format("DD/MM/YYYY") : null,
+                  )
                 }
               />
             </Col>
@@ -1439,17 +1535,24 @@ function AddNewGarda({ open, onClose, isGard }) {
                 label="Pension No"
                 name="pensionNo"
                 value={InfData.pensionNo}
-                disabled={isDisable || InfData?.membershipCategory != 'Retired Associate'}
+                disabled={
+                  isDisable ||
+                  InfData?.membershipCategory != "Retired Associate"
+                }
                 onChange={(e) => handleInputChange("pensionNo", e.target.value)}
-                required={InfData?.membershipCategory == 'Retired Associate'}
+                required={InfData?.membershipCategory == "Retired Associate"}
                 hasError={!!errors?.pensionNo}
               />
             </Col>
           </Row>
 
-          <Row className="p-1 ms-1 me-1 " style={{ backgroundColor: '#fff9eb' }} gutter={18} >
+          <Row
+            className="p-1 ms-1 me-1 "
+            style={{ backgroundColor: "#fff9eb" }}
+            gutter={18}
+          >
             <Col span={24}>
-              <div className="d-flex  pt-1 pb-1" >
+              <div className="d-flex  pt-1 pb-1">
                 <div
                   style={{
                     backgroundColor: "#fad1b8ff",
@@ -1461,7 +1564,9 @@ function AddNewGarda({ open, onClose, isGard }) {
                     justifyContent: "center",
                   }}
                 >
-                  <CiCreditCard1 style={{ color: "#ec6d28", fontSize: "18px" }} />
+                  <CiCreditCard1
+                    style={{ color: "#ec6d28", fontSize: "18px" }}
+                  />
                 </div>
                 <h2
                   style={{
@@ -1476,18 +1581,20 @@ function AddNewGarda({ open, onClose, isGard }) {
               </div>
             </Col>
           </Row>
-          <Row gutter={18} className="bg-white p-1 ms-1 me-1" >
+          <Row gutter={18} className="bg-white p-1 ms-1 me-1">
             <Col span={12}>
               <CustomSelect
                 label="Payment Type"
                 name="PaymentType"
                 required
                 options={[
-                  { value: 'deduction', label: 'Deduction at Source' },
-                  { value: 'creditCard', label: 'Credit Card' },
+                  { value: "deduction", label: "Deduction at Source" },
+                  { value: "creditCard", label: "Credit Card" },
                 ]}
                 disabled={isDisable}
-                onChange={(e) => handleInputChange("PaymentType", e.target.value)}
+                onChange={(e) =>
+                  handleInputChange("PaymentType", e.target.value)
+                }
                 value={InfData.PaymentType}
                 hasError={!!errors?.PaymentType}
               />
@@ -1498,25 +1605,33 @@ function AddNewGarda({ open, onClose, isGard }) {
                 name="payrollNo"
                 value={InfData.payrollNo}
                 hasError={!!errors?.payrollNo}
-                required={InfData?.PaymentType === 'Deduction at Source'}
-                disabled={InfData?.PaymentType !== 'Deduction at Source'}
+                required={InfData?.PaymentType === "Deduction at Source"}
+                disabled={InfData?.PaymentType !== "Deduction at Source"}
                 onChange={(e) => handleInputChange("payrollNo", e.target.value)}
               />
             </Col>
           </Row>
 
-
-
-          <Row className="bg-white p-1 ms-2 me-2" gutter={18} >
+          <Row className="bg-white p-1 ms-2 me-2" gutter={18}>
             <Col span={12}>
-              <div style={{ minHeight: '60px', display: 'flex', flexDirection: 'column', justifyContent: 'flex-start' }}>
+              <div
+                style={{
+                  minHeight: "60px",
+                  display: "flex",
+                  flexDirection: "column",
+                  justifyContent: "flex-start",
+                }}
+              >
                 <label className="my-input-label">
-                  If you are a member of another Trade Union. If yes, which Union?
+                  If you are a member of another Trade Union. If yes, which
+                  Union?
                 </label>
                 <Radio.Group
                   name="otherIrishTradeUnion"
                   value={InfData.otherIrishTradeUnion}
-                  onChange={(e) => handleInputChange('otherIrishTradeUnion', e.target?.value)}
+                  onChange={(e) =>
+                    handleInputChange("otherIrishTradeUnion", e.target?.value)
+                  }
                   disabled={isDisable}
                 >
                   <Radio value={true}>Yes</Radio>
@@ -1528,31 +1643,35 @@ function AddNewGarda({ open, onClose, isGard }) {
             <Col span={12}>
               {/* <div style={{ minHeight: '70px', display: 'flex', flexDirection: 'column', justifyContent: 'flex-start' }}> */}
               <label className="my-input-label">
-                Are you or were you a member of another Irish trade Union salary or Income Protection Scheme?
+                Are you or were you a member of another Irish trade Union salary
+                or Income Protection Scheme?
               </label>
               <Radio.Group
                 name="otherScheme"
                 value={InfData.otherScheme}
-                onChange={(e) => handleInputChange('otherIrishTradeUnion', e.target?.value)}
+                onChange={(e) =>
+                  handleInputChange("otherIrishTradeUnion", e.target?.value)
+                }
                 className="my-input-wrapper "
                 disabled={isDisable}
-
               >
                 <Radio value={true}>Yes</Radio>
                 <Radio value={false}>No</Radio>
               </Radio.Group>
               {/* </div> */}
             </Col>
-          </Row >
+          </Row>
 
-          <Row gutter={18} className="bg-white p-1 ms-1 me-1 " >
-            <Col span={12} gutter={18} >
+          <Row gutter={18} className="bg-white p-1 ms-1 me-1 ">
+            <Col span={12} gutter={18}>
               <MyInput
                 label="Recurited By"
                 name="recuritedBy"
                 value={InfData.recuritedBy}
                 disabled={isDisable}
-                onChange={(e) => handleInputChange("recuritedBy", e.target.value)}
+                onChange={(e) =>
+                  handleInputChange("recuritedBy", e.target.value)
+                }
               />
             </Col>
             <Col span={12}>
@@ -1561,7 +1680,9 @@ function AddNewGarda({ open, onClose, isGard }) {
                 name="recuritedByMembershipNo"
                 value={InfData.recuritedByMembershipNo}
                 disabled={isDisable}
-                onChange={(e) => handleInputChange("recuritedByMembershipNo", e.target.value)}
+                onChange={(e) =>
+                  handleInputChange("recuritedByMembershipNo", e.target.value)
+                }
               />
             </Col>
           </Row>
@@ -1572,14 +1693,16 @@ function AddNewGarda({ open, onClose, isGard }) {
                 name="primarySection"
                 value={InfData.primarySection}
                 disabled={isDisable}
-                onChange={(e) => handleInputChange("primarySection", e.target.value)}
+                onChange={(e) =>
+                  handleInputChange("primarySection", e.target.value)
+                }
                 options={[
-                  { value: 'section1', label: 'Section 1' },
-                  { value: 'section2', label: 'Section 2' },
-                  { value: 'section3', label: 'Section 3' },
-                  { value: 'section4', label: 'Section 4' },
-                  { value: 'section5', label: 'Section 5' },
-                  { value: 'other', label: 'Other' },
+                  { value: "section1", label: "Section 1" },
+                  { value: "section2", label: "Section 2" },
+                  { value: "section3", label: "Section 3" },
+                  { value: "section4", label: "Section 4" },
+                  { value: "section5", label: "Section 5" },
+                  { value: "other", label: "Other" },
                 ]}
               />
             </Col>
@@ -1589,9 +1712,11 @@ function AddNewGarda({ open, onClose, isGard }) {
                 name="otherPrimarySection"
                 value={InfData.otherPrimarySection}
                 // disabled={isDisable}
-                onChange={(e) => handleInputChange("otherPrimarySection", e.target.value)}
-                required={InfData?.primarySection === 'Other'}
-                disabled={InfData?.primarySection !== 'Other'}
+                onChange={(e) =>
+                  handleInputChange("otherPrimarySection", e.target.value)
+                }
+                required={InfData?.primarySection === "Other"}
+                disabled={InfData?.primarySection !== "Other"}
                 hasError={!!errors?.otherPrimarySection}
               />
             </Col>
@@ -1603,71 +1728,90 @@ function AddNewGarda({ open, onClose, isGard }) {
                 name="secondarySection"
                 value={InfData.secondarySection}
                 options={[
-                  { value: 'section1', label: 'Section 1' },
-                  { value: 'section2', label: 'Section 2' },
-                  { value: 'section3', label: 'Section 3' },
-                  { value: 'section4', label: 'Section 4' },
-                  { value: 'section5', label: 'Section 5' },
-                  { value: 'other', label: 'Other' },
+                  { value: "section1", label: "Section 1" },
+                  { value: "section2", label: "Section 2" },
+                  { value: "section3", label: "Section 3" },
+                  { value: "section4", label: "Section 4" },
+                  { value: "section5", label: "Section 5" },
+                  { value: "other", label: "Other" },
                 ]}
                 disabled={isDisable}
-                onChange={(e) => handleInputChange("secondarySection", e.target.value)}
-
-              /></Col>
+                onChange={(e) =>
+                  handleInputChange("secondarySection", e.target.value)
+                }
+              />
+            </Col>
             <Col span={12}>
               <MyInput
                 label="Other Secondary Section"
                 name="otherSecondarySection"
                 value={InfData.otherSecondarySection}
-                disabled={isDisable || InfData?.secondarySection !== 'Other'}
-                required={isDisable || InfData?.secondarySection === 'Other'}
-                onChange={(e) => handleInputChange("otherSecondarySection", e.target.value)}
+                disabled={isDisable || InfData?.secondarySection !== "Other"}
+                required={isDisable || InfData?.secondarySection === "Other"}
+                onChange={(e) =>
+                  handleInputChange("otherSecondarySection", e.target.value)
+                }
                 hasError={!!errors?.otherSecondarySection}
-              /></Col>
+              />
+            </Col>
           </Row>
           <Row className="bg-white p-1 ms-1 me-1" gutter={18}>
-            <Col span={12} >
+            <Col span={12}>
               <Checkbox
                 checked={InfData?.incomeProtectionScheme}
-                onChange={(e) => handleInputChange('incomeProtectionScheme', e.target.checked)}
+                onChange={(e) =>
+                  handleInputChange("incomeProtectionScheme", e.target.checked)
+                }
                 className="my-input-wrapper"
-                disabled={!['new', 'graduate'].includes(InfData?.inmoRewards) || isDisable}
+                disabled={
+                  !["new", "graduate"].includes(InfData?.inmoRewards) ||
+                  isDisable
+                }
               >
                 Tick here to join INMO Income Protection Scheme
               </Checkbox>
             </Col>
             <Col span={12}>
-              <Checkbox className="my-input-wrapper" disabled={isDisable ||
-                !['new', 'graduate'].includes(InfData?.inmoRewards)
-              }>
+              <Checkbox
+                className="my-input-wrapper"
+                disabled={
+                  isDisable ||
+                  !["new", "graduate"].includes(InfData?.inmoRewards)
+                }
+              >
                 Tick here to join Rewards for INMO members
               </Checkbox>
             </Col>
             <Col span={12}>
-              <Checkbox className="my-input-wrapper"
-                onChange={(e) => handleInputChange('valueAddedServices', e.target.checked)}
+              <Checkbox
+                className="my-input-wrapper"
+                onChange={(e) =>
+                  handleInputChange("valueAddedServices", e.target.checked)
+                }
                 checked={InfData?.valueAddedServices}
               >
-                Tick here to allow our partners to contact you about Value added Services by Email and SMS
+                Tick here to allow our partners to contact you about Value added
+                Services by Email and SMS
               </Checkbox>
             </Col>
             <Col span={12}>
               <Checkbox
                 checked={InfData?.termsAndConditions}
-                onChange={(e) => handleInputChange('termsAndConditions', e.target.checked)}
+                onChange={(e) =>
+                  handleInputChange("termsAndConditions", e.target.checked)
+                }
                 className="my-input-wrapper"
               >
-                I have read and agree to the INMO
-                Data Protection Statement , the INMO Privacy Statement and the INMO
-                Conditions of Membership
-                {errors?.termsAndConditions && <span style={{ color: 'red' }}> (Required)</span>}
+                I have read and agree to the INMO Data Protection Statement ,
+                the INMO Privacy Statement and the INMO Conditions of Membership
+                {errors?.termsAndConditions && (
+                  <span style={{ color: "red" }}> (Required)</span>
+                )}
               </Checkbox>
-
             </Col>
           </Row>
-
         </div>
-      </MyDrawer >
+      </MyDrawer>
     </>
   );
 }

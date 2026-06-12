@@ -63,6 +63,8 @@ import { bumpWriteOffsReload } from "../../utils/writeOffsWorkspace";
 import { bumpGeneralLedgerReload } from "../../utils/generalLedgerWorkspace";
 import { bumpReconciliationReload } from "../../utils/reconciliationWorkspace";
 import { bumpMembershipListingReportReload } from "../../utils/membershipListingReportWorkspace";
+import { bumpCreditorsListReportReload } from "../../utils/creditorsListReportWorkspace";
+import { bumpDebtorsListReportReload } from "../../utils/debtorsListReportWorkspace";
 import { bumpMembershipStatisticsReportReload } from "../../utils/membershipStatisticsReportWorkspace";
 import { bumpWorkplaceBreakdownReportReload } from "../../utils/workplaceBreakdownReportWorkspace";
 import {
@@ -178,6 +180,8 @@ const SaveViewMenu = ({ className, style }) => {
     membershiplistingreport: "membershiplisting",
     statisticsreport: "statisticsreport",
     workplacebreakdownreport: "workplacebreakdownreport",
+    creditorslistreport: "creditorslistreport",
+    debtorslistreport: "debtorslistreport",
     correspondencesummary: "notification",
     correspondencedashboard: "notification",
     communication: "notification",
@@ -306,6 +310,12 @@ const SaveViewMenu = ({ className, style }) => {
     }
     if (activePage === "WorkplaceBreakdownReport") {
       bumpWorkplaceBreakdownReportReload();
+    }
+    if (activePage === "CreditorsListReport") {
+      bumpCreditorsListReportReload();
+    }
+    if (activePage === "DebtorsListReport") {
+      bumpDebtorsListReportReload();
     }
   };
 
@@ -842,7 +852,7 @@ const SaveViewMenu = ({ className, style }) => {
         placement="bottomLeft"
         open={menuOpen}
         onOpenChange={setMenuOpen}
-        dropdownRender={() => menu}
+        popupRender={() => menu}
       >
         <Button
           onClick={(e) => e.preventDefault()}

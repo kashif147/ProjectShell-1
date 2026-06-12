@@ -24,12 +24,12 @@ const isWorkLocationLookupTypeName = (typeName) => {
   return key === "worklocation";
 };
 
-const isPaymentMethodLookupTypeName = (typeName) => {
+const isPaymentTypeLookupTypeName = (typeName) => {
   const key = String(typeName || "")
     .trim()
     .toLowerCase()
     .replace(/\s+/g, "");
-  return key === "paymenttype" || key === "paymentmethod";
+  return key === "paymenttype";
 };
 
 const sortArray = (array, key, order = 'asc') => {
@@ -203,8 +203,6 @@ const lookupsSlice = createSlice({
                 state.membershipCategoryOptions.push(optionItem);
                 break;
               case "Payment Type":
-              case "Payment Method":
-              case "paymentMethod":
                 state.paymentTypeOptions.push(optionItem);
                 break;
               case "Branch":
@@ -236,7 +234,7 @@ const lookupsSlice = createSlice({
               default:
                 if (isWorkLocationLookupTypeName(lookuptype)) {
                   state.workLocationOptions.push(optionItem);
-                } else if (isPaymentMethodLookupTypeName(lookuptype)) {
+                } else if (isPaymentTypeLookupTypeName(lookuptype)) {
                   state.paymentTypeOptions.push(optionItem);
                 }
                 break;

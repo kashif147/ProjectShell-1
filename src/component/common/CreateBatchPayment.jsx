@@ -536,6 +536,13 @@ const CreateBatchPayment = forwardRef((props, ref) => {
   const isStandingOrderContext =
     location.pathname === "/StandingOrders" ||
     resolvedBatchType === "standing order";
+  const isDeductionContext =
+    location.pathname === "/Deductions" ||
+    (location.pathname.startsWith("/BatchMemberSummary") &&
+      resolvedBatchType === "deduction");
+  const batchWorkLocationOptions = isDeductionContext
+    ? workLocationOptions.filter((opt) => opt.processSalaryDeduction)
+    : workLocationOptions;
 
   return (
     <div className="create-batch-container drwer-bg-clr">
@@ -605,7 +612,7 @@ const CreateBatchPayment = forwardRef((props, ref) => {
                       options={
                         isStandingOrderContext
                           ? branchOptions
-                          : workLocationOptions
+                          : batchWorkLocationOptions
                       }
                       value={formValues.workLocation}
                       onChange={(e) => setField("workLocation", e.target.value)}
@@ -714,7 +721,7 @@ const CreateBatchPayment = forwardRef((props, ref) => {
                     options={
                       location.pathname === "/StandingOrders"
                         ? branchOptions
-                        : workLocationOptions
+                        : batchWorkLocationOptions
                     }
                     value={formValues.workLocation}
                     onChange={(e) => setField("workLocation", e.target.value)}

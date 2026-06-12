@@ -77,6 +77,7 @@ export const isStringFilterLabel = (label, screenCols = []) => {
 
 export const isDateFilterLabel = (label, screenCols = []) => {
     if (!label) return false;
+    if (String(label) === "Reporting Period") return true;
     if (isStringFilterLabel(label, screenCols)) return false;
     if (String(label).toLowerCase().includes("date")) return true;
     if (DATE_FILTER_LABEL_PATTERN.test(String(label))) return true;
@@ -511,6 +512,7 @@ const APPLICATION_API_FILTER_KEY_TO_LABEL = {
     phone: "Phone",
     renewalDate: "Renewal Date",
     date: "Payment Date",
+    reportingPeriod: "Reporting Period",
     joinDate: "Join Date",
     paidAmount: "Paid Amount",
     amount: "Amount",
@@ -586,6 +588,12 @@ const MEMBERSHIP_LISTING_TEMPLATE_TYPES = new Set([
     "workplacebreakdownreport",
     "WorkplaceBreakdownReport",
     "workplaceBreakdownReport",
+    "creditorslistreport",
+    "CreditorsListReport",
+    "creditorsListReport",
+    "debtorslistreport",
+    "DebtorsListReport",
+    "debtorsListReport",
 ]);
 
 /** UI / column keys → reporting-service template filter keys. */
@@ -639,6 +647,25 @@ function isMembershipListingTemplateType(templateType) {
     return MEMBERSHIP_LISTING_TEMPLATE_TYPES.has(String(templateType).trim());
 }
 
+function isCreditorsListTemplateType(templateType) {
+    if (!templateType) return false;
+    const normalized = String(templateType).trim().toLowerCase();
+    return normalized === "creditorslistreport";
+}
+
+function isDebtorsListTemplateType(templateType) {
+    if (!templateType) return false;
+    const normalized = String(templateType).trim().toLowerCase();
+    return normalized === "debtorslistreport";
+}
+
+function isAccountsListReportTemplateType(templateType) {
+    return (
+        isCreditorsListTemplateType(templateType) ||
+        isDebtorsListTemplateType(templateType)
+    );
+}
+
 export const transformFiltersForApi = (filters, screenCols, options = {}) => {
     const labelMap = getLabelToKeyMap(screenCols);
     const normalizedLabelMap = Object.entries(labelMap).reduce((acc, [label, key]) => {
@@ -650,6 +677,18 @@ export const transformFiltersForApi = (filters, screenCols, options = {}) => {
     Object.keys(filters).forEach(label => {
         const filter = filters[label];
         if (filter?.selectedValues?.length > 0) {
+            if (
+                isAccountsListReportTemplateType(options.templateType) &&
+                label === "Reporting Period"
+            ) {
+                const operator = filter.operator || "between";
+                transformed.reportingPeriod = {
+                    operator: DATE_RANGE_OPERATORS.has(operator) ? operator : "between",
+                    values: (filter.selectedValues || []).map((v) => String(v)),
+                };
+                return;
+            }
+
             const normalizedLabel = String(label).trim().toLowerCase();
             const key = labelMap[label] || normalizedLabelMap[normalizedLabel];
             if (!key) return; // Ignore unknown labels to avoid backend validation errors
@@ -702,6 +741,13 @@ export const transformFiltersFromApi = (apiFilters, screenCols, options = {}) =>
     const listingTemplate = isMembershipListingTemplateType(options.templateType);
 
     Object.keys(apiFilters || {}).forEach(key => {
+        if (
+            isAccountsListReportTemplateType(options.templateType) &&
+            ["year", "month", "dateFrom", "dateTo", "periodMode"].includes(key)
+        ) {
+            return;
+        }
+
         const filter = apiFilters[key];
         let label =
             APPLICATION_API_FILTER_KEY_TO_LABEL[key] || keyToLabel[key] || key;

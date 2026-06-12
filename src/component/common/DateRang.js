@@ -254,7 +254,7 @@ function DateRang({ label, selectedValues = [], operator = "between", onApply })
 
   return (
     <Dropdown
-      dropdownRender={() => menu}
+      popupRender={() => menu}
       trigger={["click"]}
       open={open}
       onOpenChange={setOpen}

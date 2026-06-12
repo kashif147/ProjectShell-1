@@ -1426,6 +1426,8 @@ function HeaderDetails({
             location?.pathname == "/MembershipListingReport" ||
             location?.pathname == "/StatisticsReport" ||
             location?.pathname == "/WorkplaceBreakdownReport" ||
+            location?.pathname == "/CreditorsListReport" ||
+            location?.pathname == "/DebtorsListReport" ||
             location?.pathname == "/InAppNotifications") && (
             <div className="search-main">
               <div className="title d-flex justify-content-between align-items-start">
@@ -1472,6 +1474,10 @@ function HeaderDetails({
                             ? "Statistics Report"
                             : nav === "/WorkplaceBreakdownReport"
                               ? "Workplace Membership Breakdown"
+                              : nav === "/CreditorsListReport"
+                                ? "Creditors List Report"
+                              : nav === "/DebtorsListReport"
+                                ? "Debtors List Report"
                             : location?.state?.search ||
                               (nav === "/DirectDebitAuthorization"
                               ? "Direct Debit Authorization"

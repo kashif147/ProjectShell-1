@@ -29,6 +29,8 @@ import {
   mergeStaticAndDerivedOptions,
   subscribeGridFilterRows,
 } from "../utils/gridFilterOptionsRegistry";
+import { getDefaultReportingPeriodValues } from "../utils/creditorsListReportWorkspace";
+import { getDefaultReportingPeriodValues as getDebtorsDefaultReportingPeriodValues } from "../utils/debtorsListReportWorkspace";
 
 const FilterContext = createContext();
 
@@ -77,6 +79,9 @@ const WORKPLACE_BREAKDOWN_REPORT_DEFAULT_VISIBLE_FILTERS = [
   "Work Location",
   "Region",
 ];
+
+const CREDITORS_LIST_REPORT_DEFAULT_VISIBLE_FILTERS = ["Reporting Period"];
+const DEBTORS_LIST_REPORT_DEFAULT_VISIBLE_FILTERS = ["Reporting Period"];
 
 const AGGREGATE_MEMBERSHIP_REPORT_SCREENS = new Set([
   "StatisticsReport",
@@ -203,6 +208,14 @@ export const FilterProvider = ({ children }) => {
       filtersState: {},
     },
     WorkplaceBreakdownReport: {
+      visibleFilters: [],
+      filtersState: {},
+    },
+    CreditorsListReport: {
+      visibleFilters: [],
+      filtersState: {},
+    },
+    DebtorsListReport: {
       visibleFilters: [],
       filtersState: {},
     },
@@ -649,6 +662,8 @@ export const FilterProvider = ({ children }) => {
       "/membershiplistingreport": "MembershipListingReport",
       "/statisticsreport": "StatisticsReport",
       "/workplacebreakdownreport": "WorkplaceBreakdownReport",
+      "/creditorslistreport": "CreditorsListReport",
+      "/debtorslistreport": "DebtorsListReport",
       "/email": "EmailCampaigns",
       "/emailcampaigndetail": "EmailCampaigns",
       "/creditnotes": "CreditNotes",
@@ -833,6 +848,8 @@ export const FilterProvider = ({ children }) => {
       ],
       StatisticsReport: [...STATISTICS_REPORT_ALLOWED_FILTERS],
       WorkplaceBreakdownReport: [...STATISTICS_REPORT_ALLOWED_FILTERS],
+      CreditorsListReport: ["Reporting Period", "Balance"],
+      DebtorsListReport: ["Reporting Period", "Balance"],
       EmailCampaigns: [
         "Membership Category",
         "Submission Date",
@@ -957,6 +974,8 @@ export const FilterProvider = ({ children }) => {
     ],
     StatisticsReport: [...STATISTICS_REPORT_DEFAULT_VISIBLE_FILTERS],
     WorkplaceBreakdownReport: [...WORKPLACE_BREAKDOWN_REPORT_DEFAULT_VISIBLE_FILTERS],
+    CreditorsListReport: [...CREDITORS_LIST_REPORT_DEFAULT_VISIBLE_FILTERS],
+    DebtorsListReport: [...DEBTORS_LIST_REPORT_DEFAULT_VISIBLE_FILTERS],
     EmailCampaigns: ["Membership Category"],
     CreditNotes: ["CN Status"],
     JournalAdjustments: ["JA Status"],
@@ -1074,6 +1093,8 @@ export const FilterProvider = ({ children }) => {
       MembershipListingReport: getDefaultVisibleFilters("MembershipListingReport"),
       StatisticsReport: getDefaultVisibleFilters("StatisticsReport"),
       WorkplaceBreakdownReport: getDefaultVisibleFilters("WorkplaceBreakdownReport"),
+      CreditorsListReport: getDefaultVisibleFilters("CreditorsListReport"),
+      DebtorsListReport: getDefaultVisibleFilters("DebtorsListReport"),
       EmailCampaigns: getDefaultVisibleFilters("EmailCampaigns"),
       CreditNotes: getDefaultVisibleFilters("CreditNotes"),
       JournalAdjustments: getDefaultVisibleFilters("JournalAdjustments"),
@@ -1559,6 +1580,26 @@ export const FilterProvider = ({ children }) => {
         },
         "Last Payment Date": {
           operator: "between",
+          selectedValues: [],
+        },
+      },
+      CreditorsListReport: {
+        "Reporting Period": {
+          operator: "between",
+          selectedValues: getDefaultReportingPeriodValues(),
+        },
+        Balance: {
+          operator: "==",
+          selectedValues: [],
+        },
+      },
+      DebtorsListReport: {
+        "Reporting Period": {
+          operator: "between",
+          selectedValues: getDebtorsDefaultReportingPeriodValues(),
+        },
+        Balance: {
+          operator: "==",
           selectedValues: [],
         },
       },

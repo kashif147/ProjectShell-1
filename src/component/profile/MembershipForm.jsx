@@ -39,6 +39,7 @@ import {
 import utc from "dayjs/plugin/utc";
 import timezone from "dayjs/plugin/timezone";
 import dayjs from "dayjs";
+import "../../styles/MembershipForm.css";
 
 /** CustomSelect uses option label as <select> value; API often stores gender lowercase (e.g. male). */
 function normalizeGenderToSelectLabel(raw, options) {
@@ -78,6 +79,100 @@ function isPayrollOrSalaryDeduction(paymentType) {
   return false;
 }
 
+const normalizeLookupMatchKey = (value) =>
+  String(value || "")
+    .trim()
+    .toLowerCase();
+
+const isWorkLocationLookupTypeName = (typeName) => {
+  const key = normalizeLookupMatchKey(typeName).replace(/\s+/g, "");
+  return key === "worklocation";
+};
+
+const getWorkLocationMatchKeys = (item) => {
+  if (!item || typeof item !== "object") return [];
+  return [
+    ...new Set(
+      [item.label, item.lookupname, item.DisplayName, item.name]
+        .filter(Boolean)
+        .map(normalizeLookupMatchKey),
+    ),
+  ];
+};
+
+const isSalaryDeductionPaymentOption = (option) =>
+  isPayrollOrSalaryDeduction(option?.label) ||
+  isPayrollOrSalaryDeduction(option?.value);
+
+const resolveWorkLocationProcessSalaryDeduction = (
+  locationLabel,
+  workLocationOptions,
+  rawLookups,
+  locationId = null,
+) => {
+  if (locationLabel === "Other") return false;
+
+  const labelKey = normalizeLookupMatchKey(locationLabel);
+
+  if (locationId) {
+    const id = String(locationId);
+    const fromOptionById = workLocationOptions?.find(
+      (opt) => String(opt.key || opt.value) === id,
+    );
+    if (fromOptionById) return !!fromOptionById.processSalaryDeduction;
+
+    const fromRawById = (rawLookups || []).find(
+      (item) => String(item._id || item.id) === id,
+    );
+    if (fromRawById) return !!fromRawById.processSalaryDeduction;
+
+    try {
+      const stored = localStorage.getItem("hierarchicalLookups");
+      const hierarchicalLookups = stored ? JSON.parse(stored) : [];
+      const fromHierarchy = hierarchicalLookups.find(
+        (item) =>
+          String(item.id || item._id) === id ||
+          String(item.lookup?._id) === id,
+      );
+      if (fromHierarchy) return !!fromHierarchy.processSalaryDeduction;
+    } catch {
+      // ignore parse errors
+    }
+  }
+
+  if (!labelKey) return false;
+
+  const fromOptions = workLocationOptions?.find((opt) =>
+    getWorkLocationMatchKeys(opt).includes(labelKey),
+  );
+  if (fromOptions) return !!fromOptions.processSalaryDeduction;
+
+  const fromRaw = (rawLookups || []).find((item) => {
+    const type =
+      item.lookuptypeName || item.lookuptypeId?.lookuptype || item.type || "";
+    if (!isWorkLocationLookupTypeName(type)) return false;
+    return getWorkLocationMatchKeys(item).includes(labelKey);
+  });
+  if (fromRaw) return !!fromRaw.processSalaryDeduction;
+
+  try {
+    const stored = localStorage.getItem("hierarchicalLookups");
+    const hierarchicalLookups = stored ? JSON.parse(stored) : [];
+    const fromHierarchy = hierarchicalLookups.find((item) => {
+      const type = item.type || item.lookuptypeName || "";
+      const isWorkLoc =
+        type === "workLocation" || isWorkLocationLookupTypeName(type);
+      if (!isWorkLoc) return false;
+      return getWorkLocationMatchKeys(item).includes(labelKey);
+    });
+    if (fromHierarchy) return !!fromHierarchy.processSalaryDeduction;
+  } catch {
+    // ignore parse errors
+  }
+
+  return false;
+};
+
 /** Membership category value may be product _id or display name from API. */
 function isUndergraduateStudentMembershipCategory(selected, categoryOptions) {
   const sel = (selected || "").trim();
@@ -109,6 +204,56 @@ function isUndergraduateStudentMembershipCategory(selected, categoryOptions) {
   );
 }
 
+/** Membership category value may be product _id or display name from API. */
+function isHonoraryMembershipCategory(selected, categoryOptions) {
+  const sel = (selected || "").trim();
+  if (!sel) return false;
+
+  const opts = Array.isArray(categoryOptions) ? categoryOptions : [];
+  const honOpt = opts.find((o) => {
+    const lab = (o.label || "").toLowerCase();
+    return lab === "honorary" || /\bhonorary\b/.test(lab);
+  });
+  if (honOpt) {
+    if (honOpt.value === sel || honOpt.label === sel || honOpt.key === sel) {
+      return true;
+    }
+  }
+
+  const norm = sel.toLowerCase().replace(/\s+/g, "_");
+  if (norm === "honorary") return true;
+
+  const combined = sel.toLowerCase();
+  return combined === "honorary" || /\bhonorary\b/.test(combined);
+}
+
+/** Membership category value may be product _id or display name from API. */
+function isRetiredAssociateMembershipCategory(selected, categoryOptions) {
+  const sel = (selected || "").trim();
+  if (!sel) return false;
+
+  const opts = Array.isArray(categoryOptions) ? categoryOptions : [];
+  const retiredOpt = opts.find((o) => {
+    const lab = (o.label || "").toLowerCase();
+    return lab.includes("retired") && lab.includes("associate");
+  });
+  if (retiredOpt) {
+    if (
+      retiredOpt.value === sel ||
+      retiredOpt.label === sel ||
+      retiredOpt.key === sel
+    ) {
+      return true;
+    }
+  }
+
+  const norm = sel.toLowerCase().replace(/\s+/g, "_");
+  if (norm === "retired_associate") return true;
+
+  const combined = sel.toLowerCase();
+  return combined.includes("retired") && combined.includes("associate");
+}
+
 function isSameDayValue(a, b) {
   if (!a || !b) return false;
   const da = dayjs.isDayjs(a) ? a : dayjs(a);
@@ -121,6 +266,255 @@ const membershipSaveButtonStyle = {
   backgroundColor: "#45669d",
   borderColor: "#45669d",
 };
+
+function hasRequiredText(value) {
+  return String(value ?? "").trim() !== "";
+}
+
+function hasRequiredDate(value) {
+  if (value == null || value === "") return false;
+  const d = dayjs.isDayjs(value) ? value : dayjs(value);
+  return d.isValid();
+}
+
+const MEMBERSHIP_FIELD_ERROR_STYLE = {
+  border: "2px solid #ff4d4f",
+  borderRadius: "6px",
+  padding: "6px",
+  backgroundColor: "#fff2f0",
+  marginBottom: "6px",
+};
+
+function MembershipFormField({ field, fieldErrors, children }) {
+  const hasError = !!fieldErrors[field];
+  const child = React.Children.only(children);
+  const content =
+    React.isValidElement(child) &&
+    typeof child.type !== "string" &&
+    child.props?.hasError == null
+      ? React.cloneElement(child, { hasError })
+      : child;
+
+  return (
+    <div
+      className="membership-form-field"
+      data-membership-field={field}
+      style={hasError ? MEMBERSHIP_FIELD_ERROR_STYLE : undefined}
+    >
+      {content}
+    </div>
+  );
+}
+
+function MembershipFormCard({ title, children, className = "" }) {
+  return (
+    <Card className={`membership-form-card ${className}`.trim()}>
+      <h3 className="membership-form-card-header">{title}</h3>
+      <div className="membership-form-card-body">{children}</div>
+    </Card>
+  );
+}
+
+function MembershipFormGrid({ children }) {
+  return (
+    <div className="membership-form-grid">
+      {React.Children.map(children, (child) => {
+        if (child == null) return null;
+        if (React.isValidElement(child) && child.type === MembershipFormGridFull) {
+          return child;
+        }
+        return <div className="membership-form-grid-cell">{child}</div>;
+      })}
+    </div>
+  );
+}
+
+function MembershipFormGridFull({ children }) {
+  return (
+    <div className="membership-form-grid-cell membership-form-grid-full">
+      {children}
+    </div>
+  );
+}
+
+function MembershipFormColumns({ children }) {
+  return (
+    <Row gutter={[16, 10]} className="membership-form-columns" align="top">
+      {children}
+    </Row>
+  );
+}
+
+function MembershipFormCol({ children, isFirst = false }) {
+  return (
+    <Col
+      span={8}
+      className={`membership-form-col${isFirst ? " membership-form-col--first" : ""}`}
+    >
+      <div className="membership-form-column">{children}</div>
+    </Col>
+  );
+}
+
+function collectMembershipFormValidationErrors(formData, options = {}) {
+  const {
+    membershipCategorySelected,
+    undergradEducationalActive,
+    retiredAssociateActive,
+    honoraryMembershipActive,
+    showPaymentInformation,
+    payrollDeductionPayment,
+    workLocationAllowsSalaryDeduction,
+  } = options;
+  const labels = [];
+  const fields = {};
+
+  const addIssue = (field, label) => {
+    fields[field] = true;
+    if (!labels.includes(label)) labels.push(label);
+  };
+  const requireText = (value, field, label) => {
+    if (!hasRequiredText(value)) addIssue(field, label);
+  };
+  const requireDate = (value, field, label) => {
+    if (!hasRequiredDate(value)) addIssue(field, label);
+  };
+
+  requireText(formData.title, "title", "Title");
+  requireText(formData.forename, "forename", "Forename(s)");
+  requireText(formData.surname, "surname", "Surname");
+  requireDate(formData.dateOfBirth, "dateOfBirth", "Date of Birth");
+  requireText(formData.gender, "gender", "Gender");
+  requireText(
+    formData.countryPrimaryQualification,
+    "countryPrimaryQualification",
+    "Country of Primary Qualification",
+  );
+
+  if (!hasRequiredText(formData.preferredAddress)) {
+    addIssue("preferredAddress", "Preferred Address");
+  }
+  requireText(formData.addressLine1, "addressLine1", "Address Line 1");
+  requireText(formData.townCity, "townCity", "Town/City");
+  requireText(formData.country, "country", "Country");
+
+  requireText(formData.mobileNumber, "mobileNumber", "Mobile Number");
+  if (!hasRequiredText(formData.preferredEmail)) {
+    addIssue("preferredEmail", "Preferred Email");
+  } else if (formData.preferredEmail === "Personal") {
+    requireText(formData.personalEmail, "personalEmail", "Personal Email");
+  } else if (formData.preferredEmail === "Work") {
+    requireText(formData.workEmail, "workEmail", "Work Email");
+  }
+
+  requireText(formData.workLocation, "workLocation", "Work Location");
+  if (formData.workLocation === "Other") {
+    requireText(
+      formData.otherWorkLocation,
+      "otherWorkLocation",
+      "Other Work Location",
+    );
+  }
+  requireText(formData.grade, "grade", "Grade");
+  if (formData.grade === "Other") {
+    requireText(formData.otherGrade, "otherGrade", "Other Grade");
+  }
+
+  if (undergradEducationalActive) {
+    requireText(formData.studyLocation, "studyLocation", "Study Location");
+    requireDate(formData.graduationDate, "graduationDate", "Graduation Date");
+    requireText(formData.discipline, "discipline", "Discipline");
+  }
+
+  if (formData.nursingProgramme === "Yes") {
+    requireText(
+      formData.nursingSpecialization,
+      "nursingSpecialization",
+      "Primary Nurse Type",
+    );
+  } else if (formData.nursingProgramme === "No") {
+    requireText(
+      formData.nmbiNumber,
+      "nmbiNumber",
+      "NMBI No. / An Bord Altranais Number",
+    );
+  }
+
+  requireText(formData.primarySection, "primarySection", "Primary Section");
+  if (formData.primarySection === "Other") {
+    requireText(
+      formData.otherPrimarySection,
+      "otherPrimarySection",
+      "Other Primary Section",
+    );
+  }
+
+  requireText(
+    formData.membershipCategory,
+    "membershipCategory",
+    "Membership Category",
+  );
+  if (membershipCategorySelected) {
+    requireDate(formData.startDate, "startDate", "Start Date");
+  }
+
+  if (payrollDeductionPayment && showPaymentInformation) {
+    if (!workLocationAllowsSalaryDeduction) {
+      addIssue(
+        "workLocation",
+        formData.workLocation
+          ? `Salary Deduction is not enabled for work location "${formData.workLocation}"`
+          : "Work Location (required for Salary Deduction)",
+      );
+      addIssue("paymentType", "Payment Type");
+    }
+    requireText(formData.payrollNumber, "payrollNumber", "Payroll No.");
+  }
+
+  if (retiredAssociateActive) {
+    requireDate(formData.retiredDate, "retiredDate", "Retirement Date");
+    requireText(formData.pensionNumber, "pensionNumber", "Pension No.");
+  }
+
+  return { labels, fields };
+}
+
+function scrollToFirstMembershipFieldError(fields, containerSelector) {
+  const firstField = Object.keys(fields)[0];
+  if (!firstField) return;
+  const el = document.querySelector(`[data-membership-field="${firstField}"]`);
+  if (!el) return;
+  const container = el.closest(containerSelector);
+  if (container) {
+    scrollElementWithinContainer(el, container);
+  }
+}
+
+function scrollElementWithinContainer(
+  element,
+  container,
+  { behavior = "smooth", padding = 24 } = {},
+) {
+  if (!element || !container) return;
+
+  const containerRect = container.getBoundingClientRect();
+  const elementRect = element.getBoundingClientRect();
+
+  if (elementRect.top < containerRect.top + padding) {
+    container.scrollBy({
+      top: elementRect.top - containerRect.top - padding,
+      behavior,
+    });
+    return;
+  }
+
+  if (elementRect.bottom > containerRect.bottom - padding) {
+    container.scrollBy({
+      top: elementRect.bottom - containerRect.bottom + padding,
+      behavior,
+    });
+  }
+}
 
 const MembershipForm = ({
   isEditMode = false,
@@ -155,6 +549,9 @@ const MembershipForm = ({
   const subscriptionIdParam = searchParams.get("subscriptionId") || "";
   const profileIdParam = searchParams.get("profileId") || "";
   const [saveLoading, setSaveLoading] = useState(false);
+  const paymentTypeSectionRef = useRef(null);
+  const shouldFocusPaymentTypeRef = useRef(false);
+  const [fieldErrors, setFieldErrors] = useState({});
   const [initialMembershipCategory, setInitialMembershipCategory] =
     useState("");
   const [initialSubscriptionStartDate, setInitialSubscriptionStartDate] =
@@ -171,6 +568,7 @@ const MembershipForm = ({
     regionOptions,
     secondarySectionOptions,
     countryOptions,
+    lookups: lookupsRaw,
   } = useSelector((state) => state.lookups);
 
   dayjs.extend(utc);
@@ -241,24 +639,6 @@ const MembershipForm = ({
       return true;
     return false;
   }, [ProfileSubData]);
-
-  const memoizedPaymentTypeOptions = useMemo(() => {
-    if (!paymentTypeOptions) return [];
-    const hasPayrollDeduction = paymentTypeOptions.some(
-      (opt) =>
-        opt.label === "Payroll Deduction" || opt.value === "Payroll Deduction",
-    );
-    if (hasPayrollDeduction) return paymentTypeOptions;
-
-    return [
-      ...paymentTypeOptions,
-      {
-        id: "Payroll Deduction",
-        value: "Payroll Deduction",
-        label: "Payroll Deduction",
-      },
-    ];
-  }, [paymentTypeOptions]);
 
   useEffect(() => {
     // FIXED: Safely access profileSearchData results
@@ -562,6 +942,23 @@ const MembershipForm = ({
     endDate: null,
     subscriptionYear: null,
   });
+
+  const workLocationAllowsSalaryDeduction = useMemo(
+    () =>
+      resolveWorkLocationProcessSalaryDeduction(
+        formData.workLocation,
+        workLocationOptions,
+        lookupsRaw,
+      ),
+    [formData.workLocation, workLocationOptions, lookupsRaw],
+  );
+
+  const filteredPaymentTypeOptions = useMemo(() => {
+    const options = paymentTypeOptions || [];
+    if (workLocationAllowsSalaryDeduction) return options;
+    return options.filter((opt) => !isSalaryDeductionPaymentOption(opt));
+  }, [paymentTypeOptions, workLocationAllowsSalaryDeduction]);
+
   const lookupData = {
     titles: [
       { key: "mr", label: "Mr" },
@@ -672,6 +1069,27 @@ const MembershipForm = ({
         updatedData.workLocation =
           value.label || value.lookupname || value.name || "";
       }
+      const allowsSalaryDeduction = resolveWorkLocationProcessSalaryDeduction(
+        updatedData.workLocation,
+        workLocationOptions,
+        lookupsRaw,
+        typeof value === "object" && value !== null
+          ? value.key || value.value || value._id
+          : null,
+      );
+      if (
+        !allowsSalaryDeduction &&
+        isPayrollOrSalaryDeduction(updatedData.paymentType)
+      ) {
+        updatedData.paymentType = "";
+        updatedData.payrollNumber = "";
+      }
+      if (
+        !allowsSalaryDeduction &&
+        String(updatedData.workLocation || "").trim()
+      ) {
+        shouldFocusPaymentTypeRef.current = true;
+      }
     }
     if (field === "consentCorrespondence") {
       updatedData.consent = value;
@@ -739,7 +1157,28 @@ const MembershipForm = ({
       const resolved = resolveWorkLocationFromHierarchy(nextBranch, nextRegion);
       if (resolved) {
         updatedData.workLocation = resolved;
+        const allowsSalaryDeduction = resolveWorkLocationProcessSalaryDeduction(
+          resolved,
+          workLocationOptions,
+          lookupsRaw,
+        );
+        if (
+          !allowsSalaryDeduction &&
+          isPayrollOrSalaryDeduction(updatedData.paymentType)
+        ) {
+          updatedData.paymentType = "";
+          updatedData.payrollNumber = "";
+        }
+        if (!allowsSalaryDeduction) {
+          shouldFocusPaymentTypeRef.current = true;
+        }
       }
+    }
+    if (field === "nursingProgramme" && value !== "Yes") {
+      updatedData.nursingSpecialization = "";
+    }
+    if (field === "memberOfOtherUnion" && value !== "Yes") {
+      updatedData.otherUnionName = "";
     }
     if (field === "paymentType") {
       const defaultFrequency =
@@ -762,6 +1201,25 @@ const MembershipForm = ({
       updatedData.graduationDate = null;
     }
     setFormData(updatedData);
+    setFieldErrors((prev) => {
+      const next = { ...prev };
+      let changed = false;
+      if (prev[field]) {
+        delete next[field];
+        changed = true;
+      }
+      if (field === "nursingProgramme") {
+        if (value === "Yes" && next.nmbiNumber) {
+          delete next.nmbiNumber;
+          changed = true;
+        }
+        if (value !== "Yes" && next.nursingSpecialization) {
+          delete next.nursingSpecialization;
+          changed = true;
+        }
+      }
+      return changed ? next : prev;
+    });
   };
 
   // Sync isDeceased prop with formData and apply deceased logic
@@ -813,6 +1271,44 @@ const MembershipForm = ({
     [formData.paymentType],
   );
 
+  const showPaymentTypeSalaryDeductionNotice =
+    !isFormReadOnly &&
+    Boolean(String(formData.workLocation || "").trim()) &&
+    !workLocationAllowsSalaryDeduction;
+
+  const paymentTypeHighlightStyle = showPaymentTypeSalaryDeductionNotice
+    ? {
+        border: "2px solid #faad14",
+        borderRadius: "8px",
+        padding: "8px",
+        backgroundColor: "#fffbe6",
+        marginBottom: "8px",
+      }
+    : undefined;
+
+  useEffect(() => {
+    if (
+      !showPaymentTypeSalaryDeductionNotice ||
+      !shouldFocusPaymentTypeRef.current
+    ) {
+      return;
+    }
+    shouldFocusPaymentTypeRef.current = false;
+
+    const section = paymentTypeSectionRef.current;
+    if (!section) return;
+
+    const scrollContainer = section.closest(".membership-form-container");
+    if (scrollContainer) {
+      scrollElementWithinContainer(section, scrollContainer);
+    }
+
+    requestAnimationFrame(() => {
+      const select = section.querySelector("select:not([disabled])");
+      select?.focus({ preventScroll: true });
+    });
+  }, [showPaymentTypeSalaryDeductionNotice, formData.workLocation]);
+
   const undergradEducationalActive = useMemo(
     () =>
       isUndergraduateStudentMembershipCategory(
@@ -821,6 +1317,30 @@ const MembershipForm = ({
       ),
     [formData.membershipCategory, categoryData],
   );
+
+  const honoraryMembershipActive = useMemo(
+    () =>
+      isHonoraryMembershipCategory(
+        formData.membershipCategory,
+        categoryData,
+      ),
+    [formData.membershipCategory, categoryData],
+  );
+
+  const retiredAssociateActive = useMemo(
+    () =>
+      isRetiredAssociateMembershipCategory(
+        formData.membershipCategory,
+        categoryData,
+      ),
+    [formData.membershipCategory, categoryData],
+  );
+
+  const showPaymentInformation =
+    !honoraryMembershipActive && !undergradEducationalActive;
+
+  const showRemindersCancellations =
+    !undergradEducationalActive && !honoraryMembershipActive;
 
   const educationalSectionDisabled =
     isFormReadOnly || !undergradEducationalActive;
@@ -839,12 +1359,14 @@ const MembershipForm = ({
   const getSaveErrorMessage = (err) => {
     const p = err?.payload ?? err;
     if (typeof p === "string") return p;
-    return (
-      p?.message ||
-      p?.error?.message ||
-      (Array.isArray(p?.errors) ? p.errors.join(", ") : null) ||
-      "Request failed"
-    );
+    if (p?.error?.message) return p.error.message;
+    if (p?.message) return p.message;
+    if (Array.isArray(p?.errors)) return p.errors.join(", ");
+    if (Array.isArray(p?.error?.details)) {
+      return p.error.details.map((d) => d?.message || d).join(", ");
+    }
+    if (typeof p?.error === "string") return p.error;
+    return "Unable to save. Please check required fields and try again.";
   };
 
   const handleCancelEdit = () => {
@@ -866,56 +1388,30 @@ const MembershipForm = ({
       return;
     }
 
-    if (membershipCategorySelected) {
-      const sd = formData.startDate;
-      const startOk =
-        sd && (dayjs.isDayjs(sd) ? sd.isValid() : dayjs(sd).isValid());
-      if (!startOk) {
-        MyAlert(
-          "error",
-          "Subscription start date is required when a membership category is selected.",
-        );
-        return;
-      }
+    const validation = collectMembershipFormValidationErrors(formData, {
+      membershipCategorySelected,
+      undergradEducationalActive,
+      retiredAssociateActive,
+      honoraryMembershipActive,
+      showPaymentInformation,
+      payrollDeductionPayment,
+      workLocationAllowsSalaryDeduction,
+    });
+    if (validation.labels.length > 0) {
+      setFieldErrors(validation.fields);
+      scrollToFirstMembershipFieldError(
+        validation.fields,
+        ".membership-form-container",
+      );
+      MyAlert(
+        "error",
+        "Please complete the following required fields:",
+        validation.labels.map((label) => `• ${label}`).join("\n"),
+      );
+      return;
     }
 
-    if (payrollDeductionPayment) {
-      if (!String(formData.payrollNumber || "").trim()) {
-        MyAlert(
-          "error",
-          "Payroll number is required when payment type is payroll or salary deduction.",
-        );
-        return;
-      }
-    }
-
-    if (undergradEducationalActive) {
-      if (!String(formData.studyLocation || "").trim()) {
-        MyAlert(
-          "error",
-          "Study location is required for undergraduate student membership.",
-        );
-        return;
-      }
-      const gd = formData.graduationDate;
-      const gradOk =
-        gd && (dayjs.isDayjs(gd) ? gd.isValid() : dayjs(gd).isValid());
-      if (!gradOk) {
-        MyAlert(
-          "error",
-          "Graduation date is required for undergraduate student membership.",
-        );
-        return;
-      }
-      if (!String(formData.discipline || "").trim()) {
-        MyAlert(
-          "error",
-          "Discipline is required for undergraduate student membership.",
-        );
-        return;
-      }
-    }
-
+    setFieldErrors({});
     setSaveLoading(true);
     try {
       const profileBody = formDataToProfilePutPayload(
@@ -982,6 +1478,16 @@ const MembershipForm = ({
     return () => setExtras(null);
   }, [membershipToolbar, isEditMode, isFormReadOnly, saveLoading]);
 
+  const cancellationReasonOptions = [
+    { key: "voluntary", label: "Voluntary Resignation" },
+    { key: "retirement", label: "Retirement" },
+    { key: "relocation", label: "Relocation" },
+    { key: "financial", label: "Financial Reasons" },
+    { key: "dissatisfaction", label: "Dissatisfaction with Services" },
+    { key: "other", label: "Other" },
+    { key: "deceased", label: "Deceased" },
+  ];
+
   const NursingSpecializationSelectOptn = [
     { label: "General Nursing", value: "generalNursing" },
     { label: "Public Health Nurse", value: "publicHealthNurse" },
@@ -996,7 +1502,7 @@ const MembershipForm = ({
 
   return (
     <div
-      className="mt-2 pe-4 pb-4 mb-2 membership-form-container"
+      className="mt-2 pe-4 pb-4 mb-2 membership-form-container membership-form compact"
       style={{
         height: "calc(92vh - 120px - 4vh)",
         maxHeight: "calc(100vh - 120px - 4vh)",
@@ -1005,135 +1511,116 @@ const MembershipForm = ({
         position: "relative",
         scrollBehavior: "smooth",
         paddingRight: "12px",
-        paddingBottom: isEditMode ? "300px" : "200px",
+        paddingBottom: isEditMode ? "120px" : "80px",
       }}
     >
-      <Row gutter={[24, 24]}>
-        {/* Column 1: Personal Information */}
-        <Col span={8}>
-          <div style={{ height: "100%" }}>
-            {/* Personal Information Card */}
-            <Card
-              style={{
-                marginBottom: "16px",
-                border: "1px solid #e8e8e8",
-                borderRadius: "8px",
-              }}
-              styles={{ body: { padding: "16px" } }}
-            >
-              <div
-                style={{
-                  marginBottom: "16px",
-                  paddingBottom: "12px",
-                  borderBottom: "1px solid #e8e8e8",
-                }}
-              >
-                <h3
-                  style={{
-                    fontSize: "16px",
-                    fontWeight: 600,
-                    margin: 0,
-                    color: "#1a1a1a",
-                  }}
-                >
-                  Personal Information
-                </h3>
-              </div>
-              <CustomSelect
-                label="Title"
-                placeholder="Select a title"
-                options={lookupData.titles}
-                value={formData.title}
-                onChange={(e) => handleChange("title", e.target.value)}
-                disabled={isFormReadOnly}
-                required={true}
-              />
-              <MyInput
-                label="Forename(s)"
-                placeholder="Enter your forename(s)"
-                value={formData.forename}
-                onChange={(e) => handleChange("forename", e.target.value)}
-                disabled={isFormReadOnly}
-                required={true}
-              />
-              <MyInput
-                label="Surname"
-                placeholder="Enter your surname"
-                value={formData.surname}
-                onChange={(e) => handleChange("surname", e.target.value)}
-                disabled={isFormReadOnly}
-                required={true}
-              />
-              <MyDatePicker
-                label="Date of Birth"
-                placeholder="mm/dd/yyyy"
-                value={formData.dateOfBirth}
-                onChange={(date) => handleChange("dateOfBirth", date)}
-                disabled={isFormReadOnly}
-                required={true}
-              />
-              <CustomSelect
-                label="Gender"
-                placeholder="Select your gender"
-                options={
-                  Array.isArray(genderOptions) && genderOptions.length > 0
-                    ? genderOptions
-                    : lookupData.genders
-                }
-                value={formData.gender}
-                onChange={(e) => handleChange("gender", e.target.value)}
-                disabled={isFormReadOnly}
-                required={true}
-              />
-              <CustomSelect
-                label="Country of Primary Qualification"
-                placeholder="Select a country"
-                options={countriesOptions}
-                value={formData.countryPrimaryQualification}
-                onChange={(e) =>
-                  handleChange("countryPrimaryQualification", e.target.value)
-                }
-                disabled={isFormReadOnly}
-                required={true}
-              />
-            </Card>
+      <MembershipFormColumns>
+          <MembershipFormCol isFirst>
+            <MembershipFormCard title="Personal Information">
+              <MembershipFormGrid>
+                <MembershipFormGridFull>
+                  <MembershipFormField field="title" fieldErrors={fieldErrors}>
+                    <CustomSelect
+                      label="Title"
+                      placeholder="Select a title"
+                      options={lookupData.titles}
+                      value={formData.title}
+                      onChange={(e) => handleChange("title", e.target.value)}
+                      disabled={isFormReadOnly}
+                      required={true}
+                    />
+                  </MembershipFormField>
+                </MembershipFormGridFull>
+                <MembershipFormField field="forename" fieldErrors={fieldErrors}>
+                  <MyInput
+                    label="Forename(s)"
+                    placeholder="Enter your forename(s)"
+                    value={formData.forename}
+                    onChange={(e) => handleChange("forename", e.target.value)}
+                    disabled={isFormReadOnly}
+                    required={true}
+                  />
+                </MembershipFormField>
+                <MembershipFormField field="surname" fieldErrors={fieldErrors}>
+                  <MyInput
+                    label="Surname"
+                    placeholder="Enter your surname"
+                    value={formData.surname}
+                    onChange={(e) => handleChange("surname", e.target.value)}
+                    disabled={isFormReadOnly}
+                    required={true}
+                  />
+                </MembershipFormField>
+                <MembershipFormField field="dateOfBirth" fieldErrors={fieldErrors}>
+                  <MyDatePicker
+                    label="Date of Birth"
+                    placeholder="mm/dd/yyyy"
+                    value={formData.dateOfBirth}
+                    onChange={(date) => handleChange("dateOfBirth", date)}
+                    disabled={isFormReadOnly}
+                    required={true}
+                  />
+                </MembershipFormField>
+                <MembershipFormField field="gender" fieldErrors={fieldErrors}>
+                  <CustomSelect
+                    label="Gender"
+                    placeholder="Select your gender"
+                    options={
+                      Array.isArray(genderOptions) && genderOptions.length > 0
+                        ? genderOptions
+                        : lookupData.genders
+                    }
+                    value={formData.gender}
+                    onChange={(e) => handleChange("gender", e.target.value)}
+                    disabled={isFormReadOnly}
+                    required={true}
+                  />
+                </MembershipFormField>
+                <MembershipFormGridFull>
+                  <MembershipFormField
+                    field="countryPrimaryQualification"
+                    fieldErrors={fieldErrors}
+                  >
+                    <CustomSelect
+                      label="Country of Primary Qualification"
+                      placeholder="Select a country"
+                      options={countriesOptions}
+                      value={formData.countryPrimaryQualification}
+                      onChange={(e) =>
+                        handleChange("countryPrimaryQualification", e.target.value)
+                      }
+                      disabled={isFormReadOnly}
+                      required={true}
+                    />
+                  </MembershipFormField>
+                </MembershipFormGridFull>
+              </MembershipFormGrid>
+            </MembershipFormCard>
 
-            {/* Correspondence Details Card */}
-            <Card
-              style={{
-                marginBottom: "16px",
-                border: "1px solid #e8e8e8",
-                borderRadius: "8px",
-              }}
-              styles={{ body: { padding: "16px" } }}
-            >
-              <h3
-                style={{
-                  fontSize: "16px",
-                  fontWeight: 600,
-                  marginBottom: "16px",
-                  paddingBottom: "12px",
-                  borderBottom: "1px solid #e8e8e8",
-                  color: "#1a1a1a",
-                }}
+            <MembershipFormCard title="Correspondence Details">
+              <MembershipFormField
+                field="preferredAddress"
+                fieldErrors={fieldErrors}
+                radio
               >
-                Correspondence Details
-              </h3>
-              <div style={{ marginBottom: "16px" }}>
-                <label className="my-input-label">
-                  Preferred Address <span className="required-star">*</span>
-                </label>
-                <Radio.Group
-                  value={formData.preferredAddress}
-                  onChange={(e) =>
-                    handleChange("preferredAddress", e.target.value)
-                  }
-                  disabled={isFormReadOnly}
-                >
-                  <Radio value="Home/Personal">Home/Personal</Radio>
-                  <Radio value="Work">Work</Radio>
-                </Radio.Group>
-              </div>
+                <div className="membership-form-radio-block membership-form-radio-inline">
+                  <label
+                    className={`my-input-label ${fieldErrors.preferredAddress ? "error" : ""}`}
+                  >
+                    Preferred Address <span className="required-star">*</span>
+                  </label>
+                  <Radio.Group
+                    value={formData.preferredAddress}
+                    onChange={(e) =>
+                      handleChange("preferredAddress", e.target.value)
+                    }
+                    disabled={isFormReadOnly}
+                  >
+                    <Radio value="Home/Personal">Home/Personal</Radio>
+                    <Radio value="Work">Work</Radio>
+                  </Radio.Group>
+                </div>
+              </MembershipFormField>
               <MyInput
                 label="Search for your address"
                 placeholder="Search address"
@@ -1141,163 +1628,146 @@ const MembershipForm = ({
                 onChange={(e) => handleChange("searchAddress", e.target.value)}
                 disabled={isFormReadOnly}
               />
-              <MyInput
-                label="Address Line 1"
-                value={formData.addressLine1}
-                onChange={(e) => handleChange("addressLine1", e.target.value)}
-                disabled={isFormReadOnly}
-                required={true}
-                extra={
-                  <Checkbox
-                    checked={formData.nata}
-                    onChange={(e) => handleChange("nata", e.target.checked)}
+              <MembershipFormGrid>
+                <MembershipFormField field="addressLine1" fieldErrors={fieldErrors}>
+                  <MyInput
+                    label="Address Line 1"
+                    value={formData.addressLine1}
+                    onChange={(e) => handleChange("addressLine1", e.target.value)}
+                    disabled={isFormReadOnly}
+                    required={true}
+                    extra={
+                      <Checkbox
+                        checked={formData.nata}
+                        onChange={(e) => handleChange("nata", e.target.checked)}
+                        disabled={isFormReadOnly}
+                      >
+                        NATA
+                      </Checkbox>
+                    }
+                  />
+                </MembershipFormField>
+                <MyInput
+                  label="Address Line 2"
+                  value={formData.addressLine2}
+                  onChange={(e) => handleChange("addressLine2", e.target.value)}
+                  disabled={isFormReadOnly}
+                />
+              </MembershipFormGrid>
+              <MembershipFormGrid>
+                <MembershipFormField field="townCity" fieldErrors={fieldErrors}>
+                  <MyInput
+                    label="Town/City"
+                    value={formData.townCity}
+                    onChange={(e) => handleChange("townCity", e.target.value)}
+                    disabled={isFormReadOnly}
+                    required={true}
+                  />
+                </MembershipFormField>
+                <MyInput
+                  label="County/State"
+                  value={formData.countyState}
+                  onChange={(e) => handleChange("countyState", e.target.value)}
+                  disabled={isFormReadOnly}
+                />
+                <MyInput
+                  label="Eircode/Postcode"
+                  placeholder="Enter Eircode"
+                  value={formData.eircode}
+                  onChange={(e) => handleChange("eircode", e.target.value)}
+                  disabled={isFormReadOnly}
+                />
+                <MembershipFormField field="country" fieldErrors={fieldErrors}>
+                  <CustomSelect
+                    label="Country"
+                    placeholder="Select country"
+                    options={countriesOptions}
+                    value={formData.country}
+                    onChange={(e) => handleChange("country", e.target.value)}
+                    disabled={isFormReadOnly}
+                    required={true}
+                  />
+                </MembershipFormField>
+              </MembershipFormGrid>
+            </MembershipFormCard>
+
+            <MembershipFormCard title="Contact Details">
+              <MembershipFormGrid>
+                <MembershipFormGridFull>
+                  <MembershipFormField field="mobileNumber" fieldErrors={fieldErrors}>
+                    <MyInput
+                      label="Mobile Number"
+                      type="mobile"
+                      value={formData.mobileNumber}
+                      onChange={(e) => handleChange("mobileNumber", e.target.value)}
+                      disabled={isFormReadOnly}
+                      required={true}
+                    />
+                  </MembershipFormField>
+                </MembershipFormGridFull>
+                <MembershipFormGridFull>
+                  <MyInput
+                    label="Home / Work Tel Number"
+                    placeholder="Optional"
+                    value={formData.telephoneNumber}
+                    onChange={(e) =>
+                      handleChange("telephoneNumber", e.target.value)
+                    }
+                    disabled={isFormReadOnly}
+                  />
+                </MembershipFormGridFull>
+              </MembershipFormGrid>
+              <MembershipFormField
+                field="preferredEmail"
+                fieldErrors={fieldErrors}
+                radio
+              >
+                <div className="membership-form-radio-block membership-form-radio-inline">
+                  <label
+                    className={`my-input-label ${fieldErrors.preferredEmail ? "error" : ""}`}
+                  >
+                    Preferred Email <span className="required-star">*</span>
+                  </label>
+                  <Radio.Group
+                    value={formData.preferredEmail}
+                    onChange={(e) =>
+                      handleChange("preferredEmail", e.target.value)
+                    }
                     disabled={isFormReadOnly}
                   >
-                    NATA
-                  </Checkbox>
-                }
-              />
-              <MyInput
-                label="Address Line 2"
-                value={formData.addressLine2}
-                onChange={(e) => handleChange("addressLine2", e.target.value)}
-                disabled={isFormReadOnly}
-              />
-              <MyInput
-                label="Town/City"
-                value={formData.townCity}
-                onChange={(e) => handleChange("townCity", e.target.value)}
-                disabled={isFormReadOnly}
-                required={true}
-              />
-              <MyInput
-                label="County/State"
-                value={formData.countyState}
-                onChange={(e) => handleChange("countyState", e.target.value)}
-                disabled={isFormReadOnly}
-              />
-              <MyInput
-                label="Eircode/Postcode"
-                placeholder="Enter Eircode"
-                value={formData.eircode}
-                onChange={(e) => handleChange("eircode", e.target.value)}
-                disabled={isFormReadOnly}
-              />
-              <CustomSelect
-                label="Country"
-                placeholder="Select country"
-                options={countriesOptions}
-                value={formData.country}
-                onChange={(e) => handleChange("country", e.target.value)}
-                disabled={isFormReadOnly}
-                required={true}
-              />
-            </Card>
+                    <Radio value="Personal">Personal</Radio>
+                    <Radio value="Work">Work</Radio>
+                  </Radio.Group>
+                </div>
+              </MembershipFormField>
+              <MembershipFormGrid>
+                <MembershipFormField field="personalEmail" fieldErrors={fieldErrors}>
+                  <MyInput
+                    label="Personal Email"
+                    value={formData.personalEmail}
+                    onChange={(e) =>
+                      handleChange("personalEmail", e.target.value)
+                    }
+                    disabled={isFormReadOnly}
+                    required={formData.preferredEmail === "Personal"}
+                  />
+                </MembershipFormField>
+                <MembershipFormField field="workEmail" fieldErrors={fieldErrors}>
+                  <MyInput
+                    label="Work Email"
+                    placeholder="Optional"
+                    value={formData.workEmail}
+                    onChange={(e) => handleChange("workEmail", e.target.value)}
+                    disabled={isFormReadOnly}
+                    required={formData.preferredEmail === "Work"}
+                  />
+                </MembershipFormField>
+              </MembershipFormGrid>
+            </MembershipFormCard>
 
-            {/* Contact Details Card */}
-            <Card
-              style={{
-                marginBottom: "16px",
-                border: "1px solid #e8e8e8",
-                borderRadius: "8px",
-              }}
-              styles={{ body: { padding: "16px" } }}
-            >
-              <h3
-                style={{
-                  fontSize: "16px",
-                  fontWeight: 600,
-                  marginBottom: "16px",
-                  paddingBottom: "12px",
-                  borderBottom: "1px solid #e8e8e8",
-                  color: "#1a1a1a",
-                }}
-              >
-                Contact Details
-              </h3>
-              <MyInput
-                label="Mobile Number"
-                type="mobile"
-                value={formData.mobileNumber}
-                onChange={(e) => handleChange("mobileNumber", e.target.value)}
-                disabled={isFormReadOnly}
-                required={true}
-              />
-              <MyInput
-                label="Home / Work Tel Number"
-                placeholder="Optional"
-                value={formData.telephoneNumber}
-                onChange={(e) =>
-                  handleChange("telephoneNumber", e.target.value)
-                }
-                disabled={isFormReadOnly}
-              />
-              <div style={{ marginBottom: "16px" }}>
-                <label className="my-input-label">
-                  Preferred Email <span className="required-star">*</span>
-                </label>
-                <Radio.Group
-                  value={formData.preferredEmail}
-                  onChange={(e) =>
-                    handleChange("preferredEmail", e.target.value)
-                  }
-                  disabled={isFormReadOnly}
-                >
-                  <Radio value="Personal">Personal</Radio>
-                  <Radio value="Work">Work</Radio>
-                </Radio.Group>
-              </div>
-              <MyInput
-                label="Personal Email"
-                value={formData.personalEmail}
-                onChange={(e) => handleChange("personalEmail", e.target.value)}
-                disabled={isFormReadOnly}
-                required={formData.preferredEmail === "Personal"}
-              />
-              <MyInput
-                label="Work Email"
-                placeholder="Optional"
-                value={formData.workEmail}
-                onChange={(e) => handleChange("workEmail", e.target.value)}
-                disabled={isFormReadOnly}
-                required={formData.preferredEmail === "Work"}
-              />
-            </Card>
-
-            {/* Third Party Consent Card */}
-            <Card
-              style={{
-                marginBottom: "80px",
-                border: "1px solid #e8e8e8",
-                borderRadius: "8px",
-              }}
-              styles={{ body: { padding: "16px" } }}
-            >
-              <h3
-                style={{
-                  fontSize: "16px",
-                  fontWeight: 600,
-                  marginBottom: "16px",
-                  paddingBottom: "12px",
-                  borderBottom: "1px solid #e8e8e8",
-                  color: "#1a1a1a",
-                }}
-              >
-                Consent Management
-              </h3>
-
-              {/* INMO Consent Section */}
-              <div style={{ marginBottom: "24px" }}>
-                <h4
-                  style={{
-                    fontSize: "14px",
-                    fontWeight: 600,
-                    marginBottom: "12px",
-                    color: "#1a1a1a",
-                  }}
-                >
-                  INMO Consent
-                </h4>
+            <MembershipFormCard title="Consent Management">
+              <div className="membership-form-consent-section">
+                <h4 className="membership-form-subsection-title">INMO Consent</h4>
                 <Checkbox
                   checked={formData.consent}
                   indeterminate={isIndeterminate()}
@@ -1310,21 +1780,13 @@ const MembershipForm = ({
                   style={{
                     display: "flex",
                     alignItems: "center",
-                    marginBottom: "12px",
+                    marginBottom: "8px",
                   }}
                   disabled={isFormReadOnly}
                 >
                   I consent to receive correspondence from INMO
                 </Checkbox>
-                <div
-                  style={{
-                    marginLeft: "24px",
-                    display: "flex",
-                    flexDirection: "row",
-                    gap: "16px",
-                    alignItems: "center",
-                  }}
-                >
+                <div className="membership-form-consent-options">
                   <Checkbox
                     checked={formData.consentSMS}
                     onChange={(e) =>
@@ -1364,25 +1826,10 @@ const MembershipForm = ({
                 </div>
               </div>
 
-              {/* Line Separator */}
-              <div
-                style={{
-                  borderTop: "1px solid #e8e8e8",
-                  marginTop: "24px",
-                  marginBottom: "24px",
-                }}
-              ></div>
+              <div className="membership-form-separator" />
 
-              {/* Additional Service and Terms Section */}
               <div>
-                <h4
-                  style={{
-                    fontSize: "14px",
-                    fontWeight: 600,
-                    marginBottom: "12px",
-                    color: "#1a1a1a",
-                  }}
-                >
+                <h4 className="membership-form-subsection-title">
                   Additional Service and Terms
                 </h4>
                 <Checkbox
@@ -1400,166 +1847,141 @@ const MembershipForm = ({
                   member offers.
                 </Checkbox>
               </div>
-            </Card>
-          </div>
-        </Col>
+            </MembershipFormCard>
+          </MembershipFormCol>
+          <MembershipFormCol>
+            <MembershipFormCard title="Employment Details">
+              <MembershipFormGrid>
+                <MembershipFormGridFull>
+                  <MembershipFormField field="workLocation" fieldErrors={fieldErrors}>
+                    <CustomSelect
+                      label="Work Location"
+                      placeholder="Select Location..."
+                      options={workLocationOptions}
+                      value={formData.workLocation}
+                      onChange={(e) => handleChange("workLocation", e.target.value)}
+                      disabled={isFormReadOnly}
+                      required={true}
+                    />
+                  </MembershipFormField>
+                </MembershipFormGridFull>
+                <CustomSelect
+                  label="Branch"
+                  placeholder="Select Branch..."
+                  options={branchOptions}
+                  value={formData.branch}
+                  onChange={(e) => handleChange("branch", e.target.value)}
+                  disabled={isFormReadOnly}
+                />
+                <CustomSelect
+                  label="Region"
+                  placeholder="Select Region..."
+                  options={regionOptions}
+                  value={formData.region}
+                  onChange={(e) => handleChange("region", e.target.value)}
+                  disabled={isFormReadOnly}
+                />
+                <MembershipFormGridFull>
+                  <MembershipFormField field="grade" fieldErrors={fieldErrors}>
+                    <CustomSelect
+                      label="Grade"
+                      placeholder="Select Grade..."
+                      options={gradeOptions}
+                      value={formData.grade}
+                      onChange={(e) => handleChange("grade", e.target.value)}
+                      disabled={isFormReadOnly}
+                      required={true}
+                    />
+                  </MembershipFormField>
+                </MembershipFormGridFull>
+                <MembershipFormField
+                  field="otherWorkLocation"
+                  fieldErrors={fieldErrors}
+                >
+                  <MyInput
+                    label="Other Work Location"
+                    placeholder="Enabled if 'Other' is selected"
+                    disabled={isFormReadOnly || formData.workLocation !== "Other"}
+                    value={formData.otherWorkLocation}
+                    onChange={(e) =>
+                      handleChange("otherWorkLocation", e.target.value)
+                    }
+                    required={formData.workLocation === "Other"}
+                  />
+                </MembershipFormField>
+                <MembershipFormField field="otherGrade" fieldErrors={fieldErrors}>
+                  <MyInput
+                    label="Other Grade"
+                    placeholder="Enabled if 'Other' is selected"
+                    disabled={isFormReadOnly || formData.grade !== "Other"}
+                    value={formData.otherGrade}
+                    onChange={(e) => handleChange("otherGrade", e.target.value)}
+                    required={formData.grade === "Other"}
+                  />
+                </MembershipFormField>
+              </MembershipFormGrid>
+            </MembershipFormCard>
 
-        {/* Column 2: Professional Details */}
-        <Col span={8}>
-          <div style={{ height: "100%" }}>
-            {/* Employment Details Card */}
-            <Card
-              style={{
-                marginBottom: "16px",
-                border: "1px solid #e8e8e8",
-                borderRadius: "8px",
-              }}
-              styles={{ body: { padding: "16px" } }}
-            >
-              <h3
-                style={{
-                  fontSize: "16px",
-                  fontWeight: 600,
-                  marginBottom: "16px",
-                  paddingBottom: "12px",
-                  borderBottom: "1px solid #e8e8e8",
-                  color: "#1a1a1a",
-                }}
-              >
-                Employment Details
-              </h3>
-              <CustomSelect
-                label="Work Location"
-                placeholder="Select Location..."
-                options={workLocationOptions}
-                value={formData.workLocation}
-                onChange={(e) => handleChange("workLocation", e.target.value)}
-                disabled={isFormReadOnly}
-                required={true}
-              />
-              <MyInput
-                label="Other Work Location"
-                placeholder="Enabled if 'Other' is selected"
-                disabled={isFormReadOnly || formData.workLocation !== "Other"}
-                value={formData.otherWorkLocation}
-                onChange={(e) =>
-                  handleChange("otherWorkLocation", e.target.value)
-                }
-                required={formData.workLocation === "Other"}
-              />
-              <CustomSelect
-                label="Branch"
-                placeholder="Select Branch..."
-                options={branchOptions}
-                value={formData.branch}
-                onChange={(e) => handleChange("branch", e.target.value)}
-                disabled={isFormReadOnly}
-              />
-              <CustomSelect
-                label="Region"
-                placeholder="Select Region..."
-                options={regionOptions}
-                value={formData.region}
-                onChange={(e) => handleChange("region", e.target.value)}
-                disabled={isFormReadOnly}
-              />
-              <CustomSelect
-                label="Grade"
-                placeholder="Select Grade..."
-                options={gradeOptions}
-                value={formData.grade}
-                onChange={(e) => handleChange("grade", e.target.value)}
-                disabled={isFormReadOnly}
-                required={true}
-              />
-              <MyInput
-                label="Other Grade"
-                placeholder="Enabled if 'Other' is selected"
-                disabled={isFormReadOnly || formData.grade !== "Other"}
-                value={formData.otherGrade}
-                onChange={(e) => handleChange("otherGrade", e.target.value)}
-                required={formData.grade === "Other"}
-              />
-            </Card>
+            <MembershipFormCard title="Section Details">
+              <MembershipFormGrid>
+                <MembershipFormGridFull>
+                  <MembershipFormField field="primarySection" fieldErrors={fieldErrors}>
+                    <CustomSelect
+                      label="Primary Section"
+                      placeholder="Select Primary Section"
+                      value={formData.primarySection}
+                      onChange={(e) =>
+                        handleChange("primarySection", e.target.value)
+                      }
+                      options={sectionOptions}
+                      disabled={isFormReadOnly}
+                      required={true}
+                    />
+                  </MembershipFormField>
+                </MembershipFormGridFull>
+                <MembershipFormGridFull>
+                  <MembershipFormField
+                    field="otherPrimarySection"
+                    fieldErrors={fieldErrors}
+                  >
+                    <MyInput
+                      label="Other Primary Section"
+                      value={formData.otherPrimarySection}
+                      onChange={(e) =>
+                        handleChange("otherPrimarySection", e.target.value)
+                      }
+                      disabled={isFormReadOnly}
+                      required={formData.primarySection === "Other"}
+                    />
+                  </MembershipFormField>
+                </MembershipFormGridFull>
+                <MembershipFormGridFull>
+                  <CustomSelect
+                    label="Secondary Section"
+                    placeholder="Select Secondary Section (Optional)"
+                    value={formData.secondarySection}
+                    onChange={(e) =>
+                      handleChange("secondarySection", e.target.value)
+                    }
+                    options={secondarySectionOptions}
+                    disabled={isFormReadOnly}
+                  />
+                </MembershipFormGridFull>
+                <MembershipFormGridFull>
+                  <MyInput
+                    label="Other Secondary Section"
+                    value={formData.otherSecondarySection}
+                    onChange={(e) =>
+                      handleChange("otherSecondarySection", e.target.value)
+                    }
+                    disabled={isFormReadOnly}
+                  />
+                </MembershipFormGridFull>
+              </MembershipFormGrid>
+            </MembershipFormCard>
 
-            {/* Educational Details Card */}
-            <Card
-              style={{
-                marginBottom: "16px",
-                border: "1px solid #e8e8e8",
-                borderRadius: "8px",
-              }}
-              styles={{ body: { padding: "16px" } }}
-            >
-              <h3
-                style={{
-                  fontSize: "16px",
-                  fontWeight: 600,
-                  marginBottom: "16px",
-                  paddingBottom: "12px",
-                  borderBottom: "1px solid #e8e8e8",
-                  color: "#1a1a1a",
-                }}
-              >
-                Educational Details
-              </h3>
-              <CustomSelect
-                label="Study Location"
-                placeholder="Select Study Location..."
-                options={lookupData.studyLocations}
-                value={formData.studyLocation}
-                onChange={(e) => handleChange("studyLocation", e.target.value)}
-                disabled={educationalSectionDisabled}
-                required={undergradEducationalActive && !isFormReadOnly}
-              />
-              <MyDatePicker
-                label="Start Date"
-                placeholder="Select start date (Optional)"
-                value={formData.startDate}
-                onChange={(date) => handleChange("startDate", date)}
-                disabled={educationalSectionDisabled}
-              />
-              <MyDatePicker
-                label="Graduation Date"
-                placeholder="Select graduation date"
-                value={formData.graduationDate}
-                onChange={(date) => handleChange("graduationDate", date)}
-                disabled={educationalSectionDisabled}
-                required={undergradEducationalActive && !isFormReadOnly}
-              />
-              <CustomSelect
-                label="Discipline"
-                placeholder="Select Discipline..."
-                options={lookupData.disciplines}
-                value={formData.discipline}
-                onChange={(e) => handleChange("discipline", e.target.value)}
-                disabled={educationalSectionDisabled}
-                required={undergradEducationalActive && !isFormReadOnly}
-              />
-            </Card>
-
-            {/* Nursing Registration & Specialization Card */}
-            <Card
-              style={{
-                marginBottom: "16px",
-                border: "1px solid #e8e8e8",
-                borderRadius: "8px",
-              }}
-              styles={{ body: { padding: "16px" } }}
-            >
-              <h3
-                style={{
-                  fontSize: "16px",
-                  fontWeight: 600,
-                  marginBottom: "16px",
-                  paddingBottom: "12px",
-                  borderBottom: "1px solid #e8e8e8",
-                  color: "#1a1a1a",
-                }}
-              >
-                Nursing Registration & Specialization
-              </h3>
-              <div style={{ marginBottom: "16px" }}>
+            <MembershipFormCard title="Nursing Registration & Specialization">
+              <div className="membership-form-radio-block membership-form-radio-inline">
                 <label className="my-input-label">
                   Are you currently on a nursing adaptation program?
                 </label>
@@ -1574,445 +1996,359 @@ const MembershipForm = ({
                   <Radio value="No">No</Radio>
                 </Radio.Group>
               </div>
-              <MyInput
-                label="NMBI No. / An Bord Altranais Number"
-                placeholder="Enabled if adaptation is 'Yes'"
-                disabled={isFormReadOnly || formData.nursingProgramme !== "Yes"}
-                value={formData.nmbiNumber}
-                onChange={(e) => handleChange("nmbiNumber", e.target.value)}
-              />
-              <div style={{ marginBottom: "16px" }}>
-                <label className="my-input-label mb-1">
-                  Primary Nurse Type <span className="text-danger">*</span>
-                </label>
-
-                <Radio.Group
-                  name="nursingSpecialization"
-                  value={formData.nursingSpecialization}
-                  onChange={(e) =>
-                    handleChange("nursingSpecialization", e.target.value)
+              <MembershipFormField field="nmbiNumber" fieldErrors={fieldErrors}>
+                <MyInput
+                  label="NMBI No. / An Bord Altranais Number"
+                  placeholder={
+                    formData.nursingProgramme === "No"
+                      ? "Enter your NMBI number"
+                      : "Optional during adaptation programme"
                   }
                   disabled={isFormReadOnly}
-                  className="w-100"
-                >
-                  <Row gutter={[16, 8]}>
-                    {NursingSpecializationSelectOptn.map((option) => (
-                      <Col key={option.value} xs={24} sm={12}>
-                        <Radio
-                          value={option.value}
-                          style={{
-                            whiteSpace: "normal",
-                            display: "flex",
-                            alignItems: "center",
-                            height: "100%",
-                            color: "#212529",
-                          }}
-                        >
-                          {option.label}
-                        </Radio>
-                      </Col>
-                    ))}
-                  </Row>
-                </Radio.Group>
-              </div>
-            </Card>
-
-            {/* Section Details Card */}
-            <Card
-              style={{
-                marginBottom: "16px",
-                border: "1px solid #e8e8e8",
-                borderRadius: "8px",
-              }}
-              styles={{ body: { padding: "16px" } }}
-            >
-              <h3
-                style={{
-                  fontSize: "16px",
-                  fontWeight: 600,
-                  marginBottom: "16px",
-                  paddingBottom: "12px",
-                  borderBottom: "1px solid #e8e8e8",
-                  color: "#1a1a1a",
-                }}
-              >
-                Section Details
-              </h3>
-              <CustomSelect
-                label="Primary Section"
-                placeholder="Select Primary Section"
-                value={formData.primarySection}
-                onChange={(e) => handleChange("primarySection", e.target.value)}
-                options={sectionOptions}
-                disabled={isFormReadOnly}
-                required={true}
-              />
-              <MyInput
-                label="Other"
-                value={formData.otherPrimarySection}
-                onChange={(e) =>
-                  handleChange("otherPrimarySection", e.target.value)
-                }
-                disabled={isFormReadOnly}
-                required={formData.primarySection === "Other"}
-              />
-              <CustomSelect
-                label="Secondary Section (Optional)"
-                placeholder="Select Secondary Section (Optional)"
-                value={formData.secondarySection}
-                onChange={(e) =>
-                  handleChange("secondarySection", e.target.value)
-                }
-                options={secondarySectionOptions}
-                disabled={isFormReadOnly}
-              />
-              <MyInput
-                label="Other"
-                value={formData.otherSecondarySection}
-                onChange={(e) =>
-                  handleChange("otherSecondarySection", e.target.value)
-                }
-                disabled={isFormReadOnly}
-              />
-            </Card>
-
-            {/* Recruitment Details Card */}
-            <Card
-              style={{
-                marginBottom: "16px",
-                border: "1px solid #e8e8e8",
-                borderRadius: "8px",
-              }}
-              styles={{ body: { padding: "16px" } }}
-            >
-              <h3
-                style={{
-                  fontSize: "16px",
-                  fontWeight: 600,
-                  marginBottom: "16px",
-                  paddingBottom: "12px",
-                  borderBottom: "1px solid #e8e8e8",
-                  color: "#1a1a1a",
-                }}
-              >
-                Recruitment Details
-              </h3>
-              <MyInput
-                label="Recruited By"
-                placeholder="Enter full name"
-                value={formData.recruitedBy}
-                onChange={(e) => handleChange("recruitedBy", e.target.value)}
-                disabled={isFormReadOnly}
-              />
-              <MyInput
-                label="Membership Number"
-                placeholder="Enter membership number"
-                value={formData.recruitedByMembershipNo}
-                onChange={(e) =>
-                  handleChange("recruitedByMembershipNo", e.target.value)
-                }
-                disabled={isFormReadOnly}
-              />
-            </Card>
-          </div>
-        </Col>
-
-        {/* Column 3: Finalize Profile */}
-        <Col span={8}>
-          <div style={{ height: "100%" }}>
-            {/* Subscription Details Card */}
-            <Card
-              style={{
-                marginBottom: "16px",
-                border: "1px solid #e8e8e8",
-                borderRadius: "8px",
-              }}
-              styles={{ body: { padding: "16px" } }}
-            >
-              <h3
-                style={{
-                  fontSize: "16px",
-                  fontWeight: 600,
-                  marginBottom: "16px",
-                  paddingBottom: "12px",
-                  borderBottom: "1px solid #e8e8e8",
-                  color: "#1a1a1a",
-                }}
-              >
-                Subscription Details
-              </h3>
-
-              <CustomSelect
-                label="Membership Category"
-                placeholder="Select Category..."
-                options={categoryData}
-                // isIDs={true}
-                value={formData.membershipCategory}
-                onChange={(e) =>
-                  handleChange("membershipCategory", e.target.value)
-                }
-                disabled={isFormReadOnly}
-                required={true}
-              />
-              {showMembershipCategoryStartDateWarning && (
-                <div
-                  style={{
-                    backgroundColor: "#fff7e6",
-                    border: "1px solid #ffd591",
-                    borderRadius: "6px",
-                    padding: "8px 12px",
-                    marginBottom: "12px",
-                    color: "#ad6800",
-                    fontSize: "13px",
-                    fontWeight: 500,
-                  }}
-                >
-                  Membership Category has changed. Do you want to update the
-                  Subscription Start Date?
-                </div>
-              )}
-              <div
-                style={
-                  showMembershipCategoryStartDateWarning
-                    ? {
-                        border: "2px solid #faad14",
-                        borderRadius: "8px",
-                        padding: "8px",
-                        backgroundColor: "#fffbe6",
-                        marginBottom: "8px",
-                      }
-                    : undefined
-                }
-              >
-                <MyDatePicker
-                  label="Subscription Start Date"
-                  placeholder="Select start date"
-                  value={formData.startDate}
-                  onChange={(date) => handleChange("startDate", date)}
-                  disabled={isFormReadOnly}
-                  required={membershipCategorySelected}
+                  value={formData.nmbiNumber}
+                  onChange={(e) => handleChange("nmbiNumber", e.target.value)}
+                  required={
+                    !isFormReadOnly && formData.nursingProgramme === "No"
+                  }
                 />
-              </div>
-              <MyDatePicker
-                label="Subscription End Date"
-                placeholder="Select end date"
-                value={formData.endDate}
-                onChange={(date) => handleChange("endDate", date)}
-                disabled
-              />
-              <MyDatePicker
-                label="Renewal Date"
-                placeholder="Select renewal date"
-                value={formData.renewalDate}
-                onChange={(date) => handleChange("renewalDate", date)}
-                disabled
-              />
-              <CustomSelect
-                label="Membership Movement"
-                placeholder="Select Movement..."
-                options={[
-                  { value: "NewJoin", label: "New" },
-                  { value: "Renewal", label: "Renewal" },
-                  { value: "Reinstatement", label: "Reinstatement" },
-                  { value: "Transfer", label: "Transfer" },
-                  { value: "Conversion", label: "Conversion" },
-                ]}
-                value={formData.membershipMovement}
-                onChange={(e) =>
-                  handleChange("membershipMovement", e.target.value)
-                }
-                disabled
-              />
-              {/* <div style={{ marginTop: "16px", marginBottom: "16px" }}>
-                <Checkbox
-                  checked={formData.isCurrent}
-                  disabled={true}
-                >
-                  Current Subscription
-                </Checkbox>
-              </div> */}
-              <MyDatePicker
-                label="Cancellation / Resignation Date"
-                placeholder="Select cancellation date"
-                value={formData.dateCancelled}
-                onChange={(date) => handleChange("dateCancelled", date)}
-                disabled={true}
-              />
-              <MyInput
-                label="Cancellation / Resignation Reason"
-                placeholder="Enter cancellation reason"
-                value={formData.cancellationReason}
-                onChange={(e) =>
-                  handleChange("cancellationReason", e.target.value)
-                }
-                disabled={true}
-              />
-            </Card>
-
-            {/* Payment Information Card */}
-            <Card
-              style={{
-                marginBottom: "16px",
-                border: "1px solid #e8e8e8",
-                borderRadius: "8px",
-              }}
-              styles={{ body: { padding: "16px" } }}
-            >
-              <h3
-                style={{
-                  fontSize: "16px",
-                  fontWeight: 600,
-                  marginBottom: "16px",
-                  paddingBottom: "12px",
-                  borderBottom: "1px solid #e8e8e8",
-                  color: "#1a1a1a",
-                }}
+              </MembershipFormField>
+              <MembershipFormField
+                field="nursingSpecialization"
+                fieldErrors={fieldErrors}
+                radio
               >
-                Payment Information
-              </h3>
-              <CustomSelect
-                label="Payment Type"
-                placeholder="Select Payment Type"
-                // options={[
-                //   { value: "Salary Deduction", label: "Salary Deduction" },
-                //   { value: "Credit Card", label: "Credit Card" },
-                // ]}
-                value={formData.paymentType}
-                onChange={(e) => handleChange("paymentType", e.target.value)}
-                disabled={isFormReadOnly}
-                required={true}
-                isIDs={false}
-                options={memoizedPaymentTypeOptions}
-              />
-              <MyInput
-                label="Payroll No."
-                placeholder="Enter Payroll No."
-                value={formData.payrollNumber}
-                onChange={(e) => handleChange("payrollNumber", e.target.value)}
-                disabled={isFormReadOnly || !payrollDeductionPayment}
-                required={payrollDeductionPayment && !isFormReadOnly}
-              />
-              <CustomSelect
-                label="Payment Frequency"
-                placeholder="Select Frequency"
-                options={CRM_PAYMENT_FREQUENCY_OPTIONS}
-                value={formData.paymentFrequency}
-                onChange={(e) =>
-                  handleChange("paymentFrequency", e.target.value)
-                }
-                disabled={isFormReadOnly}
-              />
-            </Card>
+                <div className="membership-form-radio-block">
+                  <label
+                    className={`my-input-label mb-1 ${fieldErrors.nursingSpecialization ? "error" : ""}`}
+                  >
+                    Primary Nurse Type
+                    {formData.nursingProgramme === "Yes" ? (
+                      <span className="text-danger"> *</span>
+                    ) : null}
+                  </label>
 
-            {/* Reminders Card */}
-            <Card
-              style={{
-                marginBottom: "16px",
-                border: "1px solid #e8e8e8",
-                borderRadius: "8px",
-              }}
-              styles={{ body: { padding: "16px" } }}
-            >
-              <h3
-                style={{
-                  fontSize: "16px",
-                  fontWeight: 600,
-                  marginBottom: "16px",
-                  paddingBottom: "12px",
-                  borderBottom: "1px solid #e8e8e8",
-                  color: "#1a1a1a",
-                }}
-              >
-                Reminders
-              </h3>
-              <MyDatePicker
-                label="First Reminder"
-                placeholder="Select first reminder date"
-                value={formData.firstReminderDate}
-                onChange={(date) => handleChange("firstReminderDate", date)}
-                disabled={true}
-              />
-              <MyDatePicker
-                label="Second Reminder"
-                placeholder="Select second reminder date"
-                value={formData.secondReminderDate}
-                onChange={(date) => handleChange("secondReminderDate", date)}
-                disabled={true}
-              />
-              <MyDatePicker
-                label="Third Reminder"
-                placeholder="Select third reminder date"
-                value={formData.thirdReminderDate}
-                onChange={(date) => handleChange("thirdReminderDate", date)}
-                disabled={true}
-              />
-            </Card>
+                  <Radio.Group
+                    name="nursingSpecialization"
+                    value={formData.nursingSpecialization}
+                    onChange={(e) =>
+                      handleChange("nursingSpecialization", e.target.value)
+                    }
+                    disabled={
+                      isFormReadOnly || formData.nursingProgramme !== "Yes"
+                    }
+                    className="w-100"
+                  >
+                    <Row gutter={[12, 4]}>
+                      {NursingSpecializationSelectOptn.map((option) => (
+                        <Col key={option.value} xs={24} sm={12}>
+                          <Radio
+                            value={option.value}
+                            style={{
+                              whiteSpace: "normal",
+                              display: "flex",
+                              alignItems: "center",
+                              height: "100%",
+                              color: "#212529",
+                            }}
+                          >
+                            {option.label}
+                          </Radio>
+                        </Col>
+                      ))}
+                    </Row>
+                  </Radio.Group>
+                </div>
+              </MembershipFormField>
+            </MembershipFormCard>
 
-            {/* Retirement Details Card */}
-            <Card
-              style={{
-                marginBottom: "16px",
-                border: "1px solid #e8e8e8",
-                borderRadius: "8px",
-              }}
-              styles={{ body: { padding: "16px" } }}
+            <MembershipFormCard
+              title="Recruitment Details"
+              className="membership-form-card--last"
             >
-              <h3
-                style={{
-                  fontSize: "16px",
-                  fontWeight: 600,
-                  marginBottom: "16px",
-                  paddingBottom: "12px",
-                  borderBottom: "1px solid #e8e8e8",
-                  color: "#1a1a1a",
-                }}
-              >
-                Retirement Details
-              </h3>
-              <MyDatePicker
-                label="Retirement Date"
-                value={formData.retiredDate}
-                onChange={(date) => handleChange("retiredDate", date)}
-                disabled={
-                  isFormReadOnly ||
-                  formData.membershipCategory !== "retired_associate"
-                }
-                required={formData.membershipCategory === "retired_associate"}
-              />
-              <MyInput
-                label="Pension No."
-                value={formData.pensionNumber}
-                onChange={(e) => handleChange("pensionNumber", e.target.value)}
-                disabled={
-                  isFormReadOnly ||
-                  formData.membershipCategory !== "retired_associate"
-                }
-                required={formData.membershipCategory === "retired_associate"}
-              />
-            </Card>
+              <MembershipFormGrid>
+                <MyInput
+                  label="Recruited By"
+                  placeholder="Enter full name"
+                  value={formData.recruitedBy}
+                  onChange={(e) => handleChange("recruitedBy", e.target.value)}
+                  disabled={isFormReadOnly}
+                />
+                <MyInput
+                  label="Membership Number"
+                  placeholder="Enter membership number"
+                  value={formData.recruitedByMembershipNo}
+                  onChange={(e) =>
+                    handleChange("recruitedByMembershipNo", e.target.value)
+                  }
+                  disabled={isFormReadOnly}
+                />
+              </MembershipFormGrid>
+            </MembershipFormCard>
+          </MembershipFormCol>
+          <MembershipFormCol>
+            <MembershipFormCard title="Subscription Details">
+              <MembershipFormGrid>
+                <MembershipFormGridFull>
+                  <MembershipFormField
+                    field="membershipCategory"
+                    fieldErrors={fieldErrors}
+                  >
+                    <CustomSelect
+                      label="Membership Category"
+                      placeholder="Select Category..."
+                      options={categoryData}
+                      value={formData.membershipCategory}
+                      onChange={(e) =>
+                        handleChange("membershipCategory", e.target.value)
+                      }
+                      disabled={isFormReadOnly}
+                      required={true}
+                    />
+                  </MembershipFormField>
+                </MembershipFormGridFull>
+                {showMembershipCategoryStartDateWarning && (
+                  <MembershipFormGridFull>
+                    <div className="membership-form-notice">
+                      Membership Category has changed. Do you want to update the
+                      Start Date?
+                    </div>
+                  </MembershipFormGridFull>
+                )}
+                <MembershipFormField field="startDate" fieldErrors={fieldErrors}>
+                  <div
+                    className={
+                      showMembershipCategoryStartDateWarning &&
+                      !fieldErrors.startDate
+                        ? "membership-form-warning-wrap"
+                        : undefined
+                    }
+                  >
+                    <MyDatePicker
+                      label="Start Date"
+                      placeholder="Select start date"
+                      value={formData.startDate}
+                      onChange={(date) => handleChange("startDate", date)}
+                      disabled={isFormReadOnly}
+                      required={membershipCategorySelected}
+                    />
+                  </div>
+                </MembershipFormField>
+                <MyDatePicker
+                  label="End Date"
+                  placeholder="Select end date"
+                  value={formData.endDate}
+                  onChange={(date) => handleChange("endDate", date)}
+                  disabled
+                />
+                <MyDatePicker
+                  label="Renewal Date"
+                  placeholder="Select renewal date"
+                  value={formData.renewalDate}
+                  onChange={(date) => handleChange("renewalDate", date)}
+                  disabled
+                />
+                <CustomSelect
+                  label="Membership Movement"
+                  placeholder="Select Movement..."
+                  options={[
+                    { value: "NewJoin", label: "New" },
+                    { value: "Renewal", label: "Renewal" },
+                    { value: "Reinstatement", label: "Reinstatement" },
+                    { value: "Transfer", label: "Transfer" },
+                    { value: "Conversion", label: "Conversion" },
+                  ]}
+                  value={formData.membershipMovement}
+                  onChange={(e) =>
+                    handleChange("membershipMovement", e.target.value)
+                  }
+                  disabled
+                />
+              </MembershipFormGrid>
+            </MembershipFormCard>
 
-            {/* Additional Memberships Card */}
-            <Card
-              style={{
-                marginBottom: "16px",
-                border: "1px solid #e8e8e8",
-                borderRadius: "8px",
-              }}
-              styles={{ body: { padding: "16px" } }}
-            >
-              <h3
-                style={{
-                  fontSize: "16px",
-                  fontWeight: 600,
-                  marginBottom: "16px",
-                  paddingBottom: "12px",
-                  borderBottom: "1px solid #e8e8e8",
-                  color: "#1a1a1a",
-                }}
-              >
-                Additional Memberships
-              </h3>
-              <div style={{ marginBottom: "16px" }}>
+            {undergradEducationalActive && (
+              <MembershipFormCard title="Educational Details">
+                <MembershipFormGrid>
+                  <MembershipFormGridFull>
+                    <MembershipFormField field="studyLocation" fieldErrors={fieldErrors}>
+                      <CustomSelect
+                        label="Study Location"
+                        placeholder="Select Study Location..."
+                        options={lookupData.studyLocations}
+                        value={formData.studyLocation}
+                        onChange={(e) =>
+                          handleChange("studyLocation", e.target.value)
+                        }
+                        disabled={educationalSectionDisabled}
+                        required={undergradEducationalActive && !isFormReadOnly}
+                      />
+                    </MembershipFormField>
+                  </MembershipFormGridFull>
+                  <MyDatePicker
+                    label="Start Date"
+                    placeholder="Select start date (Optional)"
+                    value={formData.startDate}
+                    onChange={(date) => handleChange("startDate", date)}
+                    disabled={educationalSectionDisabled}
+                  />
+                  <MembershipFormField
+                    field="graduationDate"
+                    fieldErrors={fieldErrors}
+                  >
+                    <MyDatePicker
+                      label="Graduation Date"
+                      placeholder="Select graduation date"
+                      value={formData.graduationDate}
+                      onChange={(date) => handleChange("graduationDate", date)}
+                      disabled={educationalSectionDisabled}
+                      required={undergradEducationalActive && !isFormReadOnly}
+                    />
+                  </MembershipFormField>
+                  <MembershipFormGridFull>
+                    <MembershipFormField field="discipline" fieldErrors={fieldErrors}>
+                      <CustomSelect
+                        label="Discipline"
+                        placeholder="Select Discipline..."
+                        options={lookupData.disciplines}
+                        value={formData.discipline}
+                        onChange={(e) => handleChange("discipline", e.target.value)}
+                        disabled={educationalSectionDisabled}
+                        required={undergradEducationalActive && !isFormReadOnly}
+                      />
+                    </MembershipFormField>
+                  </MembershipFormGridFull>
+                </MembershipFormGrid>
+              </MembershipFormCard>
+            )}
+
+            {retiredAssociateActive && (
+              <MembershipFormCard title="Retirement Details">
+                <MembershipFormGrid>
+                  <MembershipFormField field="retiredDate" fieldErrors={fieldErrors}>
+                    <MyDatePicker
+                      label="Retirement Date"
+                      value={formData.retiredDate}
+                      onChange={(date) => handleChange("retiredDate", date)}
+                      disabled={isFormReadOnly}
+                      required={!isFormReadOnly}
+                    />
+                  </MembershipFormField>
+                  <MembershipFormField field="pensionNumber" fieldErrors={fieldErrors}>
+                    <MyInput
+                      label="Pension No."
+                      value={formData.pensionNumber}
+                      onChange={(e) =>
+                        handleChange("pensionNumber", e.target.value)
+                      }
+                      disabled={isFormReadOnly}
+                      required={!isFormReadOnly}
+                    />
+                  </MembershipFormField>
+                </MembershipFormGrid>
+              </MembershipFormCard>
+            )}
+
+            {showPaymentInformation && (
+              <MembershipFormCard title="Payment Information">
+                <div ref={paymentTypeSectionRef}>
+                  {showPaymentTypeSalaryDeductionNotice && (
+                    <div className="membership-form-notice">
+                      Salary Deduction is not available for work location &quot;
+                      {formData.workLocation}&quot;. Please choose another
+                      payment method.
+                    </div>
+                  )}
+                  <MembershipFormField field="paymentType" fieldErrors={fieldErrors}>
+                    <CustomSelect
+                      label="Payment Type"
+                      placeholder="Select Payment Type"
+                      value={formData.paymentType}
+                      onChange={(e) =>
+                        handleChange("paymentType", e.target.value)
+                      }
+                      disabled={isFormReadOnly}
+                      isIDs={false}
+                      options={filteredPaymentTypeOptions}
+                      isMarginBtm={!showPaymentTypeSalaryDeductionNotice}
+                    />
+                  </MembershipFormField>
+                </div>
+                <MembershipFormGrid>
+                  <MembershipFormField field="payrollNumber" fieldErrors={fieldErrors}>
+                    <MyInput
+                      label="Payroll No."
+                      placeholder="Enter Payroll No."
+                      value={formData.payrollNumber}
+                      onChange={(e) =>
+                        handleChange("payrollNumber", e.target.value)
+                      }
+                      disabled={isFormReadOnly || !payrollDeductionPayment}
+                      required={payrollDeductionPayment && !isFormReadOnly}
+                    />
+                  </MembershipFormField>
+                  <CustomSelect
+                    label="Payment Frequency"
+                    placeholder="Select Frequency"
+                    options={CRM_PAYMENT_FREQUENCY_OPTIONS}
+                    value={formData.paymentFrequency}
+                    onChange={(e) =>
+                      handleChange("paymentFrequency", e.target.value)
+                    }
+                    disabled={isFormReadOnly}
+                  />
+                </MembershipFormGrid>
+              </MembershipFormCard>
+            )}
+
+            {showRemindersCancellations && (
+              <MembershipFormCard title="Reminders & Cancellations">
+                <MembershipFormGrid>
+                  <MyDatePicker
+                    label="First Reminder"
+                    placeholder="Select first reminder date"
+                    value={formData.firstReminderDate}
+                    onChange={(date) => handleChange("firstReminderDate", date)}
+                    disabled={true}
+                  />
+                  <MyDatePicker
+                    label="Second Reminder"
+                    placeholder="Select second reminder date"
+                    value={formData.secondReminderDate}
+                    onChange={(date) => handleChange("secondReminderDate", date)}
+                    disabled={true}
+                  />
+                  <MyDatePicker
+                    label="Third Reminder"
+                    placeholder="Select third reminder date"
+                    value={formData.thirdReminderDate}
+                    onChange={(date) => handleChange("thirdReminderDate", date)}
+                    disabled={true}
+                  />
+                  <MyDatePicker
+                    label="Cancellation / Resignation Date"
+                    placeholder="Select cancellation date"
+                    value={formData.dateCancelled}
+                    onChange={(date) => handleChange("dateCancelled", date)}
+                    disabled={true}
+                  />
+                  <MembershipFormGridFull>
+                    <CustomSelect
+                      label="Cancellation / Resignation Reason"
+                      placeholder="Select reason"
+                      options={cancellationReasonOptions}
+                      value={formData.cancellationReason}
+                      onChange={(e) =>
+                        handleChange("cancellationReason", e.target.value)
+                      }
+                      disabled={true}
+                    />
+                  </MembershipFormGridFull>
+                </MembershipFormGrid>
+              </MembershipFormCard>
+            )}
+
+            <MembershipFormCard title="Additional Memberships">
+              <div className="membership-form-radio-block membership-form-radio-inline">
                 <label className="my-input-label">
                   Are you a member of another Trade Union?
                 </label>
@@ -2027,13 +2363,20 @@ const MembershipForm = ({
                   <Radio value="No">No</Radio>
                 </Radio.Group>
               </div>
-              <MyInput
-                label="Which Union?"
-                value={formData.otherUnionName}
-                onChange={(e) => handleChange("otherUnionName", e.target.value)}
-                disabled={isFormReadOnly}
-              />
-              <div style={{ marginTop: "16px" }}>
+              {formData.memberOfOtherUnion === "Yes" && (
+                <MyInput
+                  label="Which Union?"
+                  value={formData.otherUnionName}
+                  onChange={(e) =>
+                    handleChange("otherUnionName", e.target.value)
+                  }
+                  disabled={isFormReadOnly}
+                />
+              )}
+            </MembershipFormCard>
+
+            <MembershipFormCard title="Income Protection Scheme">
+              <div className="membership-form-radio-block membership-form-radio-stacked">
                 <label className="my-input-label">
                   Have you previously been a member of an Irish trade union
                   income protection scheme?
@@ -2049,42 +2392,21 @@ const MembershipForm = ({
                   <Radio value="No">No</Radio>
                 </Radio.Group>
               </div>
-            </Card>
+            </MembershipFormCard>
 
-            {/* Corn Market Card */}
-            <Card
-              style={{
-                marginBottom: "16px",
-                border: "1px solid #e8e8e8",
-                borderRadius: "8px",
-              }}
-              styles={{ body: { padding: "16px" } }}
-            >
-              <h3
-                style={{
-                  fontSize: "16px",
-                  fontWeight: 600,
-                  marginBottom: "16px",
-                  paddingBottom: "12px",
-                  borderBottom: "1px solid #e8e8e8",
-                  color: "#1a1a1a",
-                }}
-              >
-                CornMarket
-              </h3>
+            <MembershipFormCard title="CornMarket" className="membership-form-card--last">
               <Checkbox
                 checked={formData.joinRewards}
                 onChange={(e) => {
                   const isChecked = e.target.checked;
                   if (isChecked) {
-                    // If Rewards is checked, uncheck the other two
                     handleChange("exclusiveDiscountsOffers", false);
                     handleChange("joinINMOIncomeProtection", false);
                   }
                   handleChange("joinRewards", isChecked);
                 }}
                 style={{
-                  marginBottom: "12px",
+                  marginBottom: "8px",
                   display: "flex",
                   alignItems: "center",
                 }}
@@ -2101,13 +2423,12 @@ const MembershipForm = ({
                 onChange={(e) => {
                   const isChecked = e.target.checked;
                   if (isChecked) {
-                    // If this is checked, uncheck Rewards
                     handleChange("joinRewards", false);
                   }
                   handleChange("exclusiveDiscountsOffers", isChecked);
                 }}
                 style={{
-                  marginBottom: "12px",
+                  marginBottom: "8px",
                   display: "flex",
                   alignItems: "center",
                 }}
@@ -2120,7 +2441,6 @@ const MembershipForm = ({
                 onChange={(e) => {
                   const isChecked = e.target.checked;
                   if (isChecked) {
-                    // If this is checked, uncheck Rewards
                     handleChange("joinRewards", false);
                   }
                   handleChange("joinINMOIncomeProtection", isChecked);
@@ -2130,10 +2450,9 @@ const MembershipForm = ({
               >
                 Income Protection and Consent
               </Checkbox>
-            </Card>
-          </div>
-        </Col>
-      </Row>
+            </MembershipFormCard>
+          </MembershipFormCol>
+      </MembershipFormColumns>
       {isEditMode && !isFormReadOnly && !membershipToolbar && (
         <div
           style={{
@@ -2148,7 +2467,7 @@ const MembershipForm = ({
             justifyContent: "flex-end",
             gap: 8,
             zIndex: 20,
-            marginTop: 16,
+            marginTop: 10,
             boxShadow: "0 -2px 8px rgba(0,0,0,0.06)",
           }}
         >

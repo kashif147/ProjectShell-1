@@ -109,7 +109,7 @@ function TextFilter({
 
   return (
     <Dropdown
-      dropdownRender={() => menu}
+      popupRender={() => menu}
       trigger={["click"]}
       open={open}
       onOpenChange={setOpen}

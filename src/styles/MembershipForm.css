@@ -1,0 +1,328 @@
+/* Compact membership form density */
+.membership-form.compact {
+  gap: 10px;
+  row-gap: 10px;
+  column-gap: 16px;
+}
+
+.membership-form-columns.ant-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start !important;
+}
+
+.membership-form-columns > .membership-form-col.ant-col {
+  display: flex !important;
+  flex-direction: column;
+  align-items: stretch;
+  align-self: flex-start;
+  min-height: 0;
+}
+
+.membership-form-column {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 100%;
+}
+
+.membership-form-container.membership-form.compact {
+  padding-left: 8px;
+}
+
+.membership-form-col--first {
+  padding-left: 12px;
+}
+
+.membership-form-col .membership-form-card {
+  flex: 0 0 auto;
+  width: 100%;
+  margin-bottom: 0;
+}
+
+.membership-form-card.ant-card {
+  border: 1px solid #e8e8e8;
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  height: auto;
+  min-height: 0;
+}
+
+.membership-form-card.ant-card > .ant-card-body {
+  padding: 12px 16px !important;
+  flex: 0 0 auto;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.membership-form-card-header {
+  margin: 0 0 10px;
+  padding: 0;
+  border-bottom: 1px solid #e8e8e8;
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 1.2;
+  height: 40px;
+  min-height: 40px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  color: #1a1a1a;
+}
+
+.membership-form-card-body {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  flex: 0 0 auto;
+  min-height: 0;
+}
+
+.membership-form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px 16px;
+  align-items: stretch;
+}
+
+.membership-form-grid-cell {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  align-self: stretch;
+}
+
+.membership-form-grid-full {
+  grid-column: 1 / -1;
+}
+
+.membership-form-field {
+  margin-bottom: 0;
+  display: flex;
+  flex-direction: column;
+  flex: 0 0 auto;
+  min-height: 0;
+  min-width: 0;
+}
+
+.membership-form-field[data-membership-field] {
+  min-width: 0;
+}
+
+.membership-form-radio-block {
+  margin-bottom: 0;
+}
+
+.membership-form-radio-inline {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.membership-form-radio-inline .my-input-label {
+  margin-bottom: 0;
+  flex-shrink: 0;
+}
+
+.membership-form-radio-inline .ant-radio-group {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.membership-form-radio-stacked {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.membership-form-radio-stacked .my-input-label {
+  margin-bottom: 0;
+  white-space: normal;
+  line-height: 1.35;
+  max-width: 100%;
+}
+
+.membership-form-subsection-title {
+  font-size: 13px;
+  font-weight: 600;
+  margin: 0 0 8px;
+  color: #1a1a1a;
+}
+
+.membership-form-notice {
+  background-color: #fff7e6;
+  border: 1px solid #ffd591;
+  border-radius: 6px;
+  padding: 6px 10px;
+  margin-bottom: 0;
+  color: #ad6800;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.membership-form-warning-wrap {
+  border: 2px solid #faad14;
+  border-radius: 8px;
+  padding: 6px;
+  background-color: #fffbe6;
+  margin-bottom: 0;
+  display: flex;
+  flex-direction: column;
+  flex: 0 0 auto;
+  min-height: 0;
+}
+
+.membership-form-consent-section {
+  margin-bottom: 0;
+}
+
+.membership-form-consent-options {
+  margin-left: 20px;
+  display: flex;
+  flex-direction: row;
+  gap: 12px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.membership-form-separator {
+  border-top: 1px solid #e8e8e8;
+  margin: 4px 0;
+}
+
+/* Compact labels and controls — scoped to membership form only */
+.membership-form.compact .membership-form-card-body .my-input-wrapper,
+.membership-form.compact .membership-form-card-body .membership-form-field,
+.membership-form.compact
+  .membership-form-card-body
+  .membership-form-radio-block,
+.membership-form.compact .membership-form-card-body .membership-form-grid {
+  margin-bottom: 0;
+}
+
+.membership-form.compact .my-input-wrapper {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 0;
+  min-width: 0;
+}
+
+.membership-form.compact .membership-form-grid-cell .my-input-wrapper,
+.membership-form.compact .membership-form-grid-cell .membership-form-field {
+  flex: 0 0 auto;
+}
+
+.membership-form.compact .my-input-label {
+  margin-bottom: 4px;
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 1.2;
+}
+
+/* Align label rows so inputs line up horizontally within a grid row */
+.membership-form.compact .membership-form-grid-cell .my-input-wrapper > .d-flex,
+.membership-form.compact
+  .membership-form-grid-cell
+  .my-input-wrapper
+  > .d-flex.justify-content-between,
+.membership-form.compact
+  .membership-form-grid-cell
+  .my-input-wrapper
+  > .d-flex.justify-content-between.align-items-center {
+  min-height: 24px;
+  flex-shrink: 0;
+  align-items: flex-end !important;
+  margin-bottom: 1px;
+}
+
+.membership-form.compact
+  .membership-form-grid-cell
+  .my-input-wrapper
+  > .d-flex
+  .my-input-label,
+.membership-form.compact .membership-form-grid-cell .my-input-label {
+  margin-bottom: 0;
+}
+
+.membership-form.compact .membership-form-grid-cell .my-input-container {
+  flex-shrink: 0;
+}
+
+.membership-form.compact .my-input-container {
+  height: 36px;
+  min-height: 36px;
+}
+
+.membership-form.compact .my-input-field,
+.membership-form.compact .my-input-field-select {
+  height: 36px;
+  min-height: 36px;
+  font-size: 13px;
+}
+
+.membership-form.compact .my-input-container .my-input-field {
+  font-size: 13px;
+}
+
+.membership-form.compact .my-input-container .ant-picker {
+  height: 36px !important;
+  min-height: 36px !important;
+  font-size: 13px !important;
+}
+
+.membership-form.compact
+  .my-input-container
+  .my-input-ant-select
+  .ant-select-selector {
+  min-height: 34px !important;
+}
+
+.membership-form.compact
+  .my-input-container
+  .my-input-ant-select
+  .ant-select-selection-item,
+.membership-form.compact
+  .my-input-container
+  .my-input-ant-select
+  .ant-select-selection-placeholder,
+.membership-form.compact
+  .my-input-container
+  .my-input-ant-select
+  .ant-select-selection-search-input {
+  line-height: 34px !important;
+  font-size: 13px !important;
+}
+
+.membership-form.compact .country-code-select,
+.membership-form.compact .mobile-number-input {
+  height: 36px;
+  min-height: 36px;
+  font-size: 13px;
+}
+
+.membership-form.compact .ant-input,
+.membership-form.compact .ant-select-selector,
+.membership-form.compact .ant-picker {
+  height: 36px !important;
+  min-height: 36px !important;
+}
+
+.membership-form.compact .ant-select-selection-item {
+  line-height: 34px !important;
+}
+
+.membership-form.compact .ant-radio-wrapper,
+.membership-form.compact .ant-checkbox-wrapper {
+  font-size: 13px;
+}
+
+.membership-form-card--last {
+  margin-bottom: 40px;
+}

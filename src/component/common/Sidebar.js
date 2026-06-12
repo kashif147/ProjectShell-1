@@ -359,6 +359,11 @@ const Sidebar = () => {
           path: "/Reports",
           state: { search: "Membership Reports" },
         };
+      case "Accounts Reports":
+        return {
+          path: "/AccountsReports",
+          state: { search: "Accounts Reports" },
+        };
       case "Statistics Report":
       case "Statistics":
         return {
@@ -371,10 +376,20 @@ const Sidebar = () => {
           path: "/WorkplaceBreakdownReport",
           state: { search: "Workplace Membership Breakdown" },
         };
-      case "Membership Listing Report":
+      case "Membership Listing Reports":
         return {
           path: "/MembershipListingReport",
-          state: { search: "Membership Listing Report" },
+          state: { search: "Membership Listing Reports" },
+        };
+      case "Creditors List Report":
+        return {
+          path: "/CreditorsListReport",
+          state: { search: "Creditors List Report" },
+        };
+      case "Debtors List Report":
+        return {
+          path: "/DebtorsListReport",
+          state: { search: "Debtors List Report" },
         };
       case "Policy Client Example":
         return {
@@ -529,8 +544,11 @@ const Sidebar = () => {
       "/LiveStatsReport": "Live Stats",
       "/StatisticsReport": "Statistics Report",
       "/WorkplaceBreakdownReport": "Workplace Membership Breakdown",
-      "/MembershipListingReport": "Membership Listing Report",
+      "/MembershipListingReport": "Membership Listing Reports",
+      "/CreditorsListReport": "Creditors List Report",
+      "/DebtorsListReport": "Debtors List Report",
       "/Reports": "Membership Reports",
+      "/AccountsReports": "Accounts Reports",
       "/CorrespondenceDashboard": "Dashboard",
       "/IssuesManagementDashboard": "Dashboard",
       "/ReportsSettings": "Reports setting",

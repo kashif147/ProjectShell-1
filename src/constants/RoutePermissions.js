@@ -56,6 +56,7 @@ export const RoutePermissions = {
 
   // Reports
   "Reports": "reporting:read",
+  "AccountsReports": "reporting:read",
   "CancelledMembersReport": "reporting:read",
   "JoinersReport": "reporting:read",
   "LeaversReport": "crm:member:read",
@@ -66,6 +67,8 @@ export const RoutePermissions = {
   "MembershipListingReport": "reporting:read",
   "StatisticsReport": "reporting:read",
   "WorkplaceBreakdownReport": "reporting:read",
+  "CreditorsListReport": "reporting:read",
+  "DebtorsListReport": "reporting:read",
   "SuspendedMembersReport": "crm:member:read",
 
   // Cases & Issues

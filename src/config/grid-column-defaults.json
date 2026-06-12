@@ -271,6 +271,43 @@
         { "dataIndex": "mom", "title": "MoM", "filterValueType": "number", "isGride": true, "isVisible": true, "ellipsis": true, "width": 72, "align": "right" }
       ]
     },
+    "creditorslistreport": {
+      "screenKey": "CreditorsListReport",
+      "templateType": "creditorslistreport",
+      "service": "reporting-service",
+      "filters": {
+        "reportingPeriod": { "operator": "between", "values": [] }
+      },
+      "columns": [
+        { "dataIndex": "membershipNo", "title": "Membership No", "filterValueType": "string", "isGride": true, "isVisible": true, "ellipsis": true, "width": 130 },
+        { "dataIndex": "fullName", "title": "Name", "filterValueType": "string", "isGride": true, "isVisible": true, "ellipsis": true, "width": 200 },
+        { "dataIndex": "fullAddress", "title": "Address", "filterValueType": "string", "isGride": true, "isVisible": true, "ellipsis": true, "width": 260 },
+        { "dataIndex": "grade", "title": "Grade", "filterValueType": "string", "isGride": true, "isVisible": true, "ellipsis": true, "width": 120 },
+        { "dataIndex": "workLocation", "title": "Work Location", "filterValueType": "string", "isGride": true, "isVisible": true, "ellipsis": true, "width": 180 },
+        { "dataIndex": "amount", "title": "Balance", "filterValueType": "number", "isGride": true, "isVisible": true, "ellipsis": true, "width": 110, "align": "right" }
+      ]
+    },
+    "debtorslistreport": {
+      "screenKey": "DebtorsListReport",
+      "templateType": "debtorslistreport",
+      "service": "reporting-service",
+      "filters": {
+        "reportingPeriod": { "operator": "between", "values": [] }
+      },
+      "columns": [
+        { "dataIndex": "membershipNo", "title": "Membership No", "filterValueType": "string", "isGride": true, "isVisible": true, "ellipsis": true, "width": 130 },
+        { "dataIndex": "fullName", "title": "Name", "filterValueType": "string", "isGride": true, "isVisible": true, "ellipsis": true, "width": 200 },
+        { "dataIndex": "fullAddress", "title": "Address", "filterValueType": "string", "isGride": true, "isVisible": true, "ellipsis": true, "width": 240 },
+        { "dataIndex": "grade", "title": "Grade", "filterValueType": "string", "isGride": true, "isVisible": true, "ellipsis": true, "width": 110 },
+        { "dataIndex": "workLocation", "title": "Work Location", "filterValueType": "string", "isGride": true, "isVisible": true, "ellipsis": true, "width": 160 },
+        { "dataIndex": "amount", "title": "Balance", "filterValueType": "number", "isGride": true, "isVisible": true, "ellipsis": true, "width": 100, "align": "right" },
+        { "dataIndex": "current", "title": "Current", "filterValueType": "number", "isGride": true, "isVisible": true, "ellipsis": true, "width": 90, "align": "right" },
+        { "dataIndex": "days30", "title": "30 Days", "filterValueType": "number", "isGride": true, "isVisible": true, "ellipsis": true, "width": 90, "align": "right" },
+        { "dataIndex": "days60", "title": "60 Days", "filterValueType": "number", "isGride": true, "isVisible": true, "ellipsis": true, "width": 90, "align": "right" },
+        { "dataIndex": "days90", "title": "90 Days", "filterValueType": "number", "isGride": true, "isVisible": true, "ellipsis": true, "width": 90, "align": "right" },
+        { "dataIndex": "over90", "title": "Over 90 Days", "filterValueType": "number", "isGride": true, "isVisible": true, "ellipsis": true, "width": 110, "align": "right" }
+      ]
+    },
     "reconciliation": {
       "screenKey": "Reconciliation",
       "templateType": "reconciliation",

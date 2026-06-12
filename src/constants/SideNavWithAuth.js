@@ -361,6 +361,12 @@ export const reportItems = [
     ["reporting:read"]
   ),
   createMenuItem(
+    "Accounts Reports",
+    <FaFileInvoiceDollar />,
+    "Accounts Reports",
+    ["reporting:read"]
+  ),
+  createMenuItem(
     "Comparison Report",
     <FaBalanceScale />,
     "Comparison Report",

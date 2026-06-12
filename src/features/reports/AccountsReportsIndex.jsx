@@ -1,38 +1,30 @@
 import React from "react";
 import { Card, Row, Col, Button, Typography } from "antd";
-import { FileTextOutlined, BarChartOutlined } from "@ant-design/icons";
+import { FileTextOutlined } from "@ant-design/icons";
 import { useNavigate } from "react-router-dom";
 import "./ReportsIndex.css";
 
 const { Title } = Typography;
 
-const ReportsIndex = () => {
+const AccountsReportsIndex = () => {
   const navigate = useNavigate();
 
   const reportCards = [
     {
-      title: "Membership Listing Reports",
+      title: "Creditors List Report",
       description:
-        "Joiners, Leavers, Suspended, Archived, Re-Instated Lists — filterable membership listing with executive dashboard dimensions and date range",
+        "Members owed money by the organisation — prepayments (2020), credit notes, and net credit balances as at the reporting date",
       icon: <FileTextOutlined style={{ fontSize: "48px" }} />,
-      path: "/MembershipListingReport",
-      color: "#722ed1",
+      path: "/CreditorsListReport",
+      color: "#fa8c16",
     },
     {
-      title: "Statistics Report",
+      title: "Debtors List Report",
       description:
-        "Year membership movement: opening, joiners, reinstatements, leavers, closing — by Membership Category and region, branch and work location",
-      icon: <BarChartOutlined style={{ fontSize: "48px" }} />,
-      path: "/StatisticsReport",
-      color: "#13c2c2",
-    },
-    {
-      title: "Workplace Membership Breakdown",
-      description:
-        "Rolling monthly member counts per work location with MoM change and official assignment",
-      icon: <BarChartOutlined style={{ fontSize: "48px" }} />,
-      path: "/WorkplaceBreakdownReport",
-      color: "#2f54eb",
+        "Members with outstanding membership fees as at the reporting date, with age analysis (Current, 30, 60, 90, and Over 90 days)",
+      icon: <FileTextOutlined style={{ fontSize: "48px" }} />,
+      path: "/DebtorsListReport",
+      color: "#cf1322",
     },
   ];
 
@@ -40,7 +32,7 @@ const ReportsIndex = () => {
     <div className="reports-index">
       <div style={{ padding: "24px" }}>
         <Title level={2} style={{ marginBottom: "32px" }}>
-          Membership Reports
+          Accounts Reports
         </Title>
 
         <Row gutter={[24, 24]}>
@@ -87,4 +79,4 @@ const ReportsIndex = () => {
   );
 };
 
-export default ReportsIndex;
+export default AccountsReportsIndex;

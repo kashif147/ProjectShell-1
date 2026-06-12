@@ -14,12 +14,10 @@ import { EnterOutlined } from "@ant-design/icons";
 import { useDispatch, useSelector } from "react-redux";
 import {
   getApplicationsWithFilter,
-  setApplicationsFromExternal,
   setTemplateId,
 } from "../../features/applicationwithfilterslice";
 import {
   getPaymentFormsWithFilter,
-  setPaymentFormsFromExternal,
   setPaymentFormsTemplateId,
 } from "../../features/paymentFormsWithFilterSlice";
 import { getAllApplications } from "../../features/ApplicationSlice";
@@ -42,6 +40,8 @@ import { bumpWriteOffsReload } from "../../utils/writeOffsWorkspace";
 import { bumpGeneralLedgerReload } from "../../utils/generalLedgerWorkspace";
 import { bumpReconciliationReload } from "../../utils/reconciliationWorkspace";
 import { bumpMembershipListingReportReload } from "../../utils/membershipListingReportWorkspace";
+import { bumpCreditorsListReportReload } from "../../utils/creditorsListReportWorkspace";
+import { bumpDebtorsListReportReload } from "../../utils/debtorsListReportWorkspace";
 import { bumpMembershipStatisticsReportReload } from "../../utils/membershipStatisticsReportWorkspace";
 import { bumpWorkplaceBreakdownReportReload } from "../../utils/workplaceBreakdownReportWorkspace";
 import {
@@ -75,10 +75,6 @@ import {
   persistVisibleFiltersToStorage,
   resolveTemplateVisibleFilters,
 } from "../../utils/gridTemplateVisibleFilters";
-
-const AI_FILTER_API_URL =
-  process.env.REACT_APP_AI_PROFILE_FILTER_URL ||
-  "https://projectshell-vm.northeurope.cloudapp.azure.com/profile-service/api/profile/filter";
 
 const CHATBOT_WEBHOOK_URL =
   process.env.REACT_APP_CHATBOT_WEBHOOK_URL ||
@@ -301,6 +297,8 @@ const Toolbar = () => {
       "/membershiplistingreport": "MembershipListingReport",
       "/statisticsreport": "StatisticsReport",
       "/workplacebreakdownreport": "WorkplaceBreakdownReport",
+      "/creditorslistreport": "CreditorsListReport",
+      "/debtorslistreport": "DebtorsListReport",
     };
     return pathMap[key] || "";
   };
@@ -317,6 +315,14 @@ const Toolbar = () => {
   const isReconciliationScreen = normalizedPath === "/reconciliation";
   const isMembershipListingReportScreen =
     normalizedPath === "/membershiplistingreport";
+  const isCreditorsListReportScreen =
+    normalizedPath === "/creditorslistreport";
+  const isDebtorsListReportScreen =
+    normalizedPath === "/debtorslistreport";
+  const isMembershipListingStyleReportScreen =
+    isMembershipListingReportScreen ||
+    isCreditorsListReportScreen ||
+    isDebtorsListReportScreen;
   const isStatisticsReportScreen = normalizedPath === "/statisticsreport";
   const isWorkplaceBreakdownReportScreen =
     normalizedPath === "/workplacebreakdownreport";
@@ -375,6 +381,10 @@ const Toolbar = () => {
         ? "statisticsreport"
       : isWorkplaceBreakdownReportScreen
         ? "workplacebreakdownreport"
+      : isCreditorsListReportScreen
+        ? "creditorslistreport"
+      : isDebtorsListReportScreen
+        ? "debtorslistreport"
       : isPaymentFormsPage
       ? "payment forms"
       : isApplicationsPage
@@ -395,12 +405,12 @@ const Toolbar = () => {
   const [aiLoading, setAiLoading] = useState(false);
 
   useEffect(() => {
-    if (!isMembershipListingReportScreen) {
+    if (!isMembershipListingStyleReportScreen) {
       setGridSearch("");
       return undefined;
     }
     return subscribeReportGridSearch(setGridSearch);
-  }, [isMembershipListingReportScreen]);
+  }, [isMembershipListingStyleReportScreen]);
 
   const dashboardCategoryLabels = useMemo(
     () =>
@@ -442,14 +452,6 @@ const Toolbar = () => {
       return dispatch(getPaymentFormsWithFilter(payload));
     }
     return dispatch(getApplicationsWithFilter(payload));
-  };
-
-  const setApplicationLikeData = (rows) => {
-    if (isPaymentFormsPage) {
-      dispatch(setPaymentFormsFromExternal(rows));
-      return;
-    }
-    dispatch(setApplicationsFromExternal(rows));
   };
 
   const setApplicationLikeTemplateId = (templateId) => {
@@ -595,6 +597,10 @@ const Toolbar = () => {
       bumpReconciliationReload();
     } else if (isMembershipListingReportScreen) {
       bumpMembershipListingReportReload();
+    } else if (isCreditorsListReportScreen) {
+      bumpCreditorsListReportReload();
+    } else if (isDebtorsListReportScreen) {
+      bumpDebtorsListReportReload();
     } else if (isStatisticsReportScreen) {
       bumpMembershipStatisticsReportReload();
     } else if (isWorkplaceBreakdownReportScreen) {
@@ -633,7 +639,7 @@ const Toolbar = () => {
 
   const handleReset = () => {
     resetFilters();
-    if (isMembershipListingReportScreen) {
+    if (isMembershipListingStyleReportScreen) {
       clearReportGridSearchQuery();
     }
     if (
@@ -647,7 +653,7 @@ const Toolbar = () => {
       isWriteOffsScreen ||
       isGeneralLedgerScreen ||
       isReconciliationScreen ||
-      isMembershipListingReportScreen ||
+      isMembershipListingStyleReportScreen ||
       isAggregateMembershipReportScreen
     ) {
       const screen =
@@ -737,6 +743,10 @@ const Toolbar = () => {
       bumpReconciliationReload();
     } else if (isMembershipListingReportScreen) {
       bumpMembershipListingReportReload();
+    } else if (isCreditorsListReportScreen) {
+      bumpCreditorsListReportReload();
+    } else if (isDebtorsListReportScreen) {
+      bumpDebtorsListReportReload();
     } else if (isStatisticsReportScreen) {
       bumpMembershipStatisticsReportReload();
     } else if (isWorkplaceBreakdownReportScreen) {
@@ -769,36 +779,12 @@ const Toolbar = () => {
       const templateId = activeTemplateId || resolvedGridTemplateId || undefined;
 
       if (isApplicationLikePage) {
-        const payload = {
+        await fetchApplicationLikeList({
           templateId,
           page: 1,
           limit: 500,
           filters: aiFilters,
-        };
-
-        const token = localStorage.getItem("token");
-        const response = await fetch(AI_FILTER_API_URL, {
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-            ...(token ? { Authorization: `Bearer ${token}` } : {}),
-          },
-          body: JSON.stringify(payload),
-        });
-
-        if (!response.ok) {
-          throw new Error("Failed to fetch applications with AI filter.");
-        }
-
-        const data = await response.json();
-        const applications =
-          data?.data?.applications ||
-          data?.data?.paymentForms ||
-          data?.applications ||
-          data?.paymentForms ||
-          data?.data ||
-          [];
-        setApplicationLikeData(applications);
+        }).unwrap();
       } else if (isProfileScreen) {
         await dispatch(
           getProfilesWithFilter({
@@ -918,6 +904,10 @@ const Toolbar = () => {
       bumpReconciliationReload();
     } else if (isMembershipListingReportScreen) {
       bumpMembershipListingReportReload();
+    } else if (isCreditorsListReportScreen) {
+      bumpCreditorsListReportReload();
+    } else if (isDebtorsListReportScreen) {
+      bumpDebtorsListReportReload();
     } else if (isStatisticsReportScreen) {
       bumpMembershipStatisticsReportReload();
     } else if (isWorkplaceBreakdownReportScreen) {
@@ -1163,17 +1153,17 @@ const Toolbar = () => {
             <div style={{ flex: "0 0 250px" }}>
               <Input
                 className="my-input-field"
-                allowClear={isMembershipListingReportScreen}
+                allowClear={isMembershipListingStyleReportScreen}
                 value={
-                  isMembershipListingReportScreen ? gridSearch : undefined
+                  isMembershipListingStyleReportScreen ? gridSearch : undefined
                 }
                 onChange={(e) => {
-                  if (isMembershipListingReportScreen) {
+                  if (isMembershipListingStyleReportScreen) {
                     setReportGridSearchQuery(e.target.value);
                   }
                 }}
                 placeholder={
-                  isMembershipListingReportScreen
+                  isMembershipListingStyleReportScreen
                     ? "Membership No or Name"
                     : location.pathname === "/CasesSummary"
                       ? "Search Case ID, team, or stakeholder"

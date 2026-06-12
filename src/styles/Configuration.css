@@ -72,6 +72,11 @@
   justify-content: center;
 }
 
+.configuration-cards-panel .text-muted,
+.configuration-cards-panel .small {
+  font-size: 12px;
+}
+
 .configuration-cards-grid {
   --bs-gutter-x: 0.5rem;
   --bs-gutter-y: 0.5rem;
@@ -104,8 +109,8 @@
 }
 
 .configuration-card__label {
-  font-size: 11px;
-  line-height: 1.2;
+  font-size: 12px;
+  line-height: 1.25;
   font-weight: 500;
   word-break: break-word;
 }

@@ -36,6 +36,8 @@ const LEGACY_TEMPLATE_TYPE_SERVICE = {
   membershiplisting: "reporting-service",
   statisticsreport: "reporting-service",
   workplacebreakdownreport: "reporting-service",
+  creditorslistreport: "reporting-service",
+  debtorslistreport: "reporting-service",
   /** Correspondence / comms admin grids */
   correspondence: "notification-service",
   correspondences: "notification-service",
