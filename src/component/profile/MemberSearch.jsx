@@ -56,6 +56,7 @@ const MemberSearch = ({
   // NEW: Layout control props
   showStatus = true, // Whether to show "Searching..." and "Found X members" text
   getPopupContainer = null, // Custom popup container function
+  compact = false, // 36px density for compact forms (e.g. ApplicationForm)
 }) => {
   // Internal state for backward compatibility
   const [internalValue, setInternalValue] = useState("");
@@ -583,9 +584,13 @@ const MemberSearch = ({
     e.stopPropagation();
   };
 
+  const isDenseInput = compact || headerStyle;
+
   return (
-    <div style={{
-      width: fullWidth ? "100%" : headerStyle ? "100%" : "400px",
+    <div
+      className={compact ? "member-search-field member-search-field--compact" : undefined}
+      style={{
+      width: fullWidth ? "100%" : headerStyle || compact ? "100%" : "400px",
       position: "relative",
       ...style
     }}>
@@ -619,7 +624,7 @@ const MemberSearch = ({
         <Input
           disabled={disable || loading}
           ref={inputRef}
-          size={headerStyle ? "middle" : "large"}
+          size={isDenseInput ? "middle" : "large"}
           prefix={
             loading ? (
               <Spin
@@ -627,7 +632,7 @@ const MemberSearch = ({
                 size="small"
               />
             ) : (
-              <SearchOutlined />
+              <SearchOutlined style={{ fontSize: isDenseInput ? 14 : 16 }} />
             )
           }
           placeholder={
@@ -635,15 +640,15 @@ const MemberSearch = ({
               ? "Search by name, email, or membership number..."
               : "Search by name, email, membership number..."
           }
-          className="p-2 my-input-field"
+          className={isDenseInput ? "my-input-field" : "p-2 my-input-field"}
           style={{
             width: "100%",
-            borderRadius: headerStyle ? "4px" : "4px",
+            borderRadius: "4px",
             border: apiError ? "1px solid #ff4d4f" : "1px solid #d9d9d9",
-            height: headerStyle ? "32px" : "40px",
-            fontSize: headerStyle ? "14px" : "16px",
+            height: compact ? "36px" : headerStyle ? "32px" : "40px",
+            fontSize: compact ? "13px" : headerStyle ? "14px" : "16px",
             backgroundColor: "#ffffff",
-            lineHeight: headerStyle ? "20px" : "24px"
+            lineHeight: compact ? "34px" : headerStyle ? "20px" : "24px",
           }}
           suffix={
             searchValue && !loading && (

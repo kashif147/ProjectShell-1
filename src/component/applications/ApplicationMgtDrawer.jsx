@@ -1,7 +1,5 @@
 import { useState, useRef, useEffect, useMemo } from "react";
 import {
-  Row,
-  Col,
   Checkbox,
   Radio,
   Button,
@@ -73,13 +71,40 @@ import {
 } from "../../constants/paymentFrequency";
 import { fetchTenantTradingName } from "../../services/tenantBrandingService";
 import DuplicateProfileReview from "./DuplicateProfileReview";
+import "../../styles/ApplicationForm.css";
 
 const baseURL = process.env.REACT_APP_PROFILE_SERVICE_URL;
 const { Search: AntdSearch } = Input;
 const { Option } = Select;
 
+function AppFormGrid({ children, cols = 3, className = "" }) {
+  const colsClass =
+    cols === "33-67"
+      ? "form-grid--33-67"
+      : cols === "40-60"
+        ? "form-grid--40-60"
+        : `form-grid--${cols}`;
+  return (
+    <div className={`form-grid ${colsClass} ${className}`.trim()}>
+      {children}
+    </div>
+  );
+}
+
+function AppFormCell({ children, span = 1, className = "" }) {
+  const spanClass =
+    span === "full" ? "form-col-full" : span === 2 ? "form-col-2" : "";
+  return (
+    <div
+      className={`form-grid-cell form-item ${spanClass} ${className}`.trim()}
+    >
+      <div className="form-grid-cell-inner">{children}</div>
+    </div>
+  );
+}
+
 const ApplicationMgtSelect = (props) => (
-  <CustomSelect showSearch sortOptions {...props} />
+  <CustomSelect showSearch sortOptions isMarginBtm={false} {...props} />
 );
 
 const SALARY_DEDUCTION_PAYMENT_TYPE = "Salary Deduction";
@@ -88,6 +113,15 @@ const normalizeLookupMatchKey = (value) =>
   String(value || "")
     .trim()
     .toLowerCase();
+
+const isOtherLookupSelection = (value) => {
+  if (value == null || value === "") return false;
+  if (typeof value === "object") {
+    const label = value.label || value.name || value.lookupname || "";
+    return normalizeLookupMatchKey(label) === "other";
+  }
+  return normalizeLookupMatchKey(value) === "other";
+};
 
 const isWorkLocationLookupTypeName = (typeName) => {
   const key = normalizeLookupMatchKey(typeName).replace(/\s+/g, "");
@@ -1089,48 +1123,20 @@ function ApplicationMgtDrawer({
     iconBackground,
     subTitle,
   }) => (
-    <Row gutter={18} className="p-3 mb-3 rounded" style={{ backgroundColor }}>
-      <Col span={24}>
-        <div className="d-flex align-items-center">
-          <div
-            style={{
-              backgroundColor: iconBackground,
-              padding: "6px 8px",
-              borderRadius: "6px",
-              marginRight: "12px",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-            }}
-          >
-            {icon}
-          </div>
-          <div>
-            <h2
-              style={{
-                fontSize: "18px",
-                margin: 0,
-                fontWeight: 500,
-                color: "#1a1a1a",
-              }}
-            >
-              {title}
-            </h2>
-            <h6
-              style={{
-                fontSize: "14px",
-                margin: 0,
-                fontWeight: 400,
-                color: "#666",
-                marginTop: "4px",
-              }}
-            >
-              {subTitle}
-            </h6>
-          </div>
-        </div>
-      </Col>
-    </Row>
+    <div className="section-header" style={{ backgroundColor }}>
+      <div
+        className="section-header-icon"
+        style={{ backgroundColor: iconBackground }}
+      >
+        {icon}
+      </div>
+      <div className="section-header-text">
+        <div className="section-header-title">{title}</div>
+        {subTitle ? (
+          <div className="section-header-subtitle">{subTitle}</div>
+        ) : null}
+      </div>
+    </div>
   );
 
   const hasPersonalDetailsChanged = (original, current) => {
@@ -1309,6 +1315,32 @@ function ApplicationMgtDrawer({
     );
   }, [paymentTypeOptions, workLocationAllowsSalaryDeduction]);
 
+  const isWorkLocationOther = useMemo(
+    () => isOtherLookupSelection(InfData.professionalDetails?.workLocation),
+    [InfData.professionalDetails?.workLocation],
+  );
+  const isGradeOther = useMemo(
+    () => isOtherLookupSelection(InfData.professionalDetails?.grade),
+    [InfData.professionalDetails?.grade],
+  );
+  const isPrimarySectionOther = useMemo(
+    () => isOtherLookupSelection(InfData.subscriptionDetails?.primarySection),
+    [InfData.subscriptionDetails?.primarySection],
+  );
+  const isSecondarySectionOther = useMemo(
+    () =>
+      isOtherLookupSelection(InfData.subscriptionDetails?.secondarySection),
+    [InfData.subscriptionDetails?.secondarySection],
+  );
+  const isSalaryDeductionPayment =
+    InfData.subscriptionDetails?.paymentType === SALARY_DEDUCTION_PAYMENT_TYPE;
+  const isNmbiNumberRequired =
+    InfData.professionalDetails?.nursingAdaptationProgramme === false;
+  const showNurseTypeField =
+    InfData.professionalDetails?.nursingAdaptationProgramme === true;
+  const showYouthForumSelect =
+    InfData.professionalDetails?.joinYouthForum === true;
+
   useEffect(() => {
     if (lookupsloading) return;
     if (
@@ -1422,6 +1454,9 @@ function ApplicationMgtDrawer({
           professionalDetails: {
             ...prevData.professionalDetails,
             workLocation: workLocationLabel,
+            otherWorkLocation: isOtherLookupSelection(workLocationLabel)
+              ? prevData.professionalDetails?.otherWorkLocation || ""
+              : "",
             region: isSimple
               ? foundObject?.branch?.region?.name ||
                 foundObject?.region?.name ||
@@ -1634,14 +1669,21 @@ function ApplicationMgtDrawer({
       }
     }
 
-    if (InfData.professionalDetails?.workLocation === "Other") {
+    if (isOtherLookupSelection(InfData.professionalDetails?.workLocation)) {
       if (!InfData.professionalDetails.otherWorkLocation?.trim()) {
         newErrors.otherWorkLocation = "Other work location is required";
         missingFieldNames.push(fieldLabels.otherWorkLocation);
       }
     }
 
-    if (InfData.subscriptionDetails.primarySection === "Other") {
+    if (isOtherLookupSelection(InfData.professionalDetails?.grade)) {
+      if (!InfData.professionalDetails.otherGrade?.trim()) {
+        newErrors.otherGrade = "Other grade is required";
+        missingFieldNames.push("Other Grade");
+      }
+    }
+
+    if (isOtherLookupSelection(InfData.subscriptionDetails.primarySection)) {
       if (!InfData.subscriptionDetails.otherPrimarySection?.trim()) {
         newErrors.otherPrimarySection = "Other primary section is required";
         missingFieldNames.push(fieldLabels.otherPrimarySection);
@@ -1720,7 +1762,7 @@ function ApplicationMgtDrawer({
       }
     }
 
-    if (InfData.subscriptionDetails.secondarySection === "Other") {
+    if (isOtherLookupSelection(InfData.subscriptionDetails.secondarySection)) {
       if (!InfData.subscriptionDetails.otherSecondarySection?.trim()) {
         newErrors.otherSecondarySection = "Other secondary section is required";
         missingFieldNames.push(fieldLabels.otherSecondarySection);
@@ -2458,11 +2500,15 @@ function ApplicationMgtDrawer({
       );
 
       setInfData((prev) => {
+        const resolvedLocation = locationLabel || value;
         const next = {
           ...prev,
           professionalDetails: {
             ...prev.professionalDetails,
-            workLocation: locationLabel || value,
+            workLocation: resolvedLocation,
+            otherWorkLocation: isOtherLookupSelection(resolvedLocation)
+              ? prev.professionalDetails?.otherWorkLocation || ""
+              : "",
           },
           subscriptionDetails: {
             ...prev.subscriptionDetails,
@@ -2495,16 +2541,30 @@ function ApplicationMgtDrawer({
         };
         if (
           section === "professionalDetails" &&
-          field === "nursingAdaptationProgramme" &&
-          value === false
+          field === "nursingAdaptationProgramme"
         ) {
           updated = {
             ...updated,
             professionalDetails: {
               ...updated.professionalDetails,
-              nurseType: null,
+              nurseType: value === true ? updated.professionalDetails.nurseType : null,
             },
           };
+        }
+        if (section === "professionalDetails" && field === "grade") {
+          if (!isOtherLookupSelection(value)) {
+            updated.professionalDetails.otherGrade = "";
+          }
+        }
+        if (section === "subscriptionDetails" && field === "primarySection") {
+          if (!isOtherLookupSelection(value)) {
+            updated.subscriptionDetails.otherPrimarySection = "";
+          }
+        }
+        if (section === "subscriptionDetails" && field === "secondarySection") {
+          if (!isOtherLookupSelection(value)) {
+            updated.subscriptionDetails.otherSecondarySection = "";
+          }
         }
         if (section === "personalInfo" && field === "dateOfBirth") {
           const age = calculateAgeFtn(value);
@@ -2538,6 +2598,34 @@ function ApplicationMgtDrawer({
       }
       if (field === "joinYouthForum" && value !== true && next?.youthForum) {
         const { youthForum: _removedYf, ...rest } = next;
+        next = rest;
+      }
+      if (field === "grade" && !isOtherLookupSelection(value) && next?.otherGrade) {
+        const { otherGrade: _removedOg, ...rest } = next;
+        next = rest;
+      }
+      if (
+        field === "workLocation" &&
+        !isOtherLookupSelection(value) &&
+        next?.otherWorkLocation
+      ) {
+        const { otherWorkLocation: _removedOwl, ...rest } = next;
+        next = rest;
+      }
+      if (
+        field === "primarySection" &&
+        !isOtherLookupSelection(value) &&
+        next?.otherPrimarySection
+      ) {
+        const { otherPrimarySection: _removedOps, ...rest } = next;
+        next = rest;
+      }
+      if (
+        field === "secondarySection" &&
+        !isOtherLookupSelection(value) &&
+        next?.otherSecondarySection
+      ) {
+        const { otherSecondarySection: _removedOss, ...rest } = next;
         next = rest;
       }
       if (field === "dateOfBirth") {
@@ -3381,7 +3469,7 @@ function ApplicationMgtDrawer({
           </div>
         )}
         <div
-          className="hide-scroll-webkit"
+          className="hide-scroll-webkit application-form compact"
           style={{
             borderRadius: "15px",
             boxShadow: "0 2px 6px rgba(0,0,0,0.04)",
@@ -3390,17 +3478,17 @@ function ApplicationMgtDrawer({
             minHeight: 0,
             overflowY: "auto",
             backgroundColor: "white",
-            padding: "1.5rem",
+            padding: "12px 16px",
             filter: showLoader ? "blur(3px)" : "none",
             pointerEvents: showLoader ? "none" : "auto",
             transition: "0.3s ease",
           }}
         >
           {/* Personal Information Section */}
-          <div className="mb-3">
+          <div className="section-card">
             <SectionHeader
               icon={
-                <MailOutlined style={{ color: "#2f6bff", fontSize: "18px" }} />
+                <MailOutlined style={{ color: "#2f6bff", fontSize: "16px" }} />
               }
               title="Personal Information"
               subTitle="Please provide your details as they appear on your official documents."
@@ -3408,8 +3496,8 @@ function ApplicationMgtDrawer({
               iconBackground="#e5edff"
             />
 
-            <Row gutter={[16, 12]} className="mt-2">
-              <Col xs={24} md={8}>
+            <AppFormGrid>
+              <AppFormCell>
                 <ApplicationMgtSelect
                   label="Title"
                   name="title"
@@ -3422,8 +3510,8 @@ function ApplicationMgtDrawer({
                   }
                   hasError={!!errors?.title}
                 />
-              </Col>
-              <Col xs={24} md={8}>
+              </AppFormCell>
+              <AppFormCell>
                 <MyInput
                   label="Forename"
                   name="forename"
@@ -3439,8 +3527,8 @@ function ApplicationMgtDrawer({
                   }
                   hasError={!!errors?.forename}
                 />
-              </Col>
-              <Col xs={24} md={8}>
+              </AppFormCell>
+              <AppFormCell>
                 <MyInput
                   label="Surname"
                   name="surname"
@@ -3452,9 +3540,9 @@ function ApplicationMgtDrawer({
                   }
                   hasError={!!errors?.surname}
                 />
-              </Col>
+              </AppFormCell>
 
-              <Col xs={24} md={8}>
+              <AppFormCell>
                 <ApplicationMgtSelect
                   label="Gender"
                   name="gender"
@@ -3467,8 +3555,8 @@ function ApplicationMgtDrawer({
                   }
                   hasError={!!errors?.gender}
                 />
-              </Col>
-              <Col xs={24} md={8}>
+              </AppFormCell>
+              <AppFormCell>
                 <MyDatePicker1
                   label="Date Of Birth"
                   name="dob"
@@ -3481,8 +3569,8 @@ function ApplicationMgtDrawer({
                   hasError={!!errors?.dateOfBirth}
                   errorMessage={errors?.dateOfBirth || "Required"}
                 />
-              </Col>
-              <Col xs={24} md={8}>
+              </AppFormCell>
+              <AppFormCell>
                 <ApplicationMgtSelect
                   label="Country Primary Qualification"
                   name="countryPrimaryQualification"
@@ -3499,16 +3587,16 @@ function ApplicationMgtDrawer({
                   }
                   hasError={!!errors?.countryPrimaryQualification}
                 />
-              </Col>
-            </Row>
+              </AppFormCell>
+            </AppFormGrid>
           </div>
 
           {/* Correspondence Details Section */}
-          <div className="mb-3">
+          <div className="section-card">
             <SectionHeader
               icon={
                 <EnvironmentOutlined
-                  style={{ color: "green", fontSize: "18px" }}
+                  style={{ color: "green", fontSize: "16px" }}
                 />
               }
               title="Correspondence Details"
@@ -3517,32 +3605,25 @@ function ApplicationMgtDrawer({
               subTitle="Let us know the best way to contact you"
             />
 
-            <Row gutter={[16, 12]} className="mt-2">
-              {/* Preferred Address and Consent in one row */}
-              <Col span={24}>
-                <Row gutter={16}>
-                  <Col xs={24} md={12} className="!pb-0 pa">
+            <AppFormGrid>
+              {/* Preferred Address (33%) and Consent (67%) in one row */}
+              <AppFormCell span="full">
+                <AppFormGrid cols="33-67" className="form-grid--address-consent">
+                  <AppFormCell>
                     <div
-                      className="p-3 bg-lb "
-                      style={{
-                        borderRadius: "4px",
-                        height: "100%",
-                        backgroundColor: "#1173d41a",
-                        border: errors?.preferredAddress
-                          ? "1px solid #ff4d4f"
-                          : "1px solid #97c5efff",
-                      }}
+                      className={`info-box info-box--field-aligned ${
+                        errors?.preferredAddress ? "info-box--error" : ""
+                      }`}
                     >
-                      <div className="d-flex justify-content-between align-items-center">
-                        <label
-                          // style={{ color: errors?.preferredAddress ? "#ff4d4f" : "#215e97" }}
-                          className={`my-input-label ${
-                            errors?.preferredAddress ? "error-text1" : ""
-                          }`}
-                        >
-                          Preferred Address{" "}
-                          <span className="text-danger">*</span>
-                        </label>
+                      <label
+                        className={`my-input-label ${
+                          errors?.preferredAddress ? "error-text1" : ""
+                        }`}
+                      >
+                        Preferred Address{" "}
+                        <span className="text-danger">*</span>
+                      </label>
+                      <div className="form-control-band">
                         <Radio.Group
                           style={{ color: "#215e97", borderColor: "#215e97" }}
                           onChange={(e) =>
@@ -3558,22 +3639,13 @@ function ApplicationMgtDrawer({
                             { value: "home", label: "Home" },
                             { value: "work", label: "Work" },
                           ]}
-                          className="mt-2"
                         />
                       </div>
                     </div>
-                  </Col>
-                  <Col xs={24} md={12}>
-                    <div
-                      className="p-3"
-                      style={{
-                        borderRadius: "4px",
-                        backgroundColor: "#fffbeb",
-                        border: "1px solid #fde68a",
-                      }}
-                    >
+                  </AppFormCell>
+                  <AppFormCell>
+                    <div className="consent-box consent-box--compact">
                       <Checkbox
-                        style={{ color: "#78350f" }}
                         value={true}
                         checked={InfData?.contactInfo?.consent}
                         onChange={(e) =>
@@ -3584,41 +3656,53 @@ function ApplicationMgtDrawer({
                           )
                         }
                       >
-                        Consent to receive Correspondence from{" "}
-                        {tenantTradeName || "the organisation"}
+                        <span className="consent-box-text">
+                          <span className="consent-box-label">
+                            Consent to receive Correspondence from{" "}
+                            {tenantTradeName || "the organisation"}
+                          </span>
+                          <span className="consent-box-note">
+                            (Please un-tick this box if you would{" "}
+                            <strong>NOT like</strong> to receive correspondence via
+                            email or phone.)
+                          </span>
+                        </span>
                       </Checkbox>
-                      <p style={{ color: "#78350f" }} className="m-0 !ms-0">
-                        Please un-tick this box if you would{" "}
-                        <strong>NOT like </strong> to receive correspondence via
-                        email or phone.
-                      </p>
                     </div>
-                  </Col>
-                </Row>
-              </Col>
+                  </AppFormCell>
+                </AppFormGrid>
+              </AppFormCell>
 
-              {/* Search by address or Eircode in one line */}
-              <Col span={24}>
-                {isLoaded && (
-                  <StandaloneSearchBox
-                    onLoad={(ref) => (inputRef.current = ref)}
-                    onPlacesChanged={handlePlacesChanged}
-                    placeholder="Enter Eircode (e.g., D01X4X0)"
-                    disabled={isDisable}
-                  >
-                    <MyInput
-                      label="Search by address or Eircode"
-                      name="addressSearch"
-                      placeholder="Enter Eircode (e.g., D01X4X0)"
-                      disabled={isDisable}
-                      value={addressSearchValue}
-                      onChange={(e) => setAddressSearchValue(e.target.value)}
-                    />
-                  </StandaloneSearchBox>
-                )}
-              </Col>
+              {/* Search by address or Eircode — own row, 33% width */}
+              <AppFormCell span="full" className="form-search-eircode-row">
+                <AppFormGrid cols="33-67" className="form-grid--search-eircode">
+                  <AppFormCell>
+                    {isLoaded && (
+                      <div className="address-search-field">
+                        <StandaloneSearchBox
+                          onLoad={(ref) => (inputRef.current = ref)}
+                          onPlacesChanged={handlePlacesChanged}
+                          placeholder="Enter Eircode (e.g., D01X4X0)"
+                          disabled={isDisable}
+                        >
+                          <MyInput
+                            label="Search by address or Eircode"
+                            name="addressSearch"
+                            placeholder="Enter Eircode (e.g., D01X4X0)"
+                            disabled={isDisable}
+                            value={addressSearchValue}
+                            onChange={(e) =>
+                              setAddressSearchValue(e.target.value)
+                            }
+                          />
+                        </StandaloneSearchBox>
+                      </div>
+                    )}
+                  </AppFormCell>
+                </AppFormGrid>
+              </AppFormCell>
 
-              <Col xs={24} md={12}>
+              <AppFormCell>
                 <MyInput
                   label="Address Line 1 (Building or House)"
                   name="buildingOrHouse"
@@ -3634,9 +3718,9 @@ function ApplicationMgtDrawer({
                   }
                   hasError={!!errors?.buildingOrHouse}
                 />
-              </Col>
+              </AppFormCell>
 
-              <Col xs={24} md={12}>
+              <AppFormCell>
                 <MyInput
                   label="Address Line 2 (Street or Road)"
                   name="streetOrRoad"
@@ -3650,9 +3734,9 @@ function ApplicationMgtDrawer({
                     )
                   }
                 />
-              </Col>
+              </AppFormCell>
 
-              <Col xs={24} md={12}>
+              <AppFormCell>
                 <MyInput
                   label="Address Line 3 (Area or Town)"
                   name="adressLine3"
@@ -3666,9 +3750,9 @@ function ApplicationMgtDrawer({
                     )
                   }
                 />
-              </Col>
+              </AppFormCell>
 
-              <Col xs={24} md={12}>
+              <AppFormCell>
                 <MyInput
                   label="Address Line 4 (County, City or Postcode)"
                   name="countyCityOrPostCode"
@@ -3684,9 +3768,9 @@ function ApplicationMgtDrawer({
                   }
                   hasError={!!errors?.countyCityOrPostCode}
                 />
-              </Col>
+              </AppFormCell>
 
-              <Col xs={24} md={12}>
+              <AppFormCell>
                 <MyInput
                   label="Eircode"
                   name="Eircode"
@@ -3697,9 +3781,9 @@ function ApplicationMgtDrawer({
                   }
                   disabled={isDisable}
                 />
-              </Col>
+              </AppFormCell>
 
-              <Col xs={24} md={12}>
+              <AppFormCell>
                 <ApplicationMgtSelect
                   label="Country"
                   name="country"
@@ -3712,166 +3796,143 @@ function ApplicationMgtDrawer({
                   }
                   hasError={!!errors?.country}
                 />
-              </Col>
-              <Col span={24}>
-                <div className="mt-1 mb-3">
-                  <h4
-                    style={{
-                      fontSize: "16px",
-                      fontWeight: 600,
-                      color: "#1a1a1a",
-                      margin: 0,
-                      paddingBottom: "8px",
-                    }}
-                  >
-                    Contact Details
-                  </h4>
-                  <p
-                    style={{
-                      fontSize: "14px",
-                      color: "#666",
-                      margin: "4px 0 0 0",
-                    }}
-                  >
+              </AppFormCell>
+              <AppFormCell span="full">
+                <div className="contact-subsection">
+                  <h4 className="contact-subsection-title">Contact Details</h4>
+                  <p className="contact-subsection-subtitle">
                     Provide your email and contact number
                   </p>
                 </div>
-              </Col>
-              <Col xs={24} md={12}>
-                <MyInput
-                  label="Mobile"
-                  name="mobile"
-                  type="mobile"
-                  value={InfData.contactInfo?.mobileNumber}
-                  required
-                  hasError={!!errors?.mobileNumber}
-                  errorMessage={errors?.mobileNumber || "Required"}
-                  disabled={isDisable}
-                  onChange={(e) =>
-                    handleInputChange(
-                      "contactInfo",
-                      "mobileNumber",
-                      e.target.value,
-                    )
-                  }
-                />
-              </Col>
-
-              <Col xs={24} md={12}>
-                <MyInput
-                  label="Home / Work Tel Number"
-                  name="telephoneNumber"
-                  type="number"
-                  value={InfData.contactInfo?.telephoneNumber}
-                  disabled={isDisable}
-                  onChange={(e) =>
-                    handleInputChange(
-                      "contactInfo",
-                      "telephoneNumber",
-                      e.target.value,
-                    )
-                  }
-                  hasError={!!errors?.telephoneNumber}
-                />
-              </Col>
-
-              <Col xs={24} md={12}>
-                <div
-                  className="p-3 bg-lb"
-                  style={{
-                    borderRadius: "4px",
-                    height: "100%",
-                    backgroundColor: "#1173d41a",
-                    border: errors?.preferredEmail
-                      ? "1px solid #ff4d4f"
-                      : "1px solid #97c5efff",
-                    borderRadius: "4px",
-                  }}
-                >
-                  <div className="d-flex justify-content-between align-items-center">
-                    <label
-                      // style={{ color: errors?.preferredEmail ? "#ff4d4f" : "#215e97" }}
-                      className={`my-input-label ${
-                        errors?.preferredEmail ? "error-text1" : ""
-                      }`}
-                    >
-                      Preferred Email{" "}
-                      <span className="text-danger ms-1">*</span>
-                    </label>
-                    <Radio.Group
-                      style={{ color: "green" }}
+              </AppFormCell>
+              <AppFormCell span="full">
+                <AppFormGrid cols={2} className="form-grid--contact-phones">
+                  <AppFormCell>
+                    <MyInput
+                      label="Mobile"
+                      name="mobile"
+                      type="mobile"
+                      value={InfData.contactInfo?.mobileNumber}
+                      required
+                      hasError={!!errors?.mobileNumber}
+                      errorMessage={errors?.mobileNumber || "Required"}
+                      disabled={isDisable}
                       onChange={(e) =>
                         handleInputChange(
                           "contactInfo",
-                          "preferredEmail",
+                          "mobileNumber",
                           e.target.value,
                         )
                       }
-                      value={InfData?.contactInfo?.preferredEmail}
+                    />
+                  </AppFormCell>
+                  <AppFormCell>
+                    <MyInput
+                      label="Home / Work Tel Number"
+                      name="telephoneNumber"
+                      type="number"
+                      value={InfData.contactInfo?.telephoneNumber}
                       disabled={isDisable}
-                      // className={errors?.preferredEmail ? "radio-error" : ""}
+                      onChange={(e) =>
+                        handleInputChange(
+                          "contactInfo",
+                          "telephoneNumber",
+                          e.target.value,
+                        )
+                      }
+                      hasError={!!errors?.telephoneNumber}
+                    />
+                  </AppFormCell>
+                </AppFormGrid>
+              </AppFormCell>
+
+              <AppFormCell span="full">
+                <AppFormGrid cols={3} className="form-grid--contact-emails">
+                  <AppFormCell>
+                    <div
+                      className={`info-box info-box--field-aligned ${
+                        errors?.preferredEmail ? "info-box--error" : ""
+                      }`}
                     >
-                      <Radio style={{ color: "#215e97" }} value="personal">
-                        Personal
-                      </Radio>
-                      <Radio style={{ color: "#215e97" }} value="work">
-                        Work
-                      </Radio>
-                    </Radio.Group>
-                  </div>
-                </div>
-              </Col>
-
-              <Col xs={24} md={12}></Col>
-
-              <Col xs={24} md={12}>
-                <MyInput
-                  label="Personal Email"
-                  name="email"
-                  type="email"
-                  required={InfData.contactInfo?.preferredEmail === "personal"}
-                  value={InfData.contactInfo?.personalEmail}
-                  disabled={isDisable}
-                  onChange={(e) =>
-                    handleInputChange(
-                      "contactInfo",
-                      "personalEmail",
-                      e.target.value,
-                    )
-                  }
-                  onBlur={handleEmailBlur} // Add this
-                  hasError={!!errors?.personalEmail}
-                />
-              </Col>
-
-              <Col xs={24} md={12}>
-                <MyInput
-                  label="Work Email"
-                  name="Work Email"
-                  type="email"
-                  value={InfData?.contactInfo?.workEmail}
-                  required={InfData.contactInfo?.preferredEmail === "work"}
-                  disabled={isDisable}
-                  onChange={(e) =>
-                    handleInputChange(
-                      "contactInfo",
-                      "workEmail",
-                      e.target.value,
-                    )
-                  }
-                  onBlur={handleEmailBlur} // Add this
-                  hasError={!!errors?.workEmail}
-                />
-              </Col>
-            </Row>
+                      <label
+                        className={`my-input-label ${
+                          errors?.preferredEmail ? "error-text1" : ""
+                        }`}
+                      >
+                        Preferred Email{" "}
+                        <span className="text-danger">*</span>
+                      </label>
+                      <div className="form-control-band">
+                        <Radio.Group
+                          style={{ color: "#215e97", borderColor: "#215e97" }}
+                          onChange={(e) =>
+                            handleInputChange(
+                              "contactInfo",
+                              "preferredEmail",
+                              e.target.value,
+                            )
+                          }
+                          value={InfData?.contactInfo?.preferredEmail}
+                          disabled={isDisable}
+                          options={[
+                            { value: "personal", label: "Personal" },
+                            { value: "work", label: "Work" },
+                          ]}
+                        />
+                      </div>
+                    </div>
+                  </AppFormCell>
+                  <AppFormCell>
+                    <MyInput
+                      label="Personal Email"
+                      name="email"
+                      type="email"
+                      required={
+                        InfData.contactInfo?.preferredEmail === "personal"
+                      }
+                      value={InfData.contactInfo?.personalEmail}
+                      disabled={isDisable}
+                      onChange={(e) =>
+                        handleInputChange(
+                          "contactInfo",
+                          "personalEmail",
+                          e.target.value,
+                        )
+                      }
+                      onBlur={handleEmailBlur}
+                      hasError={!!errors?.personalEmail}
+                    />
+                  </AppFormCell>
+                  <AppFormCell>
+                    <MyInput
+                      label="Work Email"
+                      name="Work Email"
+                      type="email"
+                      value={InfData?.contactInfo?.workEmail}
+                      required={InfData.contactInfo?.preferredEmail === "work"}
+                      disabled={isDisable}
+                      onChange={(e) =>
+                        handleInputChange(
+                          "contactInfo",
+                          "workEmail",
+                          e.target.value,
+                        )
+                      }
+                      onBlur={handleEmailBlur}
+                      hasError={!!errors?.workEmail}
+                    />
+                  </AppFormCell>
+                </AppFormGrid>
+              </AppFormCell>
+            </AppFormGrid>
           </div>
 
           {/* Professional Details Section */}
-          <div className="mb-3">
+          <div className="section-card">
             <SectionHeader
               icon={
                 <IoBagRemoveOutline
-                  style={{ color: "#bf86f3", fontSize: "18px" }}
+                  style={{ color: "#bf86f3", fontSize: "16px" }}
                 />
               }
               title="Professional Details"
@@ -3879,8 +3940,8 @@ function ApplicationMgtDrawer({
               iconBackground="#ede6fa"
             />
 
-            <Row gutter={[16, 12]} className="mt-2">
-              <Col xs={24} md={12}>
+            <AppFormGrid>
+              <AppFormCell>
                 <ApplicationMgtSelect
                   label="Membership Category"
                   name="membershipCategory"
@@ -3894,157 +3955,143 @@ function ApplicationMgtDrawer({
                   }
                   hasError={!!errors?.membershipCategory}
                 />
-              </Col>
+              </AppFormCell>
               {membershipCategoryMatchesProductId(
                 InfData.subscriptionDetails?.membershipCategory,
                 RETIRED_MEMBERSHIP_CATEGORY_ID,
                 categoryData,
               ) ? (
-                <Col xs={24} md={12}>
-                  <Row gutter={[8, 8]}>
-                    <Col xs={24} md={12}>
-                      <MyDatePicker1
-                        label="Retired Date"
-                        name="retiredDate"
-                        value={InfData?.professionalDetails?.retiredDate}
-                        disabled={
-                          isDisable ||
-                          !membershipCategoryMatchesProductId(
-                            InfData?.subscriptionDetails?.membershipCategory,
-                            RETIRED_MEMBERSHIP_CATEGORY_ID,
-                            categoryData,
-                          )
-                        }
-                        required={membershipCategoryMatchesProductId(
+                <>
+                  <AppFormCell>
+                    <MyDatePicker1
+                      label="Retired Date"
+                      name="retiredDate"
+                      value={InfData?.professionalDetails?.retiredDate}
+                      disabled={
+                        isDisable ||
+                        !membershipCategoryMatchesProductId(
                           InfData?.subscriptionDetails?.membershipCategory,
                           RETIRED_MEMBERSHIP_CATEGORY_ID,
                           categoryData,
-                        )}
-                        onChange={(date, dateString) => {
-                          handleInputChange(
-                            "professionalDetails",
-                            "retiredDate",
-                            date,
-                          );
-                        }}
-                        hasError={!!errors?.retiredDate}
-                      />
-                    </Col>
-                    <Col xs={24} md={12}>
-                      <MyInput
-                        label="Pension No"
-                        name="pensionNo"
-                        value={InfData.professionalDetails?.pensionNo}
-                        disabled={
-                          isDisable ||
-                          !membershipCategoryMatchesProductId(
-                            InfData?.subscriptionDetails?.membershipCategory,
-                            RETIRED_MEMBERSHIP_CATEGORY_ID,
-                            categoryData,
-                          )
-                        }
-                        required={membershipCategoryMatchesProductId(
+                        )
+                      }
+                      required={membershipCategoryMatchesProductId(
+                        InfData?.subscriptionDetails?.membershipCategory,
+                        RETIRED_MEMBERSHIP_CATEGORY_ID,
+                        categoryData,
+                      )}
+                      onChange={(date, dateString) => {
+                        handleInputChange(
+                          "professionalDetails",
+                          "retiredDate",
+                          date,
+                        );
+                      }}
+                      hasError={!!errors?.retiredDate}
+                    />
+                  </AppFormCell>
+                  <AppFormCell>
+                    <MyInput
+                      label="Pension No"
+                      name="pensionNo"
+                      value={InfData.professionalDetails?.pensionNo}
+                      disabled={
+                        isDisable ||
+                        !membershipCategoryMatchesProductId(
                           InfData?.subscriptionDetails?.membershipCategory,
                           RETIRED_MEMBERSHIP_CATEGORY_ID,
                           categoryData,
-                        )}
-                        onChange={(e) =>
-                          handleInputChange(
-                            "professionalDetails",
-                            "pensionNo",
-                            e.target.value,
-                          )
-                        }
-                        hasError={!!errors?.pensionNo}
-                      />
-                    </Col>
-                  </Row>
-                </Col>
-              ) : !isUndergraduateStudentCategory ? (
-                <Col xs={24} md={12} />
+                        )
+                      }
+                      required={membershipCategoryMatchesProductId(
+                        InfData?.subscriptionDetails?.membershipCategory,
+                        RETIRED_MEMBERSHIP_CATEGORY_ID,
+                        categoryData,
+                      )}
+                      onChange={(e) =>
+                        handleInputChange(
+                          "professionalDetails",
+                          "pensionNo",
+                          e.target.value,
+                        )
+                      }
+                      hasError={!!errors?.pensionNo}
+                    />
+                  </AppFormCell>
+                </>
               ) : null}
               {isUndergraduateStudentCategory ? (
-                <Col xs={24}>
-                  <Row gutter={[16, 12]}>
-                    <Col xs={24} md={12}>
-                      <Row gutter={[16, 12]}>
-                        <Col xs={24} sm={12}>
-                          <ApplicationMgtSelect
-                            onChange={(e) =>
-                              handleInputChange(
-                                "professionalDetails",
-                                "studyLocation",
-                                e.target.value,
-                              )
-                            }
-                            label="Study Location"
-                            disabled={isDisable}
-                            required
-                            options={studyLocationOptions}
-                            value={InfData?.professionalDetails?.studyLocation}
-                            hasError={!!errors?.studyLocation}
-                          />
-                        </Col>
-                        <Col xs={24} sm={12}>
-                          <ApplicationMgtSelect
-                            label="Discipline"
-                            name="discipline"
-                            disabled={isDisable}
-                            required
-                            options={disciplineOptions}
-                            value={InfData?.professionalDetails?.discipline}
-                            onChange={(e) =>
-                              handleInputChange(
-                                "professionalDetails",
-                                "discipline",
-                                e.target.value,
-                              )
-                            }
-                            hasError={!!errors?.discipline}
-                          />
-                        </Col>
-                      </Row>
-                    </Col>
-                    <Col xs={24} md={12}>
-                      <Row gutter={[16, 12]}>
-                        <Col xs={24} sm={12}>
-                          <MyDatePicker1
-                            label="Start Date"
-                            onChange={(date, datestring) => {
-                              handleInputChange(
-                                "professionalDetails",
-                                "startDate",
-                                date,
-                              );
-                            }}
-                            disabled={isDisable}
-                            value={InfData?.professionalDetails?.startDate}
-                          />
-                        </Col>
-                        <Col xs={24} sm={12}>
-                          <MyDatePicker1
-                            label="Graduation date"
-                            required
-                            disabled={isDisable}
-                            onChange={(date, datestring) => {
-                              handleInputChange(
-                                "professionalDetails",
-                                "graduationDate",
-                                date,
-                              );
-                            }}
-                            value={InfData?.professionalDetails?.graduationDate}
-                            hasError={!!errors?.graduationDate}
-                          />
-                        </Col>
-                      </Row>
-                    </Col>
-                  </Row>
-                </Col>
+                <>
+                  <AppFormCell>
+                    <ApplicationMgtSelect
+                      onChange={(e) =>
+                        handleInputChange(
+                          "professionalDetails",
+                          "studyLocation",
+                          e.target.value,
+                        )
+                      }
+                      label="Study Location"
+                      disabled={isDisable}
+                      required
+                      options={studyLocationOptions}
+                      value={InfData?.professionalDetails?.studyLocation}
+                      hasError={!!errors?.studyLocation}
+                    />
+                  </AppFormCell>
+                  <AppFormCell>
+                    <ApplicationMgtSelect
+                      label="Discipline"
+                      name="discipline"
+                      disabled={isDisable}
+                      required
+                      options={disciplineOptions}
+                      value={InfData?.professionalDetails?.discipline}
+                      onChange={(e) =>
+                        handleInputChange(
+                          "professionalDetails",
+                          "discipline",
+                          e.target.value,
+                        )
+                      }
+                      hasError={!!errors?.discipline}
+                    />
+                  </AppFormCell>
+                  <AppFormCell>
+                    <MyDatePicker1
+                      label="Start Date"
+                      onChange={(date, datestring) => {
+                        handleInputChange(
+                          "professionalDetails",
+                          "startDate",
+                          date,
+                        );
+                      }}
+                      disabled={isDisable}
+                      value={InfData?.professionalDetails?.startDate}
+                    />
+                  </AppFormCell>
+                  <AppFormCell>
+                    <MyDatePicker1
+                      label="Graduation date"
+                      required
+                      disabled={isDisable}
+                      onChange={(date, datestring) => {
+                        handleInputChange(
+                          "professionalDetails",
+                          "graduationDate",
+                          date,
+                        );
+                      }}
+                      value={InfData?.professionalDetails?.graduationDate}
+                      hasError={!!errors?.graduationDate}
+                    />
+                  </AppFormCell>
+                </>
               ) : null}
 
               {/* Work Location */}
-              <Col xs={24} md={12}>
+              <AppFormCell>
                 <ApplicationMgtSelect
                   label="Work Location"
                   name="workLocation"
@@ -4063,32 +4110,29 @@ function ApplicationMgtDrawer({
                   }}
                   hasError={!!errors?.workLocation}
                 />
-              </Col>
+              </AppFormCell>
 
-              <Col xs={24} md={12}>
-                <MyInput
-                  label="Other Work Location"
-                  name="Other Work Location"
-                  value={InfData.professionalDetails?.otherWorkLocation}
-                  required={
-                    InfData.professionalDetails?.workLocation == "Other"
-                  }
-                  disabled={
-                    isDisable ||
-                    InfData?.professionalDetails?.workLocation != "Other"
-                  }
-                  onChange={(e) =>
-                    handleInputChange(
-                      "professionalDetails",
-                      "otherWorkLocation",
-                      e.target.value,
-                    )
-                  }
-                  hasError={!!errors?.otherWorkLocation}
-                />
-              </Col>
+              {isWorkLocationOther && (
+                <AppFormCell>
+                  <MyInput
+                    label="Other Work Location"
+                    name="Other Work Location"
+                    value={InfData.professionalDetails?.otherWorkLocation}
+                    required
+                    disabled={isDisable}
+                    onChange={(e) =>
+                      handleInputChange(
+                        "professionalDetails",
+                        "otherWorkLocation",
+                        e.target.value,
+                      )
+                    }
+                    hasError={!!errors?.otherWorkLocation}
+                  />
+                </AppFormCell>
+              )}
 
-              <Col xs={24} md={12}>
+              <AppFormCell>
                 <ApplicationMgtSelect
                   label="Branch"
                   name="branch"
@@ -4107,9 +4151,9 @@ function ApplicationMgtDrawer({
                   options={branchOptions}
                   hasError={!!errors?.branch}
                 />
-              </Col>
+              </AppFormCell>
 
-              <Col xs={24} md={12}>
+              <AppFormCell>
                 <ApplicationMgtSelect
                   label="Region"
                   name="Region"
@@ -4128,8 +4172,8 @@ function ApplicationMgtDrawer({
                   options={regionOptions}
                   hasError={!!errors?.region}
                 />
-              </Col>
-              <Col xs={24} md={12}>
+              </AppFormCell>
+              <AppFormCell>
                 <ApplicationMgtSelect
                   label="Grade"
                   name="grade"
@@ -4146,196 +4190,262 @@ function ApplicationMgtDrawer({
                   options={gradeOptions}
                   hasError={!!errors?.grade}
                 />
-              </Col>
+              </AppFormCell>
 
-              <Col xs={24} md={12}>
-                <MyInput
-                  label="Other Grade"
-                  name="otherGrade"
-                  value={InfData.professionalDetails?.otherGrade}
-                  required={InfData?.professionalDetails?.grade === "Other"}
-                  disabled={
-                    InfData?.professionalDetails?.grade !== "Other" || isDisable
-                  }
-                  onChange={(e) =>
-                    handleInputChange(
-                      "professionalDetails",
-                      "otherGrade",
-                      e.target.value,
-                    )
-                  }
-                  hasError={!!errors?.otherGrade}
-                />
-              </Col>
-
-              {/* Nursing Adaptation Programme */}
-              <Col xs={24} md={12} className="!pb-0 pa">
-                <div
-                  className="p-3 bg-lb"
-                  style={{
-                    borderRadius: "4px",
-                    height: "100%",
-                    backgroundColor: "#1173d41a",
-                    border: errors?.nursingAdaptationProgramme
-                      ? "1px solid #ff4d4f"
-                      : "1px solid #97c5efff",
-                  }}
-                >
-                  <label
-                    style={{
-                      color: errors?.nursingAdaptationProgramme
-                        ? "#ff4d4f"
-                        : "#215e97",
-                      display: "block",
-                      marginBottom: "8px",
-                    }}
-                    className={`my-input-label ${
-                      errors?.nursingAdaptationProgramme ? "error-text1" : ""
-                    }`}
-                  >
-                    Are you currently undertaking a nursing adaptation
-                    programme? <span className="text-danger">*</span>
-                  </label>
-
-                  <Radio.Group
-                    name="nursingAdaptationProgramme"
-                    value={
-                      InfData.professionalDetails
-                        ?.nursingAdaptationProgramme === true
-                        ? true
-                        : InfData.professionalDetails
-                              ?.nursingAdaptationProgramme === false
-                          ? false
-                          : null
-                    }
+              {isGradeOther && (
+                <AppFormCell>
+                  <MyInput
+                    label="Other Grade"
+                    name="otherGrade"
+                    value={InfData.professionalDetails?.otherGrade}
+                    required
+                    disabled={isDisable}
                     onChange={(e) =>
                       handleInputChange(
                         "professionalDetails",
-                        "nursingAdaptationProgramme",
+                        "otherGrade",
                         e.target.value,
                       )
                     }
-                    disabled={isDisable}
-                    style={{
-                      color: "#215e97",
-                      // borderColor: "#215e97",
-                      display: "flex",
-                      gap: "20px",
-                    }}
-                    className={
-                      errors?.nursingAdaptationProgramme ? "radio-error" : ""
-                    }
-                  >
-                    <Radio value={true}>Yes</Radio>
-                    <Radio value={false}>No</Radio>
-                  </Radio.Group>
-                </div>
-              </Col>
+                    hasError={!!errors?.otherGrade}
+                  />
+                </AppFormCell>
+              )}
 
-              <Col xs={24} md={12}>
-                <MyInput
-                  label="NMBI No/An Board Altranais Number"
-                  name="nmbiNumber"
-                  value={InfData?.professionalDetails?.nmbiNumber}
-                  disabled={
-                    (InfData?.professionalDetails
-                      ?.nursingAdaptationProgramme !== true &&
-                      InfData?.professionalDetails
-                        ?.nursingAdaptationProgramme !== false) ||
-                    isDisable
-                  }
-                  required={
-                    InfData?.professionalDetails?.nursingAdaptationProgramme ===
-                    false
-                  }
+              <AppFormCell>
+                <ApplicationMgtSelect
+                  label="Primary Section"
+                  name="primarySection"
+                  value={InfData.subscriptionDetails?.primarySection}
+                  disabled={isDisable}
                   onChange={(e) =>
                     handleInputChange(
-                      "professionalDetails",
-                      "nmbiNumber",
+                      "subscriptionDetails",
+                      "primarySection",
                       e.target.value,
                     )
                   }
-                  hasError={!!errors?.nmbiNumber}
+                  options={sectionOptions}
                 />
-              </Col>
+              </AppFormCell>
+
+              {isPrimarySectionOther && (
+                <AppFormCell>
+                  <MyInput
+                    label="Other Primary Section"
+                    name="otherPrimarySection"
+                    value={InfData.subscriptionDetails?.otherPrimarySection}
+                    onChange={(e) =>
+                      handleInputChange(
+                        "subscriptionDetails",
+                        "otherPrimarySection",
+                        e.target.value,
+                      )
+                    }
+                    required
+                    disabled={isDisable}
+                    hasError={!!errors?.otherPrimarySection}
+                  />
+                </AppFormCell>
+              )}
+
+              <AppFormCell>
+                <ApplicationMgtSelect
+                  label="Secondary Section"
+                  name="secondarySection"
+                  value={InfData.subscriptionDetails?.secondarySection}
+                  options={secondarySectionOptions}
+                  disabled={isDisable}
+                  onChange={(e) =>
+                    handleInputChange(
+                      "subscriptionDetails",
+                      "secondarySection",
+                      e.target.value,
+                    )
+                  }
+                />
+              </AppFormCell>
+
+              {isSecondarySectionOther && (
+                <AppFormCell>
+                  <MyInput
+                    label="Other Secondary Section"
+                    name="otherSecondarySection"
+                    value={InfData.subscriptionDetails?.otherSecondarySection}
+                    disabled={isDisable}
+                    required
+                    onChange={(e) =>
+                      handleInputChange(
+                        "subscriptionDetails",
+                        "otherSecondarySection",
+                        e.target.value,
+                      )
+                    }
+                    hasError={!!errors?.otherSecondarySection}
+                  />
+                </AppFormCell>
+              )}
+
+              {/* Nursing Adaptation Programme (cols 1–2) + NMBI No (col 3) */}
+              <AppFormCell span="full">
+                <AppFormGrid cols={2} className="form-grid--nursing-row">
+                  <AppFormCell>
+                    <div
+                      className={`info-box info-box--field-aligned info-box--field-aligned--wrap ${
+                        errors?.nursingAdaptationProgramme
+                          ? "info-box--error"
+                          : ""
+                      }`}
+                    >
+                      <label
+                        className={`my-input-label ${
+                          errors?.nursingAdaptationProgramme
+                            ? "error-text1"
+                            : ""
+                        }`}
+                        style={{
+                          color: errors?.nursingAdaptationProgramme
+                            ? "#ff4d4f"
+                            : "#215e97",
+                        }}
+                      >
+                        Are you currently undertaking a nursing adaptation
+                        programme? <span className="text-danger">*</span>
+                      </label>
+                      <div className="form-control-band">
+                        <Radio.Group
+                          name="nursingAdaptationProgramme"
+                          value={
+                            InfData.professionalDetails
+                              ?.nursingAdaptationProgramme === true
+                              ? true
+                              : InfData.professionalDetails
+                                    ?.nursingAdaptationProgramme === false
+                                ? false
+                                : null
+                          }
+                          onChange={(e) =>
+                            handleInputChange(
+                              "professionalDetails",
+                              "nursingAdaptationProgramme",
+                              e.target.value,
+                            )
+                          }
+                          disabled={isDisable}
+                          style={{
+                            color: "#215e97",
+                            borderColor: "#215e97",
+                          }}
+                          className={
+                            errors?.nursingAdaptationProgramme
+                              ? "radio-error"
+                              : ""
+                          }
+                          options={[
+                            { value: true, label: "Yes" },
+                            { value: false, label: "No" },
+                          ]}
+                        />
+                      </div>
+                    </div>
+                  </AppFormCell>
+                  <AppFormCell>
+                    <MyInput
+                      label="NMBI No/An Board Altranais Number"
+                      name="nmbiNumber"
+                      value={InfData?.professionalDetails?.nmbiNumber}
+                      disabled={isDisable}
+                      required={isNmbiNumberRequired}
+                      onChange={(e) =>
+                        handleInputChange(
+                          "professionalDetails",
+                          "nmbiNumber",
+                          e.target.value,
+                        )
+                      }
+                      hasError={!!errors?.nmbiNumber}
+                    />
+                  </AppFormCell>
+                </AppFormGrid>
+              </AppFormCell>
 
               {/* Nurse Type - Full Width */}
-              <Col span={24}>
+              {showNurseTypeField && (
+              <AppFormCell span="full">
                 <div
-                  className="ps-3 pe-3 pt-2 pb-3 bg-ly"
-                  style={{
-                    backgroundColor: "#f0fdf4",
-                    borderRadius: "4px",
-                    border: errors?.nurseType
-                      ? "1px solid #ff4d4f"
-                      : "1px solid #a4e3ba",
-                  }}
+                  className={`info-box info-box--field-aligned info-box--field-aligned--wrap info-box--nurse-type ${
+                    errors?.nurseType ? "info-box--error" : ""
+                  }`}
                 >
                   <label
-                    className="my-input-label mb-1"
-                    style={{ color: errors?.nurseType ? "#ff4d4f" : "#14532d" }}
-                  >
-                    Please tick one of the following{" "}
-                    {InfData?.professionalDetails
-                      ?.nursingAdaptationProgramme === true ? (
-                      <span className="text-danger">*</span>
-                    ) : null}
-                  </label>
-
-                  <Radio.Group
-                    name="nurseType"
-                    value={InfData.professionalDetails?.nurseType}
-                    onChange={(e) =>
-                      handleInputChange(
-                        "professionalDetails",
-                        "nurseType",
-                        e.target.value,
-                      )
-                    }
-                    disabled={
-                      InfData?.professionalDetails
-                        ?.nursingAdaptationProgramme !== true || isDisable
-                    }
+                    className={`my-input-label ${
+                      errors?.nurseType ? "error-text1" : ""
+                    }`}
                     style={{
-                      color: "#14532d",
-                      width: "100%",
+                      color: errors?.nurseType ? "#ff4d4f" : "#215e97",
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "4px",
                     }}
                   >
+                    Please tick one of the following
+                    <span className="text-danger">*</span>
+                  </label>
+                  <div className="form-control-band form-control-band--nurse-type">
+                    <Radio.Group
+                      name="nurseType"
+                      value={InfData.professionalDetails?.nurseType}
+                      onChange={(e) =>
+                        handleInputChange(
+                          "professionalDetails",
+                          "nurseType",
+                          e.target.value,
+                        )
+                      }
+                      disabled={
+                        InfData?.professionalDetails
+                          ?.nursingAdaptationProgramme !== true || isDisable
+                      }
+                      style={{
+                        color: "#215e97",
+                        width: "100%",
+                      }}
+                    >
                     <div
                       className="d-flex justify-content-between align-items-baseline flex-wrap"
                       style={{ gap: "8px" }}
                     >
                       <Radio
                         value="generalNursing"
-                        style={{ color: "#14532d", width: "14%" }}
+                        style={{ color: "#215e97", width: "14%" }}
                       >
                         General Nursing
                       </Radio>
 
                       <Radio
                         value="publicHealthNurse"
-                        style={{ color: "#14532d", width: "14%" }}
+                        style={{ color: "#215e97", width: "14%" }}
                       >
                         Public Health Nurse
                       </Radio>
 
                       <Radio
                         value="mentalHealth"
-                        style={{ color: "#14532d", width: "14%" }}
+                        style={{ color: "#215e97", width: "14%" }}
                       >
                         Mental Health Nurse
                       </Radio>
 
                       <Radio
                         value="midwife"
-                        style={{ color: "#14532d", width: "16%" }}
+                        style={{ color: "#215e97", width: "16%" }}
                       >
                         Midwife
                       </Radio>
 
                       <Radio
                         value="sickChildrenNurse"
-                        style={{ color: "#14532d", width: "14%" }}
+                        style={{ color: "#215e97", width: "14%" }}
                       >
                         Sick Children's Nurse
                       </Radio>
@@ -4343,7 +4453,7 @@ function ApplicationMgtDrawer({
                       <Radio
                         value="intellectualDisability"
                         style={{
-                          color: "#14532d",
+                          color: "#215e97",
                           width: "20%",
                           whiteSpace: "normal",
                           lineHeight: "1.2",
@@ -4352,29 +4462,27 @@ function ApplicationMgtDrawer({
                         Registered Nurse for Intellectual Disability
                       </Radio>
                     </div>
-                  </Radio.Group>
+                    </Radio.Group>
+                  </div>
                 </div>
-              </Col>
-            </Row>
+              </AppFormCell>
+              )}
+            </AppFormGrid>
           </div>
 
           {showYouthForumSection && (
-            <div className="mb-3">
-              <Row gutter={[16, 12]} className="mt-2">
-                <Col xs={24} md={12}>
+            <div className="section-card">
+              <AppFormGrid>
+                <AppFormCell span={showYouthForumSelect ? 2 : "full"}>
                   <div
-                    className="p-3 bg-lb"
-                    style={{
-                      backgroundColor: "#1173d41a",
-                      border: errors?.joinYouthForum
-                        ? "1px solid #ff4d4f"
-                        : "1px solid #97c5efff",
-                      borderRadius: "4px",
-                      height: "100%",
-                    }}
+                    className={`info-box question-box ${
+                      errors?.joinYouthForum ? "info-box--error" : ""
+                    }`}
                   >
                     <label
-                      className="my-input-label mb-2"
+                      className={`my-input-label ${
+                        errors?.joinYouthForum ? "error-text1" : ""
+                      }`}
                       style={{
                         color: errors?.joinYouthForum ? "#ff4d4f" : "#215e97",
                         display: "flex",
@@ -4410,130 +4518,109 @@ function ApplicationMgtDrawer({
                       </Radio>
                     </Radio.Group>
                   </div>
-                </Col>
-                <Col xs={24} md={12}>
-                  <ApplicationMgtSelect
-                    label="Youth Forum"
-                    name="youthForum"
-                    required={
-                      InfData.professionalDetails?.joinYouthForum === true
-                    }
-                    options={youthForumOptions}
-                    value={InfData.professionalDetails?.youthForum}
-                    disabled={
-                      isDisable ||
-                      InfData.professionalDetails?.joinYouthForum !== true
-                    }
-                    placeholder="Select Youth Forum"
-                    onChange={(e) =>
-                      handleInputChange(
-                        "professionalDetails",
-                        "youthForum",
-                        e.target.value,
-                      )
-                    }
-                    hasError={!!errors?.youthForum}
-                  />
-                </Col>
-              </Row>
+                </AppFormCell>
+                {showYouthForumSelect && (
+                  <AppFormCell>
+                    <ApplicationMgtSelect
+                      label="Youth Forum"
+                      name="youthForum"
+                      required
+                      options={youthForumOptions}
+                      value={InfData.professionalDetails?.youthForum}
+                      disabled={isDisable}
+                      placeholder="Select Youth Forum"
+                      onChange={(e) =>
+                        handleInputChange(
+                          "professionalDetails",
+                          "youthForum",
+                          e.target.value,
+                        )
+                      }
+                      hasError={!!errors?.youthForum}
+                    />
+                  </AppFormCell>
+                )}
+              </AppFormGrid>
             </div>
           )}
 
           {/* Subscription Details Section */}
-          <div className="mb-3">
+          <div className="section-card">
             <SectionHeader
               icon={
-                <CiCreditCard1 style={{ color: "#ec6d28", fontSize: "18px" }} />
+                <CiCreditCard1 style={{ color: "#ec6d28", fontSize: "16px" }} />
               }
               title="Subscription Details"
               backgroundColor="#fff9eb"
               iconBackground="#fad1b8ff"
             />
 
-            <Row gutter={[16, 12]} className="mt-2">
-              <Col xs={24} md={12}>
-                <div
+            <AppFormGrid>
+              <AppFormCell>
+                <MyDatePicker1
                   className="w-100"
-                  style={{
-                    display: "grid",
-                    gridTemplateColumns: "1fr 1fr ",
-                    gap: "8px",
+                  label="Date Joined"
+                  name="dateJoined"
+                  required
+                  value={InfData?.subscriptionDetails?.dateJoined}
+                  disabled={isDisable}
+                  onChange={(date, dateString) => {
+                    handleInputChange(
+                      "subscriptionDetails",
+                      "dateJoined",
+                      date,
+                    );
                   }}
-                >
-                  <MyDatePicker1
-                    className="w-100"
-                    label="Date Joined"
-                    name="dateJoined"
-                    required
-                    value={InfData?.subscriptionDetails?.dateJoined}
-                    disabled={isDisable}
-                    onChange={(date, dateString) => {
-                      handleInputChange(
-                        "subscriptionDetails",
-                        "dateJoined",
-                        date,
-                      );
-                    }}
-                    hasError={!!errors?.dateJoined}
-                    errorMessage={errors?.dateJoined || "Required"}
-                  />
-                  <MyDatePicker1
-                    className="w-100"
-                    label="Submission Date"
-                    name="submissionDate"
-                    value={InfData?.subscriptionDetails?.submissionDate}
-                    disabled={isDisable || isEdit}
-                    onChange={(date, dateString) => {
-                      handleInputChange(
-                        "subscriptionDetails",
-                        "submissionDate",
-                        date,
-                      );
-                    }}
-                    hasError={!!errors?.submissionDate}
-                    errorMessage={errors?.submissionDate || "Required"}
-                  />
-                </div>
-              </Col>
-              <Col xs={24} md={12}>
-                <div
+                  hasError={!!errors?.dateJoined}
+                  errorMessage={errors?.dateJoined || "Required"}
+                />
+              </AppFormCell>
+              <AppFormCell>
+                <MyDatePicker1
                   className="w-100"
-                  style={{
-                    display: "grid",
-                    gridTemplateColumns: "1fr 1fr ",
-                    gap: "8px",
+                  label="Submission Date"
+                  name="submissionDate"
+                  value={InfData?.subscriptionDetails?.submissionDate}
+                  disabled={isDisable || isEdit}
+                  onChange={(date, dateString) => {
+                    handleInputChange(
+                      "subscriptionDetails",
+                      "submissionDate",
+                      date,
+                    );
                   }}
-                >
-                  <ApplicationMgtSelect
-                    label="Payment Method"
-                    name="paymentType"
-                    required
-                    options={filteredPaymentTypeOptions}
-                    disabled={isDisable}
-                    onChange={(e) =>
-                      handleInputChange(
-                        "subscriptionDetails",
-                        "paymentType",
-                        e.target.value,
-                      )
-                    }
-                    value={InfData.subscriptionDetails?.paymentType}
-                    hasError={!!errors?.paymentType}
-                  />
+                  hasError={!!errors?.submissionDate}
+                  errorMessage={errors?.submissionDate || "Required"}
+                />
+              </AppFormCell>
+              <AppFormCell>
+                <ApplicationMgtSelect
+                  label="Payment Method"
+                  name="paymentType"
+                  required
+                  options={filteredPaymentTypeOptions}
+                  disabled={isDisable}
+                  onChange={(e) =>
+                    handleInputChange(
+                      "subscriptionDetails",
+                      "paymentType",
+                      e.target.value,
+                    )
+                  }
+                  value={InfData.subscriptionDetails?.paymentType}
+                  hasError={!!errors?.paymentType}
+                />
+              </AppFormCell>
+              {isSalaryDeductionPayment && (
+                <AppFormCell>
                   <MyInput
                     className="w-100"
                     label="Payroll No"
                     name="payrollNo"
                     value={InfData?.subscriptionDetails?.payrollNo}
                     hasError={!!errors?.payrollNo}
-                    required={
-                      InfData?.subscriptionDetails?.paymentType ===
-                      SALARY_DEDUCTION_PAYMENT_TYPE
-                    }
-                    disabled={
-                      InfData?.subscriptionDetails?.paymentType !==
-                        SALARY_DEDUCTION_PAYMENT_TYPE || isDisable
-                    }
+                    required
+                    disabled={isDisable}
                     onChange={(e) =>
                       handleInputChange(
                         "subscriptionDetails",
@@ -4542,9 +4629,9 @@ function ApplicationMgtDrawer({
                       )
                     }
                   />
-                </div>
-              </Col>
-              <Col xs={24} md={12}>
+                </AppFormCell>
+              )}
+              <AppFormCell>
                 <ApplicationMgtSelect
                   label="Payment Frequency"
                   name="paymentFrequency"
@@ -4559,22 +4646,21 @@ function ApplicationMgtDrawer({
                   }
                   value={InfData.subscriptionDetails?.paymentFrequency}
                 />
-              </Col>
+              </AppFormCell>
 
               {/* Membership Status - Full Width */}
-              <Col span={24}>
+              <AppFormCell span="full">
                 <div
-                  className="ps-3 pe-3 pt-2 pb-3 bg-ly"
+                  className="notice-box"
                   style={{
                     backgroundColor: "#f0fdf4",
-                    borderRadius: "4px",
                     border: errors?.membershipStatus
                       ? "1px solid #ff4d4f"
                       : "1px solid #a4e3ba",
                   }}
                 >
                   <label
-                    className="my-input-label mb-1"
+                    className="my-input-label"
                     style={{
                       color: errors?.membershipStatus ? "#ff4d4f" : "#14532d",
                     }}
@@ -4656,155 +4742,172 @@ function ApplicationMgtDrawer({
                     </div>
                   </Radio.Group>
                 </div>
-              </Col>
+              </AppFormCell>
 
               {isNewOrGraduateMembershipStatus && (
                 <>
-                  <Col xs={24} md={12}>
-                    <div
-                      className="p-3 bg-lb"
-                      style={{
-                        backgroundColor: "#1173d41a",
-                        border: errors?.otherIrishTradeUnion
-                          ? "1px solid #ff4d4f"
-                          : "1px solid #97c5efff",
-                        borderRadius: "4px",
-                        height: "100%",
-                      }}
+                  <AppFormCell span="full">
+                    <AppFormGrid
+                      cols={
+                        InfData.subscriptionDetails?.otherIrishTradeUnion ===
+                        true
+                          ? 3
+                          : 2
+                      }
+                      className={`form-grid--trade-union-row${
+                        InfData.subscriptionDetails?.otherIrishTradeUnion ===
+                        true
+                          ? " form-grid--trade-union-row--3"
+                          : ""
+                      }`}
                     >
-                      <label
-                        className="my-input-label mb-2"
-                        style={{
-                          color: errors?.otherIrishTradeUnion
-                            ? "#ff4d4f"
-                            : "#215e97",
-                          display: "flex",
-                          alignItems: "center",
-                          gap: "4px",
-                        }}
-                      >
-                        If you are a member of another Trade Union. If yes,
-                        which Union?
-                        <span className="text-danger">*</span>
-                      </label>
-                      <Radio.Group
-                        style={{ color: "#215e97" }}
-                        name="otherIrishTradeUnion"
-                        value={
-                          InfData.subscriptionDetails?.otherIrishTradeUnion !==
-                          null
-                            ? InfData.subscriptionDetails?.otherIrishTradeUnion
-                            : null
-                        }
-                        onChange={(e) =>
-                          handleInputChange(
-                            "subscriptionDetails",
-                            "otherIrishTradeUnion",
-                            e.target?.value,
-                          )
-                        }
-                        disabled={isDisable}
-                      >
-                        <Radio style={{ color: "#215e97" }} value={true}>
-                          Yes
-                        </Radio>
-                        <Radio style={{ color: "#215e97" }} value={false}>
-                          No
-                        </Radio>
-                      </Radio.Group>
+                      <AppFormCell>
+                        <div
+                          className={`info-box info-box--field-aligned info-box--field-aligned--wrap ${
+                            errors?.otherIrishTradeUnion
+                              ? "info-box--error"
+                              : ""
+                          }`}
+                        >
+                          <label
+                            className={`my-input-label ${
+                              errors?.otherIrishTradeUnion ? "error-text1" : ""
+                            }`}
+                            style={{
+                              color: errors?.otherIrishTradeUnion
+                                ? "#ff4d4f"
+                                : "#215e97",
+                            }}
+                          >
+                            If you are a member of another Trade Union. If yes,
+                            which Union?{" "}
+                            <span className="text-danger">*</span>
+                          </label>
+                          <div className="form-control-band">
+                            <Radio.Group
+                              name="otherIrishTradeUnion"
+                              style={{
+                                color: "#215e97",
+                                borderColor: "#215e97",
+                              }}
+                              className={
+                                errors?.otherIrishTradeUnion
+                                  ? "radio-error"
+                                  : ""
+                              }
+                              value={
+                                InfData.subscriptionDetails
+                                  ?.otherIrishTradeUnion !== null
+                                  ? InfData.subscriptionDetails
+                                      ?.otherIrishTradeUnion
+                                    : null
+                              }
+                              onChange={(e) =>
+                                handleInputChange(
+                                  "subscriptionDetails",
+                                  "otherIrishTradeUnion",
+                                  e.target?.value,
+                                )
+                              }
+                              disabled={isDisable}
+                              options={[
+                                { value: true, label: "Yes" },
+                                { value: false, label: "No" },
+                              ]}
+                            />
+                          </div>
+                        </div>
+                      </AppFormCell>
                       {InfData.subscriptionDetails?.otherIrishTradeUnion ===
                         true && (
-                        <MyInput
-                          value={
-                            InfData.subscriptionDetails
-                              ?.otherIrishTradeUnionName
-                          }
-                          onChange={(e) =>
-                            handleInputChange(
-                              "subscriptionDetails",
-                              "otherIrishTradeUnionName",
-                              e.target?.value,
-                            )
-                          }
-                          placeholder="Enter Union name"
-                          className="mt-2"
-                          hasError={!!errors?.otherIrishTradeUnionName}
-                        />
+                        <AppFormCell>
+                          <MyInput
+                            label="Union Name"
+                            name="otherIrishTradeUnionName"
+                            value={
+                              InfData.subscriptionDetails
+                                ?.otherIrishTradeUnionName
+                            }
+                            onChange={(e) =>
+                              handleInputChange(
+                                "subscriptionDetails",
+                                "otherIrishTradeUnionName",
+                                e.target?.value,
+                              )
+                            }
+                            placeholder="Enter Union name"
+                            required
+                            disabled={isDisable}
+                            hasError={!!errors?.otherIrishTradeUnionName}
+                          />
+                        </AppFormCell>
                       )}
-                    </div>
-                  </Col>
-
-                  <Col xs={24} md={12}>
-                    <div
-                      className="p-3 bg-lb"
-                      style={{
-                        backgroundColor: "#1173d41a",
-                        border: errors?.otherScheme
-                          ? "1px solid #ff4d4f"
-                          : "1px solid #97c5efff",
-                        borderRadius: "4px",
-                        height: "100%",
-                      }}
-                    >
-                      <label
-                        className="my-input-label mb-2"
-                        style={{
-                          color: errors?.otherScheme ? "#ff4d4f" : "#215e97",
-                          display: "flex",
-                          alignItems: "center",
-                          gap: "4px",
-                        }}
-                      >
-                        Are you or were you a member of another Irish trade
-                        Union salary or Income Protection Scheme?
-                        <span className="text-danger">*</span>
-                      </label>
-                      <Radio.Group
-                        name="otherScheme"
-                        value={
-                          InfData.subscriptionDetails?.otherScheme !== null
-                            ? InfData.subscriptionDetails?.otherScheme
-                            : null
-                        }
-                        onChange={(e) =>
-                          handleInputChange(
-                            "subscriptionDetails",
-                            "otherScheme",
-                            e.target?.value,
-                          )
-                        }
-                        style={{ color: "#215e97" }}
-                        disabled={isDisable}
-                      >
-                        <Radio style={{ color: "#215e97" }} value={true}>
-                          Yes
-                        </Radio>
-                        <Radio style={{ color: "#215e97" }} value={false}>
-                          No
-                        </Radio>
-                      </Radio.Group>
-                    </div>
-                  </Col>
+                      <AppFormCell>
+                        <div
+                          className={`info-box info-box--field-aligned info-box--field-aligned--wrap ${
+                            errors?.otherScheme ? "info-box--error" : ""
+                          }`}
+                        >
+                          <label
+                            className={`my-input-label ${
+                              errors?.otherScheme ? "error-text1" : ""
+                            }`}
+                            style={{
+                              color: errors?.otherScheme
+                                ? "#ff4d4f"
+                                : "#215e97",
+                            }}
+                          >
+                            Are you or were you a member of another Irish trade
+                            Union salary or Income Protection Scheme?{" "}
+                            <span className="text-danger">*</span>
+                          </label>
+                          <div className="form-control-band">
+                            <Radio.Group
+                              name="otherScheme"
+                              style={{
+                                color: "#215e97",
+                                borderColor: "#215e97",
+                              }}
+                              className={
+                                errors?.otherScheme ? "radio-error" : ""
+                              }
+                              value={
+                                InfData.subscriptionDetails?.otherScheme !==
+                                null
+                                  ? InfData.subscriptionDetails?.otherScheme
+                                  : null
+                              }
+                              onChange={(e) =>
+                                handleInputChange(
+                                  "subscriptionDetails",
+                                  "otherScheme",
+                                  e.target?.value,
+                                )
+                              }
+                              disabled={isDisable}
+                              options={[
+                                { value: true, label: "Yes" },
+                                { value: false, label: "No" },
+                              ]}
+                            />
+                          </div>
+                        </div>
+                      </AppFormCell>
+                    </AppFormGrid>
+                  </AppFormCell>
                 </>
               )}
 
               {showGraduateCornMarketOptions && (
                 <>
-                  <Col xs={24} md={24}>
-                    <div
-                      className="pe-3 ps-3 pt-2 pb-2 h-100"
-                      style={{
-                        borderRadius: "4px",
-                        backgroundColor: "#fffbeb",
-                        border: "1px solid #fde68a",
-                      }}
-                    >
+                  <AppFormCell span="full">
+                    <div className="consent-box">
                       <Checkbox
                         checked={
                           InfData?.subscriptionDetails
                             ?.exclusiveDiscountsAndOffers
                         }
-                        style={{ color: "#78350f" }}
                         onChange={(e) =>
                           handleInputChange(
                             "subscriptionDetails",
@@ -4818,21 +4921,13 @@ function ApplicationMgtDrawer({
                         offers for {tenantTradeName || "organisation"} members?
                       </Checkbox>
                     </div>
-                  </Col>
-                  <Col xs={24} md={24}>
-                    <div
-                      className="pe-3 ps-3 pt-2 pb-2 h-100"
-                      style={{
-                        borderRadius: "4px",
-                        backgroundColor: "#fffbeb",
-                        border: "1px solid #fde68a",
-                      }}
-                    >
+                  </AppFormCell>
+                  <AppFormCell span="full">
+                    <div className="consent-box">
                       <Checkbox
                         checked={
                           InfData?.subscriptionDetails?.incomeProtectionScheme
                         }
-                        style={{ color: "#78350f" }}
                         onChange={(e) =>
                           handleInputChange(
                             "subscriptionDetails",
@@ -4857,7 +4952,7 @@ function ApplicationMgtDrawer({
                           Scheme
                         </a>
                       </Checkbox>
-                      <p>
+                      <p className="consent-box-note">
                         By selecting 'I consent' below, you are agreeing to the
                         {tenantTradeName || "The organisation"}, sharing your
                         Trade Union membership details with Cornmarket.
@@ -4888,22 +4983,14 @@ function ApplicationMgtDrawer({
                         for Automatic Access to the Scheme.
                       </p>
                     </div>
-                  </Col>
+                  </AppFormCell>
                 </>
               )}
               {showNewMemberRewardsOption && (
-                <Col xs={24} md={24}>
-                  <div
-                    className="pe-3 ps-3 pt-2 pb-2 h-100"
-                    style={{
-                      borderRadius: "4px",
-                      backgroundColor: "#fffbeb",
-                      border: "1px solid #fde68a",
-                    }}
-                  >
+                <AppFormCell span="full">
+                  <div className="consent-box">
                     <Checkbox
                       checked={InfData?.subscriptionDetails?.inmoRewards}
-                      style={{ color: "#78350f" }}
                       onChange={(e) =>
                         handleInputChange(
                           "subscriptionDetails",
@@ -4941,7 +5028,7 @@ function ApplicationMgtDrawer({
                       </Tooltip>{" "}
                       for {tenantTradeName || "organisation"} members
                     </Checkbox>
-                    <p>
+                    <p className="consent-box-note">
                       By ticking here, you confirm that you agree to the Terms &
                       Conditions available on Cornmarket.ie/rewards-club-terms
                       and the Data Protection Statement available on
@@ -4949,12 +5036,12 @@ function ApplicationMgtDrawer({
                       about your Rewards Benefits. You can opt out at any time.
                     </p>
                   </div>
-                </Col>
+                </AppFormCell>
               )}
 
               {showPreviousMembershipNo && (
                 <>
-                  <Col xs={24} md={12}>
+                  <AppFormCell>
                     <MyInput
                       label="Previous Membership No."
                       name="previousMembershipNo"
@@ -4969,13 +5056,12 @@ function ApplicationMgtDrawer({
                         )
                       }
                     />
-                  </Col>
-                  <Col xs={0} md={12} aria-hidden />
+                  </AppFormCell>
                 </>
               )}
 
               {/* Recruited By */}
-              <Col xs={24} md={6}>
+              <AppFormCell>
                 <MyInput
                   label="Recruited By"
                   name="recuritedBy"
@@ -4989,9 +5075,9 @@ function ApplicationMgtDrawer({
                     )
                   }
                 />
-              </Col>
+              </AppFormCell>
 
-              <Col xs={24} md={6}>
+              <AppFormCell>
                 <MyInput
                   label="Recruited By (Membership No)"
                   name="recuritedByMembershipNo"
@@ -5005,7 +5091,7 @@ function ApplicationMgtDrawer({
                     )
                   }
                 />
-              </Col>
+              </AppFormCell>
               {/* <Col span={12}>
                 <label className="my-input-label">
                   Validate Recruited By Information
@@ -5052,184 +5138,110 @@ function ApplicationMgtDrawer({
                     Search
                   </Button>
                 </div>
-              </Col> */}
-              <Col span={12}>
-                <label className="my-input-label">
-                  Validate Recruited By Information
-                </label>
-                <MemberSearch
-                  // fullWidth={true}/
-                  disable={isDisable}
-                  onSelectBehavior="callback"
-                  onSelectCallback={handleRecruteBy}
-                  // onAddMember={handleAddMember}
-                  value={recruiterSearchValue}
-                  onChange={setRecruiterSearchValue}
-                  addMemberLabel="Add New Member"
-                  style={{ width: "100%" }}
-                />
-              </Col>
-              {/* Sections */}
-              <Col xs={24} md={12}>
-                <ApplicationMgtSelect
-                  label="Primary Section"
-                  name="primarySection"
-                  value={InfData.subscriptionDetails?.primarySection}
-                  disabled={isDisable}
-                  onChange={(e) =>
-                    handleInputChange(
-                      "subscriptionDetails",
-                      "primarySection",
-                      e.target.value,
-                    )
-                  }
-                  options={sectionOptions}
-                />
-              </Col>
-
-              <Col xs={24} md={12}>
-                <MyInput
-                  label="Other Primary Section"
-                  name="otherPrimarySection"
-                  value={InfData.subscriptionDetails?.otherPrimarySection}
-                  onChange={(e) =>
-                    handleInputChange(
-                      "subscriptionDetails",
-                      "otherPrimarySection",
-                      e.target.value,
-                    )
-                  }
-                  required={
-                    InfData?.subscriptionDetails?.primarySection === "Other"
-                  }
-                  disabled={
-                    InfData?.subscriptionDetails?.primarySection !== "Other"
-                  }
-                  hasError={!!errors?.otherPrimarySection}
-                />
-              </Col>
-
-              <Col xs={24} md={12}>
-                <ApplicationMgtSelect
-                  label="Secondary Section"
-                  name="secondarySection"
-                  value={InfData.subscriptionDetails?.secondarySection}
-                  options={secondarySectionOptions}
-                  disabled={isDisable}
-                  onChange={(e) =>
-                    handleInputChange(
-                      "subscriptionDetails",
-                      "secondarySection",
-                      e.target.value,
-                    )
-                  }
-                />
-              </Col>
-
-              <Col xs={24} md={12}>
-                <MyInput
-                  label="Other Secondary Section"
-                  name="otherSecondarySection"
-                  value={InfData.subscriptionDetails?.otherSecondarySection}
-                  disabled={
-                    isDisable ||
-                    InfData?.subscriptionDetails?.secondarySection !== "Other"
-                  }
-                  required={
-                    isDisable ||
-                    InfData?.subscriptionDetails?.secondarySection === "Other"
-                  }
-                  onChange={(e) =>
-                    handleInputChange(
-                      "subscriptionDetails",
-                      "otherSecondarySection",
-                      e.target.value,
-                    )
-                  }
-                  hasError={!!errors?.otherSecondarySection}
-                />
-              </Col>
-
-              {/* Final Checkboxes - Same Height */}
-              <Col xs={24} md={12} className="mb-3">
-                <div
-                  className="pe-3 ps-3 pt-2 pb-2   d-flex align-items-center"
-                  style={{
-                    borderRadius: "4px",
-                    height: "100%",
-                    backgroundColor: "#fffbeb",
-                    border: "1px solid #fde68a",
-                  }}
-                >
-                  <Checkbox
-                    checked={InfData?.subscriptionDetails?.valueAddedServices}
-                    style={{ color: "#78350f" }}
-                    onChange={(e) =>
-                      handleInputChange(
-                        "subscriptionDetails",
-                        "valueAddedServices",
-                        e.target.checked,
-                      )
-                    }
-                    disabled={isDisable}
-                  >
-                    Tick here to allow our partners to contact you about Value
-                    added Services by Email and SMS
-                  </Checkbox>
+              </AppFormCell> */}
+              <AppFormCell>
+                <div className="form-field-stack">
+                  <label className="my-input-label">
+                    Validate Recruited By Information
+                  </label>
+                  <div className="form-control-band form-control-band--plain">
+                    <MemberSearch
+                      compact
+                      showStatus={false}
+                      disable={isDisable}
+                      onSelectBehavior="callback"
+                      onSelectCallback={handleRecruteBy}
+                      value={recruiterSearchValue}
+                      onChange={setRecruiterSearchValue}
+                      addMemberLabel="Add New Member"
+                      style={{ width: "100%" }}
+                    />
+                  </div>
                 </div>
-              </Col>
+              </AppFormCell>
 
-              <Col className="mb-3" xs={24} md={12}>
-                <div
-                  className="pe-3 ps-3 pt-2 pb-2 d-flex align-items-center"
-                  style={{
-                    borderRadius: "4px",
-                    backgroundColor: "#fffbeb",
-                    border: "1px solid #fde68a",
-                  }}
+              <AppFormCell span="full">
+                <AppFormGrid
+                  cols="40-60"
+                  className="form-grid--final-checkboxes"
                 >
-                  <Checkbox
-                    checked={InfData?.subscriptionDetails?.termsAndConditions}
-                    onChange={(e) =>
-                      handleInputChange(
-                        "subscriptionDetails",
-                        "termsAndConditions",
-                        e.target.checked,
-                      )
-                    }
-                    style={{ color: "#78350f" }}
-                    disabled={isDisable}
-                  >
-                    I have read and agree to the{" "}
-                    <a
-                      href="#"
-                      style={{ color: "#78350f", textDecoration: "underline" }}
-                    >
-                      {tenantTradeName || "Organisation"} Data Protection
-                      Statement,
-                    </a>{" "}
-                    the{" "}
-                    <a
-                      href="#"
-                      style={{ color: "#78350f", textDecoration: "underline" }}
-                    >
-                      {tenantTradeName || "Organisation"} Privacy Statement
-                    </a>{" "}
-                    and the{" "}
-                    <a
-                      href="#"
-                      style={{ color: "#78350f", textDecoration: "underline" }}
-                    >
-                      {tenantTradeName || "Organisation"} Conditions of
-                      Membership
-                    </a>
-                    {errors?.termsAndConditions && (
-                      <span style={{ color: "red" }}> (Required)</span>
-                    )}
-                  </Checkbox>
-                </div>
-              </Col>
-            </Row>
+                  <AppFormCell>
+                    <div className="checkbox-notice-box">
+                      <Checkbox
+                        checked={
+                          InfData?.subscriptionDetails?.valueAddedServices
+                        }
+                        onChange={(e) =>
+                          handleInputChange(
+                            "subscriptionDetails",
+                            "valueAddedServices",
+                            e.target.checked,
+                          )
+                        }
+                        disabled={isDisable}
+                      >
+                        Tick here to allow our partners to contact you about
+                        Value added Services by Email and SMS
+                      </Checkbox>
+                    </div>
+                  </AppFormCell>
+                  <AppFormCell>
+                    <div className="checkbox-notice-box">
+                      <Checkbox
+                        checked={
+                          InfData?.subscriptionDetails?.termsAndConditions
+                        }
+                        onChange={(e) =>
+                          handleInputChange(
+                            "subscriptionDetails",
+                            "termsAndConditions",
+                            e.target.checked,
+                          )
+                        }
+                        style={{ color: "#78350f" }}
+                        disabled={isDisable}
+                      >
+                        I have read and agree to the{" "}
+                        <a
+                          href="#"
+                          style={{
+                            color: "#78350f",
+                            textDecoration: "underline",
+                          }}
+                        >
+                          {tenantTradeName || "Organisation"} Data Protection
+                          Statement,
+                        </a>{" "}
+                        the{" "}
+                        <a
+                          href="#"
+                          style={{
+                            color: "#78350f",
+                            textDecoration: "underline",
+                          }}
+                        >
+                          {tenantTradeName || "Organisation"} Privacy Statement
+                        </a>{" "}
+                        and the{" "}
+                        <a
+                          href="#"
+                          style={{
+                            color: "#78350f",
+                            textDecoration: "underline",
+                          }}
+                        >
+                          {tenantTradeName || "Organisation"} Conditions of
+                          Membership
+                        </a>
+                        {errors?.termsAndConditions && (
+                          <span style={{ color: "red" }}> (Required)</span>
+                        )}
+                      </Checkbox>
+                    </div>
+                  </AppFormCell>
+                </AppFormGrid>
+              </AppFormCell>
+            </AppFormGrid>
           </div>
         </div>
 

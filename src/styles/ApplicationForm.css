@@ -1,0 +1,787 @@
+/* Compact application form density */
+.application-form.compact {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.application-form.compact .section-card {
+  padding: 12px 16px;
+  border-radius: 10px;
+  border: 1px solid #f0f0f0;
+  background: #fff;
+}
+
+.application-form.compact .section-header {
+  display: flex;
+  align-items: center;
+  min-height: 48px;
+  padding: 10px 16px;
+  margin: -12px -16px 12px;
+  border-radius: 10px 10px 0 0;
+}
+
+.application-form.compact .section-header-icon {
+  padding: 5px 7px;
+  border-radius: 6px;
+  margin-right: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.application-form.compact .section-header-icon .anticon,
+.application-form.compact .section-header-icon svg {
+  font-size: 16px !important;
+}
+
+.application-form.compact .section-header-text {
+  min-width: 0;
+}
+
+.application-form.compact .section-header-title {
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 1.2;
+  margin: 0;
+  color: #1a1a1a;
+}
+
+.application-form.compact .section-header-subtitle {
+  font-size: 13px;
+  line-height: 1.2;
+  margin-top: 2px;
+  margin-bottom: 0;
+  font-weight: 400;
+  color: #666;
+}
+
+/* CSS grid layout — container-based columns, not Ant flex breakpoints */
+.application-form.compact .form-grid {
+  display: grid;
+  column-gap: 16px;
+  row-gap: 6px;
+  width: 100%;
+}
+
+.application-form.compact .form-grid-cell-inner > .form-grid {
+  display: grid;
+  width: 100%;
+}
+
+.application-form.compact .form-grid--3 {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.application-form.compact .form-grid--2 {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.application-form.compact .form-grid--33-67 {
+  grid-template-columns: minmax(0, 1fr) minmax(0, 2fr);
+}
+
+.application-form.compact .form-grid--40-60 {
+  grid-template-columns: minmax(0, 2fr) minmax(0, 3fr);
+}
+
+/* Full-width rows must not inherit field-row track sizing */
+.application-form.compact .form-grid-cell.form-col-full {
+  display: flex;
+  flex-direction: column;
+  grid-row: auto;
+}
+
+/* Each field cell: fixed label row + fixed control row */
+.application-form.compact .form-grid--3 > .form-grid-cell:not(.form-col-full):not(:has(.consent-box)):not(:has(.question-box)):not(:has(.notice-box)):not(:has(.checkbox-notice-box)),
+.application-form.compact .form-grid--2 > .form-grid-cell:not(.form-col-full):not(:has(.consent-box)):not(:has(.question-box)):not(:has(.notice-box)):not(:has(.checkbox-notice-box)),
+.application-form.compact .form-grid--33-67 > .form-grid-cell:not(.form-col-full):not(:has(.consent-box)):not(:has(.question-box)):not(:has(.notice-box)):not(:has(.checkbox-notice-box)),
+.application-form.compact .form-grid--search-eircode > .form-grid-cell,
+.application-form.compact .form-grid--contact-phones > .form-grid-cell,
+.application-form.compact .form-grid--contact-emails > .form-grid-cell,
+.application-form.compact .form-grid--nursing-row > .form-grid-cell:not(.form-col-full):not(:has(.question-box)),
+.application-form.compact .form-grid--trade-union-row > .form-grid-cell {
+  display: grid;
+  grid-template-rows: minmax(20px, auto) 36px;
+  gap: 2px;
+  align-content: start;
+  min-width: 0;
+}
+
+.application-form.compact .form-grid--3 > .form-grid-cell:not(.form-col-full):not(:has(.consent-box)):not(:has(.question-box)):not(:has(.notice-box)):not(:has(.checkbox-notice-box)) > .form-grid-cell-inner,
+.application-form.compact .form-grid--2 > .form-grid-cell:not(.form-col-full):not(:has(.consent-box)):not(:has(.question-box)):not(:has(.notice-box)):not(:has(.checkbox-notice-box)) > .form-grid-cell-inner,
+.application-form.compact .form-grid--33-67 > .form-grid-cell:not(.form-col-full):not(:has(.consent-box)):not(:has(.question-box)):not(:has(.notice-box)):not(:has(.checkbox-notice-box)) > .form-grid-cell-inner,
+.application-form.compact .form-grid--search-eircode > .form-grid-cell > .form-grid-cell-inner,
+.application-form.compact .form-grid--contact-phones > .form-grid-cell > .form-grid-cell-inner,
+.application-form.compact .form-grid--contact-emails > .form-grid-cell > .form-grid-cell-inner,
+.application-form.compact .form-grid--nursing-row > .form-grid-cell:not(.form-col-full) > .form-grid-cell-inner,
+.application-form.compact .form-grid--trade-union-row > .form-grid-cell > .form-grid-cell-inner {
+  display: contents;
+}
+
+/* Flatten wrappers so label + control sit on the cell's two grid rows */
+.application-form.compact .form-grid--3 > .form-grid-cell:not(.form-col-full) .form-grid-cell-inner > .my-input-wrapper,
+.application-form.compact .form-grid--2 > .form-grid-cell:not(.form-col-full) .form-grid-cell-inner > .my-input-wrapper,
+.application-form.compact .form-grid--33-67 > .form-grid-cell:not(.form-col-full) .form-grid-cell-inner > .my-input-wrapper,
+.application-form.compact .form-grid--search-eircode > .form-grid-cell .form-grid-cell-inner > .my-input-wrapper,
+.application-form.compact .form-grid--contact-phones > .form-grid-cell .form-grid-cell-inner > .my-input-wrapper,
+.application-form.compact .form-grid--contact-emails > .form-grid-cell .form-grid-cell-inner > .my-input-wrapper,
+.application-form.compact .form-grid--nursing-row > .form-grid-cell .form-grid-cell-inner > .my-input-wrapper,
+.application-form.compact .form-grid--trade-union-row > .form-grid-cell .form-grid-cell-inner > .my-input-wrapper,
+.application-form.compact .form-grid--3 > .form-grid-cell:not(.form-col-full) .form-grid-cell-inner > .info-box--field-aligned,
+.application-form.compact .form-grid--2 > .form-grid-cell:not(.form-col-full) .form-grid-cell-inner > .info-box--field-aligned,
+.application-form.compact .form-grid--33-67 > .form-grid-cell:not(.form-col-full) .form-grid-cell-inner > .info-box--field-aligned,
+.application-form.compact .form-grid--contact-emails > .form-grid-cell .form-grid-cell-inner > .info-box--field-aligned,
+.application-form.compact .form-grid--nursing-row > .form-grid-cell .form-grid-cell-inner > .info-box--field-aligned,
+.application-form.compact .form-grid--trade-union-row > .form-grid-cell .form-grid-cell-inner > .info-box--field-aligned,
+.application-form.compact .form-grid--3 > .form-grid-cell:not(.form-col-full) .form-grid-cell-inner > .form-field-stack,
+.application-form.compact .form-grid--2 > .form-grid-cell:not(.form-col-full) .form-grid-cell-inner > .form-field-stack,
+.application-form.compact .form-grid--33-67 > .form-grid-cell:not(.form-col-full) .form-grid-cell-inner > .form-field-stack,
+.application-form.compact .form-grid--3 > .form-grid-cell:not(.form-col-full) .form-grid-cell-inner > div:not(.form-grid):not(.consent-box):not(.notice-box):not(.checkbox-notice-box):not(.info-box),
+.application-form.compact .form-grid--2 > .form-grid-cell:not(.form-col-full) .form-grid-cell-inner > div:not(.form-grid):not(.consent-box):not(.notice-box):not(.checkbox-notice-box):not(.info-box),
+.application-form.compact .form-grid--33-67 > .form-grid-cell:not(.form-col-full) .form-grid-cell-inner > div:not(.form-grid):not(.consent-box):not(.notice-box):not(.checkbox-notice-box):not(.info-box),
+.application-form.compact .form-grid--search-eircode > .form-grid-cell .form-grid-cell-inner > div:not(.form-grid):not(.consent-box):not(.notice-box):not(.checkbox-notice-box):not(.info-box),
+.application-form.compact .form-grid--contact-phones > .form-grid-cell .form-grid-cell-inner > div:not(.form-grid):not(.consent-box):not(.notice-box):not(.checkbox-notice-box):not(.info-box),
+.application-form.compact .form-grid--contact-emails > .form-grid-cell .form-grid-cell-inner > div:not(.form-grid):not(.consent-box):not(.notice-box):not(.checkbox-notice-box):not(.info-box),
+.application-form.compact .form-grid--nursing-row > .form-grid-cell .form-grid-cell-inner > div:not(.form-grid):not(.consent-box):not(.notice-box):not(.checkbox-notice-box):not(.info-box),
+.application-form.compact .form-grid--trade-union-row > .form-grid-cell .form-grid-cell-inner > div:not(.form-grid):not(.consent-box):not(.notice-box):not(.checkbox-notice-box):not(.info-box) {
+  display: contents;
+}
+
+/* Default cell layout (full-width blocks, consent, notices) */
+.application-form.compact .form-grid-cell {
+  display: flex;
+  flex-direction: column;
+  align-self: stretch;
+  min-width: 0;
+}
+
+.application-form.compact .form-grid-cell-inner {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  width: 100%;
+}
+
+/* Row 1 — labels (MyInput, CustomSelect, MyDatePicker) */
+.application-form.compact .form-grid-cell > .d-flex,
+.application-form.compact .form-grid-cell > .my-input-label,
+.application-form.compact .form-grid-cell .info-box--field-aligned > .my-input-label {
+  align-self: end;
+  width: 100%;
+  min-width: 0;
+  margin-bottom: 0 !important;
+  display: flex;
+  align-items: flex-end !important;
+  box-sizing: border-box;
+  line-height: 1.2;
+}
+
+.application-form.compact .form-grid-cell > .d-flex > .d-flex {
+  align-items: flex-end !important;
+}
+
+.application-form.compact .form-grid-cell > .d-flex .my-input-label,
+.application-form.compact .form-grid-cell > .my-input-label {
+  margin-bottom: 0;
+}
+
+/* Row 2 — controls */
+.application-form.compact .form-grid-cell > .my-input-container,
+.application-form.compact .form-grid-cell > .form-control-band,
+.application-form.compact .form-grid-cell > div:has(> input[type="text"]) {
+  align-self: stretch;
+  width: 100%;
+  min-width: 0;
+  height: 36px !important;
+  min-height: 36px !important;
+  max-height: 36px !important;
+  box-sizing: border-box;
+}
+
+.application-form.compact .form-grid-cell input[type="text"] {
+  height: 36px !important;
+  min-height: 36px !important;
+  max-height: 36px !important;
+  font-size: 13px !important;
+  box-sizing: border-box;
+}
+
+.application-form.compact .form-control-band {
+  display: flex;
+  align-items: center;
+  padding: 0 12px;
+  border-radius: 8px;
+  box-sizing: border-box;
+  width: 100%;
+}
+
+.application-form.compact .form-control-band--plain {
+  padding: 0;
+  border: none;
+  background: transparent;
+}
+
+.application-form.compact .form-control-band--plain .member-search-field {
+  width: 100%;
+  min-width: 0;
+}
+
+.application-form.compact
+  .form-control-band--plain
+  .member-search-field
+  .ant-select-auto-complete,
+.application-form.compact
+  .form-control-band--plain
+  .member-search-field
+  .ant-input-affix-wrapper,
+.application-form.compact
+  .form-control-band--plain
+  .member-search-field
+  .ant-input-affix-wrapper.my-input-field {
+  width: 100% !important;
+  height: 36px !important;
+  min-height: 36px !important;
+  max-height: 36px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  box-sizing: border-box;
+  padding: 0 11px !important;
+}
+
+.application-form.compact
+  .form-control-band--plain
+  .member-search-field
+  .ant-input-affix-wrapper
+  .ant-input {
+  height: auto !important;
+  min-height: 0 !important;
+  padding: 0 0 0 8px !important;
+  font-size: 13px !important;
+  line-height: 22px !important;
+  border: none !important;
+  box-shadow: none !important;
+  background: transparent !important;
+}
+
+.application-form.compact
+  .form-control-band--plain
+  .member-search-field
+  .ant-input-affix-wrapper
+  .ant-input-prefix {
+  display: inline-flex;
+  align-items: center;
+  margin-inline-end: 0 !important;
+  line-height: 1;
+}
+
+.application-form.compact
+  .form-control-band--plain
+  .member-search-field
+  .ant-input-affix-wrapper
+  .ant-input-suffix {
+  display: inline-flex;
+  align-items: center;
+  margin-inline-start: 4px;
+}
+
+.application-form.compact .info-box--field-aligned {
+  background: transparent;
+  border: none;
+  padding: 0;
+  min-height: 0;
+  margin: 0;
+}
+
+.application-form.compact .info-box--field-aligned .form-control-band {
+  background-color: #1173d41a;
+  border: 1px solid #97c5efff;
+}
+
+.application-form.compact .info-box--field-aligned.info-box--error .form-control-band {
+  border-color: #ff4d4f;
+}
+
+.application-form.compact .form-grid--address-consent .consent-box--compact {
+  margin-bottom: 0;
+  flex: 1;
+  display: flex;
+  align-items: center;
+  min-height: 36px;
+  padding: 6px 12px;
+}
+
+.application-form.compact .consent-box--compact .ant-checkbox-wrapper {
+  align-items: flex-start;
+  width: 100%;
+  margin-inline-end: 0;
+  gap: 10px;
+}
+
+.application-form.compact .consent-box--compact .ant-checkbox {
+  align-self: flex-start;
+  margin-top: 2px;
+  margin-inline-end: 0;
+}
+
+.application-form.compact .consent-box--compact .ant-checkbox + span {
+  display: block;
+  line-height: 1.35;
+  padding-inline-start: 2px;
+  flex: 1;
+  min-width: 0;
+}
+
+.application-form.compact .consent-box--compact .consent-box-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.application-form.compact .consent-box--compact .consent-box-label {
+  display: block;
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 1.35;
+}
+
+.application-form.compact .consent-box--compact .consent-box-note {
+  display: block;
+  font-size: 11px;
+  font-weight: 400;
+  line-height: 1.3;
+  margin: 0;
+  padding-left: 0;
+}
+
+.application-form.compact .form-grid--address-consent > .form-grid-cell:has(.consent-box) {
+  display: flex;
+  flex-direction: column;
+}
+
+.application-form.compact .info-box--field-aligned--wrap > .my-input-label {
+  align-items: flex-end;
+}
+
+.application-form.compact .form-control-band--nurse-type {
+  height: auto !important;
+  min-height: 36px;
+  max-height: none !important;
+  padding: 8px 12px;
+  align-items: flex-start;
+  background-color: #f0fdf4;
+  border: 1px solid #a4e3ba;
+}
+
+.application-form.compact
+  .info-box--nurse-type.info-box--error
+  .form-control-band--nurse-type {
+  border-color: #ff4d4f;
+}
+
+.application-form.compact .form-grid--contact-phones,
+.application-form.compact .form-grid--contact-emails,
+.application-form.compact .form-grid--nursing-row,
+.application-form.compact .form-grid--search-eircode {
+  width: 100%;
+}
+
+.application-form.compact .form-grid--trade-union-row {
+  width: 100%;
+  grid-template-rows: minmax(20px, auto) 36px;
+}
+
+.application-form.compact .form-grid--nursing-row {
+  grid-template-columns: minmax(0, 1.35fr) minmax(0, 0.65fr);
+}
+
+.application-form.compact
+  .info-box--field-aligned
+  .form-control-band:has(.ant-radio-group):not(.form-control-band--nurse-type) {
+  width: 100%;
+  min-width: 200px;
+}
+
+.application-form.compact .form-control-band .ant-radio-group {
+  display: inline-flex;
+  align-items: center;
+  gap: 24px;
+  width: 100%;
+}
+
+.application-form.compact .form-control-band .ant-radio-wrapper {
+  margin-inline-end: 0;
+  padding-inline: 4px 8px;
+}
+
+.application-form.compact .form-grid--trade-union-row--3 {
+  grid-template-columns: minmax(0, 2fr) minmax(0, 1fr) minmax(0, 2fr);
+}
+
+.application-form.compact .form-grid--trade-union-row > .form-grid-cell {
+  grid-row: span 2;
+  grid-template-rows: subgrid;
+}
+
+.application-form.compact
+  .form-grid--trade-union-row
+  .info-box--field-aligned--wrap
+  > .my-input-label,
+.application-form.compact
+  .form-grid--trade-union-row
+  > .form-grid-cell
+  .my-input-wrapper
+  > .d-flex {
+  min-height: 40px;
+  align-items: flex-end;
+}
+
+.application-form.compact .form-grid > .form-grid-cell.form-search-eircode-row {
+  margin-bottom: 0;
+}
+
+.application-form.compact .form-grid--search-eircode {
+  grid-template-columns: minmax(0, 1fr) minmax(0, 2fr);
+}
+
+.application-form.compact .address-search-field {
+  display: contents;
+}
+
+.application-form.compact .form-grid--contact-phones,
+.application-form.compact .form-grid--contact-emails {
+  row-gap: 0;
+}
+
+.application-form.compact
+  .form-grid
+  > .form-grid-cell.form-col-full:has(.form-grid--contact-phones)
+  + .form-grid-cell.form-col-full:has(.form-grid--contact-emails) {
+  margin-top: -2px;
+}
+
+
+.application-form.compact .form-grid-cell,
+.application-form.compact .form-grid > .ant-col {
+  min-width: 0;
+  margin-bottom: 0;
+  max-width: 100% !important;
+}
+
+.application-form.compact .form-grid.ant-row {
+  display: grid !important;
+  margin-left: 0 !important;
+  margin-right: 0 !important;
+  flex-wrap: unset !important;
+}
+
+.application-form.compact .form-grid.ant-row::before,
+.application-form.compact .form-grid.ant-row::after {
+  display: none !important;
+}
+
+.application-form.compact .form-grid > .ant-col {
+  flex: none !important;
+  width: auto !important;
+  padding-left: 0 !important;
+  padding-right: 0 !important;
+}
+
+.application-form.compact .form-grid-cell.form-col-full,
+.application-form.compact .form-grid > .ant-col.form-col-full {
+  grid-column: 1 / -1;
+}
+
+.application-form.compact .form-grid-cell.form-col-2,
+.application-form.compact .form-grid > .ant-col.form-col-2 {
+  grid-column: span 2;
+}
+
+@media (max-width: 991px) {
+  .application-form.compact .form-grid--3 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 767px) {
+  .application-form.compact .form-grid--contact-emails,
+  .application-form.compact .form-grid--nursing-row {
+    grid-template-columns: 1fr;
+  }
+
+  .application-form.compact .form-grid--nursing-row > .form-grid-cell.form-col-2 {
+    grid-column: span 1;
+  }
+}
+
+@media (max-width: 575px) {
+  .application-form.compact .form-grid--3,
+  .application-form.compact .form-grid--2,
+  .application-form.compact .form-grid--33-67,
+  .application-form.compact .form-grid--40-60,
+  .application-form.compact .form-grid--contact-phones {
+    grid-template-columns: 1fr;
+  }
+
+  .application-form.compact .form-grid-cell.form-col-2,
+  .application-form.compact .form-grid > .ant-col.form-col-2 {
+    grid-column: span 1;
+  }
+}
+
+.application-form.compact .form-item {
+  margin-bottom: 10px;
+}
+
+.application-form.compact .form-grid > .form-grid-cell.form-item,
+.application-form.compact .form-grid > .ant-col.form-item {
+  margin-bottom: 0;
+}
+
+.application-form.compact .form-grid .info-box,
+.application-form.compact .form-grid .consent-box,
+.application-form.compact .form-grid .question-box,
+.application-form.compact .form-grid .notice-box,
+.application-form.compact .form-grid .checkbox-notice-box {
+  margin-bottom: 0;
+}
+
+.application-form.compact .form-grid .form-grid {
+  width: 100%;
+}
+
+.application-form.compact label,
+.application-form.compact .my-input-label {
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 1.2;
+}
+
+.application-form.compact .form-grid-cell-inner .my-input-label {
+  margin-bottom: 0;
+}
+
+.application-form.compact .info-box,
+.application-form.compact .consent-box {
+  min-height: 48px;
+  padding: 10px 16px;
+  margin-bottom: 10px;
+  border-radius: 6px;
+}
+
+.application-form.compact .info-box {
+  background-color: #1173d41a;
+  border: 1px solid #97c5efff;
+}
+
+.application-form.compact .info-box.info-box--error {
+  border-color: #ff4d4f;
+}
+
+.application-form.compact .info-box .info-box-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.application-form.compact .consent-box {
+  background-color: #fffbeb;
+  border: 1px solid #fde68a;
+  color: #78350f;
+}
+
+.application-form.compact .consent-box .ant-checkbox-wrapper {
+  color: #78350f;
+  font-size: 13px;
+  line-height: 1.3;
+}
+
+.application-form.compact .consent-box-note {
+  color: #78350f;
+  font-size: 12px;
+  line-height: 1.3;
+}
+
+.application-form.compact p.consent-box-note {
+  margin: 4px 0 0;
+}
+
+.application-form.compact .contact-subsection {
+  margin-bottom: 0;
+}
+
+.application-form.compact .contact-subsection-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: #1a1a1a;
+  margin: 0;
+  padding-bottom: 4px;
+  line-height: 1.2;
+}
+
+.application-form.compact .contact-subsection-subtitle {
+  font-size: 13px;
+  color: #666;
+  margin: 2px 0 0;
+  line-height: 1.2;
+}
+
+
+/* Compact labels and controls */
+.application-form.compact .my-input-wrapper {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 0 !important;
+  min-width: 0;
+}
+
+.application-form.compact .form-grid-cell-inner .my-input-wrapper {
+  width: 100%;
+}
+
+.application-form.compact .my-input-container {
+  height: 36px !important;
+  min-height: 36px !important;
+  max-height: 36px !important;
+  box-sizing: border-box;
+}
+
+.application-form.compact .my-input-field,
+.application-form.compact .my-input-field-select {
+  height: 100% !important;
+  min-height: 0 !important;
+  font-size: 13px;
+  box-sizing: border-box;
+}
+
+.application-form.compact .my-input-container .my-input-field {
+  font-size: 13px;
+}
+
+.application-form.compact .my-input-container .ant-picker {
+  height: 36px !important;
+  min-height: 36px !important;
+  font-size: 13px !important;
+}
+
+.application-form.compact .form-grid-cell > .my-input-container {
+  align-items: stretch !important;
+}
+
+.application-form.compact .my-input-container .my-input-ant-select {
+  height: 100% !important;
+  min-height: 100% !important;
+  align-self: stretch;
+}
+
+.application-form.compact
+  .my-input-container
+  .my-input-ant-select
+  .ant-select-selector {
+  min-height: 100% !important;
+  height: 100% !important;
+  padding: 0 32px 0 12px !important;
+  display: flex !important;
+  align-items: center !important;
+}
+
+.application-form.compact
+  .my-input-container
+  .my-input-ant-select
+  .ant-select-selection-wrap,
+.application-form.compact
+  .my-input-container
+  .my-input-ant-select
+  .ant-select-selection-search {
+  height: 100% !important;
+}
+
+.application-form.compact
+  .my-input-container
+  .my-input-ant-select
+  .ant-select-selection-item,
+.application-form.compact
+  .my-input-container
+  .my-input-ant-select
+  .ant-select-selection-placeholder,
+.application-form.compact
+  .my-input-container
+  .my-input-ant-select
+  .ant-select-selection-search-input {
+  line-height: 1.2 !important;
+  font-size: 13px !important;
+}
+
+.application-form.compact .country-code-select,
+.application-form.compact .mobile-number-input {
+  height: 36px;
+  min-height: 36px;
+  font-size: 13px;
+}
+
+.application-form.compact .ant-input,
+.application-form.compact .ant-select-selector,
+.application-form.compact .ant-picker {
+  height: 36px !important;
+  min-height: 36px !important;
+}
+
+.application-form.compact .ant-select-selection-item,
+.application-form.compact .ant-select-selection-placeholder {
+  line-height: 34px !important;
+}
+
+.application-form.compact .ant-radio-wrapper,
+.application-form.compact .ant-checkbox-wrapper {
+  font-size: 13px;
+}
+
+.application-form.compact .question-box {
+  padding: 10px 16px;
+  margin-bottom: 10px;
+  border-radius: 6px;
+  min-height: 48px;
+}
+
+.application-form.compact .question-box .my-input-label {
+  margin-bottom: 6px;
+}
+
+.application-form.compact .notice-box {
+  padding: 8px 12px;
+  border-radius: 6px;
+  margin-bottom: 10px;
+}
+
+.application-form.compact .checkbox-notice-box {
+  min-height: 48px;
+  padding: 10px 16px;
+  border-radius: 6px;
+  background-color: #fffbeb;
+  border: 1px solid #fde68a;
+  display: flex;
+  align-items: center;
+}
+
+.application-form.compact .checkbox-notice-box .ant-checkbox-wrapper {
+  color: #78350f;
+  font-size: 13px;
+  line-height: 1.3;
+}
+
+.application-form.compact .form-grid--final-checkboxes > .form-grid-cell {
+  display: flex;
+  flex-direction: column;
+}
+
+.application-form.compact
+  .form-grid--final-checkboxes
+  .checkbox-notice-box {
+  flex: 1;
+  height: 100%;
+  align-items: flex-start;
+}
