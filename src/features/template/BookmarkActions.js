@@ -41,18 +41,9 @@ export const getBookmarks = createAsyncThunk(
     }
   },
   {
-    condition: (_, { getState }) => {
-      const { bookmarks } = getState();
-      // Don't dispatch if already loading
-      if (bookmarks.bookmarksLoading) {
-        return false; // Prevent duplicate request
-      }
-      // Allow fetch if data doesn't exist or is empty
-      if (!bookmarks.bookmarks || bookmarks.bookmarks.length === 0) {
-        return true; // Allow fetch
-      }
-      // Prevent if data already exists
-      return false;
+    condition: (arg, { getState }) => {
+      if (arg?.force) return true;
+      return !getState().bookmarks.bookmarksLoading;
     },
   }
 );
@@ -64,7 +55,7 @@ export const createBookmark = createAsyncThunk(
     try {
       const token = localStorage.getItem("token");
       const bookmarkBaseUrl = process.env.REACT_APP_CUMM;
-      const apiUrl = process.env.REACT_APP_CUMM_API_URL || "/bookmarks";
+      const apiUrl = process.env.REACT_APP_CUMM_API_URL || "/bookmarks/fields";
 
       if (!bookmarkBaseUrl) {
         return rejectWithValue("Bookmark service URL is not configured");
@@ -81,7 +72,7 @@ export const createBookmark = createAsyncThunk(
         }
       );
       console.log(response.data, "Create Bookmark API Response");
-      return response.data;
+      return response.data?.data?.field ?? response.data?.field;
     } catch (error) {
       return rejectWithValue(
         error.response?.data?.message || "Failed to create bookmark"
@@ -97,7 +88,7 @@ export const updateBookmark = createAsyncThunk(
     try {
       const token = localStorage.getItem("token");
       const bookmarkBaseUrl = process.env.REACT_APP_CUMM;
-      const apiUrl = process.env.REACT_APP_CUMM_API_URL || "/bookmarks";
+      const apiUrl = process.env.REACT_APP_CUMM_API_URL || "/bookmarks/fields";
 
       if (!bookmarkBaseUrl) {
         return rejectWithValue("Bookmark service URL is not configured");
@@ -114,7 +105,7 @@ export const updateBookmark = createAsyncThunk(
         }
       );
       console.log(response.data, "Update Bookmark API Response");
-      return response.data;
+      return response.data?.data?.field ?? response.data?.field;
     } catch (error) {
       return rejectWithValue(
         error.response?.data?.message || "Failed to update bookmark"
@@ -130,7 +121,7 @@ export const deleteBookmark = createAsyncThunk(
     try {
       const token = localStorage.getItem("token");
       const bookmarkBaseUrl = process.env.REACT_APP_CUMM;
-      const apiUrl = process.env.REACT_APP_CUMM_API_URL || "/bookmarks";
+      const apiUrl = process.env.REACT_APP_CUMM_API_URL || "/bookmarks/fields";
 
       if (!bookmarkBaseUrl) {
         return rejectWithValue("Bookmark service URL is not configured");
@@ -193,7 +184,7 @@ const bookmarkSlice = createSlice({
       })
       .addCase(getBookmarks.fulfilled, (state, action) => {
         state.bookmarksLoading = false;
-        state.bookmarks = action.payload;
+        state.bookmarks = Array.isArray(action.payload) ? action.payload : [];
         state.bookmarksError = null;
       })
       .addCase(getBookmarks.rejected, (state, action) => {
@@ -207,7 +198,9 @@ const bookmarkSlice = createSlice({
       })
       .addCase(createBookmark.fulfilled, (state, action) => {
         state.creatingBookmark = false;
-        state.bookmarks.push(action.payload);
+        if (action.payload) {
+          state.bookmarks.push(action.payload);
+        }
         state.createError = null;
       })
       .addCase(createBookmark.rejected, (state, action) => {
@@ -221,11 +214,16 @@ const bookmarkSlice = createSlice({
       })
       .addCase(updateBookmark.fulfilled, (state, action) => {
         state.updatingBookmark = false;
+        const updated = action.payload;
+        const updatedId = updated?._id || updated?.id;
         const index = state.bookmarks.findIndex(
-          (bookmark) => bookmark.id === action.payload.id
+          (bookmark) =>
+            bookmark._id === updatedId ||
+            bookmark.id === updatedId ||
+            bookmark.id === action.meta?.arg?.id,
         );
-        if (index !== -1) {
-          state.bookmarks[index] = action.payload;
+        if (index !== -1 && updated) {
+          state.bookmarks[index] = updated;
         }
         state.updateError = null;
       })
@@ -241,7 +239,8 @@ const bookmarkSlice = createSlice({
       .addCase(deleteBookmark.fulfilled, (state, action) => {
         state.deletingBookmark = false;
         state.bookmarks = state.bookmarks.filter(
-          (bookmark) => bookmark.id !== action.payload
+          (bookmark) =>
+            bookmark._id !== action.payload && bookmark.id !== action.payload,
         );
         state.deleteError = null;
       })

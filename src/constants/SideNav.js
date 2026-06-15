@@ -426,13 +426,13 @@
 //     label: <div className="sidebar-label">Subscription Products</div>,
 //   },
 //   {
-//     key: "Templetes",
+//     key: "templates",
 //     icon: (
 //       <div className="icon">
 //         <FaFileCode />
 //       </div>
 //     ),
-//     label: <div className="sidebar-label">Templetes</div>,
+//     label: <div className="sidebar-label">templates</div>,
 //   },
 //   {
 //     key: "Membership",

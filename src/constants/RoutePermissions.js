@@ -42,8 +42,8 @@ export const RoutePermissions = {
   "CorrespondencesSummary": "communication:read",
 
   // Configuration & Management
-  "templeteSummary": "templates:read",
-  "templeteConfig": "templates:read",
+  "templateSummary": "templates:read",
+  "templateConfig": "templates:read",
   "Configuration": "portal:read", // System Configuration
   "PermissionManagement": "role:permission:assign",
   "RoleManagement": "role:read",

@@ -12,7 +12,6 @@ import {
   FaMapMarkerAlt,
   FaEnvelope,
   FaPhone,
-  FaIdCard,
   FaCalendarAlt,
   FaClock,
   FaShieldAlt,
@@ -1101,6 +1100,8 @@ const ProfileHeader = forwardRef(function ProfileHeader(
 
   const showStatusDotOnName = statusDotTone === "muted";
 
+  const membershipNo = memberIdForLedger || memberData.memberId;
+
   const renderMemberName = () => (
     <div className="member-name-row">
       {showStatusDotOnName ? (
@@ -1114,6 +1115,12 @@ const ProfileHeader = forwardRef(function ProfileHeader(
       ) : null}
       <h2 className="member-name">{memberData.name}</h2>
     </div>
+  );
+
+  const renderMemberDetailsLine = () => (
+    <p className="member-details">
+      {memberData.dob} ({memberData.gender}) • {memberData.age}
+    </p>
   );
 
   const renderStatusBadge = () => (
@@ -1139,6 +1146,32 @@ const ProfileHeader = forwardRef(function ProfileHeader(
       </span>
     </Tooltip>
   );
+
+  const renderMembershipStatusRow = ({ stacked = false } = {}) => {
+    const statusBadge = renderStatusBadge();
+    if (!membershipNo && !memberData.status) return null;
+
+    return (
+      <div
+        className={[
+          "member-membership-status-row",
+          stacked ? "member-membership-status-row-stacked" : "",
+        ]
+          .filter(Boolean)
+          .join(" ")}
+      >
+        {membershipNo ? (
+          <span className="member-membership-no-line">{membershipNo}</span>
+        ) : null}
+        {!stacked && membershipNo && statusBadge ? (
+          <span className="member-membership-status-sep" aria-hidden="true">
+            •
+          </span>
+        ) : null}
+        {statusBadge}
+      </div>
+    );
+  };
 
   const renderLayoutToggle = (className = "") => (
     <div
@@ -1169,10 +1202,8 @@ const ProfileHeader = forwardRef(function ProfileHeader(
             {renderMemberAvatar({ variant: "member-avatar-hero" })}
             <div className="member-profile-text member-hero-text">
               {renderMemberName()}
-              <p className="member-details">
-                {memberData.dob} ({memberData.gender}) • {memberData.age}
-              </p>
-              {renderStatusBadge()}
+              {renderMemberDetailsLine()}
+              {renderMembershipStatusRow({ stacked: true })}
             </div>
           </div>
         </div>
@@ -1194,9 +1225,6 @@ const ProfileHeader = forwardRef(function ProfileHeader(
       </div>
 
       <div className="member-details-block">
-        {renderSideDetailRow(<FaIdCard />, "Member ID:", memberData.memberId, {
-          valueClassName: "member-id",
-        })}
         {subscriptionData && memberData.subscriptionYear
           ? renderSideDetailRow(
               <FaCalendarAlt />,
@@ -1263,10 +1291,8 @@ const ProfileHeader = forwardRef(function ProfileHeader(
           {renderMemberAvatar({ variant: "member-avatar-hero" })}
           <div className="member-profile-text member-hero-text">
             {renderMemberName()}
-            <p className="member-details">
-              {memberData.dob} ({memberData.gender}) • {memberData.age}
-            </p>
-            {renderStatusBadge()}
+            {renderMemberDetailsLine()}
+            {renderMembershipStatusRow()}
           </div>
         </div>
 
@@ -1287,25 +1313,12 @@ const ProfileHeader = forwardRef(function ProfileHeader(
 
       <div className="member-details-section">
         {memberData.subscriptionYear
-          ? renderCompactDualRow(
-              {
-                icon: <FaIdCard />,
-                label: "Member ID:",
-                value: memberData.memberId,
-                valueClassName: "member-id",
-              },
-              {
-                icon: <FaCalendarAlt />,
-                label: "Sub Year:",
-                value: memberData.subscriptionYear,
-              },
+          ? renderCompactLine(
+              <FaCalendarAlt />,
+              "Sub Year:",
+              memberData.subscriptionYear,
             )
-          : renderCompactLine(
-              <FaIdCard />,
-              "Member ID:",
-              memberData.memberId,
-              "member-id",
-            )}
+          : null}
         {renderCompactDualRow(
           {
             icon: <FaCalendarAlt />,

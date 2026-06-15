@@ -14,13 +14,12 @@ import { useTableColumns } from "../../context/TableColumnsContext ";
 import { applyClientSideRowFilters } from "../../utils/filterUtils";
 import { useRegisterGridFilterRows } from "../../hooks/useRegisterGridFilterRows";
 import { resolveCentsAmountEuro } from "../../utils/financeAmount";
-import {
-  subscribeGeneralLedgerReload,
-} from "../../utils/generalLedgerWorkspace";
+import { subscribeGeneralLedgerReload } from "../../utils/generalLedgerWorkspace";
 
 function profileDisplayName(p) {
   if (!p) return "";
-  const n = `${p.personalInfo?.forename || ""} ${p.personalInfo?.surname || ""}`.trim();
+  const n =
+    `${p.personalInfo?.forename || ""} ${p.personalInfo?.surname || ""}`.trim();
   return n || String(p.fullName || "").trim() || "";
 }
 
@@ -36,7 +35,7 @@ const GeneralLedger = () => {
   const { isInitialized } = useSelector((state) => state.applicationWithFilter);
   const { activeTemplateId } = useSelector((state) => state.activeTemplate);
   const { loading: templatesLoading } = useSelector(
-    (state) => state.templetefiltrsclumnapi,
+    (state) => state.templateFiltersColumnApi,
   );
 
   const [items, setItems] = useState([]);
@@ -108,8 +107,9 @@ const GeneralLedger = () => {
             const exact =
               results.find(
                 (r) =>
-                  String(r.membershipNumber || "").trim().toLowerCase() ===
-                  lower,
+                  String(r.membershipNumber || "")
+                    .trim()
+                    .toLowerCase() === lower,
               ) || results[0];
             if (exact) {
               updates[memberNo] = {
@@ -146,16 +146,14 @@ const GeneralLedger = () => {
           debitEuro: resolveCentsAmountEuro(row, "debit"),
           creditEuro: resolveCentsAmountEuro(row, "credit"),
           highlight:
-            Boolean(highlightDocNo) &&
-            String(docNo).trim() === highlightDocNo,
+            Boolean(highlightDocNo) && String(docNo).trim() === highlightDocNo,
         };
       }),
     [items, memberEnrichment, highlightDocNo],
   );
 
   const rows = useMemo(
-    () =>
-      applyClientSideRowFilters(filterSourceRows, filtersState, glColumns),
+    () => applyClientSideRowFilters(filterSourceRows, filtersState, glColumns),
     [filterSourceRows, filtersState, glColumns],
   );
 

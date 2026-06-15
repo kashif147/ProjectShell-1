@@ -127,7 +127,7 @@ import { set } from "react-hook-form";
 import MyInput from "../component/common/MyInput";
 import { useNavigate } from "react-router-dom";
 import { fetchCountries, clearCountriesData } from "../features/CountriesSlice";
-import { getBookmarks } from "../features/templete/BookmarkActions";
+import { getBookmarks, resetBookmarks } from "../features/template/BookmarkActions";
 import { useJsApiLoader, StandaloneSearchBox } from "@react-google-maps/api";
 import { useOfficerRoleUsers } from "../hooks/useOfficerRoleUsers";
 import {
@@ -779,6 +779,11 @@ const Configuration = () => {
     dispatch(getLookupTypes(true));
   };
 
+  const refreshBookmarks = useCallback(() => {
+    dispatch(resetBookmarks());
+    dispatch(getBookmarks());
+  }, [dispatch]);
+
   const columnBookmark = [
     {
       title: "Key",
@@ -832,7 +837,7 @@ const Configuration = () => {
             size={16}
             style={{ marginRight: "10px" }}
             onClick={() => {
-              IsUpdateFtn("Bookmarks", !IsUpdateFtn?.Bookmarks, record);
+              IsUpdateFtn("Bookmarks", !isUpdateRec?.Bookmarks, record);
               addIdKeyToLookup(record?._id, "Bookmarks");
             }}
           />
@@ -847,7 +852,10 @@ const Configuration = () => {
                   await deleteFtn(
                     `bookmarks/fields/${record?._id}`, // Fixed URL - removed leading slash
                     null, // No body needed when using URL parameter
-                    () => dispatch(getBookmarks()), // Fixed callback - pass function reference
+                    () => {
+                      dispatch(resetBookmarks());
+                      dispatch(getBookmarks());
+                    },
                     true, // showAlert
                     true, // isCoum
                   );
@@ -2810,10 +2818,7 @@ const Configuration = () => {
       title: "Process Salary Deduction",
       key: "processSalaryDeduction",
       render: (_, record) => (
-        <Checkbox
-          disabled
-          checked={!!record?.processSalaryDeduction}
-        />
+        <Checkbox disabled checked={!!record?.processSalaryDeduction} />
       ),
     },
     {
@@ -5317,7 +5322,9 @@ const Configuration = () => {
                       className="configuration-card d-flex flex-column align-items-center justify-content-center border rounded bg-white w-100 text-center"
                       style={{ cursor: "pointer" }}
                     >
-                      <div className="configuration-card__icon">{item.icon}</div>
+                      <div className="configuration-card__icon">
+                        {item.icon}
+                      </div>
                       <p className="configuration-card__label mb-0 text-dark">
                         {item.label}
                       </p>
@@ -6756,10 +6763,14 @@ const Configuration = () => {
         isContact={true}
         update={async () => {
           if (!validateForm("Districts")) return;
-          await updateFtn("/lookup", getLookupDrawerPayload("Districts"), () => {
-            resetCounteries("Districts");
-            refreshLookups();
-          });
+          await updateFtn(
+            "/lookup",
+            getLookupDrawerPayload("Districts"),
+            () => {
+              resetCounteries("Districts");
+              refreshLookups();
+            },
+          );
           IsUpdateFtn("Districts", false);
         }}
         add={() => {
@@ -6797,7 +6808,9 @@ const Configuration = () => {
                 label="Branch Officer"
                 placeholder="Select Branch Manager"
                 options={branchOfficerOptions}
-                value={resolveOfficerSelectValue(drawerIpnuts?.Districts?.officer)}
+                value={resolveOfficerSelectValue(
+                  drawerIpnuts?.Districts?.officer,
+                )}
                 onChange={(e) =>
                   handleOfficerChange("Districts", branchOfficerOptions, e)
                 }
@@ -6836,7 +6849,11 @@ const Configuration = () => {
             </Col>
           </Row>
 
-          <Row gutter={24} className="config-drawer-parent-action-row" wrap={false}>
+          <Row
+            gutter={24}
+            className="config-drawer-parent-action-row"
+            wrap={false}
+          >
             <ParentLookupSelect
               drawerKey="Districts"
               lookuptypeId={drawerIpnuts?.Districts?.lookuptypeId}
@@ -6963,10 +6980,14 @@ const Configuration = () => {
           }}
           update={async () => {
             if (!validateForm("Divisions")) return;
-            await updateFtn("/lookup", getLookupDrawerPayload("Divisions"), () => {
-              resetCounteries("Divisions");
-              refreshLookups();
-            });
+            await updateFtn(
+              "/lookup",
+              getLookupDrawerPayload("Divisions"),
+              () => {
+                resetCounteries("Divisions");
+                refreshLookups();
+              },
+            );
             IsUpdateFtn("Divisions", false);
           }}
           isEdit={isUpdateRec?.Divisions}
@@ -6992,7 +7013,9 @@ const Configuration = () => {
                   label="Region Officer"
                   placeholder="Select Region Officer"
                   options={regionOfficerOptions}
-                  value={resolveOfficerSelectValue(drawerIpnuts?.Divisions?.officer)}
+                  value={resolveOfficerSelectValue(
+                    drawerIpnuts?.Divisions?.officer,
+                  )}
                   onChange={(e) =>
                     handleOfficerChange("Divisions", regionOfficerOptions, e)
                   }
@@ -7146,10 +7169,14 @@ const Configuration = () => {
         }}
         update={async () => {
           if (!validateForm("Divisions")) return;
-          await updateFtn("/lookup", getLookupDrawerPayload("Divisions"), () => {
-            resetCounteries("Divisions");
-            refreshLookups();
-          });
+          await updateFtn(
+            "/lookup",
+            getLookupDrawerPayload("Divisions"),
+            () => {
+              resetCounteries("Divisions");
+              refreshLookups();
+            },
+          );
           IsUpdateFtn("Divisions", false);
         }}
       >
@@ -7172,7 +7199,9 @@ const Configuration = () => {
                 label="Region Officer"
                 placeholder="Select Region Officer"
                 options={regionOfficerOptions}
-                value={resolveOfficerSelectValue(drawerIpnuts?.Divisions?.officer)}
+                value={resolveOfficerSelectValue(
+                  drawerIpnuts?.Divisions?.officer,
+                )}
                 onChange={(e) =>
                   handleOfficerChange("Divisions", regionOfficerOptions, e)
                 }
@@ -7348,7 +7377,9 @@ const Configuration = () => {
                   label="Officer (IRO)"
                   placeholder="Select Officer"
                   options={stationOfficerOptions}
-                  value={resolveOfficerSelectValue(drawerIpnuts?.Station?.officer)}
+                  value={resolveOfficerSelectValue(
+                    drawerIpnuts?.Station?.officer,
+                  )}
                   onChange={(e) =>
                     handleOfficerChange("Station", stationOfficerOptions, e)
                   }
@@ -7385,7 +7416,11 @@ const Configuration = () => {
               </Col>
             </Row>
 
-            <Row gutter={24} className="config-drawer-parent-action-row" wrap={false}>
+            <Row
+              gutter={24}
+              className="config-drawer-parent-action-row"
+              wrap={false}
+            >
               <ParentLookupSelect
                 drawerKey="Station"
                 lookuptypeId={drawerIpnuts?.Station?.lookuptypeId}
@@ -7727,7 +7762,11 @@ const Configuration = () => {
               </Col>
             </Row>
 
-            <Row gutter={24} className="config-drawer-parent-action-row" wrap={false}>
+            <Row
+              gutter={24}
+              className="config-drawer-parent-action-row"
+              wrap={false}
+            >
               <ParentLookupSelect
                 drawerKey="Station"
                 lookuptypeId={drawerIpnuts?.Station?.lookuptypeId}
@@ -8311,9 +8350,7 @@ const Configuration = () => {
                       lookuptypeId: nextTypeId,
                       Parentlookupid: null,
                       Parentlookup: "",
-                      ...(isWorkLoc
-                        ? {}
-                        : { processSalaryDeduction: false }),
+                      ...(isWorkLoc ? {} : { processSalaryDeduction: false }),
                     },
                   }));
                 }}
@@ -8380,7 +8417,9 @@ const Configuration = () => {
                 drawerIpnuts?.Lookup?.lookuptypeId,
               )}
               hasError={!!errors?.Lookup?.Parentlookupid}
-              onChange={(payload) => handleParentLookupChange("Lookup", payload)}
+              onChange={(payload) =>
+                handleParentLookupChange("Lookup", payload)
+              }
             />
           </Row>
 
@@ -8581,7 +8620,9 @@ const Configuration = () => {
               <Col span={12}>
                 <Checkbox
                   disabled={isDisable}
-                  checked={!!drawerIpnuts?.StandardLookup?.processSalaryDeduction}
+                  checked={
+                    !!drawerIpnuts?.StandardLookup?.processSalaryDeduction
+                  }
                   onChange={(e) =>
                     drawrInptChng(
                       "StandardLookup",
@@ -8632,14 +8673,21 @@ const Configuration = () => {
           IsUpdateFtn("Bookmarks", false);
         }}
         update={async () => {
+          if (!validateForm("Bookmarks")) return;
+          const bookmarkId =
+            drawerIpnuts?.Bookmarks?._id || drawerIpnuts?.Bookmarks?.id;
+          if (!bookmarkId) {
+            MyAlert("error", "Update failed", "Bookmark ID is missing");
+            return;
+          }
+          const { _id, id, ...bookmarkData } = drawerIpnuts?.Bookmarks || {};
           await updateFtn(
-            "/bookmarks/fields",
-            drawerIpnuts?.Bookmarks,
+            `/bookmarks/fields/${bookmarkId}`,
+            bookmarkData,
             () => {
-              // Clear the form/reset state
               resetCounteries("Bookmarks");
-              // Refresh the data
-              dispatch(getAllLookups());
+              dispatch(resetBookmarks());
+              dispatch(getBookmarks());
             },
             "updated successfully",
             true, // isCoum
@@ -8660,8 +8708,9 @@ const Configuration = () => {
             "Bookmark created successfully",
             "Failed to create bookmark",
             () => {
-              // Test without resetCounteries first
-              resetCounteries("Bookmarks", dispatch(getBookmarks()));
+              resetCounteries("Bookmarks");
+              dispatch(resetBookmarks());
+              dispatch(getBookmarks());
             },
             true,
           );
@@ -8712,7 +8761,7 @@ const Configuration = () => {
                 onChange={(e) =>
                   drawrInptChng("Bookmarks", "path", e.target.value)
                 }
-                placeholder="Enter data path (e.g., profile.personalInfo.forename)"
+                placeholder="Enter data path (e.g., profile.personalInfo.forename, system.currentUtcDate:dd MMM yyyy, profile.contactInfo.fullAddress:lines)"
                 disabled={isDisable}
                 required
                 hasError={!!errors?.Bookmarks?.path}
@@ -8726,13 +8775,11 @@ const Configuration = () => {
                 onChange={(value) =>
                   drawrInptChng("Bookmarks", "dataType", value.target.value)
                 }
+                isIDs={true}
                 options={[
                   { label: "String", value: "string" },
                   { label: "Number", value: "number" },
                   { label: "Date", value: "date" },
-                  { label: "Boolean", value: "boolean" },
-                  { label: "Array", value: "array" },
-                  { label: "Object", value: "object" },
                 ]}
                 placeholder="Select data type"
                 disabled={isDisable}
@@ -8750,7 +8797,18 @@ const Configuration = () => {
               onChange={(e) => setBookmarkSearch(e.target.value)}
               placeholder="Search by key or label..."
             />
-            <h6 className="mb-3 text-primary">Existing Bookmarks</h6>
+            <div className="d-flex justify-content-between align-items-center mb-3">
+              <h6 className="mb-0 text-primary">Existing Bookmarks</h6>
+              <Button
+                type="default"
+                size="small"
+                icon={<LuRefreshCw />}
+                loading={bookmarksLoading}
+                onClick={refreshBookmarks}
+              >
+                Refresh
+              </Button>
+            </div>
             <Table
               pagination={true}
               columns={columnBookmark}

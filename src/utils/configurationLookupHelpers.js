@@ -165,6 +165,8 @@ const LOOKUP_TYPE_NAME_TO_DRAWER_KEY = {
   bank: "StandardLookup",
   "template type": "StandardLookup",
   templatetype: "StandardLookup",
+  "template category": "StandardLookup",
+  templatecategory: "StandardLookup",
   "payment type": "StandardLookup",
   paymenttype: "StandardLookup",
   "secondary section": "StandardLookup",
@@ -360,16 +362,16 @@ const SYSTEM_DRAWER_KEYS = new Set(
   SYSTEM_CONFIGURATION_CARDS.map((card) => card.key),
 );
 
+const sortConfigurationCardsByLabel = (cards) =>
+  [...cards].sort((a, b) =>
+    String(a.label || "").localeCompare(String(b.label || ""), undefined, {
+      sensitivity: "base",
+    }),
+  );
+
 export function buildConfigurationCards(lookupsTypes = []) {
   const apiCards = Array.isArray(lookupsTypes)
-    ? [...lookupsTypes]
-        .sort((a, b) =>
-          String(a.lookuptype || "").localeCompare(
-            String(b.lookuptype || ""),
-            undefined,
-            { sensitivity: "base" },
-          ),
-        )
+    ? lookupsTypes
         .map((lookupType, index) => {
           const drawerKey = resolveConfigurationDrawerKey(lookupType);
           return {
@@ -388,7 +390,10 @@ export function buildConfigurationCards(lookupsTypes = []) {
         .filter((card) => !SYSTEM_DRAWER_KEYS.has(card.key))
     : [];
 
-  return [...apiCards, ...SYSTEM_CONFIGURATION_CARDS];
+  return sortConfigurationCardsByLabel([
+    ...apiCards,
+    ...SYSTEM_CONFIGURATION_CARDS,
+  ]);
 }
 
 export function getLookupsForDrawer(drawerKey, { lookupsTypes = [], groupedLookups = {}, data = {} } = {}) {

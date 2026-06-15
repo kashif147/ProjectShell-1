@@ -42,7 +42,7 @@ export default function WorkplaceBreakdownReport() {
 
   const { isInitialized } = useSelector((state) => state.applicationWithFilter);
   const { templatesFetching } = useSelector(
-    (state) => state.templetefiltrsclumnapi,
+    (state) => state.templateFiltersColumnApi,
   );
 
   const [report, setReport] = useState(null);

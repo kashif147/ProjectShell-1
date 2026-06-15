@@ -18,6 +18,7 @@ const KNOWN_PARENT_LOOKUP_TYPES = {
   stations: "Districts",
   cities: "County",
   city: "County",
+  templatecategory: "Template Type",
 };
 
 /** Fallback when API type name does not match hierarchy keys (drawer vs API naming). */

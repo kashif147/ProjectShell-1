@@ -14,7 +14,7 @@ function ProfileSummary() {
   const { results, loading } = useSelector((state) => state.profile);
   const { activeTemplateId } = useSelector((state) => state.activeTemplate);
   const { loading: templatesLoading } = useSelector(
-    (state) => state.templetefiltrsclumnapi
+    (state) => state.templateFiltersColumnApi,
   );
   const { isInitialized } = useSelector((state) => state.applicationWithFilter);
 
@@ -25,7 +25,7 @@ function ProfileSummary() {
       setSelectedRowKeys(keys || []);
       setSelectedIds(keys || []);
     },
-    [setSelectedIds]
+    [setSelectedIds],
   );
 
   useEffect(() => {
@@ -35,7 +35,7 @@ function ProfileSummary() {
         templateId: activeTemplateId,
         page: 1,
         limit: 500,
-      })
+      }),
     );
   }, [dispatch, activeTemplateId]);
 

@@ -37,24 +37,23 @@ function MembershipApplication() {
   } = useSelector((state) => state.paymentFormsWithFilter || {});
   const { selectedIds, setSelectedIds } = useSelectedIds();
   const { columns } = useTableColumns();
-  const { loading: templatesLoading } = useSelector((state) => state.templetefiltrsclumnapi);
+  const { loading: templatesLoading } = useSelector(
+    (state) => state.templateFiltersColumnApi,
+  );
   const [formattedApplications, setFormattedApplications] = useState([]);
   const [selectedRows, setSelectedRows] = useState(null);
   const [paymentFormDetailId, setPaymentFormDetailId] = useState(null);
   const [paymentFormDetailOpen, setPaymentFormDetailOpen] = useState(false);
   const [duplicateReviewAppId, setDuplicateReviewAppId] = useState(null);
   const [duplicateReviewOpen, setDuplicateReviewOpen] = useState(false);
-  const { activeTemplateId } = useSelector((state) => state.activeTemplate);
-  console.log(activeTemplateId, "activeTemplateId activeTemplateId");
-
   useEffect(() => {
     const pageInitialized = isPaymentFormsPage
       ? isPaymentFormsInitialized
       : isInitialized;
     if (!pageInitialized) return;
     const templateId = isPaymentFormsPage
-      ? activeTemplateId || paymentFormsTemplateId || ""
-      : activeTemplateId || currentTemplateId || "";
+      ? paymentFormsTemplateId || ""
+      : currentTemplateId || "";
     if (isPaymentFormsPage) {
       dispatch(
         getPaymentFormsWithFilter({
@@ -73,7 +72,6 @@ function MembershipApplication() {
       }),
     );
   }, [
-    activeTemplateId,
     currentTemplateId,
     paymentFormsTemplateId,
     isInitialized,
@@ -118,29 +116,31 @@ function MembershipApplication() {
   const [selectedApplicationIds, setSelectedApplicationIds] = useState([]);
   console.log(selectedApplicationIds, "selected keys");
 
-  const handleSelectionChange = useCallback((selectedKeys, selectedRows) => {
-    setSelectedKeys(selectedKeys)
-    // Map selectedRows to get application IDs
-    const ids = selectedRows.map(row => row.applicationId || row._id);
-    setSelectedIds(ids);
-  }, [setSelectedIds]);
+  const handleSelectionChange = useCallback(
+    (selectedKeys, selectedRows) => {
+      setSelectedKeys(selectedKeys);
+      // Map selectedRows to get application IDs
+      const ids = selectedRows.map((row) => row.applicationId || row._id);
+      setSelectedIds(ids);
+    },
+    [setSelectedIds],
+  );
 
   const refreshApplicationsList = useCallback(() => {
     dispatch(
       getApplicationsWithFilter({
-        templateId: activeTemplateId || currentTemplateId || "",
+        templateId: currentTemplateId || "",
         page: 1,
         limit: 500,
       }),
     );
-  }, [dispatch, activeTemplateId, currentTemplateId]);
+  }, [dispatch, currentTemplateId]);
 
   const selectedSubmittedApplication = useMemo(() => {
     if (isPaymentFormsPage || selectedKeys.length !== 1) return null;
     const key = selectedKeys[0];
     const row = formattedApplications.find(
-      (app) =>
-        String(app.applicationId || app.key || app._id) === String(key),
+      (app) => String(app.applicationId || app.key || app._id) === String(key),
     );
     if (!row || row.applicationStatus !== "submitted") return null;
     return row;
@@ -176,17 +176,12 @@ function MembershipApplication() {
     if (!isPaymentFormsPage) return;
     dispatch(
       getPaymentFormsWithFilter({
-        templateId: activeTemplateId || paymentFormsTemplateId || "",
+        templateId: paymentFormsTemplateId || "",
         page: 1,
         limit: 500,
       }),
     );
-  }, [
-    dispatch,
-    isPaymentFormsPage,
-    activeTemplateId,
-    paymentFormsTemplateId,
-  ]);
+  }, [dispatch, isPaymentFormsPage, paymentFormsTemplateId]);
 
   // Synchronize local selection with global context (to handle clear selection)
   useEffect(() => {
@@ -195,14 +190,24 @@ function MembershipApplication() {
     }
   }, [selectedIds]);
 
-  const pageLoading = isPaymentFormsPage ? paymentFormsLoading : applicationsLoading;
+  const pageLoading = isPaymentFormsPage
+    ? paymentFormsLoading
+    : applicationsLoading;
   const pageInitialized = isPaymentFormsPage
     ? isPaymentFormsInitialized
     : isInitialized;
 
   if (!pageInitialized || templatesLoading) {
     return (
-      <div style={{ display: "flex", justifyContent: "center", alignItems: "center", height: "100%", padding: "50px" }}>
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          height: "100%",
+          padding: "50px",
+        }}
+      >
         <Spin tip="Initializing Template...">
           <div style={{ minHeight: 200, width: "100%" }} />
         </Spin>

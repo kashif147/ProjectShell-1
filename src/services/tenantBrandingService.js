@@ -58,12 +58,14 @@ export const resolveTenantId = () => {
   }
 };
 
-export async function fetchTenantRecord(tenantId) {
+export async function fetchTenantRecord(tenantId, { force = false } = {}) {
   const id = tenantId || resolveTenantId();
   if (!id) return null;
 
-  const cached = getTenantCache(id);
-  if (cached) return cached;
+  if (!force) {
+    const cached = getTenantCache(id);
+    if (cached) return cached;
+  }
 
   const token = localStorage.getItem("token");
   if (!token) return null;

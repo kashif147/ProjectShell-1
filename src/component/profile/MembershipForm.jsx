@@ -33,9 +33,18 @@ import {
 } from "../../utils/membershipProfileSaveMappers";
 import { useMembershipTabToolbar } from "../../context/MembershipTabToolbarContext";
 import {
+  useConfirmUnsavedLeave,
+  useRegisterUnsavedFormGuard,
+} from "../../context/UnsavedFormContext";
+import {
+  isMembershipFormDirty,
+  serializeMembershipFormData,
+} from "../../utils/membershipFormDirty";
+import {
   CRM_PAYMENT_FREQUENCY_OPTIONS,
   getDefaultPaymentFrequencyForPaymentMethod,
 } from "../../constants/paymentFrequency";
+import { MEMBERSHIP_MOVEMENT_OPTIONS, formatMembershipMovementLabel } from "../../utils/membershipMovementLabels";
 import utc from "dayjs/plugin/utc";
 import timezone from "dayjs/plugin/timezone";
 import dayjs from "dayjs";
@@ -68,6 +77,45 @@ function normalizeGenderToSelectLabel(raw, options) {
   if (byKey) return byKey.label;
 
   return s;
+}
+
+function membershipCategoryCompareKey(s) {
+  if (s == null || s === "") return "";
+  return String(s).trim().toLowerCase().replace(/\s+/g, " ");
+}
+
+/** Map API discipline/study location (id, { _id }, or label) to canonical lookup label for selects. */
+function normalizeLookupOptionToLabel(raw, options) {
+  if (raw == null || raw === "") return "";
+  const fromObj =
+    typeof raw === "object" && raw != null && raw._id != null
+      ? String(raw._id)
+      : null;
+  const str = (fromObj ?? String(raw)).trim();
+  if (!str) return "";
+
+  if (!Array.isArray(options) || options.length === 0) {
+    return str;
+  }
+
+  const byId = options.find(
+    (o) => String(o.value) === str || String(o.key) === str,
+  );
+  if (byId?.label) return byId.label;
+
+  const key = membershipCategoryCompareKey(str);
+  const byLabel = options.find(
+    (o) => o.label && membershipCategoryCompareKey(o.label) === key,
+  );
+  if (byLabel?.label) return byLabel.label;
+
+  return str;
+}
+
+function scalarProfessionalLookupValue(raw) {
+  if (raw == null || raw === "") return "";
+  if (typeof raw === "object" && raw._id != null) return String(raw._id);
+  return String(raw);
 }
 
 function isPayrollOrSalaryDeduction(paymentType) {
@@ -418,13 +466,17 @@ function MembershipFormCol({ children, isFirst = false }) {
   );
 }
 
+const MembershipFormSelect = (props) => (
+  <CustomSelect showSearch sortOptions allowClear {...props} />
+);
+
 function collectMembershipFormValidationErrors(formData, options = {}) {
   const {
-    membershipCategorySelected,
     undergradEducationalActive,
     retiredAssociateActive,
     honoraryMembershipActive,
     showPaymentInformation,
+    isPaymentOptionalCategory,
     payrollDeductionPayment,
     workLocationAllowsSalaryDeduction,
   } = options;
@@ -518,15 +570,19 @@ function collectMembershipFormValidationErrors(formData, options = {}) {
     "membershipCategory",
     "Membership Category",
   );
-  if (membershipCategorySelected) {
+  if (undergradEducationalActive) {
     requireDate(formData.startDate, "startDate", "Start Date");
   }
 
-  if (showPaymentInformation) {
+  if (showPaymentInformation && !isPaymentOptionalCategory) {
     requireText(formData.paymentType, "paymentType", "Payment Type");
   }
 
-  if (payrollDeductionPayment && showPaymentInformation) {
+  if (
+    payrollDeductionPayment &&
+    showPaymentInformation &&
+    !isPaymentOptionalCategory
+  ) {
     if (!workLocationAllowsSalaryDeduction) {
       addIssue(
         "workLocation",
@@ -593,6 +649,7 @@ const MembershipForm = ({
   setIsDeceased,
 }) => {
   const membershipToolbar = useMembershipTabToolbar();
+  const confirmLeaveUnsavedChanges = useConfirmUnsavedLeave();
 
   const { profileDetails, loading, error } = useSelector(
     (state) => state.profileDetails,
@@ -631,6 +688,7 @@ const MembershipForm = ({
   const [paymentTypeReselectRequired, setPaymentTypeReselectRequired] =
     useState(false);
   const [fieldErrors, setFieldErrors] = useState({});
+  const [baselineSerialized, setBaselineSerialized] = useState(null);
   const [initialMembershipCategory, setInitialMembershipCategory] =
     useState("");
   const [initialSubscriptionStartDate, setInitialSubscriptionStartDate] =
@@ -646,6 +704,8 @@ const MembershipForm = ({
     branchOptions,
     regionOptions,
     secondarySectionOptions,
+    studyLocationOptions,
+    disciplineOptions,
     countryOptions,
     lookups: lookupsRaw,
   } = useSelector((state) => state.lookups);
@@ -667,6 +727,35 @@ const MembershipForm = ({
   useEffect(() => {
     dispatch(getCategoryLookup("68dae613c5b15073d66b891f"));
   }, []);
+
+  // Subscription-service is the source of truth for membership movement (and other subscription fields).
+  useEffect(() => {
+    const profileId =
+      profileDetails?._id ||
+      profileDetails?.id ||
+      profileSearchData?.results?.[0]?._id ||
+      profileSearchData?.results?.[0]?.id ||
+      profileIdParam;
+    if (!profileId) return;
+
+    if (subscriptionIdParam) {
+      dispatch(getSubscriptionById(subscriptionIdParam));
+      return;
+    }
+
+    dispatch(
+      getSubscriptionByProfileId({
+        profileId,
+        ...profileDetailActiveSubscriptionArgs,
+      }),
+    );
+  }, [
+    dispatch,
+    profileDetails,
+    profileSearchData,
+    profileIdParam,
+    subscriptionIdParam,
+  ]);
 
   // Helper function to format dates safely
   const formatDateSafe = (dateString, format = "DD/MM/YYYY") => {
@@ -702,6 +791,28 @@ const MembershipForm = ({
     }
     return null;
   }, [ProfileSubData]);
+
+  const membershipMovementFromSubscription =
+    subscriptionData?.membershipMovement ?? "";
+
+  const membershipMovementSelectOptions = useMemo(() => {
+    if (
+      !membershipMovementFromSubscription ||
+      MEMBERSHIP_MOVEMENT_OPTIONS.some(
+        (option) => option.value === membershipMovementFromSubscription,
+      )
+    ) {
+      return MEMBERSHIP_MOVEMENT_OPTIONS;
+    }
+
+    return [
+      ...MEMBERSHIP_MOVEMENT_OPTIONS,
+      {
+        value: membershipMovementFromSubscription,
+        label: formatMembershipMovementLabel(membershipMovementFromSubscription),
+      },
+    ];
+  }, [membershipMovementFromSubscription]);
 
   const isSubscriptionEmpty = useMemo(() => {
     if (!ProfileSubData) return false;
@@ -765,8 +876,12 @@ const MembershipForm = ({
       workEmail: source.contactInfo?.workEmail || "",
 
       // Professional Details
-      studyLocation: source.professionalDetails?.studyLocation || "",
-      discipline: source.professionalDetails?.discipline || "",
+      studyLocation: scalarProfessionalLookupValue(
+        source.professionalDetails?.studyLocation,
+      ),
+      discipline: scalarProfessionalLookupValue(
+        source.professionalDetails?.discipline,
+      ),
       startDate: convertUTCToLocalDate(source.professionalDetails?.startDate),
       graduationDate: convertUTCToLocalDate(
         source.professionalDetails?.graduationDate,
@@ -890,9 +1005,6 @@ const MembershipForm = ({
         // Payment Information
         paymentFrequency: subscriptionData.paymentFrequency || "",
 
-        // Membership Movement
-        membershipMovement: subscriptionData.membershipMovement || "",
-
         // Subscription Status Flags
         isCurrent: subscriptionData.isCurrent || false,
         reinstated: subscriptionData.reinstated || false,
@@ -936,6 +1048,28 @@ const MembershipForm = ({
       return next === prev.gender ? prev : { ...prev, gender: next };
     });
   }, [genderOptions]);
+
+  useEffect(() => {
+    if (!Array.isArray(disciplineOptions) || disciplineOptions.length === 0)
+      return;
+
+    setFormData((prev) => {
+      const dNorm = normalizeLookupOptionToLabel(
+        prev.discipline,
+        disciplineOptions,
+      );
+      const slNorm = normalizeLookupOptionToLabel(
+        prev.studyLocation,
+        studyLocationOptions,
+      );
+      if (dNorm === prev.discipline && slNorm === prev.studyLocation) return prev;
+      return {
+        ...prev,
+        discipline: dNorm,
+        studyLocation: slNorm,
+      };
+    });
+  }, [disciplineOptions, studyLocationOptions, profileDetails, profileSearchData]);
 
   // Internal form state
   const [formData, setFormData] = useState({
@@ -1016,7 +1150,6 @@ const MembershipForm = ({
     // Subscription specific fields
     subscriptionStatus: "",
     paymentFrequency: "",
-    membershipMovement: "",
     isCurrent: false,
     reinstated: false,
     yearendProcessed: false,
@@ -1056,19 +1189,6 @@ const MembershipForm = ({
       { key: "pakistan", label: "Pakistan" },
       { key: "usa", label: "USA" },
       { key: "uk", label: "UK" },
-      { key: "other", label: "Other" },
-    ],
-    studyLocations: [
-      { key: "local", label: "Local" },
-      { key: "abroad", label: "Abroad" },
-    ],
-    disciplines: [
-      { key: "nursing", label: "Nursing" },
-      { key: "medicine", label: "Medicine" },
-      { key: "pharmacy", label: "Pharmacy" },
-      { key: "physiotherapy", label: "Physiotherapy" },
-      { key: "occupational-therapy", label: "Occupational Therapy" },
-      { key: "radiography", label: "Radiography" },
       { key: "other", label: "Other" },
     ],
     workLocations: [
@@ -1293,6 +1413,16 @@ const MembershipForm = ({
     }
     if (
       field === "membershipCategory" &&
+      (isUndergraduateStudentMembershipCategory(value, categoryData) ||
+        isHonoraryMembershipCategory(value, categoryData))
+    ) {
+      updatedData.paymentType = "Cash";
+      updatedData.paymentFrequency = "Annually";
+      updatedData.payrollNumber = "";
+      setPaymentTypeReselectRequired(false);
+    }
+    if (
+      field === "membershipCategory" &&
       !isUndergraduateStudentMembershipCategory(value, categoryData)
     ) {
       updatedData.studyLocation = "";
@@ -1441,9 +1571,27 @@ const MembershipForm = ({
     formData.isDeceased ||
     formData.subscriptionStatus === "Resigned";
 
-  const membershipCategorySelected = Boolean(
-    String(formData.membershipCategory || "").trim(),
+  useEffect(() => {
+    if (!isEditMode || isFormReadOnly) {
+      setBaselineSerialized(null);
+      return;
+    }
+    setBaselineSerialized(serializeMembershipFormData(formData));
+    // Snapshot only when entering edit mode; formData is intentionally read once here.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isEditMode, isFormReadOnly]);
+
+  const hasUnsavedMembershipChanges = useMemo(
+    () => isMembershipFormDirty(formData, baselineSerialized),
+    [formData, baselineSerialized],
   );
+
+  useRegisterUnsavedFormGuard(
+    "membership-form",
+    hasUnsavedMembershipChanges,
+    isEditMode && !isFormReadOnly,
+  );
+
   const membershipCategoryChanged =
     String(formData.membershipCategory || "").trim() !==
     String(initialMembershipCategory || "").trim();
@@ -1489,12 +1637,15 @@ const MembershipForm = ({
     [formData.membershipCategory, categoryData],
   );
 
-  const showPaymentInformation =
-    !honoraryMembershipActive && !undergradEducationalActive;
+  const showPaymentInformation = true;
+
+  const isPaymentOptionalCategory =
+    undergradEducationalActive || honoraryMembershipActive;
 
   const showPaymentTypeSalaryDeductionNotice =
     !isFormReadOnly &&
     showPaymentInformation &&
+    !isPaymentOptionalCategory &&
     Boolean(String(formData.workLocation || "").trim()) &&
     !workLocationAllowsSalaryDeduction &&
     isPayrollOrSalaryDeduction(formData.paymentType);
@@ -1502,6 +1653,7 @@ const MembershipForm = ({
   const showPaymentTypeReselectHighlight =
     !isFormReadOnly &&
     showPaymentInformation &&
+    !isPaymentOptionalCategory &&
     paymentTypeReselectRequired &&
     !hasRequiredText(formData.paymentType);
 
@@ -1568,7 +1720,9 @@ const MembershipForm = ({
     return "Unable to save. Please check required fields and try again.";
   };
 
-  const handleCancelEdit = () => {
+  const handleCancelEdit = async () => {
+    const canProceed = await confirmLeaveUnsavedChanges();
+    if (!canProceed) return;
     if (setIsEditMode) setIsEditMode(false);
   };
 
@@ -1588,11 +1742,11 @@ const MembershipForm = ({
     }
 
     const validation = collectMembershipFormValidationErrors(formData, {
-      membershipCategorySelected,
       undergradEducationalActive,
       retiredAssociateActive,
       honoraryMembershipActive,
       showPaymentInformation,
+      isPaymentOptionalCategory,
       payrollDeductionPayment,
       workLocationAllowsSalaryDeduction,
     });
@@ -1617,9 +1771,6 @@ const MembershipForm = ({
         formData,
         profileDetails || sourceProfile,
       );
-      await dispatch(
-        updateProfileDetails({ profileId, body: profileBody }),
-      ).unwrap();
 
       const primarySub = pickPrimarySubscription(ProfileSubData?.data || []);
       const subId = primarySub?._id;
@@ -1627,11 +1778,16 @@ const MembershipForm = ({
         const subBody = formDataToSubscriptionPutPayload(
           formData,
           primarySub,
+          categoryData,
         );
         await dispatch(
           updateSubscriptionById({ subscriptionId: subId, body: subBody }),
         ).unwrap();
       }
+
+      await dispatch(
+        updateProfileDetails({ profileId, body: profileBody }),
+      ).unwrap();
 
       await dispatch(getProfileDetailsById(profileId)).unwrap();
       if (subscriptionIdParam) {
@@ -1719,7 +1875,7 @@ const MembershipForm = ({
               <MembershipFormGrid>
                 <MembershipFormGridFull>
                   <MembershipFormField field="title" fieldErrors={fieldErrors}>
-                    <CustomSelect
+                    <MembershipFormSelect
                       label="Title"
                       placeholder="Select a title"
                       options={lookupData.titles}
@@ -1761,7 +1917,7 @@ const MembershipForm = ({
                   />
                 </MembershipFormField>
                 <MembershipFormField field="gender" fieldErrors={fieldErrors}>
-                  <CustomSelect
+                  <MembershipFormSelect
                     label="Gender"
                     placeholder="Select your gender"
                     options={
@@ -1780,7 +1936,7 @@ const MembershipForm = ({
                     field="countryPrimaryQualification"
                     fieldErrors={fieldErrors}
                   >
-                    <CustomSelect
+                    <MembershipFormSelect
                       label="Country of Primary Qualification"
                       placeholder="Select a country"
                       options={countriesOptions}
@@ -1905,7 +2061,7 @@ const MembershipForm = ({
                   disabled={isFormReadOnly}
                 />
                 <MembershipFormField field="country" fieldErrors={fieldErrors}>
-                  <CustomSelect
+                  <MembershipFormSelect
                     label="Country"
                     placeholder="Select country"
                     options={countriesOptions}
@@ -2081,7 +2237,7 @@ const MembershipForm = ({
               <MembershipFormGrid>
                 <MembershipFormGridFull>
                   <MembershipFormField field="workLocation" fieldErrors={fieldErrors}>
-                    <CustomSelect
+                    <MembershipFormSelect
                       label="Work Location"
                       placeholder="Select Location..."
                       options={workLocationOptions}
@@ -2092,7 +2248,7 @@ const MembershipForm = ({
                     />
                   </MembershipFormField>
                 </MembershipFormGridFull>
-                <CustomSelect
+                <MembershipFormSelect
                   label="Branch"
                   placeholder="Select Branch..."
                   options={branchOptions}
@@ -2102,7 +2258,7 @@ const MembershipForm = ({
                     isFormReadOnly || formData.workLocation !== "Other"
                   }
                 />
-                <CustomSelect
+                <MembershipFormSelect
                   label="Region"
                   placeholder="Select Region..."
                   options={regionOptions}
@@ -2114,7 +2270,7 @@ const MembershipForm = ({
                 />
                 <MembershipFormGridFull>
                   <MembershipFormField field="grade" fieldErrors={fieldErrors}>
-                    <CustomSelect
+                    <MembershipFormSelect
                       label="Grade"
                       placeholder="Select Grade..."
                       options={gradeOptions}
@@ -2157,7 +2313,7 @@ const MembershipForm = ({
               <MembershipFormGrid>
                 <MembershipFormGridFull>
                   <MembershipFormField field="primarySection" fieldErrors={fieldErrors}>
-                    <CustomSelect
+                    <MembershipFormSelect
                       label="Primary Section"
                       placeholder="Select Primary Section"
                       value={formData.primarySection}
@@ -2187,7 +2343,7 @@ const MembershipForm = ({
                   </MembershipFormField>
                 </MembershipFormGridFull>
                 <MembershipFormGridFull>
-                  <CustomSelect
+                  <MembershipFormSelect
                     label="Secondary Section"
                     placeholder="Select Secondary Section (Optional)"
                     value={formData.secondarySection}
@@ -2327,7 +2483,7 @@ const MembershipForm = ({
                     field="membershipCategory"
                     fieldErrors={fieldErrors}
                   >
-                    <CustomSelect
+                    <MembershipFormSelect
                       label="Membership Category"
                       placeholder="Select Category..."
                       options={categoryData}
@@ -2363,7 +2519,6 @@ const MembershipForm = ({
                       value={formData.startDate}
                       onChange={(date) => handleChange("startDate", date)}
                       disabled={isFormReadOnly}
-                      required={membershipCategorySelected}
                     />
                   </div>
                 </MembershipFormField>
@@ -2381,21 +2536,79 @@ const MembershipForm = ({
                   onChange={(date) => handleChange("renewalDate", date)}
                   disabled
                 />
-                <CustomSelect
+                <MembershipFormSelect
                   label="Membership Movement"
-                  placeholder="Select Movement..."
-                  options={[
-                    { value: "NewJoin", label: "New" },
-                    { value: "Renewal", label: "Renewal" },
-                    { value: "Reinstatement", label: "Reinstatement" },
-                    { value: "Transfer", label: "Transfer" },
-                    { value: "Conversion", label: "Conversion" },
-                  ]}
-                  value={formData.membershipMovement}
-                  onChange={(e) =>
-                    handleChange("membershipMovement", e.target.value)
+                  placeholder={
+                    ProfileSubLoading ? "Loading..." : "Select Movement..."
                   }
+                  options={membershipMovementSelectOptions}
+                  value={membershipMovementFromSubscription}
+                  isIDs
                   disabled
+                />
+              </MembershipFormGrid>
+            </MembershipFormCard>
+
+            <MembershipFormCard title="Payment Information">
+              <div
+                ref={paymentTypeSectionRef}
+                style={paymentTypeHighlightStyle}
+              >
+                {showPaymentTypeSalaryDeductionNotice && (
+                  <div className="membership-form-notice">
+                    Salary Deduction is not available for work location &quot;
+                    {formData.workLocation}&quot;. Please choose another
+                    payment method.
+                  </div>
+                )}
+                {showPaymentTypeReselectHighlight && (
+                  <div className="membership-form-notice">
+                    Payment type was cleared after changing work location.
+                    Please select a payment type before saving.
+                  </div>
+                )}
+                <MembershipFormField field="paymentType" fieldErrors={fieldErrors}>
+                  <MembershipFormSelect
+                    label="Payment Type"
+                    placeholder="Select Payment Type"
+                    value={formData.paymentType}
+                    onChange={(e) =>
+                      handleChange("paymentType", e.target.value)
+                    }
+                    disabled={isFormReadOnly}
+                    required={!isFormReadOnly && !isPaymentOptionalCategory}
+                    isIDs={false}
+                    options={filteredPaymentTypeOptions}
+                    isMarginBtm={!showPaymentTypeAttention}
+                  />
+                </MembershipFormField>
+              </div>
+              <MembershipFormGrid>
+                <MembershipFormField field="payrollNumber" fieldErrors={fieldErrors}>
+                  <MyInput
+                    label="Payroll No."
+                    placeholder="Enter Payroll No."
+                    value={formData.payrollNumber}
+                    onChange={(e) =>
+                      handleChange("payrollNumber", e.target.value)
+                    }
+                    disabled={isFormReadOnly || !payrollDeductionPayment}
+                    required={
+                      payrollDeductionPayment &&
+                      !isFormReadOnly &&
+                      !isPaymentOptionalCategory
+                    }
+                  />
+                </MembershipFormField>
+                <MembershipFormSelect
+                  label="Payment Frequency"
+                  placeholder="Select Frequency"
+                  options={CRM_PAYMENT_FREQUENCY_OPTIONS}
+                  value={formData.paymentFrequency}
+                  onChange={(e) =>
+                    handleChange("paymentFrequency", e.target.value)
+                  }
+                  disabled={isFormReadOnly}
                 />
               </MembershipFormGrid>
             </MembershipFormCard>
@@ -2405,10 +2618,10 @@ const MembershipForm = ({
                 <MembershipFormGrid>
                   <MembershipFormGridFull>
                     <MembershipFormField field="studyLocation" fieldErrors={fieldErrors}>
-                      <CustomSelect
+                      <MembershipFormSelect
                         label="Study Location"
                         placeholder="Select Study Location..."
-                        options={lookupData.studyLocations}
+                        options={studyLocationOptions}
                         value={formData.studyLocation}
                         onChange={(e) =>
                           handleChange("studyLocation", e.target.value)
@@ -2418,13 +2631,16 @@ const MembershipForm = ({
                       />
                     </MembershipFormField>
                   </MembershipFormGridFull>
-                  <MyDatePicker
-                    label="Start Date"
-                    placeholder="Select start date (Optional)"
-                    value={formData.startDate}
-                    onChange={(date) => handleChange("startDate", date)}
-                    disabled={educationalSectionDisabled}
-                  />
+                  <MembershipFormField field="startDate" fieldErrors={fieldErrors}>
+                    <MyDatePicker
+                      label="Start Date"
+                      placeholder="Select start date"
+                      value={formData.startDate}
+                      onChange={(date) => handleChange("startDate", date)}
+                      disabled={educationalSectionDisabled}
+                      required={undergradEducationalActive && !isFormReadOnly}
+                    />
+                  </MembershipFormField>
                   <MembershipFormField
                     field="graduationDate"
                     fieldErrors={fieldErrors}
@@ -2440,10 +2656,10 @@ const MembershipForm = ({
                   </MembershipFormField>
                   <MembershipFormGridFull>
                     <MembershipFormField field="discipline" fieldErrors={fieldErrors}>
-                      <CustomSelect
+                      <MembershipFormSelect
                         label="Discipline"
                         placeholder="Select Discipline..."
-                        options={lookupData.disciplines}
+                        options={disciplineOptions}
                         value={formData.discipline}
                         onChange={(e) => handleChange("discipline", e.target.value)}
                         disabled={educationalSectionDisabled}
@@ -2482,68 +2698,6 @@ const MembershipForm = ({
               </MembershipFormCard>
             )}
 
-            {showPaymentInformation && (
-              <MembershipFormCard title="Payment Information">
-                <div
-                  ref={paymentTypeSectionRef}
-                  style={paymentTypeHighlightStyle}
-                >
-                  {showPaymentTypeSalaryDeductionNotice && (
-                    <div className="membership-form-notice">
-                      Salary Deduction is not available for work location &quot;
-                      {formData.workLocation}&quot;. Please choose another
-                      payment method.
-                    </div>
-                  )}
-                  {showPaymentTypeReselectHighlight && (
-                    <div className="membership-form-notice">
-                      Payment type was cleared after changing work location.
-                      Please select a payment type before saving.
-                    </div>
-                  )}
-                  <MembershipFormField field="paymentType" fieldErrors={fieldErrors}>
-                    <CustomSelect
-                      label="Payment Type"
-                      placeholder="Select Payment Type"
-                      value={formData.paymentType}
-                      onChange={(e) =>
-                        handleChange("paymentType", e.target.value)
-                      }
-                      disabled={isFormReadOnly}
-                      required={!isFormReadOnly}
-                      isIDs={false}
-                      options={filteredPaymentTypeOptions}
-                      isMarginBtm={!showPaymentTypeAttention}
-                    />
-                  </MembershipFormField>
-                </div>
-                <MembershipFormGrid>
-                  <MembershipFormField field="payrollNumber" fieldErrors={fieldErrors}>
-                    <MyInput
-                      label="Payroll No."
-                      placeholder="Enter Payroll No."
-                      value={formData.payrollNumber}
-                      onChange={(e) =>
-                        handleChange("payrollNumber", e.target.value)
-                      }
-                      disabled={isFormReadOnly || !payrollDeductionPayment}
-                      required={payrollDeductionPayment && !isFormReadOnly}
-                    />
-                  </MembershipFormField>
-                  <CustomSelect
-                    label="Payment Frequency"
-                    placeholder="Select Frequency"
-                    options={CRM_PAYMENT_FREQUENCY_OPTIONS}
-                    value={formData.paymentFrequency}
-                    onChange={(e) =>
-                      handleChange("paymentFrequency", e.target.value)
-                    }
-                    disabled={isFormReadOnly}
-                  />
-                </MembershipFormGrid>
-              </MembershipFormCard>
-            )}
-
             {showRemindersCancellations && (
               <MembershipFormCard title="Reminders & Cancellations">
                 <MembershipFormGrid>
@@ -2576,7 +2730,7 @@ const MembershipForm = ({
                     disabled={true}
                   />
                   <MembershipFormGridFull>
-                    <CustomSelect
+                    <MembershipFormSelect
                       label="Cancellation / Resignation Reason"
                       placeholder="Select reason"
                       options={cancellationReasonOptions}

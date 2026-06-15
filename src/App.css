@@ -2022,3 +2022,58 @@ table tbody tr:nth-child(odd):hover td {
 .common-table.reminder-cancellation-members-wrap .membership-table-balance-debit {
   color: #ff4d4f !important;
 }
+
+/* Member profile — Audit History tab: resizable / expandable columns */
+.audit-history-table {
+  width: 100%;
+  max-width: 100%;
+}
+
+.audit-history-table .common-table {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: auto !important;
+}
+
+.audit-history-table th.audit-history-col {
+  position: relative !important;
+  overflow: visible !important;
+}
+
+.audit-history-table .audit-history-col-header-title {
+  display: inline-flex;
+  align-items: center;
+  vertical-align: middle;
+  padding-right: 8px;
+}
+
+.audit-history-table td.audit-history-col--expanded {
+  overflow: visible !important;
+  white-space: normal !important;
+  word-break: break-word;
+  vertical-align: top;
+}
+
+.audit-history-table .audit-history-col-resize-handle {
+  position: absolute;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  width: 10px;
+  margin: 0;
+  padding: 0;
+  cursor: col-resize;
+  z-index: 3;
+  touch-action: none;
+  background: linear-gradient(
+    to right,
+    transparent,
+    rgba(255, 255, 255, 0.15)
+  );
+  border-right: 2px solid rgba(255, 255, 255, 0.55);
+}
+
+.audit-history-table .audit-history-col-resize-handle:hover {
+  background: rgba(255, 255, 255, 0.25);
+  border-right-color: #fff;
+}

@@ -301,9 +301,9 @@ export const subscriptionItems = [
 
 export const configurationItems = [
   createMenuItem(
-    "Templetes",
+    "Templates",
     <FaFileCode />,
-    "Templetes",
+    "Templates",
     ["templates:read"]
   ),
 

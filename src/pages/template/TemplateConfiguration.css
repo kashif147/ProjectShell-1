@@ -1,6 +1,6 @@
 /*
  * Host scroll lock: .main-main is overflow-y:auto globally — keep scroll inside this page.
- * Class is toggled from Entry for /templeteConfig (more reliable than :has() alone).
+ * Class is toggled from Entry for /templateConfig (more reliable than :has() alone).
  */
 .main-main.main-main--template-config {
   display: flex !important;
@@ -27,10 +27,15 @@
 .ql-toolbar .ql-picker:not(.ql-color-picker):not(.ql-icon-picker).ql-table-up {
   width: 28px;
 }
-.ql-toolbar .ql-picker:not(.ql-color-picker):not(.ql-icon-picker).ql-table-up .ql-picker-label {
+.ql-toolbar
+  .ql-picker:not(.ql-color-picker):not(.ql-icon-picker).ql-table-up
+  .ql-picker-label {
   padding: 2px 4px;
 }
-.ql-toolbar .ql-picker:not(.ql-color-picker):not(.ql-icon-picker).ql-table-up .ql-picker-label svg {
+.ql-toolbar
+  .ql-picker:not(.ql-color-picker):not(.ql-icon-picker).ql-table-up
+  .ql-picker-label
+  svg {
   position: static;
   margin-top: 0;
 }
@@ -117,8 +122,16 @@
 
 .template-config-quill-wrap .table-up-menu .icon svg [fill]:not([fill="none"]),
 .template-config-quill-wrap .table-up-align .icon svg [fill]:not([fill="none"]),
-.main-main.main-main--template-config .table-up-menu .icon svg [fill]:not([fill="none"]),
-.main-main.main-main--template-config .table-up-align .icon svg [fill]:not([fill="none"]) {
+.main-main.main-main--template-config
+  .table-up-menu
+  .icon
+  svg
+  [fill]:not([fill="none"]),
+.main-main.main-main--template-config
+  .table-up-align
+  .icon
+  svg
+  [fill]:not([fill="none"]) {
   fill: #1e293b;
   stroke: none;
 }
@@ -192,7 +205,9 @@
   background-attachment: local;
 }
 
-.template-config-quill-wrap .ql-container.ql-snow .ql-editor::-webkit-scrollbar {
+.template-config-quill-wrap
+  .ql-container.ql-snow
+  .ql-editor::-webkit-scrollbar {
   width: 0;
   height: 0;
   background: transparent;
@@ -204,11 +219,19 @@
   margin-bottom: 0.35em;
 }
 
-.template-config-quill-wrap .ql-editor table.ql-table .ql-table-cell-inner > p:first-child {
+.template-config-quill-wrap
+  .ql-editor
+  table.ql-table
+  .ql-table-cell-inner
+  > p:first-child {
   margin-top: 0;
 }
 
-.template-config-quill-wrap .ql-editor table.ql-table .ql-table-cell-inner > p:last-child {
+.template-config-quill-wrap
+  .ql-editor
+  table.ql-table
+  .ql-table-cell-inner
+  > p:last-child {
   margin-bottom: 0;
 }
 
@@ -243,4 +266,46 @@
 .template-config-quill-wrap .ql-editor .template-line-loose,
 .template-preview-body .template-line-loose {
   line-height: 2 !important;
+}
+
+/* Multiline bookmarks: keep wrapped lines aligned under the first line */
+.template-config-quill-wrap .ql-editor .bookmark-multiline,
+.template-preview-body .bookmark-multiline {
+  display: inline-block;
+  vertical-align: top;
+  line-height: inherit;
+}
+
+/* Preview member search — fit narrow Bookmark Fields column */
+.template-bookmark-member-search {
+  min-width: 0;
+  width: 100%;
+  overflow: hidden;
+}
+
+.template-bookmark-member-search .member-search-field {
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+}
+
+.template-bookmark-member-search .ant-select-auto-complete,
+.template-bookmark-member-search .ant-select {
+  width: 100% !important;
+  min-width: 0 !important;
+  max-width: 100% !important;
+}
+
+.template-bookmark-member-search .ant-input-affix-wrapper {
+  width: 100% !important;
+  min-width: 0 !important;
+  max-width: 100% !important;
+  box-sizing: border-box;
+}
+
+.template-bookmark-member-search .ant-input-affix-wrapper .ant-input {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
 }

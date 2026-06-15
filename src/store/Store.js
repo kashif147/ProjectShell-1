@@ -25,29 +25,29 @@ import roleByIdReducer from "../features/PermissionSlice";
 import productTypesReducer from "../features/ProductTypesSlice";
 import productsReducer from "../features/ProductsSlice";
 import productTypesWithProductsReducer from "../features/ProducttypeWithProducts";
-import lookupsWorkLocationReducer from '../features/LookupsWorkLocationSlice';
-import categoryLookupReducer from '../features/CategoryLookupSlice';
-import hierarchicalLookupsReducer from '../features/lookupHierarchySlice';
-import hierarchicalDataByLocationReducer from '../features/HierarchicalDataByLocationSlice';
+import lookupsWorkLocationReducer from "../features/LookupsWorkLocationSlice";
+import categoryLookupReducer from "../features/CategoryLookupSlice";
+import hierarchicalLookupsReducer from "../features/lookupHierarchySlice";
+import hierarchicalDataByLocationReducer from "../features/HierarchicalDataByLocationSlice";
 import countriesReducer from "../features/CountriesSlice"; // Countries slice
-import batchReducer from '../features/BatchesSlice'
-import bookmarkReducer from "../features/templete/BookmarkActions";
+import batchReducer from "../features/BatchesSlice";
+import bookmarkReducer from "../features/template/BookmarkActions";
 import profileReducer from "../features/profiles/ProfileSlice";
 import profileDetailsReducer from "../features/profiles/ProfileDetailsSlice";
-import searchProfileReducer from '../features/profiles/SearchProfile';
-import getTemplateReducer from "../features/templete/GetTemplateSlice";
-import templeteDetailsReducer from "../features/templete/templeteDetailsSlice";
-import transferRequestReducer from '../features/profiles/TransferRequest';
+import searchProfileReducer from "../features/profiles/SearchProfile";
+import getTemplateReducer from "../features/template/GetTemplateSlice";
+import templateDetailsReducer from "../features/template/templateDetailsSlice";
+import transferRequestReducer from "../features/profiles/TransferRequest";
 import transferRequestHistoryReducer from "../constants/TransferRequestHistory";
-import filterTransferReducer from '../features/profiles/filterTransferSlice';
+import filterTransferReducer from "../features/profiles/filterTransferSlice";
 import subscriptionReducer from "../features/subscription/subscriptionSlice";
 import profileSubscriptionReducer from "../features/subscription/profileSubscriptionSlice";
-import batchMemberReducer from '../features/profiles/batchMemberSlice';
+import batchMemberReducer from "../features/profiles/batchMemberSlice";
 import getCornMarketBatchByIdReducer from "../features/profiles/CornMarketBatchByIdSlice";
 import accountReducer from "../features/AccountSlice";
 import notificationReducer from "../features/NotificationSlice";
 import batchDetailsReducer from "../features/profiles/BatchDetailsSlice";
-import templetefiltrsclumnapiReducer from "../features/templete/templetefiltrsclumnapi";
+import templateFiltersColumnApiReducer from "../features/template/templateFiltersColumnApi";
 import userApplicationsReducer from "../features/UserApplicationsSlice";
 import screenFilterChangReducer from "../features/views/ScreenFilterChangSlice";
 import viewByIdReducer from "../features/views/ViewByIdSlice";
@@ -100,15 +100,14 @@ const store = configureStore({
     lookupsWorkLocation: lookupsWorkLocationReducer,
     bookmarks: bookmarkReducer,
     getTemplate: getTemplateReducer,
-    templeteDetails: templeteDetailsReducer,
+    templateDetails: templateDetailsReducer,
     transferRequestHistory: transferRequestHistoryReducer,
-    templetefiltrsclumnapi: templetefiltrsclumnapiReducer,
+    templateFiltersColumnApi: templateFiltersColumnApiReducer,
     userApplications: userApplicationsReducer,
     screenFilter: screenFilterChangReducer,
     viewById: viewByIdReducer,
     activeTemplate: activeTemplateReducer,
     profileApplications: profileApplicationsReducer,
-
   },
 });
 

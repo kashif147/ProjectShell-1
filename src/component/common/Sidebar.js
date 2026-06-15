@@ -396,10 +396,10 @@ const Sidebar = () => {
           path: "/PolicyClientExample",
           state: { search: "Policy Client Example" },
         };
-      case "Templetes":
+      case "Templates":
         return {
-          path: "/templeteSummary",
-          state: { search: "Templetes" },
+          path: "/templateSummary",
+          state: { search: "Templates" },
         };
       case "CornMarket New Graduate":
         return {
@@ -522,8 +522,8 @@ const Sidebar = () => {
       "/UserManagement": "User Management",
       "/PermissionManagement": "Permission Management",
       "/ProductTypesManagement": "Product Management",
-      "/templeteSummary": "Templetes",
-      "/templeteConfig": "Templetes",
+      "/templateSummary": "Templates",
+      "/templateConfig": "Templates",
       "/CancelledMembersReport": "Cancelled Members Report",
       "/PolicyClientExample": "Policy Client Example",
       "/NewGraduate": "CornMarket New Graduate",

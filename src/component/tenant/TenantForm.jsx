@@ -177,11 +177,13 @@ const TenantForm = ({ tenant, onClose }) => {
       const afterUpdate = async () => {
         onClose();
         setErrors({});
-        if (changedFields.branding) {
+        if (changedFields.branding || changedFields.organisationProfile) {
           clearTenantBrandingCache(tenant._id);
           const sessionTenantId = resolveTenantId();
           if (sessionTenantId) clearTenantBrandingCache(sessionTenantId);
-          notifyBrandingRefresh();
+          if (changedFields.branding) {
+            notifyBrandingRefresh();
+          }
         }
         await dispatch(getAllTenants());
       };

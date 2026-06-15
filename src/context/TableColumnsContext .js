@@ -868,7 +868,31 @@ function buildReconciliationColumns() {
       render: (_, r) => r.bankRef || r.externalReference || r.glDocNo || "—",
     },
     memberId: {
-      render: (v) => v || "—",
+      render: (_, row) => {
+        const mid = String(row.memberId || "").trim();
+        if (!mid) return "—";
+        const name = String(row.memberDisplayName || "").trim();
+        const pid = String(row.memberProfileId || "").trim();
+        if (name && pid) {
+          return (
+            <Link
+              to={{
+                pathname: "/Details",
+                search: buildDetailsSearch(pid),
+              }}
+              style={{ color: "#215E97", fontWeight: 500 }}
+              title={`${name} (${mid})`}
+            >
+              {name}
+            </Link>
+          );
+        }
+        return (
+          <span style={{ color: "rgba(0,0,0,0.65)" }} title={mid}>
+            {mid}
+          </span>
+        );
+      },
     },
     amount: {
       render: (value) => {

@@ -1,6 +1,14 @@
-/** User-facing labels for membership movement enum values (API values unchanged). */
+/** User-facing labels for subscription-service MEMBERSHIP_MOVEMENT enum values. */
 
 export const NEW_JOIN_COLUMN_LABEL = "New";
+
+/** Select options aligned with subscription-service MEMBERSHIP_MOVEMENT enum. */
+export const MEMBERSHIP_MOVEMENT_OPTIONS = [
+  { value: "NewJoin", label: NEW_JOIN_COLUMN_LABEL },
+  { value: "Rejoin", label: "Re-Joined" },
+  { value: "Reinstate", label: "Reinstated" },
+  { value: "Renewed", label: "Renewed" },
+];
 
 const MOVEMENT_LABELS = {
   NewJoin: NEW_JOIN_COLUMN_LABEL,

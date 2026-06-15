@@ -796,11 +796,13 @@ function HeaderDetails({
             message.destroy(processingKey);
 
             if (response.status === 200 || response.status === 204) {
-              const { successful = 0, failed = 0, results = [] } =
-                response.data || {};
-              const processingDateLabel = dayjs(selectedDate).format(
-                "DD/MM/YYYY",
-              );
+              const {
+                successful = 0,
+                failed = 0,
+                results = [],
+              } = response.data || {};
+              const processingDateLabel =
+                dayjs(selectedDate).format("DD/MM/YYYY");
 
               if (successful > 0 && failed === 0) {
                 MyAlert(
@@ -1232,14 +1234,8 @@ function HeaderDetails({
     if (nav === "/CasesSummary") {
       return [...defaultMenuItems, editCasesItem];
     }
-    if (
-      nav === "/worklocation" ||
-      nav === "/region" ||
-      nav === "/branch"
-    ) {
-      return defaultMenuItems.filter((item) =>
-        item.label.startsWith("Assign"),
-      );
+    if (nav === "/worklocation" || nav === "/region" || nav === "/branch") {
+      return defaultMenuItems.filter((item) => item.label.startsWith("Assign"));
     }
     return defaultMenuItems;
   }, [nav, defaultMenuItems, editCasesItem]);
@@ -1412,7 +1408,7 @@ function HeaderDetails({
             location?.pathname == "/branch" ||
             location?.pathname == "/DirectDebitAuthorization" ||
             location?.pathname == "/DirectDebit" ||
-            location?.pathname == "/templeteSummary" ||
+            location?.pathname == "/templateSummary" ||
             location?.pathname == "/write-offs" ||
             location?.pathname == "/Refunds" ||
             location?.pathname == "/CreditNotes" ||
@@ -1471,53 +1467,57 @@ function HeaderDetails({
                               ? "Workplace Membership Breakdown"
                               : nav === "/CreditorsListReport"
                                 ? "Creditors List Report"
-                              : nav === "/DebtorsListReport"
-                                ? "Debtors List Report"
-                            : location?.state?.search ||
-                              (nav === "/DirectDebitAuthorization"
-                              ? "Direct Debit Authorization"
-                              : nav === "/DirectDebit"
-                                ? "Direct Debit"
-                                : nav === "/DirectDebitBatchDetails"
-                                  ? "Direct Debit Batch Details"
-                                  : nav === "/Refunds"
-                                    ? "Refunds"
-                                    : nav === "/write-offs"
-                                      ? "Write-offs"
-                                      : nav === "/CreditNotes"
-                                        ? "Credit notes"
-                                        : nav === "/Reconciliation"
-                                          ? "Reconciliation"
-                                          : nav === "/JournalAdjustments"
-                                            ? "Journal adjustments"
-                                            : nav === "/GeneralLedger"
-                                              ? "General ledger"
-                                              : nav === "/onlinePayment"
-                                                ? "Finance"
-                                                : nav === "/EventsDashboard"
-                                                  ? "Events Dashboard"
+                                : nav === "/DebtorsListReport"
+                                  ? "Debtors List Report"
+                                  : location?.state?.search ||
+                                    (nav === "/DirectDebitAuthorization"
+                                      ? "Direct Debit Authorization"
+                                      : nav === "/DirectDebit"
+                                        ? "Direct Debit"
+                                        : nav === "/DirectDebitBatchDetails"
+                                          ? "Direct Debit Batch Details"
+                                          : nav === "/Refunds"
+                                            ? "Refunds"
+                                            : nav === "/write-offs"
+                                              ? "Write-offs"
+                                              : nav === "/CreditNotes"
+                                                ? "Credit notes"
+                                                : nav === "/Reconciliation"
+                                                  ? "Reconciliation"
                                                   : nav ===
-                                                      "/CorrespondenceDashboard"
-                                                    ? "Campaign Dashboard"
-                                                    : nav ===
-                                                        "/IssuesManagementDashboard"
-                                                      ? "Issues Management Dashboard"
-                                                      : nav === "/EventsSummary"
-                                                        ? "Events"
-                                                        : nav === "/Attendees"
-                                                          ? "Attendees"
-                                                          : "")}
+                                                      "/JournalAdjustments"
+                                                    ? "Journal adjustments"
+                                                    : nav === "/GeneralLedger"
+                                                      ? "General ledger"
+                                                      : nav === "/onlinePayment"
+                                                        ? "Finance"
+                                                        : nav ===
+                                                            "/EventsDashboard"
+                                                          ? "Events Dashboard"
+                                                          : nav ===
+                                                              "/CorrespondenceDashboard"
+                                                            ? "Campaign Dashboard"
+                                                            : nav ===
+                                                                "/IssuesManagementDashboard"
+                                                              ? "Issues Management Dashboard"
+                                                              : nav ===
+                                                                  "/EventsSummary"
+                                                                ? "Events"
+                                                                : nav ===
+                                                                    "/Attendees"
+                                                                  ? "Attendees"
+                                                                  : "")}
                     </h2>
                   )}
                 </div>
 
                 <div className="d-flex">
                   {/* For templateSummary, only show Create button */}
-                  {nav === "/templeteSummary" ? (
+                  {nav === "/templateSummary" ? (
                     <Button
                       onClick={() => {
-                        navigate("/templeteConfig", {
-                          state: { state: "Templetes" },
+                        navigate("/templateConfig", {
+                          state: { state: "templates" },
                         });
                       }}
                       style={{
@@ -1582,9 +1582,8 @@ function HeaderDetails({
                         (nav === "/InAppNotifications" &&
                           !hasPermission("notifications:create")) ||
                         nav === "/UserNotifications" ||
-                        isReportHeaderPath(nav)
-                          ? null
-                          : nav === "/PaymentForms" ? (
+                        isReportHeaderPath(nav) ? null : nav ===
+                        "/PaymentForms" ? (
                         <Button
                           onClick={() =>
                             openPaymentFormCreate("STANDING_ORDER")
@@ -1859,7 +1858,7 @@ function HeaderDetails({
                   </Button>
                 </div>
               ) : (
-                nav !== "/templeteSummary" &&
+                nav !== "/templateSummary" &&
                 nav !== "/CommunicationBatchDetail" && (
                   <div className="d-flex me-4 search-fliters align-items-center justify-content-between flex-wrap mt-2 mb-1">
                     {isBatchSearchPage ? (
@@ -1882,7 +1881,7 @@ function HeaderDetails({
                         location?.pathname === "/region" ||
                         location?.pathname === "/branch" ? null : (
                           <>
-                            {nav !== "/templeteConfig" &&
+                            {nav !== "/templateConfig" &&
                               !isHeaderDashboardRangeNav(nav) && (
                                 <SaveViewMenu className="ms-3" />
                               )}

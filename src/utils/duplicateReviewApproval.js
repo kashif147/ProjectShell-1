@@ -34,6 +34,62 @@ export function rowDuplicateReviewStatus(row) {
   );
 }
 
+export function getApplicationDuplicateReview(application) {
+  return (
+    application?.personalDetails?.duplicateReview ||
+    application?.duplicateReview ||
+    null
+  );
+}
+
+export function isMergedDuplicateReview(application) {
+  return getApplicationDuplicateReviewStatus(application) === "MERGED";
+}
+
+export function getApplicationDuplicateReviewStatus(application) {
+  return rowDuplicateReviewStatus(application);
+}
+
+export function getMergedDuplicateReviewSummary(application) {
+  const review = getApplicationDuplicateReview(application);
+  if (!review || review.status !== "MERGED") {
+    return null;
+  }
+
+  const matchedProfileId = review.matchedProfileId;
+  const matchRow = (review.matchSummary || []).find(
+    (match) =>
+      match.sourceType === "PROFILE" &&
+      matchedProfileId != null &&
+      String(match.sourceId) === String(matchedProfileId) &&
+      !match.ignored,
+  );
+
+  const mergeFieldChoices =
+    review.mergeFieldChoices && typeof review.mergeFieldChoices === "object"
+      ? review.mergeFieldChoices
+      : {};
+
+  const choiceEntries = Object.entries(mergeFieldChoices);
+  const profileFieldCount = choiceEntries.filter(
+    ([, source]) => source === "PROFILE",
+  ).length;
+  const applicationFieldCount = choiceEntries.filter(
+    ([, source]) => source === "APPLICATION",
+  ).length;
+
+  return {
+    matchedProfileId:
+      matchedProfileId != null ? String(matchedProfileId) : null,
+    matchName: matchRow?.name || null,
+    membershipNumber: matchRow?.membershipNumber || null,
+    reviewedAt: review.reviewedAt || null,
+    profileFieldCount,
+    applicationFieldCount,
+    totalChoices: choiceEntries.length,
+  };
+}
+
 export function getPendingDuplicateReviewApplications(gridData, selectedIds) {
   if (!Array.isArray(gridData) || !selectedIds?.length) return [];
 

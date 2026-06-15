@@ -14,6 +14,7 @@ import { RemindersProvider } from './context/CampaignDetailsProvider';
 import { FilterProvider } from './context/FilterContext';
 import ErrorBoundary from './component/common/ErrorBoundary';
 import { SelectedIdsProvider } from './context/SelectedIdsContext';
+import { UnsavedFormProvider } from './context/UnsavedFormContext';
 
 // Handle chunk loading errors globally
 window.addEventListener('error', (event) => {
@@ -50,6 +51,7 @@ root.render(
   <ErrorBoundary>
     <Provider store={store}>
       <Router>
+        <UnsavedFormProvider>
         <ExcelProvider>
           <SelectedIdsProvider >
           <FilterProvider>
@@ -63,6 +65,7 @@ root.render(
           </FilterProvider>
           </SelectedIdsProvider>
         </ExcelProvider>
+        </UnsavedFormProvider>
       </Router>
     </Provider>
   </ErrorBoundary>

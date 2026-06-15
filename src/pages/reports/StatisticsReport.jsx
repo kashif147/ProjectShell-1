@@ -1,4 +1,10 @@
-import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { Alert, Spin } from "antd";
 import { message } from "antd";
 import { useAuthorization } from "../../context/AuthorizationContext";
@@ -29,9 +35,7 @@ import {
   sortStatisticsRows,
   STATISTICS_REPORT_TITLE,
 } from "./statisticsReportUtils";
-import {
-  buildStatisticsExportSnapshot,
-} from "./statisticsReportExport";
+import { buildStatisticsExportSnapshot } from "./statisticsReportExport";
 import {
   buildSampleStatisticsReport,
   withSampleStatisticsReportIfEmpty,
@@ -43,16 +47,13 @@ const REPORT_TITLE = STATISTICS_REPORT_TITLE;
 
 export default function StatisticsReport() {
   const { user } = useAuthorization();
-  const {
-    filtersState,
-    filterOptions,
-    membershipDashboardHeader,
-  } = useFilters();
+  const { filtersState, filterOptions, membershipDashboardHeader } =
+    useFilters();
 
   const { isInitialized } = useSelector((state) => state.applicationWithFilter);
   const { activeTemplateId } = useSelector((state) => state.activeTemplate);
   const { templatesFetching } = useSelector(
-    (state) => state.templetefiltrsclumnapi,
+    (state) => state.templateFiltersColumnApi,
   );
 
   const [report, setReport] = useState(null);
@@ -80,10 +81,7 @@ export default function StatisticsReport() {
 
   const categorySource = useMemo(() => {
     const rows = report?.breakdowns?.byMembershipCategory?.rows || [];
-    return sortStatisticsRows(
-      rows.map(normalizeStatisticsCategoryRow),
-      "name",
-    );
+    return sortStatisticsRows(rows.map(normalizeStatisticsCategoryRow), "name");
   }, [report]);
 
   const filteredCategoryRows = useMemo(
@@ -92,7 +90,9 @@ export default function StatisticsReport() {
   );
 
   const locationHierarchy = useMemo(() => {
-    const sorted = sortStatisticsLocationHierarchy(report?.breakdowns?.byLocation);
+    const sorted = sortStatisticsLocationHierarchy(
+      report?.breakdowns?.byLocation,
+    );
     return filterEmptyLocationHierarchy(sorted, { includeEmptyRows });
   }, [report?.breakdowns?.byLocation, includeEmptyRows]);
 

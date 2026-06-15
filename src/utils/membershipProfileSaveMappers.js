@@ -1,5 +1,39 @@
 import dayjs from "dayjs";
 
+function normalizeMembershipCategoryToLabel(raw, categoryOptions = []) {
+  if (raw == null || raw === "") return "";
+  const str = String(raw).trim();
+  if (!Array.isArray(categoryOptions) || categoryOptions.length === 0) {
+    return str;
+  }
+  const byId = categoryOptions.find(
+    (o) => String(o.value) === str || String(o.key) === str,
+  );
+  if (byId?.label) return byId.label;
+
+  const key = str.toLowerCase().replace(/\s+/g, " ");
+  const byLabel = categoryOptions.find(
+    (o) => o.label && String(o.label).trim().toLowerCase().replace(/\s+/g, " ") === key,
+  );
+  if (byLabel?.label) return byLabel.label;
+
+  return str;
+}
+
+function isNoFeeMembershipCategoryLabel(category) {
+  const key = String(category ?? "")
+    .trim()
+    .toLowerCase()
+    .replace(/\s+/g, " ");
+  if (!key) return false;
+  if (key === "honorary" || /\bhonorary\b/.test(key)) return true;
+  return (
+    key.includes("undergraduate") &&
+    key.includes("student") &&
+    !key.includes("postgraduate")
+  );
+}
+
 /**
  * @param {unknown} val dayjs, Date, ISO string, or nullish
  * @returns {string|null}
@@ -125,10 +159,22 @@ export function formDataToProfilePutPayload(formData, profileDetails) {
  */
 export function formDataToSubscriptionPutPayload(
   formData,
-  currentSubscription
+  currentSubscription,
+  categoryOptions = [],
 ) {
   const prevPref = currentSubscription?.preferences || {};
   const prevProf = currentSubscription?.professionalDetails || {};
+
+  const membershipCategory = normalizeMembershipCategoryToLabel(
+    formData.membershipCategory,
+    categoryOptions,
+  );
+  const noFeeCategory = isNoFeeMembershipCategoryLabel(membershipCategory);
+  const paymentType = noFeeCategory ? "Cash" : formData.paymentType;
+  const paymentFrequency = noFeeCategory
+    ? "Annually"
+    : formData.paymentFrequency;
+  const payrollNo = noFeeCategory ? "" : formData.payrollNumber;
 
   const fullAddress = [
     formData.addressLine1,
@@ -142,11 +188,10 @@ export function formDataToSubscriptionPutPayload(
     .join(", ");
 
   return {
-    membershipCategory: formData.membershipCategory,
-    paymentType: formData.paymentType,
-    payrollNo: formData.payrollNumber,
-    paymentFrequency: formData.paymentFrequency,
-    membershipMovement: formData.membershipMovement,
+    membershipCategory,
+    paymentType,
+    payrollNo,
+    paymentFrequency,
     startDate: toIsoDate(formData.startDate),
     endDate: toIsoDate(formData.endDate),
     rolloverDate: toIsoDate(formData.renewalDate),

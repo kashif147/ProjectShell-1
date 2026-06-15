@@ -39,6 +39,9 @@ REACT_APP_REPORTING_SERVICE_URL=http://projectshell-vm.northeurope.cloudapp.azur
 
 # Notification Service (if used)
 REACT_APP_NOTIFICATION_SERVICE_URL=http://projectshell-vm.northeurope.cloudapp.azure.com/notification-service/api
+
+# Audit Service (member audit history, audit log grids)
+REACT_APP_AUDIT_SERVICE_URL=http://projectshell-vm.northeurope.cloudapp.azure.com/audit-service/api
 ```
 
 ## Gateway Route Mappings
@@ -56,6 +59,27 @@ Based on `default.conf`, the gateway routes are:
 | Communication Service | `/communication-service/api/` | `REACT_APP_CUMM` |
 | Reporting Service | `/reporting-service/api/` | `REACT_APP_REPORTING_SERVICE_URL` |
 | Notification Service | `/notification-service/api/` | `REACT_APP_NOTIFICATION_SERVICE_URL` |
+| Audit Service | `/audit-service/api/` | `REACT_APP_AUDIT_SERVICE_URL` |
+
+## Audit service 502
+
+OpenResty returns **502** when it cannot reach `audit-service:4006` (container stopped, wrong Docker network, or Postgres not ready).
+
+On the VM:
+
+```bash
+docker ps --filter name=audit-service
+docker logs audit-service --tail 80
+curl -sf http://localhost:4006/health   # on the VM host, if port 4006 is published
+```
+
+After deploying `default.conf`, reload the gateway container. Health via gateway (no JWT):
+
+`https://projectshell-vm.northeurope.cloudapp.azure.com/audit-service/health`
+
+API routes require JWT (`audit:read` permission):
+
+`https://projectshell-vm.northeurope.cloudapp.azure.com/audit-service/api/audit-logs/member/:profileId`
 
 ## Important Notes
 
@@ -83,7 +107,7 @@ The following files have been updated to use the correct environment variables:
 - `src/features/profiles/*` - Uses `REACT_APP_PROFILE_SERVICE_URL`
 - `src/config/serviceUrls.js` - `getAccountServiceBaseUrl()` → `REACT_APP_ACCOUNT_SERVICE_URL`; `getSubscriptionServiceBaseUrl()` → `REACT_APP_SUBSCRIPTION_SERVICE_URL` or `REACT_APP_SUBSCRIPTION`
 - `src/features/subscription/*`, finance components, etc. - import the helpers above (not `process.env` directly)
-- `src/features/templete/*` - Uses `REACT_APP_CUMM`
+- `src/features/template/*` - Uses `REACT_APP_CUMM`
 - `src/features/shared/services/reportService.js` - Uses `REACT_APP_POLICY_SERVICE_URL` for reporting
 
 ## Testing

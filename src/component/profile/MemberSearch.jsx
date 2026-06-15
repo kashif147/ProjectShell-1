@@ -11,6 +11,7 @@ import {
 import { searchProfiles } from "../../features/profiles/SearchProfile";
 import { buildDetailsSearch } from "../../utils/detailsRoute";
 import MemberSearchOptionLabel from "./MemberSearchOptionLabel";
+import { useConfirmUnsavedLeave, useAllowNextNavigationAfterConfirm } from "../../context/UnsavedFormContext";
 
 // Debounce hook
 const useDebounce = (value, delay) => {
@@ -57,6 +58,8 @@ const MemberSearch = ({
   showStatus = true, // Whether to show "Searching..." and "Found X members" text
   getPopupContainer = null, // Custom popup container function
   compact = false, // 36px density for compact forms (e.g. ApplicationForm)
+  compactOptions = false, // Single-line dropdown rows for narrow panels
+  popupMatchSelectWidth = false, // Match dropdown width to input
 }) => {
   // Internal state for backward compatibility
   const [internalValue, setInternalValue] = useState("");
@@ -74,6 +77,8 @@ const MemberSearch = ({
   const [isSearchTriggered, setIsSearchTriggered] = useState(false);
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  const confirmLeaveUnsavedChanges = useConfirmUnsavedLeave();
+  const allowNextNavigationAfterConfirm = useAllowNextNavigationAfterConfirm();
   const searchTimeoutRef = useRef(null);
   const searchRequestIdRef = useRef(0);
   const inputRef = useRef(null);
@@ -100,19 +105,62 @@ const MemberSearch = ({
     });
   };
 
+  const formatMemberDisplayValue = (memberData) => {
+    const name = `${memberData?.personalInfo?.forename || ""} ${memberData?.personalInfo?.surname || ""}`.trim();
+    const membershipNumber = memberData?.membershipNumber || "";
+    return membershipNumber ? `${name} (${membershipNumber})`.trim() : name;
+  };
+
+  const parseMemberOptionPayload = (value) => {
+    if (typeof value !== "string") return null;
+    try {
+      const parsed = JSON.parse(value);
+      if (parsed?.memberData) return parsed;
+    } catch {
+      // Not a stored member option value.
+    }
+    return null;
+  };
+
   const membersToOptions = (members, searchTerm) =>
-    members.map((member) => ({
-      value: JSON.stringify({
-        displayValue: `${member.personalInfo?.forename || ""} ${member.personalInfo?.surname || ""}`,
-        membershipNumber: member.membershipNumber,
-        searchTerm,
+    members.map((member) => {
+      const name =
+        `${member.personalInfo?.forename || ""} ${member.personalInfo?.surname || ""}`.trim();
+      const membershipNumber = member.membershipNumber || "";
+      return {
+        value: JSON.stringify({
+          displayValue: name,
+          membershipNumber,
+          searchTerm,
+          memberData: member,
+        }),
+        label: compactOptions ? (
+          <div
+            style={{
+              overflow: "hidden",
+              textOverflow: "ellipsis",
+              whiteSpace: "nowrap",
+              lineHeight: "1.4",
+              padding: "6px 0",
+              maxWidth: "100%",
+            }}
+            title={
+              membershipNumber ? `${name} (${membershipNumber})` : name
+            }
+          >
+            <span style={{ fontWeight: 600 }}>{name}</span>
+            {membershipNumber ? (
+              <span style={{ color: "#555" }}> ({membershipNumber})</span>
+            ) : null}
+          </div>
+        ) : (
+          <MemberSearchOptionLabel member={member} />
+        ),
+        memberId: member._id,
+        membershipNumber,
         memberData: member,
-      }),
-      label: <MemberSearchOptionLabel member={member} />,
-      memberId: member._id,
-      membershipNumber: member.membershipNumber,
-      memberData: member,
-    }));
+      };
+    });
 
   // Use debounce for search input
   const debouncedSearchValue = useDebounce(searchValue, 300);
@@ -278,6 +326,47 @@ const MemberSearch = ({
     };
   }, [debouncedSearchValue, onAddMember, addMemberLabel]);
 
+  const loadMemberAndNavigate = async (memberData, searchTerm) => {
+    const canProceed = await confirmLeaveUnsavedChanges();
+    if (!canProceed) return false;
+
+    handleClear();
+
+    try {
+      await dispatch(searchProfiles(searchTerm)).unwrap();
+      await dispatch(
+        getSubscriptionByProfileId({
+          profileId: memberData?._id,
+          ...profileDetailActiveSubscriptionArgs,
+        }),
+      ).unwrap();
+
+      allowNextNavigationAfterConfirm();
+      navigate({
+        pathname: navigateTo,
+        search: buildDetailsSearch(memberData._id),
+        state: {
+          name:
+            memberData.fullName ||
+            `${memberData.personalInfo?.forename} ${memberData.personalInfo?.surname}`,
+          code: memberData.membershipNumber,
+          search: "Profile",
+          memberData,
+          searchTerm,
+        },
+      });
+
+      message.success(
+        `Member ${memberData.membershipNumber} loaded successfully`,
+      );
+      return true;
+    } catch (error) {
+      console.error("Redux dispatch error:", error);
+      message.error(`Failed to load member data: ${error.message}`);
+      return false;
+    }
+  };
+
   const handleSelect = async (value, option) => {
     console.log('Selected value:', value);
     console.log('Selected option:', option);
@@ -304,49 +393,24 @@ const MemberSearch = ({
 
         // Handle selection based on onSelectBehavior prop
         switch (onSelectBehavior) {
-          case "navigate":
-            // First clear the search input immediately
-            handleClear();
+          case "navigate": {
+            selectionLockRef.current = true;
+            searchRequestIdRef.current += 1;
+            setShowNoMatchOption(false);
+            setIsSearchTriggered(false);
+            setOptions([]);
 
-            // Use Redux for BOTH subscription AND profile search when selecting
-            try {
-              // Dispatch searchProfiles to update Redux state
-              await dispatch(searchProfiles(searchTerm)).unwrap();
-
-              // Dispatch subscription lookup
-              await dispatch(
-                getSubscriptionByProfileId({
-                  profileId: memberData?._id,
-                  ...profileDetailActiveSubscriptionArgs,
-                })
-              ).unwrap();
-
-              // Navigate to the specified route
-              navigate({
-                pathname: navigateTo,
-                search: buildDetailsSearch(memberData._id),
-                state: {
-                  name: memberData.fullName ||
-                    `${memberData.personalInfo?.forename} ${memberData.personalInfo?.surname}`,
-                  code: memberData.membershipNumber,
-                  search: "Profile",
-                  memberData: memberData,
-                  searchTerm: searchTerm
-                }
-              });
-
-              message.success(`Member ${memberData.membershipNumber} loaded successfully`);
-            } catch (error) {
-              console.error("Redux dispatch error:", error);
-              message.error(`Failed to load member data: ${error.message}`);
+            const navigated = await loadMemberAndNavigate(memberData, searchTerm);
+            if (!navigated) {
+              selectionLockRef.current = false;
             }
             break;
+          }
 
           case "callback":
             try {
               // DON'T clear search value - keep it visible in the input!
-              // The search value should show the selected member's name or membership number
-              const displayValue = `${memberData.personalInfo?.forename || ''} ${memberData.personalInfo?.surname || ''} (${memberData.membershipNumber || ''})`.trim();
+              const displayValue = formatMemberDisplayValue(memberData);
 
               selectionLockRef.current = true;
               searchRequestIdRef.current += 1;
@@ -385,52 +449,19 @@ const MemberSearch = ({
             }
             break;
 
-          case "both":
-            // Clear search input
-            handleClear();
+          case "both": {
+            const navigated = await loadMemberAndNavigate(memberData, searchTerm);
+            if (!navigated) break;
 
-            // Use Redux for BOTH subscription AND profile search when selecting
-            try {
-              // Dispatch searchProfiles to update Redux state
-              await dispatch(searchProfiles(searchTerm)).unwrap();
-
-              // Dispatch subscription lookup
-              await dispatch(
-                getSubscriptionByProfileId({
-                  profileId: memberData?._id,
-                  ...profileDetailActiveSubscriptionArgs,
-                })
-              ).unwrap();
-
-              // Both navigate and call callback
-              navigate({
-                pathname: navigateTo,
-                search: buildDetailsSearch(memberData._id),
-                state: {
-                  name: memberData.fullName ||
-                    `${memberData.personalInfo?.forename} ${memberData.personalInfo?.surname}`,
-                  code: memberData.membershipNumber,
-                  search: "Profile",
-                  memberData: memberData,
-                  searchTerm: searchTerm
-                }
-              });
-
-              // Call the provided callback function
-              if (onSelectCallback && typeof onSelectCallback === 'function') {
-                await onSelectCallback(memberData, parsedValue);
-              }
-
-              message.success(`Member ${memberData.membershipNumber} loaded successfully`);
-            } catch (error) {
-              console.error("Redux dispatch error:", error);
-              message.error(`Failed to load member data: ${error.message}`);
+            if (onSelectCallback && typeof onSelectCallback === "function") {
+              await onSelectCallback(memberData, parsedValue);
             }
             break;
+          }
 
           case "none":
             // Just show success message and keep search value visible
-            const displayValueNone = `${memberData.personalInfo?.forename || ''} ${memberData.personalInfo?.surname || ''} (${memberData.membershipNumber || ''})`.trim();
+            const displayValueNone = formatMemberDisplayValue(memberData);
             selectionLockRef.current = true;
             searchRequestIdRef.current += 1;
             setShowNoMatchOption(false);
@@ -455,41 +486,10 @@ const MemberSearch = ({
             setIsSearchTriggered(false);
             break;
 
-          default:
-            // Default to navigate behavior
-            handleClear();
-
-            // Use Redux for BOTH subscription AND profile search when selecting
-            try {
-              // Dispatch searchProfiles to update Redux state
-              await dispatch(searchProfiles(searchTerm)).unwrap();
-
-              // Dispatch subscription lookup
-              await dispatch(
-                getSubscriptionByProfileId({
-                  profileId: memberData?._id,
-                  ...profileDetailActiveSubscriptionArgs,
-                })
-              ).unwrap();
-
-              navigate({
-                pathname: navigateTo,
-                search: buildDetailsSearch(memberData._id),
-                state: {
-                  name: memberData.fullName ||
-                    `${memberData.personalInfo?.forename} ${memberData.personalInfo?.surname}`,
-                  code: memberData.membershipNumber,
-                  search: "Profile",
-                  memberData: memberData,
-                  searchTerm: searchTerm
-                }
-              });
-              message.success(`Member ${memberData.membershipNumber} loaded successfully`);
-            } catch (error) {
-              console.error("Redux dispatch error:", error);
-              message.error(`Failed to load member data: ${error.message}`);
-            }
+          default: {
+            await loadMemberAndNavigate(memberData, searchTerm);
             break;
+          }
         }
 
         setCurrentSearchTerm("");
@@ -512,6 +512,12 @@ const MemberSearch = ({
   // Handle input change (for typing)
   const handleInputChange = (value, { fromSelection = false } = {}) => {
     console.log('Input changed to:', value);
+
+    // AutoComplete onChange receives the raw stringified option value on select.
+    // Ignore it here; handleSelect applies the display label or clears for navigation.
+    if (!fromSelection && parseMemberOptionPayload(value)) {
+      return;
+    }
 
     // Update value based on control mode
     if (isControlled && externalOnChange) {
@@ -601,7 +607,7 @@ const MemberSearch = ({
         value={searchValue}
         onChange={handleInputChange}
         filterOption={false}
-        popupMatchSelectWidth={false}
+        popupMatchSelectWidth={popupMatchSelectWidth}
         notFoundContent={null}
         defaultActiveFirstOption={false}
         backfill={false}
@@ -636,9 +642,11 @@ const MemberSearch = ({
             )
           }
           placeholder={
-            headerStyle
-              ? "Search by name, email, or membership number..."
-              : "Search by name, email, membership number..."
+            compactOptions
+              ? "Search member..."
+              : headerStyle
+                ? "Search by name, email, or membership number..."
+                : "Search by name, email, membership number..."
           }
           className={isDenseInput ? "my-input-field" : "p-2 my-input-field"}
           style={{

@@ -27,6 +27,33 @@
   gap: 8px;
 }
 
+/* Align tab content with top header card inset (margin 0 8px) */
+.profile-details-shell-top
+  .profile-details-tabs.ant-tabs
+  > .ant-tabs-content-holder
+  > .ant-tabs-content
+  > .ant-tabs-tabpane {
+  padding-inline: 8px;
+  box-sizing: border-box;
+}
+
+.profile-details-shell-top
+  .profile-details-tabs.ant-tabs
+  > .ant-tabs-content-holder
+  > .ant-tabs-content
+  > .ant-tabs-tabpane:has(.membership-form-container) {
+  padding-inline: 0;
+}
+
+.profile-details-shell-top
+  .profile-details-tabs.ant-tabs
+  > .ant-tabs-content-holder
+  > .ant-tabs-content
+  > .ant-tabs-tabpane
+  > .pe-3 {
+  padding-right: 0 !important;
+}
+
 .member-header-container {
   --ph-primary: #215e97;
   --ph-secondary: #1a4a7a;
@@ -203,14 +230,23 @@
 
 .member-header-top-band .member-hero-text .member-details {
   font-size: 11px;
-  margin: 0 0 4px;
+  margin: 0 0 2px;
   text-align: left;
   white-space: nowrap;
 }
 
+.member-header-top-band .member-hero-text .member-membership-status-row {
+  margin: 0 0 2px;
+  gap: 5px;
+  flex-wrap: nowrap;
+  width: 100%;
+  max-width: 100%;
+}
+
 .member-header-top-band .member-hero-text .member-status-badge {
   margin-top: 0;
-  align-self: flex-start;
+  font-size: 12px;
+  line-height: 1.2;
 }
 
 .member-header-top-band .member-contact-section {
@@ -345,6 +381,7 @@
 .member-header-top-band .member-status-badge.member-status-badge-active-plain,
 .member-header-top-band .member-status-badge.member-status-resigned {
   color: rgba(255, 255, 255, 0.95);
+  font-size: 12px;
 }
 
 .member-header-top-band .member-status-dot-active,
@@ -395,6 +432,12 @@
   padding: 4px 8px;
   font-size: 14px;
   line-height: 1.35;
+}
+
+.member-header-card-top .member-header-top-band .member-status-badge {
+  padding: 0;
+  font-size: 12px;
+  line-height: 1.2;
 }
 
 .member-header-top-band .member-contact-section .member-compact-dual-row {
@@ -687,7 +730,7 @@
 .member-header-card-top .member-header-top-band .member-details {
   color: rgba(255, 255, 255, 0.9);
   font-size: 11px;
-  margin: 0 0 4px;
+  margin: 0 0 2px;
 }
 
 .member-header-card-top .member-header-top-band .member-compact-line,
@@ -912,9 +955,9 @@
   position: relative;
   background: linear-gradient(
     135deg,
-    color-mix(in srgb, var(--ph-accent) 45%, var(--ph-secondary)) 0%,
+    color-mix(in srgb, var(--ph-primary) 82%, var(--ph-secondary)) 0%,
     var(--ph-primary) 50%,
-    color-mix(in srgb, var(--ph-primary) 65%, var(--ph-secondary)) 100%
+    color-mix(in srgb, var(--ph-primary) 68%, var(--ph-secondary)) 100%
   );
   border-radius: 12px 12px 0 0;
   overflow: hidden;
@@ -927,9 +970,9 @@
   inset: 0;
   background-image:
     radial-gradient(
-      ellipse 70% 55% at 75% 35%,
-      rgba(255, 255, 255, 0.08) 0%,
-      transparent 55%
+      ellipse 60% 45% at 80% 40%,
+      rgba(255, 255, 255, 0.05) 0%,
+      transparent 50%
     ),
     url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120' viewBox='0 0 120 120'%3E%3Cpath d='M0 60 Q30 30 60 60 T120 60' fill='none' stroke='rgba(255,255,255,0.08)' stroke-width='1'/%3E%3Cpath d='M0 80 Q30 50 60 80 T120 80' fill='none' stroke='rgba(255,255,255,0.06)' stroke-width='1'/%3E%3C/svg%3E");
   background-size:
@@ -966,6 +1009,46 @@
   align-items: center;
   gap: 12px;
   text-align: left;
+}
+
+.member-header-branded .member-profile-text.member-hero-text {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  width: 100%;
+  min-width: 0;
+}
+
+.member-header-branded .member-hero-text .member-membership-status-row {
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  width: 100%;
+  max-width: 100%;
+  margin: 0;
+}
+
+.member-header-branded .member-hero-text .member-membership-no-line {
+  white-space: nowrap;
+  font-size: 13px;
+}
+
+.member-header-branded .member-hero-text .member-status-badge {
+  margin-top: 0;
+  font-size: 12px;
+  line-height: 1.2;
+  max-width: 100%;
+  white-space: normal;
+  overflow: visible;
+  text-overflow: unset;
+}
+
+.member-header-branded
+  .member-hero-text
+  .member-status-badge.member-status-badge-active-plain,
+.member-header-branded .member-hero-text .member-status-badge.member-status-resigned {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.95);
 }
 
 .member-avatar-hero {
@@ -1072,6 +1155,50 @@
   min-width: 0;
 }
 
+.member-membership-status-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 0 0 3px;
+  min-width: 0;
+}
+
+.member-membership-status-row-stacked {
+  flex-direction: column;
+  align-items: flex-start;
+  flex-wrap: nowrap;
+  gap: 2px;
+}
+
+.member-membership-no-line {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.15;
+}
+
+.member-header-top-band .member-membership-no-line {
+  font-size: 13px;
+}
+
+.member-membership-status-sep {
+  font-size: 11px;
+  line-height: 1;
+  opacity: 0.75;
+}
+
+.member-hero-text .member-membership-no-line,
+.member-header-top-band .member-membership-no-line,
+.member-header-card-top .member-header-top-band .member-membership-no-line {
+  color: rgba(255, 255, 255, 0.95);
+}
+
+.member-hero-text .member-membership-status-sep,
+.member-header-top-band .member-membership-status-sep {
+  color: rgba(255, 255, 255, 0.75);
+}
+
 .member-status-dot {
   flex-shrink: 0;
   width: 10px;
@@ -1101,10 +1228,14 @@
   box-shadow: 0 0 0 1px rgba(15, 23, 42, 0.12);
 }
 
+.member-hero-text .member-membership-no-line {
+  font-size: 13px;
+}
+
 .member-hero-text .member-details {
   color: rgba(255, 255, 255, 0.9);
   font-size: 11px;
-  margin: 0 0 4px;
+  margin: 0 0 3px;
   text-align: left;
 }
 

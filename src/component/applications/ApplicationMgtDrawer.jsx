@@ -42,8 +42,13 @@ import { getAllApplications } from "../../features/ApplicationSlice";
 import {
   DUPLICATE_REVIEW_REQUIRED_MESSAGE,
   isDuplicateReviewBlockingApproval,
+  isMergedDuplicateReview,
 } from "../../utils/duplicateReviewApproval";
-import { buildApplicationMgtSearch } from "../../utils/applicationMgtRoute";
+import DuplicateMergeIndicator from "./DuplicateMergeIndicator";
+import {
+  APPLICATION_MGT_PATH,
+  buildApplicationMgtSearch,
+} from "../../utils/applicationMgtRoute";
 import { cleanPayload } from "../../utils/Utilities";
 import MyAlert from "../common/MyAlert";
 import { generatePatch } from "../../utils/Utilities";
@@ -71,9 +76,174 @@ import {
 } from "../../constants/paymentFrequency";
 import { fetchTenantTradingName } from "../../services/tenantBrandingService";
 import DuplicateProfileReview from "./DuplicateProfileReview";
+import { useRegisterUnsavedFormGuard } from "../../context/UnsavedFormContext";
 import "../../styles/ApplicationForm.css";
 
 const baseURL = process.env.REACT_APP_PROFILE_SERVICE_URL;
+
+const toTitleCase = (value) =>
+  String(value || "")
+    .trim()
+    .split(/\s+/)
+    .filter(Boolean)
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+    .join(" ");
+
+const buildProfileAuthHeaders = (token) => ({
+  Authorization: `Bearer ${token}`,
+  "Content-Type": "application/json",
+});
+
+const resolveApplicationEmail = (contactInfo = {}) => {
+  if (contactInfo.preferredEmail === "personal") {
+    return contactInfo.personalEmail?.trim() || "";
+  }
+  if (contactInfo.preferredEmail === "work") {
+    return contactInfo.workEmail?.trim() || "";
+  }
+  return (
+    contactInfo.personalEmail?.trim() ||
+    contactInfo.workEmail?.trim() ||
+    ""
+  );
+};
+
+const lookupExistingApplicationIdByEmail = async (email, token) => {
+  if (!email) return null;
+  try {
+    const response = await axios.post(
+      `${baseURL}/personal-details/check-email`,
+      { email },
+      { headers: buildProfileAuthHeaders(token) },
+    );
+    const data = response?.data?.data;
+    if (data?.exists && data?.type === "APPLICATION") {
+      return data.application?.applicationId || null;
+    }
+  } catch (error) {
+    console.error("lookupExistingApplicationIdByEmail failed:", error);
+  }
+  return null;
+};
+
+const upsertPersonalDetailsForSubmit = async ({
+  applicationId,
+  personalPayload,
+  token,
+}) => {
+  const headers = buildProfileAuthHeaders(token);
+  if (applicationId) {
+    const putRes = await axios.put(
+      `${baseURL}/personal-details/${applicationId}`,
+      personalPayload,
+      { headers },
+    );
+    return {
+      applicationId,
+      data: putRes?.data?.data,
+    };
+  }
+
+  try {
+    const postRes = await axios.post(
+      `${baseURL}/personal-details`,
+      personalPayload,
+      { headers },
+    );
+    const newId = postRes?.data?.data?.applicationId;
+    if (!newId) {
+      throw new Error("ApplicationId not returned from personal details API");
+    }
+    return { applicationId: newId, data: postRes?.data?.data };
+  } catch (error) {
+    const isConflict =
+      error?.response?.status === 409 ||
+      error?.response?.data?.error?.code === "CONFLICT";
+    if (!isConflict) throw error;
+
+    const email = resolveApplicationEmail(personalPayload.contactInfo);
+    const existingId = await lookupExistingApplicationIdByEmail(email, token);
+    if (!existingId) throw error;
+
+    const putRes = await axios.put(
+      `${baseURL}/personal-details/${existingId}`,
+      personalPayload,
+      { headers },
+    );
+    return { applicationId: existingId, data: putRes?.data?.data };
+  }
+};
+
+const extractApiErrorMessage = (error, fallback = "Request failed") =>
+  error?.response?.data?.error?.message ||
+  error?.response?.data?.message ||
+  error?.message ||
+  fallback;
+
+const upsertProfessionalDetailsForSubmit = async ({
+  applicationId,
+  professionalPayload,
+  token,
+}) => {
+  const headers = buildProfileAuthHeaders(token);
+  try {
+    const putRes = await axios.put(
+      `${baseURL}/professional-details/${applicationId}`,
+      professionalPayload,
+      { headers },
+    );
+    if (putRes?.data?.data != null) return putRes.data.data;
+
+    const postRes = await axios.post(
+      `${baseURL}/professional-details/${applicationId}`,
+      professionalPayload,
+      { headers },
+    );
+    if (postRes?.data?.data == null) {
+      throw new Error(
+        postRes?.data?.message || "Professional details were not saved",
+      );
+    }
+    return postRes.data.data;
+  } catch (error) {
+    throw new Error(
+      extractApiErrorMessage(error, "Professional details were not saved"),
+    );
+  }
+};
+
+const upsertSubscriptionDetailsForSubmit = async ({
+  applicationId,
+  subscriptionPayload,
+  token,
+}) => {
+  const headers = buildProfileAuthHeaders(token);
+  try {
+    const putRes = await axios.put(
+      `${baseURL}/subscription-details/${applicationId}`,
+      subscriptionPayload,
+      { headers },
+    );
+    if (putRes?.data?.data != null) return putRes.data.data;
+
+    const postRes = await axios.post(
+      `${baseURL}/subscription-details/${applicationId}`,
+      subscriptionPayload,
+      { headers },
+    );
+    if (postRes?.data?.data == null) {
+      throw new Error(
+        postRes?.data?.message || "Subscription details were not saved",
+      );
+    }
+    return postRes.data.data;
+  } catch (error) {
+    throw new Error(
+      extractApiErrorMessage(error, "Subscription details were not saved"),
+    );
+  }
+};
+
 const { Search: AntdSearch } = Input;
 const { Option } = Select;
 
@@ -345,6 +515,68 @@ function membershipCategoryMatchesProductId(
   return id === productId;
 }
 
+const prepareApplicationSubmitPayload = (infData, categoryData) => {
+  const prepared = dateUtils.prepareForAPI(infData);
+  if (prepared?.subscriptionDetails) {
+    const raw = prepared.subscriptionDetails.membershipCategory;
+    const label = normalizeMembershipCategoryToLabel(raw, categoryData);
+    prepared.subscriptionDetails = {
+      ...prepared.subscriptionDetails,
+      membershipCategory: label !== "" ? label : raw,
+    };
+  }
+  const isUndergraduateStudent = membershipCategoryMatchesProductId(
+    infData?.subscriptionDetails?.membershipCategory,
+    STUDENT_MEMBERSHIP_CATEGORY_ID,
+    categoryData,
+  );
+
+  const professionalDetails = { ...(prepared.professionalDetails || {}) };
+  if (professionalDetails.nursingAdaptationProgramme == null) {
+    professionalDetails.nursingAdaptationProgramme = false;
+  }
+  if (
+    isUndergraduateStudent &&
+    !String(professionalDetails.nmbiNumber || "").trim()
+  ) {
+    professionalDetails.nmbiNumber = "N/A";
+  }
+
+  const subscriptionDetails = { ...(prepared.subscriptionDetails || {}) };
+  subscriptionDetails.termsAndConditions = !!subscriptionDetails.termsAndConditions;
+  subscriptionDetails.valueAddedServices = !!subscriptionDetails.valueAddedServices;
+  subscriptionDetails.otherIrishTradeUnion =
+    subscriptionDetails.otherIrishTradeUnion === true;
+  subscriptionDetails.otherScheme = subscriptionDetails.otherScheme === true;
+  subscriptionDetails.incomeProtectionScheme =
+    !!subscriptionDetails.incomeProtectionScheme;
+  subscriptionDetails.inmoRewards = !!subscriptionDetails.inmoRewards;
+  subscriptionDetails.exclusiveDiscountsAndOffers =
+    !!subscriptionDetails.exclusiveDiscountsAndOffers;
+
+  if (!subscriptionDetails.submissionDate) {
+    subscriptionDetails.submissionDate = dayjs().format("YYYY-MM-DD");
+  }
+  if (!subscriptionDetails.dateJoined) {
+    subscriptionDetails.dateJoined = dayjs().format("YYYY-MM-DD");
+  }
+  if (subscriptionDetails.paymentType && !subscriptionDetails.paymentFrequency) {
+    subscriptionDetails.paymentFrequency = "Monthly";
+  }
+
+  const contactInfo = { ...(prepared.contactInfo || {}) };
+  if (contactInfo.consent == null) {
+    contactInfo.consent = true;
+  }
+
+  return {
+    ...prepared,
+    contactInfo,
+    professionalDetails,
+    subscriptionDetails,
+  };
+};
+
 function isReducedRateMembershipCategory(storedValue, categoryData) {
   const label = normalizeMembershipCategoryToLabel(storedValue, categoryData);
   const key = membershipCategoryCompareKey(label);
@@ -364,6 +596,28 @@ function isReducedRateMembershipCategory(storedValue, categoryData) {
     return true;
   }
   return false;
+}
+
+function isHonoraryMembershipCategory(selected, categoryOptions) {
+  const sel = (selected || "").trim();
+  if (!sel) return false;
+
+  const opts = Array.isArray(categoryOptions) ? categoryOptions : [];
+  const honOpt = opts.find((o) => {
+    const lab = (o.label || "").toLowerCase();
+    return lab === "honorary" || /\bhonorary\b/.test(lab);
+  });
+  if (honOpt) {
+    if (honOpt.value === sel || honOpt.label === sel || honOpt.key === sel) {
+      return true;
+    }
+  }
+
+  const norm = sel.toLowerCase().replace(/\s+/g, "_");
+  if (norm === "honorary") return true;
+
+  const combined = sel.toLowerCase();
+  return combined === "honorary" || /\bhonorary\b/.test(combined);
 }
 
 function confirmReducedRateMembershipCategoryModal() {
@@ -480,6 +734,63 @@ function ApplicationMgtDrawer({
   });
   const [duplicateReviewOpen, setDuplicateReviewOpen] = useState(false);
   const [duplicateReviewAutoRun, setDuplicateReviewAutoRun] = useState(false);
+  const [duplicateReviewApplicationId, setDuplicateReviewApplicationId] =
+    useState(null);
+
+  const duplicateReviewTargetId =
+    duplicateReviewApplicationId || application?.applicationId || null;
+
+  const hasPotentialDuplicateFromDetection = (result) => {
+    if (!result) return false;
+    if (result.hasPotentialDuplicate === true) return true;
+    if (result.duplicateReview?.status === "POTENTIAL_MATCH") return true;
+    const summary = result.matchSummary || result.duplicateReview?.matchSummary;
+    if (Array.isArray(summary) && summary.some((match) => !match.ignored)) {
+      return true;
+    }
+    const appMatches = result.matchingApplications || [];
+    const profileMatches = result.matchingProfiles || [];
+    return (
+      appMatches.some((match) => !match.ignored) ||
+      profileMatches.some((match) => !match.ignored)
+    );
+  };
+
+  const runDuplicateDetectionForApplication = async (applicationId) => {
+    const token = localStorage.getItem("token");
+    if (!token || !applicationId) return null;
+
+    const response = await axios.post(
+      `${baseURL}/applications/${applicationId}/detect-duplicates`,
+      {},
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      },
+    );
+    return response.data?.data || response.data;
+  };
+
+  const focusSubmittedApplicationForDuplicateReview = async (
+    applicationId,
+    { isBulk = false } = {},
+  ) => {
+    setDuplicateReviewApplicationId(applicationId);
+    setDuplicateReviewAutoRun(false);
+    setDuplicateReviewOpen(true);
+    await dispatch(getApplicationById({ id: applicationId }));
+    dispatch(getAllApplications());
+
+    if (!isBulk) {
+      navigate({
+        pathname: "/applicationMgt",
+        search: buildApplicationMgtSearch({ applicationId, edit: true }),
+      });
+      disableFtn(false);
+    }
+  };
 
   const duplicateReviewStatus =
     application?.personalDetails?.duplicateReview?.status ||
@@ -547,6 +858,8 @@ function ApplicationMgtDrawer({
   const draftIdFromUrl = searchParams.get("draftId") || "";
   /** Avoid resetting in-progress edits when Redux application object refreshes. */
   const loadedApplicationKeyRef = useRef(null);
+  /** Retain application id after a partial submit so retries update instead of create. */
+  const pendingSubmitApplicationIdRef = useRef(null);
   /** Edit mode follows URL only so "new application" clears reliably (no stale location.state). */
   const isEdit = Boolean(appIdFromUrl || draftIdFromUrl);
   const { applications, applicationsLoading } = useSelector(
@@ -1349,6 +1662,16 @@ function ApplicationMgtDrawer({
       ),
     [InfData?.subscriptionDetails?.membershipCategory, categoryData],
   );
+  const isHonoraryMembershipCategoryActive = useMemo(
+    () =>
+      isHonoraryMembershipCategory(
+        InfData?.subscriptionDetails?.membershipCategory,
+        categoryData,
+      ),
+    [InfData?.subscriptionDetails?.membershipCategory, categoryData],
+  );
+  const isPaymentOptionalCategory =
+    isUndergraduateStudentCategory || isHonoraryMembershipCategoryActive;
   const isNmbiNumberRequired =
     !isUndergraduateStudentCategory &&
     InfData.professionalDetails?.nursingAdaptationProgramme === false;
@@ -1382,6 +1705,7 @@ function ApplicationMgtDrawer({
 
   useEffect(() => {
     if (appIdFromUrl || draftIdFromUrl) return;
+    pendingSubmitApplicationIdRef.current = null;
     setInfData(inputValue);
     setOriginalData(null);
     setSelectedMember(null);
@@ -1509,6 +1833,11 @@ function ApplicationMgtDrawer({
       STUDENT_MEMBERSHIP_CATEGORY_ID,
       categoryData,
     );
+    const isHonorary = isHonoraryMembershipCategory(
+      InfData?.subscriptionDetails?.membershipCategory,
+      categoryData,
+    );
+    const isPaymentOptional = isUndergraduateStudent || isHonorary;
     const requiredFields = [
       "title",
       "forename",
@@ -1523,6 +1852,7 @@ function ApplicationMgtDrawer({
       "membershipCategory",
       "workLocation",
       "grade",
+      "primarySection",
       "paymentType",
       "termsAndConditions",
       "preferredAddress",
@@ -1532,6 +1862,8 @@ function ApplicationMgtDrawer({
       "joinYouthForum",
       "membershipStatus",
       "nursingAdaptationProgramme",
+      "dateJoined",
+      "submissionDate",
     ];
 
     const fieldLabels = {
@@ -1548,7 +1880,9 @@ function ApplicationMgtDrawer({
       membershipCategory: "Membership Category",
       workLocation: "Work Location",
       grade: "Grade",
+      primarySection: "Primary Section",
       paymentType: "Payment Method",
+      paymentFrequency: "Payment Frequency",
       termsAndConditions: "Terms and Conditions",
       preferredAddress: "Preferred Address",
       countryPrimaryQualification: "Country Primary Qualification",
@@ -1575,6 +1909,8 @@ function ApplicationMgtDrawer({
       nmbiNumber: "NMBI Number",
       region: "Region",
       branch: "Branch",
+      dateJoined: "Date Joined",
+      submissionDate: "Submission Date",
     };
 
     const fieldMap = {
@@ -1608,10 +1944,14 @@ function ApplicationMgtDrawer({
       pensionNo: ["professionalDetails", "pensionNo"],
 
       paymentType: ["subscriptionDetails", "paymentType"],
+      paymentFrequency: ["subscriptionDetails", "paymentFrequency"],
       termsAndConditions: ["subscriptionDetails", "termsAndConditions"],
       payrollNo: ["subscriptionDetails", "payrollNo"],
+      primarySection: ["subscriptionDetails", "primarySection"],
       otherPrimarySection: ["subscriptionDetails", "otherPrimarySection"],
       otherSecondarySection: ["subscriptionDetails", "otherSecondarySection"],
+      dateJoined: ["subscriptionDetails", "dateJoined"],
+      submissionDate: ["subscriptionDetails", "submissionDate"],
       nurseType: ["professionalDetails", "nurseType"],
       membershipStatus: ["subscriptionDetails", "membershipStatus"],
       nursingAdaptationProgramme: [
@@ -1642,8 +1982,23 @@ function ApplicationMgtDrawer({
       if (field === "nursingAdaptationProgramme" && isUndergraduateStudent) {
         return;
       }
+      if (field === "paymentType" && isPaymentOptional) {
+        return;
+      }
 
       const [section, key] = fieldMap[field] || [];
+      if (
+        (field === "dateJoined" || field === "submissionDate") &&
+        !InfData[section]?.[key]
+      ) {
+        newErrors[field] = "This field is required";
+        missingFieldNames.push(fieldLabels[field] || field);
+        return;
+      }
+      if (field === "dateJoined" || field === "submissionDate") {
+        return;
+      }
+
       const value = section ? InfData[section]?.[key] : null;
 
       const booleanAllowed = [
@@ -1786,6 +2141,28 @@ function ApplicationMgtDrawer({
       }
     }
 
+    if (!isPaymentOptional) {
+      if (!InfData.subscriptionDetails?.paymentFrequency?.trim()) {
+        newErrors.paymentFrequency = "Payment frequency is required";
+        missingFieldNames.push(fieldLabels.paymentFrequency);
+      }
+    }
+
+    if (isUndergraduateStudent) {
+      if (!InfData.professionalDetails?.startDate) {
+        newErrors.startDate = "Start date is required";
+        missingFieldNames.push(fieldLabels.startDate);
+      }
+    }
+
+    if (!InfData.subscriptionDetails?.termsAndConditions) {
+      newErrors.termsAndConditions =
+        "You must accept the terms and conditions";
+      if (!missingFieldNames.includes(fieldLabels.termsAndConditions)) {
+        missingFieldNames.push(fieldLabels.termsAndConditions);
+      }
+    }
+
     if (isOtherLookupSelection(InfData.subscriptionDetails.secondarySection)) {
       if (!InfData.subscriptionDetails.otherSecondarySection?.trim()) {
         newErrors.otherSecondarySection = "Other secondary section is required";
@@ -1794,7 +2171,7 @@ function ApplicationMgtDrawer({
     }
     if (
       !isUndergraduateStudent &&
-      InfData.professionalDetails?.nursingAdaptationProgramme === false
+      InfData.professionalDetails?.nursingAdaptationProgramme !== true
     ) {
       if (!InfData.professionalDetails.nmbiNumber?.trim()) {
         newErrors.nmbiNumber = "NMBI No/An Board Altranais Number is required";
@@ -1919,151 +2296,177 @@ function ApplicationMgtDrawer({
     if (!isValid) return;
     setIsProcessing(true);
     disableFtn(true);
+    let applicationId =
+      (isEdit && application?.applicationId) ||
+      pendingSubmitApplicationIdRef.current ||
+      null;
     try {
       const token = localStorage.getItem("token");
       if (!token) {
         throw new Error("No authentication token found");
       }
 
-      const apiData = withMembershipCategoryLabelsForApi(
-        dateUtils.prepareForAPI(InfData),
-      );
+      const apiData = prepareApplicationSubmitPayload(InfData, categoryData);
 
       const personalPayload = cleanPayload({
         personalInfo: apiData.personalInfo,
         contactInfo: apiData.contactInfo,
       });
 
-      const personalRes = await axios.post(
-        `${baseURL}/personal-details`,
+      const personalResult = await upsertPersonalDetailsForSubmit({
+        applicationId,
         personalPayload,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-        },
-      );
-
-      const applicationId = personalRes?.data?.data?.applicationId;
-
-      if (!applicationId) {
-        throw new Error("ApplicationId not returned from personal details API");
-      }
+        token,
+      });
+      applicationId = personalResult.applicationId;
+      pendingSubmitApplicationIdRef.current = applicationId;
 
       const professionalPayload = cleanPayload({
         professionalDetails: apiData.professionalDetails,
       });
 
-      await axios.post(
-        `${baseURL}/professional-details/${applicationId}`,
+      await upsertProfessionalDetailsForSubmit({
+        applicationId,
         professionalPayload,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-        },
-      );
+        token,
+      });
 
       const subscriptionPayload = cleanPayload({
         subscriptionDetails: apiData.subscriptionDetails,
       });
 
-      await axios.post(
-        `${baseURL}/subscription-details/${applicationId}`,
+      await upsertSubscriptionDetailsForSubmit({
+        applicationId,
         subscriptionPayload,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-        },
-      );
+        token,
+      });
+
+      pendingSubmitApplicationIdRef.current = null;
+
+      let duplicateDetected = false;
+      try {
+        const duplicateResult =
+          await runDuplicateDetectionForApplication(applicationId);
+        duplicateDetected =
+          hasPotentialDuplicateFromDetection(duplicateResult);
+      } catch (duplicateError) {
+        console.error("Duplicate detection failed:", duplicateError);
+      }
+
+      if (duplicateDetected) {
+        await focusSubmittedApplicationForDuplicateReview(applicationId, {
+          isBulk: selected?.Bulk === true,
+        });
+      }
 
       if (selected.Approve) {
-        try {
-          const okRetro = await confirmRetrospectiveMembershipModal(apiData);
-          if (!okRetro) {
+        if (duplicateDetected) {
+          if (selected?.Bulk !== true) {
             MyAlert(
-              "info",
-              "Approval cancelled",
-              "The application was saved. Approve from the list when you are ready.",
-            );
-          } else {
-            let approvalPayload;
-
-            if (isEdit && originalData) {
-              const apiOriginalData = withMembershipCategoryLabelsForApi(
-                dateUtils.prepareForAPI(originalData),
-              );
-              const proposedPatch = generatePatch(apiOriginalData, apiData);
-              approvalPayload = {
-                submission: apiData,
-                proposedPatch: proposedPatch,
-                notes: "Auto-approved with changes on submission",
-              };
-            } else {
-              const proposedPatch = generateCreatePatch(apiData);
-              approvalPayload = {
-                submission: apiData,
-                proposedPatch: proposedPatch,
-                notes: "Auto-approved on submission",
-              };
-            }
-
-            await axios.post(
-              `${process.env.REACT_APP_PROFILE_SERVICE_URL}/applications/${applicationId}/approve`,
-              approvalPayload,
-              {
-                headers: {
-                  "Content-Type": "application/json",
-                  Authorization: `Bearer ${token}`,
-                },
-              },
-            );
-
-            MyAlert(
-              "success",
-              "Application submitted and approved successfully!",
+              "warning",
+              "Potential duplicate detected",
+              DUPLICATE_REVIEW_REQUIRED_MESSAGE,
             );
           }
-        } catch (approveError) {
-          console.error("Approval failed:", approveError);
-          const duplicateBlocked =
-            approveError.response?.data?.code === "DUPLICATE_REVIEW_REQUIRED" ||
-            approveError.response?.data?.error?.code === "DUPLICATE_REVIEW_REQUIRED";
-          if (duplicateBlocked) {
-            MyAlert(
-              "warning",
-              "Duplicate review required",
-              approveError.response?.data?.message ||
-                "Open Duplicate Profile Review before approving this application.",
-            );
-            openDuplicateReviewDrawer(true);
-          } else {
-            MyAlert(
-              "warning",
-              "Application submitted successfully but approval failed",
-              "The application was created but could not be automatically approved. Please approve it manually.",
-            );
+        } else {
+          try {
+            const okRetro = await confirmRetrospectiveMembershipModal(apiData);
+            if (!okRetro) {
+              MyAlert(
+                "info",
+                "Approval cancelled",
+                "The application was saved. Approve from the list when you are ready.",
+              );
+            } else {
+              let approvalPayload;
+
+              if (isEdit && originalData) {
+                const apiOriginalData = withMembershipCategoryLabelsForApi(
+                  dateUtils.prepareForAPI(originalData),
+                );
+                const proposedPatch = generatePatch(apiOriginalData, apiData);
+                approvalPayload = {
+                  submission: apiData,
+                  proposedPatch: proposedPatch,
+                  notes: "Auto-approved with changes on submission",
+                };
+              } else {
+                const proposedPatch = generateCreatePatch(apiData);
+                approvalPayload = {
+                  submission: apiData,
+                  proposedPatch: proposedPatch,
+                  notes: "Auto-approved on submission",
+                };
+              }
+
+              await axios.post(
+                `${process.env.REACT_APP_PROFILE_SERVICE_URL}/applications/${applicationId}/approve`,
+                approvalPayload,
+                {
+                  headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${token}`,
+                  },
+                },
+              );
+
+              MyAlert(
+                "success",
+                "Application submitted and approved successfully!",
+              );
+            }
+          } catch (approveError) {
+            console.error("Approval failed:", approveError);
+            const duplicateBlocked =
+              approveError.response?.data?.code ===
+                "DUPLICATE_REVIEW_REQUIRED" ||
+              approveError.response?.data?.error?.code ===
+                "DUPLICATE_REVIEW_REQUIRED";
+            if (duplicateBlocked) {
+              MyAlert(
+                "warning",
+                "Duplicate review required",
+                approveError.response?.data?.message ||
+                  "Open Duplicate Profile Review before approving this application.",
+              );
+              await focusSubmittedApplicationForDuplicateReview(applicationId, {
+                isBulk: selected?.Bulk === true,
+              });
+            } else {
+              MyAlert(
+                "warning",
+                "Application submitted successfully but approval failed",
+                "The application was created but could not be automatically approved. Please approve it manually.",
+              );
+            }
           }
         }
-      } else {
+      } else if (duplicateDetected) {
+        if (selected?.Bulk !== true) {
+          MyAlert(
+            "warning",
+            "Potential duplicate detected",
+            "Application submitted. Review duplicate matches before approving.",
+          );
+        }
+      } else if (selected?.Bulk !== true) {
         MyAlert("success", "Application submitted successfully!");
       }
 
       if (selected?.Bulk !== true) {
-        setInfData(inputValue);
         setSelected((prev) => ({
           ...prev,
           Approve: false,
           Reject: false,
         }));
-        setSelectedMember(null);
-        setAddressSearchValue("");
-        setRecruiterSearchValue("");
-        navigate("/Applications");
+
+        if (!duplicateDetected) {
+          setInfData(inputValue);
+          setSelectedMember(null);
+          setAddressSearchValue("");
+          setRecruiterSearchValue("");
+          navigate("/Applications");
+        }
       } else {
         // Preserve ONLY the specified fields when Batch Entry is checked
         const preservedFields = {
@@ -2136,17 +2539,43 @@ function ApplicationMgtDrawer({
         }
 
         MyAlert(
-          "success",
-          "Application submitted successfully! Form cleared (except preserved fields) and ready for next entry.",
+          duplicateDetected ? "warning" : "success",
+          duplicateDetected
+            ? "Application submitted — potential duplicate detected"
+            : "Application submitted successfully! Form cleared (except preserved fields) and ready for next entry.",
+          duplicateDetected
+            ? "Review duplicate matches in the drawer before approving this application."
+            : undefined,
         );
       }
     } catch (error) {
       console.error("Submission error:", error);
-      MyAlert(
-        "error",
-        "Failed to submit application",
-        error?.response?.data?.error?.message || error.message,
-      );
+      if (applicationId) {
+        pendingSubmitApplicationIdRef.current = applicationId;
+        loadedApplicationKeyRef.current = String(applicationId);
+        if (!isEdit) {
+          navigate(
+            {
+              pathname: APPLICATION_MGT_PATH,
+              search: buildApplicationMgtSearch({ applicationId, edit: true }),
+            },
+            { replace: true },
+          );
+          dispatch(getApplicationById({ id: applicationId }));
+        }
+        MyAlert(
+          "warning",
+          "Application partially saved",
+          error?.message ||
+            "Some details were saved. Fix the remaining issues and submit again.",
+        );
+      } else {
+        MyAlert(
+          "error",
+          "Failed to submit application",
+          error?.message || extractApiErrorMessage(error),
+        );
+      }
     } finally {
       setIsProcessing(false);
       disableFtn(false);
@@ -2256,6 +2685,30 @@ function ApplicationMgtDrawer({
     return hasAnyChange;
   };
 
+  const hasUnsavedApplicationChanges = useMemo(() => {
+    if (isDisable) return false;
+
+    const apiInfData = withMembershipCategoryLabelsForApi(
+      dateUtils.prepareForAPI(InfData),
+    );
+    const baselineData = isEdit && originalData ? originalData : inputValue;
+    const apiBaselineData = withMembershipCategoryLabelsForApi(
+      dateUtils.prepareForAPI(baselineData),
+    );
+
+    return (
+      hasPersonalDetailsChanged(apiBaselineData, apiInfData) ||
+      hasProfessionalDetailsChanged(apiBaselineData, apiInfData) ||
+      hasSubscriptionDetailsChanged(apiInfData, apiBaselineData)
+    );
+  }, [isDisable, isEdit, originalData, InfData, categoryData]);
+
+  useRegisterUnsavedFormGuard(
+    "application-mgt-form",
+    hasUnsavedApplicationChanges,
+    !isDisable,
+  );
+
   const handleSave = async () => {
     if (isDisable) return;
     const isValid = validateForm();
@@ -2268,9 +2721,7 @@ function ApplicationMgtDrawer({
       if (!token) {
         throw new Error("No authentication token found");
       }
-      const apiData = withMembershipCategoryLabelsForApi(
-        dateUtils.prepareForAPI(InfData),
-      );
+      const apiData = prepareApplicationSubmitPayload(InfData, categoryData);
       if (!isEdit || !originalData) {
         throw new Error("Save operation requires edit mode and original data");
       }
@@ -3248,14 +3699,14 @@ function ApplicationMgtDrawer({
     setInfData(inputValue);
     setSelectedMember(null);
 
-    const nameParts = searchTerm.split(" ");
+    const nameParts = searchTerm.trim().split(/\s+/).filter(Boolean);
     if (nameParts.length >= 2) {
       setInfData((prev) => ({
         ...prev,
         personalInfo: {
           ...prev.personalInfo,
-          forename: nameParts[0],
-          surname: nameParts.slice(1).join(" "),
+          forename: toTitleCase(nameParts[0]),
+          surname: toTitleCase(nameParts.slice(1).join(" ")),
         },
       }));
     }
@@ -3370,13 +3821,16 @@ function ApplicationMgtDrawer({
             >
               Reject
             </Checkbox>
-            <Button
-              className="butn primary-btn"
-              disabled={isDisable}
-              onClick={() => handleSave()}
-            >
-              Save
-            </Button>
+            {isEdit && (
+              <Button
+                className="butn primary-btn"
+                disabled={isDisable || !originalData}
+                loading={isProcessing}
+                onClick={() => handleSave()}
+              >
+                Save
+              </Button>
+            )}
             {application?.applicationId &&
               !["approved", "rejected"].includes(
                 (
@@ -3452,6 +3906,12 @@ function ApplicationMgtDrawer({
           </div>
         </div>
         {emailConflictData?.hasConflict && <EmailConflictScreen />}
+        {isEdit && isMergedDuplicateReview(application) && (
+          <DuplicateMergeIndicator
+            application={application}
+            onViewMergeReview={() => openDuplicateReviewDrawer(false)}
+          />
+        )}
         {isEdit && isPotentialDuplicate && duplicateReviewPending && (
           <div
             style={{
@@ -4084,6 +4544,7 @@ function ApplicationMgtDrawer({
                   <AppFormCell>
                     <MyDatePicker1
                       label="Start Date"
+                      required
                       onChange={(date, datestring) => {
                         handleInputChange(
                           "professionalDetails",
@@ -4093,6 +4554,8 @@ function ApplicationMgtDrawer({
                       }}
                       disabled={isDisable}
                       value={InfData?.professionalDetails?.startDate}
+                      hasError={!!errors?.startDate}
+                      errorMessage={errors?.startDate}
                     />
                   </AppFormCell>
                   <AppFormCell>
@@ -4242,6 +4705,7 @@ function ApplicationMgtDrawer({
                   name="primarySection"
                   value={InfData.subscriptionDetails?.primarySection}
                   disabled={isDisable}
+                  required
                   onChange={(e) =>
                     handleInputChange(
                       "subscriptionDetails",
@@ -4250,6 +4714,7 @@ function ApplicationMgtDrawer({
                     )
                   }
                   options={sectionOptions}
+                  hasError={!!errors?.primarySection}
                 />
               </AppFormCell>
 
@@ -4607,6 +5072,7 @@ function ApplicationMgtDrawer({
                   className="w-100"
                   label="Submission Date"
                   name="submissionDate"
+                  required
                   value={InfData?.subscriptionDetails?.submissionDate}
                   disabled={isDisable || isEdit}
                   onChange={(date, dateString) => {
@@ -4624,7 +5090,7 @@ function ApplicationMgtDrawer({
                 <ApplicationMgtSelect
                   label="Payment Method"
                   name="paymentType"
-                  required
+                  required={!isPaymentOptionalCategory}
                   options={filteredPaymentTypeOptions}
                   disabled={isDisable}
                   onChange={(e) =>
@@ -4664,6 +5130,7 @@ function ApplicationMgtDrawer({
                   name="paymentFrequency"
                   options={CRM_PAYMENT_FREQUENCY_OPTIONS}
                   disabled={isDisable}
+                  required={!isPaymentOptionalCategory}
                   onChange={(e) =>
                     handleInputChange(
                       "subscriptionDetails",
@@ -4672,6 +5139,7 @@ function ApplicationMgtDrawer({
                     )
                   }
                   value={InfData.subscriptionDetails?.paymentFrequency}
+                  hasError={!!errors?.paymentFrequency}
                 />
               </AppFormCell>
 
@@ -5357,12 +5825,17 @@ function ApplicationMgtDrawer({
 
       <DuplicateProfileReview
         open={duplicateReviewOpen}
-        onClose={() => setDuplicateReviewOpen(false)}
-        applicationId={application?.applicationId}
+        onClose={() => {
+          setDuplicateReviewOpen(false);
+          setDuplicateReviewApplicationId(null);
+        }}
+        applicationId={duplicateReviewTargetId}
         runDetectionOnOpen={duplicateReviewAutoRun}
         onReviewUpdated={() => {
-          if (application?.applicationId) {
-            dispatch(getApplicationById({ id: application.applicationId }));
+          const reviewAppId = duplicateReviewTargetId;
+          if (reviewAppId) {
+            dispatch(getApplicationById({ id: reviewAppId }));
+            dispatch(getAllApplications());
           }
         }}
       />

@@ -489,14 +489,14 @@ const Breadcrumb = () => {
       page: "Region",
       icon: "📍",
     },
-    "/templeteConfig": {
+    "/templateConfig": {
       module: "Configuration",
-      page: "Templete Config",
+      page: "template Config",
       icon: "⚙️",
     },
-    "/templeteSummary": {
+    "/templateSummary": {
       module: "Configuration",
-      page: "Templete Summary",
+      page: "template Summary",
       icon: "⚙️",
     },
 

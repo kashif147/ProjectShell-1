@@ -21,9 +21,12 @@ import {
   getGridTemplates,
   deleteGridTemplate,
   setDefaultGridTemplate,
-} from "../../features/templete/templetefiltrsclumnapi";
+} from "../../features/template/templateFiltersColumnApi";
 import { useAuthorization } from "../../context/AuthorizationContext";
-import { getViewById, clearSelectedView } from "../../features/views/ViewByIdSlice";
+import {
+  getViewById,
+  clearSelectedView,
+} from "../../features/views/ViewByIdSlice";
 import {
   setActiveTemplateId,
   clearActiveTemplateId,
@@ -84,7 +87,7 @@ const SaveViewMenu = ({ className, style }) => {
   const { hasAnyRole } = useAuthorization();
   const canEditGridTemplates = hasAnyRole(["SU", "ASU"]);
   const { templates, loading } = useSelector(
-    (state) => state.templetefiltrsclumnapi,
+    (state) => state.templateFiltersColumnApi,
   );
 
   /** Bust Dropdown cache + drive re-render when any template’s isDefault changes after API refresh */
@@ -100,9 +103,7 @@ const SaveViewMenu = ({ className, style }) => {
         .map(
           (t) =>
             `${String(t._id)}:${
-              t && (t.isDefault === true || t.isDefault === "true")
-                ? 1
-                : 0
+              t && (t.isDefault === true || t.isDefault === "true") ? 1 : 0
             }`,
         )
         .join(",") || "";
@@ -207,8 +208,8 @@ const SaveViewMenu = ({ className, style }) => {
       normalizeTemplateType(template?.templateType) === "subscription");
 
   const resolvedCurrentTemplateId =
-    activeTemplateId ||
-    (isPaymentFormsPage ? paymentFormsTemplateId : currentTemplateId);
+    (isPaymentFormsPage ? paymentFormsTemplateId : currentTemplateId) ||
+    activeTemplateId;
 
   const isActiveSystemDefault = useMemo(() => {
     const id = String(resolvedCurrentTemplateId || "").trim();
@@ -229,11 +230,8 @@ const SaveViewMenu = ({ className, style }) => {
   };
 
   const resetScreenInitState = () => {
-    if (isPaymentFormsPage) {
-      dispatch(resetPaymentFormsInitialization());
-      return;
-    }
     dispatch(resetInitialization());
+    dispatch(resetPaymentFormsInitialization());
   };
 
   const setScreenTemplateId = (templateId) => {
@@ -413,7 +411,7 @@ const SaveViewMenu = ({ className, style }) => {
     // 1. Check if we have a persisted view in context for this screen
     const persistedTemplate = selectedTemplates[targetTemplateType];
 
-    if (persistedTemplate) {
+    if (persistedTemplate && isTemplateForCurrentType(persistedTemplate)) {
       handleApplyView(persistedTemplate, false); // false to avoid redundant context update
       return;
     }
@@ -454,7 +452,14 @@ const SaveViewMenu = ({ className, style }) => {
       initializeScreenWithTemplate("");
       dispatch(resetScreenChanged({ screen: activePage }));
     }
-  }, [dispatch, targetTemplateType, templates, loading, isMembersTemplateType, activePage]);
+  }, [
+    dispatch,
+    targetTemplateType,
+    templates,
+    loading,
+    isMembersTemplateType,
+    activePage,
+  ]);
 
   useEffect(() => {
     if (activeTemplateId) {
@@ -468,7 +473,10 @@ const SaveViewMenu = ({ className, style }) => {
       lastAppliedTemplateIdRef.current = null;
       return;
     }
-    if (!selectedView || String(selectedView._id) !== String(activeTemplateId)) {
+    if (
+      !selectedView ||
+      String(selectedView._id) !== String(activeTemplateId)
+    ) {
       return;
     }
     if (viewTemplateDetailKey) {
@@ -485,9 +493,7 @@ const SaveViewMenu = ({ className, style }) => {
     }
     lastAppliedTemplateIdRef.current = viewTemplateDetailKey;
 
-    applyViewPayloadToState(
-      normalizeViewTemplatePayload(selectedView),
-    );
+    applyViewPayloadToState(normalizeViewTemplatePayload(selectedView));
   }, [
     viewTemplateDetailKey,
     activeTemplateId,
@@ -625,7 +631,11 @@ const SaveViewMenu = ({ className, style }) => {
         },
       });
 
-      MyAlert("success", "Success", `View "${savedViewName}" saved successfully`);
+      MyAlert(
+        "success",
+        "Success",
+        `View "${savedViewName}" saved successfully`,
+      );
       setIsModalVisible(false);
       setViewName("");
 
@@ -656,7 +666,9 @@ const SaveViewMenu = ({ className, style }) => {
         handleApplyView(enrichedTemplate, true, { userPickedView: true });
         // Re-apply from the template payload: getViewById effect can skip when
         // hasUserOverriddenTemplateFilters is still true, leaving the chip UI out of sync.
-        const tFilters = transformFiltersForApply(enrichedTemplate.filters || {});
+        const tFilters = transformFiltersForApply(
+          enrichedTemplate.filters || {},
+        );
         const colScreen = tableColumnScreen;
         applyTemplate(
           colScreen,
@@ -667,8 +679,10 @@ const SaveViewMenu = ({ className, style }) => {
         );
         applyTemplateFilters(tFilters, {
           savedVisibleFilters:
-            resolveTemplateVisibleFilters(enrichedTemplate, targetTemplateType) ||
-            preservedVisibleFilters,
+            resolveTemplateVisibleFilters(
+              enrichedTemplate,
+              targetTemplateType,
+            ) || preservedVisibleFilters,
         });
         setActiveView(savedViewName);
         lastAppliedTemplateIdRef.current = keyForView(savedTemplate);
@@ -677,17 +691,21 @@ const SaveViewMenu = ({ className, style }) => {
       }
 
       // 3. Refresh the grid data
-      fetchListingByTemplate(savedTemplate?._id || resolvedCurrentTemplateId || "");
+      fetchListingByTemplate(
+        savedTemplate?._id || resolvedCurrentTemplateId || "",
+      );
     } catch (error) {
       console.error("Error saving template:", error);
       const apiMsg =
         error.response?.data?.message ||
         error.response?.data?.error?.message ||
         error.response?.data?.data ||
-        (typeof error.response?.data === "string"
-          ? error.response.data
-          : null);
-      MyAlert("error", "Error", apiMsg || error.message || "Failed to save template");
+        (typeof error.response?.data === "string" ? error.response.data : null);
+      MyAlert(
+        "error",
+        "Error",
+        apiMsg || error.message || "Failed to save template",
+      );
     } finally {
       setSaving(false);
     }
@@ -829,8 +847,7 @@ const SaveViewMenu = ({ className, style }) => {
                   template,
                   !!(
                     defaultUserTemplate &&
-                    String(template._id) ===
-                      String(defaultUserTemplate._id)
+                    String(template._id) === String(defaultUserTemplate._id)
                   ),
                 ),
               )}

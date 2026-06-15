@@ -49,7 +49,7 @@ export default function CreditorsListReport() {
   const { isInitialized } = useSelector((state) => state.applicationWithFilter);
   const { activeTemplateId } = useSelector((state) => state.activeTemplate);
   const { loading: templatesLoading } = useSelector(
-    (state) => state.templetefiltrsclumnapi,
+    (state) => state.templateFiltersColumnApi,
   );
 
   const [sourceRows, setSourceRows] = useState([]);
