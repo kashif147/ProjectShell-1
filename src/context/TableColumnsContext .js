@@ -57,6 +57,24 @@ import { Tooltip } from "antd";
 
 const TableColumnsContext = createContext();
 
+const APPLICATION_STATUS_LABELS = {
+  "in-progress": "In Progress",
+  submitted: "Submitted",
+  processed: "Processed",
+  rejected: "Rejected",
+};
+
+const EXECUTIVE_COUNCIL_STATUS_LABELS = {
+  pending: "Pending",
+  approved: "Approved",
+  rejected: "Rejected",
+};
+
+function formatStatusLabel(value, labels) {
+  if (!value) return "-";
+  return labels[String(value).toLowerCase()] || value;
+}
+
 function buildCreditNotesColumns() {
   return mergeGridColumnDefaults(GRID_COLUMN_DEFAULTS.CreditNotes || [], {
     docNo: {
@@ -316,9 +334,15 @@ function buildOnlinePaymentColumns() {
       render: (status) => {
         const value = String(status || "").toLowerCase();
         let color = "default";
-        if (value === "paid") color = "green";
+        if (value === "paid" || value === "captured") color = "green";
+        else if (value === "authorised" || value === "requires capture")
+          color = "blue";
+        else if (value === "cancelled" || value === "canceled") color = "default";
         else if (value === "refunded") color = "red";
-        else if (value === "pending") color = "orange";
+        else if (value === "pending" || value === "payment required") color = "orange";
+        else if (value === "refund required" || value === "manual review")
+          color = "purple";
+        else if (value === "authorisation expired") color = "volcano";
         else if (value === "failed") color = "volcano";
         return <Tag color={color}>{status || "—"}</Tag>;
       },
@@ -1709,13 +1733,50 @@ const staticColumns = {
         if (!status) return "-";
         const statusLower = status.toLowerCase();
         let color = "blue"; // default color
-        if (statusLower === "approved") {
+        if (statusLower === "processed") {
           color = "green";
         } else if (statusLower === "rejected") {
           color = "volcano";
         }
-        return <Tag color={color}>{status}</Tag>;
+        return (
+          <Tag color={color}>
+            {formatStatusLabel(status, APPLICATION_STATUS_LABELS)}
+          </Tag>
+        );
       },
+    },
+    {
+      dataIndex: ["executiveCouncilApprovalDetails", "status"],
+      title: "Executive Council Status",
+      ellipsis: true,
+      isGride: true,
+      isVisible: true,
+      width: 190,
+      editable: false,
+      render: (status = "pending") => {
+        const statusLower = String(status || "pending").toLowerCase();
+        const color =
+          statusLower === "approved"
+            ? "green"
+            : statusLower === "rejected"
+              ? "volcano"
+              : "blue";
+        return (
+          <Tag color={color}>
+            {formatStatusLabel(statusLower, EXECUTIVE_COUNCIL_STATUS_LABELS)}
+          </Tag>
+        );
+      },
+    },
+    {
+      dataIndex: ["executiveCouncilApprovalDetails", "decisionDate"],
+      title: "Executive Council Decision Date",
+      ellipsis: true,
+      isGride: true,
+      isVisible: true,
+      width: 230,
+      editable: false,
+      render: (value) => (value ? formatDateOnly(value) : "-"),
     },
     {
       dataIndex: "createdAt",
@@ -1913,10 +1974,10 @@ const staticColumns = {
     },
     // { dataIndex: ["personalDetails", "contactInfo", "consentEmail"], title: "Consent Email", ellipsis: true, isGride: true, isVisible: true, width: 120, editable: false },
 
-    // 🔹 Approval Info
+    // 🔹 Processing Info
     {
       dataIndex: ["approvalDetails", "approvedBy"],
-      title: "Approved By",
+      title: "Processed By",
       ellipsis: true,
       isGride: true,
       isVisible: true,
@@ -1925,7 +1986,7 @@ const staticColumns = {
     },
     {
       dataIndex: ["approvalDetails", "approvedAt"],
-      title: "Approved At",
+      title: "Processed At",
       ellipsis: true,
       isGride: true,
       isVisible: true,
@@ -3488,9 +3549,17 @@ const staticColumns = {
         if (!status) return "-";
         const statusLower = String(status).toLowerCase();
         let color = "default";
-        if (statusLower === "paid") color = "green";
-        else if (statusLower === "pending") color = "orange";
+        if (statusLower === "paid" || statusLower === "captured") color = "green";
+        else if (statusLower === "authorised" || statusLower === "requires capture")
+          color = "blue";
+        else if (statusLower === "pending" || statusLower === "payment required")
+          color = "orange";
         else if (statusLower === "unpaid") color = "red";
+        else if (statusLower === "cancelled" || statusLower === "canceled")
+          color = "default";
+        else if (statusLower === "refund required" || statusLower === "manual review")
+          color = "purple";
+        else if (statusLower === "authorisation expired") color = "volcano";
         else if (statusLower === "refunded") color = "purple";
         return <Tag color={color}>{status}</Tag>;
       },
@@ -6262,10 +6331,18 @@ export const TableColumnsProvider = ({ children }) => {
 
   const handleCheckboxFilterChange = useCallback(
     (key, isChecked, screenName, width) => {
+      const toColumnKey = (column) => {
+        if (!column) return "";
+        const dataIndex = column.dataIndex;
+        if (Array.isArray(dataIndex)) return dataIndex.join(".");
+        if (dataIndex) return String(dataIndex);
+        if (column.key) return String(column.key);
+        return String(column.title || "");
+      };
       setColumns((prevColumns) => ({
         ...prevColumns,
         [screenName]: prevColumns[screenName].map((column) =>
-          column.title === key
+          toColumnKey(column) === key || column.title === key
             ? { ...column, isGride: isChecked, width }
             : column,
         ),
@@ -7135,7 +7212,8 @@ export const TableColumnsProvider = ({ children }) => {
         if (!label || !contextByIndex[index]) return col;
         return {
           ...col,
-          title: `${label} (${contextByIndex[index]})`,
+          title: label,
+          contextLabel: contextByIndex[index],
         };
       });
 

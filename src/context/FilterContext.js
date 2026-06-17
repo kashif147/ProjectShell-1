@@ -2209,7 +2209,7 @@ export const FilterProvider = ({ children }) => {
       "Application Status": [
         "",
         "In-Progress",
-        "Approved",
+        "Processed",
         "Rejected",
         "Submitted",
       ],

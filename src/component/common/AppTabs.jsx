@@ -638,7 +638,7 @@ function AppTabs() {
       render: (date) => formatDateOnly(date),
     },
     {
-      title: "Approval Date",
+      title: "Processing Date",
       dataIndex: "approvalDate",
       key: "approvalDate",
       render: (date) => formatDateOnly(date),
@@ -649,11 +649,15 @@ function AppTabs() {
       key: "joinDate",
       render: (date) => formatDateOnly(date),
     },
-    { title: "Approved By", dataIndex: "approvedBy", key: "approvedBy" },
+    { title: "Processed By", dataIndex: "approvedBy", key: "approvedBy" },
     {
       title: "Status",
       dataIndex: "applicationStatus",
       key: "applicationStatus",
+      render: (status) =>
+        String(status || "").toLowerCase() === "processed"
+          ? "Processed"
+          : status,
     },
   ];
 

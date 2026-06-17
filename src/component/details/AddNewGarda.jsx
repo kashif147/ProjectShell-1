@@ -809,7 +809,7 @@ function AddNewGarda({ open, onClose, isGard }) {
         nextPrevData={{ total: applications?.length }}
         nextFtn={() => navigateApplication("next")}
         PrevFtn={() => navigateApplication("prev")}
-        handleChangeApprove={() => applicationStatusUpdate("approved")}
+        handleChangeApprove={() => applicationStatusUpdate("processed")}
         isAppRej={true}
         rejFtn={() => applicationStatusUpdate("rejected")}
         add={handleSubmit}

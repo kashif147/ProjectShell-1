@@ -368,7 +368,7 @@ const Breadcrumb = () => {
     },
     "/AproveMembersip": {
       module: "Subscriptions & Rewards",
-      page: "Approve Membership",
+      page: "Process Membership",
       icon: "✅",
       recordIdField: "code",
     },
@@ -584,7 +584,7 @@ const Breadcrumb = () => {
       listingSearch: "Applications",
     },
     "/AproveMembersip": {
-      pageLabel: "Approve Membership",
+      pageLabel: "Process Membership",
       listingPath: "/Applications",
       listingSearch: "Applications",
     },

@@ -130,7 +130,7 @@ const MembershipApplication = lazyWithRetry(
 const ApplicationMgt = lazyWithRetry(
   () => import("./component/applications/ApplicationMgtDrawer"),
 );
-const ApproveMembership = lazyWithRetry(
+const ProcessMembership = lazyWithRetry(
   () => import("./pages/application/ApproveMembership"),
 );
 const ChangCateSumm = lazyWithRetry(
@@ -888,7 +888,7 @@ function Entry() {
                             path="AproveMembersip"
                             element={
                               <ProtectedRoute>
-                                <ApproveMembership />
+                                <ProcessMembership />
                               </ProtectedRoute>
                             }
                           />

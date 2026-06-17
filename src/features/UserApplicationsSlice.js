@@ -6,7 +6,7 @@ const initialState = {
             _id: "APP-001",
             id: "APP-001",
             subscriptionDetails: { membershipCategory: "General" },
-            applicationStatus: "Approved",
+            applicationStatus: "Processed",
             createdAt: "2024-01-01T10:00:00Z",
             updatedAt: "2024-01-05T15:30:00Z",
             personalDetails: {

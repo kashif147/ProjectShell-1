@@ -44,6 +44,14 @@ import { bumpDebtorsListReportReload } from "../../utils/debtorsListReportWorksp
 import { bumpMembershipStatisticsReportReload } from "../../utils/membershipStatisticsReportWorkspace";
 import { bumpWorkplaceBreakdownReportReload } from "../../utils/workplaceBreakdownReportWorkspace";
 
+const getColumnIdentity = (col) => {
+  if (!col) return "";
+  if (Array.isArray(col.dataIndex)) return col.dataIndex.join(".");
+  if (col.dataIndex) return String(col.dataIndex);
+  if (col.key) return String(col.key);
+  return String(col.title || "");
+};
+
 function Gridmenu({
   title,
   screenName,
@@ -270,16 +278,19 @@ function Gridmenu({
     }
   };
 
-  const handleChange = (title, checked, screen, width) => {
+  const handleChange = (columnKey, checked, screen, width) => {
     const updated = columnsForFilter.map((col) => {
-      if (col.title === title) {
+      if (getColumnIdentity(col) === columnKey) {
         return { ...col, isGride: checked };
       }
       return col;
     });
 
-    const changed = updated.find((col) => col.title === title);
-    const withoutChanged = updated.filter((col) => col.title !== title);
+    const changed = updated.find((col) => getColumnIdentity(col) === columnKey);
+    if (!changed) return;
+    const withoutChanged = updated.filter(
+      (col) => getColumnIdentity(col) !== columnKey,
+    );
     const selected = withoutChanged.filter((col) => col.isGride);
     const unselected = withoutChanged
       .filter((col) => !col.isGride)
@@ -312,7 +323,7 @@ function Gridmenu({
     setColumnsForFilter(reordered);
     const newData = reordered.filter((col) => col.isGride);
     setColumnsDragbe(newData);
-    handleCheckboxFilterChange(title, checked, screen, width);
+    handleCheckboxFilterChange(columnKey, checked, screen, width);
     if (reorderGridColumns) {
       const keys = reordered
         .filter((c) => c.isGride)
@@ -449,7 +460,7 @@ function Gridmenu({
                       }}
                       onChange={(e) => {
                         handleChange(
-                          col?.title,
+                          getColumnIdentity(col),
                           e.target.checked,
                           screenName,
                           col?.width,
@@ -458,7 +469,15 @@ function Gridmenu({
                       onMouseDown={(e) => e.stopPropagation()} // Stop menu closure on click
                       checked={col.isGride}
                     >
-                      {col?.title}
+                      <span title={col?.contextLabel || ""}>
+                        {col?.title}
+                        {col?.contextLabel ? (
+                          <span style={{ color: "#777", fontSize: 12 }}>
+                            {" "}
+                            ({col.contextLabel})
+                          </span>
+                        ) : null}
+                      </span>
                     </Checkbox>
                   </div>
                 </Col>

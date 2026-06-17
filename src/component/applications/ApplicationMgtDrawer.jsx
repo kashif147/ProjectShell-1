@@ -2374,8 +2374,8 @@ function ApplicationMgtDrawer({
             if (!okRetro) {
               MyAlert(
                 "info",
-                "Approval cancelled",
-                "The application was saved. Approve from the list when you are ready.",
+                "Processing cancelled",
+                "The application was saved. Process from the list when you are ready.",
               );
             } else {
               let approvalPayload;
@@ -2388,14 +2388,14 @@ function ApplicationMgtDrawer({
                 approvalPayload = {
                   submission: apiData,
                   proposedPatch: proposedPatch,
-                  notes: "Auto-approved with changes on submission",
+                  notes: "Auto-processed with changes on submission",
                 };
               } else {
                 const proposedPatch = generateCreatePatch(apiData);
                 approvalPayload = {
                   submission: apiData,
                   proposedPatch: proposedPatch,
-                  notes: "Auto-approved on submission",
+                  notes: "Auto-processed on submission",
                 };
               }
 
@@ -2412,7 +2412,7 @@ function ApplicationMgtDrawer({
 
               MyAlert(
                 "success",
-                "Application submitted and approved successfully!",
+                "Application submitted and processed successfully!",
               );
             }
           } catch (approveError) {
@@ -2427,7 +2427,7 @@ function ApplicationMgtDrawer({
                 "warning",
                 "Duplicate review required",
                 approveError.response?.data?.message ||
-                  "Open Duplicate Profile Review before approving this application.",
+                  "Open Duplicate Profile Review before processing this application.",
               );
               await focusSubmittedApplicationForDuplicateReview(applicationId, {
                 isBulk: selected?.Bulk === true,
@@ -2435,8 +2435,8 @@ function ApplicationMgtDrawer({
             } else {
               MyAlert(
                 "warning",
-                "Application submitted successfully but approval failed",
-                "The application was created but could not be automatically approved. Please approve it manually.",
+                "Application submitted successfully but processing failed",
+                "The application was created but could not be automatically processed. Please process it manually.",
               );
             }
           }
@@ -2446,7 +2446,7 @@ function ApplicationMgtDrawer({
           MyAlert(
             "warning",
             "Potential duplicate detected",
-            "Application submitted. Review duplicate matches before approving.",
+            "Application submitted. Review duplicate matches before processing.",
           );
         }
       } else if (selected?.Bulk !== true) {
@@ -2544,7 +2544,7 @@ function ApplicationMgtDrawer({
             ? "Application submitted — potential duplicate detected"
             : "Application submitted successfully! Form cleared (except preserved fields) and ready for next entry.",
           duplicateDetected
-            ? "Review duplicate matches in the drawer before approving this application."
+            ? "Review duplicate matches in the drawer before processing this application."
             : undefined,
         );
       }
@@ -3263,12 +3263,12 @@ function ApplicationMgtDrawer({
       const status = application.applicationStatus?.toLowerCase();
       setCurrentApplication(application);
 
-      const shouldDisableForm = ["approved"].includes(status);
+      const shouldDisableForm = ["processed"].includes(status);
       disableFtn(shouldDisableForm);
 
       setSelected((prev) => ({
         ...prev,
-        Approve: status === "approved",
+        Approve: status === "processed",
         Reject: status === "rejected",
       }));
     } else {
@@ -3280,7 +3280,7 @@ function ApplicationMgtDrawer({
     const { name, checked } = e.target;
 
     const status = application?.applicationStatus?.toLowerCase();
-    const readOnlyStatuses = ["approved"];
+    const readOnlyStatuses = ["processed"];
 
     if (readOnlyStatuses.includes(status) && name === "Approve") {
       return;
@@ -3302,7 +3302,7 @@ function ApplicationMgtDrawer({
         Reject: false,
       }));
 
-      handleApplicationAction("approved");
+      handleApplicationAction("processed");
     }
 
     if (name === "Reject" && checked === true) {
@@ -3370,7 +3370,7 @@ function ApplicationMgtDrawer({
 
       const hasChanges = proposedPatch && proposedPatch.length > 0;
 
-      if (action === "approved") {
+      if (action === "processed") {
         if (duplicateReviewPending) {
           message.warning(DUPLICATE_REVIEW_REQUIRED_MESSAGE);
           openDuplicateReviewDrawer(false);
@@ -3502,13 +3502,13 @@ function ApplicationMgtDrawer({
 
       setSelected((prev) => ({
         ...prev,
-        Approve: action === "approved",
+        Approve: action === "processed",
         Reject: action === "rejected",
       }));
 
       const successMessage =
-        action === "approved"
-          ? "Application approved successfully!"
+        action === "processed"
+          ? "Application processed successfully!"
           : "Application rejected successfully!";
 
       MyAlert("success", successMessage);
@@ -3535,7 +3535,7 @@ function ApplicationMgtDrawer({
           "warning",
           "Duplicate review required",
           error.response?.data?.message ||
-            "Open Duplicate Profile Review before approving this application.",
+            "Open Duplicate Profile Review before processing this application.",
         );
         openDuplicateReviewDrawer(false);
       } else {
@@ -3603,13 +3603,13 @@ function ApplicationMgtDrawer({
       }
 
       const status = newApplication.applicationStatus?.toLowerCase();
-      const readOnlyStatuses = ["approved", "in-progress"];
+      const readOnlyStatuses = ["processed", "in-progress"];
 
       if (readOnlyStatuses.includes(status)) {
         disableFtn(true);
         setSelected((prev) => ({
           ...prev,
-          Approve: status === "approved",
+          Approve: status === "processed",
           Reject: status === "rejected",
         }));
       } else {
@@ -3806,7 +3806,7 @@ function ApplicationMgtDrawer({
               }
               onChange={handleChange}
             >
-              Approve
+              Process
             </Checkbox>
             <Checkbox
               name="Reject"
@@ -3832,7 +3832,7 @@ function ApplicationMgtDrawer({
               </Button>
             )}
             {application?.applicationId &&
-              !["approved", "rejected"].includes(
+              !["processed", "rejected"].includes(
                 (
                   application?.applicationStatus ||
                   application?.personalDetails?.applicationStatus ||
@@ -3937,7 +3937,7 @@ function ApplicationMgtDrawer({
               </span>
               <span style={{ color: "#820014", fontSize: 13 }}>
                 Resolve all matches (Create New Profile, Ignore Match, Tag this
-                Profile, or Merge this Profile) before approval.
+                Profile, or Merge this Profile) before processing.
               </span>
             </div>
             <Button
