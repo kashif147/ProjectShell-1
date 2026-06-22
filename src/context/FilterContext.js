@@ -2253,7 +2253,15 @@ export const FilterProvider = ({ children }) => {
       "Cancellation Flag": ["", "Yes", "No"],
       "Cancellation/Reinstated": ["", "Yes", "No"],
       "Payment Frequency": ["", "Monthly", "Quarterly", "Yearly"],
-      "Membership Movement": ["", "NewJoin", "Rejoin", "Reinstate", "Renewed"],
+      "Membership Movement": [
+        "",
+        "NewJoin",
+        "Rejoin - Cancelled",
+        "Rejoin - Resigned",
+        "Reinstate - Suspended",
+        "Reinstate - Archived",
+        "Renewed",
+      ],
       "Payment Method":
         lookupsloading && !paymentTypeOptions?.length
           ? ["Loading..."]

@@ -17,6 +17,24 @@
   margin-bottom: 16px;
 }
 
+.duplicate-profile-review-drawer .duplicate-review-decision-history {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 16px;
+  padding: 10px 12px;
+  background: #fafafa;
+  border: 1px solid #f0f0f0;
+  border-radius: 6px;
+}
+
+.duplicate-profile-review-drawer .duplicate-review-decision-history-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
 .duplicate-profile-review-drawer .duplicate-review-actions-bar {
   display: flex;
   align-items: flex-start;

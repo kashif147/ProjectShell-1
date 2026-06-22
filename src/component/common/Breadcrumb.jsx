@@ -44,6 +44,7 @@ const Breadcrumb = () => {
     Events: { icon: "📅", route: "/EventsDashboard" },
     Configuration: { icon: "⚙️", route: "/Configuration" },
     Reports: { icon: "📊", route: "/Reports" },
+    "Year-End Renewal": { icon: "📅", route: "/YearEndRenewal" },
     Settings: { icon: "⚙️", route: "/Configuration" },
     Courses: { icon: "📚", route: "/Courses" },
     "Professional Development": {
@@ -360,6 +361,11 @@ const Breadcrumb = () => {
       module: "Subscriptions & Rewards",
       page: "Payment Forms",
       icon: "📋",
+    },
+    "/YearEndRenewal": {
+      module: "Year-End Renewal",
+      page: "Year-End Renewal",
+      icon: "📅",
     },
     "/applicationMgt": {
       module: "Subscriptions & Rewards",
@@ -853,6 +859,7 @@ const Breadcrumb = () => {
       Correspondence: "/CorrespondenceDashboard",
       Finance: "/onlinePayment",
       Reports: "/Reports",
+      "Year-End Renewal": "/YearEndRenewal",
       Events: "/EventsDashboard",
       Settings: "/Configuration",
       Courses: "/Courses",

@@ -71,6 +71,7 @@ import {
 // import axios from "axios";
 import { useTableColumns } from "../../context/TableColumnsContext ";
 import { useFinanceTabToolbar } from "../../context/FinanceTabToolbarContext";
+import { hasFinanceActionRole } from "../../utils/profileRoleAccess";
 
 const financeMoreActionsButtonStyle = {
   backgroundColor: "#45669d",
@@ -833,11 +834,13 @@ const TransactionHistory = () => {
   const location = useLocation();
   const [searchParams] = useSearchParams();
   const { profileDetails } = useSelector((state) => state.profileDetails || {});
-  const { permissions: userPermissions = [] } = useAuthorization();
+  const { permissions: userPermissions = [], roles: userRoles = [] } =
+    useAuthorization();
+  const canPerformFinanceActions = hasFinanceActionRole(userRoles);
   const ledgerActionsPermissionsParam = useMemo(() => {
-    if (!userPermissions?.length) return undefined;
+    if (!canPerformFinanceActions || !userPermissions?.length) return undefined;
     return userPermissions.join(",");
-  }, [userPermissions]);
+  }, [canPerformFinanceActions, userPermissions]);
 
   // Try to get memberId from location state first, then fallback to Redux profileDetails
   const memberId =
@@ -1755,7 +1758,7 @@ const TransactionHistory = () => {
       const inflight = rowActionsInflightRef.current.get(key);
       if (inflight) return inflight;
 
-      if (!ledgerRowMayHaveActions(record)) {
+      if (!canPerformFinanceActions || !ledgerRowMayHaveActions(record)) {
         const empty = { actions: [], badges: [] };
         setRowActionsCache((prev) => {
           if (Object.prototype.hasOwnProperty.call(prev, key)) return prev;
@@ -1804,7 +1807,12 @@ const TransactionHistory = () => {
       rowActionsInflightRef.current.set(key, promise);
       return promise;
     },
-    [memberId, pendingCreditNotes, ledgerActionsPermissionsParam],
+    [
+      canPerformFinanceActions,
+      memberId,
+      pendingCreditNotes,
+      ledgerActionsPermissionsParam,
+    ],
   );
 
   useEffect(() => {
@@ -1814,7 +1822,7 @@ const TransactionHistory = () => {
   }, [pendingCreditNotes, ledgerActionsPermissionsParam]);
 
   useEffect(() => {
-    if (!memberId || !data.length) return undefined;
+    if (!canPerformFinanceActions || !memberId || !data.length) return undefined;
 
     const gen = rowActionsPrefetchGenRef.current + 1;
     rowActionsPrefetchGenRef.current = gen;
@@ -1852,6 +1860,7 @@ const TransactionHistory = () => {
     };
   }, [
     data,
+    canPerformFinanceActions,
     memberId,
     fetchRowLedgerActions,
     pendingCreditNotes,
@@ -1860,6 +1869,15 @@ const TransactionHistory = () => {
 
   const runLedgerAction = useCallback(
     async (actionId, record) => {
+      if (!canPerformFinanceActions) {
+        notification.warning({
+          message: "Finance action access required",
+          description:
+            "Only Accounts Manager and Deputy Accounts Manager roles can perform Finance tab actions.",
+          placement: "topRight",
+        });
+        return;
+      }
       switch (actionId) {
         case "create-credit-note":
           openCreateCreditNote([record]);
@@ -2131,6 +2149,7 @@ const TransactionHistory = () => {
     },
     [
       authHeaders,
+      canPerformFinanceActions,
       financeSummary,
       handleCreditNoteCancel,
       memberId,
@@ -2939,7 +2958,7 @@ const TransactionHistory = () => {
   useLayoutEffect(() => {
     const setExtras = financeToolbarApi?.setFinanceTabBarExtra;
     if (!setExtras) return undefined;
-    if (!memberId) {
+    if (!memberId || !canPerformFinanceActions) {
       setExtras(null);
       return undefined;
     }
@@ -3036,6 +3055,7 @@ const TransactionHistory = () => {
     return () => setExtras(null);
   }, [
     financeToolbarApi,
+    canPerformFinanceActions,
     memberId,
     ledgerView,
     refundMenuEnabled,

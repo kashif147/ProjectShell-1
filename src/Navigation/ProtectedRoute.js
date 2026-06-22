@@ -10,6 +10,7 @@ const ProtectedRoute = ({
   requiredRole = null,
   requiredPermissions = [],
   requiredRoles = [],
+  requireAnyAccess = false,
   requireAllPermissions = false,
   requireAllRoles = false,
   redirectTo = "/",
@@ -78,8 +79,46 @@ const ProtectedRoute = ({
     );
   }
 
+  const hasPermissionRequirement =
+    requiredPermission || requiredPermissions.length > 0;
+  const hasRoleRequirement = requiredRole || requiredRoles.length > 0;
+
+  if (requireAnyAccess && (hasPermissionRequirement || hasRoleRequirement)) {
+    const permissionAccess =
+      !hasPermissionRequirement ||
+      (requiredPermission && hasPermission(requiredPermission)) ||
+      (requiredPermissions.length > 0 &&
+        (requireAllPermissions
+          ? hasAllPermissions(requiredPermissions)
+          : hasAnyPermission(requiredPermissions)));
+    const roleAccess =
+      !hasRoleRequirement ||
+      (requiredRole && hasRole(requiredRole)) ||
+      (requiredRoles.length > 0 &&
+        (requireAllRoles
+          ? hasAllRoles(requiredRoles)
+          : hasAnyRole(requiredRoles)));
+
+    if (!permissionAccess && !roleAccess) {
+      return (
+        unauthorizedComponent || (
+          <Result
+            status="403"
+            title="Access Denied"
+            subTitle="You don't have the required access to this resource."
+            extra={
+              <Button type="primary" onClick={() => window.history.back()}>
+                Go Back
+              </Button>
+            }
+          />
+        )
+      );
+    }
+  }
+
   // Check single permission
-  if (requiredPermission && !hasPermission(requiredPermission)) {
+  if (!requireAnyAccess && requiredPermission && !hasPermission(requiredPermission)) {
     return (
       unauthorizedComponent || (
         <Result
@@ -97,7 +136,7 @@ const ProtectedRoute = ({
   }
 
   // Check multiple permissions
-  if (requiredPermissions.length > 0) {
+  if (!requireAnyAccess && requiredPermissions.length > 0) {
     const hasAccess = requireAllPermissions
       ? hasAllPermissions(requiredPermissions)
       : hasAnyPermission(requiredPermissions);
@@ -121,7 +160,7 @@ const ProtectedRoute = ({
   }
 
   // Check single role
-  if (requiredRole && !hasRole(requiredRole)) {
+  if (!requireAnyAccess && requiredRole && !hasRole(requiredRole)) {
     return (
       unauthorizedComponent || (
         <Result
@@ -139,7 +178,7 @@ const ProtectedRoute = ({
   }
 
   // Check multiple roles
-  if (requiredRoles.length > 0) {
+  if (!requireAnyAccess && requiredRoles.length > 0) {
     const hasAccess = requireAllRoles
       ? hasAllRoles(requiredRoles)
       : hasAnyRole(requiredRoles);

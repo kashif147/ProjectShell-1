@@ -36,6 +36,7 @@ export const MENU_MODULE_KEYS = [
   "Reports",
   "Cases",
   "Membership",
+  "Year-End Renewal",
 ];
 
 export function normalizeRoleCodes(roles = []) {
@@ -95,6 +96,7 @@ export function getHomeRouteFromMenuKey(menuKey) {
     "Issues Management": "/IssuesManagementDashboard",
     Events: "/EventsDashboard",
     Reports: "/Reports",
+    "Year-End Renewal": "/YearEndRenewal",
   };
   return routes[menuKey] || "/MembershipDashboard";
 }

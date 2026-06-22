@@ -140,6 +140,9 @@ const CateById = lazyWithRetry(() => import("./pages/Category/CateById"));
 const RemindersSummary = lazyWithRetry(
   () => import("./pages/reminders/RemindersSummary"),
 );
+const YearEndRenewal = lazyWithRetry(
+  () => import("./pages/membership/YearEndRenewal"),
+);
 const Cancallation = lazyWithRetry(() => import("./pages/Cancallation"));
 const CancellationDetail = lazyWithRetry(
   () => import("./pages/cancellation/CancellationDetail"),
@@ -924,6 +927,21 @@ function Entry() {
                                 }
                               >
                                 <RemindersSummary />
+                              </ProtectedRoute>
+                            }
+                          />
+                          <Route
+                            path="YearEndRenewal"
+                            element={
+                              <ProtectedRoute
+                                requiredPermissions={[
+                                  "subscriptions:write",
+                                  "payments:write",
+                                ]}
+                                requiredRoles={["SU"]}
+                                requireAnyAccess
+                              >
+                                <YearEndRenewal />
                               </ProtectedRoute>
                             }
                           />

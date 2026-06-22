@@ -54,6 +54,30 @@ export async function fetchUsersByRoleId(
   return normalizeUsersResponse(data);
 }
 
+export async function fetchUsersByRoleIds(
+  roleIds = [],
+  token = localStorage.getItem("token"),
+) {
+  const ids = [...new Set((roleIds || []).filter(Boolean))];
+  if (ids.length === 0 || !token) return {};
+
+  const baseUrl = getUserServiceBaseUrl();
+  const params = new URLSearchParams({ roleIds: ids.join(",") });
+  const response = await fetch(`${baseUrl}/roles/users/by-role?${params}`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error("Failed to fetch users for roles");
+  }
+
+  const data = await response.json();
+  return data?.data && typeof data.data === "object" ? data.data : {};
+}
+
 /**
  * Load officer users per drawer from tenant roles catalog:
  * IRO → Work Location, BO → Branch, RO → Region.
@@ -65,33 +89,21 @@ export async function fetchOfficerRoleUsers(
 ) {
   const roles = extractRolesArray(catalogRoles);
   const roleIds = resolveOfficerRoleIdsFromRolesList(roles);
+  const usersByRoleId = await fetchUsersByRoleIds(
+    [roleIds.iro, roleIds.branch, roleIds.region],
+    token,
+  ).catch((error) => {
+    console.error("Failed to fetch officer role users:", error);
+    return {};
+  });
 
-  const [iroUsers, branchUsers, regionUsers] = await Promise.all([
-    roleIds.iro
-      ? fetchUsersByRoleId(roleIds.iro, token).catch((error) => {
-          console.error(`Failed to fetch IRO users for role ${roleIds.iro}:`, error);
-          return [];
-        })
-      : Promise.resolve([]),
-    roleIds.branch
-      ? fetchUsersByRoleId(roleIds.branch, token).catch((error) => {
-          console.error(
-            `Failed to fetch Branch Officer users for role ${roleIds.branch}:`,
-            error,
-          );
-          return [];
-        })
-      : Promise.resolve([]),
-    roleIds.region
-      ? fetchUsersByRoleId(roleIds.region, token).catch((error) => {
-          console.error(
-            `Failed to fetch Region Officer users for role ${roleIds.region}:`,
-            error,
-          );
-          return [];
-        })
-      : Promise.resolve([]),
-  ]);
+  const iroUsers = roleIds.iro ? normalizeUsersResponse(usersByRoleId[roleIds.iro]) : [];
+  const branchUsers = roleIds.branch
+    ? normalizeUsersResponse(usersByRoleId[roleIds.branch])
+    : [];
+  const regionUsers = roleIds.region
+    ? normalizeUsersResponse(usersByRoleId[roleIds.region])
+    : [];
 
   return { iroUsers, branchUsers, regionUsers, roleIds };
 }

@@ -9,9 +9,24 @@ export const DUPLICATE_REVIEW_APPROVAL_ALLOWED_STATUSES = new Set([
 export const DUPLICATE_REVIEW_REQUIRED_MESSAGE =
   "Duplicate review is required before approval. Open Duplicate Profile Review and choose Create New Profile, Ignore Match, Tag this Profile, or Merge this Profile.";
 
+export const APPLICATION_DUPLICATE_REVIEW_LOCKED_MESSAGE =
+  "This application has already been processed. Duplicate records can only be managed from the Profile section.";
+
 export function isDuplicateReviewBlockingApproval(status) {
   const normalized = status || "NOT_CHECKED";
   return !DUPLICATE_REVIEW_APPROVAL_ALLOWED_STATUSES.has(normalized);
+}
+
+export function isProcessedApplicationStatus(status) {
+  return String(status || "").toLowerCase() === "processed";
+}
+
+export function getApplicationStatus(application) {
+  return (
+    application?.applicationStatus ||
+    application?.personalDetails?.applicationStatus ||
+    null
+  );
 }
 
 function rowApplicationId(row) {

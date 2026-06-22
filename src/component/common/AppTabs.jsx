@@ -56,6 +56,11 @@ import { formatDateOnly } from "../../utils/Utilities";
 import { FinanceTabToolbarContext } from "../../context/FinanceTabToolbarContext";
 import { MembershipTabToolbarContext } from "../../context/MembershipTabToolbarContext";
 import { useConfirmUnsavedLeave } from "../../context/UnsavedFormContext";
+import { useAuthorization } from "../../context/AuthorizationContext";
+import {
+  hasFullMembershipUpdateRole,
+  hasMembershipProfileWritePermission,
+} from "../../utils/profileRoleAccess";
 import ProfileDuplicateReview from "../profile/ProfileDuplicateReview";
 
 const { TabPane } = Tabs;
@@ -286,6 +291,8 @@ function AppTabs() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const confirmLeaveUnsavedChanges = useConfirmUnsavedLeave();
+  const { roles: userRoles = [], permissions: userPermissions = [] } =
+    useAuthorization();
   const location = useLocation();
   const [searchParams] = useSearchParams();
   const profileIdParam = normalizeRouteId(searchParams.get("profileId"));
@@ -411,6 +418,13 @@ function AppTabs() {
   const onMembershipHeaderActionsMetaChange = useCallback((meta) => {
     setMembershipHeaderActionsMeta(meta);
   }, []);
+
+  const canFullEditMembership = hasFullMembershipUpdateRole(userRoles);
+  const canLimitedEditMembership =
+    !canFullEditMembership &&
+    hasMembershipProfileWritePermission(userPermissions);
+  const canEditMembership = canFullEditMembership || canLimitedEditMembership;
+  const membershipEditScope = canFullEditMembership ? "full" : "personal";
 
   const [financeTabBarExtra, setFinanceTabBarExtra] = useState(null);
   useEffect(() => {
@@ -857,6 +871,7 @@ function AppTabs() {
           setIsEditMode={setIsEditMode}
           isDeceased={isDeceased}
           setIsDeceased={setIsDeceased}
+          editScope={membershipEditScope}
         />
       ),
     },
@@ -1099,6 +1114,14 @@ function AppTabs() {
       case "1": {
         const items = [
           {
+            key: "membership-duplicate",
+            label: "Check Duplicate",
+            icon: membershipMoreIcon(FaClone, MEMBERSHIP_MORE_ICON.duplicate),
+            onClick: () => setIsDuplicateDrawerOpen(true),
+          },
+        ];
+        if (canEditMembership) {
+          items.unshift({
             key: "membership-edit",
             label: isEditMode ? "Cancel Edit" : "Edit Profile",
             icon: membershipMoreIcon(FaEdit, MEMBERSHIP_MORE_ICON.edit),
@@ -1109,15 +1132,12 @@ function AppTabs() {
               }
               setIsEditMode((v) => !v);
             },
-          },
-          {
-            key: "membership-duplicate",
-            label: "Check Duplicate",
-            icon: membershipMoreIcon(FaClone, MEMBERSHIP_MORE_ICON.duplicate),
-            onClick: () => setIsDuplicateDrawerOpen(true),
-          },
-        ];
-        if (membershipHeaderActionsMeta.showActivateMembership) {
+          });
+        }
+        if (
+          canFullEditMembership &&
+          membershipHeaderActionsMeta.showActivateMembership
+        ) {
           items.push({
             key: "membership-activate",
             label: "Activate Membership",
@@ -1133,7 +1153,10 @@ function AppTabs() {
               profileHeaderRef.current?.openActivateMembershipModal?.(),
           });
         }
-        if (membershipHeaderActionsMeta.showCancelMembership) {
+        if (
+          canFullEditMembership &&
+          membershipHeaderActionsMeta.showCancelMembership
+        ) {
           items.push({
             key: "membership-cancel",
             label: "Cancel Membership",
@@ -1143,18 +1166,20 @@ function AppTabs() {
               profileHeaderRef.current?.openCancelMembershipModal?.(),
           });
         }
-        items.push(
-          { type: "divider", key: "membership-divider-deceased" },
-          {
-            key: "membership-deceased",
-            label: isDeceased ? "Unmark as Deceased" : "Mark as Deceased",
-            icon: membershipMoreIcon(
-              FaUserSlash,
-              MEMBERSHIP_MORE_ICON.deceased,
-            ),
-            onClick: () => setIsDeceased((v) => !v),
-          },
-        );
+        if (canFullEditMembership) {
+          items.push(
+            { type: "divider", key: "membership-divider-deceased" },
+            {
+              key: "membership-deceased",
+              label: isDeceased ? "Unmark as Deceased" : "Mark as Deceased",
+              icon: membershipMoreIcon(
+                FaUserSlash,
+                MEMBERSHIP_MORE_ICON.deceased,
+              ),
+              onClick: () => setIsDeceased((v) => !v),
+            },
+          );
+        }
         return items;
       }
       case "4":
@@ -1194,6 +1219,8 @@ function AppTabs() {
     }
   }, [
     activeKey,
+    canEditMembership,
+    canFullEditMembership,
     isEditMode,
     isDeceased,
     membershipHeaderActionsMeta,

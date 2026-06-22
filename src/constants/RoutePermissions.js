@@ -13,6 +13,7 @@ export const RoutePermissions = {
   "Transfers": "transferrequests:read",
   "ChangCateSumm": "changeofcategory:read",
   "Cancallation": "subscriptions:read",
+  "YearEndRenewal": "subscriptions:write",
   "RemindersSummary": "notifications:read",
 
   // Finance

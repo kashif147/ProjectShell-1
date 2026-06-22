@@ -5,15 +5,21 @@ export const NEW_JOIN_COLUMN_LABEL = "New";
 /** Select options aligned with subscription-service MEMBERSHIP_MOVEMENT enum. */
 export const MEMBERSHIP_MOVEMENT_OPTIONS = [
   { value: "NewJoin", label: NEW_JOIN_COLUMN_LABEL },
-  { value: "Rejoin", label: "Re-Joined" },
-  { value: "Reinstate", label: "Reinstated" },
+  { value: "Rejoin - Cancelled", label: "Rejoined - Cancelled" },
+  { value: "Rejoin - Resigned", label: "Rejoined - Resigned" },
+  { value: "Reinstate - Suspended", label: "Reinstated - Suspended" },
+  { value: "Reinstate - Archived", label: "Reinstated - Archived" },
   { value: "Renewed", label: "Renewed" },
 ];
 
 const MOVEMENT_LABELS = {
   NewJoin: NEW_JOIN_COLUMN_LABEL,
   Rejoin: "Re-Joined",
+  "Rejoin - Cancelled": "Rejoined - Cancelled",
+  "Rejoin - Resigned": "Rejoined - Resigned",
   Reinstate: "Reinstated",
+  "Reinstate - Suspended": "Reinstated - Suspended",
+  "Reinstate - Archived": "Reinstated - Archived",
   Renewed: "Renewed",
   Renewal: "Renewal",
   Reinstatement: "Reinstatement",
@@ -31,8 +37,16 @@ const MOVEMENT_LABEL_ALIASES = {
   "re-joined": "Re-Joined",
   "re-joiner": "Re-Joined",
   "re-joiners": "Re-Joined",
+  "rejoin - cancelled": "Rejoined - Cancelled",
+  "rejoined - cancelled": "Rejoined - Cancelled",
+  "rejoin - resigned": "Rejoined - Resigned",
+  "rejoined - resigned": "Rejoined - Resigned",
   reinstate: "Reinstated",
   "re-instated": "Reinstated",
+  "reinstate - suspended": "Reinstated - Suspended",
+  "reinstated - suspended": "Reinstated - Suspended",
+  "reinstate - archived": "Reinstated - Archived",
+  "reinstated - archived": "Reinstated - Archived",
   renewed: "Renewed",
 };
 

@@ -26,6 +26,10 @@ import {
   dateUtils,
   dayjsFromDateOnly,
 } from "../../utils/Utilities";
+import {
+  hasWorkLocationSelection,
+  resolveBranchRegionFromStudyLocation,
+} from "../../utils/lookupHierarchy";
 import CustomSelect from "../common/CustomSelect";
 import { useTableColumns } from "../../context/TableColumnsContext ";
 import MyInput from "../common/MyInput";
@@ -41,6 +45,7 @@ import {
 import { getAllApplications } from "../../features/ApplicationSlice";
 import {
   DUPLICATE_REVIEW_REQUIRED_MESSAGE,
+  getApplicationStatus,
   isDuplicateReviewBlockingApproval,
   isMergedDuplicateReview,
 } from "../../utils/duplicateReviewApproval";
@@ -386,6 +391,81 @@ const resolveWorkLocationProcessSalaryDeduction = (
   }
 
   return false;
+};
+
+const readStoredHierarchicalLookups = () => {
+  try {
+    const stored = localStorage.getItem("hierarchicalLookups");
+    const parsed = stored ? JSON.parse(stored) : [];
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+};
+
+const getOfficerDisplayName = (record) => {
+  const officer = record?.officer;
+  if (officer && typeof officer === "object") {
+    return (
+      officer.userFullName ||
+      [officer.userFirstName, officer.userLastName].filter(Boolean).join(" ") ||
+      ""
+    );
+  }
+
+  const displayName =
+    record?.officerFullName ||
+    record?.officerDisplayName ||
+    record?.officer_display_name ||
+    record?.officerName ||
+    "";
+
+  return String(displayName).includes("@") ? "" : displayName;
+};
+
+const resolveWorkLocationIroName = (
+  locationLabel,
+  workLocationOptions,
+  rawLookups,
+) => {
+  if (!locationLabel || locationLabel === "Other") return "";
+
+  const labelKey = normalizeLookupMatchKey(locationLabel);
+  const matchedOption = workLocationOptions?.find(
+    (opt) =>
+      String(opt.key || opt.value) === String(locationLabel) ||
+      getWorkLocationMatchKeys(opt).includes(labelKey),
+  );
+  const selectedId = matchedOption?.key || matchedOption?.value || null;
+
+  const rawRecord = (rawLookups || []).find((item) => {
+    const type =
+      item.lookuptypeName || item.lookuptypeId?.lookuptype || item.type || "";
+    if (!isWorkLocationLookupTypeName(type)) return false;
+    if (selectedId && String(item._id || item.id) === String(selectedId)) {
+      return true;
+    }
+    return getWorkLocationMatchKeys(item).includes(labelKey);
+  });
+  const rawOfficerName = getOfficerDisplayName(rawRecord);
+  if (rawOfficerName) return rawOfficerName;
+
+  const hierarchyRecord = readStoredHierarchicalLookups().find((item) => {
+    const type = item.type || item.lookuptypeName || "";
+    const isWorkLoc =
+      type === "workLocation" || isWorkLocationLookupTypeName(type);
+    if (!isWorkLoc) return false;
+    if (
+      selectedId &&
+      (String(item.id || item._id) === String(selectedId) ||
+        String(item.lookup?._id) === String(selectedId))
+    ) {
+      return true;
+    }
+    return getWorkLocationMatchKeys(item).includes(labelKey);
+  });
+
+  return getOfficerDisplayName(hierarchyRecord);
 };
 
 /** Product ids used for conditional retired / student fields (policy service products). */
@@ -1410,31 +1490,6 @@ function ApplicationMgtDrawer({
     );
   }, [disciplineOptions, studyLocationOptions, application, isEdit]);
 
-  console.log(application, "application92");
-
-  useEffect(() => {
-    if (application && isEdit) {
-      handleLocationChange(InfData?.professionalDetails?.workLocation);
-    }
-  }, [isEdit, application]);
-
-  useEffect(() => {
-    if (
-      hierarchyData &&
-      (hierarchyData.region || hierarchyData.branch) &&
-      !workLocationLoading
-    ) {
-      setInfData((prev) => ({
-        ...prev,
-        professionalDetails: {
-          ...prev.professionalDetails,
-          region: hierarchyData.region || prev.professionalDetails.region,
-          branch: hierarchyData.branch || prev.professionalDetails.branch,
-        },
-      }));
-    }
-  }, [hierarchyData, workLocationLoading]);
-
   const SectionHeader = ({
     icon,
     title,
@@ -1627,6 +1682,20 @@ function ApplicationMgtDrawer({
     ],
   );
 
+  const workLocationIroName = useMemo(
+    () =>
+      resolveWorkLocationIroName(
+        InfData.professionalDetails?.workLocation,
+        workLocationOptions,
+        lookupsRaw,
+      ),
+    [
+      InfData.professionalDetails?.workLocation,
+      workLocationOptions,
+      lookupsRaw,
+    ],
+  );
+
   const filteredPaymentTypeOptions = useMemo(() => {
     if (workLocationAllowsSalaryDeduction) return paymentTypeOptions;
     return paymentTypeOptions.filter(
@@ -1679,6 +1748,44 @@ function ApplicationMgtDrawer({
     InfData.professionalDetails?.nursingAdaptationProgramme === true;
   const showYouthForumSelect =
     InfData.professionalDetails?.joinYouthForum === true;
+
+  useEffect(() => {
+    if (!isUndergraduateStudentCategory || lookupsloading) return;
+    if (hasWorkLocationSelection(InfData?.professionalDetails?.workLocation)) {
+      return;
+    }
+    const studyLocation = InfData?.professionalDetails?.studyLocation;
+    if (!studyLocation) return;
+    const { branch, region } = resolveBranchRegionFromStudyLocation(
+      studyLocation,
+      studyLocationOptions,
+      lookupsRaw,
+    );
+    if (!branch && !region) return;
+    setInfData((prev) => {
+      if (
+        prev.professionalDetails?.branch === branch &&
+        prev.professionalDetails?.region === region
+      ) {
+        return prev;
+      }
+      return {
+        ...prev,
+        professionalDetails: {
+          ...prev.professionalDetails,
+          branch,
+          region,
+        },
+      };
+    });
+  }, [
+    isUndergraduateStudentCategory,
+    InfData?.professionalDetails?.studyLocation,
+    InfData?.professionalDetails?.workLocation,
+    studyLocationOptions,
+    lookupsRaw,
+    lookupsloading,
+  ]);
 
   useEffect(() => {
     if (lookupsloading) return;
@@ -1826,6 +1933,97 @@ function ApplicationMgtDrawer({
       });
     }
   };
+
+  useEffect(() => {
+    if (!application || !isEdit || lookupsloading) return;
+
+    const isUg = membershipCategoryMatchesProductId(
+      InfData?.subscriptionDetails?.membershipCategory,
+      STUDENT_MEMBERSHIP_CATEGORY_ID,
+      categoryData,
+    );
+
+    if (isUg) {
+      const workLocation = InfData?.professionalDetails?.workLocation;
+      if (hasWorkLocationSelection(workLocation)) {
+        handleLocationChange(workLocation);
+        return;
+      }
+
+      const studyLocation = InfData?.professionalDetails?.studyLocation;
+      if (!studyLocation) return;
+      const { branch, region } = resolveBranchRegionFromStudyLocation(
+        studyLocation,
+        studyLocationOptions,
+        lookupsRaw,
+      );
+      if (!branch && !region) return;
+      setInfData((prev) => {
+        if (
+          prev.professionalDetails?.branch === branch &&
+          prev.professionalDetails?.region === region
+        ) {
+          return prev;
+        }
+        return {
+          ...prev,
+          professionalDetails: {
+            ...prev.professionalDetails,
+            branch,
+            region,
+          },
+        };
+      });
+      return;
+    }
+
+    if (InfData?.professionalDetails?.workLocation) {
+      handleLocationChange(InfData.professionalDetails.workLocation);
+    }
+  }, [
+    application,
+    isEdit,
+    lookupsloading,
+    InfData?.subscriptionDetails?.membershipCategory,
+    InfData?.professionalDetails?.studyLocation,
+    InfData?.professionalDetails?.workLocation,
+    studyLocationOptions,
+    lookupsRaw,
+    categoryData,
+  ]);
+
+  useEffect(() => {
+    if (
+      membershipCategoryMatchesProductId(
+        InfData?.subscriptionDetails?.membershipCategory,
+        STUDENT_MEMBERSHIP_CATEGORY_ID,
+        categoryData,
+      ) &&
+      !hasWorkLocationSelection(InfData?.professionalDetails?.workLocation)
+    ) {
+      return;
+    }
+    if (
+      hierarchyData &&
+      (hierarchyData.region || hierarchyData.branch) &&
+      !workLocationLoading
+    ) {
+      setInfData((prev) => ({
+        ...prev,
+        professionalDetails: {
+          ...prev.professionalDetails,
+          region: hierarchyData.region || prev.professionalDetails.region,
+          branch: hierarchyData.branch || prev.professionalDetails.branch,
+        },
+      }));
+    }
+  }, [
+    hierarchyData,
+    workLocationLoading,
+    InfData?.subscriptionDetails?.membershipCategory,
+    InfData?.professionalDetails?.workLocation,
+    categoryData,
+  ]);
 
   const validateForm = () => {
     const isUndergraduateStudent = membershipCategoryMatchesProductId(
@@ -1982,6 +2180,9 @@ function ApplicationMgtDrawer({
       if (field === "nursingAdaptationProgramme" && isUndergraduateStudent) {
         return;
       }
+      if (field === "workLocation" && isUndergraduateStudent) {
+        return;
+      }
       if (field === "paymentType" && isPaymentOptional) {
         return;
       }
@@ -2048,7 +2249,10 @@ function ApplicationMgtDrawer({
       }
     }
 
-    if (isOtherLookupSelection(InfData.professionalDetails?.workLocation)) {
+    if (
+      !isUndergraduateStudent &&
+      isOtherLookupSelection(InfData.professionalDetails?.workLocation)
+    ) {
       if (!InfData.professionalDetails.otherWorkLocation?.trim()) {
         newErrors.otherWorkLocation = "Other work location is required";
         missingFieldNames.push(fieldLabels.otherWorkLocation);
@@ -2145,13 +2349,6 @@ function ApplicationMgtDrawer({
       if (!InfData.subscriptionDetails?.paymentFrequency?.trim()) {
         newErrors.paymentFrequency = "Payment frequency is required";
         missingFieldNames.push(fieldLabels.paymentFrequency);
-      }
-    }
-
-    if (isUndergraduateStudent) {
-      if (!InfData.professionalDetails?.startDate) {
-        newErrors.startDate = "Start date is required";
-        missingFieldNames.push(fieldLabels.startDate);
       }
     }
 
@@ -3010,7 +3207,63 @@ function ApplicationMgtDrawer({
         return next;
       });
 
-      handleLocationChange(locationId, allowsSalaryDeduction);
+      const resolvedLocation = locationLabel || value;
+      const isUg = membershipCategoryMatchesProductId(
+        InfData?.subscriptionDetails?.membershipCategory,
+        STUDENT_MEMBERSHIP_CATEGORY_ID,
+        categoryData,
+      );
+
+      if (hasWorkLocationSelection(resolvedLocation)) {
+        handleLocationChange(locationId, allowsSalaryDeduction);
+      } else if (isUg) {
+        const studyLocation = InfData?.professionalDetails?.studyLocation;
+        const branchRegion = studyLocation
+          ? resolveBranchRegionFromStudyLocation(
+              studyLocation,
+              studyLocationOptions,
+              lookupsRaw,
+            )
+          : { branch: "", region: "" };
+        setInfData((prev) => ({
+          ...prev,
+          professionalDetails: {
+            ...prev.professionalDetails,
+            branch: branchRegion.branch,
+            region: branchRegion.region,
+          },
+        }));
+      }
+    } else if (section === "professionalDetails" && field === "studyLocation") {
+      const studyLocationLabel = value
+        ? normalizeLookupOptionToLabel(value, studyLocationOptions)
+        : "";
+      setInfData((prev) => {
+        const branchRegion = hasWorkLocationSelection(
+          prev.professionalDetails?.workLocation,
+        )
+          ? {
+              branch: prev.professionalDetails?.branch || "",
+              region: prev.professionalDetails?.region || "",
+            }
+          : studyLocationLabel
+            ? resolveBranchRegionFromStudyLocation(
+                value,
+                studyLocationOptions,
+                lookupsRaw,
+              )
+            : { branch: "", region: "" };
+
+        return {
+          ...prev,
+          professionalDetails: {
+            ...prev.professionalDetails,
+            studyLocation: studyLocationLabel,
+            branch: branchRegion.branch,
+            region: branchRegion.region,
+          },
+        };
+      });
     } else {
       setInfData((prev) => {
         let updated = {
@@ -3298,7 +3551,7 @@ function ApplicationMgtDrawer({
     if (name === "Approve" && checked === true && isEdit) {
       setSelected((prev) => ({
         ...prev,
-        Approve: true,
+        Approve: false,
         Reject: false,
       }));
 
@@ -3337,6 +3590,7 @@ function ApplicationMgtDrawer({
     if (!isValid) return;
     setIsProcessing(true);
     disableFtn(true);
+    let actionSucceeded = false;
 
     try {
       const token = localStorage.getItem("token");
@@ -3406,25 +3660,6 @@ function ApplicationMgtDrawer({
           return;
         }
 
-        const approvalPayload = {
-          submission: apiOriginalData || {},
-        };
-
-        if (hasChanges) {
-          approvalPayload.proposedPatch = proposedPatch;
-        }
-
-        const approvalResponse = await axios.post(
-          `${process.env.REACT_APP_PROFILE_SERVICE_URL}/applications/${applicationId}/approve`,
-          approvalPayload,
-          {
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${token}`,
-            },
-          },
-        );
-
         if (isEdit && hasChanges) {
           if (personalChanged) {
             const personalPayload = cleanPayload({
@@ -3475,10 +3710,27 @@ function ApplicationMgtDrawer({
             );
           }
         }
+
+        const approvalPayload = {
+          submission:
+            isEdit && hasChanges ? apiInfData || {} : apiOriginalData || {},
+        };
+
+        const approvalResponse = await axios.post(
+          `${process.env.REACT_APP_PROFILE_SERVICE_URL}/applications/${applicationId}/approve`,
+          approvalPayload,
+          {
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+          },
+        );
       } else if (action === "rejected") {
         if (!rejectionData.reason) {
           MyAlert("error", "Please select a rejection reason");
           setIsProcessing(false);
+          disableFtn(false);
           return;
         }
 
@@ -3512,6 +3764,7 @@ function ApplicationMgtDrawer({
           : "Application rejected successfully!";
 
       MyAlert("success", successMessage);
+      actionSucceeded = true;
       disableFtn(true);
 
       if (action === "rejected") {
@@ -3553,7 +3806,7 @@ function ApplicationMgtDrawer({
       }));
     } finally {
       setIsProcessing(false);
-      disableFtn(true);
+      disableFtn(actionSucceeded);
     }
   };
 
@@ -4544,7 +4797,6 @@ function ApplicationMgtDrawer({
                   <AppFormCell>
                     <MyDatePicker1
                       label="Start Date"
-                      required
                       onChange={(date, datestring) => {
                         handleInputChange(
                           "professionalDetails",
@@ -4581,11 +4833,21 @@ function ApplicationMgtDrawer({
               <AppFormCell>
                 <ApplicationMgtSelect
                   label="Work Location"
+                  extra={
+                    InfData.professionalDetails?.workLocation &&
+                    !isOtherLookupSelection(
+                      InfData.professionalDetails?.workLocation,
+                    ) ? (
+                      <span className="application-form-worklocation-iro">
+                        IRO : {workLocationIroName || "-"}
+                      </span>
+                    ) : null
+                  }
                   name="workLocation"
                   isObjectValue={true}
                   isIDs={false}
                   value={InfData.professionalDetails?.workLocation}
-                  required
+                  required={!isUndergraduateStudentCategory}
                   options={workLocationOptions}
                   disabled={isDisable}
                   onChange={(e) => {
@@ -5830,6 +6092,7 @@ function ApplicationMgtDrawer({
           setDuplicateReviewApplicationId(null);
         }}
         applicationId={duplicateReviewTargetId}
+        applicationStatus={getApplicationStatus(application)}
         runDetectionOnOpen={duplicateReviewAutoRun}
         onReviewUpdated={() => {
           const reviewAppId = duplicateReviewTargetId;

@@ -16,6 +16,7 @@ import { transformFiltersForApi } from "../../utils/filterUtils";
 import { useLocation } from "react-router-dom";
 import PaymentFormDetailDrawer from "../../component/paymentForms/PaymentFormDetailDrawer";
 import { formatIbanDisplay } from "../../utils/iban";
+import { getApplicationStatus } from "../../utils/duplicateReviewApproval";
 
 function MembershipApplication() {
   const dispatch = useDispatch();
@@ -45,6 +46,8 @@ function MembershipApplication() {
   const [paymentFormDetailId, setPaymentFormDetailId] = useState(null);
   const [paymentFormDetailOpen, setPaymentFormDetailOpen] = useState(false);
   const [duplicateReviewAppId, setDuplicateReviewAppId] = useState(null);
+  const [duplicateReviewApplicationStatus, setDuplicateReviewApplicationStatus] =
+    useState(null);
   const [duplicateReviewOpen, setDuplicateReviewOpen] = useState(false);
   useEffect(() => {
     const pageInitialized = isPaymentFormsPage
@@ -146,17 +149,18 @@ function MembershipApplication() {
     return row;
   }, [formattedApplications, isPaymentFormsPage, selectedKeys]);
 
-  const openDuplicateReview = useCallback((applicationId) => {
+  const openDuplicateReview = useCallback((applicationId, applicationStatus) => {
     if (!applicationId) return;
     setDuplicateReviewAppId(applicationId);
+    setDuplicateReviewApplicationStatus(applicationStatus || null);
     setDuplicateReviewOpen(true);
   }, []);
 
   const handleDuplicateReviewRequest = useCallback(
     (record) => {
       const applicationId = record?.applicationId || record?._id;
-      if (applicationId && record?.applicationStatus === "submitted") {
-        openDuplicateReview(applicationId);
+      if (applicationId) {
+        openDuplicateReview(applicationId, getApplicationStatus(record));
       }
     },
     [openDuplicateReview],
@@ -258,6 +262,7 @@ function MembershipApplication() {
                   onClick={() =>
                     openDuplicateReview(
                       selectedSubmittedApplication.applicationId,
+                      selectedSubmittedApplication.applicationStatus,
                     )
                   }
                 >
@@ -275,9 +280,11 @@ function MembershipApplication() {
           onClose={() => {
             setDuplicateReviewOpen(false);
             setDuplicateReviewAppId(null);
+            setDuplicateReviewApplicationStatus(null);
           }}
           applicationId={duplicateReviewAppId}
-          runDetectionOnOpen
+          applicationStatus={duplicateReviewApplicationStatus}
+          runDetectionOnOpen={duplicateReviewApplicationStatus !== "processed"}
           onReviewUpdated={refreshApplicationsList}
         />
       )}

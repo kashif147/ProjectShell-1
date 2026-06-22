@@ -226,6 +226,19 @@
   line-height: 1.2;
 }
 
+.membership-form-worklocation-iro {
+  color: var(--primary-color);
+  display: inline-block;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.2;
+  max-width: 240px;
+  overflow: hidden;
+  text-align: right;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 /* Align label rows so inputs line up horizontally within a grid row */
 .membership-form.compact .membership-form-grid-cell .my-input-wrapper > .d-flex,
 .membership-form.compact

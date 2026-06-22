@@ -94,13 +94,27 @@
 }
 
 /* Each field cell: fixed label row + fixed control row */
-.application-form.compact .form-grid--3 > .form-grid-cell:not(.form-col-full):not(:has(.consent-box)):not(:has(.question-box)):not(:has(.notice-box)):not(:has(.checkbox-notice-box)),
-.application-form.compact .form-grid--2 > .form-grid-cell:not(.form-col-full):not(:has(.consent-box)):not(:has(.question-box)):not(:has(.notice-box)):not(:has(.checkbox-notice-box)),
-.application-form.compact .form-grid--33-67 > .form-grid-cell:not(.form-col-full):not(:has(.consent-box)):not(:has(.question-box)):not(:has(.notice-box)):not(:has(.checkbox-notice-box)),
+.application-form.compact
+  .form-grid--3
+  > .form-grid-cell:not(.form-col-full):not(:has(.consent-box)):not(
+    :has(.question-box)
+  ):not(:has(.notice-box)):not(:has(.checkbox-notice-box)),
+.application-form.compact
+  .form-grid--2
+  > .form-grid-cell:not(.form-col-full):not(:has(.consent-box)):not(
+    :has(.question-box)
+  ):not(:has(.notice-box)):not(:has(.checkbox-notice-box)),
+.application-form.compact
+  .form-grid--33-67
+  > .form-grid-cell:not(.form-col-full):not(:has(.consent-box)):not(
+    :has(.question-box)
+  ):not(:has(.notice-box)):not(:has(.checkbox-notice-box)),
 .application-form.compact .form-grid--search-eircode > .form-grid-cell,
 .application-form.compact .form-grid--contact-phones > .form-grid-cell,
 .application-form.compact .form-grid--contact-emails > .form-grid-cell,
-.application-form.compact .form-grid--nursing-row > .form-grid-cell:not(.form-col-full):not(:has(.question-box)),
+.application-form.compact
+  .form-grid--nursing-row
+  > .form-grid-cell:not(.form-col-full):not(:has(.question-box)),
 .application-form.compact .form-grid--trade-union-row > .form-grid-cell {
   display: grid;
   grid-template-rows: minmax(20px, auto) 36px;
@@ -109,43 +123,189 @@
   min-width: 0;
 }
 
-.application-form.compact .form-grid--3 > .form-grid-cell:not(.form-col-full):not(:has(.consent-box)):not(:has(.question-box)):not(:has(.notice-box)):not(:has(.checkbox-notice-box)) > .form-grid-cell-inner,
-.application-form.compact .form-grid--2 > .form-grid-cell:not(.form-col-full):not(:has(.consent-box)):not(:has(.question-box)):not(:has(.notice-box)):not(:has(.checkbox-notice-box)) > .form-grid-cell-inner,
-.application-form.compact .form-grid--33-67 > .form-grid-cell:not(.form-col-full):not(:has(.consent-box)):not(:has(.question-box)):not(:has(.notice-box)):not(:has(.checkbox-notice-box)) > .form-grid-cell-inner,
-.application-form.compact .form-grid--search-eircode > .form-grid-cell > .form-grid-cell-inner,
-.application-form.compact .form-grid--contact-phones > .form-grid-cell > .form-grid-cell-inner,
-.application-form.compact .form-grid--contact-emails > .form-grid-cell > .form-grid-cell-inner,
-.application-form.compact .form-grid--nursing-row > .form-grid-cell:not(.form-col-full) > .form-grid-cell-inner,
-.application-form.compact .form-grid--trade-union-row > .form-grid-cell > .form-grid-cell-inner {
+.application-form.compact
+  .form-grid--3
+  > .form-grid-cell:not(.form-col-full):not(:has(.consent-box)):not(
+    :has(.question-box)
+  ):not(:has(.notice-box)):not(:has(.checkbox-notice-box))
+  > .form-grid-cell-inner,
+.application-form.compact
+  .form-grid--2
+  > .form-grid-cell:not(.form-col-full):not(:has(.consent-box)):not(
+    :has(.question-box)
+  ):not(:has(.notice-box)):not(:has(.checkbox-notice-box))
+  > .form-grid-cell-inner,
+.application-form.compact
+  .form-grid--33-67
+  > .form-grid-cell:not(.form-col-full):not(:has(.consent-box)):not(
+    :has(.question-box)
+  ):not(:has(.notice-box)):not(:has(.checkbox-notice-box))
+  > .form-grid-cell-inner,
+.application-form.compact
+  .form-grid--search-eircode
+  > .form-grid-cell
+  > .form-grid-cell-inner,
+.application-form.compact
+  .form-grid--contact-phones
+  > .form-grid-cell
+  > .form-grid-cell-inner,
+.application-form.compact
+  .form-grid--contact-emails
+  > .form-grid-cell
+  > .form-grid-cell-inner,
+.application-form.compact
+  .form-grid--nursing-row
+  > .form-grid-cell:not(.form-col-full)
+  > .form-grid-cell-inner,
+.application-form.compact
+  .form-grid--trade-union-row
+  > .form-grid-cell
+  > .form-grid-cell-inner {
   display: contents;
 }
 
 /* Flatten wrappers so label + control sit on the cell's two grid rows */
-.application-form.compact .form-grid--3 > .form-grid-cell:not(.form-col-full) .form-grid-cell-inner > .my-input-wrapper,
-.application-form.compact .form-grid--2 > .form-grid-cell:not(.form-col-full) .form-grid-cell-inner > .my-input-wrapper,
-.application-form.compact .form-grid--33-67 > .form-grid-cell:not(.form-col-full) .form-grid-cell-inner > .my-input-wrapper,
-.application-form.compact .form-grid--search-eircode > .form-grid-cell .form-grid-cell-inner > .my-input-wrapper,
-.application-form.compact .form-grid--contact-phones > .form-grid-cell .form-grid-cell-inner > .my-input-wrapper,
-.application-form.compact .form-grid--contact-emails > .form-grid-cell .form-grid-cell-inner > .my-input-wrapper,
-.application-form.compact .form-grid--nursing-row > .form-grid-cell .form-grid-cell-inner > .my-input-wrapper,
-.application-form.compact .form-grid--trade-union-row > .form-grid-cell .form-grid-cell-inner > .my-input-wrapper,
-.application-form.compact .form-grid--3 > .form-grid-cell:not(.form-col-full) .form-grid-cell-inner > .info-box--field-aligned,
-.application-form.compact .form-grid--2 > .form-grid-cell:not(.form-col-full) .form-grid-cell-inner > .info-box--field-aligned,
-.application-form.compact .form-grid--33-67 > .form-grid-cell:not(.form-col-full) .form-grid-cell-inner > .info-box--field-aligned,
-.application-form.compact .form-grid--contact-emails > .form-grid-cell .form-grid-cell-inner > .info-box--field-aligned,
-.application-form.compact .form-grid--nursing-row > .form-grid-cell .form-grid-cell-inner > .info-box--field-aligned,
-.application-form.compact .form-grid--trade-union-row > .form-grid-cell .form-grid-cell-inner > .info-box--field-aligned,
-.application-form.compact .form-grid--3 > .form-grid-cell:not(.form-col-full) .form-grid-cell-inner > .form-field-stack,
-.application-form.compact .form-grid--2 > .form-grid-cell:not(.form-col-full) .form-grid-cell-inner > .form-field-stack,
-.application-form.compact .form-grid--33-67 > .form-grid-cell:not(.form-col-full) .form-grid-cell-inner > .form-field-stack,
-.application-form.compact .form-grid--3 > .form-grid-cell:not(.form-col-full) .form-grid-cell-inner > div:not(.form-grid):not(.consent-box):not(.notice-box):not(.checkbox-notice-box):not(.info-box),
-.application-form.compact .form-grid--2 > .form-grid-cell:not(.form-col-full) .form-grid-cell-inner > div:not(.form-grid):not(.consent-box):not(.notice-box):not(.checkbox-notice-box):not(.info-box),
-.application-form.compact .form-grid--33-67 > .form-grid-cell:not(.form-col-full) .form-grid-cell-inner > div:not(.form-grid):not(.consent-box):not(.notice-box):not(.checkbox-notice-box):not(.info-box),
-.application-form.compact .form-grid--search-eircode > .form-grid-cell .form-grid-cell-inner > div:not(.form-grid):not(.consent-box):not(.notice-box):not(.checkbox-notice-box):not(.info-box),
-.application-form.compact .form-grid--contact-phones > .form-grid-cell .form-grid-cell-inner > div:not(.form-grid):not(.consent-box):not(.notice-box):not(.checkbox-notice-box):not(.info-box),
-.application-form.compact .form-grid--contact-emails > .form-grid-cell .form-grid-cell-inner > div:not(.form-grid):not(.consent-box):not(.notice-box):not(.checkbox-notice-box):not(.info-box),
-.application-form.compact .form-grid--nursing-row > .form-grid-cell .form-grid-cell-inner > div:not(.form-grid):not(.consent-box):not(.notice-box):not(.checkbox-notice-box):not(.info-box),
-.application-form.compact .form-grid--trade-union-row > .form-grid-cell .form-grid-cell-inner > div:not(.form-grid):not(.consent-box):not(.notice-box):not(.checkbox-notice-box):not(.info-box) {
+.application-form.compact
+  .form-grid--3
+  > .form-grid-cell:not(.form-col-full)
+  .form-grid-cell-inner
+  > .my-input-wrapper,
+.application-form.compact
+  .form-grid--2
+  > .form-grid-cell:not(.form-col-full)
+  .form-grid-cell-inner
+  > .my-input-wrapper,
+.application-form.compact
+  .form-grid--33-67
+  > .form-grid-cell:not(.form-col-full)
+  .form-grid-cell-inner
+  > .my-input-wrapper,
+.application-form.compact
+  .form-grid--search-eircode
+  > .form-grid-cell
+  .form-grid-cell-inner
+  > .my-input-wrapper,
+.application-form.compact
+  .form-grid--contact-phones
+  > .form-grid-cell
+  .form-grid-cell-inner
+  > .my-input-wrapper,
+.application-form.compact
+  .form-grid--contact-emails
+  > .form-grid-cell
+  .form-grid-cell-inner
+  > .my-input-wrapper,
+.application-form.compact
+  .form-grid--nursing-row
+  > .form-grid-cell
+  .form-grid-cell-inner
+  > .my-input-wrapper,
+.application-form.compact
+  .form-grid--trade-union-row
+  > .form-grid-cell
+  .form-grid-cell-inner
+  > .my-input-wrapper,
+.application-form.compact
+  .form-grid--3
+  > .form-grid-cell:not(.form-col-full)
+  .form-grid-cell-inner
+  > .info-box--field-aligned,
+.application-form.compact
+  .form-grid--2
+  > .form-grid-cell:not(.form-col-full)
+  .form-grid-cell-inner
+  > .info-box--field-aligned,
+.application-form.compact
+  .form-grid--33-67
+  > .form-grid-cell:not(.form-col-full)
+  .form-grid-cell-inner
+  > .info-box--field-aligned,
+.application-form.compact
+  .form-grid--contact-emails
+  > .form-grid-cell
+  .form-grid-cell-inner
+  > .info-box--field-aligned,
+.application-form.compact
+  .form-grid--nursing-row
+  > .form-grid-cell
+  .form-grid-cell-inner
+  > .info-box--field-aligned,
+.application-form.compact
+  .form-grid--trade-union-row
+  > .form-grid-cell
+  .form-grid-cell-inner
+  > .info-box--field-aligned,
+.application-form.compact
+  .form-grid--3
+  > .form-grid-cell:not(.form-col-full)
+  .form-grid-cell-inner
+  > .form-field-stack,
+.application-form.compact
+  .form-grid--2
+  > .form-grid-cell:not(.form-col-full)
+  .form-grid-cell-inner
+  > .form-field-stack,
+.application-form.compact
+  .form-grid--33-67
+  > .form-grid-cell:not(.form-col-full)
+  .form-grid-cell-inner
+  > .form-field-stack,
+.application-form.compact
+  .form-grid--3
+  > .form-grid-cell:not(.form-col-full)
+  .form-grid-cell-inner
+  > div:not(.form-grid):not(.consent-box):not(.notice-box):not(
+    .checkbox-notice-box
+  ):not(.info-box),
+.application-form.compact
+  .form-grid--2
+  > .form-grid-cell:not(.form-col-full)
+  .form-grid-cell-inner
+  > div:not(.form-grid):not(.consent-box):not(.notice-box):not(
+    .checkbox-notice-box
+  ):not(.info-box),
+.application-form.compact
+  .form-grid--33-67
+  > .form-grid-cell:not(.form-col-full)
+  .form-grid-cell-inner
+  > div:not(.form-grid):not(.consent-box):not(.notice-box):not(
+    .checkbox-notice-box
+  ):not(.info-box),
+.application-form.compact
+  .form-grid--search-eircode
+  > .form-grid-cell
+  .form-grid-cell-inner
+  > div:not(.form-grid):not(.consent-box):not(.notice-box):not(
+    .checkbox-notice-box
+  ):not(.info-box),
+.application-form.compact
+  .form-grid--contact-phones
+  > .form-grid-cell
+  .form-grid-cell-inner
+  > div:not(.form-grid):not(.consent-box):not(.notice-box):not(
+    .checkbox-notice-box
+  ):not(.info-box),
+.application-form.compact
+  .form-grid--contact-emails
+  > .form-grid-cell
+  .form-grid-cell-inner
+  > div:not(.form-grid):not(.consent-box):not(.notice-box):not(
+    .checkbox-notice-box
+  ):not(.info-box),
+.application-form.compact
+  .form-grid--nursing-row
+  > .form-grid-cell
+  .form-grid-cell-inner
+  > div:not(.form-grid):not(.consent-box):not(.notice-box):not(
+    .checkbox-notice-box
+  ):not(.info-box),
+.application-form.compact
+  .form-grid--trade-union-row
+  > .form-grid-cell
+  .form-grid-cell-inner
+  > div:not(.form-grid):not(.consent-box):not(.notice-box):not(
+    .checkbox-notice-box
+  ):not(.info-box) {
   display: contents;
 }
 
@@ -168,7 +328,10 @@
 /* Row 1 — labels (MyInput, CustomSelect, MyDatePicker) */
 .application-form.compact .form-grid-cell > .d-flex,
 .application-form.compact .form-grid-cell > .my-input-label,
-.application-form.compact .form-grid-cell .info-box--field-aligned > .my-input-label {
+.application-form.compact
+  .form-grid-cell
+  .info-box--field-aligned
+  > .my-input-label {
   align-self: end;
   width: 100%;
   min-width: 0;
@@ -300,7 +463,9 @@
   border: 1px solid #97c5efff;
 }
 
-.application-form.compact .info-box--field-aligned.info-box--error .form-control-band {
+.application-form.compact
+  .info-box--field-aligned.info-box--error
+  .form-control-band {
   border-color: #ff4d4f;
 }
 
@@ -356,7 +521,9 @@
   padding-left: 0;
 }
 
-.application-form.compact .form-grid--address-consent > .form-grid-cell:has(.consent-box) {
+.application-form.compact
+  .form-grid--address-consent
+  > .form-grid-cell:has(.consent-box) {
   display: flex;
   flex-direction: column;
 }
@@ -460,7 +627,6 @@
   margin-top: -2px;
 }
 
-
 .application-form.compact .form-grid-cell,
 .application-form.compact .form-grid > .ant-col {
   min-width: 0;
@@ -509,7 +675,9 @@
     grid-template-columns: 1fr;
   }
 
-  .application-form.compact .form-grid--nursing-row > .form-grid-cell.form-col-2 {
+  .application-form.compact
+    .form-grid--nursing-row
+    > .form-grid-cell.form-col-2 {
     grid-column: span 1;
   }
 }
@@ -559,6 +727,19 @@
 
 .application-form.compact .form-grid-cell-inner .my-input-label {
   margin-bottom: 0;
+}
+
+.application-form-worklocation-iro {
+  color: var(--primary-color);
+  display: inline-block;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.2;
+  max-width: 220px;
+  overflow: hidden;
+  text-align: right;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .application-form.compact .info-box,
@@ -627,7 +808,6 @@
   margin: 2px 0 0;
   line-height: 1.2;
 }
-
 
 /* Compact labels and controls */
 .application-form.compact .my-input-wrapper {
@@ -776,9 +956,7 @@
   flex-direction: column;
 }
 
-.application-form.compact
-  .form-grid--final-checkboxes
-  .checkbox-notice-box {
+.application-form.compact .form-grid--final-checkboxes .checkbox-notice-box {
   flex: 1;
   height: 100%;
   align-items: flex-start;
