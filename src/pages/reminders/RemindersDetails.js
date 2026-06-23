@@ -322,6 +322,7 @@ function RemindersDetails() {
             buildStartedAt: batchDoc.buildStartedAt,
             buildCompletedAt: batchDoc.buildCompletedAt,
             balanceAsOf: batchDoc.balanceAsOf,
+            countsByTier: batchDoc.countsByTier,
             buildError: batchDoc.error || batchDoc.buildProgress?.lastError || null,
             members: grouped,
         };
@@ -342,7 +343,8 @@ function RemindersDetails() {
         if (id != null) getRemindersById(id);
     }, [location.state?.reminderBatchId, getRemindersById]);
 
-    const selectedBatch = apiBatch || selectedId;
+    const selectedBatch =
+        apiBatch ?? (location.state?.reminderBatchId ? null : selectedId);
     const batchBuildError = lifecycleBatchBuildError(selectedBatch);
     const batchIsBuilding = lifecycleBatchIsBuilding(selectedBatch);
     const batchStatus = String(selectedBatch?.status || "").toLowerCase();

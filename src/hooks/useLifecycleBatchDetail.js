@@ -9,8 +9,39 @@ const TERMINAL_BATCH_STATUSES = new Set([
   "superseded",
 ]);
 
-function isBatchBuildTerminal(status) {
-  return TERMINAL_BATCH_STATUSES.has(String(status || "").toLowerCase());
+function sumCountsByTier(countsByTier) {
+  if (!countsByTier || typeof countsByTier !== "object") return 0;
+  return (
+    (countsByTier.r1 || 0) +
+    (countsByTier.r2 || 0) +
+    (countsByTier.r3 || 0) +
+    (countsByTier.cancel || 0)
+  );
+}
+
+function isBuildStillRunning(batchDoc) {
+  if (!batchDoc) return false;
+  const status = String(batchDoc?.status || "").toLowerCase();
+  if (status === "pending_build") return true;
+  const started = batchDoc?.buildStartedAt
+    ? new Date(batchDoc.buildStartedAt).getTime()
+    : NaN;
+  const completed = batchDoc?.buildCompletedAt
+    ? new Date(batchDoc.buildCompletedAt).getTime()
+    : NaN;
+  if (!Number.isFinite(started)) return false;
+  if (!Number.isFinite(completed)) return true;
+  return completed < started;
+}
+
+function shouldContinuePolling(batchDoc, itemCount) {
+  const status = String(batchDoc?.status || "").toLowerCase();
+  if (isBuildStillRunning(batchDoc)) return true;
+  if (status === "ready") {
+    const expected = sumCountsByTier(batchDoc.countsByTier);
+    if (expected > 0 && itemCount === 0) return true;
+  }
+  return !TERMINAL_BATCH_STATUSES.has(status);
 }
 
 /**
@@ -25,7 +56,7 @@ export function useLifecycleBatchDetail({
   membersTier,
   membersLimit = 1000,
   mapBatch,
-  pollIntervalMs = 2500,
+  pollIntervalMs = 10000,
 }) {
   const [batch, setBatch] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -50,37 +81,55 @@ export function useLifecycleBatchDetail({
     };
     if (membersTier) membersParams.tier = membersTier;
 
+    const schedulePoll = () => {
+      pollTimer = setTimeout(() => load({ initial: false }), pollIntervalMs);
+    };
+
     const fetchBatch = async () => {
       const headers = { Authorization: `Bearer ${token}` };
-      const [batchRes, membersRes] = await Promise.all([
-        axios.get(`${base}/reminder-batches/${batchId}`, { headers }),
-        axios.get(`${base}/reminder-batches/${batchId}/members`, {
-          headers,
-          params: membersParams,
-        }),
-      ]);
-      const batchDoc = batchRes?.data?.data || {};
-      const rows = membersRes?.data?.data?.items || [];
-      return mapBatch({
-        batchId,
-        batchDoc,
-        rows,
-        batchTitle,
+      const batchRes = await axios.get(`${base}/reminder-batches/${batchId}`, {
+        headers,
       });
+      const batchDoc = batchRes?.data?.data || {};
+
+      let rows = [];
+      try {
+        const membersRes = await axios.get(
+          `${base}/reminder-batches/${batchId}/members`,
+          {
+            headers,
+            params: membersParams,
+          },
+        );
+        rows = membersRes?.data?.data?.items || [];
+      } catch {
+        // Members may be empty or the enrich call may fail while build is running.
+      }
+
+      return {
+        batchDoc,
+        mapped: mapBatch({
+          batchId,
+          batchDoc,
+          rows,
+          batchTitle,
+        }),
+        itemCount: rows.length,
+      };
     };
 
     const load = async ({ initial = false } = {}) => {
       if (initial) setLoading(true);
       try {
-        const next = await fetchBatch();
+        const { batchDoc, mapped, itemCount } = await fetchBatch();
         if (cancelled) return;
-        setBatch(next);
-        const status = next?.status ?? next?.batchStatus;
-        if (!isBatchBuildTerminal(status)) {
-          pollTimer = setTimeout(() => load({ initial: false }), pollIntervalMs);
+        setBatch(mapped);
+        if (shouldContinuePolling(batchDoc, itemCount)) {
+          schedulePoll();
         }
       } catch {
         if (!cancelled && initial) setBatch(null);
+        if (!cancelled) schedulePoll();
       } finally {
         if (!cancelled && initial) setLoading(false);
       }
@@ -117,6 +166,16 @@ export function lifecycleBatchBuildError(batch) {
 }
 
 export function lifecycleBatchIsBuilding(batch) {
+  if (!batch) return false;
   const status = String(batch?.status || batch?.batchStatus || "").toLowerCase();
-  return status === "pending_build";
+  if (status === "pending_build") return true;
+  const started = batch?.buildStartedAt
+    ? new Date(batch.buildStartedAt).getTime()
+    : NaN;
+  const completed = batch?.buildCompletedAt
+    ? new Date(batch.buildCompletedAt).getTime()
+    : NaN;
+  if (!Number.isFinite(started)) return false;
+  if (!Number.isFinite(completed)) return true;
+  return completed < started;
 }
