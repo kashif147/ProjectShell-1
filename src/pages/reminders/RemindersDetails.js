@@ -12,6 +12,7 @@ import {
     message,
     Checkbox,
     Empty,
+    Tooltip,
 } from "antd";
 import {
     CalendarOutlined,
@@ -32,6 +33,7 @@ import {
     LinkOutlined,
     AppstoreOutlined,
     BarChartOutlined,
+    InfoCircleOutlined,
 } from "@ant-design/icons";
 import {
     PieChart,
@@ -301,16 +303,23 @@ function RemindersDetails() {
 
     const mapReminderBatch = useCallback(({ batchId, batchDoc, rows, batchTitle }) => {
         const grouped = { R1: [], R2: [], R3: [] };
+        const allMembers = [];
         rows.forEach((row, index) => {
             const tier = row.tier || "R1";
-            if (!grouped[tier]) return;
-            grouped[tier].push({
+            const mapped = {
                 ...row,
                 membershipNo: row.membershipNo || row.membershipNumber || row.memberId,
                 outstandingBalance:
                     row.outstandingBalance == null ? 0 : row.outstandingBalance,
+                included: row.included !== false,
+                inclusionSummary: row.inclusionSummary || null,
+                exclusionReason: row.exclusionReason || null,
                 _rowKey: `${tier}-${row._id || row.profileId || index}`,
-            });
+            };
+            allMembers.push(mapped);
+            if (mapped.included && grouped[tier]) {
+                grouped[tier].push(mapped);
+            }
         });
         return {
             id: batchDoc._id || batchDoc.id || batchId,
@@ -325,6 +334,7 @@ function RemindersDetails() {
             countsByTier: batchDoc.countsByTier,
             buildError: batchDoc.error || batchDoc.buildProgress?.lastError || null,
             members: grouped,
+            allMembers,
         };
     }, []);
 
@@ -335,6 +345,7 @@ function RemindersDetails() {
     } = useLifecycleBatchDetail({
         batchId: location.state?.reminderBatchId,
         batchTitle: location.state?.reminderBatchTitle,
+        membersIncluded: "all",
         mapBatch: mapReminderBatch,
     });
 
@@ -449,12 +460,12 @@ function RemindersDetails() {
     const feeBatchTotal = sumMemberFees(comprehensiveMembers);
 
     const tableMembers = useMemo(() => {
-        if (!selectedBatch?.members) return [];
+        if (!selectedBatch) return [];
         if (activeView !== "batch") {
             return buildWaveMembers(selectedBatch.members, activeView);
         }
         if (allWavesIncluded) {
-            return comprehensiveMembers;
+            return selectedBatch.allMembers || comprehensiveMembers;
         }
         return buildMultiWaveMembers(selectedBatch.members, includedWaves);
     }, [
@@ -466,7 +477,11 @@ function RemindersDetails() {
     ]);
 
     const paymentAnalysis = useMemo(
-        () => buildPaymentMethodAnalysis(tableMembers, LIFECYCLE_PAYMENT_METHOD_ROWS),
+        () =>
+            buildPaymentMethodAnalysis(
+                tableMembers.filter((row) => row.included !== false),
+                LIFECYCLE_PAYMENT_METHOD_ROWS,
+            ),
         [tableMembers],
     );
     const paymentRowsScaled = paymentAnalysis.rows;
@@ -562,6 +577,46 @@ function RemindersDetails() {
     }, []);
 
     const columns = [
+        {
+            title: "",
+            key: "eligibility",
+            width: 44,
+            fixed: "left",
+            render: (_, row) => {
+                const summary = row.inclusionSummary;
+                if (row.included !== false && summary) {
+                    return (
+                        <Tooltip title={summary} placement="topLeft">
+                            <InfoCircleOutlined
+                                style={{
+                                    color: "var(--mainBlue)",
+                                    fontSize: 16,
+                                    cursor: "help",
+                                }}
+                                aria-label="Inclusion eligibility details"
+                            />
+                        </Tooltip>
+                    );
+                }
+                if (row.included === false) {
+                    const label = row.exclusionReason || "Excluded";
+                    return (
+                        <Tooltip
+                            title={
+                                summary ||
+                                "Rebuild the batch to generate eligibility notes."
+                            }
+                            placement="topLeft"
+                        >
+                            <Tag color="default" style={{ margin: 0, cursor: "help" }}>
+                                {label}
+                            </Tag>
+                        </Tooltip>
+                    );
+                }
+                return null;
+            },
+        },
         {
             title: "Full name",
             dataIndex: "fullName",
@@ -1304,6 +1359,11 @@ table { border-collapse: collapse; width: 100%; }
                         rowSelection={rowSelection}
                         columns={columns}
                         dataSource={tableMembers}
+                        rowClassName={(row) =>
+                            row.included === false
+                                ? "reminder-details-member-row--excluded"
+                                : ""
+                        }
                         pagination={false}
                         bordered
                         sticky

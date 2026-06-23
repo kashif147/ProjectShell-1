@@ -76,9 +76,10 @@ export function useLifecycleBatchDetail({
     let pollTimer = null;
 
     const membersParams = {
-      included: membersIncluded,
       limit: membersLimit,
     };
+    if (membersIncluded === "true") membersParams.included = "true";
+    else if (membersIncluded === "false") membersParams.included = "false";
     if (membersTier) membersParams.tier = membersTier;
 
     const schedulePoll = () => {

@@ -694,3 +694,8 @@
   color: #8c8c8c;
   margin-top: 4px;
 }
+
+.reminder-details-member-row--excluded > td {
+  opacity: 0.72;
+  background: #fafafa !important;
+}
