@@ -1,4 +1,5 @@
-import React, { useMemo, useState, useEffect } from "react";
+import React, { useMemo, useState, useEffect, useCallback } from "react";
+import axios from "axios";
 import { useLocation, useNavigate } from "react-router-dom";
 import {
     Button,
@@ -16,6 +17,7 @@ import {
     UserOutlined,
     ExportOutlined,
     PlayCircleOutlined,
+    ReloadOutlined,
     CreditCardOutlined,
     TeamOutlined,
     MailOutlined,
@@ -27,10 +29,6 @@ import {
     DownloadOutlined,
     LinkOutlined,
     AppstoreOutlined,
-    BankOutlined,
-    MoneyCollectOutlined,
-    AccountBookOutlined,
-    SyncOutlined,
     BarChartOutlined,
 } from "@ant-design/icons";
 import {
@@ -42,59 +40,18 @@ import {
 import CustomSelect from "../../component/common/CustomSelect";
 import { useReminders } from "../../context/CampaignDetailsProvider";
 import { useTableColumns } from "../../context/TableColumnsContext ";
+import { getSubscriptionServiceBaseUrl } from "../../config/serviceUrls";
 import { formatDateDdMmYyyy } from "../../utils/Utilities";
+import {
+    buildPaymentMethodAnalysis,
+    LIFECYCLE_PAYMENT_METHOD_ROWS,
+} from "../../utils/lifecycleBatchPaymentAnalysis";
+import {
+    lifecycleBatchBuildError,
+    lifecycleBatchIsBuilding,
+    useLifecycleBatchDetail,
+} from "../../hooks/useLifecycleBatchDetail";
 import "../../styles/RemindersDetails.css";
-
-const PAYMENT_METHOD_ROWS = [
-    {
-        label: "Deductions",
-        dataKey: "deductions",
-        color: "#215e97",
-        icon: AccountBookOutlined,
-        pct: 14,
-        amount: 110,
-    },
-    {
-        label: "Standing Orders",
-        dataKey: "standingOrders",
-        color: "#1677ff",
-        icon: SyncOutlined,
-        pct: 31,
-        amount: 240,
-    },
-    {
-        label: "Direct Debit",
-        dataKey: "directDebit",
-        color: "#597ef7",
-        icon: BankOutlined,
-        pct: 19,
-        amount: 149,
-    },
-    {
-        label: "Credit Card",
-        dataKey: "creditCard",
-        color: "#fa8c16",
-        icon: CreditCardOutlined,
-        pct: 30,
-        amount: 235,
-    },
-    {
-        label: "Cheque",
-        dataKey: "cheque",
-        color: "#13c2c2",
-        icon: FileTextOutlined,
-        pct: 0,
-        amount: 0,
-    },
-    {
-        label: "Cash",
-        dataKey: "cash",
-        color: "#8c8c8c",
-        icon: MoneyCollectOutlined,
-        pct: 6,
-        amount: 45,
-    },
-];
 
 const TEMPLATE_PREVIEWS = {
     email: {
@@ -156,48 +113,12 @@ const DELIVERY_CHANNELS = [
         iconClass: "sms",
     },
 ];
-
-function paymentAnalysisBaseTotal() {
-    return PAYMENT_METHOD_ROWS.reduce((a, r) => a + r.amount, 0);
-}
-
-function scalePaymentAmounts(baseRows, targetTotal) {
-    const baseSum = baseRows.reduce((a, r) => a + r.amount, 0);
-    if (!baseSum || targetTotal <= 0) {
-        return baseRows.map((r) => ({ ...r, amount: 0, pct: 0 }));
-    }
-    const scaled = baseRows.map((r) => ({
-        ...r,
-        amount: Math.round((r.amount / baseSum) * targetTotal),
-    }));
-    const scaledSum = scaled.reduce((a, r) => a + r.amount, 0);
-    return scaled.map((r) => ({
-        ...r,
-        pct: scaledSum ? Math.round((r.amount / scaledSum) * 100) : 0,
-    }));
-}
-
-function findDominantPaymentRow(rows) {
-    if (!rows?.length) return null;
-    return rows.reduce(
-        (best, row) =>
-            row.amount > (best?.amount ?? -1) ? row : best,
-        null,
-    );
-}
+const STALE_BUILD_MS = 2 * 60 * 1000;
 
 function parseMoney(s) {
     if (s == null) return 0;
     const n = parseFloat(String(s).replace(/[^\d.-]/g, ""));
     return Number.isFinite(n) ? n : 0;
-}
-
-function sumMemberFees(members) {
-    if (!members?.length) return 0;
-    return members.reduce(
-        (acc, m) => acc + parseMoney(m.membershipFee ?? m.lastPaymentAmount),
-        0,
-    );
 }
 
 function formatCurrencyAmount(n) {
@@ -234,14 +155,76 @@ function CancellationDetail() {
     const { cancallationbyId, getCancellationById } = useReminders();
     const { isDisable } = useTableColumns();
 
+    const mapCancellationBatch = useCallback(
+        ({ batchId, batchDoc, rows, batchTitle }) => ({
+            id: batchDoc._id || batchDoc.id || batchId,
+            title: batchDoc.name || batchTitle || "Cancellation batch",
+            user: batchDoc.userFullName || "—",
+            date: batchDoc.batchDate || batchDoc.createdAt,
+            status: batchDoc.status,
+            buildProgress: batchDoc.buildProgress,
+            buildStartedAt: batchDoc.buildStartedAt,
+            buildCompletedAt: batchDoc.buildCompletedAt,
+            balanceAsOf: batchDoc.balanceAsOf,
+            buildError: batchDoc.error || batchDoc.buildProgress?.lastError || null,
+            members: rows.map((row, index) => ({
+                ...row,
+                membershipNo:
+                    row.membershipNo || row.membershipNumber || row.memberId,
+                reminderNo: "R3",
+                reminderDate:
+                    row.eligibilitySnapshot?.reminderTierAnchorAt || row.updatedAt,
+                cancellationFlag: true,
+                _rowKey: `c-${row._id || row.profileId || index}`,
+            })),
+        }),
+        [],
+    );
+
+    const {
+        batch: apiBatch,
+        loading: loadingMembers,
+        refetch: refetchBatch,
+    } = useLifecycleBatchDetail({
+        batchId: location.state?.cancellationBatchId,
+        batchTitle: location.state?.cancellationBatchTitle,
+        membersTier: "CANCEL",
+        mapBatch: mapCancellationBatch,
+    });
+
+    const selectedBatch = apiBatch || cancallationbyId;
+    const batchBuildError = lifecycleBatchBuildError(selectedBatch);
+    const batchIsBuilding = lifecycleBatchIsBuilding(selectedBatch);
+    const batchStatus = String(selectedBatch?.status || "").toLowerCase();
+    const buildStartedAtMs = selectedBatch?.buildStartedAt
+        ? new Date(selectedBatch.buildStartedAt).getTime()
+        : NaN;
+    const pendingBuildIsStale =
+        batchStatus === "pending_build" &&
+        Number.isFinite(buildStartedAtMs) &&
+        Date.now() - buildStartedAtMs > STALE_BUILD_MS;
+    const canBuildBatch =
+        batchStatus === "draft" ||
+        batchStatus === "ready" ||
+        batchStatus === "failed" ||
+        pendingBuildIsStale;
+    const batchStatusLabel = useMemo(() => {
+        if (batchStatus === "failed") return "Build failed";
+        if (batchIsBuilding || batchStatus === "pending_build") return "Generating members";
+        if (batchStatus === "ready") return "Ready";
+        if (batchStatus === "completed") return "Completed";
+        return "Pending";
+    }, [batchStatus, batchIsBuilding]);
+
     const pageTitle =
         location.state?.cancellationBatchTitle ||
-        cancallationbyId?.title ||
+        selectedBatch?.title ||
         "Cancellation batch";
 
     const [selectedRowKeys, setSelectedRowKeys] = useState([]);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [activeChannel, setActiveChannel] = useState("email");
+    const [buildSubmitting, setBuildSubmitting] = useState(false);
 
     const PreviewChannelIcon =
         {
@@ -259,31 +242,29 @@ function CancellationDetail() {
     useEffect(() => {
         setSelectedRowKeys([]);
         setActiveChannel("email");
-    }, [cancallationbyId?.id]);
+    }, [selectedBatch?.id]);
 
     const tableMembers = useMemo(() => {
-        const m = cancallationbyId?.members;
+        const m = selectedBatch?.members;
         if (!m?.length) return [];
         return m
             .filter((row) => row != null && typeof row === "object")
-            .map((row, i) => ({ ...row, _rowKey: `c-${cancallationbyId.id}-${i}` }));
-    }, [cancallationbyId]);
+            .map((row, i) => ({
+                ...row,
+                _rowKey: row._rowKey || `c-${selectedBatch.id}-${i}`,
+            }));
+    }, [selectedBatch]);
 
-    const feeBatchTotal = sumMemberFees(tableMembers);
     const totalCount = tableMembers.length;
 
-    const paymentAnalysisTotal =
-        feeBatchTotal > 0 ? feeBatchTotal : paymentAnalysisBaseTotal();
-
-    const paymentRowsScaled = useMemo(
-        () => scalePaymentAmounts(PAYMENT_METHOD_ROWS, paymentAnalysisTotal),
-        [paymentAnalysisTotal],
+    const paymentAnalysis = useMemo(
+        () => buildPaymentMethodAnalysis(tableMembers, LIFECYCLE_PAYMENT_METHOD_ROWS),
+        [tableMembers],
     );
-
-    const dominantPaymentRow = useMemo(
-        () => findDominantPaymentRow(paymentRowsScaled),
-        [paymentRowsScaled],
-    );
+    const paymentRowsScaled = paymentAnalysis.rows;
+    const paymentAnalysisTotal = paymentAnalysis.total;
+    const dominantPaymentRow = paymentAnalysis.dominant;
+    const hasPaymentAnalysis = paymentAnalysis.hasData;
 
     const donutChartData = useMemo(
         () => paymentRowsScaled.filter((r) => r.amount > 0),
@@ -607,9 +588,58 @@ function CancellationDetail() {
         URL.revokeObjectURL(url);
     };
 
-    const handleProcessBatch = () => {
+    const handleProcessBatch = async () => {
         if (isDisable) return;
-        message.success("Processed cancellation batch (demo).");
+        const batchId = location.state?.cancellationBatchId || selectedBatch?.id;
+        const token = localStorage.getItem("token");
+        const base = getSubscriptionServiceBaseUrl();
+        if (!batchId || !token || !base) {
+            message.error("Missing batch or session.");
+            return;
+        }
+        try {
+            await axios.post(
+                `${base}/reminder-batches/${batchId}/execute`,
+                {},
+                { headers: { Authorization: `Bearer ${token}` } },
+            );
+            message.success("Cancellation batch execution started.");
+        } catch (error) {
+            message.error(
+                error?.response?.data?.data ||
+                    error?.response?.data?.message ||
+                    "Could not execute cancellation batch.",
+            );
+        }
+    };
+
+    const handleBuildBatch = async () => {
+        if (isDisable || !canBuildBatch) return;
+        const batchId = location.state?.cancellationBatchId || selectedBatch?.id;
+        const token = localStorage.getItem("token");
+        const base = getSubscriptionServiceBaseUrl();
+        if (!batchId || !token || !base) {
+            message.error("Missing batch or session.");
+            return;
+        }
+        setBuildSubmitting(true);
+        try {
+            await axios.post(
+                `${base}/reminder-batches/${batchId}/build`,
+                {},
+                { headers: { Authorization: `Bearer ${token}` } },
+            );
+            message.success("Member generation started.");
+            refetchBatch();
+        } catch (error) {
+            message.error(
+                error?.response?.data?.data ||
+                    error?.response?.data?.message ||
+                    "Could not generate members.",
+            );
+        } finally {
+            setBuildSubmitting(false);
+        }
     };
 
     const handleExcludeMember = () => {
@@ -660,16 +690,21 @@ function CancellationDetail() {
                             <div className="reminder-details-meta">
                                 <span className="reminder-details-meta-item">
                                     <UserOutlined />
-                                    {cancallationbyId?.user ?? "—"}
+                                    {selectedBatch?.user ?? "—"}
                                 </span>
                                 <span className="reminder-details-meta-item">
                                     <CalendarOutlined />
-                                    {formatDateDdMmYyyy(cancallationbyId?.date)}
+                                    {formatDateDdMmYyyy(selectedBatch?.date)}
                                 </span>
                                 <span className="reminder-status-badge reminder-status-badge--pending">
                                     <span className="reminder-status-dot" />
-                                    Pending
+                                    {batchStatusLabel}
                                 </span>
+                                {batchBuildError ? (
+                                    <span className="reminder-details-meta-item reminder-details-build-error">
+                                        {batchBuildError}
+                                    </span>
+                                ) : null}
                             </div>
                         </div>
                     </Col>
@@ -687,10 +722,32 @@ function CancellationDetail() {
                                     Export
                                 </Button>
                                 <Button
+                                    className="butn secoundry-btn"
+                                    icon={<ReloadOutlined />}
+                                    disabled={
+                                        isDisable ||
+                                        !canBuildBatch ||
+                                        (batchIsBuilding && !pendingBuildIsStale) ||
+                                        buildSubmitting
+                                    }
+                                    loading={buildSubmitting}
+                                    onClick={handleBuildBatch}
+                                >
+                                    {pendingBuildIsStale
+                                        ? "Requeue generation"
+                                        : batchStatus === "failed"
+                                          ? "Retry generate members"
+                                          : "Generate members"}
+                                </Button>
+                                <Button
                                     type="primary"
                                     className="butn primary-btn"
                                     icon={<PlayCircleOutlined />}
-                                    disabled={isDisable || totalCount === 0}
+                                    disabled={
+                                        isDisable ||
+                                        batchStatus !== "ready" ||
+                                        totalCount === 0
+                                    }
                                     onClick={handleProcessBatch}
                                 >
                                     Process batch
@@ -756,7 +813,9 @@ function CancellationDetail() {
                         extra={
                             <span className="reminder-details-total-amount">
                                 Total amount{" "}
-                                {formatCurrencyAmount(paymentAnalysisTotal)}
+                                {hasPaymentAnalysis
+                                    ? formatCurrencyAmount(paymentAnalysisTotal)
+                                    : "—"}
                             </span>
                         }
                         styles={{
@@ -765,6 +824,7 @@ function CancellationDetail() {
                             },
                         }}
                     >
+                        {hasPaymentAnalysis ? (
                         <div className="reminder-details-payment-layout">
                             <div className="reminder-details-donut-wrap">
                                 <ResponsiveContainer width="100%" height="100%">
@@ -809,13 +869,7 @@ function CancellationDetail() {
                             <div className="reminder-details-payment-legend">
                                 {paymentRowsScaled.map((r) => {
                                     const Icon = r.icon;
-                                    const m = tableMembers.length;
-                                    const cnt =
-                                        m > 0
-                                            ? Math.round(
-                                                  (Number(r.pct) / 100) * m,
-                                              )
-                                            : 0;
+                                    const cnt = r.memberCount || 0;
                                     return (
                                         <div
                                             key={r.dataKey}
@@ -844,7 +898,7 @@ function CancellationDetail() {
                                                         {formatPercentDisplay(
                                                             r.pct,
                                                         )}
-                                                        {m > 0 ? ` · ${cnt}` : ""}
+                                                        {cnt > 0 ? ` · ${cnt}` : ""}
                                                     </span>
                                                 </span>
                                             </div>
@@ -853,6 +907,20 @@ function CancellationDetail() {
                                 })}
                             </div>
                         </div>
+                        ) : (
+                            <div className="reminder-details-empty-wrap">
+                                <Empty
+                                    image={Empty.PRESENTED_IMAGE_SIMPLE}
+                                    description={
+                                        loadingMembers
+                                            ? "Loading payment breakdown..."
+                                            : tableMembers.length
+                                              ? "No payment method breakdown available for the current members"
+                                              : "Payment method analysis appears when batch members are loaded"
+                                    }
+                                />
+                            </div>
+                        )}
                     </Card>
                 </Col>
                 <Col xs={24} lg={12}>
@@ -957,7 +1025,9 @@ function CancellationDetail() {
                                         description={
                                             <div>
                                                 <div>
-                                                    No members in this batch
+                                                    {loadingMembers
+                                                        ? "Loading members..."
+                                                        : "No members in this batch"}
                                                 </div>
                                                 <div className="reminder-details-empty-sub">
                                                     Open a batch from

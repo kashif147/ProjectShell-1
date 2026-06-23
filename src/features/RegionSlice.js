@@ -5,7 +5,7 @@ import { baseURL } from "../utils/Utilities";
 // Fetch all regions
 export const fetchRegions = createAsyncThunk(
   "regions/fetchRegions",
-  async (_, { rejectWithValue }) => {
+  async (forceRefresh, { rejectWithValue }) => {
     try {
       const token = localStorage.getItem("token");
       const response = await axios.get(
@@ -25,21 +25,25 @@ export const fetchRegions = createAsyncThunk(
     }
   },
   {
-    condition: (_, { getState }) => {
+    condition: (forceRefresh, { getState }) => {
       const { regions, lookups } = getState();
-      // Don't dispatch if already loading in either slice
-      // Note: fetchRegions calls /api/lookup same as getAllLookups, but different slice
       if (regions.loading || lookups.lookupsloading) {
-        return false; // Prevent duplicate request
+        return false;
       }
-      // Allow fetch if data doesn't exist or is empty in both slices
+      if (forceRefresh === true) {
+        return true;
+      }
+      if (regions.lastErrorTime && Date.now() - regions.lastErrorTime < 30000) {
+        return false;
+      }
+      if (regions.fetchAttempted) {
+        return false;
+      }
       const hasRegionsData = regions.regions && regions.regions.length > 0;
       const hasLookupsData = lookups.lookups && lookups.lookups.length > 0;
-
       if (!hasRegionsData && !hasLookupsData) {
-        return true; // Allow fetch
+        return true;
       }
-      // Prevent if data already exists in either slice
       return false;
     },
   }
@@ -99,7 +103,7 @@ export const deleteRegion = createAsyncThunk(
           "Content-Type": "application/json",
         },
       });
-      dispatch(fetchRegions());
+      dispatch(fetchRegions(true));
       return id;
     } catch (error) {
       return rejectWithValue(
@@ -116,6 +120,8 @@ const regionSlice = createSlice({
     regions: [],
     loading: false,
     error: null,
+    fetchAttempted: false,
+    lastErrorTime: null,
   },
   reducers: {},
   extraReducers: (builder) => {
@@ -124,6 +130,7 @@ const regionSlice = createSlice({
       .addCase(fetchRegions.pending, (state) => {
         state.loading = true;
         state.error = null;
+        state.fetchAttempted = true;
       })
       .addCase(fetchRegions.fulfilled, (state, action) => {
         state.loading = false;
@@ -132,6 +139,7 @@ const regionSlice = createSlice({
       .addCase(fetchRegions.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
+        state.lastErrorTime = Date.now();
       })
 
       // addRegion

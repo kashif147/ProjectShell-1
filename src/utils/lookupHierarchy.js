@@ -355,6 +355,7 @@ export const mapLookupToFormValues = (record, lookupsTypes = []) => {
     isDeleted: normalized.isdeleted ?? normalized.isDeleted ?? false,
     officer: resolveOfficerIdFromRecord(normalized),
     officerLabel: resolveOfficerLabelFromRecord(normalized),
+    processSalaryDeduction: !!normalized.processSalaryDeduction,
   };
 
   if (Object.prototype.hasOwnProperty.call(normalized, "worklocationAddress")) {

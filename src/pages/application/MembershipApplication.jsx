@@ -18,6 +18,21 @@ import PaymentFormDetailDrawer from "../../component/paymentForms/PaymentFormDet
 import { formatIbanDisplay } from "../../utils/iban";
 import { getApplicationStatus } from "../../utils/duplicateReviewApproval";
 
+const normalizeStatus = (value) => String(value || "").trim().toLowerCase();
+
+const getExecutiveCouncilStatus = (record) =>
+  normalizeStatus(
+    record?.executiveCouncilApprovalDetails?.status ||
+      record?.["executiveCouncilApprovalDetails.status"],
+  );
+
+const getApplicationRowStatus = (record) =>
+  normalizeStatus(
+    record?.applicationStatus ||
+      record?.personalDetails?.applicationStatus ||
+      record?.["personalDetails.applicationStatus"],
+  );
+
 function MembershipApplication() {
   const dispatch = useDispatch();
   const { filtersState } = useFilters();
@@ -38,7 +53,7 @@ function MembershipApplication() {
   } = useSelector((state) => state.paymentFormsWithFilter || {});
   const { selectedIds, setSelectedIds } = useSelectedIds();
   const { columns } = useTableColumns();
-  const { loading: templatesLoading } = useSelector(
+  const { templatesFetching: templatesLoading } = useSelector(
     (state) => state.templateFiltersColumnApi,
   );
   const [formattedApplications, setFormattedApplications] = useState([]);
@@ -109,8 +124,12 @@ function MembershipApplication() {
   const shouldDisableRow = useCallback(
     (record) => {
       if (isPaymentFormsPage) return false;
-      const status = record?.applicationStatus;
-      return status !== "submitted";
+      const status = getApplicationRowStatus(record);
+      if (status === "submitted") return false;
+      if (status !== "processed") return true;
+
+      const executiveCouncilStatus = getExecutiveCouncilStatus(record);
+      return executiveCouncilStatus && executiveCouncilStatus !== "pending";
     },
     [isPaymentFormsPage],
   );

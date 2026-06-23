@@ -1273,7 +1273,7 @@ const staticColumns = {
 
     // ======================= MEMBERSHIP =======================
     {
-      dataIndex: ["professionalDetails", "membershipCategory"],
+      dataIndex: "membershipCategory",
       title: "Membership Category",
       ellipsis: true,
       isGride: true,
@@ -1281,7 +1281,7 @@ const staticColumns = {
       width: 180,
       render: (_, record) =>
         record?.membershipCategory ||
-        record?.professionalDetails?.membershipCategory ||
+        record?.subscriptionDetails?.membershipCategory ||
         "",
     },
 
@@ -1712,12 +1712,11 @@ const staticColumns = {
   Applications: [
     // 🔹 Top-Level Fields
     {
-      dataIndex: ["subscriptionDetails", "membershipCategory"],
+      dataIndex: "membershipCategory",
       title: "Membership Category",
       ellipsis: true,
       isGride: true,
       isVisible: true,
-      width: 250,
       width: 250,
       editable: false,
     },
@@ -1769,8 +1768,31 @@ const staticColumns = {
       },
     },
     {
+      dataIndex: "submissionDate",
+      title: "Submission Date",
+      filterValueType: "date",
+      ellipsis: true,
+      isGride: true,
+      isVisible: true,
+      width: 150,
+      editable: false,
+      render: (value) => (value ? formatDateOnly(value) : "-"),
+    },
+    {
+      dataIndex: "joinDate",
+      title: "Join Date",
+      filterValueType: "date",
+      ellipsis: true,
+      isGride: true,
+      isVisible: true,
+      width: 130,
+      editable: false,
+      render: (value) => (value ? formatDateOnly(value) : "-"),
+    },
+    {
       dataIndex: ["executiveCouncilApprovalDetails", "decisionDate"],
       title: "Executive Council Decision Date",
+      filterValueType: "date",
       ellipsis: true,
       isGride: true,
       isVisible: true,
@@ -6822,15 +6844,29 @@ export const TableColumnsProvider = ({ children }) => {
   ) => {
     if (!screenName || !templateColumns) return;
 
+    const normalizeTemplateColumnKey = (key) => {
+      const value = String(key || "");
+      if (
+        ["Applications", "Profile", "Members"].includes(screenName) &&
+        (value === "professionalDetails.membershipCategory" ||
+          value === "subscriptionDetails.membershipCategory")
+      ) {
+        return "membershipCategory";
+      }
+      return value;
+    };
+
     const profileTemplateKeys =
       screenName === "Profile"
-        ? templateColumns.map((k) => String(k).replace(/^profile\./i, ""))
+        ? templateColumns.map((k) =>
+            normalizeTemplateColumnKey(k).replace(/^profile\./i, ""),
+          )
         : null;
 
     const normalizedTemplateKeys =
       screenName === "Profile"
         ? profileTemplateKeys || []
-        : templateColumns.map((k) => String(k));
+        : templateColumns.map((k) => normalizeTemplateColumnKey(k));
 
     const templateOrderMap = normalizedTemplateKeys.reduce(
       (acc, key, index) => {
@@ -6939,8 +6975,10 @@ export const TableColumnsProvider = ({ children }) => {
 
       const normalizedMasterKeys = Array.isArray(masterColumns) && masterColumns.length > 0
         ? screenName === "Profile"
-          ? masterColumns.map((k) => String(k).replace(/^profile\./i, ""))
-          : masterColumns.map((k) => String(k))
+          ? masterColumns.map((k) =>
+              normalizeTemplateColumnKey(k).replace(/^profile\./i, ""),
+            )
+          : masterColumns.map((k) => normalizeTemplateColumnKey(k))
         : [];
 
       const existingKeys = new Set(
@@ -6995,6 +7033,7 @@ export const TableColumnsProvider = ({ children }) => {
         if (normalized === "membershipnumber") return -2;
         if (normalized.includes("personaldetails.membershipno")) return 2;
         const subscriptionTopLevelPrefixes = [
+          "membershipcategory",
           "subscriptionstatus",
           "subscriptionyear",
           "paymenttype",

@@ -20,6 +20,10 @@ export const getGridTemplates = createAsyncThunk(
       return rejectWithValue(error.response?.data || error.message);
     }
   },
+  {
+    condition: (_, { getState }) =>
+      !getState().templateFiltersColumnApi.templatesFetching,
+  },
 );
 
 // Async thunk to delete a template
@@ -189,5 +193,9 @@ const templateFiltersColumnApi = createSlice({
       });
   },
 });
+
+/** True while GET /templates list is in flight — use for grid init gates, not `loading`. */
+export const selectGridTemplatesFetching = (state) =>
+  state.templateFiltersColumnApi.templatesFetching;
 
 export default templateFiltersColumnApi.reducer;

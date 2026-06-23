@@ -287,7 +287,10 @@ function normalizeTransferHistoryRows(raw) {
   }));
 }
 
-function AppTabs() {
+function AppTabs({
+  profileId: embeddedProfileId,
+  subscriptionId: embeddedSubscriptionId,
+} = {}) {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const confirmLeaveUnsavedChanges = useConfirmUnsavedLeave();
@@ -295,9 +298,11 @@ function AppTabs() {
     useAuthorization();
   const location = useLocation();
   const [searchParams] = useSearchParams();
-  const profileIdParam = normalizeRouteId(searchParams.get("profileId"));
+  const profileIdParam = normalizeRouteId(
+    embeddedProfileId ?? searchParams.get("profileId"),
+  );
   const subscriptionIdParam = normalizeRouteId(
-    searchParams.get("subscriptionId"),
+    embeddedSubscriptionId ?? searchParams.get("subscriptionId"),
   );
   const activeTabParam = String(searchParams.get("activeTab") || "")
     .trim()

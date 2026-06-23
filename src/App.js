@@ -18,12 +18,11 @@ import { TenantBrandingProvider } from "./context/TenantBrandingContext";
 function App() {
   const dispatch = useDispatch();
   const [api, contextHolder] = notification.useNotification();
-  const hasFetchedRef = useRef(false);
+  const bootstrapRef = useRef({ lookups: false, hierarchical: false });
 
   const {
     hierarchicalLookups,
     hierarchicalLookupsLoading,
-    hierarchicalLookupsError,
   } = useSelector((state) => state.hierarchicalLookups);
 
   const { lookups, lookupsloading: lookupsLoading } = useSelector(
@@ -37,33 +36,36 @@ function App() {
   notification.warning = api.warning;
 
   useEffect(() => {
-    // Only fetch lookups if user is authenticated (token exists)
-    // This prevents API calls when landing on the login page
     const token = localStorage.getItem("token");
     if (!token) {
-      hasFetchedRef.current = false;
+      bootstrapRef.current = { lookups: false, hierarchical: false };
       return;
     }
 
-    // Only fetch if data doesn't exist, not already loading, and haven't fetched in this session
     if (
       !lookupsLoading &&
       (!lookups || lookups.length === 0) &&
-      !hasFetchedRef.current
+      !bootstrapRef.current.lookups
     ) {
-      hasFetchedRef.current = true;
+      bootstrapRef.current.lookups = true;
       dispatch(getAllLookups());
     }
 
-    // Only fetch hierarchical if data doesn't exist and not already loading
     if (
       !hierarchicalLookupsLoading &&
-      (!hierarchicalLookups || hierarchicalLookups.length === 0)
+      (!hierarchicalLookups || hierarchicalLookups.length === 0) &&
+      !bootstrapRef.current.hierarchical
     ) {
+      bootstrapRef.current.hierarchical = true;
       dispatch(getHierarchicalLookups());
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [dispatch]);
+  }, [
+    dispatch,
+    lookupsLoading,
+    lookups,
+    hierarchicalLookupsLoading,
+    hierarchicalLookups,
+  ]);
   useEffect(() => {
     const loadWorklet = async () => {
       // Shared Storage API is only available in secure contexts and specific origins

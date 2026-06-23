@@ -78,6 +78,7 @@ import { prepareChartsForPrintAsync } from "../../pages/membership/executive/use
 import { getAllApplications } from "../../features/ApplicationSlice";
 import MultiFilterDropdown from "./MultiFilterDropdown";
 import SaveViewMenu from "./SaveViewMenu";
+import { isNonGridToolbarRoute } from "../../utils/gridTemplateRoutes";
 import ApplicationMgtDrawer from "../applications/ApplicationMgtDrawer";
 import Breadcrumb from "./Breadcrumb";
 import SimpleBatch from "../../pages/membership/SimpleBatch";
@@ -192,6 +193,7 @@ function HeaderDetails({
   const [searchParams, setSearchParams] = useSearchParams();
   const currentURL = `${location?.pathname}`;
   const nav = location?.pathname || "";
+  const hideGridToolbar = isNonGridToolbarRoute(nav);
   const headerDashboardRange = useMemo(() => {
     const r = searchParams.get("range");
     return HEADER_DASHBOARD_RANGE_KEYS.includes(r) ? r : "YTD";
@@ -595,8 +597,19 @@ function HeaderDetails({
     (state) => state.lookups,
     shallowEqual,
   );
+  const regionsFetchAttemptedRef = useRef(false);
   useEffect(() => {
-    if (!regionsLoading && (!regions || regions.length === 0)) {
+    const token = localStorage.getItem("token");
+    if (!token) {
+      regionsFetchAttemptedRef.current = false;
+      return;
+    }
+    if (
+      !regionsLoading &&
+      (!regions || regions.length === 0) &&
+      !regionsFetchAttemptedRef.current
+    ) {
+      regionsFetchAttemptedRef.current = true;
       dispatch(fetchRegions());
     }
   }, [dispatch, regions, regionsLoading]);
@@ -2041,18 +2054,14 @@ function HeaderDetails({
                         style={{ width: 300 }}
                         className="inp"
                       />
-                    ) : location?.pathname === "/worklocation" ||
-                      location?.pathname === "/region" ||
-                      location?.pathname === "/branch" ? null : (
+                    ) : hideGridToolbar ? null : (
                       <div style={{ flex: 1, minWidth: 0 }}>
                         <Toolbar />
                       </div>
                     )}
                     {nav !== "/MembershipDashboard" ? (
                       <div className="d-flex flex-shrink-0 align-items-center gap-2">
-                        {location?.pathname === "/worklocation" ||
-                        location?.pathname === "/region" ||
-                        location?.pathname === "/branch" ? null : (
+                        {hideGridToolbar ? null : (
                           <>
                             {nav !== "/templateConfig" &&
                               !isHeaderDashboardRangeNav(nav) && (

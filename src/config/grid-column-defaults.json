@@ -1,5 +1,45 @@
 {
   "pages": {
+    "applications": {
+      "screenKey": "Applications",
+      "templateType": "application",
+      "service": "profile-service",
+      "filters": {
+        "applicationStatus": { "operator": "equal_to", "values": ["Submitted"] },
+        "membershipCategory": { "operator": "equal_to", "values": [] },
+        "executiveCouncilApprovalDetails.status": { "operator": "equal_to", "values": [] },
+        "executiveCouncilApprovalDetails.decisionDate": { "operator": "between", "values": [] },
+        "submissionDate": { "operator": "between", "values": [] },
+        "joinDate": { "operator": "between", "values": [] },
+        "grade": { "operator": "equal_to", "values": [] },
+        "primarySection": { "operator": "equal_to", "values": [] },
+        "workLocation": { "operator": "equal_to", "values": [] },
+        "branch": { "operator": "equal_to", "values": [] },
+        "region": { "operator": "equal_to", "values": [] },
+        "paymentType": { "operator": "equal_to", "values": [] },
+        "payrollNo": { "operator": "equal_to", "values": [] }
+      },
+      "columns": [
+        { "dataIndex": "membershipCategory", "title": "Membership Category", "isGride": true, "isVisible": true, "ellipsis": true, "width": 250 },
+        { "dataIndex": "applicationStatus", "title": "Application Status", "isGride": true, "isVisible": true, "ellipsis": true, "width": 120 },
+        { "dataIndex": "executiveCouncilApprovalDetails.status", "title": "Executive Council Status", "isGride": true, "isVisible": true, "ellipsis": true, "width": 190 },
+        { "dataIndex": "submissionDate", "title": "Submission Date", "filterValueType": "date", "isGride": true, "isVisible": true, "ellipsis": true, "width": 150 },
+        { "dataIndex": "joinDate", "title": "Join Date", "filterValueType": "date", "isGride": true, "isVisible": true, "ellipsis": true, "width": 130 },
+        { "dataIndex": "executiveCouncilApprovalDetails.decisionDate", "title": "Executive Council Decision Date", "filterValueType": "date", "isGride": true, "isVisible": true, "ellipsis": true, "width": 230 },
+        { "dataIndex": "createdAt", "title": "Created At", "filterValueType": "date", "isGride": true, "isVisible": true, "ellipsis": true, "width": 160 },
+        { "dataIndex": "updatedAt", "title": "Updated At", "filterValueType": "date", "isGride": true, "isVisible": true, "ellipsis": true, "width": 160 },
+        { "dataIndex": "personalDetails.personalInfo.title", "title": "Title", "isGride": true, "isVisible": true, "ellipsis": true, "width": 100 },
+        { "dataIndex": "personalDetails.personalInfo.forename", "title": "Forename", "isGride": true, "isVisible": true, "ellipsis": true, "width": 150 },
+        { "dataIndex": "personalDetails.personalInfo.surname", "title": "Surname", "isGride": true, "isVisible": true, "ellipsis": true, "width": 150 },
+        { "dataIndex": "personalDetails.contactInfo.mobileNumber", "title": "Mobile No", "isGride": true, "isVisible": true, "ellipsis": true, "width": 150 },
+        { "dataIndex": "professionalDetails.grade", "title": "Grade", "isGride": true, "isVisible": true, "ellipsis": true, "width": 120 },
+        { "dataIndex": "professionalDetails.workLocation", "title": "Work Location", "isGride": true, "isVisible": true, "ellipsis": true, "width": 180 },
+        { "dataIndex": "professionalDetails.branch", "title": "Branch", "isGride": true, "isVisible": true, "ellipsis": true, "width": 140 },
+        { "dataIndex": "professionalDetails.region", "title": "Region", "isGride": true, "isVisible": true, "ellipsis": true, "width": 140 },
+        { "dataIndex": "subscriptionDetails.paymentType", "title": "Payment Type", "isGride": true, "isVisible": true, "ellipsis": true, "width": 160 },
+        { "dataIndex": "subscriptionDetails.payrollNo", "title": "Payroll No", "isGride": true, "isVisible": true, "ellipsis": true, "width": 140 }
+      ]
+    },
     "creditnotes": {
       "screenKey": "CreditNotes",
       "templateType": "creditnotes",

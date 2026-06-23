@@ -75,6 +75,9 @@ export const getProfilesWithFilter = createAsyncThunk(
         error.response?.data?.message || 'Failed to fetch filtered profiles'
       );
     }
+  },
+  {
+    condition: (_, { getState }) => !getState().profile.loading,
   }
 );
 

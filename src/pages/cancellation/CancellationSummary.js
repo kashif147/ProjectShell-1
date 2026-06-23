@@ -1,5 +1,6 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import axios from "axios";
+import { message } from "antd";
 import { useNavigate } from "react-router-dom";
 import { useReminders } from "../../context/CampaignDetailsProvider";
 import { useTableColumns } from "../../context/TableColumnsContext ";
@@ -37,6 +38,8 @@ function enrichCancellation(item) {
       (String(item?.status || "").toLowerCase() === "completed"
         ? item?.updatedAt || item?.createdAt || true
         : null),
+    statusLabel: String(item?.status || "draft"),
+    isDraft: String(item?.status || "draft").toLowerCase() === "draft",
     hasCancellationDetail: false,
   };
 }
@@ -54,10 +57,11 @@ function CancellationSummary() {
   });
   const [rows, setRows] = useState([]);
   const [totalRows, setTotalRows] = useState(0);
+  const [deletingBatchId, setDeletingBatchId] = useState(null);
+  const [refreshKey, setRefreshKey] = useState(0);
 
-  useEffect(() => {
-    const controller = new AbortController();
-    const fetchCancellationBatches = async () => {
+  const fetchCancellationBatches = useCallback(
+    async (signal) => {
       try {
         const token = localStorage.getItem("token");
         const subscriptionBaseUrl = getSubscriptionServiceBaseUrl();
@@ -75,7 +79,7 @@ function CancellationSummary() {
               kind: "CANCELLATION",
             },
             headers: { Authorization: `Bearer ${token}` },
-            signal: controller.signal,
+            signal,
           },
         );
         const payload = response?.data?.data || {};
@@ -89,10 +93,15 @@ function CancellationSummary() {
         setRows([]);
         setTotalRows(0);
       }
-    };
-    fetchCancellationBatches();
+    },
+    [currentPage, pageSize],
+  );
+
+  useEffect(() => {
+    const controller = new AbortController();
+    fetchCancellationBatches(controller.signal);
     return () => controller.abort();
-  }, [currentPage, pageSize]);
+  }, [fetchCancellationBatches, refreshKey]);
 
   const filteredData = useMemo(() => {
     return rows.filter((c) => {
@@ -162,11 +171,40 @@ function CancellationSummary() {
     }
   };
 
+  const handleDeleteBatch = async (item) => {
+    const batchId = item?.id;
+    if (!batchId) return;
+    try {
+      setDeletingBatchId(batchId);
+      const token = localStorage.getItem("token");
+      const subscriptionBaseUrl = getSubscriptionServiceBaseUrl();
+      if (!token || !subscriptionBaseUrl) {
+        message.error("Unable to delete batch");
+        return;
+      }
+      await axios.delete(`${subscriptionBaseUrl}/reminder-batches/${batchId}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      message.success("Draft batch deleted");
+      setRefreshKey((key) => key + 1);
+    } catch (error) {
+      message.error(
+        error?.response?.data?.data ||
+          error?.response?.data?.message ||
+          "Failed to delete batch",
+      );
+    } finally {
+      setDeletingBatchId(null);
+    }
+  };
+
   return (
     <div style={{ width: "100%" }}>
       <CancellationBatchesTable
         dataSource={sortedFilteredData}
         onOpenBatch={openBatch}
+        onDeleteBatch={handleDeleteBatch}
+        deletingBatchId={deletingBatchId}
         total={totalRows}
         sortColumnKey={sortState.columnKey}
         sortOrder={sortState.order}

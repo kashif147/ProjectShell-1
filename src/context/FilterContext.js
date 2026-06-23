@@ -261,6 +261,8 @@ export const FilterProvider = ({ children }) => {
    */
   const userOverrodeTemplateFiltersRef = useRef(false);
   const activePageRef = useRef("Applications");
+  const lookupsFetchAttemptedRef = useRef(false);
+  const categoryFetchAttemptedRef = useRef(false);
   const [membershipDashboardApplyTick, setMembershipDashboardApplyTick] =
     useState(0);
 
@@ -323,16 +325,27 @@ export const FilterProvider = ({ children }) => {
   // 🔹 Fetch lookups and categories when missing (avoids duplicating App.js bootstrap)
   useEffect(() => {
     const token = localStorage.getItem("token");
-    if (!token) return;
+    if (!token) {
+      lookupsFetchAttemptedRef.current = false;
+      categoryFetchAttemptedRef.current = false;
+      return;
+    }
 
-    if (!lookupsloading && (!lookupsRaw || lookupsRaw.length === 0)) {
+    if (
+      !lookupsloading &&
+      (!lookupsRaw || lookupsRaw.length === 0) &&
+      !lookupsFetchAttemptedRef.current
+    ) {
+      lookupsFetchAttemptedRef.current = true;
       dispatch(getAllLookups());
     }
     if (
       !categoryLoading &&
       (currentCategoryId !== MEMBERSHIP_CATEGORY_LOOKUP_ID ||
-        !categoryData?.length)
+        !categoryData?.length) &&
+      !categoryFetchAttemptedRef.current
     ) {
+      categoryFetchAttemptedRef.current = true;
       dispatch(getCategoryLookup(MEMBERSHIP_CATEGORY_LOOKUP_ID));
     }
   }, [
@@ -645,7 +658,8 @@ export const FilterProvider = ({ children }) => {
   // 🔹 Helper to get screen from path (keys lowercased so /Applications and /applications match)
   const getScreenFromPath = () => {
     const pathMap = {
-      "/applications": "Applications",
+      "/configuration": "Configuration",
+      "/settings": "Settings",
       "/paymentforms": "Payment Forms",
       "/summary": "Profile",
       "/membership": "Membership",
@@ -685,7 +699,10 @@ export const FilterProvider = ({ children }) => {
       Applications: [
         "Membership Category",
         "Application Status",
+        "Executive Council Status",
+        "Executive Council Decision Date",
         "Submission Date",
+        "Join Date",
         "Email (Preferred)",
         "Mobile No",
         "Grade",
@@ -1116,6 +1133,22 @@ export const FilterProvider = ({ children }) => {
         },
         "Membership Category": {
           operator: "==",
+          selectedValues: [],
+        },
+        "Executive Council Status": {
+          operator: "==",
+          selectedValues: [],
+        },
+        "Executive Council Decision Date": {
+          operator: "between",
+          selectedValues: [],
+        },
+        "Submission Date": {
+          operator: "between",
+          selectedValues: [],
+        },
+        "Join Date": {
+          operator: "between",
           selectedValues: [],
         },
         "Work Location": {
@@ -2213,6 +2246,7 @@ export const FilterProvider = ({ children }) => {
         "Rejected",
         "Submitted",
       ],
+      "Executive Council Status": ["", "Pending", "Approved", "Rejected"],
       "Form Type": ["", "Salary Deductions", "Standing Orders"],
       "Membership Status": [
         "",

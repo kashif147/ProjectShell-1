@@ -382,6 +382,8 @@ export const getLabelToKeyMap = (screenCols) => {
     const overrides = {
         'Application Status': 'applicationStatus',
         'Status': 'applicationStatus',
+        'Executive Council Status': 'executiveCouncilApprovalDetails.status',
+        'Executive Council Decision Date': 'executiveCouncilApprovalDetails.decisionDate',
         'Membership Status': hasSubscriptionStatusColumn ? 'subscriptionStatus' : 'membershipStatus',
         'Membership Category': 'membershipCategory',
         'Work Location': 'workLocation',
@@ -480,6 +482,9 @@ export const getLabelToKeyMap = (screenCols) => {
 /** API stores camelCase keys; use when column list is empty or does not list a key (avoids `filtersState['applicationStatus']` vs "Application Status"). */
 const APPLICATION_API_FILTER_KEY_TO_LABEL = {
     applicationStatus: "Application Status",
+    "executiveCouncilApprovalDetails.status": "Executive Council Status",
+    "executiveCouncilApprovalDetails.decisionDate":
+      "Executive Council Decision Date",
     membershipCategory: "Membership Category",
     workLocation: "Work Location",
     grade: "Grade",

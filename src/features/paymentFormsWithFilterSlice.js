@@ -29,6 +29,10 @@ export const getPaymentFormsWithFilter = createAsyncThunk(
       );
     }
   },
+  {
+    condition: (_, { getState }) =>
+      !getState().paymentFormsWithFilter?.loading,
+  },
 );
 
 const paymentFormsWithFilterSlice = createSlice({

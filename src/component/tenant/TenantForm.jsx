@@ -33,6 +33,7 @@ import { mergeTenantFormData } from "../../constants/tenantDefaults";
 import TenantBrandingAssetUpload from "./TenantBrandingAssetUpload";
 import TenantOfficesPanel from "./TenantOfficesPanel";
 import TenantDepartmentsPanel from "./TenantDepartmentsPanel";
+import TenantPublicHolidaysPanel from "./TenantPublicHolidaysPanel";
 import { notifyBrandingRefresh } from "../../context/TenantBrandingContext";
 import {
   clearTenantBrandingCache,
@@ -42,10 +43,22 @@ const { TabPane } = Tabs;
 
 const TENANT_TAB_KEYS = [
   "details",
+  "lifecycle",
+  "publicHolidays",
   "organisation",
   "branding",
   "departments",
   "offices",
+];
+
+const MODE_OPTIONS = [
+  { label: "Manual", key: "manual" },
+  { label: "Automatic", key: "automatic" },
+];
+
+const SCHEDULE_DAY_OPTIONS = [
+  { label: "First working day", key: "FIRST_WORKING_DAY" },
+  { label: "First calendar day", key: "FIRST_DAY" },
 ];
 
 const getChangedFields = (current, original) =>
@@ -155,6 +168,30 @@ const TenantForm = ({ tenant, onClose }) => {
       }
 
       return newErrors;
+    });
+  };
+
+  const updateLifecycle = (path, value) => {
+    setIData((prev) => {
+      const lifecycle = prev.settings.lifecycleBatches || {};
+      const nextLifecycle = {
+        ...lifecycle,
+        reminder: { ...(lifecycle.reminder || {}) },
+        cancellation: { ...(lifecycle.cancellation || {}) },
+        schedule: { ...(lifecycle.schedule || {}) },
+      };
+      if (path.length === 1) {
+        nextLifecycle[path[0]] = value;
+      } else if (path.length === 2) {
+        nextLifecycle[path[0]][path[1]] = value;
+      }
+      return {
+        ...prev,
+        settings: {
+          ...prev.settings,
+          lifecycleBatches: nextLifecycle,
+        },
+      };
     });
   };
 
@@ -791,6 +828,121 @@ const TenantForm = ({ tenant, onClose }) => {
                 );
               })}
             </div>
+          </TabPane>
+
+          <TabPane tab="Lifecycle Automation" key="lifecycle">
+            <div className="drawer-tab-content pt-2">
+              <div className="section-header">Reminder batches</div>
+              <Row gutter={[16, 8]}>
+                <Col xs={24} md={12}>
+                  <CustomSelect
+                    label="Generate reminder batch"
+                    value={iData.settings.lifecycleBatches.reminder.generateMode}
+                    isIDs
+                    onChange={(e) =>
+                      updateLifecycle(
+                        ["reminder", "generateMode"],
+                        e.target.value,
+                      )
+                    }
+                    options={MODE_OPTIONS}
+                  />
+                </Col>
+                <Col xs={24} md={12}>
+                  <CustomSelect
+                    label="Execute reminder batch"
+                    value={iData.settings.lifecycleBatches.reminder.executeMode}
+                    isIDs
+                    onChange={(e) =>
+                      updateLifecycle(
+                        ["reminder", "executeMode"],
+                        e.target.value,
+                      )
+                    }
+                    options={MODE_OPTIONS}
+                  />
+                </Col>
+              </Row>
+
+              <div className="section-header">Cancellation batches</div>
+              <Row gutter={[16, 8]}>
+                <Col xs={24} md={12}>
+                  <CustomSelect
+                    label="Generate cancellation batch"
+                    value={
+                      iData.settings.lifecycleBatches.cancellation.generateMode
+                    }
+                    isIDs
+                    onChange={(e) =>
+                      updateLifecycle(
+                        ["cancellation", "generateMode"],
+                        e.target.value,
+                      )
+                    }
+                    options={MODE_OPTIONS}
+                  />
+                </Col>
+                <Col xs={24} md={12}>
+                  <CustomSelect
+                    label="Execute cancellation batch"
+                    value={
+                      iData.settings.lifecycleBatches.cancellation.executeMode
+                    }
+                    isIDs
+                    onChange={(e) =>
+                      updateLifecycle(
+                        ["cancellation", "executeMode"],
+                        e.target.value,
+                      )
+                    }
+                    options={MODE_OPTIONS}
+                  />
+                </Col>
+              </Row>
+
+              <div className="section-header">Monthly schedule</div>
+              <Row gutter={[16, 8]}>
+                <Col xs={24} md={12}>
+                  <CustomSelect
+                    label="Automatic run date"
+                    value={iData.settings.lifecycleBatches.schedule.dayMode}
+                    isIDs
+                    onChange={(e) =>
+                      updateLifecycle(["schedule", "dayMode"], e.target.value)
+                    }
+                    options={SCHEDULE_DAY_OPTIONS}
+                  />
+                </Col>
+                <Col xs={24} md={12}>
+                  <MyInput
+                    label="Notification recipient role codes"
+                    value={(
+                      iData.settings.lifecycleBatches
+                        .notificationRecipientRoleCodes || []
+                    ).join(", ")}
+                    onChange={(e) =>
+                      updateLifecycle(
+                        ["notificationRecipientRoleCodes"],
+                        e.target.value
+                          .split(",")
+                          .map((x) => x.trim().toUpperCase())
+                          .filter(Boolean),
+                      )
+                    }
+                  />
+                </Col>
+              </Row>
+            </div>
+          </TabPane>
+
+          <TabPane tab="Public Holidays" key="publicHolidays" disabled={!tenant?._id}>
+            {tenant?._id ? (
+              <TenantPublicHolidaysPanel tenantId={tenant._id} />
+            ) : (
+              <p className="text-muted">
+                Save the tenant first to manage public holidays.
+              </p>
+            )}
           </TabPane>
 
           <TabPane tab="Organisation Profile" key="organisation">

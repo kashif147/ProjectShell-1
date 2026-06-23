@@ -77,7 +77,7 @@ export default function MembershipListingReport() {
 
   const { isInitialized } = useSelector((state) => state.applicationWithFilter);
   const { activeTemplateId } = useSelector((state) => state.activeTemplate);
-  const { loading: templatesLoading } = useSelector(
+  const { templatesFetching: templatesLoading } = useSelector(
     (state) => state.templateFiltersColumnApi,
   );
 
