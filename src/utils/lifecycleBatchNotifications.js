@@ -1,6 +1,6 @@
 import { notification } from "antd";
 import axios from "axios";
-import { getAccountServiceBaseUrl } from "../config/serviceUrls";
+import { getSubscriptionServiceBaseUrl } from "../config/serviceUrls";
 
 const localId = () =>
   `local-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
@@ -81,6 +81,34 @@ export function notifyBatchReady(ctx, variant, payload) {
   });
 }
 
+export function notifyBatchFailed(ctx, variant, payload) {
+  const isReminder = variant === "reminder";
+  pushLifecycleNotification(ctx, {
+    type: isReminder
+      ? LIFECYCLE_TYPES.REMINDER_GENERATING
+      : LIFECYCLE_TYPES.CANCELLATION_GENERATING,
+    title: isReminder
+      ? "Reminder batch generation failed"
+      : "Cancellation batch generation failed",
+    body:
+      payload.error ||
+      `Batch "${payload.description}" did not finish loading members. Please retry or contact support.`,
+    referenceNumber: payload.referenceNumber,
+    description: payload.description,
+    batchDetailId: payload.batchDetailId,
+    totalTransactions: 0,
+  });
+  notification.error({
+    message: isReminder
+      ? "Reminder batch generation failed"
+      : "Cancellation batch generation failed",
+    description:
+      payload.error ||
+      `Batch "${payload.description}" did not finish loading members.`,
+    duration: 6,
+  });
+}
+
 function extractBatchDetail(res) {
   return res?.data?.data ?? res?.data ?? null;
 }
@@ -114,21 +142,35 @@ export function watchBatchUntilPopulated({
 
   let attempts = 0;
   const token = localStorage.getItem("token");
-  const base = getAccountServiceBaseUrl();
+  const base = getSubscriptionServiceBaseUrl();
   if (!token || !base) return;
 
   const tick = async () => {
     attempts += 1;
     try {
-      const res = await axios.get(`${base}/batch-details/${batchDetailId}`, {
+      const res = await axios.get(`${base}/reminder-batches/${batchDetailId}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       const data = extractBatchDetail(res);
-      if (isBatchDetailPopulated(data)) {
+      const status = String(data?.status || "").toLowerCase();
+      if (status === "failed") {
+        notifyBatchFailed(notificationCtx, variant, {
+          batchDetailId,
+          description,
+          referenceNumber,
+          error:
+            data?.error ||
+            data?.buildProgress?.lastError ||
+            "Batch generation failed.",
+        });
+        return;
+      }
+      if (status === "ready" || status === "completed" || isBatchDetailPopulated(data)) {
         const total =
-          Array.isArray(data?.batchPayments) && data.batchPayments.length > 0
-            ? data.batchPayments.length
-            : Number(data?.totalRecords ?? data?.totalTransactions ?? 0);
+          Number(data?.countsByTier?.r1 || 0) +
+          Number(data?.countsByTier?.r2 || 0) +
+          Number(data?.countsByTier?.r3 || 0) +
+          Number(data?.countsByTier?.cancel || 0);
         notifyBatchReady(notificationCtx, variant, {
           batchDetailId,
           description,
@@ -143,11 +185,11 @@ export function watchBatchUntilPopulated({
     if (attempts < maxAttempts) {
       setTimeout(tick, intervalMs);
     } else {
-      notifyBatchReady(notificationCtx, variant, {
+      notifyBatchFailed(notificationCtx, variant, {
         batchDetailId,
         description,
         referenceNumber,
-        totalTransactions: 0,
+        error: `Batch "${description}" is still not ready after polling. Check the build worker or retry generation.`,
       });
     }
   };

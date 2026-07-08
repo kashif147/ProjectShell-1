@@ -1,8 +1,8 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import {
+  Alert,
   Button,
   Drawer,
-  Input,
   Modal,
   Space,
   Spin,
@@ -12,7 +12,6 @@ import {
   message,
 } from "antd";
 import {
-  CloseCircleOutlined,
   EyeOutlined,
   MergeCellsOutlined,
   PlusCircleOutlined,
@@ -27,6 +26,10 @@ import { buildDetailsSearch } from "../../utils/detailsRoute";
 import { getApplicationById } from "../../features/ApplicationDetailsSlice";
 import MyTable from "../common/MyTable";
 import DuplicateProfileMergeDrawer from "./DuplicateProfileMergeDrawer";
+import {
+  APPLICATION_DUPLICATE_REVIEW_LOCKED_MESSAGE,
+  isProcessedApplicationStatus,
+} from "../../utils/duplicateReviewApproval";
 import "../../styles/MyDrawer.css";
 import "./DuplicateProfileReview.css";
 import "./DuplicateProfileMergeModal.css";
@@ -124,6 +127,20 @@ function formatMatchDetail(record = {}) {
   return `${reason} · ${extraFields.join(", ")}`;
 }
 
+function formatDecisionAction(action) {
+  return String(action || "")
+    .replace(/_/g, " ")
+    .toLowerCase()
+    .replace(/\b\w/g, (letter) => letter.toUpperCase());
+}
+
+function formatDecisionDate(value) {
+  if (!value) return "";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "";
+  return date.toLocaleString();
+}
+
 function MatchTable({
   title,
   rows,
@@ -131,8 +148,8 @@ function MatchTable({
   onViewDetails,
   onLink,
   onMerge,
-  onIgnore,
   showProfileActions,
+  readOnly,
   resolveCategoryLabel,
 }) {
   const columns = [
@@ -212,6 +229,7 @@ function MatchTable({
                   type="text"
                   size="small"
                   icon={<TagOutlined />}
+                  disabled={readOnly}
                   onClick={() => onLink(record)}
                 />
               </Tooltip>
@@ -220,20 +238,12 @@ function MatchTable({
                   type="text"
                   size="small"
                   icon={<MergeCellsOutlined />}
+                  disabled={readOnly}
                   onClick={() => onMerge(record)}
                 />
               </Tooltip>
             </>
           )}
-          <Tooltip title="Ignore Match">
-            <Button
-              type="text"
-              size="small"
-              danger
-              icon={<CloseCircleOutlined />}
-              onClick={() => onIgnore(record)}
-            />
-          </Tooltip>
         </Space>
       ),
     },
@@ -265,6 +275,7 @@ const DuplicateProfileReview = ({
   open,
   onClose,
   applicationId,
+  applicationStatus,
   onReviewUpdated,
   runDetectionOnOpen = false,
 }) => {
@@ -274,17 +285,14 @@ const DuplicateProfileReview = ({
   const [loading, setLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [data, setData] = useState(null);
-  const [reasonModal, setReasonModal] = useState({
-    open: false,
-    action: null,
-    record: null,
-    title: "",
-  });
-  const [decisionReason, setDecisionReason] = useState("");
   const [mergeModal, setMergeModal] = useState({
     open: false,
     record: null,
   });
+  const readOnly =
+    isProcessedApplicationStatus(applicationStatus) ||
+    isProcessedApplicationStatus(data?.applicationStatus) ||
+    data?.isReadOnly === true;
 
   const resolveCategoryLabel = useCallback(
     (value) =>
@@ -320,6 +328,10 @@ const DuplicateProfileReview = ({
 
   const runDetection = useCallback(async () => {
     if (!applicationId) return;
+    if (isProcessedApplicationStatus(applicationStatus)) {
+      await loadMatches();
+      return;
+    }
     setLoading(true);
     try {
       const response = await axios.post(
@@ -337,7 +349,7 @@ const DuplicateProfileReview = ({
     } finally {
       setLoading(false);
     }
-  }, [applicationId, baseURL, authHeaders, onReviewUpdated]);
+  }, [applicationId, applicationStatus, baseURL, authHeaders, loadMatches, onReviewUpdated]);
 
   useEffect(() => {
     if (!open || !applicationId) return;
@@ -358,6 +370,10 @@ const DuplicateProfileReview = ({
     mergeFieldChoices,
   }) => {
     if (!applicationId) return false;
+    if (readOnly) {
+      message.warning(APPLICATION_DUPLICATE_REVIEW_LOCKED_MESSAGE);
+      return false;
+    }
     setSubmitting(true);
     try {
       const response = await axios.post(
@@ -376,11 +392,7 @@ const DuplicateProfileReview = ({
       message.success("Duplicate review decision saved");
       onReviewUpdated?.(payload);
       await dispatch(getApplicationById({ id: applicationId }));
-      if (action !== "IGNORE_MATCH") {
-        onClose?.();
-      } else {
-        await loadMatches();
-      }
+      onClose?.();
       return true;
     } catch (error) {
       message.error(
@@ -389,14 +401,7 @@ const DuplicateProfileReview = ({
       return false;
     } finally {
       setSubmitting(false);
-      setReasonModal({ open: false, action: null, record: null, title: "" });
-      setDecisionReason("");
     }
-  };
-
-  const openReasonModal = (action, record, title) => {
-    setReasonModal({ open: true, action, record, title });
-    setDecisionReason("");
   };
 
   const openInNewTab = (path) => {
@@ -418,10 +423,14 @@ const DuplicateProfileReview = ({
   };
 
   const handleLink = (record) => {
+    if (readOnly) {
+      message.warning(APPLICATION_DUPLICATE_REVIEW_LOCKED_MESSAGE);
+      return;
+    }
     Modal.confirm({
       title: "Tag this Profile",
       content:
-        "On approval, this application will be linked to the selected profile. Application details will override the existing profile data. Any active subscription on the profile will be cancelled and a new subscription will be created from this application.",
+        "On approval, this application will be linked to the selected profile. Application details will override the existing profile data. Returning members get a new subscription; active members keep their current subscription.",
       okText: "Tag this Profile",
       centered: true,
       onOk: () =>
@@ -434,10 +443,18 @@ const DuplicateProfileReview = ({
   };
 
   const handleMerge = (record) => {
+    if (readOnly) {
+      message.warning(APPLICATION_DUPLICATE_REVIEW_LOCKED_MESSAGE);
+      return;
+    }
     setMergeModal({ open: true, record });
   };
 
   const handleMergeConfirm = async (mergeFieldChoices) => {
+    if (readOnly) {
+      message.warning(APPLICATION_DUPLICATE_REVIEW_LOCKED_MESSAGE);
+      return;
+    }
     const record = mergeModal.record;
     if (!record) return;
     const saved = await submitDecision({
@@ -451,15 +468,11 @@ const DuplicateProfileReview = ({
     }
   };
 
-  const handleIgnore = (record) => {
-    openReasonModal(
-      "IGNORE_MATCH",
-      record,
-      "Ignore Match",
-    );
-  };
-
   const handleCreateNewProfile = () => {
+    if (readOnly) {
+      message.warning(APPLICATION_DUPLICATE_REVIEW_LOCKED_MESSAGE);
+      return;
+    }
     Modal.confirm({
       title: "Create New Profile",
       content:
@@ -479,6 +492,9 @@ const DuplicateProfileReview = ({
     [data],
   );
   const reviewStatus = data?.duplicateReview?.status;
+  const decisionHistory = Array.isArray(data?.duplicateReview?.auditHistory)
+    ? data.duplicateReview.auditHistory
+    : [];
 
   return (
     <>
@@ -495,13 +511,15 @@ const DuplicateProfileReview = ({
         width="min(96vw, 1280px)"
         destroyOnClose
         extra={
-          <Button
-            icon={<ReloadOutlined />}
-            loading={loading}
-            onClick={runDetection}
-          >
-            Refresh
-          </Button>
+          readOnly ? null : (
+            <Button
+              icon={<ReloadOutlined />}
+              loading={loading}
+              onClick={runDetection}
+            >
+              Refresh
+            </Button>
+          )
         }
       >
         <div className="duplicate-review-drawer-content">
@@ -513,24 +531,63 @@ const DuplicateProfileReview = ({
               </div>
             )}
 
-            <div className="duplicate-review-actions-bar">
-              <p className="duplicate-review-actions-bar-text">
-                <strong>Ignore Match</strong> dismisses one row at a time (use when
-                some matches are false positives). <strong>Create New Profile</strong>{" "}
-                dismisses all matches at once and records that this is a new member.
-                Both allow approval once complete; Tag and Merge link to an existing
-                profile instead.
-              </p>
-              <Button
-                type="primary"
-                className="duplicate-review-create-new-btn"
-                icon={<PlusCircleOutlined />}
-                loading={submitting}
-                onClick={handleCreateNewProfile}
-              >
-                Create New Profile
-              </Button>
-            </div>
+            {decisionHistory.length > 0 && (
+              <div className="duplicate-review-decision-history">
+                <Text strong>Previous duplicate decisions</Text>
+                {decisionHistory.map((entry, index) => (
+                  <div
+                    className="duplicate-review-decision-history-row"
+                    key={`${entry.action || "decision"}-${entry.sourceId || index}`}
+                  >
+                    <Tag>{formatDecisionAction(entry.action)}</Tag>
+                    <Text type="secondary">
+                      {[
+                        entry.sourceType && entry.sourceId
+                          ? `${entry.sourceType}: ${entry.sourceId}`
+                          : null,
+                        entry.decisionReason
+                          ? `Reason: ${entry.decisionReason}`
+                          : null,
+                        formatDecisionDate(entry.reviewedAt),
+                      ]
+                        .filter(Boolean)
+                        .join(" · ")}
+                    </Text>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {readOnly && (
+              <Alert
+                type="info"
+                showIcon
+                className="duplicate-review-readonly-alert"
+                message={APPLICATION_DUPLICATE_REVIEW_LOCKED_MESSAGE}
+              />
+            )}
+
+            {!readOnly && (
+              <div className="duplicate-review-actions-bar">
+                <p className="duplicate-review-actions-bar-text">
+                  <strong>Ignore Match</strong> dismisses one row at a time
+                  (use when some matches are false positives).{" "}
+                  <strong>Create New Profile</strong> dismisses all matches at
+                  once and records that this is a new member. Both allow
+                  approval once complete; Tag and Merge link to an existing
+                  profile instead.
+                </p>
+                <Button
+                  type="primary"
+                  className="duplicate-review-create-new-btn"
+                  icon={<PlusCircleOutlined />}
+                  loading={submitting}
+                  onClick={handleCreateNewProfile}
+                >
+                  Create New Profile
+                </Button>
+              </div>
+            )}
 
             <MatchTable
               title="Matching Profiles"
@@ -539,8 +596,8 @@ const DuplicateProfileReview = ({
               onViewDetails={handleViewDetails}
               onLink={handleLink}
               onMerge={handleMerge}
-              onIgnore={handleIgnore}
               showProfileActions
+              readOnly={readOnly}
               resolveCategoryLabel={resolveCategoryLabel}
             />
 
@@ -551,8 +608,8 @@ const DuplicateProfileReview = ({
               onViewDetails={handleViewDetails}
               onLink={handleLink}
               onMerge={handleMerge}
-              onIgnore={handleIgnore}
               showProfileActions={false}
+              readOnly={readOnly}
               resolveCategoryLabel={resolveCategoryLabel}
             />
           </Spin>
@@ -560,7 +617,7 @@ const DuplicateProfileReview = ({
       </Drawer>
 
       <DuplicateProfileMergeDrawer
-        open={mergeModal.open}
+        open={!readOnly && mergeModal.open}
         onClose={() => setMergeModal({ open: false, record: null })}
         applicationId={applicationId}
         profileId={mergeModal.record?.sourceId}
@@ -568,31 +625,6 @@ const DuplicateProfileReview = ({
         confirming={submitting}
       />
 
-      <Modal
-        title={reasonModal.title}
-        open={reasonModal.open}
-        okText={reasonModal.title}
-        onCancel={() =>
-          setReasonModal({ open: false, action: null, record: null, title: "" })
-        }
-        onOk={() =>
-          submitDecision({
-            action: reasonModal.action,
-            sourceType: reasonModal.record?.sourceType,
-            sourceId: reasonModal.record?.sourceId,
-            reason: decisionReason,
-          })
-        }
-        confirmLoading={submitting}
-        centered
-      >
-        <Input.TextArea
-          rows={4}
-          value={decisionReason}
-          onChange={(e) => setDecisionReason(e.target.value)}
-          placeholder="Optional reason for this decision"
-        />
-      </Modal>
     </>
   );
 };

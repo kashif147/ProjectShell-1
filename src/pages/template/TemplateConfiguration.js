@@ -16,6 +16,7 @@ import {
   message,
   notification,
   Tooltip,
+  Tag,
 } from "antd";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import "./TemplateConfiguration.css";
@@ -38,18 +39,34 @@ import {
   EyeOutlined,
   FileTextOutlined,
   InfoCircleOutlined,
+  ReloadOutlined,
   SaveOutlined,
 } from "@ant-design/icons";
 import MyInput from "../../component/common/MyInput";
 import CustomSelect from "../../component/common/CustomSelect";
 import {
   resetTemplateDetails,
-  loadtempletedetails,
-} from "../../features/templete/templeteDetailsSlice";
+  loadTemplateDetails,
+} from "../../features/template/templateDetailsSlice";
 import { useDispatch, useSelector } from "react-redux";
-import { getBookmarks } from "../../features/templete/BookmarkActions";
+import { getBookmarks } from "../../features/template/BookmarkActions";
+import { getLookupTypes } from "../../features/LookupTypeSlice";
+import {
+  buildTemplateCategoryOptions,
+  buildTemplateTypeOptions,
+  ensureSelectOption,
+} from "../../utils/templateLookupHelpers";
 import htmlDocx from "html-docx-js/dist/html-docx";
 import { communicationServicePath } from "../../utils/communicationServiceUrl";
+import MemberSearch from "../../component/profile/MemberSearch";
+import {
+  buildBookmarkPreviewMap,
+  buildSampleBookmarkPreviewMap,
+  fetchPrimarySubscriptionForProfile,
+  formatPreviewMemberLabel,
+  replacePlaceholdersWithData,
+} from "../../utils/bookmarkPreviewUtils";
+import { fetchTenantRecord } from "../../services/tenantBrandingService";
 
 Quill.register({ [`modules/${TableUp.moduleName}`]: TableUp }, true);
 
@@ -71,96 +88,6 @@ const myAlert = (type, alertMessage, description) => {
 
 // Constants
 const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50MB
-
-// Helper function to replace placeholders with data
-const replacePlaceholdersWithData = (htmlContent) => {
-  if (!htmlContent) return "<p>No content available</p>";
-
-  // Sample data from your JSON
-  const sampleData = {
-    // Personal Info
-    surname: "Azim",
-    forename: "Fazal",
-    gender: "Male",
-    dateOfBirth: "1999-11-11",
-    countryPrimaryQualification: "Ireland",
-
-    // Contact Info
-    buildingOrHouse: "house",
-    streetOrRoad: "Ballycullen",
-    areaOrTown: "Dublin",
-    eircode: "D16 CC01",
-    countyCityOrPostCode: "County Dublin",
-    country: "Ireland",
-    mobileNumber: "+3533450987765",
-    personalEmail: "fazalazim238@gmail.com",
-    normalizedEmail: "fazalazim238@gmail.com",
-
-    // Professional Details
-    studyLocation: "Not specified",
-    startDate: "Not specified",
-    graduationDate: "Not specified",
-    workLocation: "An Castan Disability Services",
-    branch: "Meath",
-    region: "Dublin North East",
-    grade: "Advanced Nurse Practitioner",
-    nmbiNumber: "Not specified",
-
-    // Membership Info
-    membershipNumber: "A00004",
-    membershipCategory: "Active",
-    firstJoinedDate: "2025-12-03",
-
-    // Other
-    payrollNumber: "Not specified",
-    paymentType: "Not specified",
-    paymentFrequency: "Not specified",
-    subscriptionStatus: "Active",
-    dateResigned: "N/A",
-    dateCancelled: "N/A",
-
-    // Reminders
-    remindersReminderDate: "Not set",
-    remindersType: "Not set",
-  };
-
-  let replacedContent = htmlContent;
-
-  // Replace {{placeholder}} format with data
-  Object.keys(sampleData).forEach((key) => {
-    const placeholder = `{{${key}}}`;
-    const value = sampleData[key];
-    replacedContent = replacedContent.replace(
-      new RegExp(placeholder, "g"),
-      value
-    );
-  });
-
-  // Also handle {placeholder} format (single braces) for backward compatibility
-  Object.keys(sampleData).forEach((key) => {
-    const placeholder = `{${key}}`;
-    const value = sampleData[key];
-    replacedContent = replacedContent.replace(
-      new RegExp(placeholder, "g"),
-      value
-    );
-  });
-
-  // Add inline styles for tight line spacing
-  return replacedContent
-    .replace(
-      /<p>/g,
-      '<p style="margin: 0 0 4px 0; padding: 0; line-height: 1.0;">'
-    )
-    .replace(
-      /<p([^>]*)>/g,
-      '<p$1 style="margin: 0 0 4px 0; padding: 0; line-height: 1.0;">'
-    )
-    .replace(
-      /<br\s*\/?>/g,
-      '<br style="line-height: 1.0; margin: 0; padding: 0;" />'
-    );
-};
 
 /** Merge Quill class-based presentation into inline styles so html-docx / Word keep alignment, indent, colors. */
 const parseStyleObject = (styleStr) => {
@@ -212,7 +139,10 @@ const normalizeTableUpDataWrapTagsOnRoot = (rootEl) => {
   rootEl.querySelectorAll("table.ql-table tr").forEach((tr) => {
     const rawAttr = tr.getAttribute("data-wrap-tag");
     const cleaned = rawAttr
-      ? String(rawAttr).replace(/\u00a0/g, " ").trim().toLowerCase()
+      ? String(rawAttr)
+          .replace(/\u00a0/g, " ")
+          .trim()
+          .toLowerCase()
       : "";
     let candidate = cleaned;
     if (!TABLE_UP_VALID_WRAP_TAGS.has(cleaned)) {
@@ -221,7 +151,10 @@ const normalizeTableUpDataWrapTagsOnRoot = (rootEl) => {
       else if (section === "tfoot") candidate = "tfoot";
       else candidate = "tbody";
     }
-    tr.setAttribute("data-wrap-tag", sanitizeTableUpWrapTagAttrValue(candidate));
+    tr.setAttribute(
+      "data-wrap-tag",
+      sanitizeTableUpWrapTagAttrValue(candidate),
+    );
   });
   rootEl.querySelectorAll("[data-wrap-tag]").forEach((el) => {
     if (typeof el.matches === "function" && el.matches("table.ql-table tr")) {
@@ -229,7 +162,7 @@ const normalizeTableUpDataWrapTagsOnRoot = (rootEl) => {
     }
     el.setAttribute(
       "data-wrap-tag",
-      sanitizeTableUpWrapTagAttrValue(el.getAttribute("data-wrap-tag"))
+      sanitizeTableUpWrapTagAttrValue(el.getAttribute("data-wrap-tag")),
     );
   });
 };
@@ -245,7 +178,7 @@ const normalizeTableUpWrapTagsInHtmlString = (html) => {
   try {
     const doc = new DOMParser().parseFromString(
       `<div id="template-wraptag-root">${html}</div>`,
-      "text/html"
+      "text/html",
     );
     const root = doc.getElementById("template-wraptag-root");
     if (!root) return html;
@@ -321,7 +254,7 @@ const rehydrateQuillTableUpLayoutOnRoot = (rootEl) => {
       if (tr0) {
         let s = 0;
         const cells = [...tr0.children].filter((n) =>
-          ["TD", "TH"].includes(n.tagName)
+          ["TD", "TH"].includes(n.tagName),
         );
         for (const td of cells) {
           const stw = parseStyleObject(td.getAttribute("style")).width;
@@ -374,7 +307,10 @@ const materializeTableUpWidthsForDocxRoundTripOnRoot = (rootEl) => {
       let colIndex = 0;
       [...tr.children].forEach((node) => {
         if (!["TD", "TH"].includes(node.tagName)) return;
-        const cs = Math.max(1, parseInt(node.getAttribute("colspan") || "1", 10));
+        const cs = Math.max(
+          1,
+          parseInt(node.getAttribute("colspan") || "1", 10),
+        );
         let w = 0;
         for (let j = 0; j < cs && colIndex + j < widths.length; j += 1) {
           w += widths[colIndex + j];
@@ -420,7 +356,7 @@ const solidifyQuillHtmlForDocx = (html) => {
   try {
     const doc = new DOMParser().parseFromString(
       `<div id="template-solidify-root">${html}</div>`,
-      "text/html"
+      "text/html",
     );
     const root = doc.getElementById("template-solidify-root");
     if (!root) return html;
@@ -433,9 +369,12 @@ const solidifyQuillHtmlForDocx = (html) => {
       const classes = cls.split(/\s+/).filter(Boolean);
       const additions = {};
 
-      if (classes.includes("ql-align-center")) additions["text-align"] = "center";
-      else if (classes.includes("ql-align-right")) additions["text-align"] = "right";
-      else if (classes.includes("ql-align-justify")) additions["text-align"] = "justify";
+      if (classes.includes("ql-align-center"))
+        additions["text-align"] = "center";
+      else if (classes.includes("ql-align-right"))
+        additions["text-align"] = "right";
+      else if (classes.includes("ql-align-justify"))
+        additions["text-align"] = "justify";
 
       const indentCl = classes.find((c) => /^ql-indent-\d+$/.test(c));
       if (indentCl) {
@@ -475,7 +414,7 @@ const solidifyQuillHtmlForDocx = (html) => {
           !/^ql-color-/.test(c) &&
           !/^ql-bg-/.test(c) &&
           !/^ql-font-/.test(c) &&
-          c !== "ql-direction-rtl"
+          c !== "ql-direction-rtl",
       );
       if (remaining.length) el.setAttribute("class", remaining.join(" "));
       else el.removeAttribute("class");
@@ -667,7 +606,7 @@ const coerceInlineFontSizeToQuillSizeClasses = (html) => {
   try {
     const doc = new DOMParser().parseFromString(
       `<div id="template-coerce-root">${html}</div>`,
-      "text/html"
+      "text/html",
     );
     const root = doc.getElementById("template-coerce-root");
     if (!root) return html;
@@ -809,7 +748,7 @@ const extractContentFromDocxBase64 = async (base64Content) => {
 
           console.log(
             "📄 Raw DOCX content (first 2000 chars):",
-            textContent.substring(0, 2000)
+            textContent.substring(0, 2000),
           );
 
           let htmlContent = "";
@@ -821,10 +760,10 @@ const extractContentFromDocxBase64 = async (base64Content) => {
 
             // Saved templates: ql-editor wrapper (current) or legacy ck-content
             const qlMatch = textContent.match(
-              /<div[^>]*class\s*=\s*["'][^"']*\bql-editor\b[^"']*["'][^>]*>([\s\S]*?)<\/div>/i
+              /<div[^>]*class\s*=\s*["'][^"']*\bql-editor\b[^"']*["'][^>]*>([\s\S]*?)<\/div>/i,
             );
             const ckMatch = textContent.match(
-              /<div[^>]*class\s*=\s*["'][^"']*\bck-content\b[^"']*["'][^>]*>([\s\S]*?)<\/div>/i
+              /<div[^>]*class\s*=\s*["'][^"']*\bck-content\b[^"']*["'][^>]*>([\s\S]*?)<\/div>/i,
             );
             const editorMatch = qlMatch || ckMatch;
             if (editorMatch) {
@@ -832,12 +771,12 @@ const extractContentFromDocxBase64 = async (base64Content) => {
               console.log(
                 qlMatch
                   ? "🔍 Found ql-editor body"
-                  : "🔍 Found ck-content (legacy CKEditor) body"
+                  : "🔍 Found ck-content (legacy CKEditor) body",
               );
             } else {
               // Try to extract from body
               const bodyMatch = textContent.match(
-                /<body[^>]*>([\s\S]*?)<\/body>/i
+                /<body[^>]*>([\s\S]*?)<\/body>/i,
               );
               if (bodyMatch) {
                 htmlContent = bodyMatch[1];
@@ -901,33 +840,44 @@ const extractContentFromDocxBase64 = async (base64Content) => {
           const keepStyleDeclaration = (decl) => {
             const name = (decl.split(":")[0]?.trim() || "").toLowerCase();
             if (/^mso-/i.test(name)) return false;
-            return (
-              /^(margin-left|margin-right|padding-left|padding-right|padding-top|padding-bottom|padding|text-indent|font-size|font-family|font-weight|font-style|color|background-color|text-decoration(?:-line|-color|-style)?|letter-spacing|line-height|text-align|direction|border-left|border-right|border-top|border-bottom|border|border-width|border-style|border-color|width|min-width|max-width|height|min-height|max-height|vertical-align|table-layout|border-collapse|border-spacing|box-sizing|overflow|white-space)$/i.test(
-                name
-              )
+            return /^(margin-left|margin-right|padding-left|padding-right|padding-top|padding-bottom|padding|text-indent|font-size|font-family|font-weight|font-style|color|background-color|text-decoration(?:-line|-color|-style)?|letter-spacing|line-height|text-align|direction|border-left|border-right|border-top|border-bottom|border|border-width|border-style|border-color|width|min-width|max-width|height|min-height|max-height|vertical-align|table-layout|border-collapse|border-spacing|box-sizing|overflow|white-space)$/i.test(
+              name,
             );
           };
 
           htmlContent = htmlContent
             .replace(/<\/?o:p>/g, "")
             .replace(/<\/?w:[^>]+>/g, "")
-            .replace(/\sstyle\s*=\s*(["'])((?:(?!\1).)*)\1/gi, (m, quote, styleValue) => {
-              const parts = styleValue.split(";").map((s) => s.trim()).filter(Boolean);
-              const keep = parts.filter(keepStyleDeclaration);
-              return keep.length ? ` style=${quote}${keep.join("; ")}${quote}` : "";
-            })
-            .replace(/\sclass\s*=\s*(["'])((?:(?!\1).)*)\1/gi, (m, quote, classNames) => {
-              const keep = classNames
-                .split(/\s+/)
-                .filter(Boolean)
-                .filter(
-                  (c) =>
-                    !/^Mso/i.test(c) &&
-                    !/^WordSection/i.test(c) &&
-                    !/^msonormal$/i.test(c)
-                );
-              return keep.length ? ` class=${quote}${keep.join(" ")}${quote}` : "";
-            })
+            .replace(
+              /\sstyle\s*=\s*(["'])((?:(?!\1).)*)\1/gi,
+              (m, quote, styleValue) => {
+                const parts = styleValue
+                  .split(";")
+                  .map((s) => s.trim())
+                  .filter(Boolean);
+                const keep = parts.filter(keepStyleDeclaration);
+                return keep.length
+                  ? ` style=${quote}${keep.join("; ")}${quote}`
+                  : "";
+              },
+            )
+            .replace(
+              /\sclass\s*=\s*(["'])((?:(?!\1).)*)\1/gi,
+              (m, quote, classNames) => {
+                const keep = classNames
+                  .split(/\s+/)
+                  .filter(Boolean)
+                  .filter(
+                    (c) =>
+                      !/^Mso/i.test(c) &&
+                      !/^WordSection/i.test(c) &&
+                      !/^msonormal$/i.test(c),
+                  );
+                return keep.length
+                  ? ` class=${quote}${keep.join(" ")}${quote}`
+                  : "";
+              },
+            )
             .replace(/<p>\s*<\/p>/g, "")
             .replace(/>\s+</g, "><")
             .trim();
@@ -941,7 +891,7 @@ const extractContentFromDocxBase64 = async (base64Content) => {
             try {
               const doc = new DOMParser().parseFromString(
                 `<div id="template-extract-table-root">${htmlContent}</div>`,
-                "text/html"
+                "text/html",
               );
               const r = doc.getElementById("template-extract-table-root");
               if (r) {
@@ -973,7 +923,7 @@ const extractContentFromDocxBase64 = async (base64Content) => {
 
           console.log(
             "✅ Extracted HTML content (first 500 chars):",
-            htmlContent.substring(0, 500)
+            htmlContent.substring(0, 500),
           );
           console.log("📏 HTML content length:", htmlContent.length);
 
@@ -1045,7 +995,7 @@ const updateTemplateAPI = async (
     htmlBody,
     textBody,
     contentChanged = false,
-  }
+  },
 ) => {
   const token = localStorage.getItem("token");
 
@@ -1069,7 +1019,9 @@ const updateTemplateAPI = async (
     });
 
     const isEmailTemplate =
-      String(tempolateType || "").trim().toLowerCase() === "email";
+      String(tempolateType || "")
+        .trim()
+        .toLowerCase() === "email";
 
     let response;
     if (isEmailTemplate) {
@@ -1090,7 +1042,7 @@ const updateTemplateAPI = async (
             htmlBody: htmlBody || "<p></p>",
             textBody: textBody || "",
           }),
-        }
+        },
       );
     } else {
       const formData = new FormData();
@@ -1112,7 +1064,7 @@ const updateTemplateAPI = async (
             Authorization: `Bearer ${token}`,
           },
           body: formData,
-        }
+        },
       );
     }
 
@@ -1174,7 +1126,9 @@ const uploadTemplateAPI = async ({
   }
 
   const isEmailTemplate =
-    String(tempolateType || "").trim().toLowerCase() === "email";
+    String(tempolateType || "")
+      .trim()
+      .toLowerCase() === "email";
 
   try {
     let response;
@@ -1200,7 +1154,7 @@ const uploadTemplateAPI = async ({
       }
       if (file.size > MAX_FILE_SIZE) {
         throw new Error(
-          `File size exceeds limit (${Math.round(MAX_FILE_SIZE / (1024 * 1024))}MB)`
+          `File size exceeds limit (${Math.round(MAX_FILE_SIZE / (1024 * 1024))}MB)`,
         );
       }
       const formData = new FormData();
@@ -1215,16 +1169,13 @@ const uploadTemplateAPI = async ({
         size: file.size,
         type: file.type,
       });
-      response = await fetch(
-        communicationServicePath("templates/upload"),
-        {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-          body: formData,
-        }
-      );
+      response = await fetch(communicationServicePath("templates/upload"), {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+        body: formData,
+      });
     }
 
     const responseText = await response.text();
@@ -1291,11 +1242,16 @@ const TemplateConfiguration = () => {
   });
 
   const { bookmarks, bookmarksLoading, bookmarksError } = useSelector(
-    (state) => state.bookmarks
+    (state) => state.bookmarks,
   );
 
-  const { templeteData, templetedetailsloading } = useSelector(
-    (state) => state.templeteDetails
+  const { lookups } = useSelector((state) => state.lookups);
+  const { lookupsTypes, lookupsTypesFetched } = useSelector(
+    (state) => state.lookupsTypes,
+  );
+
+  const { templateData, templateDetailsLoading } = useSelector(
+    (state) => state.templateDetails,
   );
 
   const [selectedVariables, setSelectedVariables] = useState(new Set());
@@ -1311,12 +1267,20 @@ const TemplateConfiguration = () => {
   const [editorSessionKey, setEditorSessionKey] = useState(0);
   const isProcessingRef = useRef(false);
   const previousContentRef = useRef("");
-  const [isEditMode, setIsEditMode] = useState(false);
+  const [templateId, setTemplateId] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
+  const [previewMember, setPreviewMember] = useState(null);
+  const [previewMemberLoading, setPreviewMemberLoading] = useState(false);
+  const [previewMemberSearchValue, setPreviewMemberSearchValue] = useState("");
+  const [previewTenant, setPreviewTenant] = useState({});
+  const [bookmarksRefreshing, setBookmarksRefreshing] = useState(false);
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const templateIdFromUrl = searchParams.get("id");
+  const editingTemplateId =
+    templateId || templateIdFromUrl || templateData?.template?._id || null;
+  const isEditMode = Boolean(editingTemplateId);
 
   // Watch template type for conditional rendering
   const watchedTemplateType = watch("tempolateType");
@@ -1385,7 +1349,8 @@ const TemplateConfiguration = () => {
 
     if (isEditMode) {
       return (
-        hasContentChanged(currentData.emailContent) || hasMetadataChanged(currentData)
+        hasContentChanged(currentData.emailContent) ||
+        hasMetadataChanged(currentData)
       );
     }
 
@@ -1415,8 +1380,6 @@ const TemplateConfiguration = () => {
   const canSaveTemplate =
     hasActualTemplateChanges && isDirty && !saving && !isLoadingContent;
 
-  const [templeteId, setTempleteId] = useState(null);
-
   // Populate form with template data from API response (base64 DOCX)
   const populateFormWithTemplateData = useCallback(
     async (data) => {
@@ -1434,7 +1397,7 @@ const TemplateConfiguration = () => {
         tempolateType: template.tempolateType || "",
         emailContent: "",
       };
-      setTempleteId(template._id);
+      setTemplateId(template._id);
 
       // Reset form with the template data
       reset(formData);
@@ -1448,7 +1411,9 @@ const TemplateConfiguration = () => {
 
       try {
         const isEmailTemplate =
-          String(template.tempolateType || "").trim().toLowerCase() === "email";
+          String(template.tempolateType || "")
+            .trim()
+            .toLowerCase() === "email";
 
         if (isEmailTemplate && template.htmlBody) {
           const content = template.htmlBody;
@@ -1461,17 +1426,17 @@ const TemplateConfiguration = () => {
         } else if (data.fileContent) {
           console.log(
             "📦 Found base64 DOCX content, length:",
-            data.fileContent.length
+            data.fileContent.length,
           );
 
           // Extract HTML content from the base64 DOCX
           const { content, variables } = await extractContentFromDocxBase64(
-            data.fileContent
+            data.fileContent,
           );
 
           console.log(
             "✅ Extracted HTML for editor:",
-            content.substring(0, 200)
+            content.substring(0, 200),
           );
           console.log("🔍 Found variables in content:", variables);
 
@@ -1485,7 +1450,7 @@ const TemplateConfiguration = () => {
               const bookmark = bookmarks?.find(
                 (b) =>
                   b.key === variableName ||
-                  b.label.toLowerCase().includes(variableName.toLowerCase())
+                  b.label.toLowerCase().includes(variableName.toLowerCase()),
               );
               return bookmark?._id;
             })
@@ -1513,68 +1478,128 @@ const TemplateConfiguration = () => {
         setValue("emailContent", safeHtml);
         setEditorSessionKey((k) => k + 1);
         setIsLoadingContent(false);
-        setIsEditMode(true);
         console.log("✅ Form population complete");
       }
     },
-    [reset, setValue, bookmarks]
+    [reset, setValue, bookmarks],
   );
 
-  // Template Type options - Email or Letter
-  const templateTypeOptions = [
-    { key: "email", label: "Email" },
-    { key: "letter", label: "Letter" },
-  ];
+  // Template type and category options from lookup API
+  const templateTypeOptions = useMemo(
+    () =>
+      ensureSelectOption(
+        buildTemplateTypeOptions(lookups, lookupsTypes),
+        watchedTemplateType,
+      ),
+    [lookups, lookupsTypes, watchedTemplateType],
+  );
 
-  // Category options based on template type
-  const categoryOptions = {
-    email: [
-      { key: "welcome", label: "Welcome Email" },
-      { key: "payment_reminder", label: "Payment Reminder" },
-      { key: "notification", label: "Notification" },
-      { key: "marketing", label: "Marketing" },
-      { key: "support", label: "Support" },
-    ],
-    letter: [
-      { key: "official", label: "Official Letter" },
-      { key: "approval", label: "Approval Letter" },
-      { key: "rejection", label: "Rejection Letter" },
-      { key: "appointment", label: "Appointment Letter" },
-      { key: "certificate", label: "Certificate" },
-    ],
-  };
+  const templateCategoryOptions = useMemo(() => {
+    const options = buildTemplateCategoryOptions(
+      lookups,
+      lookupsTypes,
+      watchedTemplateType,
+    );
+    return ensureSelectOption(options, watchedCategory);
+  }, [lookups, lookupsTypes, watchedTemplateType, watchedCategory]);
 
-  // Filter available variables based on search term
-  const filteredAvailableVariables = useMemo(() => {
+  const allBookmarkVariables = useMemo(() => {
     if (!bookmarks) return [];
 
-    const allVariables = bookmarks.map((bookmark) => ({
-      id: bookmark._id,
-      name: `{{${bookmark.key}}}`, // Changed to double braces
+    return bookmarks.map((bookmark) => ({
+      id: bookmark._id || bookmark.id,
+      name: `{{${bookmark.key}}}`,
       label: bookmark.label,
       dataType: bookmark.dataType,
       key: bookmark.key,
     }));
+  }, [bookmarks]);
 
-    if (!searchTerm.trim()) return allVariables;
+  // Search filters only the available bookmark grid — not selected chips
+  const filteredBookmarkVariables = useMemo(() => {
+    if (!searchTerm.trim()) return allBookmarkVariables;
 
     const searchLower = searchTerm.toLowerCase();
-    return allVariables.filter(
+    return allBookmarkVariables.filter(
       (variable) =>
         variable.label.toLowerCase().includes(searchLower) ||
         variable.key.toLowerCase().includes(searchLower) ||
-        variable.name.toLowerCase().includes(searchLower)
+        variable.name.toLowerCase().includes(searchLower),
     );
-  }, [bookmarks, searchTerm]);
+  }, [allBookmarkVariables, searchTerm]);
+
+  const previewDataMap = useMemo(() => {
+    if (previewMember?.profile) {
+      return buildBookmarkPreviewMap({
+        profile: previewMember.profile,
+        subscription: previewMember.subscription || {},
+        tenant: previewTenant,
+        bookmarks,
+      });
+    }
+    return buildSampleBookmarkPreviewMap(bookmarks, previewTenant);
+  }, [previewMember, bookmarks, previewTenant]);
+
+  const previewMemberLabel = useMemo(
+    () => formatPreviewMemberLabel(previewMember?.profile),
+    [previewMember],
+  );
+
+  const handlePreviewMemberSelect = useCallback(async (memberData) => {
+    if (!memberData?._id) return;
+    setPreviewMemberLoading(true);
+    try {
+      const subscription = await fetchPrimarySubscriptionForProfile(
+        memberData._id,
+      );
+      setPreviewMember({ profile: memberData, subscription });
+    } catch (error) {
+      console.error("Failed to load subscription for preview:", error);
+      message.warning(
+        "Member loaded; subscription data could not be fetched. Profile bookmarks will still preview.",
+      );
+      setPreviewMember({ profile: memberData, subscription: {} });
+    } finally {
+      setPreviewMemberLoading(false);
+    }
+  }, []);
+
+  const handleClearPreviewMember = useCallback(() => {
+    setPreviewMember(null);
+    setPreviewMemberSearchValue("");
+  }, []);
+
+  const handleRefreshBookmarks = useCallback(async () => {
+    setBookmarksRefreshing(true);
+    try {
+      await dispatch(getBookmarks({ force: true })).unwrap();
+      message.success("Bookmark fields refreshed");
+    } catch (error) {
+      message.error(
+        typeof error === "string"
+          ? error
+          : "Failed to refresh bookmark fields",
+      );
+    } finally {
+      setBookmarksRefreshing(false);
+    }
+  }, [dispatch]);
 
   useEffect(() => {
     dispatch(getBookmarks());
   }, [dispatch]);
 
+  useEffect(() => {
+    if (!lookupsTypesFetched) {
+      dispatch(getLookupTypes());
+    }
+  }, [dispatch, lookupsTypesFetched]);
+
   // Refetch template after refresh: Redux is empty but `?id=` survives in the URL.
   useEffect(() => {
     if (templateIdFromUrl) {
-      dispatch(loadtempletedetails(templateIdFromUrl));
+      setTemplateId(templateIdFromUrl);
+      dispatch(loadTemplateDetails(templateIdFromUrl));
     } else {
       dispatch(resetTemplateDetails());
       reset({
@@ -1588,8 +1613,7 @@ const TemplateConfiguration = () => {
       setOriginalContent("");
       setOriginalFormData(null);
       setSelectedVariables(new Set());
-      setIsEditMode(false);
-      setTempleteId(null);
+      setTemplateId(null);
       setGeneratedFile(null);
       pendingEditorHtmlRef.current = "<p></p>";
       setEditorSessionKey((k) => k + 1);
@@ -1597,11 +1621,11 @@ const TemplateConfiguration = () => {
   }, [templateIdFromUrl, dispatch, reset]);
 
   useEffect(() => {
-    if (templeteData && !templetedetailsloading) {
+    if (templateData && !templateDetailsLoading) {
       console.log("📥 Template data received from API, populating form");
-      populateFormWithTemplateData(templeteData);
+      populateFormWithTemplateData(templateData);
     }
-  }, [templeteData, templetedetailsloading, populateFormWithTemplateData]);
+  }, [templateData, templateDetailsLoading, populateFormWithTemplateData]);
 
   useEffect(() => {
     return () => {
@@ -1670,14 +1694,14 @@ const TemplateConfiguration = () => {
         type: data.tempolateType,
         contentLength: data.emailContent?.length,
         isEditMode: isEditMode,
-        templateId: templeteData?.template?._id,
+        templateId: editingTemplateId,
       });
 
       // Extract variable names from selected variables with {{variable}} format
       const variableNames = Array.from(selectedVariables)
         .map((variableId) => {
-          const variable = filteredAvailableVariables.find(
-            (v) => v.id === variableId
+          const variable = allBookmarkVariables.find(
+            (v) => v.id === variableId,
           );
           return variable ? `{{${variable.key}}}` : null;
         })
@@ -1702,7 +1726,9 @@ const TemplateConfiguration = () => {
       }
 
       const isEmailTemplate =
-        String(data.tempolateType || "").trim().toLowerCase() === "email";
+        String(data.tempolateType || "")
+          .trim()
+          .toLowerCase() === "email";
 
       // Create DOCX file if:
       // 1. Creating new template, OR
@@ -1723,15 +1749,13 @@ const TemplateConfiguration = () => {
       }
 
       if (isEditMode) {
-        // UPDATE EXISTING TEMPLATE
-        const templateId = templeteId;
-        if (!templateId) {
+        if (!editingTemplateId) {
           throw new Error("Template ID not found for update");
         }
 
-        console.log("🔄 Updating existing template:", templateId);
+        console.log("🔄 Updating existing template:", editingTemplateId);
 
-        await updateTemplateAPI(templateId, {
+        await updateTemplateAPI(editingTemplateId, {
           file: docResult?.file,
           name: data.templateName.trim(),
           subject: data.subject?.trim(),
@@ -1755,14 +1779,14 @@ const TemplateConfiguration = () => {
           });
         } else if (metadataChanged) {
           setGeneratedFile({
-            id: `template_${templateId}`,
+            id: `template_${editingTemplateId}`,
             name: "Metadata updated",
             action: "metadata_updated_only",
             fileIncluded: false,
           });
         } else {
           setGeneratedFile({
-            id: `template_${templateId}`,
+            id: `template_${editingTemplateId}`,
             name: "No changes detected",
             action: "no_changes",
             fileIncluded: false,
@@ -1802,7 +1826,7 @@ const TemplateConfiguration = () => {
                 metadata: docResult.metadata,
                 action: "created",
                 fileIncluded: true,
-              }
+              },
         );
       }
 
@@ -1811,7 +1835,7 @@ const TemplateConfiguration = () => {
       message.success(
         isEditMode
           ? "Template updated successfully!"
-          : "Template created successfully!"
+          : "Template created successfully!",
       );
     } catch (error) {
       console.error("❌ Template operation error:", error);
@@ -1820,7 +1844,7 @@ const TemplateConfiguration = () => {
         error.message ||
           (isEditMode
             ? "Failed to update template"
-            : "Failed to create template")
+            : "Failed to create template"),
       );
 
       notification.error({
@@ -1834,7 +1858,7 @@ const TemplateConfiguration = () => {
   };
 
   const handleBackToSummary = () => {
-    navigate("/templeteSummary");
+    navigate("/templateSummary");
   };
 
   // Handle save button click
@@ -1869,8 +1893,8 @@ const TemplateConfiguration = () => {
     while ((match = variableRegex.exec(text)) !== null) {
       const variableName = match[1] || match[2]; // Get either {{variable}} or {variable}
       if (variableName) {
-        const variable = filteredAvailableVariables.find(
-          (v) => v.key === variableName
+        const variable = allBookmarkVariables.find(
+          (v) => v.key === variableName,
         );
         if (variable) {
           foundVariables.add(variable.id);
@@ -1907,21 +1931,70 @@ const TemplateConfiguration = () => {
     }
   };
 
-  // Remove variable
-  const removeVariable = (variableId) => {
-    setSelectedVariables((prev) => {
-      const newSet = new Set(prev);
-      newSet.delete(variableId);
-      return newSet;
+  // Delete exact bookmark placeholder tokens from Quill without re-importing HTML (preserves formatting).
+  const removeBookmarkPlaceholdersFromEditor = (quill, key) => {
+    const tokens = [`{{${key}}}`, `{${key}}`];
+    tokens.forEach((token) => {
+      const text = quill.getText();
+      const indices = [];
+      let from = 0;
+      while (from < text.length) {
+        const idx = text.indexOf(token, from);
+        if (idx === -1) break;
+        indices.push(idx);
+        from = idx + token.length;
+      }
+      indices.reverse().forEach((idx) => {
+        quill.deleteText(idx, token.length, "silent");
+      });
     });
-    console.log("🗑️ Variable removed:", variableId);
+  };
+
+  // Remove variable from selection and strip only its placeholder tokens from editor content
+  const removeVariable = (variableId) => {
+    if (isProcessingRef.current) return;
+
+    const variable = allBookmarkVariables.find(
+      (v) => v.id === variableId,
+    );
+    if (!variable) return;
+
+    isProcessingRef.current = true;
+    try {
+      const quill = quillRef.current?.getEditor?.();
+
+      if (quill) {
+        removeBookmarkPlaceholdersFromEditor(quill, variable.key);
+        const html = quill.root.innerHTML;
+        previousContentRef.current = html;
+        setValue("emailContent", html, { shouldDirty: true });
+        handleEmailContentChange(html);
+      } else {
+        const currentHtml = getValues("emailContent") || "";
+        const tokens = [`{{${variable.key}}}`, `{${variable.key}}`];
+        const strippedHtml = tokens.reduce(
+          (html, token) => html.split(token).join(""),
+          currentHtml,
+        );
+        previousContentRef.current = strippedHtml;
+        setValue("emailContent", strippedHtml, { shouldDirty: true });
+        handleEmailContentChange(strippedHtml);
+        pendingEditorHtmlRef.current = strippedHtml;
+      }
+
+      console.log("🗑️ Variable removed from content:", variable.key);
+    } catch (error) {
+      console.error("❌ Error removing variable:", error);
+    } finally {
+      isProcessingRef.current = false;
+    }
   };
 
   // Drag & drop handlers
   const handleDragStart = (e, variableName, variableId) => {
     e.dataTransfer.setData(
       "text/plain",
-      JSON.stringify({ variableName, variableId })
+      JSON.stringify({ variableName, variableId }),
     );
     e.dataTransfer.effectAllowed = "copy";
   };
@@ -1954,7 +2027,14 @@ const TemplateConfiguration = () => {
   };
 
   // Preview handlers
-  const handlePreview = () => {
+  const handlePreview = async () => {
+    try {
+      const tenant = await fetchTenantRecord(null, { force: true });
+      setPreviewTenant(tenant || {});
+    } catch (error) {
+      console.error("Failed to load tenant for preview:", error);
+      setPreviewTenant({});
+    }
     setIsPreviewModalVisible(true);
   };
 
@@ -1962,11 +2042,7 @@ const TemplateConfiguration = () => {
     setIsPreviewModalVisible(false);
   };
 
-  const getCategoryOptions = () => {
-    return watchedTemplateType
-      ? categoryOptions[watchedTemplateType] || []
-      : [];
-  };
+  const getCategoryOptions = () => templateCategoryOptions;
 
   return (
     <div className="px-4 template-configuration-root">
@@ -2002,8 +2078,8 @@ const TemplateConfiguration = () => {
               ? "Updating Template..."
               : "Saving Template..."
             : isEditMode
-            ? "Update Template"
-            : "Save Template"}
+              ? "Update Template"
+              : "Save Template"}
         </Button>
       </div>
 
@@ -2052,8 +2128,8 @@ const TemplateConfiguration = () => {
                 generatedFile.action === "no_changes"
                   ? "#8c8c8c"
                   : generatedFile.action === "metadata_updated_only"
-                  ? "#faad14"
-                  : "#389e0d",
+                    ? "#faad14"
+                    : "#389e0d",
             }}
           >
             {generatedFile.action === "created" &&
@@ -2239,7 +2315,8 @@ const TemplateConfiguration = () => {
                 render={({ field }) => (
                   <MyInput
                     label={
-                      String(watchedTemplateType || "").toLowerCase() === "email"
+                      String(watchedTemplateType || "").toLowerCase() ===
+                      "email"
                         ? "Plain text (optional)"
                         : "Description"
                     }
@@ -2249,7 +2326,8 @@ const TemplateConfiguration = () => {
                     type="textarea"
                     onBlur={field.onBlur}
                     placeholder={
-                      String(watchedTemplateType || "").toLowerCase() === "email"
+                      String(watchedTemplateType || "").toLowerCase() ===
+                      "email"
                         ? "Optional plain text fallback"
                         : "Enter template description"
                     }
@@ -2285,7 +2363,14 @@ const TemplateConfiguration = () => {
                 }}
               >
                 <span>Template Content Builder</span>
-                <div style={{ display: "flex", gap: "8px" }}>
+                <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+                  {previewMember?.profile ? (
+                    <Tag color="blue" style={{ margin: 0 }}>
+                      Preview: {previewMemberLabel}
+                    </Tag>
+                  ) : (
+                    <Tag style={{ margin: 0 }}>Preview: sample data</Tag>
+                  )}
                   {isLoadingContent && (
                     <Text type="secondary" style={{ fontSize: "12px" }}>
                       Loading content...
@@ -2368,7 +2453,9 @@ const TemplateConfiguration = () => {
                     onBlur={field.onBlur}
                     className="template-config-quill-wrap"
                     style={{
-                      border: errors.emailContent ? "2px solid #ff4d4f" : "none",
+                      border: errors.emailContent
+                        ? "2px solid #ff4d4f"
+                        : "none",
                       borderRadius: errors.emailContent ? "6px" : 0,
                       marginBottom: 0,
                       opacity: isLoadingContent ? 0.5 : 1,
@@ -2423,7 +2510,29 @@ const TemplateConfiguration = () => {
           }}
         >
           <Card
-            title="Bookmark Fields"
+            title={
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  width: "100%",
+                }}
+              >
+                <span>Bookmark Fields</span>
+                <Tooltip title="Reload bookmark fields from configuration">
+                  <Button
+                    type="text"
+                    size="small"
+                    icon={<ReloadOutlined />}
+                    loading={bookmarksRefreshing}
+                    onClick={handleRefreshBookmarks}
+                    aria-label="Refresh bookmark fields"
+                    style={{ color: "#215e97" }}
+                  />
+                </Tooltip>
+              </div>
+            }
             styles={{
               header: {
                 backgroundColor: "#eef4ff",
@@ -2451,6 +2560,53 @@ const TemplateConfiguration = () => {
               boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
             }}
           >
+            {/* Preview member search */}
+            <div
+              className="template-bookmark-member-search"
+              style={{
+                padding: "16px",
+                borderBottom: "1px solid #f0f0f0",
+                backgroundColor: "white",
+                minWidth: 0,
+                width: "100%",
+                boxSizing: "border-box",
+              }}
+            >
+              <Text
+                strong
+                style={{
+                  display: "block",
+                  fontSize: "12px",
+                  color: "#215e97",
+                  marginBottom: "8px",
+                }}
+              >
+                Preview member data
+              </Text>
+              <MemberSearch
+                fullWidth
+                compact
+                compactOptions
+                popupMatchSelectWidth
+                showStatus={false}
+                showAddButton={false}
+                onSelectBehavior="callback"
+                onSelectCallback={handlePreviewMemberSelect}
+                value={previewMemberSearchValue}
+                onChange={setPreviewMemberSearchValue}
+                onClear={handleClearPreviewMember}
+                disable={previewMemberLoading}
+                getPopupContainer={() => document.body}
+              />
+              <Text
+                type="secondary"
+                style={{ display: "block", fontSize: "11px", marginTop: "6px" }}
+              >
+                Search by name or membership number to preview this template with
+                real member data. Leave empty to use sample data.
+              </Text>
+            </div>
+
             {/* Search Section - Fixed height */}
             <div
               style={{
@@ -2512,8 +2668,8 @@ const TemplateConfiguration = () => {
                     }}
                   >
                     {Array.from(selectedVariables).map((variableId) => {
-                      const variable = filteredAvailableVariables.find(
-                        (v) => v.id === variableId
+                      const variable = allBookmarkVariables.find(
+                        (v) => v.id === variableId,
                       );
                       return variable ? (
                         <div
@@ -2556,8 +2712,8 @@ const TemplateConfiguration = () => {
                   overflow: "hidden",
                 }}
               >
-                {/* Loading/Error States */}
-                {bookmarksLoading && (
+                {/* Initial load only — keep list visible during manual refresh */}
+                {bookmarksLoading && bookmarks.length === 0 && !bookmarksError && (
                   <div
                     style={{
                       flex: 1,
@@ -2571,7 +2727,7 @@ const TemplateConfiguration = () => {
                   </div>
                 )}
 
-                {bookmarksError && (
+                {bookmarksError && bookmarks.length === 0 && (
                   <div
                     style={{
                       flex: 1,
@@ -2586,7 +2742,7 @@ const TemplateConfiguration = () => {
                 )}
 
                 {/* Available bookmark fields list */}
-                {bookmarks && !bookmarksLoading && !bookmarksError && (
+                {(bookmarks.length > 0 || (!bookmarksLoading && !bookmarksError)) && (
                   <>
                     <div
                       style={{
@@ -2606,7 +2762,7 @@ const TemplateConfiguration = () => {
                           strong
                           style={{ fontSize: "12px", color: "#215e97" }}
                         >
-                          Bookmark fields ({filteredAvailableVariables.length})
+                          Bookmark fields ({filteredBookmarkVariables.length})
                         </Text>
                         <Tooltip title="Drag or click bookmark fields to insert them into the template.">
                           <InfoCircleOutlined
@@ -2635,7 +2791,7 @@ const TemplateConfiguration = () => {
                           gap: "8px",
                         }}
                       >
-                        {filteredAvailableVariables.map((variable) => (
+                        {filteredBookmarkVariables.map((variable) => (
                           <div
                             key={variable.id}
                             draggable
@@ -2648,7 +2804,7 @@ const TemplateConfiguration = () => {
                             style={{
                               padding: "8px 6px",
                               backgroundColor: selectedVariables.has(
-                                variable.id
+                                variable.id,
                               )
                                 ? "#eef4ff"
                                 : "#f8f9fa",
@@ -2696,6 +2852,13 @@ const TemplateConfiguration = () => {
               <Text strong style={{ fontSize: "16px", color: "white" }}>
                 Preview
               </Text>
+              {previewMember?.profile ? (
+                <Tag color="gold" style={{ margin: 0 }}>
+                  {previewMemberLabel}
+                </Tag>
+              ) : (
+                <Tag style={{ margin: 0 }}>Sample data</Tag>
+              )}
             </div>
           </div>
         }
@@ -2760,7 +2923,8 @@ const TemplateConfiguration = () => {
               }}
               dangerouslySetInnerHTML={{
                 __html: replacePlaceholdersWithData(
-                  getValues("emailContent") || "<p>No content available</p>"
+                  getValues("emailContent") || "<p>No content available</p>",
+                  previewDataMap,
                 ),
               }}
             />

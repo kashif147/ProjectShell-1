@@ -17,11 +17,16 @@ import {
   getSubscriptionServiceBaseUrl,
 } from "../../config/serviceUrls";
 
+function defaultBatchName(variant, date = dayjs()) {
+  const label = variant === "cancellation" ? "Cancellations" : "Reminders";
+  return `${label} - ${date.format("MMM YYYY")}`;
+}
+
 function buildLifecyclePayload({ batchName, batchDateDayjs, kind }) {
   return {
     name: batchName.trim(),
     kind,
-    batchDate: batchDateDayjs.toISOString(),
+    batchDate: batchDateDayjs.startOf("day").toISOString(),
     referencePeriod: batchDateDayjs.format("YYYY-MM"),
   };
 }
@@ -38,15 +43,28 @@ const CreateLifecycleBatchForm = forwardRef(function CreateLifecycleBatchForm(
   );
 
   useEffect(() => {
+    const today = dayjs();
     form.setFieldsValue({
-      batchName: "",
-      batchDate: dayjs(),
+      batchName: defaultBatchName(variant, today),
+      batchDate: today,
     });
   }, [variant, form]);
 
   const resetForm = useCallback(() => {
-    form.setFieldsValue({ batchName: "", batchDate: dayjs() });
-  }, [form]);
+    const today = dayjs();
+    form.setFieldsValue({
+      batchName: defaultBatchName(variant, today),
+      batchDate: today,
+    });
+  }, [form, variant]);
+
+  const handleBatchDateChange = useCallback(
+    (date) => {
+      if (!date) return;
+      form.setFieldsValue({ batchName: defaultBatchName(variant, date) });
+    },
+    [form, variant],
+  );
 
   const handleSubmit = useCallback(async () => {
     try {
@@ -112,19 +130,37 @@ const CreateLifecycleBatchForm = forwardRef(function CreateLifecycleBatchForm(
 
       message.success("Batch created successfully.");
 
+      const createdStatus = String(
+        response?.data?.data?.status ?? response?.data?.status ?? "",
+      ).toLowerCase();
+      if (batchId && createdStatus === "draft") {
+        await axios.post(
+          `${subscriptionUrl}/reminder-batches/${batchId}/build`,
+          {},
+          {
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+          },
+        );
+      }
+
       notifyBatchGenerating(notificationCtx, variant, {
         batchDetailId: batchId,
         description: desc,
         referenceNumber: refNo,
       });
 
-      watchBatchUntilPopulated({
-        batchDetailId: batchId,
-        variant,
-        description: desc,
-        referenceNumber: refNo,
-        notificationCtx,
-      });
+      if (batchId) {
+        watchBatchUntilPopulated({
+          batchDetailId: batchId,
+          variant,
+          description: desc,
+          referenceNumber: refNo,
+          notificationCtx,
+        });
+      }
 
       return {
         _id: batchId,
@@ -155,7 +191,10 @@ const CreateLifecycleBatchForm = forwardRef(function CreateLifecycleBatchForm(
           form={form}
           layout="vertical"
           requiredMark={false}
-          initialValues={{ batchDate: dayjs(), batchName: "" }}
+          initialValues={{
+            batchDate: dayjs(),
+            batchName: defaultBatchName(variant),
+          }}
         >
           <Row gutter={16}>
             <Col span={24}>
@@ -164,15 +203,16 @@ const CreateLifecycleBatchForm = forwardRef(function CreateLifecycleBatchForm(
                 name="batchName"
                 rules={[{ required: true, message: "Enter batch name" }]}
               >
-                <Input
-                  placeholder="e.g. March renewal reminders"
-                  maxLength={200}
-                />
+                <Input readOnly maxLength={200} />
               </Form.Item>
             </Col>
             <Col xs={24} sm={12}>
               <Form.Item label="Batch Date" name="batchDate">
-                <DatePicker style={{ width: "100%" }} format="DD/MM/YYYY" />
+                <DatePicker
+                  style={{ width: "100%" }}
+                  format="DD/MM/YYYY"
+                  onChange={handleBatchDateChange}
+                />
               </Form.Item>
             </Col>
             <Col xs={24} sm={12}>

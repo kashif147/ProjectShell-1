@@ -14,6 +14,7 @@ import {
   getNotificationSocketConfig,
   getRealtimeSocket,
 } from "../services/realtimeSocket";
+import { reconcileBadgeCount } from "../utils/notificationListUtils";
 
 export { getNotificationServiceUrl, getNotificationSocketConfig };
 
@@ -92,7 +93,7 @@ export const NotificationProvider = ({ children }) => {
 
     const onBadgeIncrement = (data) => {
       setBadge((prev) =>
-        typeof data?.count === "number" ? data.count : prev + 1,
+        typeof data?.count === "number" ? prev + data.count : prev + 1,
       );
     };
 
@@ -137,7 +138,10 @@ export const NotificationProvider = ({ children }) => {
           { headers: { Authorization: `Bearer ${token}` } },
         );
         const { unreadCount } = res.data?.data ?? res.data ?? {};
-        if (typeof unreadCount === "number") setBadge(unreadCount);
+        setNotifications((prev) => {
+          setBadge(reconcileBadgeCount(unreadCount, prev));
+          return prev;
+        });
       } catch {
         // ignore
       } finally {

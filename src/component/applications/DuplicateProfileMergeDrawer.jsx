@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
-import { Button, Checkbox, Drawer, Spin, Typography, message } from "antd";
+import { Button, Checkbox, Drawer, Radio, Spin, Tag, Typography, message } from "antd";
 import { MergeCellsOutlined } from "@ant-design/icons";
 import { useSelector } from "react-redux";
 import axios from "axios";
@@ -96,12 +96,40 @@ const DuplicateProfileMergeDrawer = ({
   profileId,
   onConfirm,
   confirming = false,
+  mode = "application",
+  sourceProfileId,
+  targetProfileId,
 }) => {
   const baseURL = process.env.REACT_APP_PROFILE_SERVICE_URL;
+  const isProfileMode = mode === "profile";
   const [loading, setLoading] = useState(false);
   const [compareData, setCompareData] = useState(null);
   const [choices, setChoices] = useState({});
+  const [masterProfileId, setMasterProfileId] = useState(
+    () => sourceProfileId || null,
+  );
   const { membershipCategoryOptions } = useSelector((state) => state.lookups);
+
+  useEffect(() => {
+    if (open && sourceProfileId) {
+      setMasterProfileId(sourceProfileId);
+    }
+  }, [open, sourceProfileId]);
+
+  const absorbedProfileId = useMemo(() => {
+    if (!sourceProfileId || !targetProfileId || !masterProfileId) return null;
+    return String(masterProfileId) === String(sourceProfileId)
+      ? targetProfileId
+      : sourceProfileId;
+  }, [sourceProfileId, targetProfileId, masterProfileId]);
+
+  const leftColumnLabel = isProfileMode ? "Master Profile" : "Application Details";
+  const rightColumnLabel = isProfileMode
+    ? "Profile Merging In"
+    : "Member's Details";
+  const introText = isProfileMode
+    ? "Select the master profile using the radio in the column header. Columns stay fixed; the tag shows which profile is kept and which merges in. Tick the value to keep for each field."
+    : "Tick the value to keep for each field. The application form updates immediately with your selections. On approval, the active subscription is cancelled and a new one is created from the merged details.";
 
   const authHeaders = useCallback(() => {
     const token = localStorage.getItem("token");
@@ -112,13 +140,18 @@ const DuplicateProfileMergeDrawer = ({
   }, []);
 
   const loadCompareData = useCallback(async () => {
-    if (!applicationId || !profileId) return;
+    const compareUrl = isProfileMode
+      ? sourceProfileId && targetProfileId
+        ? `${baseURL}/profile/${sourceProfileId}/duplicate-merge-compare/${targetProfileId}`
+        : null
+      : applicationId && profileId
+        ? `${baseURL}/applications/${applicationId}/duplicate-merge-compare/${profileId}`
+        : null;
+
+    if (!compareUrl) return;
     setLoading(true);
     try {
-      const response = await axios.get(
-        `${baseURL}/applications/${applicationId}/duplicate-merge-compare/${profileId}`,
-        { headers: authHeaders() },
-      );
+      const response = await axios.get(compareUrl, { headers: authHeaders() });
       const payload = response.data?.data || response.data;
       setCompareData(payload);
       setChoices(buildInitialChoices(payload?.fields || []));
@@ -132,19 +165,71 @@ const DuplicateProfileMergeDrawer = ({
     } finally {
       setLoading(false);
     }
-  }, [applicationId, profileId, baseURL, authHeaders, onClose]);
+  }, [
+    applicationId,
+    profileId,
+    sourceProfileId,
+    targetProfileId,
+    baseURL,
+    authHeaders,
+    onClose,
+    isProfileMode,
+  ]);
 
   useEffect(() => {
     if (!open) return;
     loadCompareData();
   }, [open, loadCompareData]);
 
-  const handleChoiceChange = (path, source) => {
-    setChoices((prev) => ({ ...prev, [path]: source }));
+  const leftProfileSummary =
+    compareData?.sourceProfileSummary || compareData?.leftProfileSummary || {};
+  const rightProfileSummary =
+    compareData?.targetProfileSummary || compareData?.rightProfileSummary || {};
+
+  const renderProfileColumnHeader = (profileId, summary) => {
+    if (!profileId) return null;
+    const isMaster = String(masterProfileId) === String(profileId);
+    return (
+      <label className="duplicate-merge-header-profile">
+        <Radio
+          checked={isMaster}
+          onChange={() => setMasterProfileId(profileId)}
+        />
+        <span className="duplicate-merge-header-profile__details">
+          <Tag
+            className={`duplicate-merge-header-profile__tag${
+              isMaster
+                ? " duplicate-merge-header-profile__tag--master"
+                : " duplicate-merge-header-profile__tag--merging"
+            }`}
+          >
+            {isMaster ? "Master Profile - Keep" : "Merging In"}
+          </Tag>
+          <span className="duplicate-merge-header-profile__name">
+            {summary?.name || "—"}
+            {summary?.membershipNumber
+              ? ` (${summary.membershipNumber})`
+              : ""}
+          </span>
+        </span>
+      </label>
+    );
   };
 
   const handleConfirm = () => {
+    if (isProfileMode) {
+      onConfirm?.({
+        mergeFieldChoices: choices,
+        masterProfileId,
+        absorbedProfileId,
+      });
+      return;
+    }
     onConfirm?.(choices);
+  };
+
+  const handleChoiceChange = (path, source) => {
+    setChoices((prev) => ({ ...prev, [path]: source }));
   };
 
   const fields = compareData?.fields || [];
@@ -177,16 +262,27 @@ const DuplicateProfileMergeDrawer = ({
     >
       <Spin spinning={loading || confirming}>
         <Text type="secondary" className="duplicate-merge-intro">
-          Tick the value to keep for each field. On approval, the active
-          subscription is cancelled and a new one is created from the merged
-          details.
+          {introText}
         </Text>
 
         <div className="duplicate-merge-compare-panel">
           <div className="duplicate-merge-compare-header">
             <div className="duplicate-merge-header-spacer" />
-            <div className="duplicate-merge-header-app">Application Details</div>
-            <div className="duplicate-merge-header-member">Member&apos;s Details</div>
+            {isProfileMode ? (
+              <>
+                <div className="duplicate-merge-header-app">
+                  {renderProfileColumnHeader(sourceProfileId, leftProfileSummary)}
+                </div>
+                <div className="duplicate-merge-header-member">
+                  {renderProfileColumnHeader(targetProfileId, rightProfileSummary)}
+                </div>
+              </>
+            ) : (
+              <>
+                <div className="duplicate-merge-header-app">{leftColumnLabel}</div>
+                <div className="duplicate-merge-header-member">{rightColumnLabel}</div>
+              </>
+            )}
           </div>
 
           <div className="duplicate-merge-compare-body">

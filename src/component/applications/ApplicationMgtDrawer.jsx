@@ -1,7 +1,5 @@
 import { useState, useRef, useEffect, useMemo } from "react";
 import {
-  Row,
-  Col,
   Checkbox,
   Radio,
   Button,
@@ -28,6 +26,10 @@ import {
   dateUtils,
   dayjsFromDateOnly,
 } from "../../utils/Utilities";
+import {
+  hasWorkLocationSelection,
+  resolveBranchRegionFromStudyLocation,
+} from "../../utils/lookupHierarchy";
 import CustomSelect from "../common/CustomSelect";
 import { useTableColumns } from "../../context/TableColumnsContext ";
 import MyInput from "../common/MyInput";
@@ -43,9 +45,15 @@ import {
 import { getAllApplications } from "../../features/ApplicationSlice";
 import {
   DUPLICATE_REVIEW_REQUIRED_MESSAGE,
+  getApplicationStatus,
   isDuplicateReviewBlockingApproval,
+  isMergedDuplicateReview,
 } from "../../utils/duplicateReviewApproval";
-import { buildApplicationMgtSearch } from "../../utils/applicationMgtRoute";
+import DuplicateMergeIndicator from "./DuplicateMergeIndicator";
+import {
+  APPLICATION_MGT_PATH,
+  buildApplicationMgtSearch,
+} from "../../utils/applicationMgtRoute";
 import { cleanPayload } from "../../utils/Utilities";
 import MyAlert from "../common/MyAlert";
 import { generatePatch } from "../../utils/Utilities";
@@ -73,13 +81,211 @@ import {
 } from "../../constants/paymentFrequency";
 import { fetchTenantTradingName } from "../../services/tenantBrandingService";
 import DuplicateProfileReview from "./DuplicateProfileReview";
+import { useRegisterUnsavedFormGuard } from "../../context/UnsavedFormContext";
+import "../../styles/ApplicationForm.css";
 
 const baseURL = process.env.REACT_APP_PROFILE_SERVICE_URL;
+
+const toTitleCase = (value) =>
+  String(value || "")
+    .trim()
+    .split(/\s+/)
+    .filter(Boolean)
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+    .join(" ");
+
+const buildProfileAuthHeaders = (token) => ({
+  Authorization: `Bearer ${token}`,
+  "Content-Type": "application/json",
+});
+
+const resolveApplicationEmail = (contactInfo = {}) => {
+  if (contactInfo.preferredEmail === "personal") {
+    return contactInfo.personalEmail?.trim() || "";
+  }
+  if (contactInfo.preferredEmail === "work") {
+    return contactInfo.workEmail?.trim() || "";
+  }
+  return (
+    contactInfo.personalEmail?.trim() ||
+    contactInfo.workEmail?.trim() ||
+    ""
+  );
+};
+
+const lookupExistingApplicationIdByEmail = async (email, token) => {
+  if (!email) return null;
+  try {
+    const response = await axios.post(
+      `${baseURL}/personal-details/check-email`,
+      { email },
+      { headers: buildProfileAuthHeaders(token) },
+    );
+    const data = response?.data?.data;
+    if (data?.exists && data?.type === "APPLICATION") {
+      return data.application?.applicationId || null;
+    }
+  } catch (error) {
+    console.error("lookupExistingApplicationIdByEmail failed:", error);
+  }
+  return null;
+};
+
+const upsertPersonalDetailsForSubmit = async ({
+  applicationId,
+  personalPayload,
+  token,
+}) => {
+  const headers = buildProfileAuthHeaders(token);
+  if (applicationId) {
+    const putRes = await axios.put(
+      `${baseURL}/personal-details/${applicationId}`,
+      personalPayload,
+      { headers },
+    );
+    return {
+      applicationId,
+      data: putRes?.data?.data,
+    };
+  }
+
+  try {
+    const postRes = await axios.post(
+      `${baseURL}/personal-details`,
+      personalPayload,
+      { headers },
+    );
+    const newId = postRes?.data?.data?.applicationId;
+    if (!newId) {
+      throw new Error("ApplicationId not returned from personal details API");
+    }
+    return { applicationId: newId, data: postRes?.data?.data };
+  } catch (error) {
+    const isConflict =
+      error?.response?.status === 409 ||
+      error?.response?.data?.error?.code === "CONFLICT";
+    if (!isConflict) throw error;
+
+    const email = resolveApplicationEmail(personalPayload.contactInfo);
+    const existingId = await lookupExistingApplicationIdByEmail(email, token);
+    if (!existingId) throw error;
+
+    const putRes = await axios.put(
+      `${baseURL}/personal-details/${existingId}`,
+      personalPayload,
+      { headers },
+    );
+    return { applicationId: existingId, data: putRes?.data?.data };
+  }
+};
+
+const extractApiErrorMessage = (error, fallback = "Request failed") =>
+  error?.response?.data?.error?.message ||
+  error?.response?.data?.message ||
+  error?.message ||
+  fallback;
+
+const upsertProfessionalDetailsForSubmit = async ({
+  applicationId,
+  professionalPayload,
+  token,
+}) => {
+  const headers = buildProfileAuthHeaders(token);
+  try {
+    const putRes = await axios.put(
+      `${baseURL}/professional-details/${applicationId}`,
+      professionalPayload,
+      { headers },
+    );
+    if (putRes?.data?.data != null) return putRes.data.data;
+
+    const postRes = await axios.post(
+      `${baseURL}/professional-details/${applicationId}`,
+      professionalPayload,
+      { headers },
+    );
+    if (postRes?.data?.data == null) {
+      throw new Error(
+        postRes?.data?.message || "Professional details were not saved",
+      );
+    }
+    return postRes.data.data;
+  } catch (error) {
+    throw new Error(
+      extractApiErrorMessage(error, "Professional details were not saved"),
+    );
+  }
+};
+
+const upsertSubscriptionDetailsForSubmit = async ({
+  applicationId,
+  subscriptionPayload,
+  token,
+}) => {
+  const headers = buildProfileAuthHeaders(token);
+  try {
+    const putRes = await axios.put(
+      `${baseURL}/subscription-details/${applicationId}`,
+      subscriptionPayload,
+      { headers },
+    );
+    if (putRes?.data?.data != null) return putRes.data.data;
+
+    const postRes = await axios.post(
+      `${baseURL}/subscription-details/${applicationId}`,
+      subscriptionPayload,
+      { headers },
+    );
+    if (postRes?.data?.data == null) {
+      throw new Error(
+        postRes?.data?.message || "Subscription details were not saved",
+      );
+    }
+    return postRes.data.data;
+  } catch (error) {
+    throw new Error(
+      extractApiErrorMessage(error, "Subscription details were not saved"),
+    );
+  }
+};
+
 const { Search: AntdSearch } = Input;
 const { Option } = Select;
 
+function AppFormGrid({ children, cols = 3, className = "" }) {
+  const colsClass =
+    cols === "33-67"
+      ? "form-grid--33-67"
+      : cols === "40-60"
+        ? "form-grid--40-60"
+        : `form-grid--${cols}`;
+  return (
+    <div className={`form-grid ${colsClass} ${className}`.trim()}>
+      {children}
+    </div>
+  );
+}
+
+function AppFormCell({ children, span = 1, className = "" }) {
+  const spanClass =
+    span === "full" ? "form-col-full" : span === 2 ? "form-col-2" : "";
+  return (
+    <div
+      className={`form-grid-cell form-item ${spanClass} ${className}`.trim()}
+    >
+      <div className="form-grid-cell-inner">{children}</div>
+    </div>
+  );
+}
+
 const ApplicationMgtSelect = (props) => (
-  <CustomSelect showSearch sortOptions {...props} />
+  <CustomSelect
+    showSearch
+    sortOptions
+    allowClear
+    isMarginBtm={false}
+    {...props}
+  />
 );
 
 const SALARY_DEDUCTION_PAYMENT_TYPE = "Salary Deduction";
@@ -88,6 +294,15 @@ const normalizeLookupMatchKey = (value) =>
   String(value || "")
     .trim()
     .toLowerCase();
+
+const isOtherLookupSelection = (value) => {
+  if (value == null || value === "") return false;
+  if (typeof value === "object") {
+    const label = value.label || value.name || value.lookupname || "";
+    return normalizeLookupMatchKey(label) === "other";
+  }
+  return normalizeLookupMatchKey(value) === "other";
+};
 
 const isWorkLocationLookupTypeName = (typeName) => {
   const key = normalizeLookupMatchKey(typeName).replace(/\s+/g, "");
@@ -176,6 +391,81 @@ const resolveWorkLocationProcessSalaryDeduction = (
   }
 
   return false;
+};
+
+const readStoredHierarchicalLookups = () => {
+  try {
+    const stored = localStorage.getItem("hierarchicalLookups");
+    const parsed = stored ? JSON.parse(stored) : [];
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+};
+
+const getOfficerDisplayName = (record) => {
+  const officer = record?.officer;
+  if (officer && typeof officer === "object") {
+    return (
+      officer.userFullName ||
+      [officer.userFirstName, officer.userLastName].filter(Boolean).join(" ") ||
+      ""
+    );
+  }
+
+  const displayName =
+    record?.officerFullName ||
+    record?.officerDisplayName ||
+    record?.officer_display_name ||
+    record?.officerName ||
+    "";
+
+  return String(displayName).includes("@") ? "" : displayName;
+};
+
+const resolveWorkLocationIroName = (
+  locationLabel,
+  workLocationOptions,
+  rawLookups,
+) => {
+  if (!locationLabel || locationLabel === "Other") return "";
+
+  const labelKey = normalizeLookupMatchKey(locationLabel);
+  const matchedOption = workLocationOptions?.find(
+    (opt) =>
+      String(opt.key || opt.value) === String(locationLabel) ||
+      getWorkLocationMatchKeys(opt).includes(labelKey),
+  );
+  const selectedId = matchedOption?.key || matchedOption?.value || null;
+
+  const rawRecord = (rawLookups || []).find((item) => {
+    const type =
+      item.lookuptypeName || item.lookuptypeId?.lookuptype || item.type || "";
+    if (!isWorkLocationLookupTypeName(type)) return false;
+    if (selectedId && String(item._id || item.id) === String(selectedId)) {
+      return true;
+    }
+    return getWorkLocationMatchKeys(item).includes(labelKey);
+  });
+  const rawOfficerName = getOfficerDisplayName(rawRecord);
+  if (rawOfficerName) return rawOfficerName;
+
+  const hierarchyRecord = readStoredHierarchicalLookups().find((item) => {
+    const type = item.type || item.lookuptypeName || "";
+    const isWorkLoc =
+      type === "workLocation" || isWorkLocationLookupTypeName(type);
+    if (!isWorkLoc) return false;
+    if (
+      selectedId &&
+      (String(item.id || item._id) === String(selectedId) ||
+        String(item.lookup?._id) === String(selectedId))
+    ) {
+      return true;
+    }
+    return getWorkLocationMatchKeys(item).includes(labelKey);
+  });
+
+  return getOfficerDisplayName(hierarchyRecord);
 };
 
 /** Product ids used for conditional retired / student fields (policy service products). */
@@ -305,6 +595,68 @@ function membershipCategoryMatchesProductId(
   return id === productId;
 }
 
+const prepareApplicationSubmitPayload = (infData, categoryData) => {
+  const prepared = dateUtils.prepareForAPI(infData);
+  if (prepared?.subscriptionDetails) {
+    const raw = prepared.subscriptionDetails.membershipCategory;
+    const label = normalizeMembershipCategoryToLabel(raw, categoryData);
+    prepared.subscriptionDetails = {
+      ...prepared.subscriptionDetails,
+      membershipCategory: label !== "" ? label : raw,
+    };
+  }
+  const isUndergraduateStudent = membershipCategoryMatchesProductId(
+    infData?.subscriptionDetails?.membershipCategory,
+    STUDENT_MEMBERSHIP_CATEGORY_ID,
+    categoryData,
+  );
+
+  const professionalDetails = { ...(prepared.professionalDetails || {}) };
+  if (professionalDetails.nursingAdaptationProgramme == null) {
+    professionalDetails.nursingAdaptationProgramme = false;
+  }
+  if (
+    isUndergraduateStudent &&
+    !String(professionalDetails.nmbiNumber || "").trim()
+  ) {
+    professionalDetails.nmbiNumber = "N/A";
+  }
+
+  const subscriptionDetails = { ...(prepared.subscriptionDetails || {}) };
+  subscriptionDetails.termsAndConditions = !!subscriptionDetails.termsAndConditions;
+  subscriptionDetails.valueAddedServices = !!subscriptionDetails.valueAddedServices;
+  subscriptionDetails.otherIrishTradeUnion =
+    subscriptionDetails.otherIrishTradeUnion === true;
+  subscriptionDetails.otherScheme = subscriptionDetails.otherScheme === true;
+  subscriptionDetails.incomeProtectionScheme =
+    !!subscriptionDetails.incomeProtectionScheme;
+  subscriptionDetails.inmoRewards = !!subscriptionDetails.inmoRewards;
+  subscriptionDetails.exclusiveDiscountsAndOffers =
+    !!subscriptionDetails.exclusiveDiscountsAndOffers;
+
+  if (!subscriptionDetails.submissionDate) {
+    subscriptionDetails.submissionDate = dayjs().format("YYYY-MM-DD");
+  }
+  if (!subscriptionDetails.dateJoined) {
+    subscriptionDetails.dateJoined = dayjs().format("YYYY-MM-DD");
+  }
+  if (subscriptionDetails.paymentType && !subscriptionDetails.paymentFrequency) {
+    subscriptionDetails.paymentFrequency = "Monthly";
+  }
+
+  const contactInfo = { ...(prepared.contactInfo || {}) };
+  if (contactInfo.consent == null) {
+    contactInfo.consent = true;
+  }
+
+  return {
+    ...prepared,
+    contactInfo,
+    professionalDetails,
+    subscriptionDetails,
+  };
+};
+
 function isReducedRateMembershipCategory(storedValue, categoryData) {
   const label = normalizeMembershipCategoryToLabel(storedValue, categoryData);
   const key = membershipCategoryCompareKey(label);
@@ -324,6 +676,28 @@ function isReducedRateMembershipCategory(storedValue, categoryData) {
     return true;
   }
   return false;
+}
+
+function isHonoraryMembershipCategory(selected, categoryOptions) {
+  const sel = (selected || "").trim();
+  if (!sel) return false;
+
+  const opts = Array.isArray(categoryOptions) ? categoryOptions : [];
+  const honOpt = opts.find((o) => {
+    const lab = (o.label || "").toLowerCase();
+    return lab === "honorary" || /\bhonorary\b/.test(lab);
+  });
+  if (honOpt) {
+    if (honOpt.value === sel || honOpt.label === sel || honOpt.key === sel) {
+      return true;
+    }
+  }
+
+  const norm = sel.toLowerCase().replace(/\s+/g, "_");
+  if (norm === "honorary") return true;
+
+  const combined = sel.toLowerCase();
+  return combined === "honorary" || /\bhonorary\b/.test(combined);
 }
 
 function confirmReducedRateMembershipCategoryModal() {
@@ -440,6 +814,63 @@ function ApplicationMgtDrawer({
   });
   const [duplicateReviewOpen, setDuplicateReviewOpen] = useState(false);
   const [duplicateReviewAutoRun, setDuplicateReviewAutoRun] = useState(false);
+  const [duplicateReviewApplicationId, setDuplicateReviewApplicationId] =
+    useState(null);
+
+  const duplicateReviewTargetId =
+    duplicateReviewApplicationId || application?.applicationId || null;
+
+  const hasPotentialDuplicateFromDetection = (result) => {
+    if (!result) return false;
+    if (result.hasPotentialDuplicate === true) return true;
+    if (result.duplicateReview?.status === "POTENTIAL_MATCH") return true;
+    const summary = result.matchSummary || result.duplicateReview?.matchSummary;
+    if (Array.isArray(summary) && summary.some((match) => !match.ignored)) {
+      return true;
+    }
+    const appMatches = result.matchingApplications || [];
+    const profileMatches = result.matchingProfiles || [];
+    return (
+      appMatches.some((match) => !match.ignored) ||
+      profileMatches.some((match) => !match.ignored)
+    );
+  };
+
+  const runDuplicateDetectionForApplication = async (applicationId) => {
+    const token = localStorage.getItem("token");
+    if (!token || !applicationId) return null;
+
+    const response = await axios.post(
+      `${baseURL}/applications/${applicationId}/detect-duplicates`,
+      {},
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      },
+    );
+    return response.data?.data || response.data;
+  };
+
+  const focusSubmittedApplicationForDuplicateReview = async (
+    applicationId,
+    { isBulk = false } = {},
+  ) => {
+    setDuplicateReviewApplicationId(applicationId);
+    setDuplicateReviewAutoRun(false);
+    setDuplicateReviewOpen(true);
+    await dispatch(getApplicationById({ id: applicationId }));
+    dispatch(getAllApplications());
+
+    if (!isBulk) {
+      navigate({
+        pathname: "/applicationMgt",
+        search: buildApplicationMgtSearch({ applicationId, edit: true }),
+      });
+      disableFtn(false);
+    }
+  };
 
   const duplicateReviewStatus =
     application?.personalDetails?.duplicateReview?.status ||
@@ -507,6 +938,8 @@ function ApplicationMgtDrawer({
   const draftIdFromUrl = searchParams.get("draftId") || "";
   /** Avoid resetting in-progress edits when Redux application object refreshes. */
   const loadedApplicationKeyRef = useRef(null);
+  /** Retain application id after a partial submit so retries update instead of create. */
+  const pendingSubmitApplicationIdRef = useRef(null);
   /** Edit mode follows URL only so "new application" clears reliably (no stale location.state). */
   const isEdit = Boolean(appIdFromUrl || draftIdFromUrl);
   const { applications, applicationsLoading } = useSelector(
@@ -981,7 +1414,7 @@ function ApplicationMgtDrawer({
     } else {
       disableFtn(true);
     }
-  }, []);
+  }, [isEdit, disableFtn]);
 
   useEffect(() => {
     loadedApplicationKeyRef.current = null;
@@ -1057,31 +1490,6 @@ function ApplicationMgtDrawer({
     );
   }, [disciplineOptions, studyLocationOptions, application, isEdit]);
 
-  console.log(application, "application92");
-
-  useEffect(() => {
-    if (application && isEdit) {
-      handleLocationChange(InfData?.professionalDetails?.workLocation);
-    }
-  }, [isEdit, application]);
-
-  useEffect(() => {
-    if (
-      hierarchyData &&
-      (hierarchyData.region || hierarchyData.branch) &&
-      !workLocationLoading
-    ) {
-      setInfData((prev) => ({
-        ...prev,
-        professionalDetails: {
-          ...prev.professionalDetails,
-          region: hierarchyData.region || prev.professionalDetails.region,
-          branch: hierarchyData.branch || prev.professionalDetails.branch,
-        },
-      }));
-    }
-  }, [hierarchyData, workLocationLoading]);
-
   const SectionHeader = ({
     icon,
     title,
@@ -1089,48 +1497,20 @@ function ApplicationMgtDrawer({
     iconBackground,
     subTitle,
   }) => (
-    <Row gutter={18} className="p-3 mb-3 rounded" style={{ backgroundColor }}>
-      <Col span={24}>
-        <div className="d-flex align-items-center">
-          <div
-            style={{
-              backgroundColor: iconBackground,
-              padding: "6px 8px",
-              borderRadius: "6px",
-              marginRight: "12px",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-            }}
-          >
-            {icon}
-          </div>
-          <div>
-            <h2
-              style={{
-                fontSize: "18px",
-                margin: 0,
-                fontWeight: 500,
-                color: "#1a1a1a",
-              }}
-            >
-              {title}
-            </h2>
-            <h6
-              style={{
-                fontSize: "14px",
-                margin: 0,
-                fontWeight: 400,
-                color: "#666",
-                marginTop: "4px",
-              }}
-            >
-              {subTitle}
-            </h6>
-          </div>
-        </div>
-      </Col>
-    </Row>
+    <div className="section-header" style={{ backgroundColor }}>
+      <div
+        className="section-header-icon"
+        style={{ backgroundColor: iconBackground }}
+      >
+        {icon}
+      </div>
+      <div className="section-header-text">
+        <div className="section-header-title">{title}</div>
+        {subTitle ? (
+          <div className="section-header-subtitle">{subTitle}</div>
+        ) : null}
+      </div>
+    </div>
   );
 
   const hasPersonalDetailsChanged = (original, current) => {
@@ -1302,12 +1682,110 @@ function ApplicationMgtDrawer({
     ],
   );
 
+  const workLocationIroName = useMemo(
+    () =>
+      resolveWorkLocationIroName(
+        InfData.professionalDetails?.workLocation,
+        workLocationOptions,
+        lookupsRaw,
+      ),
+    [
+      InfData.professionalDetails?.workLocation,
+      workLocationOptions,
+      lookupsRaw,
+    ],
+  );
+
   const filteredPaymentTypeOptions = useMemo(() => {
     if (workLocationAllowsSalaryDeduction) return paymentTypeOptions;
     return paymentTypeOptions.filter(
       (opt) => !isSalaryDeductionPaymentOption(opt),
     );
   }, [paymentTypeOptions, workLocationAllowsSalaryDeduction]);
+
+  const isWorkLocationOther = useMemo(
+    () => isOtherLookupSelection(InfData.professionalDetails?.workLocation),
+    [InfData.professionalDetails?.workLocation],
+  );
+  const isGradeOther = useMemo(
+    () => isOtherLookupSelection(InfData.professionalDetails?.grade),
+    [InfData.professionalDetails?.grade],
+  );
+  const isPrimarySectionOther = useMemo(
+    () => isOtherLookupSelection(InfData.subscriptionDetails?.primarySection),
+    [InfData.subscriptionDetails?.primarySection],
+  );
+  const isSecondarySectionOther = useMemo(
+    () =>
+      isOtherLookupSelection(InfData.subscriptionDetails?.secondarySection),
+    [InfData.subscriptionDetails?.secondarySection],
+  );
+  const isSalaryDeductionPayment =
+    InfData.subscriptionDetails?.paymentType === SALARY_DEDUCTION_PAYMENT_TYPE;
+  const isUndergraduateStudentCategory = useMemo(
+    () =>
+      membershipCategoryMatchesProductId(
+        InfData?.subscriptionDetails?.membershipCategory,
+        STUDENT_MEMBERSHIP_CATEGORY_ID,
+        categoryData,
+      ),
+    [InfData?.subscriptionDetails?.membershipCategory, categoryData],
+  );
+  const isHonoraryMembershipCategoryActive = useMemo(
+    () =>
+      isHonoraryMembershipCategory(
+        InfData?.subscriptionDetails?.membershipCategory,
+        categoryData,
+      ),
+    [InfData?.subscriptionDetails?.membershipCategory, categoryData],
+  );
+  const isPaymentOptionalCategory =
+    isUndergraduateStudentCategory || isHonoraryMembershipCategoryActive;
+  const isNmbiNumberRequired =
+    !isUndergraduateStudentCategory &&
+    InfData.professionalDetails?.nursingAdaptationProgramme === false;
+  const showNurseTypeField =
+    InfData.professionalDetails?.nursingAdaptationProgramme === true;
+  const showYouthForumSelect =
+    InfData.professionalDetails?.joinYouthForum === true;
+
+  useEffect(() => {
+    if (!isUndergraduateStudentCategory || lookupsloading) return;
+    if (hasWorkLocationSelection(InfData?.professionalDetails?.workLocation)) {
+      return;
+    }
+    const studyLocation = InfData?.professionalDetails?.studyLocation;
+    if (!studyLocation) return;
+    const { branch, region } = resolveBranchRegionFromStudyLocation(
+      studyLocation,
+      studyLocationOptions,
+      lookupsRaw,
+    );
+    if (!branch && !region) return;
+    setInfData((prev) => {
+      if (
+        prev.professionalDetails?.branch === branch &&
+        prev.professionalDetails?.region === region
+      ) {
+        return prev;
+      }
+      return {
+        ...prev,
+        professionalDetails: {
+          ...prev.professionalDetails,
+          branch,
+          region,
+        },
+      };
+    });
+  }, [
+    isUndergraduateStudentCategory,
+    InfData?.professionalDetails?.studyLocation,
+    InfData?.professionalDetails?.workLocation,
+    studyLocationOptions,
+    lookupsRaw,
+    lookupsloading,
+  ]);
 
   useEffect(() => {
     if (lookupsloading) return;
@@ -1334,6 +1812,7 @@ function ApplicationMgtDrawer({
 
   useEffect(() => {
     if (appIdFromUrl || draftIdFromUrl) return;
+    pendingSubmitApplicationIdRef.current = null;
     setInfData(inputValue);
     setOriginalData(null);
     setSelectedMember(null);
@@ -1422,6 +1901,9 @@ function ApplicationMgtDrawer({
           professionalDetails: {
             ...prevData.professionalDetails,
             workLocation: workLocationLabel,
+            otherWorkLocation: isOtherLookupSelection(workLocationLabel)
+              ? prevData.professionalDetails?.otherWorkLocation || ""
+              : "",
             region: isSimple
               ? foundObject?.branch?.region?.name ||
                 foundObject?.region?.name ||
@@ -1452,7 +1934,108 @@ function ApplicationMgtDrawer({
     }
   };
 
+  useEffect(() => {
+    if (!application || !isEdit || lookupsloading) return;
+
+    const isUg = membershipCategoryMatchesProductId(
+      InfData?.subscriptionDetails?.membershipCategory,
+      STUDENT_MEMBERSHIP_CATEGORY_ID,
+      categoryData,
+    );
+
+    if (isUg) {
+      const workLocation = InfData?.professionalDetails?.workLocation;
+      if (hasWorkLocationSelection(workLocation)) {
+        handleLocationChange(workLocation);
+        return;
+      }
+
+      const studyLocation = InfData?.professionalDetails?.studyLocation;
+      if (!studyLocation) return;
+      const { branch, region } = resolveBranchRegionFromStudyLocation(
+        studyLocation,
+        studyLocationOptions,
+        lookupsRaw,
+      );
+      if (!branch && !region) return;
+      setInfData((prev) => {
+        if (
+          prev.professionalDetails?.branch === branch &&
+          prev.professionalDetails?.region === region
+        ) {
+          return prev;
+        }
+        return {
+          ...prev,
+          professionalDetails: {
+            ...prev.professionalDetails,
+            branch,
+            region,
+          },
+        };
+      });
+      return;
+    }
+
+    if (InfData?.professionalDetails?.workLocation) {
+      handleLocationChange(InfData.professionalDetails.workLocation);
+    }
+  }, [
+    application,
+    isEdit,
+    lookupsloading,
+    InfData?.subscriptionDetails?.membershipCategory,
+    InfData?.professionalDetails?.studyLocation,
+    InfData?.professionalDetails?.workLocation,
+    studyLocationOptions,
+    lookupsRaw,
+    categoryData,
+  ]);
+
+  useEffect(() => {
+    if (
+      membershipCategoryMatchesProductId(
+        InfData?.subscriptionDetails?.membershipCategory,
+        STUDENT_MEMBERSHIP_CATEGORY_ID,
+        categoryData,
+      ) &&
+      !hasWorkLocationSelection(InfData?.professionalDetails?.workLocation)
+    ) {
+      return;
+    }
+    if (
+      hierarchyData &&
+      (hierarchyData.region || hierarchyData.branch) &&
+      !workLocationLoading
+    ) {
+      setInfData((prev) => ({
+        ...prev,
+        professionalDetails: {
+          ...prev.professionalDetails,
+          region: hierarchyData.region || prev.professionalDetails.region,
+          branch: hierarchyData.branch || prev.professionalDetails.branch,
+        },
+      }));
+    }
+  }, [
+    hierarchyData,
+    workLocationLoading,
+    InfData?.subscriptionDetails?.membershipCategory,
+    InfData?.professionalDetails?.workLocation,
+    categoryData,
+  ]);
+
   const validateForm = () => {
+    const isUndergraduateStudent = membershipCategoryMatchesProductId(
+      InfData?.subscriptionDetails?.membershipCategory,
+      STUDENT_MEMBERSHIP_CATEGORY_ID,
+      categoryData,
+    );
+    const isHonorary = isHonoraryMembershipCategory(
+      InfData?.subscriptionDetails?.membershipCategory,
+      categoryData,
+    );
+    const isPaymentOptional = isUndergraduateStudent || isHonorary;
     const requiredFields = [
       "title",
       "forename",
@@ -1467,6 +2050,7 @@ function ApplicationMgtDrawer({
       "membershipCategory",
       "workLocation",
       "grade",
+      "primarySection",
       "paymentType",
       "termsAndConditions",
       "preferredAddress",
@@ -1476,6 +2060,8 @@ function ApplicationMgtDrawer({
       "joinYouthForum",
       "membershipStatus",
       "nursingAdaptationProgramme",
+      "dateJoined",
+      "submissionDate",
     ];
 
     const fieldLabels = {
@@ -1492,7 +2078,9 @@ function ApplicationMgtDrawer({
       membershipCategory: "Membership Category",
       workLocation: "Work Location",
       grade: "Grade",
+      primarySection: "Primary Section",
       paymentType: "Payment Method",
+      paymentFrequency: "Payment Frequency",
       termsAndConditions: "Terms and Conditions",
       preferredAddress: "Preferred Address",
       countryPrimaryQualification: "Country Primary Qualification",
@@ -1519,6 +2107,8 @@ function ApplicationMgtDrawer({
       nmbiNumber: "NMBI Number",
       region: "Region",
       branch: "Branch",
+      dateJoined: "Date Joined",
+      submissionDate: "Submission Date",
     };
 
     const fieldMap = {
@@ -1552,10 +2142,14 @@ function ApplicationMgtDrawer({
       pensionNo: ["professionalDetails", "pensionNo"],
 
       paymentType: ["subscriptionDetails", "paymentType"],
+      paymentFrequency: ["subscriptionDetails", "paymentFrequency"],
       termsAndConditions: ["subscriptionDetails", "termsAndConditions"],
       payrollNo: ["subscriptionDetails", "payrollNo"],
+      primarySection: ["subscriptionDetails", "primarySection"],
       otherPrimarySection: ["subscriptionDetails", "otherPrimarySection"],
       otherSecondarySection: ["subscriptionDetails", "otherSecondarySection"],
+      dateJoined: ["subscriptionDetails", "dateJoined"],
+      submissionDate: ["subscriptionDetails", "submissionDate"],
       nurseType: ["professionalDetails", "nurseType"],
       membershipStatus: ["subscriptionDetails", "membershipStatus"],
       nursingAdaptationProgramme: [
@@ -1583,8 +2177,29 @@ function ApplicationMgtDrawer({
       if (field === "joinYouthForum" && !requiresYouthForumQuestions) {
         return;
       }
+      if (field === "nursingAdaptationProgramme" && isUndergraduateStudent) {
+        return;
+      }
+      if (field === "workLocation" && isUndergraduateStudent) {
+        return;
+      }
+      if (field === "paymentType" && isPaymentOptional) {
+        return;
+      }
 
       const [section, key] = fieldMap[field] || [];
+      if (
+        (field === "dateJoined" || field === "submissionDate") &&
+        !InfData[section]?.[key]
+      ) {
+        newErrors[field] = "This field is required";
+        missingFieldNames.push(fieldLabels[field] || field);
+        return;
+      }
+      if (field === "dateJoined" || field === "submissionDate") {
+        return;
+      }
+
       const value = section ? InfData[section]?.[key] : null;
 
       const booleanAllowed = [
@@ -1634,14 +2249,24 @@ function ApplicationMgtDrawer({
       }
     }
 
-    if (InfData.professionalDetails?.workLocation === "Other") {
+    if (
+      !isUndergraduateStudent &&
+      isOtherLookupSelection(InfData.professionalDetails?.workLocation)
+    ) {
       if (!InfData.professionalDetails.otherWorkLocation?.trim()) {
         newErrors.otherWorkLocation = "Other work location is required";
         missingFieldNames.push(fieldLabels.otherWorkLocation);
       }
     }
 
-    if (InfData.subscriptionDetails.primarySection === "Other") {
+    if (isOtherLookupSelection(InfData.professionalDetails?.grade)) {
+      if (!InfData.professionalDetails.otherGrade?.trim()) {
+        newErrors.otherGrade = "Other grade is required";
+        missingFieldNames.push("Other Grade");
+      }
+    }
+
+    if (isOtherLookupSelection(InfData.subscriptionDetails.primarySection)) {
       if (!InfData.subscriptionDetails.otherPrimarySection?.trim()) {
         newErrors.otherPrimarySection = "Other primary section is required";
         missingFieldNames.push(fieldLabels.otherPrimarySection);
@@ -1720,19 +2345,40 @@ function ApplicationMgtDrawer({
       }
     }
 
-    if (InfData.subscriptionDetails.secondarySection === "Other") {
+    if (!isPaymentOptional) {
+      if (!InfData.subscriptionDetails?.paymentFrequency?.trim()) {
+        newErrors.paymentFrequency = "Payment frequency is required";
+        missingFieldNames.push(fieldLabels.paymentFrequency);
+      }
+    }
+
+    if (!InfData.subscriptionDetails?.termsAndConditions) {
+      newErrors.termsAndConditions =
+        "You must accept the terms and conditions";
+      if (!missingFieldNames.includes(fieldLabels.termsAndConditions)) {
+        missingFieldNames.push(fieldLabels.termsAndConditions);
+      }
+    }
+
+    if (isOtherLookupSelection(InfData.subscriptionDetails.secondarySection)) {
       if (!InfData.subscriptionDetails.otherSecondarySection?.trim()) {
         newErrors.otherSecondarySection = "Other secondary section is required";
         missingFieldNames.push(fieldLabels.otherSecondarySection);
       }
     }
-    if (InfData.professionalDetails?.nursingAdaptationProgramme === false) {
+    if (
+      !isUndergraduateStudent &&
+      InfData.professionalDetails?.nursingAdaptationProgramme !== true
+    ) {
       if (!InfData.professionalDetails.nmbiNumber?.trim()) {
         newErrors.nmbiNumber = "NMBI No/An Board Altranais Number is required";
         missingFieldNames.push(fieldLabels.nmbiNumber);
       }
     }
-    if (InfData.professionalDetails?.nursingAdaptationProgramme === true) {
+    if (
+      !isUndergraduateStudent &&
+      InfData.professionalDetails?.nursingAdaptationProgramme === true
+    ) {
       const nt = InfData.professionalDetails.nurseType;
       if (
         nt === undefined ||
@@ -1847,151 +2493,177 @@ function ApplicationMgtDrawer({
     if (!isValid) return;
     setIsProcessing(true);
     disableFtn(true);
+    let applicationId =
+      (isEdit && application?.applicationId) ||
+      pendingSubmitApplicationIdRef.current ||
+      null;
     try {
       const token = localStorage.getItem("token");
       if (!token) {
         throw new Error("No authentication token found");
       }
 
-      const apiData = withMembershipCategoryLabelsForApi(
-        dateUtils.prepareForAPI(InfData),
-      );
+      const apiData = prepareApplicationSubmitPayload(InfData, categoryData);
 
       const personalPayload = cleanPayload({
         personalInfo: apiData.personalInfo,
         contactInfo: apiData.contactInfo,
       });
 
-      const personalRes = await axios.post(
-        `${baseURL}/personal-details`,
+      const personalResult = await upsertPersonalDetailsForSubmit({
+        applicationId,
         personalPayload,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-        },
-      );
-
-      const applicationId = personalRes?.data?.data?.applicationId;
-
-      if (!applicationId) {
-        throw new Error("ApplicationId not returned from personal details API");
-      }
+        token,
+      });
+      applicationId = personalResult.applicationId;
+      pendingSubmitApplicationIdRef.current = applicationId;
 
       const professionalPayload = cleanPayload({
         professionalDetails: apiData.professionalDetails,
       });
 
-      await axios.post(
-        `${baseURL}/professional-details/${applicationId}`,
+      await upsertProfessionalDetailsForSubmit({
+        applicationId,
         professionalPayload,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-        },
-      );
+        token,
+      });
 
       const subscriptionPayload = cleanPayload({
         subscriptionDetails: apiData.subscriptionDetails,
       });
 
-      await axios.post(
-        `${baseURL}/subscription-details/${applicationId}`,
+      await upsertSubscriptionDetailsForSubmit({
+        applicationId,
         subscriptionPayload,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-        },
-      );
+        token,
+      });
+
+      pendingSubmitApplicationIdRef.current = null;
+
+      let duplicateDetected = false;
+      try {
+        const duplicateResult =
+          await runDuplicateDetectionForApplication(applicationId);
+        duplicateDetected =
+          hasPotentialDuplicateFromDetection(duplicateResult);
+      } catch (duplicateError) {
+        console.error("Duplicate detection failed:", duplicateError);
+      }
+
+      if (duplicateDetected) {
+        await focusSubmittedApplicationForDuplicateReview(applicationId, {
+          isBulk: selected?.Bulk === true,
+        });
+      }
 
       if (selected.Approve) {
-        try {
-          const okRetro = await confirmRetrospectiveMembershipModal(apiData);
-          if (!okRetro) {
+        if (duplicateDetected) {
+          if (selected?.Bulk !== true) {
             MyAlert(
-              "info",
-              "Approval cancelled",
-              "The application was saved. Approve from the list when you are ready.",
-            );
-          } else {
-            let approvalPayload;
-
-            if (isEdit && originalData) {
-              const apiOriginalData = withMembershipCategoryLabelsForApi(
-                dateUtils.prepareForAPI(originalData),
-              );
-              const proposedPatch = generatePatch(apiOriginalData, apiData);
-              approvalPayload = {
-                submission: apiData,
-                proposedPatch: proposedPatch,
-                notes: "Auto-approved with changes on submission",
-              };
-            } else {
-              const proposedPatch = generateCreatePatch(apiData);
-              approvalPayload = {
-                submission: apiData,
-                proposedPatch: proposedPatch,
-                notes: "Auto-approved on submission",
-              };
-            }
-
-            await axios.post(
-              `${process.env.REACT_APP_PROFILE_SERVICE_URL}/applications/${applicationId}/approve`,
-              approvalPayload,
-              {
-                headers: {
-                  "Content-Type": "application/json",
-                  Authorization: `Bearer ${token}`,
-                },
-              },
-            );
-
-            MyAlert(
-              "success",
-              "Application submitted and approved successfully!",
+              "warning",
+              "Potential duplicate detected",
+              DUPLICATE_REVIEW_REQUIRED_MESSAGE,
             );
           }
-        } catch (approveError) {
-          console.error("Approval failed:", approveError);
-          const duplicateBlocked =
-            approveError.response?.data?.code === "DUPLICATE_REVIEW_REQUIRED" ||
-            approveError.response?.data?.error?.code === "DUPLICATE_REVIEW_REQUIRED";
-          if (duplicateBlocked) {
-            MyAlert(
-              "warning",
-              "Duplicate review required",
-              approveError.response?.data?.message ||
-                "Open Duplicate Profile Review before approving this application.",
-            );
-            openDuplicateReviewDrawer(true);
-          } else {
-            MyAlert(
-              "warning",
-              "Application submitted successfully but approval failed",
-              "The application was created but could not be automatically approved. Please approve it manually.",
-            );
+        } else {
+          try {
+            const okRetro = await confirmRetrospectiveMembershipModal(apiData);
+            if (!okRetro) {
+              MyAlert(
+                "info",
+                "Processing cancelled",
+                "The application was saved. Process from the list when you are ready.",
+              );
+            } else {
+              let approvalPayload;
+
+              if (isEdit && originalData) {
+                const apiOriginalData = withMembershipCategoryLabelsForApi(
+                  dateUtils.prepareForAPI(originalData),
+                );
+                const proposedPatch = generatePatch(apiOriginalData, apiData);
+                approvalPayload = {
+                  submission: apiData,
+                  proposedPatch: proposedPatch,
+                  notes: "Auto-processed with changes on submission",
+                };
+              } else {
+                const proposedPatch = generateCreatePatch(apiData);
+                approvalPayload = {
+                  submission: apiData,
+                  proposedPatch: proposedPatch,
+                  notes: "Auto-processed on submission",
+                };
+              }
+
+              await axios.post(
+                `${process.env.REACT_APP_PROFILE_SERVICE_URL}/applications/${applicationId}/approve`,
+                approvalPayload,
+                {
+                  headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${token}`,
+                  },
+                },
+              );
+
+              MyAlert(
+                "success",
+                "Application submitted and processed successfully!",
+              );
+            }
+          } catch (approveError) {
+            console.error("Approval failed:", approveError);
+            const duplicateBlocked =
+              approveError.response?.data?.code ===
+                "DUPLICATE_REVIEW_REQUIRED" ||
+              approveError.response?.data?.error?.code ===
+                "DUPLICATE_REVIEW_REQUIRED";
+            if (duplicateBlocked) {
+              MyAlert(
+                "warning",
+                "Duplicate review required",
+                approveError.response?.data?.message ||
+                  "Open Duplicate Profile Review before processing this application.",
+              );
+              await focusSubmittedApplicationForDuplicateReview(applicationId, {
+                isBulk: selected?.Bulk === true,
+              });
+            } else {
+              MyAlert(
+                "warning",
+                "Application submitted successfully but processing failed",
+                "The application was created but could not be automatically processed. Please process it manually.",
+              );
+            }
           }
         }
-      } else {
+      } else if (duplicateDetected) {
+        if (selected?.Bulk !== true) {
+          MyAlert(
+            "warning",
+            "Potential duplicate detected",
+            "Application submitted. Review duplicate matches before processing.",
+          );
+        }
+      } else if (selected?.Bulk !== true) {
         MyAlert("success", "Application submitted successfully!");
       }
 
       if (selected?.Bulk !== true) {
-        setInfData(inputValue);
         setSelected((prev) => ({
           ...prev,
           Approve: false,
           Reject: false,
         }));
-        setSelectedMember(null);
-        setAddressSearchValue("");
-        setRecruiterSearchValue("");
-        navigate("/Applications");
+
+        if (!duplicateDetected) {
+          setInfData(inputValue);
+          setSelectedMember(null);
+          setAddressSearchValue("");
+          setRecruiterSearchValue("");
+          navigate("/Applications");
+        }
       } else {
         // Preserve ONLY the specified fields when Batch Entry is checked
         const preservedFields = {
@@ -2064,17 +2736,43 @@ function ApplicationMgtDrawer({
         }
 
         MyAlert(
-          "success",
-          "Application submitted successfully! Form cleared (except preserved fields) and ready for next entry.",
+          duplicateDetected ? "warning" : "success",
+          duplicateDetected
+            ? "Application submitted — potential duplicate detected"
+            : "Application submitted successfully! Form cleared (except preserved fields) and ready for next entry.",
+          duplicateDetected
+            ? "Review duplicate matches in the drawer before processing this application."
+            : undefined,
         );
       }
     } catch (error) {
       console.error("Submission error:", error);
-      MyAlert(
-        "error",
-        "Failed to submit application",
-        error?.response?.data?.error?.message || error.message,
-      );
+      if (applicationId) {
+        pendingSubmitApplicationIdRef.current = applicationId;
+        loadedApplicationKeyRef.current = String(applicationId);
+        if (!isEdit) {
+          navigate(
+            {
+              pathname: APPLICATION_MGT_PATH,
+              search: buildApplicationMgtSearch({ applicationId, edit: true }),
+            },
+            { replace: true },
+          );
+          dispatch(getApplicationById({ id: applicationId }));
+        }
+        MyAlert(
+          "warning",
+          "Application partially saved",
+          error?.message ||
+            "Some details were saved. Fix the remaining issues and submit again.",
+        );
+      } else {
+        MyAlert(
+          "error",
+          "Failed to submit application",
+          error?.message || extractApiErrorMessage(error),
+        );
+      }
     } finally {
       setIsProcessing(false);
       disableFtn(false);
@@ -2184,6 +2882,30 @@ function ApplicationMgtDrawer({
     return hasAnyChange;
   };
 
+  const hasUnsavedApplicationChanges = useMemo(() => {
+    if (isDisable) return false;
+
+    const apiInfData = withMembershipCategoryLabelsForApi(
+      dateUtils.prepareForAPI(InfData),
+    );
+    const baselineData = isEdit && originalData ? originalData : inputValue;
+    const apiBaselineData = withMembershipCategoryLabelsForApi(
+      dateUtils.prepareForAPI(baselineData),
+    );
+
+    return (
+      hasPersonalDetailsChanged(apiBaselineData, apiInfData) ||
+      hasProfessionalDetailsChanged(apiBaselineData, apiInfData) ||
+      hasSubscriptionDetailsChanged(apiInfData, apiBaselineData)
+    );
+  }, [isDisable, isEdit, originalData, InfData, categoryData]);
+
+  useRegisterUnsavedFormGuard(
+    "application-mgt-form",
+    hasUnsavedApplicationChanges,
+    !isDisable,
+  );
+
   const handleSave = async () => {
     if (isDisable) return;
     const isValid = validateForm();
@@ -2196,9 +2918,7 @@ function ApplicationMgtDrawer({
       if (!token) {
         throw new Error("No authentication token found");
       }
-      const apiData = withMembershipCategoryLabelsForApi(
-        dateUtils.prepareForAPI(InfData),
-      );
+      const apiData = prepareApplicationSubmitPayload(InfData, categoryData);
       if (!isEdit || !originalData) {
         throw new Error("Save operation requires edit mode and original data");
       }
@@ -2458,11 +3178,15 @@ function ApplicationMgtDrawer({
       );
 
       setInfData((prev) => {
+        const resolvedLocation = locationLabel || value;
         const next = {
           ...prev,
           professionalDetails: {
             ...prev.professionalDetails,
-            workLocation: locationLabel || value,
+            workLocation: resolvedLocation,
+            otherWorkLocation: isOtherLookupSelection(resolvedLocation)
+              ? prev.professionalDetails?.otherWorkLocation || ""
+              : "",
           },
           subscriptionDetails: {
             ...prev.subscriptionDetails,
@@ -2483,7 +3207,63 @@ function ApplicationMgtDrawer({
         return next;
       });
 
-      handleLocationChange(locationId, allowsSalaryDeduction);
+      const resolvedLocation = locationLabel || value;
+      const isUg = membershipCategoryMatchesProductId(
+        InfData?.subscriptionDetails?.membershipCategory,
+        STUDENT_MEMBERSHIP_CATEGORY_ID,
+        categoryData,
+      );
+
+      if (hasWorkLocationSelection(resolvedLocation)) {
+        handleLocationChange(locationId, allowsSalaryDeduction);
+      } else if (isUg) {
+        const studyLocation = InfData?.professionalDetails?.studyLocation;
+        const branchRegion = studyLocation
+          ? resolveBranchRegionFromStudyLocation(
+              studyLocation,
+              studyLocationOptions,
+              lookupsRaw,
+            )
+          : { branch: "", region: "" };
+        setInfData((prev) => ({
+          ...prev,
+          professionalDetails: {
+            ...prev.professionalDetails,
+            branch: branchRegion.branch,
+            region: branchRegion.region,
+          },
+        }));
+      }
+    } else if (section === "professionalDetails" && field === "studyLocation") {
+      const studyLocationLabel = value
+        ? normalizeLookupOptionToLabel(value, studyLocationOptions)
+        : "";
+      setInfData((prev) => {
+        const branchRegion = hasWorkLocationSelection(
+          prev.professionalDetails?.workLocation,
+        )
+          ? {
+              branch: prev.professionalDetails?.branch || "",
+              region: prev.professionalDetails?.region || "",
+            }
+          : studyLocationLabel
+            ? resolveBranchRegionFromStudyLocation(
+                value,
+                studyLocationOptions,
+                lookupsRaw,
+              )
+            : { branch: "", region: "" };
+
+        return {
+          ...prev,
+          professionalDetails: {
+            ...prev.professionalDetails,
+            studyLocation: studyLocationLabel,
+            branch: branchRegion.branch,
+            region: branchRegion.region,
+          },
+        };
+      });
     } else {
       setInfData((prev) => {
         let updated = {
@@ -2495,16 +3275,30 @@ function ApplicationMgtDrawer({
         };
         if (
           section === "professionalDetails" &&
-          field === "nursingAdaptationProgramme" &&
-          value === false
+          field === "nursingAdaptationProgramme"
         ) {
           updated = {
             ...updated,
             professionalDetails: {
               ...updated.professionalDetails,
-              nurseType: null,
+              nurseType: value === true ? updated.professionalDetails.nurseType : null,
             },
           };
+        }
+        if (section === "professionalDetails" && field === "grade") {
+          if (!isOtherLookupSelection(value)) {
+            updated.professionalDetails.otherGrade = "";
+          }
+        }
+        if (section === "subscriptionDetails" && field === "primarySection") {
+          if (!isOtherLookupSelection(value)) {
+            updated.subscriptionDetails.otherPrimarySection = "";
+          }
+        }
+        if (section === "subscriptionDetails" && field === "secondarySection") {
+          if (!isOtherLookupSelection(value)) {
+            updated.subscriptionDetails.otherSecondarySection = "";
+          }
         }
         if (section === "personalInfo" && field === "dateOfBirth") {
           const age = calculateAgeFtn(value);
@@ -2538,6 +3332,34 @@ function ApplicationMgtDrawer({
       }
       if (field === "joinYouthForum" && value !== true && next?.youthForum) {
         const { youthForum: _removedYf, ...rest } = next;
+        next = rest;
+      }
+      if (field === "grade" && !isOtherLookupSelection(value) && next?.otherGrade) {
+        const { otherGrade: _removedOg, ...rest } = next;
+        next = rest;
+      }
+      if (
+        field === "workLocation" &&
+        !isOtherLookupSelection(value) &&
+        next?.otherWorkLocation
+      ) {
+        const { otherWorkLocation: _removedOwl, ...rest } = next;
+        next = rest;
+      }
+      if (
+        field === "primarySection" &&
+        !isOtherLookupSelection(value) &&
+        next?.otherPrimarySection
+      ) {
+        const { otherPrimarySection: _removedOps, ...rest } = next;
+        next = rest;
+      }
+      if (
+        field === "secondarySection" &&
+        !isOtherLookupSelection(value) &&
+        next?.otherSecondarySection
+      ) {
+        const { otherSecondarySection: _removedOss, ...rest } = next;
         next = rest;
       }
       if (field === "dateOfBirth") {
@@ -2694,12 +3516,12 @@ function ApplicationMgtDrawer({
       const status = application.applicationStatus?.toLowerCase();
       setCurrentApplication(application);
 
-      const shouldDisableForm = ["approved"].includes(status);
+      const shouldDisableForm = ["processed"].includes(status);
       disableFtn(shouldDisableForm);
 
       setSelected((prev) => ({
         ...prev,
-        Approve: status === "approved",
+        Approve: status === "processed",
         Reject: status === "rejected",
       }));
     } else {
@@ -2711,7 +3533,7 @@ function ApplicationMgtDrawer({
     const { name, checked } = e.target;
 
     const status = application?.applicationStatus?.toLowerCase();
-    const readOnlyStatuses = ["approved"];
+    const readOnlyStatuses = ["processed"];
 
     if (readOnlyStatuses.includes(status) && name === "Approve") {
       return;
@@ -2729,11 +3551,11 @@ function ApplicationMgtDrawer({
     if (name === "Approve" && checked === true && isEdit) {
       setSelected((prev) => ({
         ...prev,
-        Approve: true,
+        Approve: false,
         Reject: false,
       }));
 
-      handleApplicationAction("approved");
+      handleApplicationAction("processed");
     }
 
     if (name === "Reject" && checked === true) {
@@ -2768,6 +3590,7 @@ function ApplicationMgtDrawer({
     if (!isValid) return;
     setIsProcessing(true);
     disableFtn(true);
+    let actionSucceeded = false;
 
     try {
       const token = localStorage.getItem("token");
@@ -2801,7 +3624,7 @@ function ApplicationMgtDrawer({
 
       const hasChanges = proposedPatch && proposedPatch.length > 0;
 
-      if (action === "approved") {
+      if (action === "processed") {
         if (duplicateReviewPending) {
           message.warning(DUPLICATE_REVIEW_REQUIRED_MESSAGE);
           openDuplicateReviewDrawer(false);
@@ -2836,25 +3659,6 @@ function ApplicationMgtDrawer({
           }));
           return;
         }
-
-        const approvalPayload = {
-          submission: apiOriginalData || {},
-        };
-
-        if (hasChanges) {
-          approvalPayload.proposedPatch = proposedPatch;
-        }
-
-        const approvalResponse = await axios.post(
-          `${process.env.REACT_APP_PROFILE_SERVICE_URL}/applications/${applicationId}/approve`,
-          approvalPayload,
-          {
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${token}`,
-            },
-          },
-        );
 
         if (isEdit && hasChanges) {
           if (personalChanged) {
@@ -2906,10 +3710,27 @@ function ApplicationMgtDrawer({
             );
           }
         }
+
+        const approvalPayload = {
+          submission:
+            isEdit && hasChanges ? apiInfData || {} : apiOriginalData || {},
+        };
+
+        const approvalResponse = await axios.post(
+          `${process.env.REACT_APP_PROFILE_SERVICE_URL}/applications/${applicationId}/approve`,
+          approvalPayload,
+          {
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+          },
+        );
       } else if (action === "rejected") {
         if (!rejectionData.reason) {
           MyAlert("error", "Please select a rejection reason");
           setIsProcessing(false);
+          disableFtn(false);
           return;
         }
 
@@ -2933,16 +3754,17 @@ function ApplicationMgtDrawer({
 
       setSelected((prev) => ({
         ...prev,
-        Approve: action === "approved",
+        Approve: action === "processed",
         Reject: action === "rejected",
       }));
 
       const successMessage =
-        action === "approved"
-          ? "Application approved successfully!"
+        action === "processed"
+          ? "Application processed successfully!"
           : "Application rejected successfully!";
 
       MyAlert("success", successMessage);
+      actionSucceeded = true;
       disableFtn(true);
 
       if (action === "rejected") {
@@ -2966,7 +3788,7 @@ function ApplicationMgtDrawer({
           "warning",
           "Duplicate review required",
           error.response?.data?.message ||
-            "Open Duplicate Profile Review before approving this application.",
+            "Open Duplicate Profile Review before processing this application.",
         );
         openDuplicateReviewDrawer(false);
       } else {
@@ -2984,7 +3806,7 @@ function ApplicationMgtDrawer({
       }));
     } finally {
       setIsProcessing(false);
-      disableFtn(true);
+      disableFtn(actionSucceeded);
     }
   };
 
@@ -3034,13 +3856,13 @@ function ApplicationMgtDrawer({
       }
 
       const status = newApplication.applicationStatus?.toLowerCase();
-      const readOnlyStatuses = ["approved", "in-progress"];
+      const readOnlyStatuses = ["processed", "in-progress"];
 
       if (readOnlyStatuses.includes(status)) {
         disableFtn(true);
         setSelected((prev) => ({
           ...prev,
-          Approve: status === "approved",
+          Approve: status === "processed",
           Reject: status === "rejected",
         }));
       } else {
@@ -3130,26 +3952,20 @@ function ApplicationMgtDrawer({
     setInfData(inputValue);
     setSelectedMember(null);
 
-    const nameParts = searchTerm.split(" ");
+    const nameParts = searchTerm.trim().split(/\s+/).filter(Boolean);
     if (nameParts.length >= 2) {
       setInfData((prev) => ({
         ...prev,
         personalInfo: {
           ...prev.personalInfo,
-          forename: nameParts[0],
-          surname: nameParts.slice(1).join(" "),
+          forename: toTitleCase(nameParts[0]),
+          surname: toTitleCase(nameParts.slice(1).join(" ")),
         },
       }));
     }
 
     message.success("Ready to add new member");
   };
-
-  const isUndergraduateStudentCategory = membershipCategoryMatchesProductId(
-    InfData?.subscriptionDetails?.membershipCategory,
-    STUDENT_MEMBERSHIP_CATEGORY_ID,
-    categoryData,
-  );
 
   const membershipStatusValue =
     InfData?.subscriptionDetails?.membershipStatus || "";
@@ -3243,7 +4059,7 @@ function ApplicationMgtDrawer({
               }
               onChange={handleChange}
             >
-              Approve
+              Process
             </Checkbox>
             <Checkbox
               name="Reject"
@@ -3258,15 +4074,18 @@ function ApplicationMgtDrawer({
             >
               Reject
             </Checkbox>
-            <Button
-              className="butn primary-btn"
-              disabled={isDisable}
-              onClick={() => handleSave()}
-            >
-              Save
-            </Button>
+            {isEdit && (
+              <Button
+                className="butn primary-btn"
+                disabled={isDisable || !originalData}
+                loading={isProcessing}
+                onClick={() => handleSave()}
+              >
+                Save
+              </Button>
+            )}
             {application?.applicationId &&
-              !["approved", "rejected"].includes(
+              !["processed", "rejected"].includes(
                 (
                   application?.applicationStatus ||
                   application?.personalDetails?.applicationStatus ||
@@ -3340,6 +4159,12 @@ function ApplicationMgtDrawer({
           </div>
         </div>
         {emailConflictData?.hasConflict && <EmailConflictScreen />}
+        {isEdit && isMergedDuplicateReview(application) && (
+          <DuplicateMergeIndicator
+            application={application}
+            onViewMergeReview={() => openDuplicateReviewDrawer(false)}
+          />
+        )}
         {isEdit && isPotentialDuplicate && duplicateReviewPending && (
           <div
             style={{
@@ -3365,7 +4190,7 @@ function ApplicationMgtDrawer({
               </span>
               <span style={{ color: "#820014", fontSize: 13 }}>
                 Resolve all matches (Create New Profile, Ignore Match, Tag this
-                Profile, or Merge this Profile) before approval.
+                Profile, or Merge this Profile) before processing.
               </span>
             </div>
             <Button
@@ -3381,7 +4206,7 @@ function ApplicationMgtDrawer({
           </div>
         )}
         <div
-          className="hide-scroll-webkit"
+          className="hide-scroll-webkit application-form compact"
           style={{
             borderRadius: "15px",
             boxShadow: "0 2px 6px rgba(0,0,0,0.04)",
@@ -3390,17 +4215,17 @@ function ApplicationMgtDrawer({
             minHeight: 0,
             overflowY: "auto",
             backgroundColor: "white",
-            padding: "1.5rem",
+            padding: "12px 16px",
             filter: showLoader ? "blur(3px)" : "none",
             pointerEvents: showLoader ? "none" : "auto",
             transition: "0.3s ease",
           }}
         >
           {/* Personal Information Section */}
-          <div className="mb-3">
+          <div className="section-card">
             <SectionHeader
               icon={
-                <MailOutlined style={{ color: "#2f6bff", fontSize: "18px" }} />
+                <MailOutlined style={{ color: "#2f6bff", fontSize: "16px" }} />
               }
               title="Personal Information"
               subTitle="Please provide your details as they appear on your official documents."
@@ -3408,8 +4233,8 @@ function ApplicationMgtDrawer({
               iconBackground="#e5edff"
             />
 
-            <Row gutter={[16, 12]} className="mt-2">
-              <Col xs={24} md={8}>
+            <AppFormGrid>
+              <AppFormCell>
                 <ApplicationMgtSelect
                   label="Title"
                   name="title"
@@ -3422,8 +4247,8 @@ function ApplicationMgtDrawer({
                   }
                   hasError={!!errors?.title}
                 />
-              </Col>
-              <Col xs={24} md={8}>
+              </AppFormCell>
+              <AppFormCell>
                 <MyInput
                   label="Forename"
                   name="forename"
@@ -3439,8 +4264,8 @@ function ApplicationMgtDrawer({
                   }
                   hasError={!!errors?.forename}
                 />
-              </Col>
-              <Col xs={24} md={8}>
+              </AppFormCell>
+              <AppFormCell>
                 <MyInput
                   label="Surname"
                   name="surname"
@@ -3452,9 +4277,9 @@ function ApplicationMgtDrawer({
                   }
                   hasError={!!errors?.surname}
                 />
-              </Col>
+              </AppFormCell>
 
-              <Col xs={24} md={8}>
+              <AppFormCell>
                 <ApplicationMgtSelect
                   label="Gender"
                   name="gender"
@@ -3467,8 +4292,8 @@ function ApplicationMgtDrawer({
                   }
                   hasError={!!errors?.gender}
                 />
-              </Col>
-              <Col xs={24} md={8}>
+              </AppFormCell>
+              <AppFormCell>
                 <MyDatePicker1
                   label="Date Of Birth"
                   name="dob"
@@ -3481,8 +4306,8 @@ function ApplicationMgtDrawer({
                   hasError={!!errors?.dateOfBirth}
                   errorMessage={errors?.dateOfBirth || "Required"}
                 />
-              </Col>
-              <Col xs={24} md={8}>
+              </AppFormCell>
+              <AppFormCell>
                 <ApplicationMgtSelect
                   label="Country Primary Qualification"
                   name="countryPrimaryQualification"
@@ -3499,16 +4324,16 @@ function ApplicationMgtDrawer({
                   }
                   hasError={!!errors?.countryPrimaryQualification}
                 />
-              </Col>
-            </Row>
+              </AppFormCell>
+            </AppFormGrid>
           </div>
 
           {/* Correspondence Details Section */}
-          <div className="mb-3">
+          <div className="section-card">
             <SectionHeader
               icon={
                 <EnvironmentOutlined
-                  style={{ color: "green", fontSize: "18px" }}
+                  style={{ color: "green", fontSize: "16px" }}
                 />
               }
               title="Correspondence Details"
@@ -3517,32 +4342,25 @@ function ApplicationMgtDrawer({
               subTitle="Let us know the best way to contact you"
             />
 
-            <Row gutter={[16, 12]} className="mt-2">
-              {/* Preferred Address and Consent in one row */}
-              <Col span={24}>
-                <Row gutter={16}>
-                  <Col xs={24} md={12} className="!pb-0 pa">
+            <AppFormGrid>
+              {/* Preferred Address (33%) and Consent (67%) in one row */}
+              <AppFormCell span="full">
+                <AppFormGrid cols="33-67" className="form-grid--address-consent">
+                  <AppFormCell>
                     <div
-                      className="p-3 bg-lb "
-                      style={{
-                        borderRadius: "4px",
-                        height: "100%",
-                        backgroundColor: "#1173d41a",
-                        border: errors?.preferredAddress
-                          ? "1px solid #ff4d4f"
-                          : "1px solid #97c5efff",
-                      }}
+                      className={`info-box info-box--field-aligned ${
+                        errors?.preferredAddress ? "info-box--error" : ""
+                      }`}
                     >
-                      <div className="d-flex justify-content-between align-items-center">
-                        <label
-                          // style={{ color: errors?.preferredAddress ? "#ff4d4f" : "#215e97" }}
-                          className={`my-input-label ${
-                            errors?.preferredAddress ? "error-text1" : ""
-                          }`}
-                        >
-                          Preferred Address{" "}
-                          <span className="text-danger">*</span>
-                        </label>
+                      <label
+                        className={`my-input-label ${
+                          errors?.preferredAddress ? "error-text1" : ""
+                        }`}
+                      >
+                        Preferred Address{" "}
+                        <span className="text-danger">*</span>
+                      </label>
+                      <div className="form-control-band">
                         <Radio.Group
                           style={{ color: "#215e97", borderColor: "#215e97" }}
                           onChange={(e) =>
@@ -3558,22 +4376,13 @@ function ApplicationMgtDrawer({
                             { value: "home", label: "Home" },
                             { value: "work", label: "Work" },
                           ]}
-                          className="mt-2"
                         />
                       </div>
                     </div>
-                  </Col>
-                  <Col xs={24} md={12}>
-                    <div
-                      className="p-3"
-                      style={{
-                        borderRadius: "4px",
-                        backgroundColor: "#fffbeb",
-                        border: "1px solid #fde68a",
-                      }}
-                    >
+                  </AppFormCell>
+                  <AppFormCell>
+                    <div className="consent-box consent-box--compact">
                       <Checkbox
-                        style={{ color: "#78350f" }}
                         value={true}
                         checked={InfData?.contactInfo?.consent}
                         onChange={(e) =>
@@ -3584,41 +4393,53 @@ function ApplicationMgtDrawer({
                           )
                         }
                       >
-                        Consent to receive Correspondence from{" "}
-                        {tenantTradeName || "the organisation"}
+                        <span className="consent-box-text">
+                          <span className="consent-box-label">
+                            Consent to receive Correspondence from{" "}
+                            {tenantTradeName || "the organisation"}
+                          </span>
+                          <span className="consent-box-note">
+                            (Please un-tick this box if you would{" "}
+                            <strong>NOT like</strong> to receive correspondence via
+                            email or phone.)
+                          </span>
+                        </span>
                       </Checkbox>
-                      <p style={{ color: "#78350f" }} className="m-0 !ms-0">
-                        Please un-tick this box if you would{" "}
-                        <strong>NOT like </strong> to receive correspondence via
-                        email or phone.
-                      </p>
                     </div>
-                  </Col>
-                </Row>
-              </Col>
+                  </AppFormCell>
+                </AppFormGrid>
+              </AppFormCell>
 
-              {/* Search by address or Eircode in one line */}
-              <Col span={24}>
-                {isLoaded && (
-                  <StandaloneSearchBox
-                    onLoad={(ref) => (inputRef.current = ref)}
-                    onPlacesChanged={handlePlacesChanged}
-                    placeholder="Enter Eircode (e.g., D01X4X0)"
-                    disabled={isDisable}
-                  >
-                    <MyInput
-                      label="Search by address or Eircode"
-                      name="addressSearch"
-                      placeholder="Enter Eircode (e.g., D01X4X0)"
-                      disabled={isDisable}
-                      value={addressSearchValue}
-                      onChange={(e) => setAddressSearchValue(e.target.value)}
-                    />
-                  </StandaloneSearchBox>
-                )}
-              </Col>
+              {/* Search by address or Eircode — own row, 33% width */}
+              <AppFormCell span="full" className="form-search-eircode-row">
+                <AppFormGrid cols="33-67" className="form-grid--search-eircode">
+                  <AppFormCell>
+                    {isLoaded && (
+                      <div className="address-search-field">
+                        <StandaloneSearchBox
+                          onLoad={(ref) => (inputRef.current = ref)}
+                          onPlacesChanged={handlePlacesChanged}
+                          placeholder="Enter Eircode (e.g., D01X4X0)"
+                          disabled={isDisable}
+                        >
+                          <MyInput
+                            label="Search by address or Eircode"
+                            name="addressSearch"
+                            placeholder="Enter Eircode (e.g., D01X4X0)"
+                            disabled={isDisable}
+                            value={addressSearchValue}
+                            onChange={(e) =>
+                              setAddressSearchValue(e.target.value)
+                            }
+                          />
+                        </StandaloneSearchBox>
+                      </div>
+                    )}
+                  </AppFormCell>
+                </AppFormGrid>
+              </AppFormCell>
 
-              <Col xs={24} md={12}>
+              <AppFormCell>
                 <MyInput
                   label="Address Line 1 (Building or House)"
                   name="buildingOrHouse"
@@ -3634,9 +4455,9 @@ function ApplicationMgtDrawer({
                   }
                   hasError={!!errors?.buildingOrHouse}
                 />
-              </Col>
+              </AppFormCell>
 
-              <Col xs={24} md={12}>
+              <AppFormCell>
                 <MyInput
                   label="Address Line 2 (Street or Road)"
                   name="streetOrRoad"
@@ -3650,9 +4471,9 @@ function ApplicationMgtDrawer({
                     )
                   }
                 />
-              </Col>
+              </AppFormCell>
 
-              <Col xs={24} md={12}>
+              <AppFormCell>
                 <MyInput
                   label="Address Line 3 (Area or Town)"
                   name="adressLine3"
@@ -3666,9 +4487,9 @@ function ApplicationMgtDrawer({
                     )
                   }
                 />
-              </Col>
+              </AppFormCell>
 
-              <Col xs={24} md={12}>
+              <AppFormCell>
                 <MyInput
                   label="Address Line 4 (County, City or Postcode)"
                   name="countyCityOrPostCode"
@@ -3684,9 +4505,9 @@ function ApplicationMgtDrawer({
                   }
                   hasError={!!errors?.countyCityOrPostCode}
                 />
-              </Col>
+              </AppFormCell>
 
-              <Col xs={24} md={12}>
+              <AppFormCell>
                 <MyInput
                   label="Eircode"
                   name="Eircode"
@@ -3697,9 +4518,9 @@ function ApplicationMgtDrawer({
                   }
                   disabled={isDisable}
                 />
-              </Col>
+              </AppFormCell>
 
-              <Col xs={24} md={12}>
+              <AppFormCell>
                 <ApplicationMgtSelect
                   label="Country"
                   name="country"
@@ -3712,166 +4533,143 @@ function ApplicationMgtDrawer({
                   }
                   hasError={!!errors?.country}
                 />
-              </Col>
-              <Col span={24}>
-                <div className="mt-1 mb-3">
-                  <h4
-                    style={{
-                      fontSize: "16px",
-                      fontWeight: 600,
-                      color: "#1a1a1a",
-                      margin: 0,
-                      paddingBottom: "8px",
-                    }}
-                  >
-                    Contact Details
-                  </h4>
-                  <p
-                    style={{
-                      fontSize: "14px",
-                      color: "#666",
-                      margin: "4px 0 0 0",
-                    }}
-                  >
+              </AppFormCell>
+              <AppFormCell span="full">
+                <div className="contact-subsection">
+                  <h4 className="contact-subsection-title">Contact Details</h4>
+                  <p className="contact-subsection-subtitle">
                     Provide your email and contact number
                   </p>
                 </div>
-              </Col>
-              <Col xs={24} md={12}>
-                <MyInput
-                  label="Mobile"
-                  name="mobile"
-                  type="mobile"
-                  value={InfData.contactInfo?.mobileNumber}
-                  required
-                  hasError={!!errors?.mobileNumber}
-                  errorMessage={errors?.mobileNumber || "Required"}
-                  disabled={isDisable}
-                  onChange={(e) =>
-                    handleInputChange(
-                      "contactInfo",
-                      "mobileNumber",
-                      e.target.value,
-                    )
-                  }
-                />
-              </Col>
-
-              <Col xs={24} md={12}>
-                <MyInput
-                  label="Home / Work Tel Number"
-                  name="telephoneNumber"
-                  type="number"
-                  value={InfData.contactInfo?.telephoneNumber}
-                  disabled={isDisable}
-                  onChange={(e) =>
-                    handleInputChange(
-                      "contactInfo",
-                      "telephoneNumber",
-                      e.target.value,
-                    )
-                  }
-                  hasError={!!errors?.telephoneNumber}
-                />
-              </Col>
-
-              <Col xs={24} md={12}>
-                <div
-                  className="p-3 bg-lb"
-                  style={{
-                    borderRadius: "4px",
-                    height: "100%",
-                    backgroundColor: "#1173d41a",
-                    border: errors?.preferredEmail
-                      ? "1px solid #ff4d4f"
-                      : "1px solid #97c5efff",
-                    borderRadius: "4px",
-                  }}
-                >
-                  <div className="d-flex justify-content-between align-items-center">
-                    <label
-                      // style={{ color: errors?.preferredEmail ? "#ff4d4f" : "#215e97" }}
-                      className={`my-input-label ${
-                        errors?.preferredEmail ? "error-text1" : ""
-                      }`}
-                    >
-                      Preferred Email{" "}
-                      <span className="text-danger ms-1">*</span>
-                    </label>
-                    <Radio.Group
-                      style={{ color: "green" }}
+              </AppFormCell>
+              <AppFormCell span="full">
+                <AppFormGrid cols={2} className="form-grid--contact-phones">
+                  <AppFormCell>
+                    <MyInput
+                      label="Mobile"
+                      name="mobile"
+                      type="mobile"
+                      value={InfData.contactInfo?.mobileNumber}
+                      required
+                      hasError={!!errors?.mobileNumber}
+                      errorMessage={errors?.mobileNumber || "Required"}
+                      disabled={isDisable}
                       onChange={(e) =>
                         handleInputChange(
                           "contactInfo",
-                          "preferredEmail",
+                          "mobileNumber",
                           e.target.value,
                         )
                       }
-                      value={InfData?.contactInfo?.preferredEmail}
+                    />
+                  </AppFormCell>
+                  <AppFormCell>
+                    <MyInput
+                      label="Home / Work Tel Number"
+                      name="telephoneNumber"
+                      type="number"
+                      value={InfData.contactInfo?.telephoneNumber}
                       disabled={isDisable}
-                      // className={errors?.preferredEmail ? "radio-error" : ""}
+                      onChange={(e) =>
+                        handleInputChange(
+                          "contactInfo",
+                          "telephoneNumber",
+                          e.target.value,
+                        )
+                      }
+                      hasError={!!errors?.telephoneNumber}
+                    />
+                  </AppFormCell>
+                </AppFormGrid>
+              </AppFormCell>
+
+              <AppFormCell span="full">
+                <AppFormGrid cols={3} className="form-grid--contact-emails">
+                  <AppFormCell>
+                    <div
+                      className={`info-box info-box--field-aligned ${
+                        errors?.preferredEmail ? "info-box--error" : ""
+                      }`}
                     >
-                      <Radio style={{ color: "#215e97" }} value="personal">
-                        Personal
-                      </Radio>
-                      <Radio style={{ color: "#215e97" }} value="work">
-                        Work
-                      </Radio>
-                    </Radio.Group>
-                  </div>
-                </div>
-              </Col>
-
-              <Col xs={24} md={12}></Col>
-
-              <Col xs={24} md={12}>
-                <MyInput
-                  label="Personal Email"
-                  name="email"
-                  type="email"
-                  required={InfData.contactInfo?.preferredEmail === "personal"}
-                  value={InfData.contactInfo?.personalEmail}
-                  disabled={isDisable}
-                  onChange={(e) =>
-                    handleInputChange(
-                      "contactInfo",
-                      "personalEmail",
-                      e.target.value,
-                    )
-                  }
-                  onBlur={handleEmailBlur} // Add this
-                  hasError={!!errors?.personalEmail}
-                />
-              </Col>
-
-              <Col xs={24} md={12}>
-                <MyInput
-                  label="Work Email"
-                  name="Work Email"
-                  type="email"
-                  value={InfData?.contactInfo?.workEmail}
-                  required={InfData.contactInfo?.preferredEmail === "work"}
-                  disabled={isDisable}
-                  onChange={(e) =>
-                    handleInputChange(
-                      "contactInfo",
-                      "workEmail",
-                      e.target.value,
-                    )
-                  }
-                  onBlur={handleEmailBlur} // Add this
-                  hasError={!!errors?.workEmail}
-                />
-              </Col>
-            </Row>
+                      <label
+                        className={`my-input-label ${
+                          errors?.preferredEmail ? "error-text1" : ""
+                        }`}
+                      >
+                        Preferred Email{" "}
+                        <span className="text-danger">*</span>
+                      </label>
+                      <div className="form-control-band">
+                        <Radio.Group
+                          style={{ color: "#215e97", borderColor: "#215e97" }}
+                          onChange={(e) =>
+                            handleInputChange(
+                              "contactInfo",
+                              "preferredEmail",
+                              e.target.value,
+                            )
+                          }
+                          value={InfData?.contactInfo?.preferredEmail}
+                          disabled={isDisable}
+                          options={[
+                            { value: "personal", label: "Personal" },
+                            { value: "work", label: "Work" },
+                          ]}
+                        />
+                      </div>
+                    </div>
+                  </AppFormCell>
+                  <AppFormCell>
+                    <MyInput
+                      label="Personal Email"
+                      name="email"
+                      type="email"
+                      required={
+                        InfData.contactInfo?.preferredEmail === "personal"
+                      }
+                      value={InfData.contactInfo?.personalEmail}
+                      disabled={isDisable}
+                      onChange={(e) =>
+                        handleInputChange(
+                          "contactInfo",
+                          "personalEmail",
+                          e.target.value,
+                        )
+                      }
+                      onBlur={handleEmailBlur}
+                      hasError={!!errors?.personalEmail}
+                    />
+                  </AppFormCell>
+                  <AppFormCell>
+                    <MyInput
+                      label="Work Email"
+                      name="Work Email"
+                      type="email"
+                      value={InfData?.contactInfo?.workEmail}
+                      required={InfData.contactInfo?.preferredEmail === "work"}
+                      disabled={isDisable}
+                      onChange={(e) =>
+                        handleInputChange(
+                          "contactInfo",
+                          "workEmail",
+                          e.target.value,
+                        )
+                      }
+                      onBlur={handleEmailBlur}
+                      hasError={!!errors?.workEmail}
+                    />
+                  </AppFormCell>
+                </AppFormGrid>
+              </AppFormCell>
+            </AppFormGrid>
           </div>
 
           {/* Professional Details Section */}
-          <div className="mb-3">
+          <div className="section-card">
             <SectionHeader
               icon={
                 <IoBagRemoveOutline
-                  style={{ color: "#bf86f3", fontSize: "18px" }}
+                  style={{ color: "#bf86f3", fontSize: "16px" }}
                 />
               }
               title="Professional Details"
@@ -3879,8 +4677,8 @@ function ApplicationMgtDrawer({
               iconBackground="#ede6fa"
             />
 
-            <Row gutter={[16, 12]} className="mt-2">
-              <Col xs={24} md={12}>
+            <AppFormGrid>
+              <AppFormCell>
                 <ApplicationMgtSelect
                   label="Membership Category"
                   name="membershipCategory"
@@ -3894,164 +4692,162 @@ function ApplicationMgtDrawer({
                   }
                   hasError={!!errors?.membershipCategory}
                 />
-              </Col>
+              </AppFormCell>
               {membershipCategoryMatchesProductId(
                 InfData.subscriptionDetails?.membershipCategory,
                 RETIRED_MEMBERSHIP_CATEGORY_ID,
                 categoryData,
               ) ? (
-                <Col xs={24} md={12}>
-                  <Row gutter={[8, 8]}>
-                    <Col xs={24} md={12}>
-                      <MyDatePicker1
-                        label="Retired Date"
-                        name="retiredDate"
-                        value={InfData?.professionalDetails?.retiredDate}
-                        disabled={
-                          isDisable ||
-                          !membershipCategoryMatchesProductId(
-                            InfData?.subscriptionDetails?.membershipCategory,
-                            RETIRED_MEMBERSHIP_CATEGORY_ID,
-                            categoryData,
-                          )
-                        }
-                        required={membershipCategoryMatchesProductId(
+                <>
+                  <AppFormCell>
+                    <MyDatePicker1
+                      label="Retired Date"
+                      name="retiredDate"
+                      value={InfData?.professionalDetails?.retiredDate}
+                      disabled={
+                        isDisable ||
+                        !membershipCategoryMatchesProductId(
                           InfData?.subscriptionDetails?.membershipCategory,
                           RETIRED_MEMBERSHIP_CATEGORY_ID,
                           categoryData,
-                        )}
-                        onChange={(date, dateString) => {
-                          handleInputChange(
-                            "professionalDetails",
-                            "retiredDate",
-                            date,
-                          );
-                        }}
-                        hasError={!!errors?.retiredDate}
-                      />
-                    </Col>
-                    <Col xs={24} md={12}>
-                      <MyInput
-                        label="Pension No"
-                        name="pensionNo"
-                        value={InfData.professionalDetails?.pensionNo}
-                        disabled={
-                          isDisable ||
-                          !membershipCategoryMatchesProductId(
-                            InfData?.subscriptionDetails?.membershipCategory,
-                            RETIRED_MEMBERSHIP_CATEGORY_ID,
-                            categoryData,
-                          )
-                        }
-                        required={membershipCategoryMatchesProductId(
+                        )
+                      }
+                      required={membershipCategoryMatchesProductId(
+                        InfData?.subscriptionDetails?.membershipCategory,
+                        RETIRED_MEMBERSHIP_CATEGORY_ID,
+                        categoryData,
+                      )}
+                      onChange={(date, dateString) => {
+                        handleInputChange(
+                          "professionalDetails",
+                          "retiredDate",
+                          date,
+                        );
+                      }}
+                      hasError={!!errors?.retiredDate}
+                    />
+                  </AppFormCell>
+                  <AppFormCell>
+                    <MyInput
+                      label="Pension No"
+                      name="pensionNo"
+                      value={InfData.professionalDetails?.pensionNo}
+                      disabled={
+                        isDisable ||
+                        !membershipCategoryMatchesProductId(
                           InfData?.subscriptionDetails?.membershipCategory,
                           RETIRED_MEMBERSHIP_CATEGORY_ID,
                           categoryData,
-                        )}
-                        onChange={(e) =>
-                          handleInputChange(
-                            "professionalDetails",
-                            "pensionNo",
-                            e.target.value,
-                          )
-                        }
-                        hasError={!!errors?.pensionNo}
-                      />
-                    </Col>
-                  </Row>
-                </Col>
-              ) : !isUndergraduateStudentCategory ? (
-                <Col xs={24} md={12} />
+                        )
+                      }
+                      required={membershipCategoryMatchesProductId(
+                        InfData?.subscriptionDetails?.membershipCategory,
+                        RETIRED_MEMBERSHIP_CATEGORY_ID,
+                        categoryData,
+                      )}
+                      onChange={(e) =>
+                        handleInputChange(
+                          "professionalDetails",
+                          "pensionNo",
+                          e.target.value,
+                        )
+                      }
+                      hasError={!!errors?.pensionNo}
+                    />
+                  </AppFormCell>
+                </>
               ) : null}
               {isUndergraduateStudentCategory ? (
-                <Col xs={24}>
-                  <Row gutter={[16, 12]}>
-                    <Col xs={24} md={12}>
-                      <Row gutter={[16, 12]}>
-                        <Col xs={24} sm={12}>
-                          <ApplicationMgtSelect
-                            onChange={(e) =>
-                              handleInputChange(
-                                "professionalDetails",
-                                "studyLocation",
-                                e.target.value,
-                              )
-                            }
-                            label="Study Location"
-                            disabled={isDisable}
-                            required
-                            options={studyLocationOptions}
-                            value={InfData?.professionalDetails?.studyLocation}
-                            hasError={!!errors?.studyLocation}
-                          />
-                        </Col>
-                        <Col xs={24} sm={12}>
-                          <ApplicationMgtSelect
-                            label="Discipline"
-                            name="discipline"
-                            disabled={isDisable}
-                            required
-                            options={disciplineOptions}
-                            value={InfData?.professionalDetails?.discipline}
-                            onChange={(e) =>
-                              handleInputChange(
-                                "professionalDetails",
-                                "discipline",
-                                e.target.value,
-                              )
-                            }
-                            hasError={!!errors?.discipline}
-                          />
-                        </Col>
-                      </Row>
-                    </Col>
-                    <Col xs={24} md={12}>
-                      <Row gutter={[16, 12]}>
-                        <Col xs={24} sm={12}>
-                          <MyDatePicker1
-                            label="Start Date"
-                            onChange={(date, datestring) => {
-                              handleInputChange(
-                                "professionalDetails",
-                                "startDate",
-                                date,
-                              );
-                            }}
-                            disabled={isDisable}
-                            value={InfData?.professionalDetails?.startDate}
-                          />
-                        </Col>
-                        <Col xs={24} sm={12}>
-                          <MyDatePicker1
-                            label="Graduation date"
-                            required
-                            disabled={isDisable}
-                            onChange={(date, datestring) => {
-                              handleInputChange(
-                                "professionalDetails",
-                                "graduationDate",
-                                date,
-                              );
-                            }}
-                            value={InfData?.professionalDetails?.graduationDate}
-                            hasError={!!errors?.graduationDate}
-                          />
-                        </Col>
-                      </Row>
-                    </Col>
-                  </Row>
-                </Col>
+                <>
+                  <AppFormCell>
+                    <ApplicationMgtSelect
+                      onChange={(e) =>
+                        handleInputChange(
+                          "professionalDetails",
+                          "studyLocation",
+                          e.target.value,
+                        )
+                      }
+                      label="Study Location"
+                      disabled={isDisable}
+                      required
+                      options={studyLocationOptions}
+                      value={InfData?.professionalDetails?.studyLocation}
+                      hasError={!!errors?.studyLocation}
+                    />
+                  </AppFormCell>
+                  <AppFormCell>
+                    <ApplicationMgtSelect
+                      label="Discipline"
+                      name="discipline"
+                      disabled={isDisable}
+                      required
+                      options={disciplineOptions}
+                      value={InfData?.professionalDetails?.discipline}
+                      onChange={(e) =>
+                        handleInputChange(
+                          "professionalDetails",
+                          "discipline",
+                          e.target.value,
+                        )
+                      }
+                      hasError={!!errors?.discipline}
+                    />
+                  </AppFormCell>
+                  <AppFormCell>
+                    <MyDatePicker1
+                      label="Start Date"
+                      onChange={(date, datestring) => {
+                        handleInputChange(
+                          "professionalDetails",
+                          "startDate",
+                          date,
+                        );
+                      }}
+                      disabled={isDisable}
+                      value={InfData?.professionalDetails?.startDate}
+                      hasError={!!errors?.startDate}
+                      errorMessage={errors?.startDate}
+                    />
+                  </AppFormCell>
+                  <AppFormCell>
+                    <MyDatePicker1
+                      label="Graduation date"
+                      required
+                      disabled={isDisable}
+                      onChange={(date, datestring) => {
+                        handleInputChange(
+                          "professionalDetails",
+                          "graduationDate",
+                          date,
+                        );
+                      }}
+                      value={InfData?.professionalDetails?.graduationDate}
+                      hasError={!!errors?.graduationDate}
+                    />
+                  </AppFormCell>
+                </>
               ) : null}
 
               {/* Work Location */}
-              <Col xs={24} md={12}>
+              <AppFormCell>
                 <ApplicationMgtSelect
                   label="Work Location"
+                  extra={
+                    InfData.professionalDetails?.workLocation &&
+                    !isOtherLookupSelection(
+                      InfData.professionalDetails?.workLocation,
+                    ) ? (
+                      <span className="application-form-worklocation-iro">
+                        IRO : {workLocationIroName || "-"}
+                      </span>
+                    ) : null
+                  }
                   name="workLocation"
                   isObjectValue={true}
                   isIDs={false}
                   value={InfData.professionalDetails?.workLocation}
-                  required
+                  required={!isUndergraduateStudentCategory}
                   options={workLocationOptions}
                   disabled={isDisable}
                   onChange={(e) => {
@@ -4063,32 +4859,29 @@ function ApplicationMgtDrawer({
                   }}
                   hasError={!!errors?.workLocation}
                 />
-              </Col>
+              </AppFormCell>
 
-              <Col xs={24} md={12}>
-                <MyInput
-                  label="Other Work Location"
-                  name="Other Work Location"
-                  value={InfData.professionalDetails?.otherWorkLocation}
-                  required={
-                    InfData.professionalDetails?.workLocation == "Other"
-                  }
-                  disabled={
-                    isDisable ||
-                    InfData?.professionalDetails?.workLocation != "Other"
-                  }
-                  onChange={(e) =>
-                    handleInputChange(
-                      "professionalDetails",
-                      "otherWorkLocation",
-                      e.target.value,
-                    )
-                  }
-                  hasError={!!errors?.otherWorkLocation}
-                />
-              </Col>
+              {isWorkLocationOther && (
+                <AppFormCell>
+                  <MyInput
+                    label="Other Work Location"
+                    name="Other Work Location"
+                    value={InfData.professionalDetails?.otherWorkLocation}
+                    required
+                    disabled={isDisable}
+                    onChange={(e) =>
+                      handleInputChange(
+                        "professionalDetails",
+                        "otherWorkLocation",
+                        e.target.value,
+                      )
+                    }
+                    hasError={!!errors?.otherWorkLocation}
+                  />
+                </AppFormCell>
+              )}
 
-              <Col xs={24} md={12}>
+              <AppFormCell>
                 <ApplicationMgtSelect
                   label="Branch"
                   name="branch"
@@ -4107,9 +4900,9 @@ function ApplicationMgtDrawer({
                   options={branchOptions}
                   hasError={!!errors?.branch}
                 />
-              </Col>
+              </AppFormCell>
 
-              <Col xs={24} md={12}>
+              <AppFormCell>
                 <ApplicationMgtSelect
                   label="Region"
                   name="Region"
@@ -4128,8 +4921,8 @@ function ApplicationMgtDrawer({
                   options={regionOptions}
                   hasError={!!errors?.region}
                 />
-              </Col>
-              <Col xs={24} md={12}>
+              </AppFormCell>
+              <AppFormCell>
                 <ApplicationMgtSelect
                   label="Grade"
                   name="grade"
@@ -4146,142 +4939,214 @@ function ApplicationMgtDrawer({
                   options={gradeOptions}
                   hasError={!!errors?.grade}
                 />
-              </Col>
+              </AppFormCell>
 
-              <Col xs={24} md={12}>
-                <MyInput
-                  label="Other Grade"
-                  name="otherGrade"
-                  value={InfData.professionalDetails?.otherGrade}
-                  required={InfData?.professionalDetails?.grade === "Other"}
-                  disabled={
-                    InfData?.professionalDetails?.grade !== "Other" || isDisable
-                  }
-                  onChange={(e) =>
-                    handleInputChange(
-                      "professionalDetails",
-                      "otherGrade",
-                      e.target.value,
-                    )
-                  }
-                  hasError={!!errors?.otherGrade}
-                />
-              </Col>
-
-              {/* Nursing Adaptation Programme */}
-              <Col xs={24} md={12} className="!pb-0 pa">
-                <div
-                  className="p-3 bg-lb"
-                  style={{
-                    borderRadius: "4px",
-                    height: "100%",
-                    backgroundColor: "#1173d41a",
-                    border: errors?.nursingAdaptationProgramme
-                      ? "1px solid #ff4d4f"
-                      : "1px solid #97c5efff",
-                  }}
-                >
-                  <label
-                    style={{
-                      color: errors?.nursingAdaptationProgramme
-                        ? "#ff4d4f"
-                        : "#215e97",
-                      display: "block",
-                      marginBottom: "8px",
-                    }}
-                    className={`my-input-label ${
-                      errors?.nursingAdaptationProgramme ? "error-text1" : ""
-                    }`}
-                  >
-                    Are you currently undertaking a nursing adaptation
-                    programme? <span className="text-danger">*</span>
-                  </label>
-
-                  <Radio.Group
-                    name="nursingAdaptationProgramme"
-                    value={
-                      InfData.professionalDetails
-                        ?.nursingAdaptationProgramme === true
-                        ? true
-                        : InfData.professionalDetails
-                              ?.nursingAdaptationProgramme === false
-                          ? false
-                          : null
-                    }
+              {isGradeOther && (
+                <AppFormCell>
+                  <MyInput
+                    label="Other Grade"
+                    name="otherGrade"
+                    value={InfData.professionalDetails?.otherGrade}
+                    required
+                    disabled={isDisable}
                     onChange={(e) =>
                       handleInputChange(
                         "professionalDetails",
-                        "nursingAdaptationProgramme",
+                        "otherGrade",
                         e.target.value,
                       )
                     }
-                    disabled={isDisable}
-                    style={{
-                      color: "#215e97",
-                      // borderColor: "#215e97",
-                      display: "flex",
-                      gap: "20px",
-                    }}
-                    className={
-                      errors?.nursingAdaptationProgramme ? "radio-error" : ""
-                    }
-                  >
-                    <Radio value={true}>Yes</Radio>
-                    <Radio value={false}>No</Radio>
-                  </Radio.Group>
-                </div>
-              </Col>
+                    hasError={!!errors?.otherGrade}
+                  />
+                </AppFormCell>
+              )}
 
-              <Col xs={24} md={12}>
-                <MyInput
-                  label="NMBI No/An Board Altranais Number"
-                  name="nmbiNumber"
-                  value={InfData?.professionalDetails?.nmbiNumber}
-                  disabled={
-                    (InfData?.professionalDetails
-                      ?.nursingAdaptationProgramme !== true &&
-                      InfData?.professionalDetails
-                        ?.nursingAdaptationProgramme !== false) ||
-                    isDisable
-                  }
-                  required={
-                    InfData?.professionalDetails?.nursingAdaptationProgramme ===
-                    false
-                  }
+              <AppFormCell>
+                <ApplicationMgtSelect
+                  label="Primary Section"
+                  name="primarySection"
+                  value={InfData.subscriptionDetails?.primarySection}
+                  disabled={isDisable}
+                  required
                   onChange={(e) =>
                     handleInputChange(
-                      "professionalDetails",
-                      "nmbiNumber",
+                      "subscriptionDetails",
+                      "primarySection",
                       e.target.value,
                     )
                   }
-                  hasError={!!errors?.nmbiNumber}
+                  options={sectionOptions}
+                  hasError={!!errors?.primarySection}
                 />
-              </Col>
+              </AppFormCell>
+
+              {isPrimarySectionOther && (
+                <AppFormCell>
+                  <MyInput
+                    label="Other Primary Section"
+                    name="otherPrimarySection"
+                    value={InfData.subscriptionDetails?.otherPrimarySection}
+                    onChange={(e) =>
+                      handleInputChange(
+                        "subscriptionDetails",
+                        "otherPrimarySection",
+                        e.target.value,
+                      )
+                    }
+                    required
+                    disabled={isDisable}
+                    hasError={!!errors?.otherPrimarySection}
+                  />
+                </AppFormCell>
+              )}
+
+              <AppFormCell>
+                <ApplicationMgtSelect
+                  label="Secondary Section"
+                  name="secondarySection"
+                  value={InfData.subscriptionDetails?.secondarySection}
+                  options={secondarySectionOptions}
+                  disabled={isDisable}
+                  onChange={(e) =>
+                    handleInputChange(
+                      "subscriptionDetails",
+                      "secondarySection",
+                      e.target.value,
+                    )
+                  }
+                />
+              </AppFormCell>
+
+              {isSecondarySectionOther && (
+                <AppFormCell>
+                  <MyInput
+                    label="Other Secondary Section"
+                    name="otherSecondarySection"
+                    value={InfData.subscriptionDetails?.otherSecondarySection}
+                    disabled={isDisable}
+                    required
+                    onChange={(e) =>
+                      handleInputChange(
+                        "subscriptionDetails",
+                        "otherSecondarySection",
+                        e.target.value,
+                      )
+                    }
+                    hasError={!!errors?.otherSecondarySection}
+                  />
+                </AppFormCell>
+              )}
+
+              {/* Nursing Adaptation Programme (cols 1–2) + NMBI No (col 3) */}
+              <AppFormCell span="full">
+                <AppFormGrid cols={2} className="form-grid--nursing-row">
+                  <AppFormCell>
+                    <div
+                      className={`info-box info-box--field-aligned info-box--field-aligned--wrap ${
+                        errors?.nursingAdaptationProgramme
+                          ? "info-box--error"
+                          : ""
+                      }`}
+                    >
+                      <label
+                        className={`my-input-label ${
+                          errors?.nursingAdaptationProgramme
+                            ? "error-text1"
+                            : ""
+                        }`}
+                        style={{
+                          color: errors?.nursingAdaptationProgramme
+                            ? "#ff4d4f"
+                            : "#215e97",
+                        }}
+                      >
+                        Are you currently undertaking a nursing adaptation
+                        programme?
+                        {!isUndergraduateStudentCategory ? (
+                          <span className="text-danger"> *</span>
+                        ) : null}
+                      </label>
+                      <div className="form-control-band">
+                        <Radio.Group
+                          name="nursingAdaptationProgramme"
+                          value={
+                            InfData.professionalDetails
+                              ?.nursingAdaptationProgramme === true
+                              ? true
+                              : InfData.professionalDetails
+                                    ?.nursingAdaptationProgramme === false
+                                ? false
+                                : null
+                          }
+                          onChange={(e) =>
+                            handleInputChange(
+                              "professionalDetails",
+                              "nursingAdaptationProgramme",
+                              e.target.value,
+                            )
+                          }
+                          disabled={isDisable}
+                          style={{
+                            color: "#215e97",
+                            borderColor: "#215e97",
+                          }}
+                          className={
+                            errors?.nursingAdaptationProgramme
+                              ? "radio-error"
+                              : ""
+                          }
+                          options={[
+                            { value: true, label: "Yes" },
+                            { value: false, label: "No" },
+                          ]}
+                        />
+                      </div>
+                    </div>
+                  </AppFormCell>
+                  <AppFormCell>
+                    <MyInput
+                      label="NMBI No/An Board Altranais Number"
+                      name="nmbiNumber"
+                      value={InfData?.professionalDetails?.nmbiNumber}
+                      disabled={isDisable}
+                      required={isNmbiNumberRequired}
+                      onChange={(e) =>
+                        handleInputChange(
+                          "professionalDetails",
+                          "nmbiNumber",
+                          e.target.value,
+                        )
+                      }
+                      hasError={!!errors?.nmbiNumber}
+                    />
+                  </AppFormCell>
+                </AppFormGrid>
+              </AppFormCell>
 
               {/* Nurse Type - Full Width */}
-              <Col span={24}>
+              {showNurseTypeField && (
+              <AppFormCell span="full">
                 <div
-                  className="ps-3 pe-3 pt-2 pb-3 bg-ly"
-                  style={{
-                    backgroundColor: "#f0fdf4",
-                    borderRadius: "4px",
-                    border: errors?.nurseType
-                      ? "1px solid #ff4d4f"
-                      : "1px solid #a4e3ba",
-                  }}
+                  className={`question-box nurse-type-box ${
+                    errors?.nurseType ? "info-box--error" : ""
+                  }`}
                 >
                   <label
-                    className="my-input-label mb-1"
-                    style={{ color: errors?.nurseType ? "#ff4d4f" : "#14532d" }}
+                    className={`my-input-label ${
+                      errors?.nurseType ? "error-text1" : ""
+                    }`}
+                    style={{
+                      color: errors?.nurseType ? "#ff4d4f" : "#215e97",
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "4px",
+                    }}
                   >
-                    Please tick one of the following{" "}
-                    {InfData?.professionalDetails
-                      ?.nursingAdaptationProgramme === true ? (
+                    Please tick one of the following
+                    {!isUndergraduateStudentCategory ? (
                       <span className="text-danger">*</span>
                     ) : null}
                   </label>
-
                   <Radio.Group
                     name="nurseType"
                     value={InfData.professionalDetails?.nurseType}
@@ -4297,7 +5162,7 @@ function ApplicationMgtDrawer({
                         ?.nursingAdaptationProgramme !== true || isDisable
                     }
                     style={{
-                      color: "#14532d",
+                      color: "#215e97",
                       width: "100%",
                     }}
                   >
@@ -4307,35 +5172,35 @@ function ApplicationMgtDrawer({
                     >
                       <Radio
                         value="generalNursing"
-                        style={{ color: "#14532d", width: "14%" }}
+                        style={{ color: "#215e97", width: "14%" }}
                       >
                         General Nursing
                       </Radio>
 
                       <Radio
                         value="publicHealthNurse"
-                        style={{ color: "#14532d", width: "14%" }}
+                        style={{ color: "#215e97", width: "14%" }}
                       >
                         Public Health Nurse
                       </Radio>
 
                       <Radio
                         value="mentalHealth"
-                        style={{ color: "#14532d", width: "14%" }}
+                        style={{ color: "#215e97", width: "14%" }}
                       >
                         Mental Health Nurse
                       </Radio>
 
                       <Radio
                         value="midwife"
-                        style={{ color: "#14532d", width: "16%" }}
+                        style={{ color: "#215e97", width: "16%" }}
                       >
                         Midwife
                       </Radio>
 
                       <Radio
                         value="sickChildrenNurse"
-                        style={{ color: "#14532d", width: "14%" }}
+                        style={{ color: "#215e97", width: "14%" }}
                       >
                         Sick Children's Nurse
                       </Radio>
@@ -4343,7 +5208,7 @@ function ApplicationMgtDrawer({
                       <Radio
                         value="intellectualDisability"
                         style={{
-                          color: "#14532d",
+                          color: "#215e97",
                           width: "20%",
                           whiteSpace: "normal",
                           lineHeight: "1.2",
@@ -4354,27 +5219,24 @@ function ApplicationMgtDrawer({
                     </div>
                   </Radio.Group>
                 </div>
-              </Col>
-            </Row>
+              </AppFormCell>
+              )}
+            </AppFormGrid>
           </div>
 
           {showYouthForumSection && (
-            <div className="mb-3">
-              <Row gutter={[16, 12]} className="mt-2">
-                <Col xs={24} md={12}>
+            <div className="section-card">
+              <AppFormGrid>
+                <AppFormCell span={showYouthForumSelect ? 2 : "full"}>
                   <div
-                    className="p-3 bg-lb"
-                    style={{
-                      backgroundColor: "#1173d41a",
-                      border: errors?.joinYouthForum
-                        ? "1px solid #ff4d4f"
-                        : "1px solid #97c5efff",
-                      borderRadius: "4px",
-                      height: "100%",
-                    }}
+                    className={`info-box question-box ${
+                      errors?.joinYouthForum ? "info-box--error" : ""
+                    }`}
                   >
                     <label
-                      className="my-input-label mb-2"
+                      className={`my-input-label ${
+                        errors?.joinYouthForum ? "error-text1" : ""
+                      }`}
                       style={{
                         color: errors?.joinYouthForum ? "#ff4d4f" : "#215e97",
                         display: "flex",
@@ -4410,130 +5272,110 @@ function ApplicationMgtDrawer({
                       </Radio>
                     </Radio.Group>
                   </div>
-                </Col>
-                <Col xs={24} md={12}>
-                  <ApplicationMgtSelect
-                    label="Youth Forum"
-                    name="youthForum"
-                    required={
-                      InfData.professionalDetails?.joinYouthForum === true
-                    }
-                    options={youthForumOptions}
-                    value={InfData.professionalDetails?.youthForum}
-                    disabled={
-                      isDisable ||
-                      InfData.professionalDetails?.joinYouthForum !== true
-                    }
-                    placeholder="Select Youth Forum"
-                    onChange={(e) =>
-                      handleInputChange(
-                        "professionalDetails",
-                        "youthForum",
-                        e.target.value,
-                      )
-                    }
-                    hasError={!!errors?.youthForum}
-                  />
-                </Col>
-              </Row>
+                </AppFormCell>
+                {showYouthForumSelect && (
+                  <AppFormCell>
+                    <ApplicationMgtSelect
+                      label="Youth Forum"
+                      name="youthForum"
+                      required
+                      options={youthForumOptions}
+                      value={InfData.professionalDetails?.youthForum}
+                      disabled={isDisable}
+                      placeholder="Select Youth Forum"
+                      onChange={(e) =>
+                        handleInputChange(
+                          "professionalDetails",
+                          "youthForum",
+                          e.target.value,
+                        )
+                      }
+                      hasError={!!errors?.youthForum}
+                    />
+                  </AppFormCell>
+                )}
+              </AppFormGrid>
             </div>
           )}
 
           {/* Subscription Details Section */}
-          <div className="mb-3">
+          <div className="section-card">
             <SectionHeader
               icon={
-                <CiCreditCard1 style={{ color: "#ec6d28", fontSize: "18px" }} />
+                <CiCreditCard1 style={{ color: "#ec6d28", fontSize: "16px" }} />
               }
               title="Subscription Details"
               backgroundColor="#fff9eb"
               iconBackground="#fad1b8ff"
             />
 
-            <Row gutter={[16, 12]} className="mt-2">
-              <Col xs={24} md={12}>
-                <div
+            <AppFormGrid>
+              <AppFormCell>
+                <MyDatePicker1
                   className="w-100"
-                  style={{
-                    display: "grid",
-                    gridTemplateColumns: "1fr 1fr ",
-                    gap: "8px",
+                  label="Date Joined"
+                  name="dateJoined"
+                  required
+                  value={InfData?.subscriptionDetails?.dateJoined}
+                  disabled={isDisable}
+                  onChange={(date, dateString) => {
+                    handleInputChange(
+                      "subscriptionDetails",
+                      "dateJoined",
+                      date,
+                    );
                   }}
-                >
-                  <MyDatePicker1
-                    className="w-100"
-                    label="Date Joined"
-                    name="dateJoined"
-                    required
-                    value={InfData?.subscriptionDetails?.dateJoined}
-                    disabled={isDisable}
-                    onChange={(date, dateString) => {
-                      handleInputChange(
-                        "subscriptionDetails",
-                        "dateJoined",
-                        date,
-                      );
-                    }}
-                    hasError={!!errors?.dateJoined}
-                    errorMessage={errors?.dateJoined || "Required"}
-                  />
-                  <MyDatePicker1
-                    className="w-100"
-                    label="Submission Date"
-                    name="submissionDate"
-                    value={InfData?.subscriptionDetails?.submissionDate}
-                    disabled={isDisable || isEdit}
-                    onChange={(date, dateString) => {
-                      handleInputChange(
-                        "subscriptionDetails",
-                        "submissionDate",
-                        date,
-                      );
-                    }}
-                    hasError={!!errors?.submissionDate}
-                    errorMessage={errors?.submissionDate || "Required"}
-                  />
-                </div>
-              </Col>
-              <Col xs={24} md={12}>
-                <div
+                  hasError={!!errors?.dateJoined}
+                  errorMessage={errors?.dateJoined || "Required"}
+                />
+              </AppFormCell>
+              <AppFormCell>
+                <MyDatePicker1
                   className="w-100"
-                  style={{
-                    display: "grid",
-                    gridTemplateColumns: "1fr 1fr ",
-                    gap: "8px",
+                  label="Submission Date"
+                  name="submissionDate"
+                  required
+                  value={InfData?.subscriptionDetails?.submissionDate}
+                  disabled={isDisable || isEdit}
+                  onChange={(date, dateString) => {
+                    handleInputChange(
+                      "subscriptionDetails",
+                      "submissionDate",
+                      date,
+                    );
                   }}
-                >
-                  <ApplicationMgtSelect
-                    label="Payment Method"
-                    name="paymentType"
-                    required
-                    options={filteredPaymentTypeOptions}
-                    disabled={isDisable}
-                    onChange={(e) =>
-                      handleInputChange(
-                        "subscriptionDetails",
-                        "paymentType",
-                        e.target.value,
-                      )
-                    }
-                    value={InfData.subscriptionDetails?.paymentType}
-                    hasError={!!errors?.paymentType}
-                  />
+                  hasError={!!errors?.submissionDate}
+                  errorMessage={errors?.submissionDate || "Required"}
+                />
+              </AppFormCell>
+              <AppFormCell>
+                <ApplicationMgtSelect
+                  label="Payment Method"
+                  name="paymentType"
+                  required={!isPaymentOptionalCategory}
+                  options={filteredPaymentTypeOptions}
+                  disabled={isDisable}
+                  onChange={(e) =>
+                    handleInputChange(
+                      "subscriptionDetails",
+                      "paymentType",
+                      e.target.value,
+                    )
+                  }
+                  value={InfData.subscriptionDetails?.paymentType}
+                  hasError={!!errors?.paymentType}
+                />
+              </AppFormCell>
+              {isSalaryDeductionPayment && (
+                <AppFormCell>
                   <MyInput
                     className="w-100"
                     label="Payroll No"
                     name="payrollNo"
                     value={InfData?.subscriptionDetails?.payrollNo}
                     hasError={!!errors?.payrollNo}
-                    required={
-                      InfData?.subscriptionDetails?.paymentType ===
-                      SALARY_DEDUCTION_PAYMENT_TYPE
-                    }
-                    disabled={
-                      InfData?.subscriptionDetails?.paymentType !==
-                        SALARY_DEDUCTION_PAYMENT_TYPE || isDisable
-                    }
+                    required
+                    disabled={isDisable}
                     onChange={(e) =>
                       handleInputChange(
                         "subscriptionDetails",
@@ -4542,14 +5384,15 @@ function ApplicationMgtDrawer({
                       )
                     }
                   />
-                </div>
-              </Col>
-              <Col xs={24} md={12}>
+                </AppFormCell>
+              )}
+              <AppFormCell>
                 <ApplicationMgtSelect
                   label="Payment Frequency"
                   name="paymentFrequency"
                   options={CRM_PAYMENT_FREQUENCY_OPTIONS}
                   disabled={isDisable}
+                  required={!isPaymentOptionalCategory}
                   onChange={(e) =>
                     handleInputChange(
                       "subscriptionDetails",
@@ -4558,23 +5401,23 @@ function ApplicationMgtDrawer({
                     )
                   }
                   value={InfData.subscriptionDetails?.paymentFrequency}
+                  hasError={!!errors?.paymentFrequency}
                 />
-              </Col>
+              </AppFormCell>
 
               {/* Membership Status - Full Width */}
-              <Col span={24}>
+              <AppFormCell span="full">
                 <div
-                  className="ps-3 pe-3 pt-2 pb-3 bg-ly"
+                  className="notice-box"
                   style={{
                     backgroundColor: "#f0fdf4",
-                    borderRadius: "4px",
                     border: errors?.membershipStatus
                       ? "1px solid #ff4d4f"
                       : "1px solid #a4e3ba",
                   }}
                 >
                   <label
-                    className="my-input-label mb-1"
+                    className="my-input-label"
                     style={{
                       color: errors?.membershipStatus ? "#ff4d4f" : "#14532d",
                     }}
@@ -4656,155 +5499,172 @@ function ApplicationMgtDrawer({
                     </div>
                   </Radio.Group>
                 </div>
-              </Col>
+              </AppFormCell>
 
               {isNewOrGraduateMembershipStatus && (
                 <>
-                  <Col xs={24} md={12}>
-                    <div
-                      className="p-3 bg-lb"
-                      style={{
-                        backgroundColor: "#1173d41a",
-                        border: errors?.otherIrishTradeUnion
-                          ? "1px solid #ff4d4f"
-                          : "1px solid #97c5efff",
-                        borderRadius: "4px",
-                        height: "100%",
-                      }}
+                  <AppFormCell span="full">
+                    <AppFormGrid
+                      cols={
+                        InfData.subscriptionDetails?.otherIrishTradeUnion ===
+                        true
+                          ? 3
+                          : 2
+                      }
+                      className={`form-grid--trade-union-row${
+                        InfData.subscriptionDetails?.otherIrishTradeUnion ===
+                        true
+                          ? " form-grid--trade-union-row--3"
+                          : ""
+                      }`}
                     >
-                      <label
-                        className="my-input-label mb-2"
-                        style={{
-                          color: errors?.otherIrishTradeUnion
-                            ? "#ff4d4f"
-                            : "#215e97",
-                          display: "flex",
-                          alignItems: "center",
-                          gap: "4px",
-                        }}
-                      >
-                        If you are a member of another Trade Union. If yes,
-                        which Union?
-                        <span className="text-danger">*</span>
-                      </label>
-                      <Radio.Group
-                        style={{ color: "#215e97" }}
-                        name="otherIrishTradeUnion"
-                        value={
-                          InfData.subscriptionDetails?.otherIrishTradeUnion !==
-                          null
-                            ? InfData.subscriptionDetails?.otherIrishTradeUnion
-                            : null
-                        }
-                        onChange={(e) =>
-                          handleInputChange(
-                            "subscriptionDetails",
-                            "otherIrishTradeUnion",
-                            e.target?.value,
-                          )
-                        }
-                        disabled={isDisable}
-                      >
-                        <Radio style={{ color: "#215e97" }} value={true}>
-                          Yes
-                        </Radio>
-                        <Radio style={{ color: "#215e97" }} value={false}>
-                          No
-                        </Radio>
-                      </Radio.Group>
+                      <AppFormCell>
+                        <div
+                          className={`info-box info-box--field-aligned info-box--field-aligned--wrap ${
+                            errors?.otherIrishTradeUnion
+                              ? "info-box--error"
+                              : ""
+                          }`}
+                        >
+                          <label
+                            className={`my-input-label ${
+                              errors?.otherIrishTradeUnion ? "error-text1" : ""
+                            }`}
+                            style={{
+                              color: errors?.otherIrishTradeUnion
+                                ? "#ff4d4f"
+                                : "#215e97",
+                            }}
+                          >
+                            If you are a member of another Trade Union. If yes,
+                            which Union?{" "}
+                            <span className="text-danger">*</span>
+                          </label>
+                          <div className="form-control-band">
+                            <Radio.Group
+                              name="otherIrishTradeUnion"
+                              style={{
+                                color: "#215e97",
+                                borderColor: "#215e97",
+                              }}
+                              className={
+                                errors?.otherIrishTradeUnion
+                                  ? "radio-error"
+                                  : ""
+                              }
+                              value={
+                                InfData.subscriptionDetails
+                                  ?.otherIrishTradeUnion !== null
+                                  ? InfData.subscriptionDetails
+                                      ?.otherIrishTradeUnion
+                                    : null
+                              }
+                              onChange={(e) =>
+                                handleInputChange(
+                                  "subscriptionDetails",
+                                  "otherIrishTradeUnion",
+                                  e.target?.value,
+                                )
+                              }
+                              disabled={isDisable}
+                              options={[
+                                { value: true, label: "Yes" },
+                                { value: false, label: "No" },
+                              ]}
+                            />
+                          </div>
+                        </div>
+                      </AppFormCell>
                       {InfData.subscriptionDetails?.otherIrishTradeUnion ===
                         true && (
-                        <MyInput
-                          value={
-                            InfData.subscriptionDetails
-                              ?.otherIrishTradeUnionName
-                          }
-                          onChange={(e) =>
-                            handleInputChange(
-                              "subscriptionDetails",
-                              "otherIrishTradeUnionName",
-                              e.target?.value,
-                            )
-                          }
-                          placeholder="Enter Union name"
-                          className="mt-2"
-                          hasError={!!errors?.otherIrishTradeUnionName}
-                        />
+                        <AppFormCell>
+                          <MyInput
+                            label="Union Name"
+                            name="otherIrishTradeUnionName"
+                            value={
+                              InfData.subscriptionDetails
+                                ?.otherIrishTradeUnionName
+                            }
+                            onChange={(e) =>
+                              handleInputChange(
+                                "subscriptionDetails",
+                                "otherIrishTradeUnionName",
+                                e.target?.value,
+                              )
+                            }
+                            placeholder="Enter Union name"
+                            required
+                            disabled={isDisable}
+                            hasError={!!errors?.otherIrishTradeUnionName}
+                          />
+                        </AppFormCell>
                       )}
-                    </div>
-                  </Col>
-
-                  <Col xs={24} md={12}>
-                    <div
-                      className="p-3 bg-lb"
-                      style={{
-                        backgroundColor: "#1173d41a",
-                        border: errors?.otherScheme
-                          ? "1px solid #ff4d4f"
-                          : "1px solid #97c5efff",
-                        borderRadius: "4px",
-                        height: "100%",
-                      }}
-                    >
-                      <label
-                        className="my-input-label mb-2"
-                        style={{
-                          color: errors?.otherScheme ? "#ff4d4f" : "#215e97",
-                          display: "flex",
-                          alignItems: "center",
-                          gap: "4px",
-                        }}
-                      >
-                        Are you or were you a member of another Irish trade
-                        Union salary or Income Protection Scheme?
-                        <span className="text-danger">*</span>
-                      </label>
-                      <Radio.Group
-                        name="otherScheme"
-                        value={
-                          InfData.subscriptionDetails?.otherScheme !== null
-                            ? InfData.subscriptionDetails?.otherScheme
-                            : null
-                        }
-                        onChange={(e) =>
-                          handleInputChange(
-                            "subscriptionDetails",
-                            "otherScheme",
-                            e.target?.value,
-                          )
-                        }
-                        style={{ color: "#215e97" }}
-                        disabled={isDisable}
-                      >
-                        <Radio style={{ color: "#215e97" }} value={true}>
-                          Yes
-                        </Radio>
-                        <Radio style={{ color: "#215e97" }} value={false}>
-                          No
-                        </Radio>
-                      </Radio.Group>
-                    </div>
-                  </Col>
+                      <AppFormCell>
+                        <div
+                          className={`info-box info-box--field-aligned info-box--field-aligned--wrap ${
+                            errors?.otherScheme ? "info-box--error" : ""
+                          }`}
+                        >
+                          <label
+                            className={`my-input-label ${
+                              errors?.otherScheme ? "error-text1" : ""
+                            }`}
+                            style={{
+                              color: errors?.otherScheme
+                                ? "#ff4d4f"
+                                : "#215e97",
+                            }}
+                          >
+                            Are you or were you a member of another Irish trade
+                            Union salary or Income Protection Scheme?{" "}
+                            <span className="text-danger">*</span>
+                          </label>
+                          <div className="form-control-band">
+                            <Radio.Group
+                              name="otherScheme"
+                              style={{
+                                color: "#215e97",
+                                borderColor: "#215e97",
+                              }}
+                              className={
+                                errors?.otherScheme ? "radio-error" : ""
+                              }
+                              value={
+                                InfData.subscriptionDetails?.otherScheme !==
+                                null
+                                  ? InfData.subscriptionDetails?.otherScheme
+                                  : null
+                              }
+                              onChange={(e) =>
+                                handleInputChange(
+                                  "subscriptionDetails",
+                                  "otherScheme",
+                                  e.target?.value,
+                                )
+                              }
+                              disabled={isDisable}
+                              options={[
+                                { value: true, label: "Yes" },
+                                { value: false, label: "No" },
+                              ]}
+                            />
+                          </div>
+                        </div>
+                      </AppFormCell>
+                    </AppFormGrid>
+                  </AppFormCell>
                 </>
               )}
 
               {showGraduateCornMarketOptions && (
                 <>
-                  <Col xs={24} md={24}>
-                    <div
-                      className="pe-3 ps-3 pt-2 pb-2 h-100"
-                      style={{
-                        borderRadius: "4px",
-                        backgroundColor: "#fffbeb",
-                        border: "1px solid #fde68a",
-                      }}
-                    >
+                  <AppFormCell span="full">
+                    <div className="consent-box">
                       <Checkbox
                         checked={
                           InfData?.subscriptionDetails
                             ?.exclusiveDiscountsAndOffers
                         }
-                        style={{ color: "#78350f" }}
                         onChange={(e) =>
                           handleInputChange(
                             "subscriptionDetails",
@@ -4818,21 +5678,13 @@ function ApplicationMgtDrawer({
                         offers for {tenantTradeName || "organisation"} members?
                       </Checkbox>
                     </div>
-                  </Col>
-                  <Col xs={24} md={24}>
-                    <div
-                      className="pe-3 ps-3 pt-2 pb-2 h-100"
-                      style={{
-                        borderRadius: "4px",
-                        backgroundColor: "#fffbeb",
-                        border: "1px solid #fde68a",
-                      }}
-                    >
+                  </AppFormCell>
+                  <AppFormCell span="full">
+                    <div className="consent-box">
                       <Checkbox
                         checked={
                           InfData?.subscriptionDetails?.incomeProtectionScheme
                         }
-                        style={{ color: "#78350f" }}
                         onChange={(e) =>
                           handleInputChange(
                             "subscriptionDetails",
@@ -4857,7 +5709,7 @@ function ApplicationMgtDrawer({
                           Scheme
                         </a>
                       </Checkbox>
-                      <p>
+                      <p className="consent-box-note">
                         By selecting 'I consent' below, you are agreeing to the
                         {tenantTradeName || "The organisation"}, sharing your
                         Trade Union membership details with Cornmarket.
@@ -4888,22 +5740,14 @@ function ApplicationMgtDrawer({
                         for Automatic Access to the Scheme.
                       </p>
                     </div>
-                  </Col>
+                  </AppFormCell>
                 </>
               )}
               {showNewMemberRewardsOption && (
-                <Col xs={24} md={24}>
-                  <div
-                    className="pe-3 ps-3 pt-2 pb-2 h-100"
-                    style={{
-                      borderRadius: "4px",
-                      backgroundColor: "#fffbeb",
-                      border: "1px solid #fde68a",
-                    }}
-                  >
+                <AppFormCell span="full">
+                  <div className="consent-box">
                     <Checkbox
                       checked={InfData?.subscriptionDetails?.inmoRewards}
-                      style={{ color: "#78350f" }}
                       onChange={(e) =>
                         handleInputChange(
                           "subscriptionDetails",
@@ -4941,7 +5785,7 @@ function ApplicationMgtDrawer({
                       </Tooltip>{" "}
                       for {tenantTradeName || "organisation"} members
                     </Checkbox>
-                    <p>
+                    <p className="consent-box-note">
                       By ticking here, you confirm that you agree to the Terms &
                       Conditions available on Cornmarket.ie/rewards-club-terms
                       and the Data Protection Statement available on
@@ -4949,33 +5793,36 @@ function ApplicationMgtDrawer({
                       about your Rewards Benefits. You can opt out at any time.
                     </p>
                   </div>
-                </Col>
+                </AppFormCell>
               )}
 
               {showPreviousMembershipNo && (
-                <>
-                  <Col xs={24} md={12}>
-                    <MyInput
-                      label="Previous Membership No."
-                      name="previousMembershipNo"
-                      value={InfData?.professionalDetails?.previousMembershipNo}
-                      placeholder="Enter previous membership number"
-                      disabled={isDisable}
-                      onChange={(e) =>
-                        handleInputChange(
-                          "professionalDetails",
-                          "previousMembershipNo",
-                          e.target.value,
-                        )
-                      }
-                    />
-                  </Col>
-                  <Col xs={0} md={12} aria-hidden />
-                </>
+                <AppFormCell span="full">
+                  <AppFormGrid cols={3}>
+                    <AppFormCell>
+                      <MyInput
+                        label="Previous Membership No."
+                        name="previousMembershipNo"
+                        value={
+                          InfData?.professionalDetails?.previousMembershipNo
+                        }
+                        placeholder="Enter previous membership number"
+                        disabled={isDisable}
+                        onChange={(e) =>
+                          handleInputChange(
+                            "professionalDetails",
+                            "previousMembershipNo",
+                            e.target.value,
+                          )
+                        }
+                      />
+                    </AppFormCell>
+                  </AppFormGrid>
+                </AppFormCell>
               )}
 
               {/* Recruited By */}
-              <Col xs={24} md={6}>
+              <AppFormCell>
                 <MyInput
                   label="Recruited By"
                   name="recuritedBy"
@@ -4989,9 +5836,9 @@ function ApplicationMgtDrawer({
                     )
                   }
                 />
-              </Col>
+              </AppFormCell>
 
-              <Col xs={24} md={6}>
+              <AppFormCell>
                 <MyInput
                   label="Recruited By (Membership No)"
                   name="recuritedByMembershipNo"
@@ -5005,7 +5852,7 @@ function ApplicationMgtDrawer({
                     )
                   }
                 />
-              </Col>
+              </AppFormCell>
               {/* <Col span={12}>
                 <label className="my-input-label">
                   Validate Recruited By Information
@@ -5052,184 +5899,110 @@ function ApplicationMgtDrawer({
                     Search
                   </Button>
                 </div>
-              </Col> */}
-              <Col span={12}>
-                <label className="my-input-label">
-                  Validate Recruited By Information
-                </label>
-                <MemberSearch
-                  // fullWidth={true}/
-                  disable={isDisable}
-                  onSelectBehavior="callback"
-                  onSelectCallback={handleRecruteBy}
-                  // onAddMember={handleAddMember}
-                  value={recruiterSearchValue}
-                  onChange={setRecruiterSearchValue}
-                  addMemberLabel="Add New Member"
-                  style={{ width: "100%" }}
-                />
-              </Col>
-              {/* Sections */}
-              <Col xs={24} md={12}>
-                <ApplicationMgtSelect
-                  label="Primary Section"
-                  name="primarySection"
-                  value={InfData.subscriptionDetails?.primarySection}
-                  disabled={isDisable}
-                  onChange={(e) =>
-                    handleInputChange(
-                      "subscriptionDetails",
-                      "primarySection",
-                      e.target.value,
-                    )
-                  }
-                  options={sectionOptions}
-                />
-              </Col>
-
-              <Col xs={24} md={12}>
-                <MyInput
-                  label="Other Primary Section"
-                  name="otherPrimarySection"
-                  value={InfData.subscriptionDetails?.otherPrimarySection}
-                  onChange={(e) =>
-                    handleInputChange(
-                      "subscriptionDetails",
-                      "otherPrimarySection",
-                      e.target.value,
-                    )
-                  }
-                  required={
-                    InfData?.subscriptionDetails?.primarySection === "Other"
-                  }
-                  disabled={
-                    InfData?.subscriptionDetails?.primarySection !== "Other"
-                  }
-                  hasError={!!errors?.otherPrimarySection}
-                />
-              </Col>
-
-              <Col xs={24} md={12}>
-                <ApplicationMgtSelect
-                  label="Secondary Section"
-                  name="secondarySection"
-                  value={InfData.subscriptionDetails?.secondarySection}
-                  options={secondarySectionOptions}
-                  disabled={isDisable}
-                  onChange={(e) =>
-                    handleInputChange(
-                      "subscriptionDetails",
-                      "secondarySection",
-                      e.target.value,
-                    )
-                  }
-                />
-              </Col>
-
-              <Col xs={24} md={12}>
-                <MyInput
-                  label="Other Secondary Section"
-                  name="otherSecondarySection"
-                  value={InfData.subscriptionDetails?.otherSecondarySection}
-                  disabled={
-                    isDisable ||
-                    InfData?.subscriptionDetails?.secondarySection !== "Other"
-                  }
-                  required={
-                    isDisable ||
-                    InfData?.subscriptionDetails?.secondarySection === "Other"
-                  }
-                  onChange={(e) =>
-                    handleInputChange(
-                      "subscriptionDetails",
-                      "otherSecondarySection",
-                      e.target.value,
-                    )
-                  }
-                  hasError={!!errors?.otherSecondarySection}
-                />
-              </Col>
-
-              {/* Final Checkboxes - Same Height */}
-              <Col xs={24} md={12} className="mb-3">
-                <div
-                  className="pe-3 ps-3 pt-2 pb-2   d-flex align-items-center"
-                  style={{
-                    borderRadius: "4px",
-                    height: "100%",
-                    backgroundColor: "#fffbeb",
-                    border: "1px solid #fde68a",
-                  }}
-                >
-                  <Checkbox
-                    checked={InfData?.subscriptionDetails?.valueAddedServices}
-                    style={{ color: "#78350f" }}
-                    onChange={(e) =>
-                      handleInputChange(
-                        "subscriptionDetails",
-                        "valueAddedServices",
-                        e.target.checked,
-                      )
-                    }
-                    disabled={isDisable}
-                  >
-                    Tick here to allow our partners to contact you about Value
-                    added Services by Email and SMS
-                  </Checkbox>
+              </AppFormCell> */}
+              <AppFormCell>
+                <div className="form-field-stack">
+                  <label className="my-input-label">
+                    Validate Recruited By Information
+                  </label>
+                  <div className="form-control-band form-control-band--plain">
+                    <MemberSearch
+                      compact
+                      showStatus={false}
+                      disable={isDisable}
+                      onSelectBehavior="callback"
+                      onSelectCallback={handleRecruteBy}
+                      value={recruiterSearchValue}
+                      onChange={setRecruiterSearchValue}
+                      addMemberLabel="Add New Member"
+                      style={{ width: "100%" }}
+                    />
+                  </div>
                 </div>
-              </Col>
+              </AppFormCell>
 
-              <Col className="mb-3" xs={24} md={12}>
-                <div
-                  className="pe-3 ps-3 pt-2 pb-2 d-flex align-items-center"
-                  style={{
-                    borderRadius: "4px",
-                    backgroundColor: "#fffbeb",
-                    border: "1px solid #fde68a",
-                  }}
+              <AppFormCell span="full">
+                <AppFormGrid
+                  cols="40-60"
+                  className="form-grid--final-checkboxes"
                 >
-                  <Checkbox
-                    checked={InfData?.subscriptionDetails?.termsAndConditions}
-                    onChange={(e) =>
-                      handleInputChange(
-                        "subscriptionDetails",
-                        "termsAndConditions",
-                        e.target.checked,
-                      )
-                    }
-                    style={{ color: "#78350f" }}
-                    disabled={isDisable}
-                  >
-                    I have read and agree to the{" "}
-                    <a
-                      href="#"
-                      style={{ color: "#78350f", textDecoration: "underline" }}
-                    >
-                      {tenantTradeName || "Organisation"} Data Protection
-                      Statement,
-                    </a>{" "}
-                    the{" "}
-                    <a
-                      href="#"
-                      style={{ color: "#78350f", textDecoration: "underline" }}
-                    >
-                      {tenantTradeName || "Organisation"} Privacy Statement
-                    </a>{" "}
-                    and the{" "}
-                    <a
-                      href="#"
-                      style={{ color: "#78350f", textDecoration: "underline" }}
-                    >
-                      {tenantTradeName || "Organisation"} Conditions of
-                      Membership
-                    </a>
-                    {errors?.termsAndConditions && (
-                      <span style={{ color: "red" }}> (Required)</span>
-                    )}
-                  </Checkbox>
-                </div>
-              </Col>
-            </Row>
+                  <AppFormCell>
+                    <div className="checkbox-notice-box">
+                      <Checkbox
+                        checked={
+                          InfData?.subscriptionDetails?.valueAddedServices
+                        }
+                        onChange={(e) =>
+                          handleInputChange(
+                            "subscriptionDetails",
+                            "valueAddedServices",
+                            e.target.checked,
+                          )
+                        }
+                        disabled={isDisable}
+                      >
+                        Tick here to allow our partners to contact you about
+                        Value added Services by Email and SMS
+                      </Checkbox>
+                    </div>
+                  </AppFormCell>
+                  <AppFormCell>
+                    <div className="checkbox-notice-box">
+                      <Checkbox
+                        checked={
+                          InfData?.subscriptionDetails?.termsAndConditions
+                        }
+                        onChange={(e) =>
+                          handleInputChange(
+                            "subscriptionDetails",
+                            "termsAndConditions",
+                            e.target.checked,
+                          )
+                        }
+                        style={{ color: "#78350f" }}
+                        disabled={isDisable}
+                      >
+                        I have read and agree to the{" "}
+                        <a
+                          href="#"
+                          style={{
+                            color: "#78350f",
+                            textDecoration: "underline",
+                          }}
+                        >
+                          {tenantTradeName || "Organisation"} Data Protection
+                          Statement,
+                        </a>{" "}
+                        the{" "}
+                        <a
+                          href="#"
+                          style={{
+                            color: "#78350f",
+                            textDecoration: "underline",
+                          }}
+                        >
+                          {tenantTradeName || "Organisation"} Privacy Statement
+                        </a>{" "}
+                        and the{" "}
+                        <a
+                          href="#"
+                          style={{
+                            color: "#78350f",
+                            textDecoration: "underline",
+                          }}
+                        >
+                          {tenantTradeName || "Organisation"} Conditions of
+                          Membership
+                        </a>
+                        {errors?.termsAndConditions && (
+                          <span style={{ color: "red" }}> (Required)</span>
+                        )}
+                      </Checkbox>
+                    </div>
+                  </AppFormCell>
+                </AppFormGrid>
+              </AppFormCell>
+            </AppFormGrid>
           </div>
         </div>
 
@@ -5314,12 +6087,18 @@ function ApplicationMgtDrawer({
 
       <DuplicateProfileReview
         open={duplicateReviewOpen}
-        onClose={() => setDuplicateReviewOpen(false)}
-        applicationId={application?.applicationId}
+        onClose={() => {
+          setDuplicateReviewOpen(false);
+          setDuplicateReviewApplicationId(null);
+        }}
+        applicationId={duplicateReviewTargetId}
+        applicationStatus={getApplicationStatus(application)}
         runDetectionOnOpen={duplicateReviewAutoRun}
         onReviewUpdated={() => {
-          if (application?.applicationId) {
-            dispatch(getApplicationById({ id: application.applicationId }));
+          const reviewAppId = duplicateReviewTargetId;
+          if (reviewAppId) {
+            dispatch(getApplicationById({ id: reviewAppId }));
+            dispatch(getAllApplications());
           }
         }}
       />

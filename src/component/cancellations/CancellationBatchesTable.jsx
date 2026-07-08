@@ -1,7 +1,7 @@
 import React, { useMemo } from "react";
-import { Table, Tag } from "antd";
+import { Button, Popconfirm, Table, Tag } from "antd";
 import "../reminders/ReminderBatchesTable.css";
-import { RightOutlined } from "@ant-design/icons";
+import { DeleteOutlined, RightOutlined } from "@ant-design/icons";
 import { LuRefreshCw } from "react-icons/lu";
 import UnifiedPagination from "../common/UnifiedPagination";
 import { formatDateDdMmYyyy } from "../../utils/Utilities";
@@ -29,9 +29,30 @@ function formatCount(n) {
   return num.toLocaleString();
 }
 
+function batchStatusDisplay(statusText, completed) {
+  const s = String(statusText || "").trim().toLowerCase();
+  if (s === "pending_build") return "Generating members";
+  if (s === "ready") return "Ready";
+  if (s === "failed") return "Build failed";
+  if (s === "completed" || completed) return "Completed";
+  if (s === "draft") return "Pending";
+  return s
+    ? s.replace(/_/g, " ").replace(/\b\w/g, (char) => char.toUpperCase())
+    : "Pending";
+}
+
+function batchStatusStyle(statusText, completed) {
+  const s = String(statusText || "").trim().toLowerCase();
+  if (s === "completed" || completed) return SOFT_BATCH_STATUS_TAGS.completed;
+  if (s === "failed") return SOFT_BATCH_STATUS_TAGS.failed || SOFT_BATCH_STATUS_TAGS.pending;
+  return SOFT_BATCH_STATUS_TAGS.pending;
+}
+
 function CancellationBatchesTable({
   dataSource,
   onOpenBatch,
+  onDeleteBatch,
+  deletingBatchId,
   total,
   current,
   pageSize,
@@ -88,18 +109,15 @@ function CancellationBatchesTable({
         }),
         render: (_, record) => {
           const completed = Boolean(record.processed);
+          const statusLabel = record.statusLabel || (completed ? "completed" : "pending");
           return (
             <div>
               <div style={stackRow1}>
                 <Tag
                   bordered={false}
-                  style={
-                    completed
-                      ? SOFT_BATCH_STATUS_TAGS.completed
-                      : SOFT_BATCH_STATUS_TAGS.pending
-                  }
+                  style={batchStatusStyle(statusLabel, completed)}
                 >
-                  {completed ? "Completed" : "Pending"}
+                  {batchStatusDisplay(statusLabel, completed)}
                 </Tag>
               </div>
               <div
@@ -237,27 +255,48 @@ function CancellationBatchesTable({
       },
       {
         title: "",
-        key: "chevron",
-        width: 48,
+        key: "actions",
+        width: 72,
         fixed: "right",
         align: "center",
         onCell: () => ({
           className: "reminder-batches-table__cell-stack",
           style: { verticalAlign: "top" },
         }),
-        render: () => (
-          <div>
-            <div style={{ ...stackRow1, justifyContent: "center" }}>
-              <RightOutlined style={{ color: "#d9d9d9", fontSize: 12 }} />
-            </div>
-            <div style={stackRow2} aria-hidden>
-              &nbsp;
-            </div>
+        render: (_, record) => (
+          <div
+            style={{
+              ...stackRow1,
+              justifyContent: "center",
+              gap: 4,
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            {record.isDraft && onDeleteBatch ? (
+              <Popconfirm
+                title="Delete draft batch?"
+                description="This permanently removes the batch and cannot be undone."
+                okText="Delete"
+                cancelText="Cancel"
+                okButtonProps={{ danger: true }}
+                onConfirm={() => onDeleteBatch(record)}
+              >
+                <Button
+                  type="text"
+                  size="small"
+                  danger
+                  icon={<DeleteOutlined />}
+                  loading={deletingBatchId === record.id}
+                  aria-label="Delete draft batch"
+                />
+              </Popconfirm>
+            ) : null}
+            <RightOutlined style={{ color: "#d9d9d9", fontSize: 12 }} />
           </div>
         ),
       },
     ],
-    [sortColumnKey, sortOrder],
+    [sortColumnKey, sortOrder, onDeleteBatch, deletingBatchId],
   );
 
   const handleTableChange = (_pagination, _filters, sorter) => {

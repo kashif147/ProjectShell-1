@@ -8,6 +8,9 @@ import {
   normalizeLookup,
   normalizeLookups,
 } from "../utils/lookupHierarchy";
+import {
+  filterMembershipCategoryOptionsForPortalUser,
+} from "../utils/membershipCategoryLabels";
 
 const API_URL = process.env.REACT_APP_POLICY_SERVICE_URL;
 const getAuthHeaders = () => ({
@@ -292,7 +295,9 @@ const lookupsSlice = createSlice({
         state.workLocationOptions = sortArray(state.workLocationOptions, 'label', 'asc');
         state.gradeOptions = sortArray(state.gradeOptions, 'label', 'asc');
         state.sectionOptions = sortArray(state.sectionOptions, 'label', 'asc');
-        state.membershipCategoryOptions = sortArray(state.membershipCategoryOptions, 'label', 'asc');
+        state.membershipCategoryOptions = filterMembershipCategoryOptionsForPortalUser(
+          sortArray(state.membershipCategoryOptions, 'label', 'asc'),
+        );
         state.paymentTypeOptions = sortArray(state.paymentTypeOptions, 'label', 'asc');
         state.branchOptions = sortArray(state.branchOptions, 'label', 'asc');
         state.regionOptions = sortArray(state.regionOptions, 'label', 'asc');

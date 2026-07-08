@@ -21,7 +21,11 @@ export const isBatchProcessNotification = (type) =>
   type === "BATCH_PROCESS_COMPLETED" ||
   type === "BATCH_PROCESS_QUEUED" ||
   type === "DD_PREPARE_QUEUED" ||
-  type === "DD_PREPARE_COMPLETED";
+  type === "DD_PREPARE_COMPLETED" ||
+  type === "BATCH_REMINDER_GENERATING" ||
+  type === "BATCH_REMINDER_READY" ||
+  type === "BATCH_CANCELLATION_GENERATING" ||
+  type === "BATCH_CANCELLATION_READY";
 
 export const isDirectDebitPrepareNotification = (type) =>
   type === "DD_PREPARE_QUEUED" || type === "DD_PREPARE_COMPLETED";

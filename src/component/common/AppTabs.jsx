@@ -55,6 +55,13 @@ import MyAlert from "./MyAlert";
 import { formatDateOnly } from "../../utils/Utilities";
 import { FinanceTabToolbarContext } from "../../context/FinanceTabToolbarContext";
 import { MembershipTabToolbarContext } from "../../context/MembershipTabToolbarContext";
+import { useConfirmUnsavedLeave } from "../../context/UnsavedFormContext";
+import { useAuthorization } from "../../context/AuthorizationContext";
+import {
+  hasFullMembershipUpdateRole,
+  hasMembershipProfileWritePermission,
+} from "../../utils/profileRoleAccess";
+import ProfileDuplicateReview from "../profile/ProfileDuplicateReview";
 
 const { TabPane } = Tabs;
 
@@ -280,14 +287,22 @@ function normalizeTransferHistoryRows(raw) {
   }));
 }
 
-function AppTabs() {
+function AppTabs({
+  profileId: embeddedProfileId,
+  subscriptionId: embeddedSubscriptionId,
+} = {}) {
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  const confirmLeaveUnsavedChanges = useConfirmUnsavedLeave();
+  const { roles: userRoles = [], permissions: userPermissions = [] } =
+    useAuthorization();
   const location = useLocation();
   const [searchParams] = useSearchParams();
-  const profileIdParam = normalizeRouteId(searchParams.get("profileId"));
+  const profileIdParam = normalizeRouteId(
+    embeddedProfileId ?? searchParams.get("profileId"),
+  );
   const subscriptionIdParam = normalizeRouteId(
-    searchParams.get("subscriptionId"),
+    embeddedSubscriptionId ?? searchParams.get("subscriptionId"),
   );
   const activeTabParam = String(searchParams.get("activeTab") || "")
     .trim()
@@ -409,6 +424,13 @@ function AppTabs() {
     setMembershipHeaderActionsMeta(meta);
   }, []);
 
+  const canFullEditMembership = hasFullMembershipUpdateRole(userRoles);
+  const canLimitedEditMembership =
+    !canFullEditMembership &&
+    hasMembershipProfileWritePermission(userPermissions);
+  const canEditMembership = canFullEditMembership || canLimitedEditMembership;
+  const membershipEditScope = canFullEditMembership ? "full" : "personal";
+
   const [financeTabBarExtra, setFinanceTabBarExtra] = useState(null);
   useEffect(() => {
     if (activeKey !== "2") setFinanceTabBarExtra(null);
@@ -440,6 +462,47 @@ function AppTabs() {
     useSelector((state) => state.profileApplications || {});
   const { history: transferHistoryRaw, loading: transferHistoryLoading } =
     useSelector((state) => state.transferRequestHistory || {});
+
+  const memberAuditContext = useMemo(() => {
+    const profileId = profileDetails?._id || profileDetails?.id || profileIdParam;
+    const subscriptionIdSet = new Set();
+    for (const row of ProfileSubData?.data || []) {
+      const id = row?._id || row?.id;
+      if (id) subscriptionIdSet.add(String(id));
+    }
+    for (const row of ProfileSubHistory || []) {
+      const id = row?._id || row?.id;
+      if (id) subscriptionIdSet.add(String(id));
+    }
+
+    const applicationIdSet = new Set();
+    const primaryAppId =
+      profileDetails?.applicationId ||
+      primarySubscriptionRow?.applicationId ||
+      null;
+    if (primaryAppId) applicationIdSet.add(String(primaryAppId));
+    for (const app of profileApplications || []) {
+      const id = app?.applicationId || app?._id || app?.id;
+      if (id) applicationIdSet.add(String(id));
+    }
+
+    return {
+      profileId: profileId ? String(profileId) : null,
+      membershipNumber:
+        profileDetails?.membershipNumber != null
+          ? String(profileDetails.membershipNumber)
+          : null,
+      subscriptionIds: [...subscriptionIdSet],
+      applicationIds: [...applicationIdSet],
+    };
+  }, [
+    profileDetails,
+    profileIdParam,
+    ProfileSubData,
+    ProfileSubHistory,
+    profileApplications,
+    primarySubscriptionRow,
+  ]);
 
   useEffect(() => {
     if (activeKey === "3" && profileDetails?._id) {
@@ -594,7 +657,7 @@ function AppTabs() {
       render: (date) => formatDateOnly(date),
     },
     {
-      title: "Approval Date",
+      title: "Processing Date",
       dataIndex: "approvalDate",
       key: "approvalDate",
       render: (date) => formatDateOnly(date),
@@ -605,11 +668,15 @@ function AppTabs() {
       key: "joinDate",
       render: (date) => formatDateOnly(date),
     },
-    { title: "Approved By", dataIndex: "approvedBy", key: "approvedBy" },
+    { title: "Processed By", dataIndex: "approvedBy", key: "approvedBy" },
     {
       title: "Status",
       dataIndex: "applicationStatus",
       key: "applicationStatus",
+      render: (status) =>
+        String(status || "").toLowerCase() === "processed"
+          ? "Processed"
+          : status,
     },
   ];
 
@@ -809,6 +876,7 @@ function AppTabs() {
           setIsEditMode={setIsEditMode}
           isDeceased={isDeceased}
           setIsDeceased={setIsDeceased}
+          editScope={membershipEditScope}
         />
       ),
     },
@@ -851,7 +919,14 @@ function AppTabs() {
     },
     { key: "7", label: "Claims", children: <ClaimsById /> },
     { key: "8", label: "Roster", children: <Roster /> },
-    { key: "11", label: "Audit History", children: <HistoryByID /> },
+    { key: "11", label: "Audit History", children: (
+        <HistoryByID
+          profileId={memberAuditContext.profileId}
+          membershipNumber={memberAuditContext.membershipNumber}
+          subscriptionIds={memberAuditContext.subscriptionIds}
+          applicationIds={memberAuditContext.applicationIds}
+        />
+      ) },
     {
       key: "17",
       label: "Subscription History",
@@ -903,7 +978,12 @@ function AppTabs() {
     },
   ];
 
-  const handleMenuClick = (key) => {
+  const handleMenuClick = async (key) => {
+    if (activeKey === "1" && key !== "1") {
+      const canProceed = await confirmLeaveUnsavedChanges();
+      if (!canProceed) return;
+    }
+
     const isStatic = staticTabKeys.includes(activeKey);
 
     setVisibleTabs((prev) => {
@@ -924,7 +1004,12 @@ function AppTabs() {
 
     setActiveKey(key);
   };
-  const handleTabChange = (key) => {
+  const handleTabChange = async (key) => {
+    if (activeKey === "1" && key !== "1") {
+      const canProceed = await confirmLeaveUnsavedChanges();
+      if (!canProceed) return;
+    }
+
     const isStatic = staticTabKeys.includes(key);
 
     if (isStatic) {
@@ -1034,19 +1119,30 @@ function AppTabs() {
       case "1": {
         const items = [
           {
-            key: "membership-edit",
-            label: isEditMode ? "Cancel Edit" : "Edit Profile",
-            icon: membershipMoreIcon(FaEdit, MEMBERSHIP_MORE_ICON.edit),
-            onClick: () => setIsEditMode((v) => !v),
-          },
-          {
             key: "membership-duplicate",
             label: "Check Duplicate",
             icon: membershipMoreIcon(FaClone, MEMBERSHIP_MORE_ICON.duplicate),
             onClick: () => setIsDuplicateDrawerOpen(true),
           },
         ];
-        if (membershipHeaderActionsMeta.showActivateMembership) {
+        if (canEditMembership) {
+          items.unshift({
+            key: "membership-edit",
+            label: isEditMode ? "Cancel Edit" : "Edit Profile",
+            icon: membershipMoreIcon(FaEdit, MEMBERSHIP_MORE_ICON.edit),
+            onClick: async () => {
+              if (isEditMode) {
+                const canProceed = await confirmLeaveUnsavedChanges();
+                if (!canProceed) return;
+              }
+              setIsEditMode((v) => !v);
+            },
+          });
+        }
+        if (
+          canFullEditMembership &&
+          membershipHeaderActionsMeta.showActivateMembership
+        ) {
           items.push({
             key: "membership-activate",
             label: "Activate Membership",
@@ -1062,7 +1158,10 @@ function AppTabs() {
               profileHeaderRef.current?.openActivateMembershipModal?.(),
           });
         }
-        if (membershipHeaderActionsMeta.showCancelMembership) {
+        if (
+          canFullEditMembership &&
+          membershipHeaderActionsMeta.showCancelMembership
+        ) {
           items.push({
             key: "membership-cancel",
             label: "Cancel Membership",
@@ -1072,18 +1171,20 @@ function AppTabs() {
               profileHeaderRef.current?.openCancelMembershipModal?.(),
           });
         }
-        items.push(
-          { type: "divider", key: "membership-divider-deceased" },
-          {
-            key: "membership-deceased",
-            label: isDeceased ? "Unmark as Deceased" : "Mark as Deceased",
-            icon: membershipMoreIcon(
-              FaUserSlash,
-              MEMBERSHIP_MORE_ICON.deceased,
-            ),
-            onClick: () => setIsDeceased((v) => !v),
-          },
-        );
+        if (canFullEditMembership) {
+          items.push(
+            { type: "divider", key: "membership-divider-deceased" },
+            {
+              key: "membership-deceased",
+              label: isDeceased ? "Unmark as Deceased" : "Mark as Deceased",
+              icon: membershipMoreIcon(
+                FaUserSlash,
+                MEMBERSHIP_MORE_ICON.deceased,
+              ),
+              onClick: () => setIsDeceased((v) => !v),
+            },
+          );
+        }
         return items;
       }
       case "4":
@@ -1123,6 +1224,8 @@ function AppTabs() {
     }
   }, [
     activeKey,
+    canEditMembership,
+    canFullEditMembership,
     isEditMode,
     isDeceased,
     membershipHeaderActionsMeta,
@@ -1309,13 +1412,36 @@ function AppTabs() {
       />
 
       <Drawer
-        title="Duplicate Members"
+        className="duplicate-profile-review-drawer"
+        title={
+          <div className="duplicate-review-drawer-title">
+            <FaClone />
+            <span>Duplicate Profiles</span>
+          </div>
+        }
         open={isDuplicateDrawerOpen}
         onClose={() => setIsDuplicateDrawerOpen(false)}
-        width={1000}
-        styles={{ body: { padding: 0 } }}
+        width="min(96vw, 1280px)"
+        destroyOnClose
       >
-        <DuplicateMembers />
+        <ProfileDuplicateReview
+          profileId={profileDetails?._id || profileDetails?.id}
+          open={isDuplicateDrawerOpen}
+          runDetectionOnOpen
+          onClose={() => setIsDuplicateDrawerOpen(false)}
+          onMerged={() => {
+            const profileId = profileDetails?._id || profileDetails?.id;
+            if (profileId) {
+              dispatch(getProfileDetailsById(profileId));
+              dispatch(
+                getSubscriptionByProfileId({
+                  profileId,
+                  ...profileDetailActiveSubscriptionArgs,
+                }),
+              );
+            }
+          }}
+        />
       </Drawer>
 
       <Drawer

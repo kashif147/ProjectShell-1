@@ -54,11 +54,12 @@ import {
 } from "react-icons/fa";
 
 // Helper function to create menu item with permissions
-const createMenuItem = (key, icon, label, permissions = []) => ({
+const createMenuItem = (key, icon, label, permissions = [], roles = []) => ({
   key,
   icon: <div className="icon">{icon}</div>,
   label: <div className="sidebar-label">{label}</div>,
   permissions,
+  roles,
 });
 
 export const correspondenceItems = [
@@ -299,11 +300,21 @@ export const subscriptionItems = [
   ),
 ];
 
+export const yearEndRenewalItems = [
+  createMenuItem(
+    "Year-End Renewal",
+    <FaCalendarCheck />,
+    "Year-End Renewal",
+    ["subscriptions:write", "payments:write"],
+    ["SU"]
+  ),
+];
+
 export const configurationItems = [
   createMenuItem(
-    "Templetes",
+    "Templates",
     <FaFileCode />,
-    "Templetes",
+    "Templates",
     ["templates:read"]
   ),
 

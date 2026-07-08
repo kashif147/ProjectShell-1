@@ -15,12 +15,14 @@ export function useOfficerRoleUsers() {
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    dispatch(getAllRoles());
-  }, [dispatch]);
+    if (!rolesLoading && (!Array.isArray(roles) || roles.length === 0)) {
+      dispatch(getAllRoles());
+    }
+  }, [dispatch, roles, rolesLoading]);
 
   const loadOfficerUsers = useCallback(async () => {
     const token = localStorage.getItem("token");
-    if (!token) return;
+    if (!token || !Array.isArray(roles) || roles.length === 0) return;
 
     setLoading(true);
     setError(null);

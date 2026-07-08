@@ -10,6 +10,7 @@ import {
   reportItems,
   issuesItems,
   eventsItems,
+  yearEndRenewalItems,
 } from "../../constants/SideNavWithAuth.js";
 import { useSelector, useDispatch } from "react-redux";
 import "../../styles/Sidebar.css";
@@ -29,7 +30,7 @@ const Sidebar = () => {
   const menuLblState = useSelector((state) => state.menuLbl);
   const location = useLocation();
   const navigate = useNavigate();
-  const { hasPermission } = useAuthorization();
+  const { hasPermission, hasAnyRole } = useAuthorization();
 
   // Debug logging
   const [isPinned, setIsPinned] = useState(() => {
@@ -128,6 +129,10 @@ const Sidebar = () => {
     ) {
       dispatch(updateMenuLbl({ key: "Subscriptions & Rewards", value: true }));
     }
+
+    if (path.startsWith("/YearEndRenewal") && activeKey !== "Year-End Renewal") {
+      dispatch(updateMenuLbl({ key: "Year-End Renewal", value: true }));
+    }
   }, [location.pathname, location.state, activeKey, dispatch]);
 
   // These are the menu links for various modules, imported from a constants file
@@ -143,6 +148,7 @@ const Sidebar = () => {
       "Issues Management": issuesItems,
       Cases: casesItems,
       Events: eventsItems,
+      "Year-End Renewal": yearEndRenewalItems,
     }),
     []
   );
@@ -161,14 +167,21 @@ const Sidebar = () => {
       const hasRequiredPermission = item.permissions.some((permission) =>
         hasPermission(permission)
       );
+      const hasRequiredRole =
+        Array.isArray(item.roles) &&
+        item.roles.length > 0 &&
+        hasAnyRole(item.roles);
       
-      if (!hasRequiredPermission) {
-        console.log(`User lacks permissions for sidebar item ${item.key}:`, item.permissions);
+      if (!hasRequiredPermission && !hasRequiredRole) {
+        console.log(`User lacks access for sidebar item ${item.key}:`, {
+          permissions: item.permissions,
+          roles: item.roles,
+        });
       }
       
-      return hasRequiredPermission;
+      return hasRequiredPermission || hasRequiredRole;
     });
-  }, [itemsMap, activeKey, hasPermission]);
+  }, [itemsMap, activeKey, hasPermission, hasAnyRole]);
   console.log(menuItems, "trt")
   const getNavLinkData = (key) => {
     switch (key) {
@@ -228,6 +241,11 @@ const Sidebar = () => {
         };
       case "Reminders":
         return { path: "/RemindersSummary", state: { search: "Reminders" } };
+      case "Year-End Renewal":
+        return {
+          path: "/YearEndRenewal",
+          state: { search: "Year-End Renewal" },
+        };
       case "Cancellations":
         return { path: "/Cancallation", state: { search: "Cancallation" } };
       case "Category Changes":
@@ -396,10 +414,10 @@ const Sidebar = () => {
           path: "/PolicyClientExample",
           state: { search: "Policy Client Example" },
         };
-      case "Templetes":
+      case "Templates":
         return {
-          path: "/templeteSummary",
-          state: { search: "Templetes" },
+          path: "/templateSummary",
+          state: { search: "Templates" },
         };
       case "CornMarket New Graduate":
         return {
@@ -498,6 +516,7 @@ const Sidebar = () => {
       "/Applications": "Applications",
       "/RemindersSummary": "Reminders",
       "/RemindersDetails": "Reminders",
+      "/YearEndRenewal": "Year-End Renewal",
       "/Cancallation": "Cancellations",
       "/CancellationDetail": "Cancellations",
       "/ChangCateSumm": "Category Changes",
@@ -522,8 +541,8 @@ const Sidebar = () => {
       "/UserManagement": "User Management",
       "/PermissionManagement": "Permission Management",
       "/ProductTypesManagement": "Product Management",
-      "/templeteSummary": "Templetes",
-      "/templeteConfig": "Templetes",
+      "/templateSummary": "Templates",
+      "/templateConfig": "Templates",
       "/CancelledMembersReport": "Cancelled Members Report",
       "/PolicyClientExample": "Policy Client Example",
       "/NewGraduate": "CornMarket New Graduate",

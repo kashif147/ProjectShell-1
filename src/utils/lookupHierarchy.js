@@ -18,6 +18,7 @@ const KNOWN_PARENT_LOOKUP_TYPES = {
   stations: "Districts",
   cities: "County",
   city: "County",
+  templatecategory: "Template Type",
 };
 
 /** Fallback when API type name does not match hierarchy keys (drawer vs API naming). */
@@ -114,6 +115,107 @@ export const normalizeLookup = (item) => {
       item.ParentlookuptypeId ?? lookuptypeRef?.ParentlookuptypeId ?? null,
     Parentlookuptype:
       item.Parentlookuptype ?? lookuptypeRef?.Parentlookuptype ?? null,
+  };
+};
+
+const normalizeLookupMatchKey = (value) =>
+  String(value ?? "")
+    .trim()
+    .toLowerCase();
+
+const isStudyLocationLookupTypeName = (typeName) =>
+  normalizeTypeKey(typeName) === "studylocation";
+
+const findLookupRecordById = (id, rawLookups) => {
+  if (id == null || id === "") return null;
+  const idStr = String(typeof id === "object" ? id._id || id.id : id);
+  return (rawLookups || []).find(
+    (item) => String(item._id || item.id) === idStr,
+  );
+};
+
+const getLookupDisplayLabel = (record) => {
+  if (!record) return "";
+  return (
+    record.lookupname ||
+    record.DisplayName ||
+    record.displayname ||
+    record.label ||
+    record.name ||
+    ""
+  );
+};
+
+/**
+ * Resolve branch and region display labels from a study location id or label.
+ */
+export const hasWorkLocationSelection = (workLocation) =>
+  Boolean(String(workLocation ?? "").trim());
+
+export const resolveBranchRegionFromStudyLocation = (
+  selectedLookupIdOrLabel,
+  studyLocationOptions = [],
+  rawLookups = [],
+) => {
+  const labelKey = normalizeLookupMatchKey(selectedLookupIdOrLabel);
+
+  let matchedOption = studyLocationOptions.find(
+    (opt) => String(opt.key || opt.value) === String(selectedLookupIdOrLabel),
+  );
+  if (!matchedOption && labelKey) {
+    matchedOption = studyLocationOptions.find(
+      (opt) => normalizeLookupMatchKey(opt.label) === labelKey,
+    );
+  }
+
+  const selectedLookupId =
+    matchedOption?.key || matchedOption?.value || selectedLookupIdOrLabel;
+
+  const studyRecord = (rawLookups || []).find((item) => {
+    const type =
+      item.lookuptypeName || item.lookuptypeId?.lookuptype || item.type || "";
+    if (!isStudyLocationLookupTypeName(type)) return false;
+    if (
+      selectedLookupId &&
+      String(item._id || item.id) === String(selectedLookupId)
+    ) {
+      return true;
+    }
+    const keys = [item.lookupname, item.DisplayName, item.label, item.name]
+      .filter(Boolean)
+      .map(normalizeLookupMatchKey);
+    return labelKey && keys.includes(labelKey);
+  });
+
+  if (!studyRecord) {
+    return { branch: "", region: "" };
+  }
+
+  const branchRef = studyRecord.Parentlookupid;
+  const branchRecord =
+    branchRef && typeof branchRef === "object" && branchRef.lookupname
+      ? branchRef
+      : findLookupRecordById(
+          branchRef?._id ?? branchRef ?? studyRecord.branch?.id,
+          rawLookups,
+        );
+
+  if (!branchRecord) {
+    return { branch: "", region: "" };
+  }
+
+  const regionRef = branchRecord.Parentlookupid;
+  const regionRecord =
+    regionRef && typeof regionRef === "object" && regionRef.lookupname
+      ? regionRef
+      : findLookupRecordById(
+          regionRef?._id ?? regionRef ?? branchRecord.region?.id,
+          rawLookups,
+        );
+
+  return {
+    branch: getLookupDisplayLabel(branchRecord),
+    region: getLookupDisplayLabel(regionRecord),
   };
 };
 
@@ -253,6 +355,7 @@ export const mapLookupToFormValues = (record, lookupsTypes = []) => {
     isDeleted: normalized.isdeleted ?? normalized.isDeleted ?? false,
     officer: resolveOfficerIdFromRecord(normalized),
     officerLabel: resolveOfficerLabelFromRecord(normalized),
+    processSalaryDeduction: !!normalized.processSalaryDeduction,
   };
 
   if (Object.prototype.hasOwnProperty.call(normalized, "worklocationAddress")) {

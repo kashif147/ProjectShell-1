@@ -33,13 +33,29 @@ import {
 } from "../../utils/membershipProfileSaveMappers";
 import { useMembershipTabToolbar } from "../../context/MembershipTabToolbarContext";
 import {
+  useConfirmUnsavedLeave,
+  useRegisterUnsavedFormGuard,
+} from "../../context/UnsavedFormContext";
+import {
+  isMembershipFormDirty,
+  serializeMembershipFormData,
+} from "../../utils/membershipFormDirty";
+import {
+  hasWorkLocationSelection,
+  resolveBranchRegionFromStudyLocation,
+} from "../../utils/lookupHierarchy";
+import {
   CRM_PAYMENT_FREQUENCY_OPTIONS,
   getDefaultPaymentFrequencyForPaymentMethod,
 } from "../../constants/paymentFrequency";
+import { MEMBERSHIP_MOVEMENT_OPTIONS, formatMembershipMovementLabel } from "../../utils/membershipMovementLabels";
 import utc from "dayjs/plugin/utc";
 import timezone from "dayjs/plugin/timezone";
 import dayjs from "dayjs";
+import { useJsApiLoader, StandaloneSearchBox } from "@react-google-maps/api";
 import "../../styles/MembershipForm.css";
+
+const GOOGLE_MAPS_LIBRARIES = ["places", "maps"];
 
 /** CustomSelect uses option label as <select> value; API often stores gender lowercase (e.g. male). */
 function normalizeGenderToSelectLabel(raw, options) {
@@ -65,6 +81,45 @@ function normalizeGenderToSelectLabel(raw, options) {
   if (byKey) return byKey.label;
 
   return s;
+}
+
+function membershipCategoryCompareKey(s) {
+  if (s == null || s === "") return "";
+  return String(s).trim().toLowerCase().replace(/\s+/g, " ");
+}
+
+/** Map API discipline/study location (id, { _id }, or label) to canonical lookup label for selects. */
+function normalizeLookupOptionToLabel(raw, options) {
+  if (raw == null || raw === "") return "";
+  const fromObj =
+    typeof raw === "object" && raw != null && raw._id != null
+      ? String(raw._id)
+      : null;
+  const str = (fromObj ?? String(raw)).trim();
+  if (!str) return "";
+
+  if (!Array.isArray(options) || options.length === 0) {
+    return str;
+  }
+
+  const byId = options.find(
+    (o) => String(o.value) === str || String(o.key) === str,
+  );
+  if (byId?.label) return byId.label;
+
+  const key = membershipCategoryCompareKey(str);
+  const byLabel = options.find(
+    (o) => o.label && membershipCategoryCompareKey(o.label) === key,
+  );
+  if (byLabel?.label) return byLabel.label;
+
+  return str;
+}
+
+function scalarProfessionalLookupValue(raw) {
+  if (raw == null || raw === "") return "";
+  if (typeof raw === "object" && raw._id != null) return String(raw._id);
+  return String(raw);
 }
 
 function isPayrollOrSalaryDeduction(paymentType) {
@@ -172,6 +227,184 @@ const resolveWorkLocationProcessSalaryDeduction = (
 
   return false;
 };
+
+const readStoredHierarchicalLookups = () => {
+  try {
+    const stored = localStorage.getItem("hierarchicalLookups");
+    const parsed = stored ? JSON.parse(stored) : [];
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+};
+
+const getOfficerDisplayName = (record) => {
+  const officer = record?.officer;
+  if (officer && typeof officer === "object") {
+    return (
+      officer.userFullName ||
+      [officer.userFirstName, officer.userLastName].filter(Boolean).join(" ") ||
+      ""
+    );
+  }
+
+  const displayName =
+    record?.officerFullName ||
+    record?.officerDisplayName ||
+    record?.officer_display_name ||
+    record?.officerName ||
+    "";
+
+  return String(displayName).includes("@") ? "" : displayName;
+};
+
+const resolveWorkLocationIroName = (
+  locationLabel,
+  workLocationOptions,
+  rawLookups,
+) => {
+  if (!locationLabel || locationLabel === "Other") return "";
+
+  const labelKey = normalizeLookupMatchKey(locationLabel);
+  const matchedOption = workLocationOptions?.find(
+    (opt) =>
+      String(opt.key || opt.value) === String(locationLabel) ||
+      getWorkLocationMatchKeys(opt).includes(labelKey),
+  );
+  const selectedId = matchedOption?.key || matchedOption?.value || null;
+
+  const rawRecord = (rawLookups || []).find((item) => {
+    const type =
+      item.lookuptypeName || item.lookuptypeId?.lookuptype || item.type || "";
+    if (!isWorkLocationLookupTypeName(type)) return false;
+    if (selectedId && String(item._id || item.id) === String(selectedId)) {
+      return true;
+    }
+    return getWorkLocationMatchKeys(item).includes(labelKey);
+  });
+  const rawOfficerName = getOfficerDisplayName(rawRecord);
+  if (rawOfficerName) return rawOfficerName;
+
+  const hierarchyRecord = readStoredHierarchicalLookups().find((item) => {
+    const type = item.type || item.lookuptypeName || "";
+    const isWorkLoc =
+      type === "workLocation" || isWorkLocationLookupTypeName(type);
+    if (!isWorkLoc) return false;
+    if (
+      selectedId &&
+      (String(item.id || item._id) === String(selectedId) ||
+        String(item.lookup?._id) === String(selectedId))
+    ) {
+      return true;
+    }
+    return getWorkLocationMatchKeys(item).includes(labelKey);
+  });
+
+  return getOfficerDisplayName(hierarchyRecord);
+};
+
+function resolveMembershipBranchRegion(
+  data,
+  {
+    categoryData,
+    workLocationOptions,
+    studyLocationOptions,
+    lookupsRaw,
+  },
+  overrides = {},
+) {
+  const workLocation = String(
+    overrides.workLocation ?? data.workLocation ?? "",
+  ).trim();
+  const studyLocation = String(
+    overrides.studyLocation ?? data.studyLocation ?? "",
+  ).trim();
+  const isUg = isUndergraduateStudentMembershipCategory(
+    data.membershipCategory,
+    categoryData,
+  );
+
+  if (hasWorkLocationSelection(workLocation)) {
+    if (workLocation === "Other") {
+      return isUg
+        ? { branch: data.branch || "", region: data.region || "" }
+        : { branch: "", region: "" };
+    }
+    return resolveBranchRegionFromWorkLocation(
+      overrides.workLocationRaw ?? workLocation,
+      workLocationOptions,
+    );
+  }
+
+  if (isUg && studyLocation) {
+    return resolveBranchRegionFromStudyLocation(
+      studyLocation,
+      studyLocationOptions,
+      lookupsRaw,
+    );
+  }
+
+  return { branch: "", region: "" };
+}
+
+function resolveBranchRegionFromWorkLocation(
+  selectedLookupIdOrLabel,
+  workLocationOptions,
+) {
+  try {
+    const storedLookups = localStorage.getItem("hierarchicalLookups");
+    const hierarchicalLookups = storedLookups ? JSON.parse(storedLookups) : [];
+    const labelKey = normalizeLookupMatchKey(selectedLookupIdOrLabel);
+
+    let matchedOption = workLocationOptions?.find(
+      (opt) => String(opt.key || opt.value) === String(selectedLookupIdOrLabel),
+    );
+    if (!matchedOption && labelKey) {
+      matchedOption = workLocationOptions?.find((opt) =>
+        getWorkLocationMatchKeys(opt).includes(labelKey),
+      );
+    }
+
+    const selectedLookupId =
+      matchedOption?.key || matchedOption?.value || selectedLookupIdOrLabel;
+
+    let foundObject = hierarchicalLookups.find(
+      (item) =>
+        String(item.id || item._id) === String(selectedLookupId) ||
+        String(item.lookup?._id) === String(selectedLookupId),
+    );
+    if (!foundObject && labelKey) {
+      foundObject = hierarchicalLookups.find((item) => {
+        const type = item.type || item.lookuptypeName || "";
+        const isWorkLoc =
+          type === "workLocation" || isWorkLocationLookupTypeName(type);
+        return isWorkLoc && getWorkLocationMatchKeys(item).includes(labelKey);
+      });
+    }
+
+    if (!foundObject && !matchedOption) {
+      return { branch: "", region: "" };
+    }
+
+    const isSimple = foundObject?.type === "workLocation";
+    return {
+      branch: isSimple
+        ? foundObject?.branch?.name || ""
+        : foundObject?.branch?.lookupname ||
+          foundObject?.branch?.label ||
+          "",
+      region: isSimple
+        ? foundObject?.branch?.region?.name ||
+          foundObject?.region?.name ||
+          ""
+        : foundObject?.region?.lookupname ||
+          foundObject?.region?.label ||
+          "",
+    };
+  } catch {
+    return { branch: "", region: "" };
+  }
+}
 
 /** Membership category value may be product _id or display name from API. */
 function isUndergraduateStudentMembershipCategory(selected, categoryOptions) {
@@ -356,13 +589,17 @@ function MembershipFormCol({ children, isFirst = false }) {
   );
 }
 
+const MembershipFormSelect = (props) => (
+  <CustomSelect showSearch sortOptions allowClear {...props} />
+);
+
 function collectMembershipFormValidationErrors(formData, options = {}) {
   const {
-    membershipCategorySelected,
     undergradEducationalActive,
     retiredAssociateActive,
     honoraryMembershipActive,
     showPaymentInformation,
+    isPaymentOptionalCategory,
     payrollDeductionPayment,
     workLocationAllowsSalaryDeduction,
   } = options;
@@ -407,13 +644,15 @@ function collectMembershipFormValidationErrors(formData, options = {}) {
     requireText(formData.workEmail, "workEmail", "Work Email");
   }
 
-  requireText(formData.workLocation, "workLocation", "Work Location");
-  if (formData.workLocation === "Other") {
-    requireText(
-      formData.otherWorkLocation,
-      "otherWorkLocation",
-      "Other Work Location",
-    );
+  if (!undergradEducationalActive) {
+    requireText(formData.workLocation, "workLocation", "Work Location");
+    if (formData.workLocation === "Other") {
+      requireText(
+        formData.otherWorkLocation,
+        "otherWorkLocation",
+        "Other Work Location",
+      );
+    }
   }
   requireText(formData.grade, "grade", "Grade");
   if (formData.grade === "Other") {
@@ -426,18 +665,20 @@ function collectMembershipFormValidationErrors(formData, options = {}) {
     requireText(formData.discipline, "discipline", "Discipline");
   }
 
-  if (formData.nursingProgramme === "Yes") {
-    requireText(
-      formData.nursingSpecialization,
-      "nursingSpecialization",
-      "Primary Nurse Type",
-    );
-  } else if (formData.nursingProgramme === "No") {
-    requireText(
-      formData.nmbiNumber,
-      "nmbiNumber",
-      "NMBI No. / An Bord Altranais Number",
-    );
+  if (!undergradEducationalActive) {
+    if (formData.nursingProgramme === "Yes") {
+      requireText(
+        formData.nursingSpecialization,
+        "nursingSpecialization",
+        "Primary Nurse Type",
+      );
+    } else if (formData.nursingProgramme === "No") {
+      requireText(
+        formData.nmbiNumber,
+        "nmbiNumber",
+        "NMBI No. / An Bord Altranais Number",
+      );
+    }
   }
 
   requireText(formData.primarySection, "primarySection", "Primary Section");
@@ -454,11 +695,16 @@ function collectMembershipFormValidationErrors(formData, options = {}) {
     "membershipCategory",
     "Membership Category",
   );
-  if (membershipCategorySelected) {
-    requireDate(formData.startDate, "startDate", "Start Date");
+
+  if (showPaymentInformation && !isPaymentOptionalCategory) {
+    requireText(formData.paymentType, "paymentType", "Payment Type");
   }
 
-  if (payrollDeductionPayment && showPaymentInformation) {
+  if (
+    payrollDeductionPayment &&
+    showPaymentInformation &&
+    !isPaymentOptionalCategory
+  ) {
     if (!workLocationAllowsSalaryDeduction) {
       addIssue(
         "workLocation",
@@ -466,7 +712,9 @@ function collectMembershipFormValidationErrors(formData, options = {}) {
           ? `Salary Deduction is not enabled for work location "${formData.workLocation}"`
           : "Work Location (required for Salary Deduction)",
       );
-      addIssue("paymentType", "Payment Type");
+      if (hasRequiredText(formData.paymentType)) {
+        addIssue("paymentType", "Payment Type");
+      }
     }
     requireText(formData.payrollNumber, "payrollNumber", "Payroll No.");
   }
@@ -521,8 +769,10 @@ const MembershipForm = ({
   setIsEditMode,
   isDeceased: propIsDeceased = false,
   setIsDeceased,
+  editScope = "full",
 }) => {
   const membershipToolbar = useMembershipTabToolbar();
+  const confirmLeaveUnsavedChanges = useConfirmUnsavedLeave();
 
   const { profileDetails, loading, error } = useSelector(
     (state) => state.profileDetails,
@@ -530,6 +780,13 @@ const MembershipForm = ({
   const { countriesOptions, countriesData, loadingC, errorC } = useSelector(
     (state) => state.countries,
   );
+
+  const addressSearchRef = useRef(null);
+  const { isLoaded: isMapsLoaded } = useJsApiLoader({
+    id: "google-map-script",
+    googleMapsApiKey: "AIzaSyCJYpj8WV5Rzof7O3jGhW9XabD0J4Yqe1o",
+    libraries: GOOGLE_MAPS_LIBRARIES,
+  });
 
   const { categoryData, currentCategoryId } = useSelector(
     (state) => state.categoryLookup,
@@ -551,7 +808,10 @@ const MembershipForm = ({
   const [saveLoading, setSaveLoading] = useState(false);
   const paymentTypeSectionRef = useRef(null);
   const shouldFocusPaymentTypeRef = useRef(false);
+  const [paymentTypeReselectRequired, setPaymentTypeReselectRequired] =
+    useState(false);
   const [fieldErrors, setFieldErrors] = useState({});
+  const [baselineSerialized, setBaselineSerialized] = useState(null);
   const [initialMembershipCategory, setInitialMembershipCategory] =
     useState("");
   const [initialSubscriptionStartDate, setInitialSubscriptionStartDate] =
@@ -567,6 +827,8 @@ const MembershipForm = ({
     branchOptions,
     regionOptions,
     secondarySectionOptions,
+    studyLocationOptions,
+    disciplineOptions,
     countryOptions,
     lookups: lookupsRaw,
   } = useSelector((state) => state.lookups);
@@ -588,6 +850,35 @@ const MembershipForm = ({
   useEffect(() => {
     dispatch(getCategoryLookup("68dae613c5b15073d66b891f"));
   }, []);
+
+  // Subscription-service is the source of truth for membership movement (and other subscription fields).
+  useEffect(() => {
+    const profileId =
+      profileDetails?._id ||
+      profileDetails?.id ||
+      profileSearchData?.results?.[0]?._id ||
+      profileSearchData?.results?.[0]?.id ||
+      profileIdParam;
+    if (!profileId) return;
+
+    if (subscriptionIdParam) {
+      dispatch(getSubscriptionById(subscriptionIdParam));
+      return;
+    }
+
+    dispatch(
+      getSubscriptionByProfileId({
+        profileId,
+        ...profileDetailActiveSubscriptionArgs,
+      }),
+    );
+  }, [
+    dispatch,
+    profileDetails,
+    profileSearchData,
+    profileIdParam,
+    subscriptionIdParam,
+  ]);
 
   // Helper function to format dates safely
   const formatDateSafe = (dateString, format = "DD/MM/YYYY") => {
@@ -624,6 +915,28 @@ const MembershipForm = ({
     return null;
   }, [ProfileSubData]);
 
+  const membershipMovementFromSubscription =
+    subscriptionData?.membershipMovement ?? "";
+
+  const membershipMovementSelectOptions = useMemo(() => {
+    if (
+      !membershipMovementFromSubscription ||
+      MEMBERSHIP_MOVEMENT_OPTIONS.some(
+        (option) => option.value === membershipMovementFromSubscription,
+      )
+    ) {
+      return MEMBERSHIP_MOVEMENT_OPTIONS;
+    }
+
+    return [
+      ...MEMBERSHIP_MOVEMENT_OPTIONS,
+      {
+        value: membershipMovementFromSubscription,
+        label: formatMembershipMovementLabel(membershipMovementFromSubscription),
+      },
+    ];
+  }, [membershipMovementFromSubscription]);
+
   const isSubscriptionEmpty = useMemo(() => {
     if (!ProfileSubData) return false;
     // Direct array empty
@@ -646,6 +959,8 @@ const MembershipForm = ({
     // Choose source dynamically
     const source = profileDetails || searchAoiRes;
     if (!source) return;
+
+    setPaymentTypeReselectRequired(false);
 
     const subDoc = pickPrimarySubscription(ProfileSubData?.data || []);
 
@@ -684,8 +999,12 @@ const MembershipForm = ({
       workEmail: source.contactInfo?.workEmail || "",
 
       // Professional Details
-      studyLocation: source.professionalDetails?.studyLocation || "",
-      discipline: source.professionalDetails?.discipline || "",
+      studyLocation: scalarProfessionalLookupValue(
+        source.professionalDetails?.studyLocation,
+      ),
+      discipline: scalarProfessionalLookupValue(
+        source.professionalDetails?.discipline,
+      ),
       startDate: convertUTCToLocalDate(source.professionalDetails?.startDate),
       graduationDate: convertUTCToLocalDate(
         source.professionalDetails?.graduationDate,
@@ -808,9 +1127,6 @@ const MembershipForm = ({
 
         // Payment Information
         paymentFrequency: subscriptionData.paymentFrequency || "",
-
-        // Membership Movement
-        membershipMovement: subscriptionData.membershipMovement || "",
 
         // Subscription Status Flags
         isCurrent: subscriptionData.isCurrent || false,
@@ -935,7 +1251,6 @@ const MembershipForm = ({
     // Subscription specific fields
     subscriptionStatus: "",
     paymentFrequency: "",
-    membershipMovement: "",
     isCurrent: false,
     reinstated: false,
     yearendProcessed: false,
@@ -946,6 +1261,16 @@ const MembershipForm = ({
   const workLocationAllowsSalaryDeduction = useMemo(
     () =>
       resolveWorkLocationProcessSalaryDeduction(
+        formData.workLocation,
+        workLocationOptions,
+        lookupsRaw,
+      ),
+    [formData.workLocation, workLocationOptions, lookupsRaw],
+  );
+
+  const workLocationIroName = useMemo(
+    () =>
+      resolveWorkLocationIroName(
         formData.workLocation,
         workLocationOptions,
         lookupsRaw,
@@ -975,19 +1300,6 @@ const MembershipForm = ({
       { key: "pakistan", label: "Pakistan" },
       { key: "usa", label: "USA" },
       { key: "uk", label: "UK" },
-      { key: "other", label: "Other" },
-    ],
-    studyLocations: [
-      { key: "local", label: "Local" },
-      { key: "abroad", label: "Abroad" },
-    ],
-    disciplines: [
-      { key: "nursing", label: "Nursing" },
-      { key: "medicine", label: "Medicine" },
-      { key: "pharmacy", label: "Pharmacy" },
-      { key: "physiotherapy", label: "Physiotherapy" },
-      { key: "occupational-therapy", label: "Occupational Therapy" },
-      { key: "radiography", label: "Radiography" },
       { key: "other", label: "Other" },
     ],
     workLocations: [
@@ -1063,7 +1375,15 @@ const MembershipForm = ({
   };
 
   const handleChange = (field, value) => {
+    let paymentTypeCleared = false;
     const updatedData = { ...formData, [field]: value };
+    const branchRegionContext = {
+      categoryData,
+      workLocationOptions,
+      studyLocationOptions,
+      lookupsRaw,
+    };
+
     if (field === "workLocation") {
       if (typeof value === "object" && value !== null) {
         updatedData.workLocation =
@@ -1083,12 +1403,32 @@ const MembershipForm = ({
       ) {
         updatedData.paymentType = "";
         updatedData.payrollNumber = "";
-      }
-      if (
-        !allowsSalaryDeduction &&
-        String(updatedData.workLocation || "").trim()
-      ) {
+        paymentTypeCleared = true;
+        setPaymentTypeReselectRequired(true);
         shouldFocusPaymentTypeRef.current = true;
+      }
+
+      const workLocationRaw =
+        typeof value === "object" && value !== null
+          ? value.key || value.value || updatedData.workLocation
+          : value;
+      const { branch, region } = resolveMembershipBranchRegion(
+        updatedData,
+        branchRegionContext,
+        { workLocationRaw },
+      );
+      updatedData.branch = branch;
+      updatedData.region = region;
+    }
+    if (field === "studyLocation") {
+      if (!hasWorkLocationSelection(updatedData.workLocation)) {
+        const { branch, region } = resolveMembershipBranchRegion(
+          updatedData,
+          branchRegionContext,
+          { studyLocation: value },
+        );
+        updatedData.branch = branch;
+        updatedData.region = region;
       }
     }
     if (field === "consentCorrespondence") {
@@ -1154,6 +1494,7 @@ const MembershipForm = ({
     if (field === "branch" || field === "region") {
       const nextBranch = field === "branch" ? value : updatedData.branch;
       const nextRegion = field === "region" ? value : updatedData.region;
+      if (String(updatedData.workLocation || "").trim() !== "Other") {
       const resolved = resolveWorkLocationFromHierarchy(nextBranch, nextRegion);
       if (resolved) {
         updatedData.workLocation = resolved;
@@ -1168,10 +1509,11 @@ const MembershipForm = ({
         ) {
           updatedData.paymentType = "";
           updatedData.payrollNumber = "";
-        }
-        if (!allowsSalaryDeduction) {
+          paymentTypeCleared = true;
+          setPaymentTypeReselectRequired(true);
           shouldFocusPaymentTypeRef.current = true;
         }
+      }
       }
     }
     if (field === "nursingProgramme" && value !== "Yes") {
@@ -1191,6 +1533,30 @@ const MembershipForm = ({
       if (!isPayrollOrSalaryDeduction(value)) {
         updatedData.payrollNumber = "";
       }
+      if (hasRequiredText(value)) {
+        setPaymentTypeReselectRequired(false);
+      }
+    }
+    if (
+      field === "membershipCategory" &&
+      (isUndergraduateStudentMembershipCategory(value, categoryData) ||
+        isHonoraryMembershipCategory(value, categoryData))
+    ) {
+      updatedData.paymentType = "Cash";
+      updatedData.paymentFrequency = "Annually";
+      updatedData.payrollNumber = "";
+      setPaymentTypeReselectRequired(false);
+    }
+    if (
+      field === "membershipCategory" &&
+      isUndergraduateStudentMembershipCategory(value, categoryData)
+    ) {
+      const { branch, region } = resolveMembershipBranchRegion(
+        updatedData,
+        branchRegionContext,
+      );
+      updatedData.branch = branch;
+      updatedData.region = region;
     }
     if (
       field === "membershipCategory" &&
@@ -1199,6 +1565,7 @@ const MembershipForm = ({
       updatedData.studyLocation = "";
       updatedData.discipline = "";
       updatedData.graduationDate = null;
+      updatedData.startDate = null;
     }
     setFormData(updatedData);
     setFieldErrors((prev) => {
@@ -1218,8 +1585,100 @@ const MembershipForm = ({
           changed = true;
         }
       }
+      if (paymentTypeCleared) {
+        next.paymentType = true;
+        changed = true;
+      }
       return changed ? next : prev;
     });
+  };
+
+  const handleClearAddressSearch = () => {
+    handleChange("searchAddress", "");
+  };
+
+  const handlePlacesChanged = () => {
+    const places = addressSearchRef.current?.getPlaces?.();
+    if (!places?.length) return;
+
+    const place = places[0];
+    const placeId = place.place_id;
+    if (!placeId || !window.google?.maps?.places) return;
+
+    const service = new window.google.maps.places.PlacesService(
+      document.createElement("div"),
+    );
+
+    service.getDetails(
+      {
+        placeId,
+        fields: ["address_components", "name", "formatted_address"],
+      },
+      (details, status) => {
+        if (
+          status !== window.google.maps.places.PlacesServiceStatus.OK ||
+          !details
+        ) {
+          return;
+        }
+
+        const components = details.address_components || [];
+        const getComponent = (type) =>
+          components.find((c) => c.types.includes(type))?.long_name || "";
+        const getComponentShortName = (type) =>
+          components.find((c) => c.types.includes(type))?.short_name || "";
+
+        const streetNumber = getComponent("street_number");
+        const route = getComponent("route");
+        const neighborhood = getComponent("neighborhood") || "";
+        const sublocality = getComponent("sublocality") || "";
+        const town =
+          getComponent("locality") || getComponent("postal_town") || "";
+        const county = getComponent("administrative_area_level_1") || "";
+        const postalCode = getComponent("postal_code");
+        const countryLongName = getComponent("country");
+        const countryShortName = getComponentShortName("country");
+
+        let countryDisplayName = "";
+        if (countryLongName || countryShortName) {
+          const matchedCountry = countriesOptions?.find(
+            (c) =>
+              c?.code === countryLongName ||
+              c?.code === countryShortName ||
+              c?.name === countryLongName ||
+              c?.displayname === countryLongName,
+          );
+          countryDisplayName =
+            matchedCountry?.displayname ||
+            matchedCountry?.label ||
+            countryLongName ||
+            "";
+        }
+
+        setFormData((prev) => ({
+          ...prev,
+          searchAddress: details.formatted_address || prev.searchAddress,
+          addressLine1: `${streetNumber} ${route}`.trim(),
+          addressLine2: neighborhood || sublocality,
+          townCity: town,
+          countyState: county.trim(),
+          eircode: postalCode.trim(),
+          country: countryDisplayName || prev.country,
+          nata: false,
+        }));
+        setFieldErrors((prev) => {
+          const next = { ...prev };
+          let changed = false;
+          ["addressLine1", "townCity", "country"].forEach((field) => {
+            if (next[field]) {
+              delete next[field];
+              changed = true;
+            }
+          });
+          return changed ? next : prev;
+        });
+      },
+    );
   };
 
   // Sync isDeceased prop with formData and apply deceased logic
@@ -1249,10 +1708,31 @@ const MembershipForm = ({
     !isEditMode ||
     formData.isDeceased ||
     formData.subscriptionStatus === "Resigned";
+  const isLimitedMembershipEdit = editScope !== "full";
+  const membershipDetailsReadOnly =
+    isFormReadOnly || isLimitedMembershipEdit;
 
-  const membershipCategorySelected = Boolean(
-    String(formData.membershipCategory || "").trim(),
+  useEffect(() => {
+    if (!isEditMode || isFormReadOnly) {
+      setBaselineSerialized(null);
+      return;
+    }
+    setBaselineSerialized(serializeMembershipFormData(formData));
+    // Snapshot only when entering edit mode; formData is intentionally read once here.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isEditMode, isFormReadOnly]);
+
+  const hasUnsavedMembershipChanges = useMemo(
+    () => isMembershipFormDirty(formData, baselineSerialized),
+    [formData, baselineSerialized],
   );
+
+  useRegisterUnsavedFormGuard(
+    "membership-form",
+    hasUnsavedMembershipChanges,
+    isEditMode && !isFormReadOnly,
+  );
+
   const membershipCategoryChanged =
     String(formData.membershipCategory || "").trim() !==
     String(initialMembershipCategory || "").trim();
@@ -1270,44 +1750,6 @@ const MembershipForm = ({
     () => isPayrollOrSalaryDeduction(formData.paymentType),
     [formData.paymentType],
   );
-
-  const showPaymentTypeSalaryDeductionNotice =
-    !isFormReadOnly &&
-    Boolean(String(formData.workLocation || "").trim()) &&
-    !workLocationAllowsSalaryDeduction;
-
-  const paymentTypeHighlightStyle = showPaymentTypeSalaryDeductionNotice
-    ? {
-        border: "2px solid #faad14",
-        borderRadius: "8px",
-        padding: "8px",
-        backgroundColor: "#fffbe6",
-        marginBottom: "8px",
-      }
-    : undefined;
-
-  useEffect(() => {
-    if (
-      !showPaymentTypeSalaryDeductionNotice ||
-      !shouldFocusPaymentTypeRef.current
-    ) {
-      return;
-    }
-    shouldFocusPaymentTypeRef.current = false;
-
-    const section = paymentTypeSectionRef.current;
-    if (!section) return;
-
-    const scrollContainer = section.closest(".membership-form-container");
-    if (scrollContainer) {
-      scrollElementWithinContainer(section, scrollContainer);
-    }
-
-    requestAnimationFrame(() => {
-      const select = section.querySelector("select:not([disabled])");
-      select?.focus({ preventScroll: true });
-    });
-  }, [showPaymentTypeSalaryDeductionNotice, formData.workLocation]);
 
   const undergradEducationalActive = useMemo(
     () =>
@@ -1336,14 +1778,135 @@ const MembershipForm = ({
     [formData.membershipCategory, categoryData],
   );
 
-  const showPaymentInformation =
-    !honoraryMembershipActive && !undergradEducationalActive;
+  const showPaymentInformation = true;
+
+  const isPaymentOptionalCategory =
+    undergradEducationalActive || honoraryMembershipActive;
+
+  const showPaymentTypeSalaryDeductionNotice =
+    !isFormReadOnly &&
+    showPaymentInformation &&
+    !isPaymentOptionalCategory &&
+    Boolean(String(formData.workLocation || "").trim()) &&
+    !workLocationAllowsSalaryDeduction &&
+    isPayrollOrSalaryDeduction(formData.paymentType);
+
+  const showPaymentTypeReselectHighlight =
+    !isFormReadOnly &&
+    showPaymentInformation &&
+    !isPaymentOptionalCategory &&
+    paymentTypeReselectRequired &&
+    !hasRequiredText(formData.paymentType);
+
+  const showPaymentTypeAttention =
+    showPaymentTypeSalaryDeductionNotice || showPaymentTypeReselectHighlight;
+
+  const paymentTypeHighlightStyle = showPaymentTypeAttention
+    ? {
+        border: "2px solid #faad14",
+        borderRadius: "8px",
+        padding: "8px",
+        backgroundColor: "#fffbe6",
+        marginBottom: "8px",
+      }
+    : undefined;
+
+  useEffect(() => {
+    if (!showPaymentTypeAttention || !shouldFocusPaymentTypeRef.current) {
+      return;
+    }
+    shouldFocusPaymentTypeRef.current = false;
+
+    const section = paymentTypeSectionRef.current;
+    if (!section) return;
+
+    const scrollContainer = section.closest(".membership-form-container");
+    if (scrollContainer) {
+      scrollElementWithinContainer(section, scrollContainer);
+    }
+
+    requestAnimationFrame(() => {
+      const select = section.querySelector("select:not([disabled])");
+      select?.focus({ preventScroll: true });
+    });
+  }, [showPaymentTypeAttention, formData.workLocation, formData.paymentType]);
 
   const showRemindersCancellations =
     !undergradEducationalActive && !honoraryMembershipActive;
 
   const educationalSectionDisabled =
     isFormReadOnly || !undergradEducationalActive;
+
+  const branchRegionLookupContext = useMemo(
+    () => ({
+      categoryData,
+      workLocationOptions,
+      studyLocationOptions,
+      lookupsRaw,
+    }),
+    [categoryData, workLocationOptions, studyLocationOptions, lookupsRaw],
+  );
+
+  useEffect(() => {
+    if (!Array.isArray(disciplineOptions) || disciplineOptions.length === 0) {
+      return;
+    }
+
+    setFormData((prev) => {
+      const dNorm = normalizeLookupOptionToLabel(
+        prev.discipline,
+        disciplineOptions,
+      );
+      const slNorm = normalizeLookupOptionToLabel(
+        prev.studyLocation,
+        studyLocationOptions,
+      );
+      if (dNorm === prev.discipline && slNorm === prev.studyLocation) {
+        return prev;
+      }
+
+      const next = {
+        ...prev,
+        discipline: dNorm,
+        studyLocation: slNorm,
+      };
+      const { branch, region } = resolveMembershipBranchRegion(
+        next,
+        branchRegionLookupContext,
+      );
+      if (next.branch === branch && next.region === region) {
+        return next;
+      }
+      return { ...next, branch, region };
+    });
+  }, [
+    disciplineOptions,
+    studyLocationOptions,
+    profileDetails,
+    profileSearchData,
+    branchRegionLookupContext,
+  ]);
+
+  useEffect(() => {
+    if (!undergradEducationalActive) return;
+
+    const { branch, region } = resolveMembershipBranchRegion(
+      formData,
+      branchRegionLookupContext,
+    );
+    if (!branch && !region) return;
+
+    setFormData((prev) => {
+      if (prev.branch === branch && prev.region === region) return prev;
+      return { ...prev, branch, region };
+    });
+  }, [
+    undergradEducationalActive,
+    formData.workLocation,
+    formData.studyLocation,
+    formData.membershipCategory,
+    branchRegionLookupContext,
+  ]);
 
   // Calculate indeterminate state for main checkbox
   const isIndeterminate = () => {
@@ -1369,7 +1932,9 @@ const MembershipForm = ({
     return "Unable to save. Please check required fields and try again.";
   };
 
-  const handleCancelEdit = () => {
+  const handleCancelEdit = async () => {
+    const canProceed = await confirmLeaveUnsavedChanges();
+    if (!canProceed) return;
     if (setIsEditMode) setIsEditMode(false);
   };
 
@@ -1388,51 +1953,62 @@ const MembershipForm = ({
       return;
     }
 
-    const validation = collectMembershipFormValidationErrors(formData, {
-      membershipCategorySelected,
-      undergradEducationalActive,
-      retiredAssociateActive,
-      honoraryMembershipActive,
-      showPaymentInformation,
-      payrollDeductionPayment,
-      workLocationAllowsSalaryDeduction,
-    });
-    if (validation.labels.length > 0) {
-      setFieldErrors(validation.fields);
-      scrollToFirstMembershipFieldError(
-        validation.fields,
-        ".membership-form-container",
-      );
-      MyAlert(
-        "error",
-        "Please complete the following required fields:",
-        validation.labels.map((label) => `• ${label}`).join("\n"),
-      );
-      return;
+    if (!isLimitedMembershipEdit) {
+      const validation = collectMembershipFormValidationErrors(formData, {
+        undergradEducationalActive,
+        retiredAssociateActive,
+        honoraryMembershipActive,
+        showPaymentInformation,
+        isPaymentOptionalCategory,
+        payrollDeductionPayment,
+        workLocationAllowsSalaryDeduction,
+      });
+      if (validation.labels.length > 0) {
+        setFieldErrors(validation.fields);
+        scrollToFirstMembershipFieldError(
+          validation.fields,
+          ".membership-form-container",
+        );
+        MyAlert(
+          "error",
+          "Please complete the following required fields:",
+          validation.labels.map((label) => `• ${label}`).join("\n"),
+        );
+        return;
+      }
     }
 
     setFieldErrors({});
     setSaveLoading(true);
     try {
-      const profileBody = formDataToProfilePutPayload(
+      const mappedProfileBody = formDataToProfilePutPayload(
         formData,
         profileDetails || sourceProfile,
       );
-      await dispatch(
-        updateProfileDetails({ profileId, body: profileBody }),
-      ).unwrap();
+      const profileBody = isLimitedMembershipEdit
+        ? {
+            personalInfo: mappedProfileBody.personalInfo,
+            contactInfo: mappedProfileBody.contactInfo,
+            preferences: mappedProfileBody.preferences,
+          }
+        : mappedProfileBody;
 
       const primarySub = pickPrimarySubscription(ProfileSubData?.data || []);
       const subId = primarySub?._id;
-      if (subId) {
+      if (subId && !isLimitedMembershipEdit) {
         const subBody = formDataToSubscriptionPutPayload(
           formData,
           primarySub,
+          categoryData,
         );
         await dispatch(
           updateSubscriptionById({ subscriptionId: subId, body: subBody }),
         ).unwrap();
       }
+
+      await dispatch(
+        updateProfileDetails({ profileId, body: profileBody }),
+      ).unwrap();
 
       await dispatch(getProfileDetailsById(profileId)).unwrap();
       if (subscriptionIdParam) {
@@ -1520,7 +2096,7 @@ const MembershipForm = ({
               <MembershipFormGrid>
                 <MembershipFormGridFull>
                   <MembershipFormField field="title" fieldErrors={fieldErrors}>
-                    <CustomSelect
+                    <MembershipFormSelect
                       label="Title"
                       placeholder="Select a title"
                       options={lookupData.titles}
@@ -1562,7 +2138,7 @@ const MembershipForm = ({
                   />
                 </MembershipFormField>
                 <MembershipFormField field="gender" fieldErrors={fieldErrors}>
-                  <CustomSelect
+                  <MembershipFormSelect
                     label="Gender"
                     placeholder="Select your gender"
                     options={
@@ -1581,7 +2157,7 @@ const MembershipForm = ({
                     field="countryPrimaryQualification"
                     fieldErrors={fieldErrors}
                   >
-                    <CustomSelect
+                    <MembershipFormSelect
                       label="Country of Primary Qualification"
                       placeholder="Select a country"
                       options={countriesOptions}
@@ -1621,13 +2197,41 @@ const MembershipForm = ({
                   </Radio.Group>
                 </div>
               </MembershipFormField>
-              <MyInput
-                label="Search for your address"
-                placeholder="Search address"
-                value={formData.searchAddress}
-                onChange={(e) => handleChange("searchAddress", e.target.value)}
-                disabled={isFormReadOnly}
-              />
+              {isMapsLoaded ? (
+                <div className="membership-address-search-field">
+                  <StandaloneSearchBox
+                    onLoad={(ref) => {
+                      addressSearchRef.current = ref;
+                    }}
+                    onPlacesChanged={handlePlacesChanged}
+                  >
+                    <MyInput
+                      label="Search for your address"
+                      name="searchAddress"
+                      placeholder="Search address or Eircode"
+                      value={formData.searchAddress}
+                      onChange={(e) =>
+                        handleChange("searchAddress", e.target.value)
+                      }
+                      onClear={handleClearAddressSearch}
+                      allowClear
+                      disabled={isFormReadOnly}
+                    />
+                  </StandaloneSearchBox>
+                </div>
+              ) : (
+                <MyInput
+                  label="Search for your address"
+                  placeholder="Search address or Eircode"
+                  value={formData.searchAddress}
+                  onChange={(e) =>
+                    handleChange("searchAddress", e.target.value)
+                  }
+                  onClear={handleClearAddressSearch}
+                  allowClear
+                  disabled={isFormReadOnly}
+                />
+              )}
               <MembershipFormGrid>
                 <MembershipFormField field="addressLine1" fieldErrors={fieldErrors}>
                   <MyInput
@@ -1678,7 +2282,7 @@ const MembershipForm = ({
                   disabled={isFormReadOnly}
                 />
                 <MembershipFormField field="country" fieldErrors={fieldErrors}>
-                  <CustomSelect
+                  <MembershipFormSelect
                     label="Country"
                     placeholder="Select country"
                     options={countriesOptions}
@@ -1854,42 +2458,63 @@ const MembershipForm = ({
               <MembershipFormGrid>
                 <MembershipFormGridFull>
                   <MembershipFormField field="workLocation" fieldErrors={fieldErrors}>
-                    <CustomSelect
+                    <MembershipFormSelect
                       label="Work Location"
+                      extra={
+                        formData.workLocation && formData.workLocation !== "Other" ? (
+                          <span className="membership-form-worklocation-iro">
+                            IRO : {workLocationIroName || "-"}
+                          </span>
+                        ) : null
+                      }
                       placeholder="Select Location..."
                       options={workLocationOptions}
                       value={formData.workLocation}
                       onChange={(e) => handleChange("workLocation", e.target.value)}
-                      disabled={isFormReadOnly}
-                      required={true}
+                      disabled={membershipDetailsReadOnly}
+                      required={!undergradEducationalActive && !isFormReadOnly}
                     />
                   </MembershipFormField>
                 </MembershipFormGridFull>
-                <CustomSelect
+                <MembershipFormSelect
                   label="Branch"
                   placeholder="Select Branch..."
                   options={branchOptions}
                   value={formData.branch}
                   onChange={(e) => handleChange("branch", e.target.value)}
-                  disabled={isFormReadOnly}
+                  disabled={
+                    membershipDetailsReadOnly ||
+                    (undergradEducationalActive
+                      ? hasWorkLocationSelection(formData.workLocation)
+                        ? formData.workLocation !== "Other"
+                        : Boolean(String(formData.studyLocation || "").trim())
+                      : formData.workLocation !== "Other")
+                  }
                 />
-                <CustomSelect
+                <MembershipFormSelect
                   label="Region"
                   placeholder="Select Region..."
                   options={regionOptions}
                   value={formData.region}
                   onChange={(e) => handleChange("region", e.target.value)}
-                  disabled={isFormReadOnly}
+                  disabled={
+                    membershipDetailsReadOnly ||
+                    (undergradEducationalActive
+                      ? hasWorkLocationSelection(formData.workLocation)
+                        ? formData.workLocation !== "Other"
+                        : Boolean(String(formData.studyLocation || "").trim())
+                      : formData.workLocation !== "Other")
+                  }
                 />
                 <MembershipFormGridFull>
                   <MembershipFormField field="grade" fieldErrors={fieldErrors}>
-                    <CustomSelect
+                    <MembershipFormSelect
                       label="Grade"
                       placeholder="Select Grade..."
                       options={gradeOptions}
                       value={formData.grade}
                       onChange={(e) => handleChange("grade", e.target.value)}
-                      disabled={isFormReadOnly}
+                      disabled={membershipDetailsReadOnly}
                       required={true}
                     />
                   </MembershipFormField>
@@ -1901,7 +2526,10 @@ const MembershipForm = ({
                   <MyInput
                     label="Other Work Location"
                     placeholder="Enabled if 'Other' is selected"
-                    disabled={isFormReadOnly || formData.workLocation !== "Other"}
+                    disabled={
+                      membershipDetailsReadOnly ||
+                      formData.workLocation !== "Other"
+                    }
                     value={formData.otherWorkLocation}
                     onChange={(e) =>
                       handleChange("otherWorkLocation", e.target.value)
@@ -1913,7 +2541,7 @@ const MembershipForm = ({
                   <MyInput
                     label="Other Grade"
                     placeholder="Enabled if 'Other' is selected"
-                    disabled={isFormReadOnly || formData.grade !== "Other"}
+                    disabled={membershipDetailsReadOnly || formData.grade !== "Other"}
                     value={formData.otherGrade}
                     onChange={(e) => handleChange("otherGrade", e.target.value)}
                     required={formData.grade === "Other"}
@@ -1926,7 +2554,7 @@ const MembershipForm = ({
               <MembershipFormGrid>
                 <MembershipFormGridFull>
                   <MembershipFormField field="primarySection" fieldErrors={fieldErrors}>
-                    <CustomSelect
+                    <MembershipFormSelect
                       label="Primary Section"
                       placeholder="Select Primary Section"
                       value={formData.primarySection}
@@ -1934,7 +2562,7 @@ const MembershipForm = ({
                         handleChange("primarySection", e.target.value)
                       }
                       options={sectionOptions}
-                      disabled={isFormReadOnly}
+                      disabled={membershipDetailsReadOnly}
                       required={true}
                     />
                   </MembershipFormField>
@@ -1950,13 +2578,13 @@ const MembershipForm = ({
                       onChange={(e) =>
                         handleChange("otherPrimarySection", e.target.value)
                       }
-                      disabled={isFormReadOnly}
+                      disabled={membershipDetailsReadOnly}
                       required={formData.primarySection === "Other"}
                     />
                   </MembershipFormField>
                 </MembershipFormGridFull>
                 <MembershipFormGridFull>
-                  <CustomSelect
+                  <MembershipFormSelect
                     label="Secondary Section"
                     placeholder="Select Secondary Section (Optional)"
                     value={formData.secondarySection}
@@ -1964,7 +2592,7 @@ const MembershipForm = ({
                       handleChange("secondarySection", e.target.value)
                     }
                     options={secondarySectionOptions}
-                    disabled={isFormReadOnly}
+                    disabled={membershipDetailsReadOnly}
                   />
                 </MembershipFormGridFull>
                 <MembershipFormGridFull>
@@ -1974,7 +2602,7 @@ const MembershipForm = ({
                     onChange={(e) =>
                       handleChange("otherSecondarySection", e.target.value)
                     }
-                    disabled={isFormReadOnly}
+                    disabled={membershipDetailsReadOnly}
                   />
                 </MembershipFormGridFull>
               </MembershipFormGrid>
@@ -1990,7 +2618,7 @@ const MembershipForm = ({
                   onChange={(e) =>
                     handleChange("nursingProgramme", e.target.value)
                   }
-                  disabled={isFormReadOnly}
+                  disabled={membershipDetailsReadOnly}
                 >
                   <Radio value="Yes">Yes</Radio>
                   <Radio value="No">No</Radio>
@@ -2004,11 +2632,13 @@ const MembershipForm = ({
                       ? "Enter your NMBI number"
                       : "Optional during adaptation programme"
                   }
-                  disabled={isFormReadOnly}
+                  disabled={membershipDetailsReadOnly}
                   value={formData.nmbiNumber}
                   onChange={(e) => handleChange("nmbiNumber", e.target.value)}
                   required={
-                    !isFormReadOnly && formData.nursingProgramme === "No"
+                    !isFormReadOnly &&
+                    !undergradEducationalActive &&
+                    formData.nursingProgramme === "No"
                   }
                 />
               </MembershipFormField>
@@ -2022,7 +2652,8 @@ const MembershipForm = ({
                     className={`my-input-label mb-1 ${fieldErrors.nursingSpecialization ? "error" : ""}`}
                   >
                     Primary Nurse Type
-                    {formData.nursingProgramme === "Yes" ? (
+                    {!undergradEducationalActive &&
+                    formData.nursingProgramme === "Yes" ? (
                       <span className="text-danger"> *</span>
                     ) : null}
                   </label>
@@ -2034,7 +2665,8 @@ const MembershipForm = ({
                       handleChange("nursingSpecialization", e.target.value)
                     }
                     disabled={
-                      isFormReadOnly || formData.nursingProgramme !== "Yes"
+                      membershipDetailsReadOnly ||
+                      formData.nursingProgramme !== "Yes"
                     }
                     className="w-100"
                   >
@@ -2071,7 +2703,7 @@ const MembershipForm = ({
                   placeholder="Enter full name"
                   value={formData.recruitedBy}
                   onChange={(e) => handleChange("recruitedBy", e.target.value)}
-                  disabled={isFormReadOnly}
+                  disabled={membershipDetailsReadOnly}
                 />
                 <MyInput
                   label="Membership Number"
@@ -2080,7 +2712,7 @@ const MembershipForm = ({
                   onChange={(e) =>
                     handleChange("recruitedByMembershipNo", e.target.value)
                   }
-                  disabled={isFormReadOnly}
+                  disabled={membershipDetailsReadOnly}
                 />
               </MembershipFormGrid>
             </MembershipFormCard>
@@ -2093,7 +2725,7 @@ const MembershipForm = ({
                     field="membershipCategory"
                     fieldErrors={fieldErrors}
                   >
-                    <CustomSelect
+                    <MembershipFormSelect
                       label="Membership Category"
                       placeholder="Select Category..."
                       options={categoryData}
@@ -2101,7 +2733,7 @@ const MembershipForm = ({
                       onChange={(e) =>
                         handleChange("membershipCategory", e.target.value)
                       }
-                      disabled={isFormReadOnly}
+                      disabled={membershipDetailsReadOnly}
                       required={true}
                     />
                   </MembershipFormField>
@@ -2128,8 +2760,7 @@ const MembershipForm = ({
                       placeholder="Select start date"
                       value={formData.startDate}
                       onChange={(date) => handleChange("startDate", date)}
-                      disabled={isFormReadOnly}
-                      required={membershipCategorySelected}
+                      disabled={membershipDetailsReadOnly}
                     />
                   </div>
                 </MembershipFormField>
@@ -2147,21 +2778,79 @@ const MembershipForm = ({
                   onChange={(date) => handleChange("renewalDate", date)}
                   disabled
                 />
-                <CustomSelect
+                <MembershipFormSelect
                   label="Membership Movement"
-                  placeholder="Select Movement..."
-                  options={[
-                    { value: "NewJoin", label: "New" },
-                    { value: "Renewal", label: "Renewal" },
-                    { value: "Reinstatement", label: "Reinstatement" },
-                    { value: "Transfer", label: "Transfer" },
-                    { value: "Conversion", label: "Conversion" },
-                  ]}
-                  value={formData.membershipMovement}
-                  onChange={(e) =>
-                    handleChange("membershipMovement", e.target.value)
+                  placeholder={
+                    ProfileSubLoading ? "Loading..." : "Select Movement..."
                   }
+                  options={membershipMovementSelectOptions}
+                  value={membershipMovementFromSubscription}
+                  isIDs
                   disabled
+                />
+              </MembershipFormGrid>
+            </MembershipFormCard>
+
+            <MembershipFormCard title="Payment Information">
+              <div
+                ref={paymentTypeSectionRef}
+                style={paymentTypeHighlightStyle}
+              >
+                {showPaymentTypeSalaryDeductionNotice && (
+                  <div className="membership-form-notice">
+                    Salary Deduction is not available for work location &quot;
+                    {formData.workLocation}&quot;. Please choose another
+                    payment method.
+                  </div>
+                )}
+                {showPaymentTypeReselectHighlight && (
+                  <div className="membership-form-notice">
+                    Payment type was cleared after changing work location.
+                    Please select a payment type before saving.
+                  </div>
+                )}
+                <MembershipFormField field="paymentType" fieldErrors={fieldErrors}>
+                  <MembershipFormSelect
+                    label="Payment Type"
+                    placeholder="Select Payment Type"
+                    value={formData.paymentType}
+                    onChange={(e) =>
+                      handleChange("paymentType", e.target.value)
+                    }
+                    disabled={membershipDetailsReadOnly}
+                    required={!isFormReadOnly && !isPaymentOptionalCategory}
+                    isIDs={false}
+                    options={filteredPaymentTypeOptions}
+                    isMarginBtm={!showPaymentTypeAttention}
+                  />
+                </MembershipFormField>
+              </div>
+              <MembershipFormGrid>
+                <MembershipFormField field="payrollNumber" fieldErrors={fieldErrors}>
+                  <MyInput
+                    label="Payroll No."
+                    placeholder="Enter Payroll No."
+                    value={formData.payrollNumber}
+                    onChange={(e) =>
+                      handleChange("payrollNumber", e.target.value)
+                    }
+                    disabled={membershipDetailsReadOnly || !payrollDeductionPayment}
+                    required={
+                      payrollDeductionPayment &&
+                      !isFormReadOnly &&
+                      !isPaymentOptionalCategory
+                    }
+                  />
+                </MembershipFormField>
+                <MembershipFormSelect
+                  label="Payment Frequency"
+                  placeholder="Select Frequency"
+                  options={CRM_PAYMENT_FREQUENCY_OPTIONS}
+                  value={formData.paymentFrequency}
+                  onChange={(e) =>
+                    handleChange("paymentFrequency", e.target.value)
+                  }
+                  disabled={membershipDetailsReadOnly}
                 />
               </MembershipFormGrid>
             </MembershipFormCard>
@@ -2171,10 +2860,10 @@ const MembershipForm = ({
                 <MembershipFormGrid>
                   <MembershipFormGridFull>
                     <MembershipFormField field="studyLocation" fieldErrors={fieldErrors}>
-                      <CustomSelect
+                      <MembershipFormSelect
                         label="Study Location"
                         placeholder="Select Study Location..."
-                        options={lookupData.studyLocations}
+                        options={studyLocationOptions}
                         value={formData.studyLocation}
                         onChange={(e) =>
                           handleChange("studyLocation", e.target.value)
@@ -2184,13 +2873,15 @@ const MembershipForm = ({
                       />
                     </MembershipFormField>
                   </MembershipFormGridFull>
-                  <MyDatePicker
-                    label="Start Date"
-                    placeholder="Select start date (Optional)"
-                    value={formData.startDate}
-                    onChange={(date) => handleChange("startDate", date)}
-                    disabled={educationalSectionDisabled}
-                  />
+                  <MembershipFormField field="startDate" fieldErrors={fieldErrors}>
+                    <MyDatePicker
+                      label="Start Date"
+                      placeholder="Select start date"
+                      value={formData.startDate}
+                      onChange={(date) => handleChange("startDate", date)}
+                      disabled={educationalSectionDisabled}
+                    />
+                  </MembershipFormField>
                   <MembershipFormField
                     field="graduationDate"
                     fieldErrors={fieldErrors}
@@ -2206,10 +2897,10 @@ const MembershipForm = ({
                   </MembershipFormField>
                   <MembershipFormGridFull>
                     <MembershipFormField field="discipline" fieldErrors={fieldErrors}>
-                      <CustomSelect
+                      <MembershipFormSelect
                         label="Discipline"
                         placeholder="Select Discipline..."
-                        options={lookupData.disciplines}
+                        options={disciplineOptions}
                         value={formData.discipline}
                         onChange={(e) => handleChange("discipline", e.target.value)}
                         disabled={educationalSectionDisabled}
@@ -2229,7 +2920,7 @@ const MembershipForm = ({
                       label="Retirement Date"
                       value={formData.retiredDate}
                       onChange={(date) => handleChange("retiredDate", date)}
-                      disabled={isFormReadOnly}
+                      disabled={membershipDetailsReadOnly}
                       required={!isFormReadOnly}
                     />
                   </MembershipFormField>
@@ -2240,62 +2931,10 @@ const MembershipForm = ({
                       onChange={(e) =>
                         handleChange("pensionNumber", e.target.value)
                       }
-                      disabled={isFormReadOnly}
+                      disabled={membershipDetailsReadOnly}
                       required={!isFormReadOnly}
                     />
                   </MembershipFormField>
-                </MembershipFormGrid>
-              </MembershipFormCard>
-            )}
-
-            {showPaymentInformation && (
-              <MembershipFormCard title="Payment Information">
-                <div ref={paymentTypeSectionRef}>
-                  {showPaymentTypeSalaryDeductionNotice && (
-                    <div className="membership-form-notice">
-                      Salary Deduction is not available for work location &quot;
-                      {formData.workLocation}&quot;. Please choose another
-                      payment method.
-                    </div>
-                  )}
-                  <MembershipFormField field="paymentType" fieldErrors={fieldErrors}>
-                    <CustomSelect
-                      label="Payment Type"
-                      placeholder="Select Payment Type"
-                      value={formData.paymentType}
-                      onChange={(e) =>
-                        handleChange("paymentType", e.target.value)
-                      }
-                      disabled={isFormReadOnly}
-                      isIDs={false}
-                      options={filteredPaymentTypeOptions}
-                      isMarginBtm={!showPaymentTypeSalaryDeductionNotice}
-                    />
-                  </MembershipFormField>
-                </div>
-                <MembershipFormGrid>
-                  <MembershipFormField field="payrollNumber" fieldErrors={fieldErrors}>
-                    <MyInput
-                      label="Payroll No."
-                      placeholder="Enter Payroll No."
-                      value={formData.payrollNumber}
-                      onChange={(e) =>
-                        handleChange("payrollNumber", e.target.value)
-                      }
-                      disabled={isFormReadOnly || !payrollDeductionPayment}
-                      required={payrollDeductionPayment && !isFormReadOnly}
-                    />
-                  </MembershipFormField>
-                  <CustomSelect
-                    label="Payment Frequency"
-                    placeholder="Select Frequency"
-                    options={CRM_PAYMENT_FREQUENCY_OPTIONS}
-                    value={formData.paymentFrequency}
-                    onChange={(e) =>
-                      handleChange("paymentFrequency", e.target.value)
-                    }
-                    disabled={isFormReadOnly}
-                  />
                 </MembershipFormGrid>
               </MembershipFormCard>
             )}
@@ -2332,7 +2971,7 @@ const MembershipForm = ({
                     disabled={true}
                   />
                   <MembershipFormGridFull>
-                    <CustomSelect
+                    <MembershipFormSelect
                       label="Cancellation / Resignation Reason"
                       placeholder="Select reason"
                       options={cancellationReasonOptions}
@@ -2357,7 +2996,7 @@ const MembershipForm = ({
                   onChange={(e) =>
                     handleChange("memberOfOtherUnion", e.target.value)
                   }
-                  disabled={isFormReadOnly}
+                  disabled={membershipDetailsReadOnly}
                 >
                   <Radio value="Yes">Yes</Radio>
                   <Radio value="No">No</Radio>
@@ -2370,7 +3009,7 @@ const MembershipForm = ({
                   onChange={(e) =>
                     handleChange("otherUnionName", e.target.value)
                   }
-                  disabled={isFormReadOnly}
+                  disabled={membershipDetailsReadOnly}
                 />
               )}
             </MembershipFormCard>
@@ -2386,7 +3025,7 @@ const MembershipForm = ({
                   onChange={(e) =>
                     handleChange("otherUnionScheme", e.target.value)
                   }
-                  disabled={isFormReadOnly}
+                  disabled={membershipDetailsReadOnly}
                 >
                   <Radio value="Yes">Yes</Radio>
                   <Radio value="No">No</Radio>
@@ -2411,7 +3050,7 @@ const MembershipForm = ({
                   alignItems: "center",
                 }}
                 disabled={
-                  !isEditMode ||
+                  membershipDetailsReadOnly ||
                   formData.exclusiveDiscountsOffers ||
                   formData.joinINMOIncomeProtection
                 }
@@ -2432,7 +3071,7 @@ const MembershipForm = ({
                   display: "flex",
                   alignItems: "center",
                 }}
-                disabled={isFormReadOnly || formData.joinRewards}
+                disabled={membershipDetailsReadOnly || formData.joinRewards}
               >
                 Exclusive Discounts and Offers
               </Checkbox>
@@ -2446,7 +3085,7 @@ const MembershipForm = ({
                   handleChange("joinINMOIncomeProtection", isChecked);
                 }}
                 style={{ display: "flex", alignItems: "center" }}
-                disabled={isFormReadOnly || formData.joinRewards}
+                disabled={membershipDetailsReadOnly || formData.joinRewards}
               >
                 Income Protection and Consent
               </Checkbox>

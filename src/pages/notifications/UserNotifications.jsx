@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Card, List, Typography, Button, Spin, message } from "antd";
 import { BellOutlined } from "@ant-design/icons";
 import axios from "axios";
@@ -8,6 +8,11 @@ import {
   getNotificationServiceUrl,
 } from "../../context/NotificationContext";
 import { NotificationRow } from "../../component/notifications/notificationPresentation";
+import {
+  isLocalNotificationId,
+  mergeNotificationLists,
+  reconcileBadgeCount,
+} from "../../utils/notificationListUtils";
 
 const { Title } = Typography;
 
@@ -17,11 +22,14 @@ const FILTERS = ["all", "unread"];
 const UserNotifications = () => {
   const navigate = useNavigate();
   const {
+    notifications,
     setNotifications,
     setBadge,
     markAsRead,
     markAllAsRead,
   } = useNotifications();
+  const notificationsRef = useRef(notifications);
+  notificationsRef.current = notifications;
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [clearLoading, setClearLoading] = useState(false);
@@ -40,10 +48,10 @@ const UserNotifications = () => {
       );
       const { notifications: list, unreadCount } =
         res.data?.data ?? res.data ?? {};
-      const next = Array.isArray(list) ? list : [];
-      setItems(next);
-      setNotifications(next);
-      if (typeof unreadCount === "number") setBadge(unreadCount);
+      const merged = mergeNotificationLists(list, notificationsRef.current);
+      setItems(merged);
+      setNotifications(merged);
+      setBadge(reconcileBadgeCount(unreadCount, merged));
     } catch (error) {
       console.error("Failed to fetch notifications:", error);
       message.error("Failed to load notifications");
@@ -84,6 +92,10 @@ const UserNotifications = () => {
     setItems(next);
     setNotifications(next);
     setBadge((prev) => Math.max((Number(prev) || 0) - 1, 0));
+
+    if (isLocalNotificationId(notificationId)) {
+      return;
+    }
 
     try {
       await axios.post(

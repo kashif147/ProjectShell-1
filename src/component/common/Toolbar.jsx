@@ -53,7 +53,7 @@ import { useAuthorization } from "../../context/AuthorizationContext";
 import {
   updateGridTemplate,
   getGridTemplates,
-} from "../../features/templete/templetefiltrsclumnapi";
+} from "../../features/template/templateFiltersColumnApi";
 import { getViewById } from "../../features/views/ViewByIdSlice";
 import { setActiveTemplateId } from "../../features/views/ActiveTemplateSlice";
 import MyAlert from "./MyAlert";
@@ -253,7 +253,7 @@ const Toolbar = () => {
     activePage === "Membership" ? "Members" : activePage;
 
   const { columns, applyTemplate } = useTableColumns();
-  const { templates } = useSelector((state) => state.templetefiltrsclumnapi);
+  const { templates } = useSelector((state) => state.templateFiltersColumnApi);
   const { hasAnyRole } = useAuthorization();
   const canEditGridTemplates = hasAnyRole(["SU", "ASU"]);
   const { currentTemplateId } = useSelector(
@@ -315,10 +315,8 @@ const Toolbar = () => {
   const isReconciliationScreen = normalizedPath === "/reconciliation";
   const isMembershipListingReportScreen =
     normalizedPath === "/membershiplistingreport";
-  const isCreditorsListReportScreen =
-    normalizedPath === "/creditorslistreport";
-  const isDebtorsListReportScreen =
-    normalizedPath === "/debtorslistreport";
+  const isCreditorsListReportScreen = normalizedPath === "/creditorslistreport";
+  const isDebtorsListReportScreen = normalizedPath === "/debtorslistreport";
   const isMembershipListingStyleReportScreen =
     isMembershipListingReportScreen ||
     isCreditorsListReportScreen ||
@@ -341,11 +339,15 @@ const Toolbar = () => {
     ? screenChanges[activeScreen.toLowerCase()] === true
     : false;
 
-  const resolvedGridTemplateId =
-    activeTemplateId ||
-    paymentFormsTemplateId ||
-    currentTemplateId ||
-    "";
+  const isPaymentFormsPage = normalizedPath === "/paymentforms";
+  const isApplicationsPage = normalizedPath === "/applications";
+  const isApplicationLikePage = isApplicationsPage || isPaymentFormsPage;
+
+  const resolvedGridTemplateId = isApplicationsPage
+    ? currentTemplateId || activeTemplateId || ""
+    : isPaymentFormsPage
+      ? paymentFormsTemplateId || activeTemplateId || ""
+      : activeTemplateId || "";
 
   const isActiveSystemDefault = useMemo(() => {
     const id = String(resolvedGridTemplateId || "").trim();
@@ -356,42 +358,40 @@ const Toolbar = () => {
       (t) => String(t._id) === id && t.systemDefault === true,
     );
   }, [resolvedGridTemplateId, templates]);
-  const isPaymentFormsPage = normalizedPath === "/paymentforms";
-  const isApplicationsPage = normalizedPath === "/applications";
-  const isApplicationLikePage = isApplicationsPage || isPaymentFormsPage;
+
   const gridTemplateType = isMembersScreen
     ? "members"
     : isCreditNotesScreen
       ? "creditnotes"
       : isJournalAdjustmentsScreen
         ? "journaladjustments"
-      : isOnlinePaymentScreen
-        ? "onlinepayment"
-      : isRefundsScreen
-        ? "refunds"
-      : isWriteOffsScreen
-        ? "writeoffs"
-      : isGeneralLedgerScreen
-        ? "generalledger"
-      : isReconciliationScreen
-        ? "reconciliation"
-      : isMembershipListingReportScreen
-        ? "membershiplisting"
-      : isStatisticsReportScreen
-        ? "statisticsreport"
-      : isWorkplaceBreakdownReportScreen
-        ? "workplacebreakdownreport"
-      : isCreditorsListReportScreen
-        ? "creditorslistreport"
-      : isDebtorsListReportScreen
-        ? "debtorslistreport"
-      : isPaymentFormsPage
-      ? "payment forms"
-      : isApplicationsPage
-      ? "application"
-      : isProfileScreen
-        ? "profile"
-        : undefined;
+        : isOnlinePaymentScreen
+          ? "onlinepayment"
+          : isRefundsScreen
+            ? "refunds"
+            : isWriteOffsScreen
+              ? "writeoffs"
+              : isGeneralLedgerScreen
+                ? "generalledger"
+                : isReconciliationScreen
+                  ? "reconciliation"
+                  : isMembershipListingReportScreen
+                    ? "membershiplisting"
+                    : isStatisticsReportScreen
+                      ? "statisticsreport"
+                      : isWorkplaceBreakdownReportScreen
+                        ? "workplacebreakdownreport"
+                        : isCreditorsListReportScreen
+                          ? "creditorslistreport"
+                          : isDebtorsListReportScreen
+                            ? "debtorslistreport"
+                            : isPaymentFormsPage
+                              ? "payment forms"
+                              : isApplicationsPage
+                                ? "application"
+                                : isProfileScreen
+                                  ? "profile"
+                                  : undefined;
 
   const supportsAiGridFilter =
     !BATCH_TOOLBAR_ROUTES.has(location.pathname) &&
@@ -439,9 +439,9 @@ const Toolbar = () => {
               ? "CreditNotes"
               : isJournalAdjustmentsScreen
                 ? "JournalAdjustments"
-              : isOnlinePaymentScreen
-                ? "OnlinePayment"
-              : "");
+                : isOnlinePaymentScreen
+                  ? "OnlinePayment"
+                  : "");
     if (screen) {
       dispatch(markScreenChanged({ screen }));
     }
@@ -666,9 +666,9 @@ const Toolbar = () => {
               ? "CreditNotes"
               : isJournalAdjustmentsScreen
                 ? "JournalAdjustments"
-              : isOnlinePaymentScreen
-                ? "OnlinePayment"
-              : "Members");
+                : isOnlinePaymentScreen
+                  ? "OnlinePayment"
+                  : "Members");
       if (screen) {
         dispatch(resetScreenChanged({ screen }));
       }
@@ -776,7 +776,8 @@ const Toolbar = () => {
         return;
       }
 
-      const templateId = activeTemplateId || resolvedGridTemplateId || undefined;
+      const templateId =
+        activeTemplateId || resolvedGridTemplateId || undefined;
 
       if (isApplicationLikePage) {
         await fetchApplicationLikeList({
@@ -839,9 +840,7 @@ const Toolbar = () => {
     const visibleColumnKeys = screenColumns
       .filter((col) => col.isGride === true)
       .map((col) =>
-        Array.isArray(col.dataIndex)
-          ? col.dataIndex.join(".")
-          : col.dataIndex,
+        Array.isArray(col.dataIndex) ? col.dataIndex.join(".") : col.dataIndex,
       );
 
     const visibleFilterLabels = getVisibleFiltersForSave();
@@ -915,7 +914,10 @@ const Toolbar = () => {
     }
   };
 
-  const applySavedTemplateState = (view, { preserveVisibleFilters = null } = {}) => {
+  const applySavedTemplateState = (
+    view,
+    { preserveVisibleFilters = null } = {},
+  ) => {
     const nextFilters = transformFiltersFromApi(
       view?.filters || {},
       columns[tableColumnScreen] || [],
@@ -1086,10 +1088,12 @@ const Toolbar = () => {
         error.response?.data?.message ||
         error.response?.data?.error?.message ||
         error.response?.data?.data ||
-        (typeof error.response?.data === "string"
-          ? error.response.data
-          : null);
-      MyAlert("error", "Error", apiMsg || error.message || "Failed to save view");
+        (typeof error.response?.data === "string" ? error.response.data : null);
+      MyAlert(
+        "error",
+        "Error",
+        apiMsg || error.message || "Failed to save view",
+      );
     } finally {
       setIsSaving(false);
     }
@@ -1271,10 +1275,7 @@ const Toolbar = () => {
           <MembershipDashboardHeaderControls variant="inline" />
         )}
 
-        <SimpleMenu
-          title="More"
-          triggerClassName="gray-btn butn"
-        />
+        <SimpleMenu title="More" triggerClassName="gray-btn butn" />
         <Button className="gray-btn butn" onClick={handleReset}>
           Reset
         </Button>

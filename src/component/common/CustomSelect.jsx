@@ -42,10 +42,13 @@ const CustomSelect = ({
   isObjectValue = false,
   showSearch = false,
   sortOptions = false,
+  allowClear = true,
 }) => {
   const [isFocused, setIsFocused] = useState(false);
   const autoId = useId().replace(/:/g, "");
   const selectId = id ?? (name ? String(name) : `select-${autoId}`);
+  const canClear = allowClear && !disabled;
+  const useAntSelect = showSearch || canClear;
 
   const preparedOptions = useMemo(() => {
     const list = sortOptions ? sortSelectOptions(options) : options;
@@ -91,12 +94,22 @@ const CustomSelect = ({
   };
 
   const handleAntSelectChange = (selectedValue) => {
-    emitChange(selectedValue ?? "");
+    if (selectedValue === undefined || selectedValue === null) {
+      emitChange("");
+      return;
+    }
+    emitChange(selectedValue);
   };
 
   const normalizedValue = resolveDisplayedValue(value, isObjectValue);
   const antSelectValue =
     normalizedValue === "" ? undefined : normalizedValue;
+
+  const antSelectOptions = preparedOptions.map((opt) => ({
+    value: opt.optionValue,
+    label: opt.label,
+    key: opt.optionKey,
+  }));
 
   return (
     <div className={`${isMarginBtm ? "my-input-wrapper" : ""}`}>
@@ -121,28 +134,27 @@ const CustomSelect = ({
           isFocused ? "focused" : ""
         } ${disabled ? "disabled" : ""}`}
       >
-        {showSearch ? (
+        {useAntSelect ? (
           <Select
             id={selectId}
             variant="borderless"
-            showSearch
-            allowClear={!required && !disabled}
+            showSearch={showSearch}
+            allowClear={canClear}
             placeholder={placeholder}
             value={antSelectValue}
             disabled={disabled}
             className="my-input-ant-select"
             classNames={{ popup: "my-input-ant-select-dropdown" }}
             optionFilterProp="label"
-            filterOption={(input, option) =>
-              String(option?.label ?? "")
-                .toLowerCase()
-                .includes(String(input ?? "").toLowerCase())
+            filterOption={
+              showSearch
+                ? (input, option) =>
+                    String(option?.label ?? "")
+                      .toLowerCase()
+                      .includes(String(input ?? "").toLowerCase())
+                : undefined
             }
-            options={preparedOptions.map((opt) => ({
-              value: opt.optionValue,
-              label: opt.label,
-              key: opt.optionKey,
-            }))}
+            options={antSelectOptions}
             onChange={handleAntSelectChange}
             onFocus={() => setIsFocused(true)}
             onBlur={() => setIsFocused(false)}
@@ -170,7 +182,7 @@ const CustomSelect = ({
             ))}
           </select>
         )}
-        {hasError && !disabled && !showSearch && (
+        {hasError && !disabled && !useAntSelect && (
           <AiOutlineExclamationCircle className="error-icon" />
         )}
       </div>

@@ -7,6 +7,7 @@ import {
   listProfilePaymentForms,
   downloadPaymentFormPdf,
 } from "../../api/paymentFormApi";
+import { listProfileGeneratedLetters } from "../../api/correspondenceApi";
 import PaymentFormDetailDrawer from "../paymentForms/PaymentFormDetailDrawer";
 import {
   parseFilenameFromContentDisposition,
@@ -53,7 +54,21 @@ function buildColumns(onDownloadPdf, downloadingId) {
       key: "pdf",
       width: 120,
       render: (_, record) => {
-        if (!record._id) return "—";
+        if (record.documentType === "letter" && record.fileUrl) {
+          return (
+            <Tooltip title="Download letter">
+              <a
+                href={record.fileUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <DownloadOutlined style={{ fontSize: 18 }} /> DOCX
+              </a>
+            </Tooltip>
+          );
+        }
+        if (!record._id || record.documentType === "letter") return "—";
         return (
           <div
             style={{ display: "flex", alignItems: "center", gap: 8 }}
@@ -117,26 +132,43 @@ export default function DoucmentsById({
     if (!profileId) return;
     setLoading(true);
     try {
-      const items = await listProfilePaymentForms(profileId);
-      setRows(
-        items.map((item) => ({
-          key: item._id,
-          _id: item._id,
-          name: `${item.formTypeLabel || item.formType} – ${item.membershipNumber}`,
-          formType: item.formTypeLabel || item.formType,
-          status: item.status,
-          isAuthorized: Boolean(item.isAuthorized),
-          authorisationMode: item.authorisationMode || null,
-          dateUploaded: item.updatedAt
-            ? dayjs(item.updatedAt).format("YYYY-MM-DD HH:mm")
-            : "—",
-          fileUrl:
-            item.downloadUrls?.signedPdf ||
-            item.downloadUrls?.paperUpload ||
-            item.downloadUrls?.generatedPdf ||
-            null,
-        })),
-      );
+      const [items, letters] = await Promise.all([
+        listProfilePaymentForms(profileId),
+        listProfileGeneratedLetters(profileId).catch(() => []),
+      ]);
+      const paymentRows = items.map((item) => ({
+        key: item._id,
+        _id: item._id,
+        documentType: "payment_form",
+        name: `${item.formTypeLabel || item.formType} – ${item.membershipNumber}`,
+        formType: item.formTypeLabel || item.formType,
+        status: item.status,
+        isAuthorized: Boolean(item.isAuthorized),
+        authorisationMode: item.authorisationMode || null,
+        dateUploaded: item.updatedAt
+          ? dayjs(item.updatedAt).format("YYYY-MM-DD HH:mm")
+          : "—",
+        fileUrl:
+          item.downloadUrls?.signedPdf ||
+          item.downloadUrls?.paperUpload ||
+          item.downloadUrls?.generatedPdf ||
+          null,
+      }));
+      const letterRows = (letters || []).map((letter) => ({
+        key: `letter-${letter._id}`,
+        _id: letter._id,
+        documentType: "letter",
+        name: letter.displayName || letter.templateName || letter.fileName,
+        formType: "Letter",
+        status: "Generated",
+        isAuthorized: false,
+        authorisationMode: null,
+        dateUploaded: letter.createdAt
+          ? dayjs(letter.createdAt).format("YYYY-MM-DD HH:mm")
+          : "—",
+        fileUrl: letter.downloadUrl || null,
+      }));
+      setRows([...letterRows, ...paymentRows]);
     } catch {
       message.error("Could not load payment forms");
     } finally {
@@ -208,6 +240,7 @@ export default function DoucmentsById({
         selection={false}
         tablePadding={{ paddingLeft: "0", paddingRight: "0" }}
         onRowClick={(record) => {
+          if (record.documentType === "letter") return;
           if (record._id) {
             setCreateMode(false);
             setDetailId(record._id);

@@ -2,7 +2,7 @@ import React from 'react'
 import MyDeatails from '../../component/common/MyDeatails'
 import ProfileHeader from '../../component/common/ProfileHeader'
 
-function ApproveMembership() {
+function ProcessMembership() {
     return (
       
     <div className='d-flex'>
@@ -14,4 +14,4 @@ function ApproveMembership() {
   )
 }
 
-export default ApproveMembership
+export default ProcessMembership

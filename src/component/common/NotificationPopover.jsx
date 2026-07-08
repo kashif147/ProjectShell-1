@@ -7,6 +7,12 @@ import {
   getNotificationServiceUrl,
 } from "../../context/NotificationContext";
 import { NotificationRow } from "../notifications/notificationPresentation";
+import {
+  isLocalNotificationId,
+  mergeNotificationLists,
+  reconcileBadgeCount,
+} from "../../utils/notificationListUtils";
+import { LIFECYCLE_TYPES } from "../../utils/lifecycleBatchNotifications";
 
 const { Title } = Typography;
 
@@ -16,20 +22,52 @@ const NotificationPopover = ({ isOpen, onNavigateToAll, onClose }) => {
     useNotifications();
   const [clearLoading, setClearLoading] = React.useState(false);
 
-  /** Route DD prepare rows straight to the run's batch detail page. */
+  /** Route actionable notification rows to the relevant batch screen. */
   const navigateForNotification = (item) => {
     const meta = item?.metadata || {};
+    const batchId = meta.batchDetailId || meta.batchId;
+
     if (
       meta.type === "DD_PREPARE_QUEUED" ||
       meta.type === "DD_PREPARE_COMPLETED"
     ) {
-      const runId = meta.runId || meta.batchDetailId;
+      const runId = meta.runId || batchId;
       if (runId) {
         onClose?.();
         navigate("/DirectDebitBatchDetails", {
           state: { runId, search: "Direct Debit Batch Details" },
         });
       }
+      return;
+    }
+
+    if (
+      batchId &&
+      (meta.type === LIFECYCLE_TYPES.REMINDER_GENERATING ||
+        meta.type === LIFECYCLE_TYPES.REMINDER_READY)
+    ) {
+      onClose?.();
+      navigate("/RemindersDetails", {
+        state: {
+          reminderBatchTitle: meta.description || item.title,
+          reminderBatchId: batchId,
+        },
+      });
+      return;
+    }
+
+    if (
+      batchId &&
+      (meta.type === LIFECYCLE_TYPES.CANCELLATION_GENERATING ||
+        meta.type === LIFECYCLE_TYPES.CANCELLATION_READY)
+    ) {
+      onClose?.();
+      navigate("/CancellationDetail", {
+        state: {
+          cancellationBatchTitle: meta.description || item.title,
+          cancellationBatchId: batchId,
+        },
+      });
     }
   };
 
@@ -48,7 +86,7 @@ const NotificationPopover = ({ isOpen, onNavigateToAll, onClose }) => {
     );
     setBadge((prev) => Math.max((Number(prev) || 0) - 1, 0));
 
-    if (String(notificationId).startsWith("local-")) {
+    if (isLocalNotificationId(notificationId)) {
       return;
     }
 
@@ -84,8 +122,11 @@ const NotificationPopover = ({ isOpen, onNavigateToAll, onClose }) => {
         },
       );
       const { notifications: list, unreadCount } = res.data?.data ?? res.data ?? {};
-      if (Array.isArray(list)) setNotifications(list);
-      if (typeof unreadCount === "number") setBadge(unreadCount);
+      setNotifications((prev) => {
+        const merged = mergeNotificationLists(list, prev);
+        setBadge(reconcileBadgeCount(unreadCount, merged));
+        return merged;
+      });
     } catch (error) {
       console.error("Failed to fetch notifications:", error);
     }

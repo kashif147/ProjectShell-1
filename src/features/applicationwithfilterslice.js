@@ -21,6 +21,9 @@ export const getApplicationsWithFilter = createAsyncThunk(
                 error.response?.data?.message || 'Failed to fetch filtered applications'
             );
         }
+    },
+    {
+        condition: (_, { getState }) => !getState().applicationWithFilter.loading,
     }
 );
 

@@ -1,4 +1,10 @@
-import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { message, Spin } from "antd";
 import { useSelector } from "react-redux";
 import TableComponent from "../../component/common/TableComponent";
@@ -71,8 +77,8 @@ export default function MembershipListingReport() {
 
   const { isInitialized } = useSelector((state) => state.applicationWithFilter);
   const { activeTemplateId } = useSelector((state) => state.activeTemplate);
-  const { loading: templatesLoading } = useSelector(
-    (state) => state.templetefiltrsclumnapi,
+  const { templatesFetching: templatesLoading } = useSelector(
+    (state) => state.templateFiltersColumnApi,
   );
 
   const [sourceRows, setSourceRows] = useState([]);
@@ -95,11 +101,7 @@ export default function MembershipListingReport() {
     [filteredRows, searchQuery],
   );
 
-  useRegisterGridFilterRows(
-    "MembershipListingReport",
-    sourceRows,
-    screenCols,
-  );
+  useRegisterGridFilterRows("MembershipListingReport", sourceRows, screenCols);
 
   const fetchListing = useCallback(async ({ isStale } = {}) => {
     setLoading(true);

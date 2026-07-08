@@ -783,11 +783,11 @@ function MyDrawer({
               </Checkbox>
             )}
 
-            {/* Approval / Rejection */}
+            {/* Process / Rejection */}
             {isAppRej && (
               <Radio.Group value="">
-                <Radio value="approved" onClick={handleChangeApprove}>
-                  Approve
+                <Radio value="processed" onClick={handleChangeApprove}>
+                  Process
                 </Radio>
                 <CommonPopConfirm
                   title="Are you sure you want to reject?"

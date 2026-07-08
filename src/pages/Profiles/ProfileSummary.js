@@ -13,10 +13,12 @@ function ProfileSummary() {
   const { setSelectedIds } = useSelectedIds();
   const { results, loading } = useSelector((state) => state.profile);
   const { activeTemplateId } = useSelector((state) => state.activeTemplate);
-  const { loading: templatesLoading } = useSelector(
-    (state) => state.templetefiltrsclumnapi
+  const { templatesFetching: templatesLoading } = useSelector(
+    (state) => state.templateFiltersColumnApi,
   );
-  const { isInitialized } = useSelector((state) => state.applicationWithFilter);
+  const { isInitialized, currentTemplateId } = useSelector(
+    (state) => state.applicationWithFilter,
+  );
 
   const [selectedRowKeys, setSelectedRowKeys] = useState([]);
 
@@ -25,19 +27,25 @@ function ProfileSummary() {
       setSelectedRowKeys(keys || []);
       setSelectedIds(keys || []);
     },
-    [setSelectedIds]
+    [setSelectedIds],
   );
 
   useEffect(() => {
-    if (!activeTemplateId) return;
+    if (!isInitialized || templatesLoading) return;
     dispatch(
       getProfilesWithFilter({
-        templateId: activeTemplateId,
+        templateId: currentTemplateId || activeTemplateId || "",
         page: 1,
         limit: 500,
-      })
+      }),
     );
-  }, [dispatch, activeTemplateId]);
+  }, [
+    dispatch,
+    currentTemplateId,
+    activeTemplateId,
+    isInitialized,
+    templatesLoading,
+  ]);
 
   useEffect(() => {
     return () => {

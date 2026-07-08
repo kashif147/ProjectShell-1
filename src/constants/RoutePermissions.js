@@ -13,6 +13,7 @@ export const RoutePermissions = {
   "Transfers": "transferrequests:read",
   "ChangCateSumm": "changeofcategory:read",
   "Cancallation": "subscriptions:read",
+  "YearEndRenewal": "subscriptions:write",
   "RemindersSummary": "notifications:read",
 
   // Finance
@@ -42,8 +43,8 @@ export const RoutePermissions = {
   "CorrespondencesSummary": "communication:read",
 
   // Configuration & Management
-  "templeteSummary": "templates:read",
-  "templeteConfig": "templates:read",
+  "templateSummary": "templates:read",
+  "templateConfig": "templates:read",
   "Configuration": "portal:read", // System Configuration
   "PermissionManagement": "role:permission:assign",
   "RoleManagement": "role:read",

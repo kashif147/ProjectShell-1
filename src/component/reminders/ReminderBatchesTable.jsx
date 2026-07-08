@@ -1,11 +1,15 @@
 import React, { useMemo } from "react";
-import { Table, Tag } from "antd";
+import { Button, Popconfirm, Table, Tag } from "antd";
 import "./ReminderBatchesTable.css";
-import { RightOutlined } from "@ant-design/icons";
+import { DeleteOutlined, RightOutlined } from "@ant-design/icons";
 import { LuRefreshCw } from "react-icons/lu";
 import UnifiedPagination from "../common/UnifiedPagination";
 import { formatDateDdMmYyyy } from "../../utils/Utilities";
-import { SOFT_BATCH_STATUS_TAGS } from "../../utils/softTagStyles";
+import {
+  REMINDER_BATCH_STATUS_TAG_STYLE,
+  reminderBatchStatusLabel,
+  reminderBatchStatusTagColor,
+} from "../../utils/reminderBatchStatus";
 
 /** Same height for row 1 in stack columns so row 2 (ID / trigger / created date / breakdown) lines up */
 const STACK_ROW1_H = 24;
@@ -44,6 +48,36 @@ function batchGrandTotal(stats) {
 }
 
 function PerfCell({ positive, pct, size = 13 }) {
+  if (positive == null) {
+    return (
+      <span
+        style={{
+          fontWeight: 600,
+          fontSize: size,
+          color: "#8c8c8c",
+          lineHeight: 1.3,
+          whiteSpace: "nowrap",
+        }}
+      >
+        —
+      </span>
+    );
+  }
+  if (pct == null) {
+    return (
+      <span
+        style={{
+          fontWeight: 600,
+          fontSize: size,
+          color: positive ? "#389e0d" : "#cf1322",
+          lineHeight: 1.3,
+          whiteSpace: "nowrap",
+        }}
+      >
+        New
+      </span>
+    );
+  }
   const p = typeof pct === "number" ? pct.toFixed(1) : pct;
   return (
     <span
@@ -64,22 +98,19 @@ function PerfCell({ positive, pct, size = 13 }) {
 }
 
 function perfSecondaryLabel(k, perf) {
+  if (!perf?.hasComparison) return `${k} (—)`;
+  if (perf.pct == null) return `${k} (new)`;
   const p = typeof perf.pct === "number" ? perf.pct.toFixed(1) : perf.pct;
   const arrow = perf.positive ? "↗" : "↘";
   return `${k} (${arrow}${p}%)`;
 }
 
-function statusTextToTagColor(statusText, hasTriggeredDate) {
-  const s = String(statusText || "").toLowerCase();
-  if (s === "completed" || s === "executed" || s === "done") return "success";
-  if (s === "failed" || s === "error") return "error";
-  if (s === "draft" || s === "pending") return "warning";
-  return hasTriggeredDate ? "success" : "default";
-}
 // helper function to get the tag color based on the status text
 function ReminderBatchesTable({
   dataSource,
   onOpenBatch,
+  onDeleteBatch,
+  deletingBatchId,
   total,
   current,
   pageSize,
@@ -139,21 +170,14 @@ function ReminderBatchesTable({
           const statusLabel = String(
             record.statusLabel || (completed ? "completed" : "pending"),
           );
-          const prettyStatus =
-            statusLabel.charAt(0).toUpperCase() +
-            statusLabel.slice(1).toLowerCase();
-          const tagColor = statusTextToTagColor(statusLabel, completed);
+          const prettyStatus = reminderBatchStatusLabel(statusLabel, completed);
+          const tagColor = reminderBatchStatusTagColor(statusLabel, completed);
           return (
             <div>
               <div style={stackRow1}>
                 <Tag
-                  color={completed ? "success" : "warning"}
-                  style={{
-                    margin: 0,
-                    fontSize: 11,
-                    lineHeight: "18px",
-                    padding: "0 6px",
-                  }}
+                  color={tagColor}
+                  style={REMINDER_BATCH_STATUS_TAG_STYLE}
                 >
                   {prettyStatus}
                 </Tag>
@@ -259,8 +283,9 @@ function ReminderBatchesTable({
           const perfs = keys.map(
             (k) =>
               record.performance?.[k] || {
-                positive: true,
-                pct: 0,
+                positive: null,
+                pct: null,
+                hasComparison: false,
               },
           );
           return (
@@ -290,27 +315,48 @@ function ReminderBatchesTable({
       },
       {
         title: "",
-        key: "chevron",
-        width: 48,
+        key: "actions",
+        width: 72,
         fixed: "right",
         align: "center",
         onCell: () => ({
           className: "reminder-batches-table__cell-stack",
           style: { verticalAlign: "top" },
         }),
-        render: () => (
-          <div>
-            <div style={{ ...stackRow1, justifyContent: "center" }}>
-              <RightOutlined style={{ color: "#d9d9d9", fontSize: 12 }} />
-            </div>
-            <div style={stackRow2} aria-hidden>
-              &nbsp;
-            </div>
+        render: (_, record) => (
+          <div
+            style={{
+              ...stackRow1,
+              justifyContent: "center",
+              gap: 4,
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            {record.isDraft && onDeleteBatch ? (
+              <Popconfirm
+                title="Delete draft batch?"
+                description="This permanently removes the batch and cannot be undone."
+                okText="Delete"
+                cancelText="Cancel"
+                okButtonProps={{ danger: true }}
+                onConfirm={() => onDeleteBatch(record)}
+              >
+                <Button
+                  type="text"
+                  size="small"
+                  danger
+                  icon={<DeleteOutlined />}
+                  loading={deletingBatchId === record.id}
+                  aria-label="Delete draft batch"
+                />
+              </Popconfirm>
+            ) : null}
+            <RightOutlined style={{ color: "#d9d9d9", fontSize: 12 }} />
           </div>
         ),
       },
     ],
-    [sortColumnKey, sortOrder],
+    [sortColumnKey, sortOrder, onDeleteBatch, deletingBatchId],
   );
 
   const handleTableChange = (_pagination, _filters, sorter) => {

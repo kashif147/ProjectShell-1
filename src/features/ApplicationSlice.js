@@ -71,7 +71,7 @@ export const getAllApplications = createAsyncThunk(
         const statusMap = {
           'inprogress': 'in-progress',
           'in-progress': 'in-progress',
-          'approved': 'approved',
+          'processed': 'processed',
           'rejected': 'rejected',
           'submitted': 'submitted',
           'draft': 'draft'
@@ -92,7 +92,7 @@ export const getAllApplications = createAsyncThunk(
           console.log('🔍 Using NOT EQUAL operator');
 
           // Define all possible status values
-          const allStatusValues = ['in-progress', 'approved', 'rejected', 'submitted'];
+          const allStatusValues = ['in-progress', 'processed', 'rejected', 'submitted'];
 
           // For "!=" operator, we want statuses that are NOT in the selected values
           const excludedStatuses = filteredStatus;

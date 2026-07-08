@@ -31,8 +31,8 @@ const RefundsSummary = () => {
 
   const { isInitialized } = useSelector((state) => state.applicationWithFilter);
   const { activeTemplateId } = useSelector((state) => state.activeTemplate);
-  const { loading: templatesLoading } = useSelector(
-    (state) => state.templetefiltrsclumnapi,
+  const { templatesFetching: templatesLoading } = useSelector(
+    (state) => state.templateFiltersColumnApi,
   );
 
   const [filterSourceRows, setFilterSourceRows] = useState([]);
@@ -96,11 +96,7 @@ const RefundsSummary = () => {
 
   const rows = useMemo(
     () =>
-      applyClientSideRowFilters(
-        filterSourceRows,
-        filtersState,
-        refundColumns,
-      ),
+      applyClientSideRowFilters(filterSourceRows, filtersState, refundColumns),
     [filterSourceRows, filtersState, refundColumns],
   );
 

@@ -44,6 +44,7 @@ const Breadcrumb = () => {
     Events: { icon: "📅", route: "/EventsDashboard" },
     Configuration: { icon: "⚙️", route: "/Configuration" },
     Reports: { icon: "📊", route: "/Reports" },
+    "Year-End Renewal": { icon: "📅", route: "/YearEndRenewal" },
     Settings: { icon: "⚙️", route: "/Configuration" },
     Courses: { icon: "📚", route: "/Courses" },
     "Professional Development": {
@@ -361,6 +362,11 @@ const Breadcrumb = () => {
       page: "Payment Forms",
       icon: "📋",
     },
+    "/YearEndRenewal": {
+      module: "Year-End Renewal",
+      page: "Year-End Renewal",
+      icon: "📅",
+    },
     "/applicationMgt": {
       module: "Subscriptions & Rewards",
       page: "Applications Mangment",
@@ -368,7 +374,7 @@ const Breadcrumb = () => {
     },
     "/AproveMembersip": {
       module: "Subscriptions & Rewards",
-      page: "Approve Membership",
+      page: "Process Membership",
       icon: "✅",
       recordIdField: "code",
     },
@@ -489,14 +495,14 @@ const Breadcrumb = () => {
       page: "Region",
       icon: "📍",
     },
-    "/templeteConfig": {
+    "/templateConfig": {
       module: "Configuration",
-      page: "Templete Config",
+      page: "template Config",
       icon: "⚙️",
     },
-    "/templeteSummary": {
+    "/templateSummary": {
       module: "Configuration",
-      page: "Templete Summary",
+      page: "template Summary",
       icon: "⚙️",
     },
 
@@ -584,7 +590,7 @@ const Breadcrumb = () => {
       listingSearch: "Applications",
     },
     "/AproveMembersip": {
-      pageLabel: "Approve Membership",
+      pageLabel: "Process Membership",
       listingPath: "/Applications",
       listingSearch: "Applications",
     },
@@ -853,6 +859,7 @@ const Breadcrumb = () => {
       Correspondence: "/CorrespondenceDashboard",
       Finance: "/onlinePayment",
       Reports: "/Reports",
+      "Year-End Renewal": "/YearEndRenewal",
       Events: "/EventsDashboard",
       Settings: "/Configuration",
       Courses: "/Courses",

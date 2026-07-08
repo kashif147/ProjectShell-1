@@ -61,6 +61,15 @@ import { isMembershipReportGridPath } from "../../constants/membershipReportRout
 
 const EditableContext = React.createContext(null);
 
+const getColumnIdentity = (col, fallbackIndex = 0) => {
+  if (!col) return `idx:${fallbackIndex}`;
+  if (Array.isArray(col.dataIndex)) return `data:${col.dataIndex.join(".")}`;
+  if (col.dataIndex) return `data:${col.dataIndex}`;
+  if (col.key) return `key:${col.key}`;
+  if (col.title) return `title:${col.title}`;
+  return `idx:${fallbackIndex}`;
+};
+
 const EditableRow = ({ index, ...props }) => {
   const [form] = Form.useForm();
   return (
@@ -271,9 +280,9 @@ const TableComponent = ({
       ?.filter((item) => item?.isGride)
       ?.map((item, index) => ({
         ...item,
-        key: `${index}`,
-        onHeaderCell: () => ({ id: `${index}` }),
-        onCell: () => ({ id: `${index}` }),
+        key: getColumnIdentity(item, index),
+        onHeaderCell: () => ({ id: getColumnIdentity(item, index) }),
+        onCell: () => ({ id: getColumnIdentity(item, index) }),
       })) || []
   );
 
@@ -329,19 +338,14 @@ const TableComponent = ({
   const [columnsForFilter, setColumnsForFilter] = useState(() =>
     (columns?.[screenName] || [])?.map((item, index) => ({
       ...item,
-      key: `${index}`,
-      onHeaderCell: () => ({ id: `${index}` }),
-      onCell: () => ({ id: `${index}` }),
+      key: getColumnIdentity(item, index),
+      onHeaderCell: () => ({ id: getColumnIdentity(item, index) }),
+      onCell: () => ({ id: getColumnIdentity(item, index) }),
     })) || []
   );
 
   const getColumnStableKey = useCallback((col, fallbackIndex = 0) => {
-    if (!col) return `idx:${fallbackIndex}`;
-    if (Array.isArray(col.dataIndex)) return `data:${col.dataIndex.join(".")}`;
-    if (col.dataIndex) return `data:${col.dataIndex}`;
-    if (col.title) return `title:${col.title}`;
-    if (col.key) return `key:${col.key}`;
-    return `idx:${fallbackIndex}`;
+    return getColumnIdentity(col, fallbackIndex);
   }, []);
 
   const sortUnselectedAlphabetically = useCallback((list = []) => {
@@ -396,7 +400,7 @@ const TableComponent = ({
   useEffect(() => {
     const rawMenuColumns = (columns?.[screenName] || []).map((item, index) => ({
       ...item,
-      key: `${index}`,
+      key: getColumnIdentity(item, index),
       isVisible: item.isVisible !== false,
     }));
 
@@ -1354,7 +1358,7 @@ const TableComponent = ({
         strategy={horizontalListSortingStrategy}
       >
         <div
-          className="common-table "
+          className={`common-table ${screenName === "Applications" ? "applications-table" : ""}`}
           style={{
             paddingLeft: "34px",
             paddingRight: "34px",

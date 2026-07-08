@@ -21,9 +21,12 @@ import {
   getGridTemplates,
   deleteGridTemplate,
   setDefaultGridTemplate,
-} from "../../features/templete/templetefiltrsclumnapi";
+} from "../../features/template/templateFiltersColumnApi";
 import { useAuthorization } from "../../context/AuthorizationContext";
-import { getViewById, clearSelectedView } from "../../features/views/ViewByIdSlice";
+import {
+  getViewById,
+  clearSelectedView,
+} from "../../features/views/ViewByIdSlice";
 import {
   setActiveTemplateId,
   clearActiveTemplateId,
@@ -31,6 +34,7 @@ import {
 import { getApplicationsWithFilter } from "../../features/applicationwithfilterslice";
 import { getPaymentFormsWithFilter } from "../../features/paymentFormsWithFilterSlice";
 import { getSubscriptionsWithTemplate } from "../../features/subscription/subscriptionSlice";
+import { getProfilesWithFilter } from "../../features/profiles/ProfileSlice";
 import { useTableColumns } from "../../context/TableColumnsContext ";
 import { useFilters } from "../../context/FilterContext";
 import { useLocation } from "react-router-dom";
@@ -73,6 +77,10 @@ import {
   buildColumnLabelsMap,
 } from "../../config/gridColumnDefaults";
 import {
+  GRID_SCREEN_PATH_TO_TEMPLATE_TYPE,
+  isGridTemplateRoute,
+} from "../../utils/gridTemplateRoutes";
+import {
   buildTemplateMetaWithVisibleFilters,
   persistVisibleFiltersToStorage,
   resolveTemplateVisibleFilters,
@@ -83,8 +91,8 @@ const SaveViewMenu = ({ className, style }) => {
   const location = useLocation();
   const { hasAnyRole } = useAuthorization();
   const canEditGridTemplates = hasAnyRole(["SU", "ASU"]);
-  const { templates, loading } = useSelector(
-    (state) => state.templetefiltrsclumnapi,
+  const { templates, loading, templatesFetching } = useSelector(
+    (state) => state.templateFiltersColumnApi,
   );
 
   /** Bust Dropdown cache + drive re-render when any template’s isDefault changes after API refresh */
@@ -100,9 +108,7 @@ const SaveViewMenu = ({ className, style }) => {
         .map(
           (t) =>
             `${String(t._id)}:${
-              t && (t.isDefault === true || t.isDefault === "true")
-                ? 1
-                : 0
+              t && (t.isDefault === true || t.isDefault === "true") ? 1 : 0
             }`,
         )
         .join(",") || "";
@@ -115,7 +121,7 @@ const SaveViewMenu = ({ className, style }) => {
     (state) => state.paymentFormsWithFilter || {},
   );
   const { activeTemplateId } = useSelector((state) => state.activeTemplate);
-  const { selectedView, loading: viewLoading } = useSelector(
+  const { selectedView, loading: viewLoading, error: viewByIdError } = useSelector(
     (state) => state.viewById,
   );
   /** Re-run apply when getViewById content changes (application templates often need full detail for filters). */
@@ -162,34 +168,7 @@ const SaveViewMenu = ({ className, style }) => {
   const screenNameForApi = rawScreenName.toLowerCase(); // API uses 'application'
 
   // Application screens map to 'application' templateType
-  const screenMapping = {
-    applications: "application",
-    paymentforms: "payment forms",
-    members: "members",
-    membership: "members",
-    summary: "profile",
-    eventsdashboard: "eventsdashboard",
-    creditnotes: "creditnotes",
-    journaladjustments: "journaladjustments",
-    onlinepayment: "onlinepayment",
-    refunds: "refunds",
-    "write-offs": "writeoffs",
-    writeoffs: "writeoffs",
-    generalledger: "generalledger",
-    reconciliation: "reconciliation",
-    membershiplistingreport: "membershiplisting",
-    statisticsreport: "statisticsreport",
-    workplacebreakdownreport: "workplacebreakdownreport",
-    creditorslistreport: "creditorslistreport",
-    debtorslistreport: "debtorslistreport",
-    correspondencesummary: "notification",
-    correspondencedashboard: "notification",
-    communication: "notification",
-    communicationbatchdetail: "notification",
-    inappnotifications: "notification",
-    audithistory: "audithistory",
-    historybyid: "audithistory",
-  };
+  const screenMapping = GRID_SCREEN_PATH_TO_TEMPLATE_TYPE;
 
   const normalizeTemplateType = (type) =>
     String(type || "")
@@ -197,6 +176,7 @@ const SaveViewMenu = ({ className, style }) => {
       .toLowerCase();
   const targetTemplateType =
     screenMapping[screenNameForApi] || screenNameForApi;
+  const isGridTemplateScreen = isGridTemplateRoute(location.pathname);
   const isMembersTemplateType =
     normalizeTemplateType(targetTemplateType) === "member" ||
     normalizeTemplateType(targetTemplateType) === "members";
@@ -207,8 +187,8 @@ const SaveViewMenu = ({ className, style }) => {
       normalizeTemplateType(template?.templateType) === "subscription");
 
   const resolvedCurrentTemplateId =
-    activeTemplateId ||
-    (isPaymentFormsPage ? paymentFormsTemplateId : currentTemplateId);
+    (isPaymentFormsPage ? paymentFormsTemplateId : currentTemplateId) ||
+    activeTemplateId;
 
   const isActiveSystemDefault = useMemo(() => {
     const id = String(resolvedCurrentTemplateId || "").trim();
@@ -229,11 +209,8 @@ const SaveViewMenu = ({ className, style }) => {
   };
 
   const resetScreenInitState = () => {
-    if (isPaymentFormsPage) {
-      dispatch(resetPaymentFormsInitialization());
-      return;
-    }
     dispatch(resetInitialization());
+    dispatch(resetPaymentFormsInitialization());
   };
 
   const setScreenTemplateId = (templateId) => {
@@ -269,6 +246,16 @@ const SaveViewMenu = ({ className, style }) => {
       dispatch(
         getApplicationsWithFilter({
           templateId,
+          page: 1,
+          limit: 500,
+        }),
+      );
+      return;
+    }
+    if (activePage === "Profile") {
+      dispatch(
+        getProfilesWithFilter({
+          templateId: templateId || "",
           page: 1,
           limit: 500,
         }),
@@ -361,7 +348,10 @@ const SaveViewMenu = ({ className, style }) => {
       });
       setActiveView(t.name);
       initializeScreenWithTemplate(t._id || "");
-      fetchListingByTemplate(t._id || "");
+      // Members list fetch is owned by pages/subscription/Memebers.js after init.
+      if (!isMembersTemplateType) {
+        fetchListingByTemplate(t._id || "");
+      }
       dispatch(resetScreenChanged({ screen: activePage }));
     },
     [
@@ -387,36 +377,38 @@ const SaveViewMenu = ({ className, style }) => {
     }, {});
 
   useEffect(() => {
+    if (!isGridTemplateScreen) return;
     dispatch(getGridTemplates({ type: targetTemplateType }));
-  }, [dispatch, targetTemplateType]);
+  }, [dispatch, targetTemplateType, isGridTemplateScreen]);
 
   // Consolidate Initialization Logic: Reset and Apply Template on Screen Change
   const lastScreen = React.useRef(null);
   /** Only run full applyTemplate/applyTemplateFilters when switching to a new template id — not on getViewById refetch of the same view (that was stomping user edits and hiding Save). */
   const lastAppliedTemplateIdRef = React.useRef(null);
+  /** Skip re-applying list init when getGridTemplates refetches the same screen + template. */
+  const lastListingInitKeyRef = React.useRef(null);
+  const lastViewByIdRequestRef = React.useRef(null);
   /** When user picks a view from the menu, allow one effect run even if hasUserOverridden is true (races with other updates). */
   const viewMenuPickForceApplyRef = React.useRef(false);
   useEffect(() => {
+    if (!isGridTemplateScreen) return;
     // 🛡️ Always reset immediately IF AND ONLY IF the screen actually changed
     if (lastScreen.current !== targetTemplateType) {
       lastAppliedTemplateIdRef.current = null;
+      lastListingInitKeyRef.current = null;
+      lastViewByIdRequestRef.current = null;
       dispatch(resetScreenChanged({}));
       resetScreenInitState();
       dispatch(clearActiveTemplateId());
       lastScreen.current = targetTemplateType;
     }
 
-    if (loading || !templates) {
+    if (templatesFetching || !templates) {
       return;
     }
 
     // 1. Check if we have a persisted view in context for this screen
     const persistedTemplate = selectedTemplates[targetTemplateType];
-
-    if (persistedTemplate) {
-      handleApplyView(persistedTemplate, false); // false to avoid redundant context update
-      return;
-    }
 
     // 2. Fall back to user default or system default
     const systemView = isTemplateForCurrentType(templates.systemDefault)
@@ -430,45 +422,106 @@ const SaveViewMenu = ({ className, style }) => {
 
     const defaultView = userViews.find((t) => t.isDefault);
 
-    if (defaultView) {
-      dispatch(setActiveTemplateId(defaultView._id));
-      handleApplyView(defaultView);
-    } else if (systemView) {
-      dispatch(setActiveTemplateId(systemView._id));
-      handleApplyView(systemView);
-    } else {
-      const page = GRID_SYSTEM_DEFAULT_PAGES[targetTemplateType];
-      const colScreen = tableColumnScreen;
-      if (page?.columns?.length) {
-        const columnKeys = buildVisibleColumnKeys(page.columns);
-        const labels = buildColumnLabelsMap(page.columns);
-        applyTemplate(colScreen, columnKeys, columnKeys, labels, labels);
-        applyTemplateFilters(transformFiltersForApply(page.filters || {}), {
-          savedVisibleFilters: Array.isArray(page.visibleFilters)
-            ? page.visibleFilters
-            : null,
-        });
-      }
-      setActiveView("System default (local)");
-      dispatch(setActiveTemplateId(null));
-      initializeScreenWithTemplate("");
-      dispatch(resetScreenChanged({ screen: activePage }));
+    const templateToApply =
+      persistedTemplate && isTemplateForCurrentType(persistedTemplate)
+        ? persistedTemplate
+        : defaultView || systemView || null;
+
+    const listingInitKey = templateToApply
+      ? `${targetTemplateType}|${String(templateToApply._id)}`
+      : `${targetTemplateType}|local`;
+
+    if (lastListingInitKeyRef.current === listingInitKey) {
+      return;
     }
-  }, [dispatch, targetTemplateType, templates, loading, isMembersTemplateType, activePage]);
+    lastListingInitKeyRef.current = listingInitKey;
+
+    if (templateToApply) {
+      const usingPersisted =
+        persistedTemplate &&
+        isTemplateForCurrentType(persistedTemplate) &&
+        String(persistedTemplate._id) === String(templateToApply._id);
+      handleApplyView(templateToApply, !usingPersisted);
+      return;
+    }
+
+    const page = GRID_SYSTEM_DEFAULT_PAGES[targetTemplateType];
+    const colScreen = tableColumnScreen;
+    if (page?.columns?.length) {
+      const columnKeys = buildVisibleColumnKeys(page.columns);
+      const labels = buildColumnLabelsMap(page.columns);
+      applyTemplate(colScreen, columnKeys, columnKeys, labels, labels);
+      applyTemplateFilters(transformFiltersForApply(page.filters || {}), {
+        savedVisibleFilters: Array.isArray(page.visibleFilters)
+          ? page.visibleFilters
+          : null,
+      });
+    }
+    setActiveView("System default (local)");
+    dispatch(setActiveTemplateId(null));
+    initializeScreenWithTemplate("");
+    dispatch(resetScreenChanged({ screen: activePage }));
+  }, [
+    dispatch,
+    targetTemplateType,
+    templateListRenderKey,
+    templatesFetching,
+    isMembersTemplateType,
+    isGridTemplateScreen,
+  ]);
 
   useEffect(() => {
-    if (activeTemplateId) {
-      dispatch(getViewById({ id: activeTemplateId, type: targetTemplateType }));
+    if (!isGridTemplateScreen || !activeTemplateId) {
+      if (!activeTemplateId) {
+        lastViewByIdRequestRef.current = null;
+      }
+      return;
     }
+    const requestKey = `${targetTemplateType}|${String(activeTemplateId)}`;
+    if (lastViewByIdRequestRef.current === requestKey) {
+      return;
+    }
+    lastViewByIdRequestRef.current = requestKey;
+    dispatch(getViewById({ id: activeTemplateId, type: targetTemplateType }));
   }, [dispatch, activeTemplateId, targetTemplateType]);
+
+  // If GET /templates/:id fails transiently, apply from the list payload so the grid can still init.
+  useEffect(() => {
+    if (!isGridTemplateScreen || !activeTemplateId || viewLoading) return;
+    if (selectedView || !viewByIdError || !templates) return;
+    const tid = String(activeTemplateId);
+    const fromList = [
+      templates.systemDefault,
+      ...(templates.userTemplates || []),
+    ].find(
+      (t) =>
+        t &&
+        String(t._id) === tid &&
+        isTemplateForCurrentType(t),
+    );
+    if (!fromList) return;
+    applyViewPayloadToState(fromList);
+  }, [
+    isGridTemplateScreen,
+    activeTemplateId,
+    viewLoading,
+    selectedView,
+    viewByIdError,
+    templates,
+    applyViewPayloadToState,
+  ]);
 
   // Apply template settings when view details are fetched (once per active template id)
   useEffect(() => {
+    if (!isGridTemplateScreen) return;
     if (!activeTemplateId) {
       lastAppliedTemplateIdRef.current = null;
       return;
     }
-    if (!selectedView || String(selectedView._id) !== String(activeTemplateId)) {
+    if (
+      !selectedView ||
+      String(selectedView._id) !== String(activeTemplateId)
+    ) {
       return;
     }
     if (viewTemplateDetailKey) {
@@ -485,14 +538,13 @@ const SaveViewMenu = ({ className, style }) => {
     }
     lastAppliedTemplateIdRef.current = viewTemplateDetailKey;
 
-    applyViewPayloadToState(
-      normalizeViewTemplatePayload(selectedView),
-    );
+    applyViewPayloadToState(normalizeViewTemplatePayload(selectedView));
   }, [
     viewTemplateDetailKey,
     activeTemplateId,
     applyViewPayloadToState,
     hasUserOverriddenTemplateFilters,
+    isGridTemplateScreen,
   ]);
 
   const handleApplyView = (
@@ -503,6 +555,8 @@ const SaveViewMenu = ({ className, style }) => {
     if (userPickedView) {
       acknowledgeUserChoseNewTemplate();
       viewMenuPickForceApplyRef.current = true;
+      lastListingInitKeyRef.current = null;
+      lastViewByIdRequestRef.current = null;
       // Reset so the getViewById follow-up is allowed to run (list payloads often
       // omit or shallow-copy filters; the detail response is the source of truth).
       lastAppliedTemplateIdRef.current = null;
@@ -562,6 +616,8 @@ const SaveViewMenu = ({ className, style }) => {
 
         // If the deleted view was active, we need to clear it so initialization can reset to system default
         if (id === activeTemplateId) {
+          lastListingInitKeyRef.current = null;
+          lastViewByIdRequestRef.current = null;
           dispatch(setActiveTemplateId(null));
           updateSelectedTemplate(targetTemplateType, null);
         }
@@ -625,7 +681,11 @@ const SaveViewMenu = ({ className, style }) => {
         },
       });
 
-      MyAlert("success", "Success", `View "${savedViewName}" saved successfully`);
+      MyAlert(
+        "success",
+        "Success",
+        `View "${savedViewName}" saved successfully`,
+      );
       setIsModalVisible(false);
       setViewName("");
 
@@ -656,7 +716,9 @@ const SaveViewMenu = ({ className, style }) => {
         handleApplyView(enrichedTemplate, true, { userPickedView: true });
         // Re-apply from the template payload: getViewById effect can skip when
         // hasUserOverriddenTemplateFilters is still true, leaving the chip UI out of sync.
-        const tFilters = transformFiltersForApply(enrichedTemplate.filters || {});
+        const tFilters = transformFiltersForApply(
+          enrichedTemplate.filters || {},
+        );
         const colScreen = tableColumnScreen;
         applyTemplate(
           colScreen,
@@ -667,8 +729,10 @@ const SaveViewMenu = ({ className, style }) => {
         );
         applyTemplateFilters(tFilters, {
           savedVisibleFilters:
-            resolveTemplateVisibleFilters(enrichedTemplate, targetTemplateType) ||
-            preservedVisibleFilters,
+            resolveTemplateVisibleFilters(
+              enrichedTemplate,
+              targetTemplateType,
+            ) || preservedVisibleFilters,
         });
         setActiveView(savedViewName);
         lastAppliedTemplateIdRef.current = keyForView(savedTemplate);
@@ -677,17 +741,21 @@ const SaveViewMenu = ({ className, style }) => {
       }
 
       // 3. Refresh the grid data
-      fetchListingByTemplate(savedTemplate?._id || resolvedCurrentTemplateId || "");
+      fetchListingByTemplate(
+        savedTemplate?._id || resolvedCurrentTemplateId || "",
+      );
     } catch (error) {
       console.error("Error saving template:", error);
       const apiMsg =
         error.response?.data?.message ||
         error.response?.data?.error?.message ||
         error.response?.data?.data ||
-        (typeof error.response?.data === "string"
-          ? error.response.data
-          : null);
-      MyAlert("error", "Error", apiMsg || error.message || "Failed to save template");
+        (typeof error.response?.data === "string" ? error.response.data : null);
+      MyAlert(
+        "error",
+        "Error",
+        apiMsg || error.message || "Failed to save template",
+      );
     } finally {
       setSaving(false);
     }
@@ -753,7 +821,7 @@ const SaveViewMenu = ({ className, style }) => {
         boxShadow: "0 2px 8px rgba(0,0,0,0.15)",
       }}
     >
-      {loading ? (
+      {loading || templatesFetching ? (
         <div style={{ padding: "20px", textAlign: "center" }}>
           <Spin size="small" />
         </div>
@@ -829,8 +897,7 @@ const SaveViewMenu = ({ className, style }) => {
                   template,
                   !!(
                     defaultUserTemplate &&
-                    String(template._id) ===
-                      String(defaultUserTemplate._id)
+                    String(template._id) === String(defaultUserTemplate._id)
                   ),
                 ),
               )}
@@ -840,6 +907,10 @@ const SaveViewMenu = ({ className, style }) => {
       )}
     </div>
   );
+
+  if (!isGridTemplateScreen) {
+    return null;
+  }
 
   return (
     <div

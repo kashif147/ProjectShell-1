@@ -1,6 +1,7 @@
 // slices/categoryLookupSlice.js
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import axios from 'axios';
+import { filterMembershipCategoryOptionsForPortalUser } from '../utils/membershipCategoryLabels';
 
 const api = `${process.env.REACT_APP_POLICY_SERVICE_URL}/products/by-type`;
 
@@ -18,11 +19,13 @@ export const getCategoryLookup = createAsyncThunk(
       });
 
       // Transform the API response to [{label: "name", value: "_id"}]
-      const transformedData = response.data.data.products.map(product => ({
-        label: product.name,
-        value: product._id,
-        key: product._id,
-      }));
+      const transformedData = filterMembershipCategoryOptionsForPortalUser(
+        response.data.data.products.map(product => ({
+          label: product.name,
+          value: product._id,
+          key: product._id,
+        })),
+      );
 
       return {
         originalData: response.data, // Keep original data if needed

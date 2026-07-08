@@ -16,6 +16,7 @@ import {
   FaRegClipboard,
   FaRegFileAlt,
   FaCogs,
+  FaCalendarCheck,
 } from "react-icons/fa";
 import { TbReportAnalytics } from "react-icons/tb";
 import { MdOutlineWork } from "react-icons/md";
@@ -38,7 +39,6 @@ import { useTenantBranding } from "../../context/TenantBrandingContext";
 const AppLauncherMenu = ({ closeDropdown }) => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const { permissions, roles } = useAuthorization();
   const menuLbl = useSelector((state) => state.menuLbl);
   let userdata = localStorage.getItem("userdata");
   userdata = JSON.parse(userdata);
@@ -54,6 +54,7 @@ const AppLauncherMenu = ({ closeDropdown }) => {
       Reports: "/Reports",
       Settings: "/Settings",
       "Issues Management": "/CasesSummary",
+      "Year-End Renewal": "/YearEndRenewal",
     };
 
     dispatch(updateMenuLbl({ key, value }));
@@ -115,16 +116,33 @@ const AppLauncherMenu = ({ closeDropdown }) => {
       permissions: ["menu:reports:access"],
       route: "/Reports",
     },
+    {
+      name: "Year-End Renewal",
+      icon: FaCalendarCheck,
+      bgColor: "#2E7D32",
+      permissions: ["subscriptions:write", "payments:write"],
+      roles: ["SU"],
+      route: "/YearEndRenewal",
+    },
   ];
 
-  const { hasPermission } = useAuthorization();
+  const { hasPermission, hasAnyRole } = useAuthorization();
 
   const accessibleApps = appItems.filter((app) => {
-    if (!app.permissions || app.permissions.length === 0) {
+    if (
+      (!app.permissions || app.permissions.length === 0) &&
+      (!app.roles || app.roles.length === 0)
+    ) {
       return true;
     }
 
-    return app.permissions.some((perm) => hasPermission(perm));
+    const hasRequiredPermission = (app.permissions || []).some((perm) =>
+      hasPermission(perm),
+    );
+    const hasRequiredRole =
+      Array.isArray(app.roles) && app.roles.length > 0 && hasAnyRole(app.roles);
+
+    return hasRequiredPermission || hasRequiredRole;
   });
 
   return (
@@ -139,6 +157,7 @@ const AppLauncherMenu = ({ closeDropdown }) => {
             "Issues Management": "Issues Management",
             Configuration: "Configuration",
             Reports: "Reports",
+            "Year-End Renewal": "Year-End Renewal",
           };
 
           const menuKey = menuLabelMap[app.name] || app.name;
@@ -241,7 +260,7 @@ function Header() {
   const { badge } = useNotifications();
   const [notificationOpen, setNotificationOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
-  
+
   // Read directly from localStorage as requested
   const userDataRaw = localStorage.getItem("userData");
   const userData = userDataRaw ? JSON.parse(userDataRaw) : {};
@@ -395,8 +414,8 @@ function Header() {
           /> */}
           <MemberSearch
             headerStyle={true}
-          // onSelectBehavior="navigate" (default)
-          // navigateTo="/Details" (default)
+            // onSelectBehavior="navigate" (default)
+            // navigateTo="/Details" (default)
           />
         </div>
 

@@ -36,6 +36,21 @@ export const defaultRegionalSettings = {
   dateFormat: "DD/MM/YYYY",
 };
 
+export const defaultLifecycleBatches = {
+  reminder: {
+    generateMode: "manual",
+    executeMode: "manual",
+  },
+  cancellation: {
+    generateMode: "manual",
+    executeMode: "manual",
+  },
+  schedule: {
+    dayMode: "FIRST_WORKING_DAY",
+  },
+  notificationRecipientRoleCodes: ["MO"],
+};
+
 export const mergeTenantFormData = (tenant) => ({
   name: "",
   code: "",
@@ -67,6 +82,7 @@ export const mergeTenantFormData = (tenant) => ({
     maxUsers: 100,
     allowSelfRegistration: true,
     sessionTimeout: 24,
+    lifecycleBatches: defaultLifecycleBatches,
     passwordPolicy: {
       minLength: 8,
       requireUppercase: true,
@@ -75,6 +91,25 @@ export const mergeTenantFormData = (tenant) => ({
       requireSpecialChars: true,
     },
     ...(tenant?.settings || {}),
+    lifecycleBatches: {
+      ...defaultLifecycleBatches,
+      ...(tenant?.settings?.lifecycleBatches || {}),
+      reminder: {
+        ...defaultLifecycleBatches.reminder,
+        ...(tenant?.settings?.lifecycleBatches?.reminder || {}),
+      },
+      cancellation: {
+        ...defaultLifecycleBatches.cancellation,
+        ...(tenant?.settings?.lifecycleBatches?.cancellation || {}),
+      },
+      schedule: {
+        ...defaultLifecycleBatches.schedule,
+        ...(tenant?.settings?.lifecycleBatches?.schedule || {}),
+      },
+      notificationRecipientRoleCodes:
+        tenant?.settings?.lifecycleBatches?.notificationRecipientRoleCodes ||
+        defaultLifecycleBatches.notificationRecipientRoleCodes,
+    },
     passwordPolicy: {
       minLength: 8,
       requireUppercase: true,

@@ -30,10 +30,11 @@ const APPROVED_MEMBERSHIP_STATUSES = new Set([
 ]);
 
 function isApprovedRow(row) {
-  const status = String(row?.membershipStatus || "").trim().toLowerCase();
-  const hasMembershipNo = String(
-    row?.membershipNumber || row?.memberId || "",
-  ).trim() !== "";
+  const status = String(row?.membershipStatus || "")
+    .trim()
+    .toLowerCase();
+  const hasMembershipNo =
+    String(row?.membershipNumber || row?.memberId || "").trim() !== "";
   return hasMembershipNo || APPROVED_MEMBERSHIP_STATUSES.has(status);
 }
 
@@ -73,7 +74,9 @@ function resolvePaymentIntentId(row) {
 
 function refundInitialModeFromRecord(row) {
   if (resolvePaymentIntentId(row)) return "stripe";
-  const provider = String(row?.settlement?.provider || "").trim().toLowerCase();
+  const provider = String(row?.settlement?.provider || "")
+    .trim()
+    .toLowerCase();
   return provider === "stripe" ? "stripe" : "external";
 }
 
@@ -96,12 +99,9 @@ function resolvePrefillRefundAmountEuro(row) {
 }
 
 function normalizeOnlinePaymentRow(row, index) {
-    const paymentStatus = row?.settlement?.status || row?.paymentStatus || "-";
+  const paymentStatus = row?.settlement?.status || row?.paymentStatus || "-";
   const paymentMethod =
-    row?.paymentMethod ||
-    row?.paymentType ||
-    row?.settlement?.provider ||
-    "-";
+    row?.paymentMethod || row?.paymentType || row?.settlement?.provider || "-";
   const transactionId =
     row?.transactionId || row?.docNo || row?.id || row?._id || "";
   return {
@@ -139,8 +139,8 @@ const OnlinePayment = () => {
   const { stripePayments, loading } = useSelector((state) => state.account);
   const { isInitialized } = useSelector((state) => state.applicationWithFilter);
   const { activeTemplateId } = useSelector((state) => state.activeTemplate);
-  const { loading: templatesLoading } = useSelector(
-    (state) => state.templetefiltrsclumnapi,
+  const { templatesFetching: templatesLoading } = useSelector(
+    (state) => state.templateFiltersColumnApi,
   );
 
   const [selectedRowKeys, setSelectedRowKeys] = useState([]);
@@ -156,9 +156,7 @@ const OnlinePayment = () => {
   const highlightDocNo = String(location.state?.highlightDocNo || "")
     .trim()
     .toLowerCase();
-  const highlightPaymentIntentId = String(
-    location.state?.paymentIntentId || "",
-  )
+  const highlightPaymentIntentId = String(location.state?.paymentIntentId || "")
     .trim()
     .toLowerCase();
 
@@ -240,8 +238,9 @@ const OnlinePayment = () => {
         const matchedProfile =
           results.find(
             (item) =>
-              String(item?.membershipNumber || "").trim().toLowerCase() ===
-              memberOrApplicationNo.toLowerCase(),
+              String(item?.membershipNumber || "")
+                .trim()
+                .toLowerCase() === memberOrApplicationNo.toLowerCase(),
           ) || results[0];
 
         if (!matchedProfile?._id) {
@@ -250,7 +249,9 @@ const OnlinePayment = () => {
         }
 
         const rowList = rowsRef.current || [];
-        const selectedIndex = rowList.findIndex((item) => item.key === record.key);
+        const selectedIndex = rowList.findIndex(
+          (item) => item.key === record.key,
+        );
         setGridData(rowList);
         getProfile([record], selectedIndex >= 0 ? selectedIndex : 0);
 

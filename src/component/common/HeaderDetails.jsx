@@ -78,6 +78,7 @@ import { prepareChartsForPrintAsync } from "../../pages/membership/executive/use
 import { getAllApplications } from "../../features/ApplicationSlice";
 import MultiFilterDropdown from "./MultiFilterDropdown";
 import SaveViewMenu from "./SaveViewMenu";
+import { isNonGridToolbarRoute } from "../../utils/gridTemplateRoutes";
 import ApplicationMgtDrawer from "../applications/ApplicationMgtDrawer";
 import Breadcrumb from "./Breadcrumb";
 import SimpleBatch from "../../pages/membership/SimpleBatch";
@@ -192,6 +193,7 @@ function HeaderDetails({
   const [searchParams, setSearchParams] = useSearchParams();
   const currentURL = `${location?.pathname}`;
   const nav = location?.pathname || "";
+  const hideGridToolbar = isNonGridToolbarRoute(nav);
   const headerDashboardRange = useMemo(() => {
     const r = searchParams.get("range");
     return HEADER_DASHBOARD_RANGE_KEYS.includes(r) ? r : "YTD";
@@ -475,8 +477,12 @@ function HeaderDetails({
 
   const defaultMenuItems = [
     {
-      label: "Executive council approval",
+      label: "Process",
       onClick: (e) => handleBulkApproval(selectedIds),
+    },
+    {
+      label: "Executive Council Approval",
+      onClick: (e) => handleBulkExecutiveCouncilApproval(selectedIds),
     },
     { label: "Bulk Changes", onClick: (e) => handleAction("Bulk Changes", e) },
     {
@@ -591,18 +597,198 @@ function HeaderDetails({
     (state) => state.lookups,
     shallowEqual,
   );
+  const regionsFetchAttemptedRef = useRef(false);
   useEffect(() => {
-    if (!regionsLoading && (!regions || regions.length === 0)) {
+    const token = localStorage.getItem("token");
+    if (!token) {
+      regionsFetchAttemptedRef.current = false;
+      return;
+    }
+    if (
+      !regionsLoading &&
+      (!regions || regions.length === 0) &&
+      !regionsFetchAttemptedRef.current
+    ) {
+      regionsFetchAttemptedRef.current = true;
       dispatch(fetchRegions());
     }
   }, [dispatch, regions, regionsLoading]);
   const [tempSelectedDate, setTempSelectedDate] = useState(null);
-  const handleBulkApproval = async (selectedApplications) => {
+  const [tempCouncilDecisionDate, setTempCouncilDecisionDate] = useState(null);
+  async function handleBulkExecutiveCouncilApproval(selectedApplications) {
     if (!selectedApplications || selectedApplications.length === 0) {
       MyAlert(
         "error",
         "Selection Required",
-        "Please select at least one application to approve.",
+        "Please select at least one processed application.",
+      );
+      return;
+    }
+
+    const isValidDecisionDate = (date) =>
+      date && dayjs.isDayjs(date) && date.isValid();
+
+    const initialDate = isValidDecisionDate(tempCouncilDecisionDate)
+      ? tempCouncilDecisionDate
+      : dayjs().startOf("day");
+
+    let selectedDate = initialDate;
+    let modalRef = null;
+
+    const syncButton = (date, { loading = false } = {}) => {
+      if (!modalRef) return;
+      modalRef.update({
+        okButtonProps: {
+          disabled: !isValidDecisionDate(date) || loading,
+          loading,
+          style: {
+            backgroundColor: "#45669d",
+            borderColor: "#45669d",
+            color: "white",
+            opacity: loading ? 0.7 : 1,
+          },
+        },
+        cancelButtonProps: {
+          disabled: loading,
+        },
+      });
+    };
+
+    modalRef = Modal.confirm({
+      title: "Executive Council Approval",
+      icon: null,
+      width: 500,
+      content: (
+        <div style={{ padding: "10px 0 20px 0" }}>
+          <MyDatePicker1
+            label="Decision Date"
+            name="executiveCouncilDecisionDate"
+            value={initialDate}
+            onChange={(date) => {
+              selectedDate = date;
+              setTempCouncilDecisionDate(date);
+              syncButton(date);
+            }}
+            required={true}
+            placeholder="Select decision date"
+            format="DD/MM/YYYY"
+          />
+        </div>
+      ),
+      okText: "Approve",
+      cancelText: "Cancel",
+      okButtonProps: {
+        disabled: !isValidDecisionDate(initialDate),
+        style: {
+          backgroundColor: "#45669d",
+          borderColor: "#45669d",
+          color: "white",
+        },
+      },
+      onOk: async () => {
+        if (!isValidDecisionDate(selectedDate)) {
+          MyAlert("error", "Date Required", "Please select a decision date.");
+          return Promise.reject();
+        }
+
+        syncButton(selectedDate, { loading: true });
+        const processingKey = "bulk-executive-council-approval";
+        message.loading({
+          content: `Recording Executive Council approval for ${selectedApplications.length} application(s)...`,
+          duration: 0,
+          key: processingKey,
+        });
+
+        try {
+          const token = localStorage.getItem("token");
+          const response = await axios.post(
+            `${process.env.REACT_APP_PROFILE_SERVICE_URL}/applications/bulk-executive-council-approval`,
+            {
+              applicationIds: selectedApplications,
+              status: "approved",
+              decisionDate: dayjs(selectedDate).format("YYYY-MM-DD"),
+            },
+            {
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${token}`,
+              },
+              timeout: 120000,
+            },
+          );
+
+          message.destroy(processingKey);
+          const {
+            successful = 0,
+            failed = 0,
+            skipped = 0,
+            results = [],
+          } = response.data || {};
+
+          if (successful > 0 && failed === 0) {
+            MyAlert(
+              "success",
+              "Executive Council Approval Recorded",
+              `Marked ${successful} application(s) as Executive Council approved.`,
+            );
+          } else if (successful > 0) {
+            const failedDetails = results
+              .filter((r) => !r.success)
+              .map((r) => `${r.applicationId}: ${r.error || "failed"}`)
+              .slice(0, 5)
+              .join("; ");
+            MyAlert(
+              "warning",
+              "Partial Executive Council Approval",
+              `Recorded ${successful}; ${skipped || failed} skipped/failed. ${failedDetails}`,
+            );
+          } else {
+            const failedDetails = results
+              .map((r) => `${r.applicationId}: ${r.error || "failed"}`)
+              .slice(0, 5)
+              .join("; ");
+            MyAlert(
+              "error",
+              "Executive Council Approval Failed",
+              failedDetails ||
+                "Only processed applications can be marked as Executive Council approved.",
+            );
+            syncButton(selectedDate, { loading: false });
+            return Promise.reject();
+          }
+
+          setSelectedIds([]);
+          dispatch(
+            getApplicationsWithFilter({
+              templateId: resolvedTemplateId,
+              page: 1,
+              limit: 500,
+            }),
+          );
+          Modal.destroyAll();
+          return Promise.resolve();
+        } catch (error) {
+          message.destroy(processingKey);
+          syncButton(selectedDate, { loading: false });
+          MyAlert(
+            "error",
+            "Executive Council Approval Failed",
+            error.response?.data?.message ||
+              error.message ||
+              "Failed to record Executive Council approval.",
+          );
+          return Promise.reject();
+        }
+      },
+    });
+  }
+
+  async function handleBulkApproval(selectedApplications) {
+    if (!selectedApplications || selectedApplications.length === 0) {
+      MyAlert(
+        "error",
+        "Selection Required",
+        "Please select at least one application to process.",
       );
       return;
     }
@@ -615,16 +801,48 @@ function HeaderDetails({
       MyAlert(
         "warning",
         "Duplicate review required",
-        `${pendingDuplicateReview.length} selected application(s) still need duplicate review before approval. ${DUPLICATE_REVIEW_REQUIRED_MESSAGE}`,
+        `${pendingDuplicateReview.length} selected application(s) still need duplicate review before processing. ${DUPLICATE_REVIEW_REQUIRED_MESSAGE}`,
       );
       return;
     }
 
     const openBulkApprovalProcessingModal = () => {
-      // State to manage date and processing
-      let selectedDate = null;
+      const isValidProcessingDate = (date) =>
+        date && dayjs.isDayjs(date) && date.isValid();
+
+      const initialDate = isValidProcessingDate(tempSelectedDate)
+        ? tempSelectedDate
+        : dayjs().startOf("day");
+
+      let selectedDate = initialDate;
       let isProcessing = false;
       let modalRef = null;
+
+      const syncProcessButton = (date, { loading = false } = {}) => {
+        if (!modalRef) return;
+        const enabled = isValidProcessingDate(date);
+        modalRef.update({
+          okButtonProps: {
+            disabled: !enabled || loading,
+            loading,
+            style: {
+              backgroundColor: "#45669d",
+              borderColor: "#45669d",
+              color: "white",
+              opacity: loading ? 0.7 : 1,
+            },
+          },
+          cancelButtonProps: {
+            disabled: loading,
+            style: {
+              borderColor: "#d9d9d9",
+              color: "rgba(0, 0, 0, 0.88)",
+              opacity: loading ? 0.5 : 1,
+              pointerEvents: loading ? "none" : "auto",
+            },
+          },
+        });
+      };
 
       // Create the modal
       modalRef = Modal.confirm({
@@ -637,23 +855,11 @@ function HeaderDetails({
             <MyDatePicker1
               label="Processing Date"
               name="processingDate"
-              value={tempSelectedDate}
+              value={initialDate}
               onChange={(date) => {
+                selectedDate = date;
                 setTempSelectedDate(date);
-                selectedDate = date; // Also store in the closure variable
-                if (modalRef) {
-                  modalRef.update({
-                    okButtonProps: {
-                      disabled: !date,
-                      style: date
-                        ? {
-                            backgroundColor: "#45669d",
-                            borderColor: "#45669d",
-                          }
-                        : {},
-                    },
-                  });
-                }
+                syncProcessButton(date);
               }}
               required={true}
               placeholder="Select processing date"
@@ -683,10 +889,10 @@ function HeaderDetails({
             )}
           </div>
         ),
-        okText: "Approve",
+        okText: "Process",
         cancelText: "Cancel",
         okButtonProps: {
-          disabled: true,
+          disabled: !isValidProcessingDate(initialDate),
           style: {
             backgroundColor: "#45669d",
             borderColor: "#45669d",
@@ -700,7 +906,7 @@ function HeaderDetails({
           },
         },
         onOk: async () => {
-          if (!selectedDate) {
+          if (!isValidProcessingDate(selectedDate)) {
             MyAlert(
               "error",
               "Date Required",
@@ -711,26 +917,7 @@ function HeaderDetails({
 
           // Set processing state
           isProcessing = true;
-          if (modalRef) {
-            modalRef.update({
-              okButtonProps: {
-                disabled: true,
-                loading: true,
-                style: {
-                  backgroundColor: "#45669d",
-                  borderColor: "#45669d",
-                  opacity: 0.7,
-                },
-              },
-              cancelButtonProps: {
-                disabled: true,
-                style: {
-                  opacity: 0.5,
-                  pointerEvents: "none",
-                },
-              },
-            });
-          }
+          syncProcessButton(selectedDate, { loading: true });
 
           try {
             const applicationIds = selectedApplications; // It's already an array of IDs
@@ -757,27 +944,7 @@ function HeaderDetails({
               });
               if (!proceed) {
                 isProcessing = false;
-                if (modalRef) {
-                  modalRef.update({
-                    okButtonProps: {
-                      disabled: !selectedDate,
-                      loading: false,
-                      style: selectedDate
-                        ? {
-                            backgroundColor: "#45669d",
-                            borderColor: "#45669d",
-                          }
-                        : {},
-                    },
-                    cancelButtonProps: {
-                      disabled: false,
-                      style: {
-                        borderColor: "#d9d9d9",
-                        color: "rgba(0, 0, 0, 0.88)",
-                      },
-                    },
-                  });
-                }
+                syncProcessButton(selectedDate, { loading: false });
                 return Promise.reject();
               }
             }
@@ -790,7 +957,7 @@ function HeaderDetails({
             // Show processing notification
             const processingKey = "bulk-approval-processing";
             message.loading({
-              content: `Approving ${selectedApplications.length} application(s)...`,
+              content: `Processing ${selectedApplications.length} application(s)...`,
               duration: 0,
               key: processingKey,
               style: {
@@ -815,11 +982,47 @@ function HeaderDetails({
             message.destroy(processingKey);
 
             if (response.status === 200 || response.status === 204) {
-              MyAlert(
-                "success",
-                "Approval Successful",
-                `Successfully approved ${applicationIds.length} application(s) with processing date ${dayjs(selectedDate).format("DD/MM/YYYY")}!`,
-              );
+              const {
+                successful = 0,
+                failed = 0,
+                results = [],
+              } = response.data || {};
+              const processingDateLabel =
+                dayjs(selectedDate).format("DD/MM/YYYY");
+
+              if (successful > 0 && failed === 0) {
+                MyAlert(
+                  "success",
+                  "Processing Successful",
+                  `Successfully processed ${successful} application(s) with processing date ${processingDateLabel}!`,
+                );
+              } else if (successful > 0 && failed > 0) {
+                const failedDetails = results
+                  .filter((r) => !r.success)
+                  .map((r) => `${r.applicationId}: ${r.error || "failed"}`)
+                  .slice(0, 5)
+                  .join("; ");
+                MyAlert(
+                  "warning",
+                  "Partial Processing",
+                  `Processed ${successful} application(s); ${failed} failed. ${failedDetails}`,
+                );
+              } else {
+                const failedDetails = results
+                  .map((r) => `${r.applicationId}: ${r.error || "failed"}`)
+                  .slice(0, 5)
+                  .join("; ");
+                MyAlert(
+                  "error",
+                  "Processing Failed",
+                  failedDetails ||
+                    response.data?.message ||
+                    "No applications were processed.",
+                );
+                isProcessing = false;
+                syncProcessButton(selectedDate, { loading: false });
+                return Promise.reject();
+              }
 
               // Clear selected IDs context
               setSelectedIds([]);
@@ -854,7 +1057,7 @@ function HeaderDetails({
               MyAlert(
                 "warning",
                 "Partial Success",
-                `Approval completed but with status: ${response.status}`,
+                `Processing completed but with status: ${response.status}`,
               );
               Modal.destroyAll();
               return Promise.resolve();
@@ -865,40 +1068,20 @@ function HeaderDetails({
 
             // Reset modal state on error
             isProcessing = false;
-            if (modalRef) {
-              modalRef.update({
-                okButtonProps: {
-                  disabled: !selectedDate,
-                  loading: false,
-                  style: selectedDate
-                    ? {
-                        backgroundColor: "#45669d",
-                        borderColor: "#45669d",
-                      }
-                    : {},
-                },
-                cancelButtonProps: {
-                  disabled: false,
-                  style: {
-                    borderColor: "#d9d9d9",
-                    color: "rgba(0, 0, 0, 0.88)",
-                  },
-                },
-              });
-            }
+            syncProcessButton(selectedDate, { loading: false });
 
             if (error.code === "ECONNABORTED") {
               MyAlert(
                 "error",
                 "Request Timeout",
-                `The approval request is taking too long to process ${selectedApplications.length} applications. ` +
+                `The processing request is taking too long to process ${selectedApplications.length} applications. ` +
                   `The process may still be running in the background. Please check back later.`,
               );
             } else if (error.response) {
               MyAlert(
                 "error",
-                "Approval Failed",
-                `Error ${error.response.status}: ${error.response.data?.message || "Failed to approve applications"}`,
+                "Processing Failed",
+                `Error ${error.response.status}: ${error.response.data?.message || "Failed to process applications"}`,
               );
             } else if (error.request) {
               MyAlert(
@@ -910,7 +1093,7 @@ function HeaderDetails({
               MyAlert(
                 "error",
                 "Error",
-                `Failed to approve applications: ${error.message}`,
+                `Failed to process applications: ${error.message}`,
               );
             }
             return Promise.reject();
@@ -918,14 +1101,14 @@ function HeaderDetails({
         },
         onCancel: () => {
           if (typeof MyAlert === "function") {
-            MyAlert("info", "Cancelled", "Approval process was cancelled.");
+            MyAlert("info", "Cancelled", "Processing was cancelled.");
           }
         },
       });
     };
 
     openBulkApprovalProcessingModal();
-  };
+  }
 
   const handleAssignIRO = async (selectedUser, selectedWorkLocations) => {
     if (!selectedWorkLocations || selectedWorkLocations.length === 0) {
@@ -1237,14 +1420,8 @@ function HeaderDetails({
     if (nav === "/CasesSummary") {
       return [...defaultMenuItems, editCasesItem];
     }
-    if (
-      nav === "/worklocation" ||
-      nav === "/region" ||
-      nav === "/branch"
-    ) {
-      return defaultMenuItems.filter((item) =>
-        item.label.startsWith("Assign"),
-      );
+    if (nav === "/worklocation" || nav === "/region" || nav === "/branch") {
+      return defaultMenuItems.filter((item) => item.label.startsWith("Assign"));
     }
     return defaultMenuItems;
   }, [nav, defaultMenuItems, editCasesItem]);
@@ -1417,7 +1594,7 @@ function HeaderDetails({
             location?.pathname == "/branch" ||
             location?.pathname == "/DirectDebitAuthorization" ||
             location?.pathname == "/DirectDebit" ||
-            location?.pathname == "/templeteSummary" ||
+            location?.pathname == "/templateSummary" ||
             location?.pathname == "/write-offs" ||
             location?.pathname == "/Refunds" ||
             location?.pathname == "/CreditNotes" ||
@@ -1476,53 +1653,57 @@ function HeaderDetails({
                               ? "Workplace Membership Breakdown"
                               : nav === "/CreditorsListReport"
                                 ? "Creditors List Report"
-                              : nav === "/DebtorsListReport"
-                                ? "Debtors List Report"
-                            : location?.state?.search ||
-                              (nav === "/DirectDebitAuthorization"
-                              ? "Direct Debit Authorization"
-                              : nav === "/DirectDebit"
-                                ? "Direct Debit"
-                                : nav === "/DirectDebitBatchDetails"
-                                  ? "Direct Debit Batch Details"
-                                  : nav === "/Refunds"
-                                    ? "Refunds"
-                                    : nav === "/write-offs"
-                                      ? "Write-offs"
-                                      : nav === "/CreditNotes"
-                                        ? "Credit notes"
-                                        : nav === "/Reconciliation"
-                                          ? "Reconciliation"
-                                          : nav === "/JournalAdjustments"
-                                            ? "Journal adjustments"
-                                            : nav === "/GeneralLedger"
-                                              ? "General ledger"
-                                              : nav === "/onlinePayment"
-                                                ? "Finance"
-                                                : nav === "/EventsDashboard"
-                                                  ? "Events Dashboard"
+                                : nav === "/DebtorsListReport"
+                                  ? "Debtors List Report"
+                                  : location?.state?.search ||
+                                    (nav === "/DirectDebitAuthorization"
+                                      ? "Direct Debit Authorization"
+                                      : nav === "/DirectDebit"
+                                        ? "Direct Debit"
+                                        : nav === "/DirectDebitBatchDetails"
+                                          ? "Direct Debit Batch Details"
+                                          : nav === "/Refunds"
+                                            ? "Refunds"
+                                            : nav === "/write-offs"
+                                              ? "Write-offs"
+                                              : nav === "/CreditNotes"
+                                                ? "Credit notes"
+                                                : nav === "/Reconciliation"
+                                                  ? "Reconciliation"
                                                   : nav ===
-                                                      "/CorrespondenceDashboard"
-                                                    ? "Campaign Dashboard"
-                                                    : nav ===
-                                                        "/IssuesManagementDashboard"
-                                                      ? "Issues Management Dashboard"
-                                                      : nav === "/EventsSummary"
-                                                        ? "Events"
-                                                        : nav === "/Attendees"
-                                                          ? "Attendees"
-                                                          : "")}
+                                                      "/JournalAdjustments"
+                                                    ? "Journal adjustments"
+                                                    : nav === "/GeneralLedger"
+                                                      ? "General ledger"
+                                                      : nav === "/onlinePayment"
+                                                        ? "Finance"
+                                                        : nav ===
+                                                            "/EventsDashboard"
+                                                          ? "Events Dashboard"
+                                                          : nav ===
+                                                              "/CorrespondenceDashboard"
+                                                            ? "Campaign Dashboard"
+                                                            : nav ===
+                                                                "/IssuesManagementDashboard"
+                                                              ? "Issues Management Dashboard"
+                                                              : nav ===
+                                                                  "/EventsSummary"
+                                                                ? "Events"
+                                                                : nav ===
+                                                                    "/Attendees"
+                                                                  ? "Attendees"
+                                                                  : "")}
                     </h2>
                   )}
                 </div>
 
                 <div className="d-flex">
                   {/* For templateSummary, only show Create button */}
-                  {nav === "/templeteSummary" ? (
+                  {nav === "/templateSummary" ? (
                     <Button
                       onClick={() => {
-                        navigate("/templeteConfig", {
-                          state: { state: "Templetes" },
+                        navigate("/templateConfig", {
+                          state: { state: "templates" },
                         });
                       }}
                       style={{
@@ -1587,9 +1768,8 @@ function HeaderDetails({
                         (nav === "/InAppNotifications" &&
                           !hasPermission("notifications:create")) ||
                         nav === "/UserNotifications" ||
-                        isReportHeaderPath(nav)
-                          ? null
-                          : nav === "/PaymentForms" ? (
+                        isReportHeaderPath(nav) ? null : nav ===
+                        "/PaymentForms" ? (
                         <Button
                           onClick={() =>
                             openPaymentFormCreate("STANDING_ORDER")
@@ -1864,7 +2044,7 @@ function HeaderDetails({
                   </Button>
                 </div>
               ) : (
-                nav !== "/templeteSummary" &&
+                nav !== "/templateSummary" &&
                 nav !== "/CommunicationBatchDetail" && (
                   <div className="d-flex me-4 search-fliters align-items-center justify-content-between flex-wrap mt-2 mb-1">
                     {isBatchSearchPage ? (
@@ -1874,20 +2054,16 @@ function HeaderDetails({
                         style={{ width: 300 }}
                         className="inp"
                       />
-                    ) : location?.pathname === "/worklocation" ||
-                      location?.pathname === "/region" ||
-                      location?.pathname === "/branch" ? null : (
+                    ) : hideGridToolbar ? null : (
                       <div style={{ flex: 1, minWidth: 0 }}>
                         <Toolbar />
                       </div>
                     )}
                     {nav !== "/MembershipDashboard" ? (
                       <div className="d-flex flex-shrink-0 align-items-center gap-2">
-                        {location?.pathname === "/worklocation" ||
-                        location?.pathname === "/region" ||
-                        location?.pathname === "/branch" ? null : (
+                        {hideGridToolbar ? null : (
                           <>
-                            {nav !== "/templeteConfig" &&
+                            {nav !== "/templateConfig" &&
                               !isHeaderDashboardRangeNav(nav) && (
                                 <SaveViewMenu className="ms-3" />
                               )}

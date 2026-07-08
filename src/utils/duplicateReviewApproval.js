@@ -9,9 +9,24 @@ export const DUPLICATE_REVIEW_APPROVAL_ALLOWED_STATUSES = new Set([
 export const DUPLICATE_REVIEW_REQUIRED_MESSAGE =
   "Duplicate review is required before approval. Open Duplicate Profile Review and choose Create New Profile, Ignore Match, Tag this Profile, or Merge this Profile.";
 
+export const APPLICATION_DUPLICATE_REVIEW_LOCKED_MESSAGE =
+  "This application has already been processed. Duplicate records can only be managed from the Profile section.";
+
 export function isDuplicateReviewBlockingApproval(status) {
   const normalized = status || "NOT_CHECKED";
   return !DUPLICATE_REVIEW_APPROVAL_ALLOWED_STATUSES.has(normalized);
+}
+
+export function isProcessedApplicationStatus(status) {
+  return String(status || "").toLowerCase() === "processed";
+}
+
+export function getApplicationStatus(application) {
+  return (
+    application?.applicationStatus ||
+    application?.personalDetails?.applicationStatus ||
+    null
+  );
 }
 
 function rowApplicationId(row) {
@@ -32,6 +47,62 @@ export function rowDuplicateReviewStatus(row) {
     row?.duplicateReview?.status ||
     "NOT_CHECKED"
   );
+}
+
+export function getApplicationDuplicateReview(application) {
+  return (
+    application?.personalDetails?.duplicateReview ||
+    application?.duplicateReview ||
+    null
+  );
+}
+
+export function isMergedDuplicateReview(application) {
+  return getApplicationDuplicateReviewStatus(application) === "MERGED";
+}
+
+export function getApplicationDuplicateReviewStatus(application) {
+  return rowDuplicateReviewStatus(application);
+}
+
+export function getMergedDuplicateReviewSummary(application) {
+  const review = getApplicationDuplicateReview(application);
+  if (!review || review.status !== "MERGED") {
+    return null;
+  }
+
+  const matchedProfileId = review.matchedProfileId;
+  const matchRow = (review.matchSummary || []).find(
+    (match) =>
+      match.sourceType === "PROFILE" &&
+      matchedProfileId != null &&
+      String(match.sourceId) === String(matchedProfileId) &&
+      !match.ignored,
+  );
+
+  const mergeFieldChoices =
+    review.mergeFieldChoices && typeof review.mergeFieldChoices === "object"
+      ? review.mergeFieldChoices
+      : {};
+
+  const choiceEntries = Object.entries(mergeFieldChoices);
+  const profileFieldCount = choiceEntries.filter(
+    ([, source]) => source === "PROFILE",
+  ).length;
+  const applicationFieldCount = choiceEntries.filter(
+    ([, source]) => source === "APPLICATION",
+  ).length;
+
+  return {
+    matchedProfileId:
+      matchedProfileId != null ? String(matchedProfileId) : null,
+    matchName: matchRow?.name || null,
+    membershipNumber: matchRow?.membershipNumber || null,
+    reviewedAt: review.reviewedAt || null,
+    profileFieldCount,
+    applicationFieldCount,
+    totalChoices: choiceEntries.length,
+  };
 }
 
 export function getPendingDuplicateReviewApplications(gridData, selectedIds) {

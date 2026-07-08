@@ -20,11 +20,15 @@ export const getViewById = createAsyncThunk(
             const body = response.data?.data ?? response.data;
             return normalizeViewTemplatePayload(body);
         } catch (error) {
-            return rejectWithValue(
-                error.response?.data?.message || 'Failed to fetch template by ID'
-            );
-        }
+      const body = error.response?.data;
+      return rejectWithValue(
+        body?.data ||
+          body?.message ||
+          error.message ||
+          "Failed to fetch template by ID",
+      );
     }
+  },
 );
 
 const viewByIdSlice = createSlice({

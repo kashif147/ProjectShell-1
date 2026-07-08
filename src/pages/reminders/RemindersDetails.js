@@ -1,4 +1,5 @@
 import React, { useMemo, useState, useEffect, useCallback } from "react";
+import axios from "axios";
 import { useLocation, useNavigate } from "react-router-dom";
 import {
     Button,
@@ -11,12 +12,14 @@ import {
     message,
     Checkbox,
     Empty,
+    Tooltip,
 } from "antd";
 import {
     CalendarOutlined,
     UserOutlined,
     ExportOutlined,
     PlayCircleOutlined,
+    ReloadOutlined,
     CreditCardOutlined,
     BellOutlined,
     TeamOutlined,
@@ -29,11 +32,8 @@ import {
     DownloadOutlined,
     LinkOutlined,
     AppstoreOutlined,
-    BankOutlined,
-    MoneyCollectOutlined,
-    AccountBookOutlined,
-    SyncOutlined,
     BarChartOutlined,
+    InfoCircleOutlined,
 } from "@ant-design/icons";
 import {
     PieChart,
@@ -44,13 +44,25 @@ import {
 import CustomSelect from "../../component/common/CustomSelect";
 import { useReminders } from "../../context/CampaignDetailsProvider";
 import { useTableColumns } from "../../context/TableColumnsContext ";
+import { getSubscriptionServiceBaseUrl } from "../../config/serviceUrls";
 import { formatDateDdMmYyyy } from "../../utils/Utilities";
+import MemberProfileDrawer from "../../component/profile/MemberProfileDrawer";
+import {
+    buildPaymentMethodAnalysis,
+    LIFECYCLE_PAYMENT_METHOD_ROWS,
+} from "../../utils/lifecycleBatchPaymentAnalysis";
+import {
+    lifecycleBatchBuildError,
+    lifecycleBatchIsBuilding,
+    useLifecycleBatchDetail,
+} from "../../hooks/useLifecycleBatchDetail";
+import {
+    REMINDER_BATCH_STATUS_TAG_STYLE,
+    reminderBatchStatusLabel,
+    reminderBatchStatusTagColor,
+} from "../../utils/reminderBatchStatus";
 import htmlDocx from "html-docx-js/dist/html-docx";
 import "../../styles/RemindersDetails.css";
-
-function paymentAnalysisBaseTotal() {
-    return PAYMENT_METHOD_ROWS.reduce((a, r) => a + r.amount, 0);
-}
 
 function parseMoney(s) {
     if (s == null) return 0;
@@ -81,6 +93,15 @@ function formatOutstandingBalanceLikeHeader(value) {
         text: indicator ? `${amountText} (${indicator})` : amountText,
         color: amount > 0 ? "#cf1322" : "#389e0d",
     };
+}
+
+function formatEuroAmount(value) {
+    if (value == null || value === "") return "—";
+    const amount = parseMoney(value);
+    return `€${amount.toLocaleString("en-IE", {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+    })}`;
 }
 
 function formatPercentDisplay(pct) {
@@ -115,57 +136,6 @@ function buildWaveMembers(members, wave) {
         .filter((row) => row != null && typeof row === "object")
         .map((row, i) => ({ ...row, _rowKey: `${wave}-${i}` }));
 }
-
-const PAYMENT_METHOD_ROWS = [
-    {
-        label: "Deductions",
-        dataKey: "deductions",
-        color: "#215e97",
-        icon: AccountBookOutlined,
-        pct: 14,
-        amount: 110,
-    },
-    {
-        label: "Standing Orders",
-        dataKey: "standingOrders",
-        color: "#1677ff",
-        icon: SyncOutlined,
-        pct: 31,
-        amount: 240,
-    },
-    {
-        label: "Direct Debit",
-        dataKey: "directDebit",
-        color: "#597ef7",
-        icon: BankOutlined,
-        pct: 19,
-        amount: 149,
-    },
-    {
-        label: "Credit Card",
-        dataKey: "creditCard",
-        color: "#fa8c16",
-        icon: CreditCardOutlined,
-        pct: 30,
-        amount: 235,
-    },
-    {
-        label: "Cheque",
-        dataKey: "cheque",
-        color: "#13c2c2",
-        icon: FileTextOutlined,
-        pct: 0,
-        amount: 0,
-    },
-    {
-        label: "Cash",
-        dataKey: "cash",
-        color: "#8c8c8c",
-        icon: MoneyCollectOutlined,
-        pct: 6,
-        amount: 45,
-    },
-];
 
 const TEMPLATE_PREVIEWS = {
     email: {
@@ -232,32 +202,8 @@ const DELIVERY_CHANNELS = [
     },
 ];
 
-function scalePaymentAmounts(baseRows, targetTotal) {
-    const baseSum = baseRows.reduce((a, r) => a + r.amount, 0);
-    if (!baseSum || targetTotal <= 0) {
-        return baseRows.map((r) => ({ ...r, amount: 0, pct: 0 }));
-    }
-    const scaled = baseRows.map((r) => ({
-        ...r,
-        amount: Math.round((r.amount / baseSum) * targetTotal),
-    }));
-    const scaledSum = scaled.reduce((a, r) => a + r.amount, 0);
-    return scaled.map((r) => ({
-        ...r,
-        pct: scaledSum ? Math.round((r.amount / scaledSum) * 100) : 0,
-    }));
-}
-
-function findDominantPaymentRow(rows) {
-    if (!rows?.length) return null;
-    return rows.reduce(
-        (best, row) =>
-            row.amount > (best?.amount ?? -1) ? row : best,
-        null,
-    );
-}
-
 const WAVE_ORDER = ["R1", "R2", "R3"];
+const STALE_BUILD_MS = 2 * 60 * 1000;
 
 function sortWaves(waves) {
     return [...new Set(waves)].sort(
@@ -323,20 +269,125 @@ function sanitizeDocxFileBase(name) {
     return base.slice(0, 80) || "batch";
 }
 
+function profileIdForDetailsLink(record) {
+    if (record == null) return null;
+    const p = record.profileId;
+    if (p == null) return null;
+    if (typeof p === "object" && p._id != null) return String(p._id);
+    const s = String(p).trim();
+    if (s === "" || s === "null" || s === "undefined") return null;
+    return s;
+}
+
+function subscriptionIdForDetailsLink(record) {
+    if (record == null) return null;
+    const s = record.subscriptionId;
+    if (s == null) return null;
+    if (typeof s === "object" && s._id != null) return String(s._id);
+    const id = String(s).trim();
+    if (id === "" || id === "null" || id === "undefined") return null;
+    return id;
+}
+
+const MEMBER_FILE_LINK_STYLE = {
+    color: "blue",
+    textDecoration: "underline",
+    cursor: "pointer",
+};
+
 function RemindersDetails() {
     const location = useLocation();
     const navigate = useNavigate();
     const { selectedId, getRemindersById } = useReminders();
     const { isDisable } = useTableColumns();
 
+    const mapReminderBatch = useCallback(({ batchId, batchDoc, rows, batchTitle }) => {
+        const grouped = { R1: [], R2: [], R3: [] };
+        const allMembers = [];
+        rows.forEach((row, index) => {
+            const tier = row.tier || "R1";
+            const mapped = {
+                ...row,
+                membershipNo: row.membershipNo || row.membershipNumber || row.memberId,
+                outstandingBalance:
+                    row.outstandingBalance == null ? 0 : row.outstandingBalance,
+                included: row.included !== false,
+                inclusionSummary: row.inclusionSummary || null,
+                exclusionReason: row.exclusionReason || null,
+                _rowKey: `${tier}-${row._id || row.profileId || index}`,
+            };
+            allMembers.push(mapped);
+            if (mapped.included && grouped[tier]) {
+                grouped[tier].push(mapped);
+            }
+        });
+        return {
+            id: batchDoc._id || batchDoc.id || batchId,
+            title: batchDoc.name || batchTitle || "Reminders batch",
+            user: batchDoc.userFullName || "—",
+            date: batchDoc.batchDate || batchDoc.createdAt,
+            status: batchDoc.status,
+            buildProgress: batchDoc.buildProgress,
+            buildStartedAt: batchDoc.buildStartedAt,
+            buildCompletedAt: batchDoc.buildCompletedAt,
+            balanceAsOf: batchDoc.balanceAsOf,
+            countsByTier: batchDoc.countsByTier,
+            buildError: batchDoc.error || batchDoc.buildProgress?.lastError || null,
+            members: grouped,
+            allMembers,
+        };
+    }, []);
+
+    const {
+        batch: apiBatch,
+        loading: loadingMembers,
+        refetch: refetchBatch,
+    } = useLifecycleBatchDetail({
+        batchId: location.state?.reminderBatchId,
+        batchTitle: location.state?.reminderBatchTitle,
+        membersIncluded: "all",
+        mapBatch: mapReminderBatch,
+    });
+
     useEffect(() => {
         const id = location.state?.reminderBatchId;
         if (id != null) getRemindersById(id);
     }, [location.state?.reminderBatchId, getRemindersById]);
 
+    const selectedBatch =
+        apiBatch ?? (location.state?.reminderBatchId ? null : selectedId);
+    const batchBuildError = lifecycleBatchBuildError(selectedBatch);
+    const batchIsBuilding = lifecycleBatchIsBuilding(selectedBatch);
+    const batchStatus = String(selectedBatch?.status || "").toLowerCase();
+    const buildStartedAtMs = selectedBatch?.buildStartedAt
+        ? new Date(selectedBatch.buildStartedAt).getTime()
+        : NaN;
+    const pendingBuildIsStale =
+        batchStatus === "pending_build" &&
+        Number.isFinite(buildStartedAtMs) &&
+        Date.now() - buildStartedAtMs > STALE_BUILD_MS;
+    const canBuildBatch =
+        batchStatus === "draft" ||
+        batchStatus === "ready" ||
+        batchStatus === "failed" ||
+        pendingBuildIsStale;
+    const batchStatusForDisplay = batchBuildError
+        ? "failed"
+        : batchIsBuilding
+          ? "pending_build"
+          : batchStatus;
+    const batchStatusLabel = useMemo(
+        () => reminderBatchStatusLabel(batchStatusForDisplay),
+        [batchStatusForDisplay],
+    );
+    const batchStatusTagColor = useMemo(
+        () => reminderBatchStatusTagColor(batchStatusForDisplay),
+        [batchStatusForDisplay],
+    );
+
     const pageTitle =
         location.state?.reminderBatchTitle ||
-        selectedId?.title ||
+        selectedBatch?.title ||
         "Reminders batch";
 
     /** Waves excluded from trigger (unchecked). Default none = all included. */
@@ -346,6 +397,13 @@ function RemindersDetails() {
     const [selectedRowKeys, setSelectedRowKeys] = useState([]);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [activeChannel, setActiveChannel] = useState("email");
+    const [buildSubmitting, setBuildSubmitting] = useState(false);
+    const [memberProfileDrawer, setMemberProfileDrawer] = useState({
+        open: false,
+        profileId: null,
+        subscriptionId: null,
+        memberName: null,
+    });
 
     const PreviewChannelIcon =
         {
@@ -378,7 +436,7 @@ function RemindersDetails() {
         setActiveView("batch");
         setSelectedRowKeys([]);
         setActiveChannel("email");
-    }, [selectedId?.id]);
+    }, [selectedBatch?.id]);
 
     const selectionKey = `${[...excludedWaves].sort().join(",")}|${activeView}`;
 
@@ -386,70 +444,50 @@ function RemindersDetails() {
         setSelectedRowKeys([]);
     }, [selectionKey]);
 
-    const totalR1 = selectedId?.members?.R1?.length ?? 0;
-    const totalR2 = selectedId?.members?.R2?.length ?? 0;
-    const totalR3 = selectedId?.members?.R3?.length ?? 0;
+    const totalR1 = selectedBatch?.members?.R1?.length ?? 0;
+    const totalR2 = selectedBatch?.members?.R2?.length ?? 0;
+    const totalR3 = selectedBatch?.members?.R3?.length ?? 0;
 
-    const feeR1 = sumMemberFees(selectedId?.members?.R1);
-    const feeR2 = sumMemberFees(selectedId?.members?.R2);
-    const feeR3 = sumMemberFees(selectedId?.members?.R3);
+    const feeR1 = sumMemberFees(selectedBatch?.members?.R1);
+    const feeR2 = sumMemberFees(selectedBatch?.members?.R2);
+    const feeR3 = sumMemberFees(selectedBatch?.members?.R3);
 
     const comprehensiveMembers = useMemo(
-        () => buildComprehensiveMembers(selectedId?.members),
-        [selectedId],
+        () => buildComprehensiveMembers(selectedBatch?.members),
+        [selectedBatch],
     );
     const totalBatchCount = comprehensiveMembers.length;
     const feeBatchTotal = sumMemberFees(comprehensiveMembers);
 
     const tableMembers = useMemo(() => {
-        if (!selectedId?.members) return [];
+        if (!selectedBatch) return [];
         if (activeView !== "batch") {
-            return buildWaveMembers(selectedId.members, activeView);
+            return buildWaveMembers(selectedBatch.members, activeView);
         }
         if (allWavesIncluded) {
-            return comprehensiveMembers;
+            return selectedBatch.allMembers || comprehensiveMembers;
         }
-        return buildMultiWaveMembers(selectedId.members, includedWaves);
+        return buildMultiWaveMembers(selectedBatch.members, includedWaves);
     }, [
-        selectedId,
+        selectedBatch,
         activeView,
         allWavesIncluded,
         includedWaves,
         comprehensiveMembers,
     ]);
 
-    const selectedFeeTotal = useMemo(() => {
-        if (activeView === "R1") return feeR1;
-        if (activeView === "R2") return feeR2;
-        if (activeView === "R3") return feeR3;
-        if (allWavesIncluded) return feeBatchTotal;
-        let sum = 0;
-        if (includedWaves.includes("R1")) sum += feeR1;
-        if (includedWaves.includes("R2")) sum += feeR2;
-        if (includedWaves.includes("R3")) sum += feeR3;
-        return sum;
-    }, [
-        activeView,
-        allWavesIncluded,
-        includedWaves,
-        feeR1,
-        feeR2,
-        feeR3,
-        feeBatchTotal,
-    ]);
-
-    const paymentAnalysisTotal =
-        selectedFeeTotal > 0 ? selectedFeeTotal : paymentAnalysisBaseTotal();
-
-    const paymentRowsScaled = useMemo(
-        () => scalePaymentAmounts(PAYMENT_METHOD_ROWS, paymentAnalysisTotal),
-        [paymentAnalysisTotal],
+    const paymentAnalysis = useMemo(
+        () =>
+            buildPaymentMethodAnalysis(
+                tableMembers.filter((row) => row.included !== false),
+                LIFECYCLE_PAYMENT_METHOD_ROWS,
+            ),
+        [tableMembers],
     );
-
-    const dominantPaymentRow = useMemo(
-        () => findDominantPaymentRow(paymentRowsScaled),
-        [paymentRowsScaled],
-    );
+    const paymentRowsScaled = paymentAnalysis.rows;
+    const paymentAnalysisTotal = paymentAnalysis.total;
+    const dominantPaymentRow = paymentAnalysis.dominant;
+    const hasPaymentAnalysis = paymentAnalysis.hasData;
 
     const donutChartData = useMemo(
         () => paymentRowsScaled.filter((r) => r.amount > 0),
@@ -462,29 +500,151 @@ function RemindersDetails() {
 
     const triggerButtonLabel = formatTriggerButtonLabel(includedWaves);
 
-    const handleTriggerSelected = () => {
-        if (isDisable) return;
-        if (includedWaves.length === 0) return;
-        if (allWavesIncluded) {
-            message.success("Triggered all reminders in batch (demo).");
+    const handleBuildBatch = async () => {
+        if (!canBuildBatch) return;
+        const batchId = location.state?.reminderBatchId || selectedBatch?.id;
+        const token = localStorage.getItem("token");
+        const base = getSubscriptionServiceBaseUrl();
+        if (!batchId || !token || !base) {
+            message.error("Missing batch or session.");
             return;
         }
-        const labels = sortWaves(includedWaves).join(", ");
-        message.success(`Triggered ${labels} (demo).`);
+        setBuildSubmitting(true);
+        try {
+            await axios.post(
+                `${base}/reminder-batches/${batchId}/build`,
+                {},
+                { headers: { Authorization: `Bearer ${token}` } },
+            );
+            message.success("Member generation started.");
+            refetchBatch();
+        } catch (error) {
+            message.error(
+                error?.response?.data?.data ||
+                    error?.response?.data?.message ||
+                    "Could not generate members.",
+            );
+        } finally {
+            setBuildSubmitting(false);
+        }
+    };
+
+    const handleTriggerSelected = async () => {
+        if (isDisable) return;
+        if (includedWaves.length === 0) return;
+        const batchId = location.state?.reminderBatchId || selectedBatch?.id;
+        const token = localStorage.getItem("token");
+        const base = getSubscriptionServiceBaseUrl();
+        if (!batchId || !token || !base) {
+            message.error("Missing batch or session.");
+            return;
+        }
+        try {
+            await axios.post(
+                `${base}/reminder-batches/${batchId}/execute`,
+                {},
+                { headers: { Authorization: `Bearer ${token}` } },
+            );
+            message.success("Batch execution started.");
+        } catch (error) {
+            message.error(
+                error?.response?.data?.data ||
+                    error?.response?.data?.message ||
+                    "Could not execute batch.",
+            );
+        }
     };
 
     const addressText = (row) => {
+        if (row.fullAddress && row.fullAddress !== "—") return row.fullAddress;
         const parts = [row.workLocation, row.branch].filter(Boolean);
         return parts.length ? parts.join(", ") : "—";
     };
 
+    const openMemberProfileDrawer = useCallback((row) => {
+        const profileId = profileIdForDetailsLink(row);
+        if (!profileId) return;
+        setMemberProfileDrawer({
+            open: true,
+            profileId,
+            subscriptionId: subscriptionIdForDetailsLink(row),
+            memberName: row.fullName || null,
+        });
+    }, []);
+
+    const closeMemberProfileDrawer = useCallback(() => {
+        setMemberProfileDrawer((prev) => ({ ...prev, open: false }));
+    }, []);
+
     const columns = [
+        {
+            title: "",
+            key: "eligibility",
+            width: 44,
+            fixed: "left",
+            render: (_, row) => {
+                const summary = row.inclusionSummary;
+                if (row.included !== false && summary) {
+                    return (
+                        <Tooltip title={summary} placement="topLeft">
+                            <InfoCircleOutlined
+                                style={{
+                                    color: "var(--mainBlue)",
+                                    fontSize: 16,
+                                    cursor: "help",
+                                }}
+                                aria-label="Inclusion eligibility details"
+                            />
+                        </Tooltip>
+                    );
+                }
+                if (row.included === false) {
+                    const label = row.exclusionReason || "Excluded";
+                    return (
+                        <Tooltip
+                            title={
+                                summary ||
+                                "Rebuild the batch to generate eligibility notes."
+                            }
+                            placement="topLeft"
+                        >
+                            <Tag color="default" style={{ margin: 0, cursor: "help" }}>
+                                {label}
+                            </Tag>
+                        </Tooltip>
+                    );
+                }
+                return null;
+            },
+        },
         {
             title: "Full name",
             dataIndex: "fullName",
             key: "fullName",
             width: 160,
             ellipsis: { showTitle: true },
+            render: (name, row) => {
+                const label = name ?? "—";
+                const profileId = profileIdForDetailsLink(row);
+                if (!profileId) return label;
+                return (
+                    <button
+                        type="button"
+                        onClick={() => openMemberProfileDrawer(row)}
+                        style={{
+                            ...MEMBER_FILE_LINK_STYLE,
+                            border: "none",
+                            background: "none",
+                            padding: 0,
+                            font: "inherit",
+                            textAlign: "left",
+                        }}
+                        title="Open member profile"
+                    >
+                        {label}
+                    </button>
+                );
+            },
         },
         {
             title: "Email",
@@ -548,10 +708,31 @@ function RemindersDetails() {
             },
         },
         {
-            title: "Last payment",
+            title: "Arrears",
+            dataIndex: "arrears",
+            key: "arrears",
+            width: 120,
+            render: (v) => (v == null ? "—" : formatOutstandingBalanceLikeHeader(v).text),
+        },
+        {
+            title: "Amount owed to date",
+            dataIndex: "amountOwedToDate",
+            key: "amountOwedToDate",
+            width: 170,
+            render: (v) => (v == null ? "—" : formatOutstandingBalanceLikeHeader(v).text),
+        },
+        {
+            title: "Last payment amount",
+            dataIndex: "lastPaymentAmount",
+            key: "lastPaymentAmount",
+            width: 150,
+            render: (v) => formatEuroAmount(v),
+        },
+        {
+            title: "Last payment date",
             dataIndex: "lastPaymentDate",
             key: "lastPaymentDate",
-            width: 130,
+            width: 140,
             render: (v) => formatDateDdMmYyyy(v),
         },
     ];
@@ -853,16 +1034,23 @@ table { border-collapse: collapse; width: 100%; }
                             <div className="reminder-details-meta">
                                 <span className="reminder-details-meta-item">
                                     <UserOutlined />
-                                    {selectedId?.user ?? "—"}
+                                    {selectedBatch?.user ?? "—"}
                                 </span>
                                 <span className="reminder-details-meta-item">
                                     <CalendarOutlined />
-                                    {formatDateDdMmYyyy(selectedId?.date)}
+                                    {formatDateDdMmYyyy(selectedBatch?.date)}
                                 </span>
-                                <span className="reminder-status-badge reminder-status-badge--pending">
-                                    <span className="reminder-status-dot" />
-                                    Pending
-                                </span>
+                                <Tag
+                                    color={batchStatusTagColor}
+                                    style={REMINDER_BATCH_STATUS_TAG_STYLE}
+                                >
+                                    {batchStatusLabel}
+                                </Tag>
+                                {batchBuildError ? (
+                                    <span className="reminder-details-meta-item reminder-details-build-error">
+                                        {batchBuildError}
+                                    </span>
+                                ) : null}
                             </div>
                         </div>
                     </Col>
@@ -880,11 +1068,31 @@ table { border-collapse: collapse; width: 100%; }
                                     Export
                                 </Button>
                                 <Button
+                                    className="butn secoundry-btn"
+                                    icon={<ReloadOutlined />}
+                                    disabled={
+                                        !canBuildBatch ||
+                                        (batchIsBuilding && !pendingBuildIsStale) ||
+                                        buildSubmitting
+                                    }
+                                    loading={buildSubmitting}
+                                    onClick={handleBuildBatch}
+                                >
+                                    {pendingBuildIsStale
+                                        ? "Requeue generation"
+                                        : batchStatus === "failed"
+                                          ? "Retry generate members"
+                                          : "Generate members"}
+                                </Button>
+                                <Button
                                     type="primary"
                                     className="butn primary-btn"
                                     icon={<PlayCircleOutlined />}
                                     disabled={
-                                        isDisable || includedWaves.length === 0
+                                        isDisable ||
+                                        batchStatus !== "ready" ||
+                                        totalBatchCount === 0 ||
+                                        includedWaves.length === 0
                                     }
                                     onClick={handleTriggerSelected}
                                 >
@@ -940,7 +1148,9 @@ table { border-collapse: collapse; width: 100%; }
                         extra={
                             <span className="reminder-details-total-amount">
                                 Total amount{" "}
-                                {formatCurrencyAmount(paymentAnalysisTotal)}
+                                {hasPaymentAnalysis
+                                    ? formatCurrencyAmount(paymentAnalysisTotal)
+                                    : "—"}
                             </span>
                         }
                         styles={{
@@ -949,6 +1159,7 @@ table { border-collapse: collapse; width: 100%; }
                             },
                         }}
                     >
+                        {hasPaymentAnalysis ? (
                         <div className="reminder-details-payment-layout">
                             <div className="reminder-details-donut-wrap">
                                 <ResponsiveContainer width="100%" height="100%">
@@ -993,13 +1204,7 @@ table { border-collapse: collapse; width: 100%; }
                             <div className="reminder-details-payment-legend">
                                 {paymentRowsScaled.map((r) => {
                                     const Icon = r.icon;
-                                    const m = tableMembers.length;
-                                    const cnt =
-                                        m > 0
-                                            ? Math.round(
-                                                  (Number(r.pct) / 100) * m,
-                                              )
-                                            : 0;
+                                    const cnt = r.memberCount || 0;
                                     return (
                                         <div
                                             key={r.dataKey}
@@ -1028,7 +1233,7 @@ table { border-collapse: collapse; width: 100%; }
                                                         {formatPercentDisplay(
                                                             r.pct,
                                                         )}
-                                                        {m > 0
+                                                        {cnt > 0
                                                             ? ` · ${cnt}`
                                                             : ""}
                                                     </span>
@@ -1039,6 +1244,20 @@ table { border-collapse: collapse; width: 100%; }
                                 })}
                             </div>
                         </div>
+                        ) : (
+                            <div className="reminder-details-empty-wrap">
+                                <Empty
+                                    image={Empty.PRESENTED_IMAGE_SIMPLE}
+                                    description={
+                                        loadingMembers
+                                            ? "Loading payment breakdown..."
+                                            : tableMembers.length
+                                              ? "No payment method breakdown available for the current members"
+                                              : "Payment method analysis appears when batch members are loaded"
+                                    }
+                                />
+                            </div>
+                        )}
                     </Card>
                 </Col>
                 <Col xs={24} lg={12}>
@@ -1140,6 +1359,11 @@ table { border-collapse: collapse; width: 100%; }
                         rowSelection={rowSelection}
                         columns={columns}
                         dataSource={tableMembers}
+                        rowClassName={(row) =>
+                            row.included === false
+                                ? "reminder-details-member-row--excluded"
+                                : ""
+                        }
                         pagination={false}
                         bordered
                         sticky
@@ -1153,8 +1377,8 @@ table { border-collapse: collapse; width: 100%; }
                                         description={
                                             <div>
                                                 <div>
-                                                    {selectedId
-                                                        ? "No members in this batch"
+                                                    {loadingMembers
+                                                        ? "Loading members..."
                                                         : "No members in this batch"}
                                                 </div>
                                                 <div className="reminder-details-empty-sub">
@@ -1189,6 +1413,14 @@ table { border-collapse: collapse; width: 100%; }
             >
                 <CustomSelect placeholder="Select a memeber" />
             </Modal>
+
+            <MemberProfileDrawer
+                open={memberProfileDrawer.open}
+                onClose={closeMemberProfileDrawer}
+                profileId={memberProfileDrawer.profileId}
+                subscriptionId={memberProfileDrawer.subscriptionId}
+                memberName={memberProfileDrawer.memberName}
+            />
         </div>
     );
 }

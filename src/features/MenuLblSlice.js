@@ -21,6 +21,7 @@ const defaultMenuState = {
   Profiles: false,
   Membership: false,
   Reports: false,
+  "Year-End Renewal": false,
 };
 
 function buildMenuState(activeKey) {

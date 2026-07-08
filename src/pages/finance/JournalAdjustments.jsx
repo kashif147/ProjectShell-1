@@ -21,7 +21,8 @@ import {
 
 function profileDisplayName(p) {
   if (!p) return "";
-  const n = `${p.personalInfo?.forename || ""} ${p.personalInfo?.surname || ""}`.trim();
+  const n =
+    `${p.personalInfo?.forename || ""} ${p.personalInfo?.surname || ""}`.trim();
   return n || String(p.fullName || "").trim() || "";
 }
 
@@ -34,8 +35,8 @@ const JournalAdjustments = () => {
 
   const { isInitialized } = useSelector((state) => state.applicationWithFilter);
   const { activeTemplateId } = useSelector((state) => state.activeTemplate);
-  const { loading: templatesLoading } = useSelector(
-    (state) => state.templetefiltrsclumnapi,
+  const { templatesFetching: templatesLoading } = useSelector(
+    (state) => state.templateFiltersColumnApi,
   );
 
   const [items, setItems] = useState([]);
@@ -63,8 +64,7 @@ const JournalAdjustments = () => {
           ...row,
           key: docNo || `journal-adjustment-${index}`,
           highlight:
-            Boolean(highlightDocNo) &&
-            String(docNo).trim() === highlightDocNo,
+            Boolean(highlightDocNo) && String(docNo).trim() === highlightDocNo,
         };
       });
       setFilterSourceItems(mappedRows);
@@ -99,7 +99,9 @@ const JournalAdjustments = () => {
       );
       const ids = [
         ...new Set(
-          need.map((i) => String(i.memberId).trim()).filter((m) => m.length >= 2),
+          need
+            .map((i) => String(i.memberId).trim())
+            .filter((m) => m.length >= 2),
         ),
       ];
       if (!ids.length) return;
@@ -112,7 +114,9 @@ const JournalAdjustments = () => {
             const exact =
               results.find(
                 (r) =>
-                  String(r.membershipNumber || "").trim().toLowerCase() === lower,
+                  String(r.membershipNumber || "")
+                    .trim()
+                    .toLowerCase() === lower,
               ) || results[0];
             if (exact) {
               updates[memberNo] = {
@@ -167,8 +171,10 @@ const JournalAdjustments = () => {
         const enriched = mid ? memberEnrichment[mid] : null;
         return {
           ...row,
-          memberDisplayName: row.memberName || enriched?.memberDisplayName || "",
-          memberProfileId: row.memberProfileId || enriched?.memberProfileId || "",
+          memberDisplayName:
+            row.memberName || enriched?.memberDisplayName || "",
+          memberProfileId:
+            row.memberProfileId || enriched?.memberProfileId || "",
         };
       }),
     [items, memberEnrichment],

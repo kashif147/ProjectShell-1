@@ -76,8 +76,8 @@ const ClaimsDetails = lazyWithRetry(
 );
 const ClaimsById = lazyWithRetry(() => import("./pages/Claims/ClaimsById"));
 const CasesById = lazyWithRetry(() => import("./pages/Cases/CasesById"));
-const IssuesManagementDashboard = lazyWithRetry(() =>
-  import("./pages/Cases/IssuesManagementDashboard"),
+const IssuesManagementDashboard = lazyWithRetry(
+  () => import("./pages/Cases/IssuesManagementDashboard"),
 );
 const Filter = lazyWithRetry(() => import("./pages/Filters/Filter"));
 const TransferSummary = lazyWithRetry(
@@ -105,11 +105,11 @@ const AddClaims = lazyWithRetry(() => import("./pages/Claims/AddClaims"));
 const Login = lazyWithRetry(() => import("./pages/auth/Login"));
 const LandingPage = lazyWithRetry(() => import("./component/msft/LandingPage"));
 const Reports = lazyWithRetry(() => import("./pages/reports/Reports"));
-const TempletsSummary = lazyWithRetry(
-  () => import("./pages/templete/TempletsSummary"),
+const TemplatesSummary = lazyWithRetry(
+  () => import("./pages/template/TemplatesSummary"),
 );
-const TempleteConfig = lazyWithRetry(
-  () => import("./pages/templete/TemplateConfiguration"),
+const TemplateConfiguration = lazyWithRetry(
+  () => import("./pages/template/TemplateConfiguration"),
 );
 const CorspndncDetail = lazyWithRetry(
   () => import("./pages/Correspondences/CorspndncDetail"),
@@ -130,7 +130,7 @@ const MembershipApplication = lazyWithRetry(
 const ApplicationMgt = lazyWithRetry(
   () => import("./component/applications/ApplicationMgtDrawer"),
 );
-const ApproveMembership = lazyWithRetry(
+const ProcessMembership = lazyWithRetry(
   () => import("./pages/application/ApproveMembership"),
 );
 const ChangCateSumm = lazyWithRetry(
@@ -139,6 +139,9 @@ const ChangCateSumm = lazyWithRetry(
 const CateById = lazyWithRetry(() => import("./pages/Category/CateById"));
 const RemindersSummary = lazyWithRetry(
   () => import("./pages/reminders/RemindersSummary"),
+);
+const YearEndRenewal = lazyWithRetry(
+  () => import("./pages/membership/YearEndRenewal"),
 );
 const Cancallation = lazyWithRetry(() => import("./pages/Cancallation"));
 const CancellationDetail = lazyWithRetry(
@@ -165,7 +168,9 @@ const Reconciliation = lazyWithRetry(
 const JournalAdjustments = lazyWithRetry(
   () => import("./pages/finance/JournalAdjustments"),
 );
-const GeneralLedger = lazyWithRetry(() => import("./pages/finance/GeneralLedger"));
+const GeneralLedger = lazyWithRetry(
+  () => import("./pages/finance/GeneralLedger"),
+);
 const DirectDebitAuthorization = lazyWithRetry(
   () => import("./pages/finance/DirectDebitAuthorization"),
 );
@@ -173,7 +178,7 @@ const NotDesignedYet = lazyWithRetry(() => import("./pages/NotDesign"));
 const Sms = lazyWithRetry(() => import("./pages/Correspondences/sms"));
 const Email = lazyWithRetry(() => import("./pages/Correspondences/Emails"));
 const EmailCampaignDetail = lazyWithRetry(
-  () => import("./pages/Correspondences/EmailCampaignDetail")
+  () => import("./pages/Correspondences/EmailCampaignDetail"),
 );
 const Notes = lazyWithRetry(() => import("./pages/Correspondences/Notes"));
 const PopOut = lazyWithRetry(() => import("./component/common/PopOut"));
@@ -322,7 +327,8 @@ function Entry() {
 
   /** Reports hub — cards only; no breadcrumb, toolbar, templates, or header actions. */
   const noHeaderDetailsRoutes = ["/Reports", "/AccountsReports"];
-  const normalizedPath = String(location.pathname || "").replace(/\/$/, "") || "/";
+  const normalizedPath =
+    String(location.pathname || "").replace(/\/$/, "") || "/";
   const showHeaderDetails =
     showSidebar && !noHeaderDetailsRoutes.includes(normalizedPath);
 
@@ -342,1066 +348,1325 @@ function Entry() {
   return (
     <AuthorizationProvider>
       <ReminderBatchesFilterProvider>
-      <CancellationBatchesFilterProvider>
-      <div
-        style={{
-          height: "100vh",
-          width: "100vw",
-          display: "flex",
-          flexDirection: "column",
-          overflow: "hidden",
-        }}
-      >
-        {/* Header */}
-        {showSidebar && <Header />}
-
-        {/* Main layout body */}
-        <div style={{ display: "flex", flex: 1, overflow: "hidden" }}>
-          {/* Sidebar */}
-          {showSidebar && <Sidebar />}
-
-          {/* Main content column */}
+        <CancellationBatchesFilterProvider>
           <div
             style={{
-              flex: 1,
+              height: "100vh",
+              width: "100vw",
               display: "flex",
               flexDirection: "column",
               overflow: "hidden",
             }}
           >
-            <CasesEditProvider>
-              {/* Header Details */}
-              {showHeaderDetails && <HeaderDetails />}
+            {/* Header */}
+            {showSidebar && <Header />}
 
-              {/* Content area + resizable section */}
+            {/* Main layout body */}
+            <div style={{ display: "flex", flex: 1, overflow: "hidden" }}>
+              {/* Sidebar */}
+              {showSidebar && <Sidebar />}
+
+              {/* Main content column */}
               <div
                 style={{
                   flex: 1,
                   display: "flex",
-                  minHeight: 0,
+                  flexDirection: "column",
                   overflow: "hidden",
                 }}
               >
-                <div
-                  style={{
-                    flex: 1,
-                    minHeight: 0,
-                    overflowY:
-                      location.pathname === "/applicationMgt" ? "hidden" : undefined,
-                    scrollbarWidth:
-                      location.pathname === "/CasesDetails" ||
-                      location.pathname === "/RemindersDetails" ||
-                      location.pathname === "/CancellationDetail"
-                        ? "auto"
-                        : "none",
-                  }}
-                  className={`main-main ${
-                    location.pathname === "/CasesDetails" ||
-                    location.pathname === "/RemindersDetails" ||
-                    location.pathname === "/CancellationDetail"
-                      ? "enable-vertical-scroll"
-                      : ""
-                  } ${location.pathname === "/templeteConfig" ? "main-main--template-config" : ""} ${
-                    location.pathname === "/MembershipDashboard"
-                      ? "main-main--exec-dashboard"
-                      : ""
-                  }`}
-                >
-                  <Suspense
-                    fallback={
-                      <div
-                        style={{
-                          display: "flex",
-                          justifyContent: "center",
-                          alignItems: "center",
-                          height: "100vh", // full screen height
-                          width: "100%", // full width
-                        }}
-                      >
-                        <Spin size="large" />
-                      </div>
-                    }
+                <CasesEditProvider>
+                  {/* Header Details */}
+                  {showHeaderDetails && <HeaderDetails />}
+
+                  {/* Content area + resizable section */}
+                  <div
+                    style={{
+                      flex: 1,
+                      display: "flex",
+                      minHeight: 0,
+                      overflow: "hidden",
+                    }}
                   >
-                    <Routes>
-                      <Route path="/" element={<Login />} />
-
-                      {/* Protected Routes with Authorization */}
-                      <Route
-                        path="Dummy"
-                        element={
-                          <ProtectedRoute>
-                            <Dummy />
-                          </ProtectedRoute>
+                    <div
+                      style={{
+                        flex: 1,
+                        minHeight: 0,
+                        overflowY:
+                          location.pathname === "/applicationMgt"
+                            ? "hidden"
+                            : undefined,
+                        scrollbarWidth:
+                          location.pathname === "/CasesDetails" ||
+                          location.pathname === "/RemindersDetails" ||
+                          location.pathname === "/CancellationDetail"
+                            ? "auto"
+                            : "none",
+                      }}
+                      className={`main-main ${
+                        location.pathname === "/CasesDetails" ||
+                        location.pathname === "/RemindersDetails" ||
+                        location.pathname === "/CancellationDetail"
+                          ? "enable-vertical-scroll"
+                          : ""
+                      } ${location.pathname === "/templateConfig" ? "main-main--template-config" : ""} ${
+                        location.pathname === "/MembershipDashboard"
+                          ? "main-main--exec-dashboard"
+                          : ""
+                      }`}
+                    >
+                      <Suspense
+                        fallback={
+                          <div
+                            style={{
+                              display: "flex",
+                              justifyContent: "center",
+                              alignItems: "center",
+                              height: "100vh", // full screen height
+                              width: "100%", // full width
+                            }}
+                          >
+                            <Spin size="large" />
+                          </div>
                         }
-                      />
+                      >
+                        <Routes>
+                          <Route path="/" element={<Login />} />
 
-                      <Route
-                        path="Details"
-                        element={
-                          <RoutePermissionWrapper path="/Details">
-                            <ProtectedRoute requiredPermission={RoutePermissions["Details"]}>
-                              <ProfileDetails />
-                            </ProtectedRoute>
-                          </RoutePermissionWrapper>
-                        }
-                      />
-
-                      <Route
-                        path="Summary"
-                        element={
-                          <RoutePermissionWrapper path="/Summary">
-                            <ProtectedRoute requiredPermission={RoutePermissions["Summary"]}>
-                              <ProfileSummary />
-                            </ProtectedRoute>
-                          </RoutePermissionWrapper>
-                        }
-                      />
-
-                      <Route
-                        path="CasesDetails"
-                        element={
-                          <ProtectedRoute requiredPermission={RoutePermissions["/CasesDetails"]}>
-                            <CasesDetails />
-                          </ProtectedRoute>
-                        }
-                      />
-
-                      <Route
-                        path="CasesById"
-                        element={
-                          <ProtectedRoute requiredPermission={RoutePermissions["/CasesById"]}>
-                            <CasesById />
-                          </ProtectedRoute>
-                        }
-                      />
-
-                      <Route
-                        path="CasesSummary"
-                        element={
-                          <ProtectedRoute requiredPermission={RoutePermissions["/CasesSummary"]}>
-                            <CasesSummary />
-                          </ProtectedRoute>
-                        }
-                      />
-
-                      <Route
-                        path="IssuesManagementDashboard"
-                        element={
-                          <ProtectedRoute
-                            requiredPermission={
-                              RoutePermissions["IssuesManagementDashboard"]
+                          {/* Protected Routes with Authorization */}
+                          <Route
+                            path="Dummy"
+                            element={
+                              <ProtectedRoute>
+                                <Dummy />
+                              </ProtectedRoute>
                             }
-                          >
-                            <IssuesManagementDashboard />
-                          </ProtectedRoute>
-                        }
-                      />
+                          />
 
-                      {/* InmoRewards routes - these will have no sidebar */}
-                      <Route
-                        path="rewards/insurance"
-                        element={
-                          <ProtectedRoute>
-                            <IncomeProtectionTooltip />
-                          </ProtectedRoute>
-                        }
-                      />
-                      <Route
-                        path="rewards/rewards"
-                        element={
-                          <ProtectedRoute>
-                            <IncomeProtectionTooltip />
-                          </ProtectedRoute>
-                        }
-                      />
-
-                      <Route
-                        path="templeteSummary"
-                        element={
-                          <ProtectedRoute requiredPermission={RoutePermissions["/templeteSummary"]}>
-                            <TempletsSummary />
-                          </ProtectedRoute>
-                        }
-                      />
-                      <Route
-                        path="templeteConfig"
-                        element={
-                          <ProtectedRoute requiredPermission={RoutePermissions["/templeteConfig"]}>
-                            <TempleteConfig />
-                          </ProtectedRoute>
-                        }
-                      />
-
-                      <Route
-                        path="ClaimSummary"
-                        element={
-                          <ProtectedRoute requiredPermission={RoutePermissions["/ClaimSummary"]}>
-                            <ClaimSummary />
-                          </ProtectedRoute>
-                        }
-                      />
-
-                      <Route
-                        path="ClaimsDetails"
-                        element={
-                          <ProtectedRoute requiredPermission={RoutePermissions["/ClaimsDetails"]}>
-                            <ClaimsDetails />
-                          </ProtectedRoute>
-                        }
-                      />
-
-                      <Route
-                        path="Configuration"
-                        element={
-                          <ProtectedRoute requiredPermission={RoutePermissions["/Configuration"]}>
-                            <Configuration />
-                          </ProtectedRoute>
-                        }
-                      />
-
-                      <Route
-                        path="Filters"
-                        element={
-                          <ProtectedRoute>
-                            <Filter />
-                          </ProtectedRoute>
-                        }
-                      />
-
-                      <Route
-                        path="ClaimsById"
-                        element={
-                          <ProtectedRoute requiredPermission={RoutePermissions["/ClaimsById"]}>
-                            <ClaimsById />
-                          </ProtectedRoute>
-                        }
-                      />
-
-                      <Route
-                        path="AddNewProfile"
-                        element={
-                          <ProtectedRoute requiredPermission={RoutePermissions["/AddNewProfile"]}>
-                            <AddNewProfile />
-                          </ProtectedRoute>
-                        }
-                      />
-
-                      <Route
-                        path="Transfers"
-                        element={
-                          <ProtectedRoute requiredPermission={RoutePermissions["/Transfers"]}>
-                            <TransferSummary />
-                          </ProtectedRoute>
-                        }
-                      />
-
-                      <Route
-                        path="AddClaims"
-                        element={
-                          <ProtectedRoute requiredPermission={RoutePermissions["/AddClaims"]}>
-                            <AddClaims />
-                          </ProtectedRoute>
-                        }
-                      />
-
-                      <Route
-                        path="CorrespondencesSummary"
-                        element={
-                          <ProtectedRoute requiredPermission={RoutePermissions["/CorrespondencesSummary"]}>
-                            <CorrespondencesSummary />
-                          </ProtectedRoute>
-                        }
-                      />
-                      <Route
-                        path="InAppNotifications"
-                        element={
-                          <ProtectedRoute requiredPermission={RoutePermissions["/InAppNotifications"]}>
-                            <InAppNotifications />
-                          </ProtectedRoute>
-                        }
-                      />
-                      <Route
-                        path="UserNotifications"
-                        element={
-                          <ProtectedRoute
-                            requiredPermission={RoutePermissions["UserNotifications"]}
-                          >
-                            <UserNotifications />
-                          </ProtectedRoute>
-                        }
-                      />
-                      <Route
-                        path="CorrespondenceDashboard"
-                        element={
-                          <ProtectedRoute requiredPermission={RoutePermissions["/CorrespondenceDashboard"]}>
-                            <CorrespondenceDashboard />
-                          </ProtectedRoute>
-                        }
-                      />
-                      <Route
-                        path="CommunicationBatchDetail"
-                        element={
-                          <ProtectedRoute requiredPermission={RoutePermissions["/CommunicationBatchDetail"]}>
-                            <CommunicationBatchDetail />
-                          </ProtectedRoute>
-                        }
-                      />
-
-                      <Route
-                        path="LandingPage"
-                        element={
-                          <ProtectedRoute>
-                            <LandingPage />
-                          </ProtectedRoute>
-                        }
-                      />
-
-                      <Route
-                        path="Reports"
-                        element={
-                          <ProtectedRoute
-                            requiredPermission={
-                              RoutePermissions["Reports"]
+                          <Route
+                            path="Details"
+                            element={
+                              <RoutePermissionWrapper path="/Details">
+                                <ProtectedRoute
+                                  requiredPermission={
+                                    RoutePermissions["Details"]
+                                  }
+                                >
+                                  <ProfileDetails />
+                                </ProtectedRoute>
+                              </RoutePermissionWrapper>
                             }
-                          >
-                            <ReportsIndex />
-                          </ProtectedRoute>
-                        }
-                      />
-                      <Route
-                        path="AccountsReports"
-                        element={
-                          <ProtectedRoute
-                            requiredPermission={
-                              RoutePermissions["AccountsReports"]
+                          />
+
+                          <Route
+                            path="Summary"
+                            element={
+                              <RoutePermissionWrapper path="/Summary">
+                                <ProtectedRoute
+                                  requiredPermission={
+                                    RoutePermissions["Summary"]
+                                  }
+                                >
+                                  <ProfileSummary />
+                                </ProtectedRoute>
+                              </RoutePermissionWrapper>
                             }
-                          >
-                            <AccountsReportsIndex />
-                          </ProtectedRoute>
-                        }
-                      />
-                      <Route
-                        path="ReportsDashboard"
-                        element={
-                          <ProtectedRoute>
-                            <DashboardPage />
-                          </ProtectedRoute>
-                        }
-                      />
+                          />
 
-                      <Route
-                        path="CorspndncDetail"
-                        element={
-                          <ProtectedRoute>
-                            <CorspndncDetail />
-                          </ProtectedRoute>
-                        }
-                      />
-
-                      <Route
-                        path="EventsDashboard"
-                        element={
-                          <ProtectedRoute requiredPermission={RoutePermissions["EventsDashboard"]}>
-                            <EventsDashboard />
-                          </ProtectedRoute>
-                        }
-                      />
-                      <Route
-                        path="EventsSummary"
-                        element={
-                          <ProtectedRoute requiredPermission={RoutePermissions["/EventsSummary"]}>
-                            <EventsSummary />
-                          </ProtectedRoute>
-                        }
-                      />
-                      <Route
-                        path="EventDetails"
-                        element={
-                          <ProtectedRoute requiredPermission={RoutePermissions["/EventDetails"]}>
-                            <EventDetails />
-                          </ProtectedRoute>
-                        }
-                      />
-                      <Route
-                        path="Attendees"
-                        element={
-                          <ProtectedRoute requiredPermission={RoutePermissions["Attendees"]}>
-                            <AttendeesSummary />
-                          </ProtectedRoute>
-                        }
-                      />
-
-                      <Route
-                        path="RosterSummary"
-                        element={
-                          <ProtectedRoute>
-                            <RusterSummary />
-                          </ProtectedRoute>
-                        }
-                      />
-
-                      <Route
-                        path="Doucmnets"
-                        element={
-                          <ProtectedRoute>
-                            <Doucmnets />
-                          </ProtectedRoute>
-                        }
-                      />
-
-                      <Route
-                        path="Roster"
-                        element={
-                          <ProtectedRoute>
-                            <RosterDetails />
-                          </ProtectedRoute>
-                        }
-                      />
-
-                      <Route
-                        path="Applications"
-                        element={
-                          <ProtectedRoute requiredPermission={RoutePermissions["/Applications"]}>
-                            <MembershipApplication />
-                          </ProtectedRoute>
-                        }
-                      />
-                      <Route
-                        path="PaymentForms"
-                        element={
-                          <ProtectedRoute requiredPermission={RoutePermissions["PaymentForms"]}>
-                            <MembershipApplication />
-                          </ProtectedRoute>
-                        }
-                      />
-                      <Route
-                        path="applicationMgt"
-                        element={
-                          <ProtectedRoute>
-                            <ApplicationMgt />
-                          </ProtectedRoute>
-                        }
-                      />
-
-                      <Route
-                        path="AproveMembersip"
-                        element={
-                          <ProtectedRoute>
-                            <ApproveMembership />
-                          </ProtectedRoute>
-                        }
-                      />
-
-                      <Route
-                        path="ChangCateSumm"
-                        element={
-                          <ProtectedRoute requiredPermission={RoutePermissions["ChangCateSumm"]}>
-                            <ChangCateSumm />
-                          </ProtectedRoute>
-                        }
-                      />
-
-                      <Route
-                        path="ChangeCatById"
-                        element={
-                          <ProtectedRoute>
-                            <CateById />
-                          </ProtectedRoute>
-                        }
-                      />
-
-                      <Route
-                        path="RemindersSummary"
-                        element={
-                          <ProtectedRoute requiredPermission={RoutePermissions["RemindersSummary"]}>
-                            <RemindersSummary />
-                          </ProtectedRoute>
-                        }
-                      />
-
-                      <Route
-                        path="Cancallation"
-                        element={
-                          <ProtectedRoute requiredPermission={RoutePermissions["Cancallation"]}>
-                            <Cancallation />
-                          </ProtectedRoute>
-                        }
-                      />
-
-                      <Route
-                        path="Import"
-                        element={
-                          <ProtectedRoute requiredPermission={RoutePermissions["Import"]}>
-                            <Import />
-                          </ProtectedRoute>
-                        }
-                      />
-
-                      <Route
-                        path="Deductions"
-                        element={
-                          <ProtectedRoute requiredPermission={RoutePermissions["Deductions"]}>
-                            <Deductions />
-                          </ProtectedRoute>
-                        }
-                      />
-
-                      <Route
-                        path="StandingOrders"
-                        element={
-                          <ProtectedRoute requiredPermission={RoutePermissions["StandingOrders"]}>
-                            <StandingOrders />
-                          </ProtectedRoute>
-                        }
-                      />
-
-                      <Route
-                        path="Cheque"
-                        element={
-                          <ProtectedRoute requiredPermission={RoutePermissions["Cheque"]}>
-                            <Cheque />
-                          </ProtectedRoute>
-                        }
-                      />
-
-                      <Route
-                        path="Reconciliation"
-                        element={
-                          <ProtectedRoute requiredPermission={RoutePermissions["Reconciliation"]}>
-                            <Reconciliation />
-                          </ProtectedRoute>
-                        }
-                      />
-                      <Route
-                        path="JournalAdjustments"
-                        element={
-                          <ProtectedRoute requiredPermission={RoutePermissions["JournalAdjustments"]}>
-                            <JournalAdjustments />
-                          </ProtectedRoute>
-                        }
-                      />
-                      <Route
-                        path="DirectDebitAuthorization"
-                        element={
-                          <ProtectedRoute requiredPermission={RoutePermissions["DirectDebitAuthorization"]}>
-                            <DirectDebitAuthorization />
-                          </ProtectedRoute>
-                        }
-                      />
-                      <Route
-                        path="Members"
-                        element={
-                          <ProtectedRoute requiredPermission={RoutePermissions["Members"]}>
-                            <Subscriptions />
-                          </ProtectedRoute>
-                        }
-                      />
-                      <Route
-                        path="onlinePayment"
-                        element={
-                          <ProtectedRoute requiredPermission={RoutePermissions["onlinePayment"]}>
-                            <OnlinePayment />
-                          </ProtectedRoute>
-                        }
-                      />
-
-                      <Route
-                        path="BatchMemberSummary/:batchId?"
-                        element={
-                          <ProtectedRoute>
-                            <BatchMemberSummary />
-                          </ProtectedRoute>
-                        }
-                      />
-                      <Route
-                        path="DirectDebit"
-                        element={
-                          <ProtectedRoute requiredPermission={RoutePermissions["DirectDebit"]}>
-                            <DirectDebitSummary />
-                          </ProtectedRoute>
-                        }
-                      />
-
-                      <Route
-                        path="Refunds"
-                        element={
-                          <ProtectedRoute requiredPermission={RoutePermissions["Refunds"]}>
-                            <RefundsSummary />
-                          </ProtectedRoute>
-                        }
-                      />
-                      <Route
-                        path="write-offs"
-                        element={
-                          <ProtectedRoute requiredPermission={RoutePermissions["write-offs"]}>
-                            <WriteOffsSummary />
-                          </ProtectedRoute>
-                        }
-                      />
-                      <Route
-                        path="CreditNotes"
-                        element={
-                          <ProtectedRoute requiredPermission={RoutePermissions["CreditNotes"]}>
-                            <CreditNotesSummary />
-                          </ProtectedRoute>
-                        }
-                      />
-                      <Route
-                        path="GeneralLedger"
-                        element={
-                          <ProtectedRoute
-                            requiredPermission={RoutePermissions["GeneralLedger"]}
-                          >
-                            <GeneralLedger />
-                          </ProtectedRoute>
-                        }
-                      />
-                      <Route
-                        path="Batch/:id"
-                        element={
-                          <ProtectedRoute>
-                            <SimpleBatchMemberSummary />
-                          </ProtectedRoute>
-                        }
-                      />
-                      <Route
-                        path="SimpleBatchMemberSummary"
-                        element={
-                          <ProtectedRoute requiredPermission={RoutePermissions["Batches"]}>
-                            <SimpleBatchMemberSummary />
-                          </ProtectedRoute>
-                        }
-                      />
-                      <Route
-                        path="DirectDebitBatchDetails"
-                        element={
-                          <ProtectedRoute>
-                            <DirectDebitBatchDetails />
-                          </ProtectedRoute>
-                        }
-                      />
-
-                      <Route
-                        path="NotDesignedYet"
-                        element={
-                          <ProtectedRoute>
-                            <NotDesignedYet />
-                          </ProtectedRoute>
-                        }
-                      />
-
-                      <Route
-                        path="Email"
-                        element={
-                          <ProtectedRoute requiredPermission={RoutePermissions["Email"]}>
-                            <Email />
-                          </ProtectedRoute>
-                        }
-                      />
-                      <Route
-                        path="EmailCampaignDetail"
-                        element={
-                          <ProtectedRoute requiredPermission={RoutePermissions["EmailCampaignDetail"]}>
-                            <EmailCampaignDetail />
-                          </ProtectedRoute>
-                        }
-                      />
-
-                      <Route
-                        path="Sms"
-                        element={
-                          <ProtectedRoute requiredPermission={RoutePermissions["Sms"]}>
-                            <Sms />
-                          </ProtectedRoute>
-                        }
-                      />
-
-                      <Route
-                        path="Notes"
-                        element={
-                          <ProtectedRoute requiredPermission={RoutePermissions["Notes"]}>
-                            <Notes />
-                          </ProtectedRoute>
-                        }
-                      />
-
-                      <Route
-                        path="CornMarket"
-                        element={
-                          <ProtectedRoute requiredPermission={RoutePermissions["Configuration"]}>
-                            <CornGrideSummary />
-                          </ProtectedRoute>
-                        }
-                      />
-
-                      <Route
-                        path="worklocation"
-                        element={
-                          <ProtectedRoute>
-                            <PopOut />
-                          </ProtectedRoute>
-                        }
-                      />
-                      <Route
-                        path="region"
-                        element={
-                          <ProtectedRoute>
-                            <PopOut />
-                          </ProtectedRoute>
-                        }
-                      />
-                      <Route
-                        path="branch"
-                        element={
-                          <ProtectedRoute>
-                            <PopOut />
-                          </ProtectedRoute>
-                        }
-                      />
-
-                      <Route
-                        path="DirectDebit"
-                        element={
-                          <ProtectedRoute>
-                            <DirectDebitSummary />
-                          </ProtectedRoute>
-                        }
-                      />
-
-                      <Route
-                        path="members"
-                        element={
-                          <ProtectedRoute requiredPermission={RoutePermissions["Members"]}>
-                            <Members />
-                          </ProtectedRoute>
-                        }
-                      />
-
-                      <Route
-                        path="RemindersDetails"
-                        element={
-                          <ProtectedRoute>
-                            <RemindersDetails />
-                          </ProtectedRoute>
-                        }
-                      />
-
-                      <Route
-                        path="CancellationDetail"
-                        element={
-                          <ProtectedRoute>
-                            <CancellationDetail />
-                          </ProtectedRoute>
-                        }
-                      />
-
-                      <Route
-                        path="MembershipDashboard"
-                        element={
-                          <RoutePermissionWrapper path="/MembershipDashboard">
-                            {/* <ProtectedRoute requiredPermission={RoutePermissions["MembershipDashboard"]}> */}
-                            <MembershipDashboard />
-                            {/* </ProtectedRoute> */}
-                          </RoutePermissionWrapper>
-                        }
-                      />
-
-                      <Route
-                        path="MembershipDashboard/chart"
-                        element={
-                          <RoutePermissionWrapper path="/MembershipDashboard">
-                            <ExecutiveChartExpandPage />
-                          </RoutePermissionWrapper>
-                        }
-                      />
-
-                      <Route
-                        path="TenantManagement"
-                        element={
-                          <ProtectedRoute requiredPermission={RoutePermissions["TenantManagement"]}>
-                            <TenantManagement />
-                          </ProtectedRoute>
-                        }
-                      />
-                      <Route
-                        path="TenantOffices"
-                        element={
-                          <ProtectedRoute requiredPermission={RoutePermissions["TenantOffices"]}>
-                            <TenantOfficesPage />
-                          </ProtectedRoute>
-                        }
-                      />
-                      <Route
-                        path="TenantDepartments"
-                        element={
-                          <ProtectedRoute requiredPermission={RoutePermissions["TenantDepartments"]}>
-                            <TenantDepartmentsPage />
-                          </ProtectedRoute>
-                        }
-                      />
-                      <Route
-                        path="CancelledMembersReport"
-                        element={
-                          <ProtectedRoute requiredPermission={RoutePermissions["CancelledMembersReport"]}>
-                            <CancelledMembersReport />
-                          </ProtectedRoute>
-                        }
-                      />
-                      <Route
-                        path="SuspendedMembersReport"
-                        element={
-                          <ProtectedRoute requiredPermission={RoutePermissions["SuspendedMembersReport"]}>
-                            <SuspendedMembersReport />
-                          </ProtectedRoute>
-                        }
-                      />
-                      <Route
-                        path="ResignedMembersReport"
-                        element={
-                          <ProtectedRoute requiredPermission={RoutePermissions["ResignedMembersReport"]}>
-                            <ResignedMembersReport />
-                          </ProtectedRoute>
-                        }
-                      />
-                      <Route
-                        path="NewMembersReport"
-                        element={
-                          <ProtectedRoute requiredPermission={RoutePermissions["NewMembersReport"]}>
-                            <NewMembersReport />
-                          </ProtectedRoute>
-                        }
-                      />
-                      <Route
-                        path="LeaversReport"
-                        element={
-                          <ProtectedRoute requiredPermission={RoutePermissions["LeaversReport"]}>
-                            <LeaversReport />
-                          </ProtectedRoute>
-                        }
-                      />
-                      <Route
-                        path="JoinersReport"
-                        element={
-                          <ProtectedRoute requiredPermission={RoutePermissions["JoinersReport"]}>
-                            <JoinersReport />
-                          </ProtectedRoute>
-                        }
-                      />
-                      <Route
-                        path="ComparisonReport"
-                        element={
-                          <ProtectedRoute requiredPermission={RoutePermissions["ComparisonReport"]}>
-                            <ComparisonReport />
-                          </ProtectedRoute>
-                        }
-                      />
-                      <Route
-                        path="LiveStatsReport"
-                        element={
-                          <ProtectedRoute requiredPermission={RoutePermissions["LiveStatsReport"]}>
-                            <LiveStatsReport />
-                          </ProtectedRoute>
-                        }
-                      />
-                      <Route
-                        path="StatisticsReport"
-                        element={
-                          <ProtectedRoute
-                            requiredPermission={RoutePermissions["StatisticsReport"]}
-                          >
-                            <StatisticsReport />
-                          </ProtectedRoute>
-                        }
-                      />
-                      <Route
-                        path="WorkplaceBreakdownReport"
-                        element={
-                          <ProtectedRoute
-                            requiredPermission={
-                              RoutePermissions["WorkplaceBreakdownReport"]
+                          <Route
+                            path="CasesDetails"
+                            element={
+                              <ProtectedRoute
+                                requiredPermission={
+                                  RoutePermissions["/CasesDetails"]
+                                }
+                              >
+                                <CasesDetails />
+                              </ProtectedRoute>
                             }
-                          >
-                            <WorkplaceBreakdownReport />
-                          </ProtectedRoute>
-                        }
-                      />
-                      <Route
-                        path="MembershipListingReport"
-                        element={
-                          <ProtectedRoute
-                            requiredPermission={
-                              RoutePermissions["MembershipListingReport"]
+                          />
+
+                          <Route
+                            path="CasesById"
+                            element={
+                              <ProtectedRoute
+                                requiredPermission={
+                                  RoutePermissions["/CasesById"]
+                                }
+                              >
+                                <CasesById />
+                              </ProtectedRoute>
                             }
-                          >
-                            <MembershipListingReport />
-                          </ProtectedRoute>
-                        }
-                      />
-                      <Route
-                        path="CreditorsListReport"
-                        element={
-                          <ProtectedRoute
-                            requiredPermission={
-                              RoutePermissions["CreditorsListReport"]
+                          />
+
+                          <Route
+                            path="CasesSummary"
+                            element={
+                              <ProtectedRoute
+                                requiredPermission={
+                                  RoutePermissions["/CasesSummary"]
+                                }
+                              >
+                                <CasesSummary />
+                              </ProtectedRoute>
                             }
-                          >
-                            <CreditorsListReport />
-                          </ProtectedRoute>
-                        }
-                      />
-                      <Route
-                        path="DebtorsListReport"
-                        element={
-                          <ProtectedRoute
-                            requiredPermission={
-                              RoutePermissions["DebtorsListReport"]
+                          />
+
+                          <Route
+                            path="IssuesManagementDashboard"
+                            element={
+                              <ProtectedRoute
+                                requiredPermission={
+                                  RoutePermissions["IssuesManagementDashboard"]
+                                }
+                              >
+                                <IssuesManagementDashboard />
+                              </ProtectedRoute>
                             }
-                          >
-                            <DebtorsListReport />
-                          </ProtectedRoute>
-                        }
-                      />
+                          />
 
-                      <Route
-                        path="RoleManagement"
-                        element={
-                          <ProtectedRoute requiredPermission={RoutePermissions["RoleManagement"]}>
-                            <RoleManagement />
-                          </ProtectedRoute>
-                        }
-                      />
+                          {/* InmoRewards routes - these will have no sidebar */}
+                          <Route
+                            path="rewards/insurance"
+                            element={
+                              <ProtectedRoute>
+                                <IncomeProtectionTooltip />
+                              </ProtectedRoute>
+                            }
+                          />
+                          <Route
+                            path="rewards/rewards"
+                            element={
+                              <ProtectedRoute>
+                                <IncomeProtectionTooltip />
+                              </ProtectedRoute>
+                            }
+                          />
 
-                      <Route
-                        path="UserManagement"
-                        element={
-                          <RoutePermissionWrapper path="/UserManagement">
-                            <ProtectedRoute requiredPermission={RoutePermissions["UserManagement"]}>
-                              <UserManagement />
-                            </ProtectedRoute>
-                          </RoutePermissionWrapper>
-                        }
-                      />
+                          <Route
+                            path="templateSummary"
+                            element={
+                              <ProtectedRoute
+                                requiredPermission={
+                                  RoutePermissions["templateSummary"]
+                                }
+                              >
+                                <TemplatesSummary />
+                              </ProtectedRoute>
+                            }
+                          />
+                          <Route
+                            path="templateConfig"
+                            element={
+                              <ProtectedRoute
+                                requiredPermission={
+                                  RoutePermissions["templateConfig"]
+                                }
+                              >
+                                <TemplateConfiguration />
+                              </ProtectedRoute>
+                            }
+                          />
 
-                      <Route
-                        path="PermissionManagement"
-                        element={
-                          <ProtectedRoute requiredPermission={RoutePermissions["PermissionManagement"]}>
-                            <PermissionManagement />
-                          </ProtectedRoute>
-                        }
-                      />
+                          <Route
+                            path="ClaimSummary"
+                            element={
+                              <ProtectedRoute
+                                requiredPermission={
+                                  RoutePermissions["/ClaimSummary"]
+                                }
+                              >
+                                <ClaimSummary />
+                              </ProtectedRoute>
+                            }
+                          />
 
-                      <Route
-                        path="ProductTypesManagement"
-                        element={
-                          <ProtectedRoute requiredPermission={RoutePermissions["ProductTypesManagement"]}>
-                            <ProductTypesManagement />
-                          </ProtectedRoute>
-                        }
-                      />
+                          <Route
+                            path="ClaimsDetails"
+                            element={
+                              <ProtectedRoute
+                                requiredPermission={
+                                  RoutePermissions["/ClaimsDetails"]
+                                }
+                              >
+                                <ClaimsDetails />
+                              </ProtectedRoute>
+                            }
+                          />
 
-                      <Route
-                        path="CancelledMembersReport"
-                        element={
-                          <ProtectedRoute requiredPermission={RoutePermissions["CancelledMembersReport"]}>
-                            <CancelledMembersReport />
-                          </ProtectedRoute>
-                        }
-                      />
+                          <Route
+                            path="Configuration"
+                            element={
+                              <ProtectedRoute
+                                requiredPermission={
+                                  RoutePermissions["/Configuration"]
+                                }
+                              >
+                                <Configuration />
+                              </ProtectedRoute>
+                            }
+                          />
 
-                      <Route
-                        path="ReportViewerDemo"
-                        element={
-                          <ProtectedRoute>
-                            <ReportViewerDemo />
-                          </ProtectedRoute>
-                        }
-                      />
+                          <Route
+                            path="Filters"
+                            element={
+                              <ProtectedRoute>
+                                <Filter />
+                              </ProtectedRoute>
+                            }
+                          />
 
-                      <Route
-                        path="AuthorizationExample"
-                        element={
-                          <ProtectedRoute>
-                            <AuthorizationExample />
-                          </ProtectedRoute>
-                        }
-                      />
+                          <Route
+                            path="ClaimsById"
+                            element={
+                              <ProtectedRoute
+                                requiredPermission={
+                                  RoutePermissions["/ClaimsById"]
+                                }
+                              >
+                                <ClaimsById />
+                              </ProtectedRoute>
+                            }
+                          />
 
-                      <Route
-                        path="DynamicPermissionsExample"
-                        element={
-                          <ProtectedRoute>
-                            <DynamicPermissionsExample />
-                          </ProtectedRoute>
-                        }
-                      />
+                          <Route
+                            path="AddNewProfile"
+                            element={
+                              <ProtectedRoute
+                                requiredPermission={
+                                  RoutePermissions["/AddNewProfile"]
+                                }
+                              >
+                                <AddNewProfile />
+                              </ProtectedRoute>
+                            }
+                          />
 
-                      <Route
-                        path="DynamicRoutePermissionsExample"
-                        element={
-                          <ProtectedRoute>
-                            <DynamicRoutePermissionsExample />
-                          </ProtectedRoute>
-                        }
-                      />
+                          <Route
+                            path="Transfers"
+                            element={
+                              <ProtectedRoute
+                                requiredPermission={
+                                  RoutePermissions["/Transfers"]
+                                }
+                              >
+                                <TransferSummary />
+                              </ProtectedRoute>
+                            }
+                          />
 
-                      <Route
-                        path="PolicyClientExample"
-                        element={
-                          <ProtectedRoute requiredPermission={RoutePermissions["PolicyClientExample"]}>
-                            <PolicyClientExample />
-                          </ProtectedRoute>
-                        }
-                      />
-                      <Route
-                        path="ProductManagementDemo"
-                        element={
-                          <ProtectedRoute>
-                            <ProductManagementDemo />
-                          </ProtectedRoute>
-                        }
-                      />
-                      <Route
-                        path="NewGraduate"
-                        element={
-                          <ProtectedRoute>
-                            <NewGraduate />
-                          </ProtectedRoute>
-                        }
-                      />
-                      <Route
-                        path="CornMarketRewards"
-                        element={
-                          <ProtectedRoute>
-                            <NewlyJoint />
-                          </ProtectedRoute>
-                        }
-                      />
-                      <Route
-                        path="RecruitAFriend"
-                        element={
-                          <ProtectedRoute>
-                            <RecruitAFriend />
-                          </ProtectedRoute>
-                        }
-                      />
-                    </Routes>
-                  </Suspense>
-                </div>
+                          <Route
+                            path="AddClaims"
+                            element={
+                              <ProtectedRoute
+                                requiredPermission={
+                                  RoutePermissions["/AddClaims"]
+                                }
+                              >
+                                <AddClaims />
+                              </ProtectedRoute>
+                            }
+                          />
 
-                {/* Optional right-side component */}
-                {showResizableCompRoutes.includes(location.pathname) && (
-                  <ResizableComp />
-                )}
+                          <Route
+                            path="CorrespondencesSummary"
+                            element={
+                              <ProtectedRoute
+                                requiredPermission={
+                                  RoutePermissions["/CorrespondencesSummary"]
+                                }
+                              >
+                                <CorrespondencesSummary />
+                              </ProtectedRoute>
+                            }
+                          />
+                          <Route
+                            path="InAppNotifications"
+                            element={
+                              <ProtectedRoute
+                                requiredPermission={
+                                  RoutePermissions["/InAppNotifications"]
+                                }
+                              >
+                                <InAppNotifications />
+                              </ProtectedRoute>
+                            }
+                          />
+                          <Route
+                            path="UserNotifications"
+                            element={
+                              <ProtectedRoute
+                                requiredPermission={
+                                  RoutePermissions["UserNotifications"]
+                                }
+                              >
+                                <UserNotifications />
+                              </ProtectedRoute>
+                            }
+                          />
+                          <Route
+                            path="CorrespondenceDashboard"
+                            element={
+                              <ProtectedRoute
+                                requiredPermission={
+                                  RoutePermissions["/CorrespondenceDashboard"]
+                                }
+                              >
+                                <CorrespondenceDashboard />
+                              </ProtectedRoute>
+                            }
+                          />
+                          <Route
+                            path="CommunicationBatchDetail"
+                            element={
+                              <ProtectedRoute
+                                requiredPermission={
+                                  RoutePermissions["/CommunicationBatchDetail"]
+                                }
+                              >
+                                <CommunicationBatchDetail />
+                              </ProtectedRoute>
+                            }
+                          />
+
+                          <Route
+                            path="LandingPage"
+                            element={
+                              <ProtectedRoute>
+                                <LandingPage />
+                              </ProtectedRoute>
+                            }
+                          />
+
+                          <Route
+                            path="Reports"
+                            element={
+                              <ProtectedRoute
+                                requiredPermission={RoutePermissions["Reports"]}
+                              >
+                                <ReportsIndex />
+                              </ProtectedRoute>
+                            }
+                          />
+                          <Route
+                            path="AccountsReports"
+                            element={
+                              <ProtectedRoute
+                                requiredPermission={
+                                  RoutePermissions["AccountsReports"]
+                                }
+                              >
+                                <AccountsReportsIndex />
+                              </ProtectedRoute>
+                            }
+                          />
+                          <Route
+                            path="ReportsDashboard"
+                            element={
+                              <ProtectedRoute>
+                                <DashboardPage />
+                              </ProtectedRoute>
+                            }
+                          />
+
+                          <Route
+                            path="CorspndncDetail"
+                            element={
+                              <ProtectedRoute>
+                                <CorspndncDetail />
+                              </ProtectedRoute>
+                            }
+                          />
+
+                          <Route
+                            path="EventsDashboard"
+                            element={
+                              <ProtectedRoute
+                                requiredPermission={
+                                  RoutePermissions["EventsDashboard"]
+                                }
+                              >
+                                <EventsDashboard />
+                              </ProtectedRoute>
+                            }
+                          />
+                          <Route
+                            path="EventsSummary"
+                            element={
+                              <ProtectedRoute
+                                requiredPermission={
+                                  RoutePermissions["/EventsSummary"]
+                                }
+                              >
+                                <EventsSummary />
+                              </ProtectedRoute>
+                            }
+                          />
+                          <Route
+                            path="EventDetails"
+                            element={
+                              <ProtectedRoute
+                                requiredPermission={
+                                  RoutePermissions["/EventDetails"]
+                                }
+                              >
+                                <EventDetails />
+                              </ProtectedRoute>
+                            }
+                          />
+                          <Route
+                            path="Attendees"
+                            element={
+                              <ProtectedRoute
+                                requiredPermission={
+                                  RoutePermissions["Attendees"]
+                                }
+                              >
+                                <AttendeesSummary />
+                              </ProtectedRoute>
+                            }
+                          />
+
+                          <Route
+                            path="RosterSummary"
+                            element={
+                              <ProtectedRoute>
+                                <RusterSummary />
+                              </ProtectedRoute>
+                            }
+                          />
+
+                          <Route
+                            path="Doucmnets"
+                            element={
+                              <ProtectedRoute>
+                                <Doucmnets />
+                              </ProtectedRoute>
+                            }
+                          />
+
+                          <Route
+                            path="Roster"
+                            element={
+                              <ProtectedRoute>
+                                <RosterDetails />
+                              </ProtectedRoute>
+                            }
+                          />
+
+                          <Route
+                            path="Applications"
+                            element={
+                              <ProtectedRoute
+                                requiredPermission={
+                                  RoutePermissions["/Applications"]
+                                }
+                              >
+                                <MembershipApplication />
+                              </ProtectedRoute>
+                            }
+                          />
+                          <Route
+                            path="PaymentForms"
+                            element={
+                              <ProtectedRoute
+                                requiredPermission={
+                                  RoutePermissions["PaymentForms"]
+                                }
+                              >
+                                <MembershipApplication />
+                              </ProtectedRoute>
+                            }
+                          />
+                          <Route
+                            path="applicationMgt"
+                            element={
+                              <ProtectedRoute>
+                                <ApplicationMgt />
+                              </ProtectedRoute>
+                            }
+                          />
+
+                          <Route
+                            path="AproveMembersip"
+                            element={
+                              <ProtectedRoute>
+                                <ProcessMembership />
+                              </ProtectedRoute>
+                            }
+                          />
+
+                          <Route
+                            path="ChangCateSumm"
+                            element={
+                              <ProtectedRoute
+                                requiredPermission={
+                                  RoutePermissions["ChangCateSumm"]
+                                }
+                              >
+                                <ChangCateSumm />
+                              </ProtectedRoute>
+                            }
+                          />
+
+                          <Route
+                            path="ChangeCatById"
+                            element={
+                              <ProtectedRoute>
+                                <CateById />
+                              </ProtectedRoute>
+                            }
+                          />
+
+                          <Route
+                            path="RemindersSummary"
+                            element={
+                              <ProtectedRoute
+                                requiredPermission={
+                                  RoutePermissions["RemindersSummary"]
+                                }
+                              >
+                                <RemindersSummary />
+                              </ProtectedRoute>
+                            }
+                          />
+                          <Route
+                            path="YearEndRenewal"
+                            element={
+                              <ProtectedRoute
+                                requiredPermissions={[
+                                  "subscriptions:write",
+                                  "payments:write",
+                                ]}
+                                requiredRoles={["SU"]}
+                                requireAnyAccess
+                              >
+                                <YearEndRenewal />
+                              </ProtectedRoute>
+                            }
+                          />
+
+                          <Route
+                            path="Cancallation"
+                            element={
+                              <ProtectedRoute
+                                requiredPermission={
+                                  RoutePermissions["Cancallation"]
+                                }
+                              >
+                                <Cancallation />
+                              </ProtectedRoute>
+                            }
+                          />
+
+                          <Route
+                            path="Import"
+                            element={
+                              <ProtectedRoute
+                                requiredPermission={RoutePermissions["Import"]}
+                              >
+                                <Import />
+                              </ProtectedRoute>
+                            }
+                          />
+
+                          <Route
+                            path="Deductions"
+                            element={
+                              <ProtectedRoute
+                                requiredPermission={
+                                  RoutePermissions["Deductions"]
+                                }
+                              >
+                                <Deductions />
+                              </ProtectedRoute>
+                            }
+                          />
+
+                          <Route
+                            path="StandingOrders"
+                            element={
+                              <ProtectedRoute
+                                requiredPermission={
+                                  RoutePermissions["StandingOrders"]
+                                }
+                              >
+                                <StandingOrders />
+                              </ProtectedRoute>
+                            }
+                          />
+
+                          <Route
+                            path="Cheque"
+                            element={
+                              <ProtectedRoute
+                                requiredPermission={RoutePermissions["Cheque"]}
+                              >
+                                <Cheque />
+                              </ProtectedRoute>
+                            }
+                          />
+
+                          <Route
+                            path="Reconciliation"
+                            element={
+                              <ProtectedRoute
+                                requiredPermission={
+                                  RoutePermissions["Reconciliation"]
+                                }
+                              >
+                                <Reconciliation />
+                              </ProtectedRoute>
+                            }
+                          />
+                          <Route
+                            path="JournalAdjustments"
+                            element={
+                              <ProtectedRoute
+                                requiredPermission={
+                                  RoutePermissions["JournalAdjustments"]
+                                }
+                              >
+                                <JournalAdjustments />
+                              </ProtectedRoute>
+                            }
+                          />
+                          <Route
+                            path="DirectDebitAuthorization"
+                            element={
+                              <ProtectedRoute
+                                requiredPermission={
+                                  RoutePermissions["DirectDebitAuthorization"]
+                                }
+                              >
+                                <DirectDebitAuthorization />
+                              </ProtectedRoute>
+                            }
+                          />
+                          <Route
+                            path="Members"
+                            element={
+                              <ProtectedRoute
+                                requiredPermission={RoutePermissions["Members"]}
+                              >
+                                <Subscriptions />
+                              </ProtectedRoute>
+                            }
+                          />
+                          <Route
+                            path="onlinePayment"
+                            element={
+                              <ProtectedRoute
+                                requiredPermission={
+                                  RoutePermissions["onlinePayment"]
+                                }
+                              >
+                                <OnlinePayment />
+                              </ProtectedRoute>
+                            }
+                          />
+
+                          <Route
+                            path="BatchMemberSummary/:batchId?"
+                            element={
+                              <ProtectedRoute>
+                                <BatchMemberSummary />
+                              </ProtectedRoute>
+                            }
+                          />
+                          <Route
+                            path="DirectDebit"
+                            element={
+                              <ProtectedRoute
+                                requiredPermission={
+                                  RoutePermissions["DirectDebit"]
+                                }
+                              >
+                                <DirectDebitSummary />
+                              </ProtectedRoute>
+                            }
+                          />
+
+                          <Route
+                            path="Refunds"
+                            element={
+                              <ProtectedRoute
+                                requiredPermission={RoutePermissions["Refunds"]}
+                              >
+                                <RefundsSummary />
+                              </ProtectedRoute>
+                            }
+                          />
+                          <Route
+                            path="write-offs"
+                            element={
+                              <ProtectedRoute
+                                requiredPermission={
+                                  RoutePermissions["write-offs"]
+                                }
+                              >
+                                <WriteOffsSummary />
+                              </ProtectedRoute>
+                            }
+                          />
+                          <Route
+                            path="CreditNotes"
+                            element={
+                              <ProtectedRoute
+                                requiredPermission={
+                                  RoutePermissions["CreditNotes"]
+                                }
+                              >
+                                <CreditNotesSummary />
+                              </ProtectedRoute>
+                            }
+                          />
+                          <Route
+                            path="GeneralLedger"
+                            element={
+                              <ProtectedRoute
+                                requiredPermission={
+                                  RoutePermissions["GeneralLedger"]
+                                }
+                              >
+                                <GeneralLedger />
+                              </ProtectedRoute>
+                            }
+                          />
+                          <Route
+                            path="Batch/:id"
+                            element={
+                              <ProtectedRoute>
+                                <SimpleBatchMemberSummary />
+                              </ProtectedRoute>
+                            }
+                          />
+                          <Route
+                            path="SimpleBatchMemberSummary"
+                            element={
+                              <ProtectedRoute
+                                requiredPermission={RoutePermissions["Batches"]}
+                              >
+                                <SimpleBatchMemberSummary />
+                              </ProtectedRoute>
+                            }
+                          />
+                          <Route
+                            path="DirectDebitBatchDetails"
+                            element={
+                              <ProtectedRoute>
+                                <DirectDebitBatchDetails />
+                              </ProtectedRoute>
+                            }
+                          />
+
+                          <Route
+                            path="NotDesignedYet"
+                            element={
+                              <ProtectedRoute>
+                                <NotDesignedYet />
+                              </ProtectedRoute>
+                            }
+                          />
+
+                          <Route
+                            path="Email"
+                            element={
+                              <ProtectedRoute
+                                requiredPermission={RoutePermissions["Email"]}
+                              >
+                                <Email />
+                              </ProtectedRoute>
+                            }
+                          />
+                          <Route
+                            path="EmailCampaignDetail"
+                            element={
+                              <ProtectedRoute
+                                requiredPermission={
+                                  RoutePermissions["EmailCampaignDetail"]
+                                }
+                              >
+                                <EmailCampaignDetail />
+                              </ProtectedRoute>
+                            }
+                          />
+
+                          <Route
+                            path="Sms"
+                            element={
+                              <ProtectedRoute
+                                requiredPermission={RoutePermissions["Sms"]}
+                              >
+                                <Sms />
+                              </ProtectedRoute>
+                            }
+                          />
+
+                          <Route
+                            path="Notes"
+                            element={
+                              <ProtectedRoute
+                                requiredPermission={RoutePermissions["Notes"]}
+                              >
+                                <Notes />
+                              </ProtectedRoute>
+                            }
+                          />
+
+                          <Route
+                            path="CornMarket"
+                            element={
+                              <ProtectedRoute
+                                requiredPermission={
+                                  RoutePermissions["Configuration"]
+                                }
+                              >
+                                <CornGrideSummary />
+                              </ProtectedRoute>
+                            }
+                          />
+
+                          <Route
+                            path="worklocation"
+                            element={
+                              <ProtectedRoute>
+                                <PopOut />
+                              </ProtectedRoute>
+                            }
+                          />
+                          <Route
+                            path="region"
+                            element={
+                              <ProtectedRoute>
+                                <PopOut />
+                              </ProtectedRoute>
+                            }
+                          />
+                          <Route
+                            path="branch"
+                            element={
+                              <ProtectedRoute>
+                                <PopOut />
+                              </ProtectedRoute>
+                            }
+                          />
+
+                          <Route
+                            path="DirectDebit"
+                            element={
+                              <ProtectedRoute>
+                                <DirectDebitSummary />
+                              </ProtectedRoute>
+                            }
+                          />
+
+                          <Route
+                            path="members"
+                            element={
+                              <ProtectedRoute
+                                requiredPermission={RoutePermissions["Members"]}
+                              >
+                                <Members />
+                              </ProtectedRoute>
+                            }
+                          />
+
+                          <Route
+                            path="RemindersDetails"
+                            element={
+                              <ProtectedRoute>
+                                <RemindersDetails />
+                              </ProtectedRoute>
+                            }
+                          />
+
+                          <Route
+                            path="CancellationDetail"
+                            element={
+                              <ProtectedRoute>
+                                <CancellationDetail />
+                              </ProtectedRoute>
+                            }
+                          />
+
+                          <Route
+                            path="MembershipDashboard"
+                            element={
+                              <RoutePermissionWrapper path="/MembershipDashboard">
+                                {/* <ProtectedRoute requiredPermission={RoutePermissions["MembershipDashboard"]}> */}
+                                <MembershipDashboard />
+                                {/* </ProtectedRoute> */}
+                              </RoutePermissionWrapper>
+                            }
+                          />
+
+                          <Route
+                            path="MembershipDashboard/chart"
+                            element={
+                              <RoutePermissionWrapper path="/MembershipDashboard">
+                                <ExecutiveChartExpandPage />
+                              </RoutePermissionWrapper>
+                            }
+                          />
+
+                          <Route
+                            path="TenantManagement"
+                            element={
+                              <ProtectedRoute
+                                requiredPermission={
+                                  RoutePermissions["TenantManagement"]
+                                }
+                              >
+                                <TenantManagement />
+                              </ProtectedRoute>
+                            }
+                          />
+                          <Route
+                            path="TenantOffices"
+                            element={
+                              <ProtectedRoute
+                                requiredPermission={
+                                  RoutePermissions["TenantOffices"]
+                                }
+                              >
+                                <TenantOfficesPage />
+                              </ProtectedRoute>
+                            }
+                          />
+                          <Route
+                            path="TenantDepartments"
+                            element={
+                              <ProtectedRoute
+                                requiredPermission={
+                                  RoutePermissions["TenantDepartments"]
+                                }
+                              >
+                                <TenantDepartmentsPage />
+                              </ProtectedRoute>
+                            }
+                          />
+                          <Route
+                            path="CancelledMembersReport"
+                            element={
+                              <ProtectedRoute
+                                requiredPermission={
+                                  RoutePermissions["CancelledMembersReport"]
+                                }
+                              >
+                                <CancelledMembersReport />
+                              </ProtectedRoute>
+                            }
+                          />
+                          <Route
+                            path="SuspendedMembersReport"
+                            element={
+                              <ProtectedRoute
+                                requiredPermission={
+                                  RoutePermissions["SuspendedMembersReport"]
+                                }
+                              >
+                                <SuspendedMembersReport />
+                              </ProtectedRoute>
+                            }
+                          />
+                          <Route
+                            path="ResignedMembersReport"
+                            element={
+                              <ProtectedRoute
+                                requiredPermission={
+                                  RoutePermissions["ResignedMembersReport"]
+                                }
+                              >
+                                <ResignedMembersReport />
+                              </ProtectedRoute>
+                            }
+                          />
+                          <Route
+                            path="NewMembersReport"
+                            element={
+                              <ProtectedRoute
+                                requiredPermission={
+                                  RoutePermissions["NewMembersReport"]
+                                }
+                              >
+                                <NewMembersReport />
+                              </ProtectedRoute>
+                            }
+                          />
+                          <Route
+                            path="LeaversReport"
+                            element={
+                              <ProtectedRoute
+                                requiredPermission={
+                                  RoutePermissions["LeaversReport"]
+                                }
+                              >
+                                <LeaversReport />
+                              </ProtectedRoute>
+                            }
+                          />
+                          <Route
+                            path="JoinersReport"
+                            element={
+                              <ProtectedRoute
+                                requiredPermission={
+                                  RoutePermissions["JoinersReport"]
+                                }
+                              >
+                                <JoinersReport />
+                              </ProtectedRoute>
+                            }
+                          />
+                          <Route
+                            path="ComparisonReport"
+                            element={
+                              <ProtectedRoute
+                                requiredPermission={
+                                  RoutePermissions["ComparisonReport"]
+                                }
+                              >
+                                <ComparisonReport />
+                              </ProtectedRoute>
+                            }
+                          />
+                          <Route
+                            path="LiveStatsReport"
+                            element={
+                              <ProtectedRoute
+                                requiredPermission={
+                                  RoutePermissions["LiveStatsReport"]
+                                }
+                              >
+                                <LiveStatsReport />
+                              </ProtectedRoute>
+                            }
+                          />
+                          <Route
+                            path="StatisticsReport"
+                            element={
+                              <ProtectedRoute
+                                requiredPermission={
+                                  RoutePermissions["StatisticsReport"]
+                                }
+                              >
+                                <StatisticsReport />
+                              </ProtectedRoute>
+                            }
+                          />
+                          <Route
+                            path="WorkplaceBreakdownReport"
+                            element={
+                              <ProtectedRoute
+                                requiredPermission={
+                                  RoutePermissions["WorkplaceBreakdownReport"]
+                                }
+                              >
+                                <WorkplaceBreakdownReport />
+                              </ProtectedRoute>
+                            }
+                          />
+                          <Route
+                            path="MembershipListingReport"
+                            element={
+                              <ProtectedRoute
+                                requiredPermission={
+                                  RoutePermissions["MembershipListingReport"]
+                                }
+                              >
+                                <MembershipListingReport />
+                              </ProtectedRoute>
+                            }
+                          />
+                          <Route
+                            path="CreditorsListReport"
+                            element={
+                              <ProtectedRoute
+                                requiredPermission={
+                                  RoutePermissions["CreditorsListReport"]
+                                }
+                              >
+                                <CreditorsListReport />
+                              </ProtectedRoute>
+                            }
+                          />
+                          <Route
+                            path="DebtorsListReport"
+                            element={
+                              <ProtectedRoute
+                                requiredPermission={
+                                  RoutePermissions["DebtorsListReport"]
+                                }
+                              >
+                                <DebtorsListReport />
+                              </ProtectedRoute>
+                            }
+                          />
+
+                          <Route
+                            path="RoleManagement"
+                            element={
+                              <ProtectedRoute
+                                requiredPermission={
+                                  RoutePermissions["RoleManagement"]
+                                }
+                              >
+                                <RoleManagement />
+                              </ProtectedRoute>
+                            }
+                          />
+
+                          <Route
+                            path="UserManagement"
+                            element={
+                              <RoutePermissionWrapper path="/UserManagement">
+                                <ProtectedRoute
+                                  requiredPermission={
+                                    RoutePermissions["UserManagement"]
+                                  }
+                                >
+                                  <UserManagement />
+                                </ProtectedRoute>
+                              </RoutePermissionWrapper>
+                            }
+                          />
+
+                          <Route
+                            path="PermissionManagement"
+                            element={
+                              <ProtectedRoute
+                                requiredPermission={
+                                  RoutePermissions["PermissionManagement"]
+                                }
+                              >
+                                <PermissionManagement />
+                              </ProtectedRoute>
+                            }
+                          />
+
+                          <Route
+                            path="ProductTypesManagement"
+                            element={
+                              <ProtectedRoute
+                                requiredPermission={
+                                  RoutePermissions["ProductTypesManagement"]
+                                }
+                              >
+                                <ProductTypesManagement />
+                              </ProtectedRoute>
+                            }
+                          />
+
+                          <Route
+                            path="CancelledMembersReport"
+                            element={
+                              <ProtectedRoute
+                                requiredPermission={
+                                  RoutePermissions["CancelledMembersReport"]
+                                }
+                              >
+                                <CancelledMembersReport />
+                              </ProtectedRoute>
+                            }
+                          />
+
+                          <Route
+                            path="ReportViewerDemo"
+                            element={
+                              <ProtectedRoute>
+                                <ReportViewerDemo />
+                              </ProtectedRoute>
+                            }
+                          />
+
+                          <Route
+                            path="AuthorizationExample"
+                            element={
+                              <ProtectedRoute>
+                                <AuthorizationExample />
+                              </ProtectedRoute>
+                            }
+                          />
+
+                          <Route
+                            path="DynamicPermissionsExample"
+                            element={
+                              <ProtectedRoute>
+                                <DynamicPermissionsExample />
+                              </ProtectedRoute>
+                            }
+                          />
+
+                          <Route
+                            path="DynamicRoutePermissionsExample"
+                            element={
+                              <ProtectedRoute>
+                                <DynamicRoutePermissionsExample />
+                              </ProtectedRoute>
+                            }
+                          />
+
+                          <Route
+                            path="PolicyClientExample"
+                            element={
+                              <ProtectedRoute
+                                requiredPermission={
+                                  RoutePermissions["PolicyClientExample"]
+                                }
+                              >
+                                <PolicyClientExample />
+                              </ProtectedRoute>
+                            }
+                          />
+                          <Route
+                            path="ProductManagementDemo"
+                            element={
+                              <ProtectedRoute>
+                                <ProductManagementDemo />
+                              </ProtectedRoute>
+                            }
+                          />
+                          <Route
+                            path="NewGraduate"
+                            element={
+                              <ProtectedRoute>
+                                <NewGraduate />
+                              </ProtectedRoute>
+                            }
+                          />
+                          <Route
+                            path="CornMarketRewards"
+                            element={
+                              <ProtectedRoute>
+                                <NewlyJoint />
+                              </ProtectedRoute>
+                            }
+                          />
+                          <Route
+                            path="RecruitAFriend"
+                            element={
+                              <ProtectedRoute>
+                                <RecruitAFriend />
+                              </ProtectedRoute>
+                            }
+                          />
+                        </Routes>
+                      </Suspense>
+                    </div>
+
+                    {/* Optional right-side component */}
+                    {showResizableCompRoutes.includes(location.pathname) && (
+                      <ResizableComp />
+                    )}
+                  </div>
+                </CasesEditProvider>
               </div>
-            </CasesEditProvider>
-          </div>
-        </div>
+            </div>
 
-        {/* Footer - also hide for noSidebarRoutes */}
-        {showSidebar && <MyFooter />}
-      </div>
-      </CancellationBatchesFilterProvider>
+            {/* Footer - also hide for noSidebarRoutes */}
+            {showSidebar && <MyFooter />}
+          </div>
+        </CancellationBatchesFilterProvider>
       </ReminderBatchesFilterProvider>
     </AuthorizationProvider>
   );

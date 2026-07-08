@@ -1,10 +1,20 @@
-import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { Button, Input, Modal, notification, Space, Spin } from "antd";
 import axios from "axios";
 import { useSearchParams } from "react-router-dom";
 import { useSelector } from "react-redux";
 import TableComponent from "../../component/common/TableComponent";
 import { getAccountServiceBaseUrl } from "../../config/serviceUrls";
+import {
+  getProfileServiceApiBase,
+  searchProfilesByQuery,
+} from "../../services/profileSearchApi";
 import { useFilters } from "../../context/FilterContext";
 import { useTableColumns } from "../../context/TableColumnsContext ";
 import { applyClientSideRowFilters } from "../../utils/filterUtils";
@@ -27,9 +37,15 @@ function getSelectedClearingAccount(filtersState) {
   return code || "all";
 }
 
+function profileDisplayName(p) {
+  if (!p) return "";
+  const n =
+    `${p.personalInfo?.forename || ""} ${p.personalInfo?.surname || ""}`.trim();
+  return n || String(p.fullName || "").trim() || "";
+}
+
 function mapReconciliationRow(item) {
-  const bankRef =
-    item.bankRef || item.externalReference || item.glDocNo || "";
+  const bankRef = item.bankRef || item.externalReference || item.glDocNo || "";
   return {
     ...item,
     key: item._id,
@@ -49,11 +65,12 @@ const Reconciliation = () => {
 
   const { isInitialized } = useSelector((state) => state.applicationWithFilter);
   const { activeTemplateId } = useSelector((state) => state.activeTemplate);
-  const { loading: templatesLoading } = useSelector(
-    (state) => state.templetefiltrsclumnapi,
+  const { templatesFetching: templatesLoading } = useSelector(
+    (state) => state.templateFiltersColumnApi,
   );
 
   const [filterSourceRows, setFilterSourceRows] = useState([]);
+  const [memberEnrichment, setMemberEnrichment] = useState({});
   const [dashboard, setDashboard] = useState(null);
   const [loading, setLoading] = useState(false);
   const [selectedRowKeys, setSelectedRowKeys] = useState([]);
@@ -122,6 +139,52 @@ const Reconciliation = () => {
   useEffect(() => subscribeReconciliationReload(load), [load]);
 
   useEffect(() => {
+    let cancelled = false;
+    const run = async () => {
+      if (!getProfileServiceApiBase() || !filterSourceRows.length) return;
+      const ids = [
+        ...new Set(
+          filterSourceRows
+            .map((i) => String(i.memberId || "").trim())
+            .filter((m) => m.length >= 2),
+        ),
+      ];
+      if (!ids.length) return;
+      const updates = {};
+      await Promise.all(
+        ids.map(async (memberNo) => {
+          try {
+            const results = await searchProfilesByQuery(memberNo);
+            const lower = memberNo.toLowerCase();
+            const exact =
+              results.find(
+                (r) =>
+                  String(r.membershipNumber || "")
+                    .trim()
+                    .toLowerCase() === lower,
+              ) || results[0];
+            if (exact) {
+              updates[memberNo] = {
+                memberDisplayName: profileDisplayName(exact),
+                memberProfileId: exact._id,
+              };
+            }
+          } catch {
+            /* ignore */
+          }
+        }),
+      );
+      if (!cancelled && Object.keys(updates).length) {
+        setMemberEnrichment((prev) => ({ ...prev, ...updates }));
+      }
+    };
+    run();
+    return () => {
+      cancelled = true;
+    };
+  }, [filterSourceRows]);
+
+  useEffect(() => {
     if (!isInitialized || urlFiltersAppliedRef.current) return;
     const ref = String(searchParams.get("ref") || "").trim();
     const clearing = String(searchParams.get("clearing") || "").trim();
@@ -142,17 +205,26 @@ const Reconciliation = () => {
     if (ref || clearing || status) {
       setSearchParams({}, { replace: true });
     }
-  }, [
-    isInitialized,
-    searchParams,
-    setSearchParams,
-    updateFilterValues,
-  ]);
+  }, [isInitialized, searchParams, setSearchParams, updateFilterValues]);
+
+  const enrichedSourceRows = useMemo(
+    () =>
+      filterSourceRows.map((row) => {
+        const mid = String(row.memberId || "").trim();
+        const enriched = mid ? memberEnrichment[mid] : null;
+        return {
+          ...row,
+          memberDisplayName: enriched?.memberDisplayName || "",
+          memberProfileId: enriched?.memberProfileId || "",
+        };
+      }),
+    [filterSourceRows, memberEnrichment],
+  );
 
   const rows = useMemo(
     () =>
       applyClientSideRowFilters(
-        filterSourceRows,
+        enrichedSourceRows,
         filtersState,
         reconciliationColumns,
       ).map((row) => ({
@@ -161,12 +233,12 @@ const Reconciliation = () => {
           ? String(row.bankRef || "").includes(bankRefFilter)
           : false,
       })),
-    [bankRefFilter, filterSourceRows, filtersState, reconciliationColumns],
+    [bankRefFilter, enrichedSourceRows, filtersState, reconciliationColumns],
   );
 
   useRegisterGridFilterRows(
     "Reconciliation",
-    filterSourceRows,
+    enrichedSourceRows,
     reconciliationColumns,
   );
 
@@ -188,8 +260,7 @@ const Reconciliation = () => {
   }, [rows]);
 
   const seed = useCallback(async () => {
-    const codes =
-      clearingCode === "all" ? CLEARING_CODES : [clearingCode];
+    const codes = clearingCode === "all" ? CLEARING_CODES : [clearingCode];
     let totalCreated = 0;
     for (const code of codes) {
       const res = await axios.post(
@@ -356,10 +427,7 @@ const Reconciliation = () => {
       if (!ids.length) return;
       let glDocNo = "";
       Modal.confirm({
-        title:
-          ids.length > 1
-            ? `Match ${ids.length} records`
-            : "Manual match",
+        title: ids.length > 1 ? `Match ${ids.length} records` : "Manual match",
         content: (
           <Input
             placeholder="Matched GL doc no."

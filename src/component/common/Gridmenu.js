@@ -1,10 +1,27 @@
 import React, { useState, useEffect } from "react";
 import { useLocation } from "react-router-dom";
-import { Dropdown, Menu, Input, Row, Col, Checkbox, Button, Divider, message } from "antd";
-import { SearchOutlined, SaveOutlined, HolderOutlined } from "@ant-design/icons";
+import {
+  Dropdown,
+  Menu,
+  Input,
+  Row,
+  Col,
+  Checkbox,
+  Button,
+  Divider,
+  message,
+} from "antd";
+import {
+  SearchOutlined,
+  SaveOutlined,
+  HolderOutlined,
+} from "@ant-design/icons";
 import { useTableColumns } from "../../context/TableColumnsContext ";
 import { useDispatch, useSelector } from "react-redux";
-import { getGridTemplates, updateGridTemplate } from "../../features/templete/templetefiltrsclumnapi";
+import {
+  getGridTemplates,
+  updateGridTemplate,
+} from "../../features/template/templateFiltersColumnApi";
 import { getViewById } from "../../features/views/ViewByIdSlice";
 import { getApplicationsWithFilter } from "../../features/applicationwithfilterslice";
 import { getPaymentFormsWithFilter } from "../../features/paymentFormsWithFilterSlice";
@@ -27,7 +44,21 @@ import { bumpDebtorsListReportReload } from "../../utils/debtorsListReportWorksp
 import { bumpMembershipStatisticsReportReload } from "../../utils/membershipStatisticsReportWorkspace";
 import { bumpWorkplaceBreakdownReportReload } from "../../utils/workplaceBreakdownReportWorkspace";
 
-function Gridmenu({ title, screenName, setColumnsDragbe, columnsForFilter, setColumnsForFilter }) {
+const getColumnIdentity = (col) => {
+  if (!col) return "";
+  if (Array.isArray(col.dataIndex)) return col.dataIndex.join(".");
+  if (col.dataIndex) return String(col.dataIndex);
+  if (col.key) return String(col.key);
+  return String(col.title || "");
+};
+
+function Gridmenu({
+  title,
+  screenName,
+  setColumnsDragbe,
+  columnsForFilter,
+  setColumnsForFilter,
+}) {
   const dispatch = useDispatch();
   const location = useLocation(); // Add location to check route
   const isMembersScreen =
@@ -62,15 +93,21 @@ function Gridmenu({ title, screenName, setColumnsDragbe, columnsForFilter, setCo
     normalizedGridPath === "/workplacebreakdownreport";
   const isCreditorsListReportScreen =
     normalizedGridPath === "/creditorslistreport";
-  const isDebtorsListReportScreen =
-    normalizedGridPath === "/debtorslistreport";
+  const isDebtorsListReportScreen = normalizedGridPath === "/debtorslistreport";
   const { hasAnyRole } = useAuthorization();
   const canEditGridTemplates = hasAnyRole(["SU", "ASU"]);
   const screenChanges = useSelector(
     (state) => state.screenFilter?.screenFilterChanged || {},
   );
-  const hasUnsavedViewChanges = !!screenChanges[String(screenName || "").toLowerCase()];
-  const { columns, updateColumns, handleCheckboxFilterChange, updateSelectedTemplate, reorderGridColumns } = useTableColumns();
+  const hasUnsavedViewChanges =
+    !!screenChanges[String(screenName || "").toLowerCase()];
+  const {
+    columns,
+    updateColumns,
+    handleCheckboxFilterChange,
+    updateSelectedTemplate,
+    reorderGridColumns,
+  } = useTableColumns();
   const { filtersState, applyTemplateFilters } = useFilters();
   const { currentTemplateId } = useSelector((state) =>
     isPaymentFormsScreen
@@ -88,31 +125,31 @@ function Gridmenu({ title, screenName, setColumnsDragbe, columnsForFilter, setCo
       ? "creditnotes"
       : isJournalAdjustmentsScreen
         ? "journaladjustments"
-      : isOnlinePaymentScreen
-        ? "onlinepayment"
-      : isRefundsScreen
-        ? "refunds"
-      : isWriteOffsScreen
-        ? "writeoffs"
-      : isGeneralLedgerScreen
-        ? "generalledger"
-      : isReconciliationScreen
-        ? "reconciliation"
-      : isMembershipListingReportScreen
-        ? "membershiplisting"
-      : isStatisticsReportScreen
-        ? "statisticsreport"
-      : isWorkplaceBreakdownReportScreen
-        ? "workplacebreakdownreport"
-      : isCreditorsListReportScreen
-        ? "creditorslistreport"
-      : isDebtorsListReportScreen
-        ? "debtorslistreport"
-      : isPaymentFormsScreen
-      ? "payment forms"
-      : isApplicationsScreen
-      ? "application"
-      : undefined;
+        : isOnlinePaymentScreen
+          ? "onlinepayment"
+          : isRefundsScreen
+            ? "refunds"
+            : isWriteOffsScreen
+              ? "writeoffs"
+              : isGeneralLedgerScreen
+                ? "generalledger"
+                : isReconciliationScreen
+                  ? "reconciliation"
+                  : isMembershipListingReportScreen
+                    ? "membershiplisting"
+                    : isStatisticsReportScreen
+                      ? "statisticsreport"
+                      : isWorkplaceBreakdownReportScreen
+                        ? "workplacebreakdownreport"
+                        : isCreditorsListReportScreen
+                          ? "creditorslistreport"
+                          : isDebtorsListReportScreen
+                            ? "debtorslistreport"
+                            : isPaymentFormsScreen
+                              ? "payment forms"
+                              : isApplicationsScreen
+                                ? "application"
+                                : undefined;
 
   const handleUpdateTemplate = async () => {
     if (!currentTemplateId) {
@@ -128,11 +165,18 @@ function Gridmenu({ title, screenName, setColumnsDragbe, columnsForFilter, setCo
     try {
       // 1. Get current visible columns dataIndexes
       const visibleColumnIndexes = columnsForFilter
-        .filter(col => col.isGride)
-        .map(col => Array.isArray(col.dataIndex) ? col.dataIndex.join(".") : col.dataIndex);
+        .filter((col) => col.isGride)
+        .map((col) =>
+          Array.isArray(col.dataIndex)
+            ? col.dataIndex.join(".")
+            : col.dataIndex,
+        );
 
       // 2. Get current filters in API format
-      const currentApiFilters = transformFiltersForApi(filtersState, columns[screenName] || []);
+      const currentApiFilters = transformFiltersForApi(
+        filtersState,
+        columns[screenName] || [],
+      );
 
       const payload = {
         columns: visibleColumnIndexes,
@@ -154,12 +198,14 @@ function Gridmenu({ title, screenName, setColumnsDragbe, columnsForFilter, setCo
             ...(gridTemplateType ? { templateType: gridTemplateType } : {}),
           },
           type: gridTemplateType,
-        })
+        }),
       ).unwrap();
 
       MyAlert("success", "Success", "Template updated successfully");
 
-      console.log("✅ Update successful, re-fetching details via viewById slice...");
+      console.log(
+        "✅ Update successful, re-fetching details via viewById slice...",
+      );
 
       // 1. Refresh the specific view details in Redux
       // This will trigger the global synchronization via SaveViewMenu's observers
@@ -167,7 +213,7 @@ function Gridmenu({ title, screenName, setColumnsDragbe, columnsForFilter, setCo
         getViewById({
           id: currentTemplateId,
           type: gridTemplateType,
-        })
+        }),
       );
 
       // 2. Refresh the overall list
@@ -232,23 +278,30 @@ function Gridmenu({ title, screenName, setColumnsDragbe, columnsForFilter, setCo
     }
   };
 
-  const handleChange = (title, checked, screen, width) => {
-    const updated = columnsForFilter.map(col => {
-      if (col.title === title) {
+  const handleChange = (columnKey, checked, screen, width) => {
+    const updated = columnsForFilter.map((col) => {
+      if (getColumnIdentity(col) === columnKey) {
         return { ...col, isGride: checked };
       }
       return col;
     });
 
-    const changed = updated.find((col) => col.title === title);
-    const withoutChanged = updated.filter((col) => col.title !== title);
+    const changed = updated.find((col) => getColumnIdentity(col) === columnKey);
+    if (!changed) return;
+    const withoutChanged = updated.filter(
+      (col) => getColumnIdentity(col) !== columnKey,
+    );
     const selected = withoutChanged.filter((col) => col.isGride);
     const unselected = withoutChanged
       .filter((col) => !col.isGride)
       .sort((a, b) =>
-        String(a?.title || "").localeCompare(String(b?.title || ""), undefined, {
-          sensitivity: "base",
-        }),
+        String(a?.title || "").localeCompare(
+          String(b?.title || ""),
+          undefined,
+          {
+            sensitivity: "base",
+          },
+        ),
       );
     const reordered = checked
       ? [...selected, changed, ...unselected]
@@ -256,9 +309,13 @@ function Gridmenu({ title, screenName, setColumnsDragbe, columnsForFilter, setCo
           if (a.isGride && !b.isGride) return -1;
           if (!a.isGride && b.isGride) return 1;
           if (!a.isGride && !b.isGride) {
-            return String(a?.title || "").localeCompare(String(b?.title || ""), undefined, {
-              sensitivity: "base",
-            });
+            return String(a?.title || "").localeCompare(
+              String(b?.title || ""),
+              undefined,
+              {
+                sensitivity: "base",
+              },
+            );
           }
           return 0;
         });
@@ -266,7 +323,7 @@ function Gridmenu({ title, screenName, setColumnsDragbe, columnsForFilter, setCo
     setColumnsForFilter(reordered);
     const newData = reordered.filter((col) => col.isGride);
     setColumnsDragbe(newData);
-    handleCheckboxFilterChange(title, checked, screen, width);
+    handleCheckboxFilterChange(columnKey, checked, screen, width);
     if (reorderGridColumns) {
       const keys = reordered
         .filter((c) => c.isGride)
@@ -301,7 +358,7 @@ function Gridmenu({ title, screenName, setColumnsDragbe, columnsForFilter, setCo
       return {
         ...item,
         isVisible: item.title.toLowerCase().includes(normalizedQuery),
-      }
+      };
     });
     setColumnsForFilter(filteredResults);
   };
@@ -348,7 +405,11 @@ function Gridmenu({ title, screenName, setColumnsDragbe, columnsForFilter, setCo
 
   const menu = (
     <Menu>
-      <Menu.Item key="search" disabled style={{ cursor: 'default', padding: '8px' }}>
+      <Menu.Item
+        key="search"
+        disabled
+        style={{ cursor: "default", padding: "8px" }}
+      >
         <Input
           suffix={<SearchOutlined />}
           placeholder="Search columns..."
@@ -358,73 +419,90 @@ function Gridmenu({ title, screenName, setColumnsDragbe, columnsForFilter, setCo
         />
       </Menu.Item>
       <Divider style={{ margin: "4px 0" }} />
-      <div style={{ maxHeight: "250px", overflowY: "auto", overflowX: "hidden", padding: '4px 12px' }}>
+      <div
+        style={{
+          maxHeight: "250px",
+          overflowY: "auto",
+          overflowX: "hidden",
+          padding: "4px 12px",
+        }}
+      >
         <Row>
-          {columnsForFilter?.map((col, index) =>
-            col.isVisible !== false && (
-              <Col span={24} key={col.key || col.title || col.dataIndex}>
-                <div
-                  draggable
-                  onDragStart={() => handleDragStart(index)}
-                  onDragOver={handleDragOver}
-                  onDrop={() => handleDrop(index)}
-                  onDragEnd={() => setDraggingIndex(null)}
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 8,
-                    marginBottom: "8px",
-                    opacity: draggingIndex === index ? 0.5 : 1,
-                    cursor: "move",
-                  }}
-                >
-                  <HolderOutlined
-                    style={{ color: "#999", fontSize: 14, cursor: "grab" }}
-                    onMouseDown={(e) => e.stopPropagation()}
-                  />
-                  <Checkbox
+          {columnsForFilter?.map(
+            (col, index) =>
+              col.isVisible !== false && (
+                <Col span={24} key={col.key || col.title || col.dataIndex}>
+                  <div
+                    draggable
+                    onDragStart={() => handleDragStart(index)}
+                    onDragOver={handleDragOver}
+                    onDrop={() => handleDrop(index)}
+                    onDragEnd={() => setDraggingIndex(null)}
                     style={{
-                      width: '100%',
-                      fontSize: '13px',
-                      fontWeight: 500,
-                      color: '#444'
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 8,
+                      marginBottom: "8px",
+                      opacity: draggingIndex === index ? 0.5 : 1,
+                      cursor: "move",
                     }}
-                    onChange={(e) => {
-                      handleChange(
-                        col?.title,
-                        e.target.checked,
-                        screenName,
-                        col?.width
-                      );
-                    }}
-                    onMouseDown={(e) => e.stopPropagation()} // Stop menu closure on click
-                    checked={col.isGride}
                   >
-                    {col?.title}
-                  </Checkbox>
-                </div>
-              </Col>
-            ))}
+                    <HolderOutlined
+                      style={{ color: "#999", fontSize: 14, cursor: "grab" }}
+                      onMouseDown={(e) => e.stopPropagation()}
+                    />
+                    <Checkbox
+                      style={{
+                        width: "100%",
+                        fontSize: "13px",
+                        fontWeight: 500,
+                        color: "#444",
+                      }}
+                      onChange={(e) => {
+                        handleChange(
+                          getColumnIdentity(col),
+                          e.target.checked,
+                          screenName,
+                          col?.width,
+                        );
+                      }}
+                      onMouseDown={(e) => e.stopPropagation()} // Stop menu closure on click
+                      checked={col.isGride}
+                    >
+                      <span title={col?.contextLabel || ""}>
+                        {col?.title}
+                        {col?.contextLabel ? (
+                          <span style={{ color: "#777", fontSize: 12 }}>
+                            {" "}
+                            ({col.contextLabel})
+                          </span>
+                        ) : null}
+                      </span>
+                    </Checkbox>
+                  </div>
+                </Col>
+              ),
+          )}
         </Row>
       </div>
       {canEditGridTemplates && hasUnsavedViewChanges && (
         <>
-      <Divider style={{ margin: "4px 0" }} />
-      <div style={{ padding: '12px' }}>
-        <Button
-          className="butn primary-btn"
-          icon={<SaveOutlined />}
-          loading={isUpdating}
-          onClick={(e) => {
-            e.stopPropagation();
-            handleUpdateTemplate();
-          }}
-          disabled={!currentTemplateId}
-          style={{ width: '100%', height: '36px' }}
-        >
-          Update Template
-        </Button>
-      </div>
+          <Divider style={{ margin: "4px 0" }} />
+          <div style={{ padding: "12px" }}>
+            <Button
+              className="butn primary-btn"
+              icon={<SaveOutlined />}
+              loading={isUpdating}
+              onClick={(e) => {
+                e.stopPropagation();
+                handleUpdateTemplate();
+              }}
+              disabled={!currentTemplateId}
+              style={{ width: "100%", height: "36px" }}
+            >
+              Update Template
+            </Button>
+          </div>
         </>
       )}
     </Menu>
@@ -448,8 +526,8 @@ function Gridmenu({ title, screenName, setColumnsDragbe, columnsForFilter, setCo
         width: 220,
         padding: "0px",
         boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
-        borderRadius: '8px',
-        overflow: 'hidden'
+        borderRadius: "8px",
+        overflow: "hidden",
       }}
     >
       <Button className="transparent-bg">{title}</Button>

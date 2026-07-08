@@ -89,11 +89,15 @@ export const getSubscriptionsWithTemplate = createAsyncThunk(
       );
       return res.data?.data || {};
     } catch (err) {
+      const body = err.response?.data;
       return rejectWithValue(
-        err.response?.data?.message || "Failed to fetch filtered subscriptions"
+        body?.message ||
+          body?.data ||
+          err.message ||
+          "Failed to fetch filtered subscriptions",
       );
     }
-  }
+  },
 );
 
 
