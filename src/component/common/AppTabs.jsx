@@ -307,6 +307,7 @@ function AppTabs({
   const activeTabParam = String(searchParams.get("activeTab") || "")
     .trim()
     .toLowerCase();
+  const profileHeaderRef = useRef(null);
 
   const refreshDetailsData = useCallback(() => {
     if (!profileIdParam) return;
@@ -328,7 +329,10 @@ function AppTabs({
   }, [refreshDetailsData]);
 
   useEffect(() => {
-    const handler = () => refreshDetailsData();
+    const handler = () => {
+      refreshDetailsData();
+      profileHeaderRef.current?.refreshAccountSummary?.();
+    };
     window.addEventListener("projectshell:details-refresh", handler);
     return () =>
       window.removeEventListener("projectshell:details-refresh", handler);
@@ -412,8 +416,6 @@ function AppTabs({
   const closeHistorySubscriptionDetail = useCallback(() => {
     setIsHistoryDetailOpen(false);
   }, []);
-
-  const profileHeaderRef = useRef(null);
   const documentsActionsRef = useRef(null);
   const registerDocumentsActions = useCallback((actions) => {
     documentsActionsRef.current = actions;

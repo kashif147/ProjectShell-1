@@ -122,6 +122,18 @@ function scalarProfessionalLookupValue(raw) {
   return String(raw);
 }
 
+function normalizeSubscriptionId(raw) {
+  const value =
+    raw && typeof raw === "object"
+      ? raw._id ?? raw.id ?? raw.value ?? null
+      : raw;
+  const id = String(value ?? "").trim();
+  if (!id || id.toLowerCase() === "undefined" || id.toLowerCase() === "null") {
+    return "";
+  }
+  return id;
+}
+
 function isPayrollOrSalaryDeduction(paymentType) {
   const s = (paymentType || "").trim().toLowerCase();
   if (!s) return false;
@@ -861,8 +873,13 @@ const MembershipForm = ({
       profileIdParam;
     if (!profileId) return;
 
-    if (subscriptionIdParam) {
-      dispatch(getSubscriptionById(subscriptionIdParam));
+    const source = profileDetails || profileSearchData?.results?.[0] || null;
+    const linkedSubscriptionId = normalizeSubscriptionId(
+      subscriptionIdParam || source?.currentSubscriptionId,
+    );
+
+    if (linkedSubscriptionId) {
+      dispatch(getSubscriptionById(linkedSubscriptionId));
       return;
     }
 
@@ -2011,8 +2028,13 @@ const MembershipForm = ({
       ).unwrap();
 
       await dispatch(getProfileDetailsById(profileId)).unwrap();
-      if (subscriptionIdParam) {
-        await dispatch(getSubscriptionById(subscriptionIdParam)).unwrap();
+      const linkedSubscriptionId = normalizeSubscriptionId(
+        subscriptionIdParam ||
+          profileDetails?.currentSubscriptionId ||
+          sourceProfile?.currentSubscriptionId,
+      );
+      if (linkedSubscriptionId) {
+        await dispatch(getSubscriptionById(linkedSubscriptionId)).unwrap();
       } else {
         await dispatch(
           getSubscriptionByProfileId({
