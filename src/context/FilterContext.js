@@ -2251,6 +2251,7 @@ export const FilterProvider = ({ children }) => {
       "Membership Status": [
         "",
         "Active",
+        "Renewed",
         "Cancelled",
         "Resigned",
         "Lapsed",
