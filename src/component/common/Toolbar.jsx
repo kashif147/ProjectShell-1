@@ -1122,12 +1122,12 @@ const Toolbar = () => {
           <Button
             onClick={handleBatchSearch}
             style={{
-              backgroundColor: "#45669d",
+              backgroundColor: "var(--app-brand-primary)",
               borderRadius: "4px",
-              border: "none",
+              border: "1px solid var(--app-brand-primary)",
               height: "32px",
               fontWeight: "500",
-              color: "white",
+              color: "var(--brand-on-primary, #ffffff)",
             }}
           >
             Search
@@ -1292,9 +1292,10 @@ const Toolbar = () => {
             aria-label="AI filter"
             title="AI filter"
             style={{
-              backgroundColor: "#f0f2f5",
+              backgroundColor: "transparent",
               borderRadius: "4px",
-              border: "1px solid #d9d9d9",
+              border:
+                "1px solid var(--app-control-border, color-mix(in srgb, var(--app-brand-primary) 14%, #d9d9d9))",
               height: "32px",
               width: "32px",
               minWidth: "32px",
@@ -1303,7 +1304,7 @@ const Toolbar = () => {
               alignItems: "center",
               justifyContent: "center",
               fontWeight: "500",
-              color: "#45669d",
+              color: "var(--app-brand-primary)",
             }}
           />
         )}
@@ -1317,12 +1318,12 @@ const Toolbar = () => {
               onClick={handleSave}
               loading={isSaving}
               style={{
-                backgroundColor: "#E6F7FF",
-                borderRadius: "#4px",
-                border: "1px solid #91D5FF",
+                backgroundColor: "var(--app-brand-primary)",
+                borderRadius: "4px",
+                border: "1px solid var(--app-brand-primary)",
                 height: "32px",
                 fontWeight: "500",
-                color: "#1890FF",
+                color: "var(--brand-on-primary, #ffffff)",
               }}
             >
               Save
@@ -1386,7 +1387,7 @@ const Toolbar = () => {
                     loading={aiLoading}
                     style={{
                       paddingInline: 6,
-                      color: "#45669d",
+                      color: "var(--app-brand-primary)",
                       fontWeight: 500,
                     }}
                   >
@@ -1395,11 +1396,11 @@ const Toolbar = () => {
                         display: "inline-flex",
                         alignItems: "center",
                         gap: 4,
-                        color: "#45669d",
+                        color: "var(--app-brand-primary)",
                       }}
                     >
                       Generate
-                      <EnterOutlined style={{ color: "#45669d" }} />
+                      <EnterOutlined style={{ color: "var(--app-brand-primary)" }} />
                     </span>
                   </Button>
                 </div>

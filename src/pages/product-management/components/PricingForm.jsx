@@ -592,7 +592,7 @@ const PricingDrawer = ({ open, onClose, product, productType, onSubmit }) => {
           <Switch
             checked={formData.status === "Active"}
             // className="butn"
-            style={{ backgroundColor: '#215e97' }}
+            style={{ backgroundColor: 'var(--app-brand-primary)' }}
             onChange={(checked) => handleChange("status", checked ? "Active" : "Inactive")}
             checkedChildren="Active"
             unCheckedChildren="Inactive"
@@ -617,7 +617,7 @@ const PricingDrawer = ({ open, onClose, product, productType, onSubmit }) => {
                     <th
                       {...restProps}
                       style={{
-                        backgroundColor: '#215e97',
+                        backgroundColor: 'var(--app-brand-primary)',
                         ...restProps.style
                       }}
                     >

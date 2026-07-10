@@ -493,7 +493,7 @@ const { ProfileDetails } = useTableColumns();
                     {
                       key: 'export_csv',
                       label: 'Export as CSV',
-                      icon: <BsFiletypeXls style={{ fontSize: "12px", marginRight: "10px", color: "#45669d" }} />,
+                      icon: <BsFiletypeXls style={{ fontSize: "12px", marginRight: "10px", color: "var(--app-brand-primary)" }} />,
                       onClick: () => downloadCSV(),
                     }
                   ]}

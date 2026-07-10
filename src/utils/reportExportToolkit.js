@@ -244,12 +244,12 @@ export function printReportDocument({
   <style>
     @page { size: ${layout}; margin: 12mm; }
     body { font-family: "Segoe UI", Arial, sans-serif; font-size: 10px; color: #1a1a1a; }
-    h1 { font-size: 16px; margin: 0 0 4px; color: #45669d; }
+    h1 { font-size: 16px; margin: 0 0 4px; color: var(--app-brand-primary); }
     .meta { margin-bottom: 12px; font-size: 9px; line-height: 1.4; }
     .meta ul { margin: 4px 0 0 16px; padding: 0; }
     table { width: 100%; border-collapse: collapse; table-layout: auto; }
     th, td { border: 1px solid #d9d9d9; padding: 4px 6px; text-align: left; vertical-align: top; word-break: break-word; }
-    th { background: #45669d; color: #fff; font-weight: 600; }
+    th { background: var(--app-brand-primary); color: #fff; font-weight: 600; }
     tr:nth-child(even) td { background: #fafafa; }
     .footer { margin-top: 12px; font-size: 8px; color: #666; }
   </style>

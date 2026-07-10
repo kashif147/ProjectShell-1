@@ -425,7 +425,7 @@ function SimpleBatchMemberSummary() {
   return (
     <div
       style={{
-        backgroundColor: "#f8fafc",
+        backgroundColor: "var(--theme-muted-bg)",
         minHeight: "100vh",
         padding: "15px",
         paddingBottom: "12px",
@@ -553,7 +553,7 @@ function SimpleBatchMemberSummary() {
             value={metrics.totalExceptions}
             icon={<MinusCircleOutlined />}
             color={metrics.totalExceptions > 0 ? "#ef4444" : "#94a3b8"}
-            iconBg={metrics.totalExceptions > 0 ? "#fee2e2" : "#f1f5f9"}
+            iconBg={metrics.totalExceptions > 0 ? "#fee2e2" : "var(--theme-section-bg)"}
           />
         </Col>
       </Row>
@@ -583,7 +583,7 @@ function SimpleBatchMemberSummary() {
             display: "flex",
             justifyContent: "space-between",
             alignItems: "center",
-            borderBottom: "1px solid #f1f5f9",
+            borderBottom: "1px solid var(--theme-section-bg)",
             gap: "20px",
             backgroundColor: "rgba(9, 30, 66, 0.04)",
             flexShrink: 0,
@@ -623,7 +623,7 @@ function SimpleBatchMemberSummary() {
               style={{
                 maxWidth: "400px",
                 borderRadius: "8px",
-                backgroundColor: "#f8fafc",
+                backgroundColor: "var(--theme-muted-bg)",
                 border: "1px solid #e2e8f0",
                 height: "36px",
               }}

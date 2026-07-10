@@ -28,8 +28,8 @@ const InAppNotifications = () => {
                         width: '40px',
                         height: '40px',
                         borderRadius: '8px',
-                        backgroundColor: '#e6f7ff',
-                        color: '#1890ff',
+                        backgroundColor: 'var(--app-brand-bg)',
+                        color: 'var(--app-brand-accent)',
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
@@ -38,7 +38,7 @@ const InAppNotifications = () => {
                         <BellOutlined />
                     </div>
                     <div>
-                        <div style={{ fontWeight: 600, color: '#1890ff', cursor: 'pointer' }}
+                        <div style={{ fontWeight: 600, color: 'var(--app-brand-accent)', cursor: 'pointer' }}
                             onClick={() => navigate("/CommunicationBatchDetail", { state: { batchId: record.batchId, batchName: text } })}
                         >
                             {text}

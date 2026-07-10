@@ -109,7 +109,7 @@ const DashboardPage = () => {
                 title="Total Members"
                 value={kpiData.totalMembers}
                 prefix={<UserOutlined />}
-                valueStyle={{ color: "#1890ff" }}
+                valueStyle={{ color: "var(--app-brand-accent)" }}
               />
             </Card>
           </Col>
@@ -161,7 +161,7 @@ const DashboardPage = () => {
                   <Line
                     type="monotone"
                     dataKey="revenue"
-                    stroke="#1890ff"
+                    stroke="var(--app-brand-accent)"
                     strokeWidth={2}
                     name="Revenue"
                   />

@@ -4,7 +4,6 @@ import Header from "./component/common/Header";
 import HeaderDetails from "./component/common/HeaderDetails";
 import Sidebar from "./component/common/Sidebar";
 import ResizableComp from "./component/common/ResizableComp";
-import MyFooter from "./component/common/MyFooter";
 import CornGrideSummary from "./pages/cornmarket/CornGrideSummary";
 import ProtectedRoute from "./Navigation/ProtectedRoute";
 import { AuthorizationProvider } from "./context/AuthorizationContext";
@@ -1662,9 +1661,6 @@ function Entry() {
                 </CasesEditProvider>
               </div>
             </div>
-
-            {/* Footer - also hide for noSidebarRoutes */}
-            {showSidebar && <MyFooter />}
           </div>
         </CancellationBatchesFilterProvider>
       </ReminderBatchesFilterProvider>

@@ -830,7 +830,7 @@ function AddNewGarda({ open, onClose, isGard }) {
         isDisable={isDisable}
         width="1500px"
       >
-        <div className="" style={{ backgroundColor: "#f6f9fc" }}>
+        <div className="" style={{ backgroundColor: "var(--theme-page-bg)" }}>
           <div>
             <Row
               gutter={18}

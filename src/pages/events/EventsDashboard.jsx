@@ -26,7 +26,7 @@ const REVENUE_TREND = [
 ];
 
 const REVENUE_BY_TYPE = [
-  { name: "Conference", value: 38200, color: "#215e97" },
+  { name: "Conference", value: 38200, color: "var(--app-brand-primary)" },
   { name: "Networking", value: 11800, color: "#7c3aed" },
   { name: "Seminar", value: 3200, color: "#16a34a" },
   { name: "Webinar", value: 6200, color: "#ea580c" },
@@ -92,7 +92,7 @@ function EventsDashboard() {
         value: "8",
         trend: "↗ 12%",
         trendMuted: false,
-        barColor: "#215e97",
+        barColor: "var(--app-brand-primary)",
         barPercent: 72,
       },
       {
@@ -269,8 +269,8 @@ function EventsDashboard() {
                 <AreaChart data={REVENUE_TREND} margin={{ top: 4, right: 8, left: 0, bottom: 4 }}>
                   <defs>
                     <linearGradient id="eventsRevFill" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stopColor="#215e97" stopOpacity={0.35} />
-                      <stop offset="100%" stopColor="#215e97" stopOpacity={0.02} />
+                      <stop offset="0%" stopColor="var(--app-brand-primary)" stopOpacity={0.35} />
+                      <stop offset="100%" stopColor="var(--app-brand-primary)" stopOpacity={0.02} />
                     </linearGradient>
                   </defs>
                   <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" vertical={false} />
@@ -296,7 +296,7 @@ function EventsDashboard() {
                     type="monotone"
                     dataKey="revenue"
                     name="Revenue"
-                    stroke="#215e97"
+                    stroke="var(--app-brand-primary)"
                     strokeWidth={2}
                     fill="url(#eventsRevFill)"
                   />

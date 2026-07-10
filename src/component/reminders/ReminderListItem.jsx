@@ -30,7 +30,7 @@ const ReminderListItem = ({ item, onView, onEdit }) => {
             fontSize: "16px",
             fontWeight: 600,
             marginBottom: "6px",
-            color: "#215e97",
+            color: "var(--app-brand-primary)",
             cursor: "pointer",
             display: "inline-block",
             transition: "all 0.2s",
@@ -41,7 +41,7 @@ const ReminderListItem = ({ item, onView, onEdit }) => {
           }}
           onMouseLeave={(e) => {
             e.target.style.textDecoration = "none";
-            e.target.style.color = "#215e97";
+            e.target.style.color = "var(--app-brand-primary)";
           }}
         >
           {item.title}
@@ -64,11 +64,11 @@ const ReminderListItem = ({ item, onView, onEdit }) => {
               e.currentTarget.style.color = "#1a4d7a";
             }}
             onMouseLeave={(e) => {
-              e.currentTarget.style.color = "#215e97";
+              e.currentTarget.style.color = "var(--app-brand-primary)";
             }}
             style={{ 
               padding: 0,
-              color: "#215e97",
+              color: "var(--app-brand-primary)",
               fontSize: "13px",
             }}
           >

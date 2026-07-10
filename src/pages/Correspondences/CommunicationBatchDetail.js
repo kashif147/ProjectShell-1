@@ -68,7 +68,7 @@ function extractNotificationTokenRows(tokensPayload) {
   return [];
 }
 
-const PLATFORM_ICON_STYLE = { fontSize: 18, color: "#215e97" };
+const PLATFORM_ICON_STYLE = { fontSize: 18, color: "var(--app-brand-primary)" };
 
 function platformIconAndLabel(platform) {
   const raw = String(platform ?? "").trim();
@@ -268,7 +268,7 @@ const CommunicationBatchDetail = () => {
   //     memberName: i % 2 === 0 ? "Alex Smith" : "Bonnie Johnson",
   //     memberId: i % 2 === 0 ? "#MEM-00124" : "#MEM-00982",
   //     initials: i % 2 === 0 ? "AS" : "BJ",
-  //     avatarColor: i % 2 === 0 ? "#1890ff" : "#fa8c16",
+  //     avatarColor: i % 2 === 0 ? "var(--app-brand-accent)" : "#fa8c16",
   //     channel: "Email",
   //     recipientDetail: i % 2 === 0 ? "alex.smith@example.com" : "bonnie.j@invalid-domain",
   //     timestamp: "Aug 15, 11:02 AM",
@@ -330,9 +330,9 @@ const CommunicationBatchDetail = () => {
   };
 
   const retryButtonStyle = {
-    backgroundColor: "#1677ff",
-    borderColor: "#1677ff",
-    color: "white",
+    backgroundColor: "var(--primary-color)",
+    borderColor: "var(--primary-color)",
+    color: "var(--brand-on-primary, #ffffff)",
     borderRadius: "4px",
     height: "38px",
     padding: "0 16px",
@@ -565,7 +565,7 @@ const CommunicationBatchDetail = () => {
                 subColor: "#52c41a",
                 icon: (
                   <UserOutlined
-                    style={{ color: "#1890ff", fontSize: "13px" }}
+                    style={{ color: "var(--app-brand-accent)", fontSize: "13px" }}
                   />
                 ),
               },
@@ -586,7 +586,7 @@ const CommunicationBatchDetail = () => {
                 sub: `${stats.openRate}% Open`,
                 subColor: "#8c8c8c",
                 icon: (
-                  <EyeOutlined style={{ color: "#1890ff", fontSize: "13px" }} />
+                  <EyeOutlined style={{ color: "var(--app-brand-accent)", fontSize: "13px" }} />
                 ),
               },
               {

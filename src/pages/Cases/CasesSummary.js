@@ -123,7 +123,7 @@ function CasesSummary() {
     const priorityConfig = {
       Critical: { color: "#ff4d4f", bg: "#fff2f0", border: "#ffccc7" },
       High: { color: "#fa8c16", bg: "#fff7e6", border: "#ffd591" },
-      Medium: { color: "#1890ff", bg: "#e6f7ff", border: "#91d5ff" },
+      Medium: { color: "var(--app-brand-accent)", bg: "var(--app-brand-bg)", border: "#91d5ff" },
       Low: { color: "#52c41a", bg: "#f6ffed", border: "#b7eb8f" },
     };
     const config = priorityConfig[priority] || priorityConfig["Medium"];

@@ -51,7 +51,7 @@ export const SOFT_READ_TAG = {
   },
   unread: {
     ...SOFT_TAG_BASE,
-    background: "#f8fafc",
+    background: "var(--theme-muted-bg)",
     color: "#64748b",
     borderColor: "#e2e8f0",
   },

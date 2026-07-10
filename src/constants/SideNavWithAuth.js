@@ -54,9 +54,30 @@ import {
 } from "react-icons/fa";
 
 // Helper function to create menu item with permissions
+const getSidebarIconTone = (key = "") => {
+  const tones = [
+    "blue",
+    "green",
+    "amber",
+    "coral",
+    "violet",
+    "cyan",
+    "rose",
+    "indigo",
+  ];
+  const index = String(key)
+    .split("")
+    .reduce((sum, char) => sum + char.charCodeAt(0), 0);
+  return tones[index % tones.length];
+};
+
 const createMenuItem = (key, icon, label, permissions = [], roles = []) => ({
   key,
-  icon: <div className="icon">{icon}</div>,
+  icon: (
+    <div className={`icon sidebar-nav-icon sidebar-nav-icon--${getSidebarIconTone(key)}`}>
+      {icon}
+    </div>
+  ),
   label: <div className="sidebar-label">{label}</div>,
   permissions,
   roles,

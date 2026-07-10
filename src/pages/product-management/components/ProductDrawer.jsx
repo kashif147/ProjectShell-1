@@ -417,7 +417,7 @@ const ProductForm = ({ product, productType, onClose, onSubmit, hidePricing }) =
         <div className="switch-container">
           <Switch
             checked={formData.status === "Active"} // convert string → boolean
-            style={{ backgroundColor: '#215e97' }}
+            style={{ backgroundColor: 'var(--app-brand-primary)' }}
             onChange={(checked) =>
               handleInputChange("status", checked ? "Active" : "Inactive")
 
@@ -450,7 +450,7 @@ const ProductForm = ({ product, productType, onClose, onSubmit, hidePricing }) =
                     <th
                       {...restProps}
                       style={{
-                        backgroundColor: '#215e97',
+                        backgroundColor: 'var(--app-brand-primary)',
                         ...restProps.style
                       }}
                     >

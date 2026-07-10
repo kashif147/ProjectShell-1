@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from "react";
 import {
   Input,
-  Table,
   Space,
   Button,
   Tag,
@@ -45,7 +44,7 @@ import {
 import MyConfirm from "../../../component/common/MyConfirm";
 import UserRoleAssignment from "../../../component/user/UserRoleAssignment";
 import UserDetails from "./UserDetails";
-import { getUnifiedPaginationConfig } from "../../../component/common/UnifiedPagination";
+import MyTable from "../../../component/common/MyTable";
 import "../../../styles/UserManagement.css";
 
 const { Option } = Select;
@@ -295,7 +294,7 @@ const UserManagement = ({ onClose }) => {
         <Space size="middle">
           <Tooltip title="View Details">
             <EyeOutlined
-              style={{ cursor: "pointer", color: "#1890ff", fontSize: "16px" }}
+              style={{ cursor: "pointer", color: "var(--app-brand-accent)", fontSize: "16px" }}
               onClick={() => handleViewDetails(record)}
             />
           </Tooltip>
@@ -477,27 +476,13 @@ const UserManagement = ({ onClose }) => {
       </Card>
 
       {/* Table */}
-      <div className="bg-white rounded shadow-sm">
-        <Table
-          columns={columns}
-          dataSource={filteredUsers || []}
-          loading={usersLoading}
-          rowKey="_id"
-          pagination={getUnifiedPaginationConfig({
-            total: filteredUsers.length,
-            itemName: "users",
-          })}
-          className="drawer-tbl"
-          size="small"
-          rowClassName={(record, index) =>
-            index % 2 !== 0 ? "odd-row" : "even-row"
-          }
-          scroll={{ x: 1000, y: '45vh' }}
-          locale={{
-            emptyText: "No Data"
-          }}
-        />
-      </div>
+      <MyTable
+        columns={columns}
+        dataSource={filteredUsers || []}
+        loading={usersLoading}
+        selection={false}
+        scroll={{ x: 1000, y: "45vh" }}
+      />
 
       {/* Role Assignment Drawer */}
       {isRoleAssignmentOpen && (

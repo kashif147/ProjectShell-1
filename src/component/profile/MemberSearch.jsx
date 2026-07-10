@@ -698,7 +698,7 @@ const MemberSearch = ({
           left: 0,
           right: 0,
           fontSize: "12px",
-          color: loading ? "#1890ff" : options.length > 0 ? "#52c41a" : "#ff4d4f",
+          color: loading ? "var(--app-brand-accent)" : options.length > 0 ? "#52c41a" : "#ff4d4f",
           padding: "4px 8px",
           backgroundColor: "transparent",
           marginTop: "4px",

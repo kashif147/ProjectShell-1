@@ -39,6 +39,8 @@ const MyTable = ({
   alwaysFirstSortOrder = "ascend",
   /** Ant Design Table `components` (e.g. resizable header cells). */
   tableComponents,
+  /** Ant Design Table `expandable` config (e.g. nested detail rows). */
+  expandable,
 }) => {
   const [internalSelectedRowKeys, setInternalSelectedRowKeys] = useState([]);
   const [filteredInfo, setFilteredInfo] = useState({});
@@ -457,10 +459,14 @@ const MyTable = ({
       rowSelection={rowSelectionConfig}
       pagination={false}
       onChange={handleTableChange}
+      rowClassName={(record, index) =>
+        index % 2 === 0 ? "even-row" : "odd-row"
+      }
       bordered
       tableLayout="fixed"
       sticky
       components={tableComponents}
+      expandable={expandable}
       scroll={mergedScroll}
       size="middle"
       onRow={(record, rowIndex) => ({
@@ -498,7 +504,7 @@ const MyTable = ({
             flexShrink: 0,
             marginTop: 0,
             padding: "6px 10px",
-            backgroundColor: "#fafafa",
+            backgroundColor: "var(--app-table-surface-bg, #ffffff)",
             position: "relative",
             zIndex: 10,
             fontSize: 12,
@@ -518,13 +524,13 @@ const MyTable = ({
             style={{
               cursor: "pointer",
               fontSize: "14px",
-              color: "#215e97",
+              color: "var(--app-brand-primary)",
               transition: "color 0.3s ease",
             }}
             onClick={() => window.location.reload()}
             title="Refresh"
-            onMouseEnter={(e) => (e.currentTarget.style.color = "#1890ff")}
-            onMouseLeave={(e) => (e.currentTarget.style.color = "#215e97")}
+            onMouseEnter={(e) => (e.currentTarget.style.color = "var(--app-brand-accent)")}
+            onMouseLeave={(e) => (e.currentTarget.style.color = "var(--app-brand-primary)")}
           />
         </div>
       ) : (
@@ -533,7 +539,7 @@ const MyTable = ({
           style={{
             marginTop: "10px",
             padding: "8px 0",
-            backgroundColor: "#fafafa",
+            backgroundColor: "var(--app-table-surface-bg, #ffffff)",
             borderTop: "none",
             position: "relative",
             zIndex: 10,
@@ -569,17 +575,17 @@ const MyTable = ({
                   style={{
                     cursor: "pointer",
                     fontSize: "14px",
-                    color: "#215e97",
+                    color: "var(--app-brand-primary)",
                     transition: "color 0.3s ease",
                     marginLeft: "4px",
                   }}
                   onClick={() => window.location.reload()}
                   title="Refresh"
                   onMouseEnter={(e) =>
-                    (e.currentTarget.style.color = "#1890ff")
+                    (e.currentTarget.style.color = "var(--app-brand-accent)")
                   }
                   onMouseLeave={(e) =>
-                    (e.currentTarget.style.color = "#215e97")
+                    (e.currentTarget.style.color = "var(--app-brand-primary)")
                   }
                 />
               </span>

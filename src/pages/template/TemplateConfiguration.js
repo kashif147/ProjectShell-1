@@ -2089,14 +2089,14 @@ const TemplateConfiguration = () => {
           style={{
             marginBottom: "16px",
             padding: "12px",
-            backgroundColor: "#e6f7ff",
+            backgroundColor: "var(--app-brand-bg)",
             border: "1px solid #91d5ff",
             borderRadius: "6px",
             textAlign: "center",
             flexShrink: 0,
           }}
         >
-          <Text strong style={{ color: "#1890ff" }}>
+          <Text strong style={{ color: "var(--app-brand-accent)" }}>
             ⏳ Loading template content from DOCX...
           </Text>
           <Text type="secondary" style={{ display: "block", marginTop: "4px" }}>
@@ -2187,7 +2187,7 @@ const TemplateConfiguration = () => {
             styles={{
               header: {
                 backgroundColor: "#eef4ff",
-                color: "#215e97",
+                color: "var(--app-brand-primary)",
                 minHeight: "36px",
                 padding: "6px 16px",
               },
@@ -2390,7 +2390,7 @@ const TemplateConfiguration = () => {
             styles={{
               header: {
                 backgroundColor: "#eef4ff",
-                color: "#215e97",
+                color: "var(--app-brand-primary)",
                 borderBottom: "1px solid #f0f0f0",
                 minHeight: "36px",
                 padding: "6px 16px",
@@ -2528,7 +2528,7 @@ const TemplateConfiguration = () => {
                     loading={bookmarksRefreshing}
                     onClick={handleRefreshBookmarks}
                     aria-label="Refresh bookmark fields"
-                    style={{ color: "#215e97" }}
+                    style={{ color: "var(--app-brand-primary)" }}
                   />
                 </Tooltip>
               </div>
@@ -2536,7 +2536,7 @@ const TemplateConfiguration = () => {
             styles={{
               header: {
                 backgroundColor: "#eef4ff",
-                color: "#215e97",
+                color: "var(--app-brand-primary)",
                 minHeight: "36px",
                 padding: "6px 16px",
               },
@@ -2577,7 +2577,7 @@ const TemplateConfiguration = () => {
                 style={{
                   display: "block",
                   fontSize: "12px",
-                  color: "#215e97",
+                  color: "var(--app-brand-primary)",
                   marginBottom: "8px",
                 }}
               >
@@ -2649,7 +2649,7 @@ const TemplateConfiguration = () => {
                     strong
                     style={{
                       fontSize: "12px",
-                      color: "#215e97",
+                      color: "var(--app-brand-primary)",
                       marginBottom: "8px",
                       display: "block",
                     }}
@@ -2677,10 +2677,10 @@ const TemplateConfiguration = () => {
                           style={{
                             padding: "4px 8px",
                             backgroundColor: "#eef4ff",
-                            border: "1px solid #215e97",
+                            border: "1px solid var(--app-brand-primary)",
                             borderRadius: "4px",
                             fontSize: "11px",
-                            color: "#215e97",
+                            color: "var(--app-brand-primary)",
                             display: "flex",
                             alignItems: "center",
                             gap: "4px",
@@ -2760,14 +2760,14 @@ const TemplateConfiguration = () => {
                       >
                         <Text
                           strong
-                          style={{ fontSize: "12px", color: "#215e97" }}
+                          style={{ fontSize: "12px", color: "var(--app-brand-primary)" }}
                         >
                           Bookmark fields ({filteredBookmarkVariables.length})
                         </Text>
                         <Tooltip title="Drag or click bookmark fields to insert them into the template.">
                           <InfoCircleOutlined
                             style={{
-                              color: "#215e97",
+                              color: "var(--app-brand-primary)",
                               cursor: "default",
                               fontSize: "14px",
                             }}
@@ -2809,7 +2809,7 @@ const TemplateConfiguration = () => {
                                 ? "#eef4ff"
                                 : "#f8f9fa",
                               border: selectedVariables.has(variable.id)
-                                ? "2px solid #215e97"
+                                ? "2px solid var(--app-brand-primary)"
                                 : "1px solid #d9d9d9",
                               borderRadius: "6px",
                               cursor: "grab",

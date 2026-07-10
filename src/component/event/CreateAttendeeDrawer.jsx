@@ -231,7 +231,7 @@ const CreateAttendeeDrawer = ({ open, onClose }) => {
                                 display: 'flex',
                                 justifyContent: 'space-between',
                                 padding: '0 16px',
-                                backgroundColor: '#f8fafc',
+                                backgroundColor: 'var(--theme-muted-bg)',
                                 borderRadius: '8px',
                                 border: '1px solid #eef2f6',
                                 height: '40px',

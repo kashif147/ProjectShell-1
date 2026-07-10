@@ -41,7 +41,7 @@ const KPICard = ({ value, change, label, isPositive }) => {
         style={{
           fontSize: "22px",
           fontWeight: 700,
-          color: "#215e97",
+          color: "var(--app-brand-primary)",
           marginBottom: "6px",
           lineHeight: "1.2",
         }}

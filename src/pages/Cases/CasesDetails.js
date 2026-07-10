@@ -404,7 +404,7 @@ function CasesDetails() {
       version: "v1.0",
       modifiedBy: "R. SMITH",
       type: "msg",
-      icon: <FileTextOutlined style={{ color: "#1890ff" }} />,
+      icon: <FileTextOutlined style={{ color: "var(--app-brand-accent)" }} />,
       printContent:
         "Subject: Witness Testimony – Case Reference\nFrom: R. SMITH\nDate: Oct 22, 2023\n\nSummary of correspondence regarding witness testimony. Key points documented for case file. Follow-up required with legal team.",
     },
@@ -425,7 +425,7 @@ function CasesDetails() {
       version: "v1.2",
       modifiedBy: "M. LEGAL",
       type: "doc",
-      icon: <FileTextOutlined style={{ color: "#1890ff" }} />,
+      icon: <FileTextOutlined style={{ color: "var(--app-brand-accent)" }} />,
       printContent:
         "Internal Review Notes\n\nReview completed by M. LEGAL. Recommendations: proceed with cross-verification; escalate if further indicators found. Next steps documented in case workflow.",
     },
@@ -618,7 +618,7 @@ function CasesDetails() {
                   <div className="file-info-main">
                     <div className="file-icon-wrapper">
                       <FileTextOutlined
-                        style={{ color: "#1890ff", fontSize: 20 }}
+                        style={{ color: "var(--app-brand-accent)", fontSize: 20 }}
                       />
                     </div>
                     <div className="file-details">

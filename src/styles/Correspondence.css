@@ -12,13 +12,13 @@
 }
 .corespndence-main .ant-tabs-tab{
     margin-left: 30px !important;
-    color: #215E97 !important;
+    color: var(--app-brand-primary) !important;
     font-weight: 400 !important;
     font-size: 16px !important;
 }
 .corespndence-main{
-    background-color:#F5F5F5;
-    height: 100vh; 
+    background-color: var(--app-page-bg, #f8f9f9);
+    height: 100vh;
     width: 77vw;
 }
 .chat-container{

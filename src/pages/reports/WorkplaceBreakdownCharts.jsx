@@ -91,7 +91,7 @@ export default function WorkplaceBreakdownCharts({ trendSeries }) {
                   type="monotone"
                   dataKey="count"
                   name="Members"
-                  stroke="#45669d"
+                  stroke="var(--app-brand-primary)"
                   strokeWidth={2}
                   dot={{ r: 3 }}
                 />
@@ -125,7 +125,7 @@ export default function WorkplaceBreakdownCharts({ trendSeries }) {
                     );
                   }}
                 />
-                <Bar dataKey="count" name="Members" fill="#45669d" radius={[0, 4, 4, 0]} />
+                <Bar dataKey="count" name="Members" fill="var(--app-brand-primary)" radius={[0, 4, 4, 0]} />
               </BarChart>
             </ResponsiveContainer>
           </Card>

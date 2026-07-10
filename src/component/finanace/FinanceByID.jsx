@@ -74,8 +74,8 @@ import { useFinanceTabToolbar } from "../../context/FinanceTabToolbarContext";
 import { hasFinanceActionRole } from "../../utils/profileRoleAccess";
 
 const financeMoreActionsButtonStyle = {
-  backgroundColor: "#45669d",
-  borderColor: "#45669d",
+  backgroundColor: "var(--app-brand-primary)",
+  borderColor: "var(--app-brand-primary)",
   color: "#fff",
 };
 
@@ -87,7 +87,7 @@ const ledgerRowActionsButtonStyle = {
   display: "inline-flex",
   alignItems: "center",
   justifyContent: "center",
-  color: "#45669d",
+  color: "var(--app-brand-primary)",
 };
 
 function accountServiceErrorMessage(error, fallback) {

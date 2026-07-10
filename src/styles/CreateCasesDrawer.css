@@ -2,7 +2,7 @@
   padding: 0.5rem 0.75rem;
   font-family: var(--font-family);
   color: var(--font-color);
-  background-color: #f6f9fc;
+  background-color: var(--theme-page-bg);
 }
 
 .completion-progress-container {
@@ -265,7 +265,7 @@
 
 /* Set drawer body background to grey */
 .create-case-drawer .ant-drawer-body {
-  background-color: #f6f9fc !important;
+  background-color: var(--theme-page-bg) !important;
   padding: 0 !important;
 }
 
@@ -379,7 +379,7 @@
 
 /* Edit cases drawer – same styling as create case with extra left padding */
 .edit-cases-drawer.ant-drawer .ant-drawer-body {
-  background-color: #f6f9fc !important;
+  background-color: var(--theme-page-bg) !important;
   padding: 24px 24px 24px 32px !important;
 }
 

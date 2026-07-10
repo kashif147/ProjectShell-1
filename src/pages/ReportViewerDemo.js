@@ -157,7 +157,7 @@ const ReportViewerDemo = () => {
         <Card title="Report Statistics" style={{ marginBottom: 16 }}>
           <Space size="large">
             <div style={{ textAlign: "center" }}>
-              <Title level={3} style={{ color: "#1890ff", margin: 0 }}>
+              <Title level={3} style={{ color: "var(--app-brand-accent)", margin: 0 }}>
                 {sampleData.length}
               </Title>
               <Text type="secondary">Total Reports</Text>

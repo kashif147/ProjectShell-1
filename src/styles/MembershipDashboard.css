@@ -156,7 +156,7 @@
 }
 
 .membership-kpi-pill__value:focus-visible {
-  outline: 2px solid #1890ff;
+  outline: 2px solid var(--app-brand-accent);
   outline-offset: 2px;
   border-radius: 4px;
 }
@@ -327,7 +327,7 @@
 }
 
 .comparison-data .ytd {
-  color: #1890ff;
+  color: var(--app-brand-accent);
   font-weight: 500;
 }
 

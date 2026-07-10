@@ -1,7 +1,9 @@
+import { SHELL_BRANDING } from "../constants/shellBranding";
+import { normalizeHex, readableTextColor } from "./brandingPalette";
+
 /**
- * Applies tenant branding without overriding app shell CSS variables.
- * Sidebar, buttons, and chrome keep Utilites.css (:root) values.
- * Colours in tenant.branding are stored for future use (e.g. letters) only.
+ * Applies saved tenant branding to shared CSS variables.
+ * Color recommendations are handled in the tenant branding form, not here.
  */
 
 const DEFAULT_TITLE = "Project Shell";
@@ -11,11 +13,52 @@ const SHELL_CSS_VARS = [
   "--secoundry-color",
   "--accent-color",
   "--secoundry-bg-color",
+  "--brand-on-primary",
+  "--brand-on-secondary",
+  "--brand-on-accent",
 ];
 
-function clearShellStyleOverrides() {
+function resolveSavedBranding(branding = {}) {
+  const primaryColor =
+    normalizeHex(branding.primaryColor) || SHELL_BRANDING.primaryColor;
+  const secondaryColor =
+    normalizeHex(branding.secondaryColor) || SHELL_BRANDING.secondaryColor;
+  const accentColor =
+    normalizeHex(branding.accentColor) || SHELL_BRANDING.accentColor;
+  const secondaryBackgroundColor =
+    normalizeHex(branding.secondaryBackgroundColor) ||
+    SHELL_BRANDING.secondaryBackgroundColor;
+
+  return {
+    ...branding,
+    primaryColor,
+    secondaryColor,
+    accentColor,
+    secondaryBackgroundColor,
+    onPrimaryColor: readableTextColor(primaryColor),
+    onSecondaryColor: readableTextColor(secondaryColor),
+    onAccentColor: readableTextColor(accentColor),
+  };
+}
+
+function applyShellCssVars(branding = SHELL_BRANDING) {
   const root = document.documentElement;
-  SHELL_CSS_VARS.forEach((cssVar) => root.style.removeProperty(cssVar));
+  const resolved = resolveSavedBranding(branding);
+  const values = {
+    "--primary-color": resolved.primaryColor,
+    "--secoundry-color": resolved.secondaryColor,
+    "--accent-color": resolved.accentColor,
+    "--secoundry-bg-color": resolved.secondaryBackgroundColor,
+    "--brand-on-primary": resolved.onPrimaryColor,
+    "--brand-on-secondary": resolved.onSecondaryColor,
+    "--brand-on-accent": resolved.onAccentColor,
+  };
+
+  SHELL_CSS_VARS.forEach((cssVar) => {
+    root.style.setProperty(cssVar, values[cssVar]);
+  });
+
+  return resolved;
 }
 
 function setFavicon(url) {
@@ -30,18 +73,19 @@ function setFavicon(url) {
 }
 
 export function applyTenantBranding(branding = {}) {
-  clearShellStyleOverrides();
+  const resolved = applyShellCssVars(branding);
 
-  document.title = branding.portalTitle?.trim() || DEFAULT_TITLE;
-  setFavicon(branding.faviconUrl || branding.logoUrl);
+  document.title = resolved.portalTitle?.trim() || DEFAULT_TITLE;
+  setFavicon(resolved.faviconUrl || resolved.logoUrl);
 
-  return branding;
+  return resolved;
 }
 
 export function resetTenantBranding() {
-  clearShellStyleOverrides();
+  const resolved = applyShellCssVars(SHELL_BRANDING);
   document.title = DEFAULT_TITLE;
 
   const metaTheme = document.querySelector('meta[name="theme-color"]');
-  if (metaTheme) metaTheme.setAttribute("content", "#000000");
+  if (metaTheme) metaTheme.setAttribute("content", resolved.primaryColor);
+  return resolved;
 }

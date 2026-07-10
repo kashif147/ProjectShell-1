@@ -1902,7 +1902,7 @@ function MyDeatails() {
                 className="d-flex align-items-center justify-content-center"
                 style={{
                   height: "44px",
-                  backgroundColor: "#215E97",
+                  backgroundColor: "var(--app-brand-primary)",
                   color: "white",
                 }}
               >
@@ -1978,7 +1978,7 @@ function MyDeatails() {
                 className="d-flex align-items-center justify-content-center"
                 style={{
                   height: "44px",
-                  backgroundColor: "#215E97",
+                  backgroundColor: "var(--app-brand-primary)",
                   color: "white",
                 }}
               >

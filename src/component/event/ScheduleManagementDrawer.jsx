@@ -38,7 +38,7 @@ const ScheduleManagementDrawer = ({
             <Button
                 type="primary"
                 onClick={onSave}
-                style={{ width: '100px', backgroundColor: '#215E97', borderColor: '#215E97' }}
+                style={{ width: '100px', backgroundColor: 'var(--app-brand-primary)', borderColor: 'var(--app-brand-primary)' }}
             >
                 Done
             </Button>

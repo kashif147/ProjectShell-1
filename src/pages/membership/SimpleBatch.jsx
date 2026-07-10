@@ -301,7 +301,7 @@ const SimpleBatch = ({ open, onClose, onSubmit }) => {
           <Button
             className="butn secoundry-btn"
             onClick={onClose}
-            style={{ color: "#215E97", borderColor: "#215E97" }}
+            style={{ color: "var(--app-brand-primary)", borderColor: "var(--app-brand-primary)" }}
           >
             Close
           </Button>
@@ -320,7 +320,7 @@ const SimpleBatch = ({ open, onClose, onSubmit }) => {
         className="drawer-main-container"
         style={{
           padding: "16px",
-          backgroundColor: "#f6f9fc",
+          backgroundColor: "var(--theme-page-bg)",
           height: "100%",
         }}
       >

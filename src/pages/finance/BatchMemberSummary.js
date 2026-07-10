@@ -528,7 +528,7 @@ export default function BatchMemberSummary() {
                   padding: "4px 8px",
                   cursor: "pointer",
                   backgroundColor: selectedKeys?.includes(option.value)
-                    ? "#e6f7ff"
+                    ? "var(--app-brand-bg)"
                     : "transparent",
                 }}
               >
@@ -620,7 +620,7 @@ export default function BatchMemberSummary() {
               }
             >
               <InfoCircleOutlined
-                style={{ color: "#1677ff", fontSize: 16, cursor: "default" }}
+                style={{ color: "var(--primary-color)", fontSize: 16, cursor: "default" }}
                 role="img"
                 aria-label="Row issue details"
               />
@@ -651,7 +651,7 @@ export default function BatchMemberSummary() {
         onFilter: (value, record) =>
           String(record.fileRow?.membershipNumber ?? "") === String(value),
         filterIcon: (filtered) => (
-          <SearchOutlined style={{ color: filtered ? "#1890ff" : undefined }} />
+          <SearchOutlined style={{ color: filtered ? "var(--app-brand-accent)" : undefined }} />
         ),
         onCell: (record) => ({
           className: isFileRefMembershipMismatch(record)
@@ -677,7 +677,7 @@ export default function BatchMemberSummary() {
         onFilter: (value, record) =>
           String(batchPaymentNameOnFile(record)) === String(value),
         filterIcon: (filtered) => (
-          <SearchOutlined style={{ color: filtered ? "#1890ff" : undefined }} />
+          <SearchOutlined style={{ color: filtered ? "var(--app-brand-accent)" : undefined }} />
         ),
       },
       {
@@ -730,7 +730,7 @@ export default function BatchMemberSummary() {
                       padding: "4px 8px",
                       cursor: "pointer",
                       backgroundColor: selectedKeys?.includes(range.value)
-                        ? "#e6f7ff"
+                        ? "var(--app-brand-bg)"
                         : "transparent",
                     }}
                   >
@@ -774,7 +774,7 @@ export default function BatchMemberSummary() {
           return true;
         },
         filterIcon: (filtered) => (
-          <SearchOutlined style={{ color: filtered ? "#1890ff" : undefined }} />
+          <SearchOutlined style={{ color: filtered ? "var(--app-brand-accent)" : undefined }} />
         ),
       },
       {
@@ -801,7 +801,7 @@ export default function BatchMemberSummary() {
           return recordValue === value;
         },
         filterIcon: (filtered) => (
-          <SearchOutlined style={{ color: filtered ? "#1890ff" : undefined }} />
+          <SearchOutlined style={{ color: filtered ? "var(--app-brand-accent)" : undefined }} />
         ),
         onCell: (record) => ({
           className: isFileRefMembershipMismatch(record)
@@ -837,7 +837,7 @@ export default function BatchMemberSummary() {
         onFilter: (value, record) =>
           String(batchPaymentCrmFullName(record)) === String(value),
         filterIcon: (filtered) => (
-          <SearchOutlined style={{ color: filtered ? "#1890ff" : undefined }} />
+          <SearchOutlined style={{ color: filtered ? "var(--app-brand-accent)" : undefined }} />
         ),
       },
       {
@@ -868,7 +868,7 @@ export default function BatchMemberSummary() {
           return r === String(value);
         },
         filterIcon: (filtered) => (
-          <SearchOutlined style={{ color: filtered ? "#1890ff" : undefined }} />
+          <SearchOutlined style={{ color: filtered ? "var(--app-brand-accent)" : undefined }} />
         ),
       },
       {
@@ -892,7 +892,7 @@ export default function BatchMemberSummary() {
           return recordValue === value;
         },
         filterIcon: (filtered) => (
-          <SearchOutlined style={{ color: filtered ? "#1890ff" : undefined }} />
+          <SearchOutlined style={{ color: filtered ? "var(--app-brand-accent)" : undefined }} />
         ),
       },
       {
@@ -959,7 +959,7 @@ export default function BatchMemberSummary() {
         onFilter: (value, record) =>
           String(record.fileRow?.membershipNumber ?? "") === String(value),
         filterIcon: (filtered) => (
-          <SearchOutlined style={{ color: filtered ? "#1890ff" : undefined }} />
+          <SearchOutlined style={{ color: filtered ? "var(--app-brand-accent)" : undefined }} />
         ),
       },
       {
@@ -983,7 +983,7 @@ export default function BatchMemberSummary() {
           return recordValue === value;
         },
         filterIcon: (filtered) => (
-          <SearchOutlined style={{ color: filtered ? "#1890ff" : undefined }} />
+          <SearchOutlined style={{ color: filtered ? "var(--app-brand-accent)" : undefined }} />
         ),
         render: (_, record) => {
           const v = record?.fullName;
@@ -1030,7 +1030,7 @@ export default function BatchMemberSummary() {
           return r === String(value);
         },
         filterIcon: (filtered) => (
-          <SearchOutlined style={{ color: filtered ? "#1890ff" : undefined }} />
+          <SearchOutlined style={{ color: filtered ? "var(--app-brand-accent)" : undefined }} />
         ),
       },
       {
@@ -1054,7 +1054,7 @@ export default function BatchMemberSummary() {
           return recordValue === value;
         },
         filterIcon: (filtered) => (
-          <SearchOutlined style={{ color: filtered ? "#1890ff" : undefined }} />
+          <SearchOutlined style={{ color: filtered ? "var(--app-brand-accent)" : undefined }} />
         ),
       },
       {
@@ -1107,7 +1107,7 @@ export default function BatchMemberSummary() {
                       padding: "4px 8px",
                       cursor: "pointer",
                       backgroundColor: selectedKeys?.includes(range.value)
-                        ? "#e6f7ff"
+                        ? "var(--app-brand-bg)"
                         : "transparent",
                     }}
                   >
@@ -1150,7 +1150,7 @@ export default function BatchMemberSummary() {
           return true;
         },
         filterIcon: (filtered) => (
-          <SearchOutlined style={{ color: filtered ? "#1890ff" : undefined }} />
+          <SearchOutlined style={{ color: filtered ? "var(--app-brand-accent)" : undefined }} />
         ),
       },
       {
@@ -1569,7 +1569,7 @@ export default function BatchMemberSummary() {
   return (
     <div
       style={{
-        backgroundColor: "#f8fafc",
+        backgroundColor: "var(--theme-muted-bg)",
         minHeight: "100vh",
         padding: "15px",
         paddingBottom: "12px",
@@ -2007,7 +2007,7 @@ export default function BatchMemberSummary() {
                 width: "24px",
                 height: "24px",
                 borderRadius: "6px",
-                backgroundColor: displayArrears !== 0 ? "#fee2e2" : "#f1f5f9",
+                backgroundColor: displayArrears !== 0 ? "#fee2e2" : "var(--theme-section-bg)",
                 display: "flex",
                 justifyContent: "center",
                 alignItems: "center",
@@ -2125,7 +2125,7 @@ export default function BatchMemberSummary() {
                 width: "24px",
                 height: "24px",
                 borderRadius: "6px",
-                backgroundColor: displayAdvance !== 0 ? "#dcfce7" : "#f1f5f9",
+                backgroundColor: displayAdvance !== 0 ? "#dcfce7" : "var(--theme-section-bg)",
                 display: "flex",
                 justifyContent: "center",
                 alignItems: "center",
@@ -2243,7 +2243,7 @@ export default function BatchMemberSummary() {
                 width: "24px",
                 height: "24px",
                 borderRadius: "6px",
-                backgroundColor: exceptions.length > 0 ? "#fee2e2" : "#f1f5f9",
+                backgroundColor: exceptions.length > 0 ? "#fee2e2" : "var(--theme-section-bg)",
                 display: "flex",
                 justifyContent: "center",
                 alignItems: "center",
@@ -2302,7 +2302,7 @@ export default function BatchMemberSummary() {
                 width: "24px",
                 height: "24px",
                 borderRadius: "6px",
-                backgroundColor: "#f1f5f9",
+                backgroundColor: "var(--theme-section-bg)",
                 display: "flex",
                 justifyContent: "center",
                 alignItems: "center",
@@ -2353,7 +2353,7 @@ export default function BatchMemberSummary() {
               width: "24px",
               height: "24px",
               borderRadius: "6px",
-              backgroundColor: "#f1f5f9",
+              backgroundColor: "var(--theme-section-bg)",
               display: "flex",
               justifyContent: "center",
               alignItems: "center",
@@ -2446,7 +2446,7 @@ export default function BatchMemberSummary() {
             display: "flex",
             justifyContent: "space-between",
             alignItems: "center",
-            borderBottom: "1px solid #f1f5f9",
+            borderBottom: "1px solid var(--theme-section-bg)",
             gap: "20px",
             backgroundColor: "rgba(9, 30, 66, 0.04)",
             flexShrink: 0,
@@ -2646,7 +2646,7 @@ export default function BatchMemberSummary() {
                       width: "64px",
                       height: "64px",
                       borderRadius: "50%",
-                      backgroundColor: "#f1f5f9",
+                      backgroundColor: "var(--theme-section-bg)",
                       display: "flex",
                       justifyContent: "center",
                       alignItems: "center",

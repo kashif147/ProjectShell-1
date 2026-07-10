@@ -812,7 +812,7 @@ const CreateBatchPayment = forwardRef((props, ref) => {
 
             <div className="summary-line total">
               <Text strong>Batch Total (€):</Text>{" "}
-              <Text strong style={{ color: "#1677ff" }}>
+              <Text strong style={{ color: "var(--primary-color)" }}>
                 €{batchTotals?.totalCurrent?.toLocaleString()}
               </Text>
             </div>

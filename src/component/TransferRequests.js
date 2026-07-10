@@ -248,8 +248,8 @@ function TransferRequests({ open, onClose }) {
             type="primary"
             onClick={() => updateStatusftn(requestId)}
             style={{
-              backgroundColor: "#215E97",
-              borderColor: "#215E97",
+              backgroundColor: "var(--app-brand-primary)",
+              borderColor: "var(--app-brand-primary)",
               color: "white",
               fontWeight: "500",
               fontSize: "14px",
@@ -279,7 +279,7 @@ function TransferRequests({ open, onClose }) {
               className="d-flex align-items-center justify-content-center"
               style={{
                 height: "35px",
-                backgroundColor: "#215E97",
+                backgroundColor: "var(--app-brand-primary)",
                 color: "white",
               }}
             >
@@ -336,7 +336,7 @@ function TransferRequests({ open, onClose }) {
               className="d-flex align-items-center justify-content-center"
               style={{
                 height: "35px",
-                backgroundColor: "#215E97",
+                backgroundColor: "var(--app-brand-primary)",
                 color: "white",
               }}
             >

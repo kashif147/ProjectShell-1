@@ -209,7 +209,7 @@ function New() {
         </Button>
             <Select
                 onChange={handleOptionSelect} 
-                style={{ borderLeft: 'none', backgroundColor: "#215E97", borderRadius:'3px' }}
+                style={{ borderLeft: 'none', backgroundColor: "var(--app-brand-primary)", borderRadius:'3px' }}
                 value={null}
                 dropdownStyle={{ width: '10%', }}
                  className="custom-select"

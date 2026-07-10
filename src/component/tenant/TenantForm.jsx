@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useMemo } from "react";
 import {
   Drawer,
   Button,
@@ -39,7 +39,47 @@ import {
   clearTenantBrandingCache,
   resolveTenantId,
 } from "../../services/tenantBrandingService";
+import { recommendBrandingColors } from "../../utils/brandingPalette";
 const { TabPane } = Tabs;
+
+const ColorField = ({ label, value, onChange, recommendation, onApply }) => (
+  <div className="color-field-wrap">
+    <div className="color-field">
+      <MyInput
+        label={label}
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+      />
+      <input
+        type="color"
+        className="color-picker-input"
+        value={value || "#1E40AF"}
+        onChange={(e) => onChange(e.target.value)}
+        aria-label={`${label} picker`}
+      />
+    </div>
+    {recommendation ? (
+      <div className="tenant-color-recommendation">
+        <span
+          className="tenant-color-swatch"
+          style={{ backgroundColor: recommendation }}
+          aria-hidden="true"
+        />
+        <span className="tenant-color-recommendation-value">
+          Recommended {recommendation}
+        </span>
+        <Button
+          type="link"
+          size="small"
+          className="tenant-color-apply"
+          onClick={onApply}
+        >
+          Apply
+        </Button>
+      </div>
+    ) : null}
+  </div>
+);
 
 const TENANT_TAB_KEYS = [
   "details",
@@ -76,6 +116,10 @@ const TenantForm = ({ tenant, onClose }) => {
 
   const [errors, setErrors] = useState({});
   const [activeTabKey, setActiveTabKey] = useState("details");
+  const brandingRecommendations = useMemo(
+    () => recommendBrandingColors(iData.branding?.primaryColor),
+    [iData.branding?.primaryColor],
+  );
 
   useEffect(() => {
     setActiveTabKey("details");
@@ -195,6 +239,22 @@ const TenantForm = ({ tenant, onClose }) => {
     });
   };
 
+  const applyBrandingRecommendation = (field) => {
+    handleChange("branding", field, brandingRecommendations[field], null);
+  };
+
+  const applyBrandingRecommendations = () => {
+    setIData((prev) => ({
+      ...prev,
+      branding: {
+        ...prev.branding,
+        secondaryColor: brandingRecommendations.secondaryColor,
+        accentColor: brandingRecommendations.accentColor,
+        secondaryBackgroundColor: brandingRecommendations.secondaryBackgroundColor,
+      },
+    }));
+  };
+
   const handleSubmit = async () => {
     if (!validate()) {
       return;
@@ -284,23 +344,6 @@ const TenantForm = ({ tenant, onClose }) => {
         },
       );
   };
-  const ColorField = ({ label, value, onChange }) => (
-    <div className="color-field">
-      <MyInput
-        label={label}
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-      />
-      <input
-        type="color"
-        className="color-picker-input"
-        value={value || "#1E40AF"}
-        onChange={(e) => onChange(e.target.value)}
-        aria-label={`${label} picker`}
-      />
-    </div>
-  );
-
   return (
     <Drawer
       className="tenant-form-drawer"
@@ -1301,11 +1344,48 @@ const TenantForm = ({ tenant, onClose }) => {
 
               <div className="section-header">Colours</div>
               <p className="text-muted tenant-branding-hint mb-2">
-                Matches Project Shell defaults (Utilites.css). Used for letters
-                and exports; the live app sidebar keeps existing CSS.
+                Select a primary colour to see recommended secondary, accent and
+                surface tint colours. Saved branding values are applied exactly
+                as set.
               </p>
+              <div className="tenant-branding-recommendation-bar">
+                <div>
+                  <div className="tenant-branding-recommendation-title">
+                    Suggested companion colours
+                  </div>
+                  <div className="tenant-branding-recommendation-swatches">
+                    <span
+                      className="tenant-color-swatch"
+                      style={{
+                        backgroundColor: brandingRecommendations.secondaryColor,
+                      }}
+                    />
+                    <span>{brandingRecommendations.secondaryColor}</span>
+                    <span
+                      className="tenant-color-swatch"
+                      style={{
+                        backgroundColor: brandingRecommendations.accentColor,
+                      }}
+                    />
+                    <span>{brandingRecommendations.accentColor}</span>
+                    <span
+                      className="tenant-color-swatch"
+                      style={{
+                        backgroundColor:
+                          brandingRecommendations.secondaryBackgroundColor,
+                      }}
+                    />
+                    <span>
+                      {brandingRecommendations.secondaryBackgroundColor}
+                    </span>
+                  </div>
+                </div>
+                <Button size="small" onClick={applyBrandingRecommendations}>
+                  Apply Suggested
+                </Button>
+              </div>
               <Row gutter={16}>
-                <Col span={8}>
+                <Col span={6}>
                   <ColorField
                     label="Primary Colour"
                     value={iData.branding.primaryColor}
@@ -1314,21 +1394,45 @@ const TenantForm = ({ tenant, onClose }) => {
                     }
                   />
                 </Col>
-                <Col span={8}>
+                <Col span={6}>
                   <ColorField
                     label="Secondary Colour"
                     value={iData.branding.secondaryColor}
                     onChange={(val) =>
                       handleChange("branding", "secondaryColor", val, null)
                     }
+                    recommendation={brandingRecommendations.secondaryColor}
+                    onApply={() => applyBrandingRecommendation("secondaryColor")}
                   />
                 </Col>
-                <Col span={8}>
+                <Col span={6}>
                   <ColorField
                     label="Accent Colour"
                     value={iData.branding.accentColor}
                     onChange={(val) =>
                       handleChange("branding", "accentColor", val, null)
+                    }
+                    recommendation={brandingRecommendations.accentColor}
+                    onApply={() => applyBrandingRecommendation("accentColor")}
+                  />
+                </Col>
+                <Col span={6}>
+                  <ColorField
+                    label="Surface Tint"
+                    value={iData.branding.secondaryBackgroundColor}
+                    onChange={(val) =>
+                      handleChange(
+                        "branding",
+                        "secondaryBackgroundColor",
+                        val,
+                        null,
+                      )
+                    }
+                    recommendation={
+                      brandingRecommendations.secondaryBackgroundColor
+                    }
+                    onApply={() =>
+                      applyBrandingRecommendation("secondaryBackgroundColor")
                     }
                   />
                 </Col>

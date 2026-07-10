@@ -365,7 +365,7 @@ function SimpleMenu({
                     style={{
                       fontSize: "12px",
                       marginRight: "10px",
-                      color: "#45669d"
+                      color: "var(--app-brand-primary)"
                     }}
                   />
                   Delete
@@ -377,7 +377,7 @@ function SimpleMenu({
                       fontSize: "12px",
                       marginRight: "10px",
                       fontWeight: "500",
-                      color: "#45669d"
+                      color: "var(--app-brand-primary)"
                     }}
                   />
                   Attached
@@ -388,7 +388,7 @@ function SimpleMenu({
                     style={{
                       fontSize: "12px",
                       marginRight: "10px",
-                      color: "#45669d"
+                      color: "var(--app-brand-primary)"
                     }}
                   />
                   View
@@ -407,7 +407,7 @@ function SimpleMenu({
                     style={{
                       fontSize: "12px",
                       marginRight: "10px",
-                      color: "#45669d"
+                      color: "var(--app-brand-primary)"
                     }}
                   />
                   Print Label
@@ -425,7 +425,7 @@ function SimpleMenu({
                     style={{
                       fontSize: "12px",
                       marginRight: "10px",
-                      color: "#45669d"
+                      color: "var(--app-brand-primary)"
                     }}
                   />
                   Transfer Requests
@@ -450,7 +450,7 @@ function SimpleMenu({
                     style={{
                       fontSize: "12px",
                       marginRight: "10px",
-                      color: "#45669d"
+                      color: "var(--app-brand-primary)"
                     }}
                   />
                   Career Break
@@ -468,7 +468,7 @@ function SimpleMenu({
                     style={{
                       fontSize: "12px",
                       marginRight: "10px",
-                      color: "#45669d"
+                      color: "var(--app-brand-primary)"
                     }}
                   />
                   Generate NFC tag
@@ -486,7 +486,7 @@ function SimpleMenu({
                     style={{
                       fontSize: "12px",
                       marginRight: "10px",
-                      color: "#45669d"
+                      color: "var(--app-brand-primary)"
                     }}
                   />
                   Category Changes
@@ -502,7 +502,7 @@ function SimpleMenu({
               setIsUndoCancelModalVisible(true);
             }}>
               <div className="d-flex align-items-baseline">
-                <FaUndo style={{ fontSize: "12px", marginRight: "10px", color: "#45669d" }} />
+                <FaUndo style={{ fontSize: "12px", marginRight: "10px", color: "var(--app-brand-primary)" }} />
                 Undo Cancel
               </div>
             </Menu.Item>

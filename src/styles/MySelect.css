@@ -108,8 +108,8 @@
 }
 
 .my-input-wrapper .my-input-container.focused {
-  background-color: #f0f8ff;
-  border-color: #40a9ff;
+  background-color: var(--theme-focus-bg);
+  border-color: var(--app-brand-accent);
   outline: none;
   box-shadow: none;
 }
@@ -143,7 +143,7 @@
   border-radius: 0 !important;
 }
 .my-input-container.focused .my-input-field {
-  border-color: #40a9ff;
+  border-color: var(--app-brand-accent);
   box-shadow: none;
 }
 

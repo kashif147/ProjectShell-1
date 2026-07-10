@@ -230,7 +230,7 @@ const TenantDepartmentContactsPanel = ({
               <Tooltip title="Primary contact">
                 <StarFilled
                   style={{
-                    color: "#1677ff",
+                    color: "var(--primary-color)",
                     fontSize: 16,
                     verticalAlign: "middle",
                   }}

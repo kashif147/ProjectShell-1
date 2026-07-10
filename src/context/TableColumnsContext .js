@@ -144,7 +144,7 @@ function buildCreditNotesColumns() {
             <Button
               type="link"
               size="small"
-              style={{ color: "#215E97", fontWeight: 500, padding: 0 }}
+              style={{ color: "var(--app-brand-primary)", fontWeight: 500, padding: 0 }}
               onClick={() => callCreditNoteApprove(r.docNo)}
             >
               Approve
@@ -230,7 +230,7 @@ function buildJournalAdjustmentsColumns() {
                 pathname: "/Details",
                 search: buildDetailsSearch(pid),
               }}
-              style={{ color: "#215E97", fontWeight: 500 }}
+              style={{ color: "var(--app-brand-primary)", fontWeight: 500 }}
               title={`${name} (${mid})`}
             >
               {name}
@@ -256,7 +256,7 @@ function buildJournalAdjustmentsColumns() {
           <Button
             type="link"
             size="small"
-            style={{ color: "#215E97", fontWeight: 500, padding: 0 }}
+            style={{ color: "var(--app-brand-primary)", fontWeight: 500, padding: 0 }}
             onClick={() => callJournalAdjustmentApprove(r.docNo)}
           >
             Approve
@@ -286,7 +286,7 @@ function buildOnlinePaymentColumns() {
               callOnlinePaymentOpenFinance(record);
             }}
             style={{
-              color: "#1677ff",
+              color: "var(--primary-color)",
               textDecoration: "underline",
               cursor: "pointer",
             }}
@@ -904,7 +904,7 @@ function buildReconciliationColumns() {
                 pathname: "/Details",
                 search: buildDetailsSearch(pid),
               }}
-              style={{ color: "#215E97", fontWeight: 500 }}
+              style={{ color: "var(--app-brand-primary)", fontWeight: 500 }}
               title={`${name} (${mid})`}
             >
               {name}

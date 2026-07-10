@@ -61,8 +61,8 @@
 }
 
 .duplicate-profile-review-drawer .duplicate-review-create-new-btn.ant-btn-primary {
-  background: #45669d;
-  border-color: #45669d;
+  background: var(--app-brand-primary);
+  border-color: var(--app-brand-primary);
 }
 
 .duplicate-profile-review-drawer .duplicate-review-create-new-btn.ant-btn-primary:hover,
@@ -134,7 +134,7 @@
   .ant-table-thead
   .ant-table-cell-fix-right {
   z-index: 18 !important;
-  background-color: var(--mainBlue, #45669d) !important;
+  background-color: var(--mainBlue, var(--app-brand-primary)) !important;
 }
 
 .duplicate-profile-review-drawer

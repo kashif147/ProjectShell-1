@@ -14,7 +14,7 @@
 }
 
 :where(.css-dev-only-do-not-override-tjsggz).pa .ant-radio-wrapper-disabled {
-  color: #215e97 !important;
+  color: var(--app-brand-primary) !important;
 }
 
 .mobile-input-group {
@@ -30,17 +30,17 @@
 }
 
 .bg-lb .ant-radio-wrapper .ant-radio-checked .ant-radio-inner {
-  background-color: #215e97 !important;
-  border-color: #215e97 !important;
+  background-color: var(--app-brand-primary) !important;
+  border-color: var(--app-brand-primary) !important;
 }
 
 .pb .ant-radio-label {
-  color: #215e97 !important;
+  color: var(--app-brand-primary) !important;
 }
 
 .pa .ant-radio-wrapper .ant-radio-checked .ant-radio-inner {
-  background-color: #215e97 !important;
-  border-color: #215e97 !important;
+  background-color: var(--app-brand-primary) !important;
+  border-color: var(--app-brand-primary) !important;
 }
 
 .bg-ly .ant-radio-wrapper .ant-radio-checked .ant-radio-inner {
@@ -62,8 +62,8 @@
 }
 
 .country-code-select:focus {
-  background-color: #f0f8ff;
-  border-color: #40a9ff;
+  background-color: var(--theme-focus-bg);
+  border-color: var(--app-brand-accent);
   outline: none;
 }
 
@@ -92,8 +92,8 @@
 }
 
 .country-code-select:focus {
-  background-color: #f0f8ff;
-  border-color: #40a9ff;
+  background-color: var(--theme-focus-bg);
+  border-color: var(--app-brand-accent);
   outline: none;
 }
 
@@ -111,8 +111,8 @@
 }
 
 .mobile-number-input:focus {
-  background-color: #f0f8ff;
-  border-color: #40a9ff;
+  background-color: var(--theme-focus-bg);
+  border-color: var(--app-brand-accent);
   outline: none;
 }
 
@@ -213,8 +213,8 @@
 }
 
 .my-input-container.focused {
-  background-color: #f0f8ff;
-  border-color: #40a9ff;
+  background-color: var(--theme-focus-bg);
+  border-color: var(--app-brand-accent);
   outline: none;
   box-shadow: none;
 }

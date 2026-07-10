@@ -1,7 +1,7 @@
 /* Header toolbar filter row — unified chip + action styling */
 .search-fliters {
-  --toolbar-filter-text: #475569;
-  --toolbar-filter-text-hover: #334155;
+  --toolbar-filter-text: var(--app-brand-primary);
+  --toolbar-filter-text-hover: color-mix(in srgb, var(--app-brand-primary) 78%, #000000);
   align-items: center !important;
 }
 
@@ -38,9 +38,9 @@
   height: 34px;
   padding: 0 12px;
   border-radius: 3px;
-  border: 1px solid #e2e8f0;
-  background-color: #fff;
-  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+  border: 1px solid var(--app-control-border, color-mix(in srgb, var(--app-brand-primary) 14%, #d9d9d9));
+  background-color: transparent;
+  box-shadow: none;
   flex-shrink: 0;
   transition:
     background-color 0.15s ease,
@@ -69,8 +69,8 @@
 
 .search-fliters .filter-button1:hover,
 .search-fliters .exec-dashboard-filter-chip:hover {
-  background-color: #f8fafc;
-  border-color: #cbd5e1;
+  background-color: color-mix(in srgb, var(--app-brand-primary) 6%, transparent);
+  border-color: var(--app-brand-primary);
 }
 
 .search-fliters .filter-button1 .filter-label,
@@ -160,9 +160,28 @@
 
 .search-fliters .filter-button1.active,
 .search-fliters .exec-dashboard-filter-checkbox--checked {
-  background-color: #eff6ff !important;
-  border-color: #93c5fd !important;
-  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+  background-color: color-mix(in srgb, var(--app-brand-primary) 8%, transparent) !important;
+  border-color: var(--app-brand-primary) !important;
+  box-shadow: none;
+}
+
+.search-fliters .ant-btn-default,
+.toolbar-filter-row .ant-btn-default,
+.search-fliters .gray-btn.butn,
+.toolbar-filter-row .gray-btn.butn {
+  background-color: transparent !important;
+  border-color: var(--app-control-border, color-mix(in srgb, var(--app-brand-primary) 14%, #d9d9d9)) !important;
+  box-shadow: none !important;
+  color: var(--toolbar-filter-text) !important;
+}
+
+.search-fliters .ant-btn-default:hover,
+.toolbar-filter-row .ant-btn-default:hover,
+.search-fliters .gray-btn.butn:hover,
+.toolbar-filter-row .gray-btn.butn:hover {
+  background-color: color-mix(in srgb, var(--app-brand-primary) 6%, transparent) !important;
+  border-color: var(--app-brand-primary) !important;
+  color: var(--toolbar-filter-text-hover) !important;
 }
 
 /* Include Student / Include Honorary checkboxes */
@@ -220,8 +239,19 @@
   .exec-dashboard-filter-checkbox__input
   .ant-checkbox-checked
   .ant-checkbox-inner {
-  background-color: #45669d;
-  border-color: #45669d;
+  background-color: var(--app-brand-primary);
+  border-color: var(--app-brand-primary);
+}
+
+.search-fliters
+  .exec-dashboard-filter-checkbox__input
+  .ant-checkbox-checked
+  .ant-checkbox-inner::after,
+.toolbar-filter-row
+  .exec-dashboard-filter-checkbox__input
+  .ant-checkbox-checked
+  .ant-checkbox-inner::after {
+  border-color: var(--brand-on-primary, #ffffff);
 }
 
 .search-fliters
@@ -230,7 +260,7 @@
 .toolbar-filter-row
   .exec-dashboard-filter-checkbox__input:hover
   .ant-checkbox-inner {
-  border-color: #45669d;
+  border-color: var(--app-brand-primary);
 }
 
 .search-fliters .exec-dashboard-filter-checkbox__input .filter-label,
@@ -261,7 +291,7 @@
   font-size: 13px;
   font-weight: 600;
   line-height: 1;
-  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+  box-shadow: none;
 }
 
 .toolbar-filter-row .toolbar-filter-action.ant-btn:hover,
@@ -274,14 +304,14 @@
 }
 
 .search-fliters .toolbar-filter-action--primary.ant-btn {
-  background-color: #45669d !important;
-  border: 1px solid #3d5f94 !important;
+  background-color: var(--app-brand-primary) !important;
+  border: 1px solid var(--app-brand-primary) !important;
   color: #fff !important;
 }
 
 .search-fliters .toolbar-filter-action--primary.ant-btn:hover {
-  background-color: #3a5888 !important;
-  border-color: #34547d !important;
+  background-color: color-mix(in srgb, var(--app-brand-primary) 84%, #000000) !important;
+  border-color: color-mix(in srgb, var(--app-brand-primary) 78%, #000000) !important;
   color: #fff !important;
 }
 

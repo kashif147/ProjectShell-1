@@ -1,1021 +1,1035 @@
-/* Compact application form density */
-.application-form.compact {
+.application-mgt-shell {
+  --app-form-ink: #0f2e33;
+  --app-form-ink-soft: #5b6b70;
+  --app-form-bg: #f3f6f6;
+  --app-form-surface: #ffffff;
+  --app-form-border: #e1e9e9;
+  --app-form-border-soft: #edf2f2;
+  --app-form-teal: #0e9e93;
+  --app-form-teal-deep: #0a6e67;
+  --app-form-teal-tint: #e4f5f3;
+  --app-form-coral: #ff6f4c;
+  --app-form-coral-deep: #c7451e;
+  --app-form-coral-tint: #ffe9e2;
+  --app-form-amber: #f5a524;
+  --app-form-amber-deep: #966208;
+  --app-form-amber-tint: #fef3de;
+  --app-form-violet-deep: #5340c4;
+  --app-form-violet-tint: #eeebfc;
+  --app-form-shadow-sm: 0 1px 2px rgba(15, 46, 51, 0.06);
+  --app-form-shadow-md: 0 10px 28px rgba(15, 46, 51, 0.1);
+  --app-form-control-height: 40px;
+  --app-form-control-radius: 10px;
+  color: var(--app-form-ink);
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  height: 100%;
+  min-height: 0;
+  overflow: hidden;
 }
 
-.application-form.compact .section-card {
-  padding: 12px 16px;
-  border-radius: 10px;
-  border: 1px solid #f0f0f0;
-  background: #fff;
-}
-
-.application-form.compact .section-header {
+.application-mgt-surface {
+  background: var(--app-form-bg);
   display: flex;
-  align-items: center;
-  min-height: 48px;
-  padding: 10px 16px;
-  margin: -12px -16px 12px;
-  border-radius: 10px 10px 0 0;
+  flex: 1 1 auto;
+  flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
+  position: relative;
 }
 
-.application-form.compact .section-header-icon {
-  padding: 5px 7px;
-  border-radius: 6px;
-  margin-right: 10px;
-  display: flex;
+.application-form-topbar {
   align-items: center;
-  justify-content: center;
+  background: var(--app-form-surface);
+  border-bottom: 1px solid var(--app-form-border-soft);
+  box-shadow: var(--app-form-shadow-sm);
+  display: flex;
   flex-shrink: 0;
+  flex-wrap: wrap;
+  gap: 20px;
+  justify-content: space-between;
+  padding: 14px 32px;
+  position: sticky;
+  top: 0;
+  z-index: 8;
 }
 
-.application-form.compact .section-header-icon .anticon,
-.application-form.compact .section-header-icon svg {
-  font-size: 16px !important;
+.application-form-stepper {
+  align-items: center;
+  display: flex;
+  flex: 1 1 480px;
+  min-width: 0;
+  overflow-x: auto;
 }
 
-.application-form.compact .section-header-text {
+.application-form-step {
+  align-items: center;
+  background: transparent;
+  border: 0;
+  border-bottom: 2.5px solid transparent;
+  color: var(--app-form-ink-soft);
+  cursor: pointer;
+  display: flex;
+  flex: 0 0 auto;
+  font-size: 13px;
+  font-weight: 600;
+  gap: 9px;
+  margin-right: 20px;
+  padding: 14px 0;
+  transition: 0.15s ease;
+  white-space: nowrap;
+}
+
+.application-form-step:hover,
+.application-form-step--active {
+  color: var(--app-form-teal-deep);
+}
+
+.application-form-step--active {
+  border-bottom-color: var(--app-form-teal);
+}
+
+.application-form-step-number {
+  align-items: center;
+  background: var(--app-form-border-soft);
+  border-radius: 50%;
+  color: var(--app-form-ink-soft);
+  display: inline-flex;
+  flex: 0 0 22px;
+  font-size: 11px;
+  font-weight: 700;
+  height: 22px;
+  justify-content: center;
+  width: 22px;
+}
+
+.application-form-step--active .application-form-step-number {
+  background: var(--app-form-teal);
+  color: #fff;
+}
+
+.application-form-topbar-actions {
+  align-items: center;
+  display: flex;
+  flex: 0 1 auto;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: flex-end;
   min-width: 0;
 }
 
-.application-form.compact .section-header-title {
-  font-size: 16px;
+.application-form-toggle-chip.ant-checkbox-wrapper {
+  align-items: center;
+  background: #fff;
+  border: 1px solid var(--app-form-border);
+  border-radius: var(--app-form-control-radius);
+  color: var(--app-form-ink-soft);
+  display: inline-flex;
+  font-size: 12.5px;
   font-weight: 600;
-  line-height: 1.2;
+  gap: 7px;
+  height: var(--app-form-control-height);
+  justify-content: center;
+  line-height: 1;
   margin: 0;
-  color: #1a1a1a;
+  min-height: var(--app-form-control-height);
+  padding: 0 12px;
+  transition: 0.15s ease;
 }
 
-.application-form.compact .section-header-subtitle {
+.application-form-toggle-chip.ant-checkbox-wrapper > span:not(.ant-checkbox) {
+  align-items: center;
+  display: inline-flex;
+  line-height: 1;
+}
+
+.application-form-toggle-chip.ant-checkbox-wrapper:hover {
+  background: var(--app-form-teal-tint);
+  border-color: var(--app-form-teal);
+  color: var(--app-form-teal-deep);
+}
+
+.application-form-topbar .butn,
+.application-form-topbar .ant-btn {
+  align-items: center;
+  border-radius: var(--app-form-control-radius);
+  display: inline-flex;
   font-size: 13px;
-  line-height: 1.2;
-  margin-top: 2px;
-  margin-bottom: 0;
-  font-weight: 400;
-  color: #666;
+  font-weight: 700;
+  height: var(--app-form-control-height);
+  justify-content: center;
+  line-height: 1;
+  min-height: var(--app-form-control-height);
+  padding: 0 16px;
 }
 
-/* CSS grid layout — container-based columns, not Ant flex breakpoints */
-.application-form.compact .form-grid {
+.application-form-topbar-actions .member-search-field,
+.application-form-topbar-actions .ant-select,
+.application-form-topbar-actions .ant-input-affix-wrapper {
+  max-width: 360px;
+}
+
+.application-form-topbar-actions .member-search-field--compact {
+  flex: 0 0 280px;
+  max-width: 280px;
+  width: 280px !important;
+}
+
+.application-form-topbar-actions .member-search-field--compact .ant-select,
+.application-form-topbar-actions
+  .member-search-field--compact
+  .ant-select-selector {
+  background: transparent !important;
+  border: 0 !important;
+  box-shadow: none !important;
+  height: auto !important;
+  max-width: none;
+  padding: 0 !important;
+  width: 100% !important;
+}
+
+.application-form-topbar-actions
+  .member-search-field--compact
+  .ant-input-affix-wrapper {
+  align-items: center;
+  background: #fbfdfd !important;
+  border: 1.5px solid var(--app-form-border) !important;
+  border-radius: var(--app-form-control-radius) !important;
+  box-shadow: none !important;
+  display: flex;
+  font-size: 13px !important;
+  height: var(--app-form-control-height) !important;
+  max-width: none;
+  padding: 0 12px !important;
+  width: 100% !important;
+}
+
+.application-form-topbar-actions
+  .member-search-field--compact
+  .ant-input-affix-wrapper-focused,
+.application-form-topbar-actions
+  .member-search-field--compact
+  .ant-input-affix-wrapper:focus-within {
+  background: #fff !important;
+  border-color: var(--app-form-teal) !important;
+  box-shadow: 0 0 0 3px rgba(14, 158, 147, 0.14) !important;
+}
+
+.application-form-topbar-actions .member-search-field--compact .ant-input {
+  background: transparent !important;
+  border: 0 !important;
+  box-shadow: none !important;
+  color: var(--app-form-ink) !important;
+  font-size: 13px !important;
+  height: auto !important;
+  line-height: 20px !important;
+  min-height: 0 !important;
+  padding: 0 !important;
+}
+
+.application-form-topbar-actions
+  .member-search-field--compact
+  .ant-input::placeholder {
+  color: #a6b5b6 !important;
+}
+
+.application-mgt-shell .application-form {
+  background: var(--app-form-bg);
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  gap: 22px;
+  margin: 0;
+  min-height: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  padding: 28px 32px 80px;
+  scroll-behavior: smooth;
+  width: 100%;
+}
+
+.application-mgt-shell .application-form::-webkit-scrollbar {
+  width: 8px;
+}
+
+.application-mgt-shell .application-form::-webkit-scrollbar-thumb {
+  background: #c7d3d3;
+  border-radius: 999px;
+}
+
+.application-mgt-shell .section-card {
+  background: var(--app-form-surface);
+  border: 1px solid var(--app-form-border-soft);
+  border-radius: 14px;
+  box-shadow: var(--app-form-shadow-sm);
+  flex: 0 0 auto;
+  height: auto;
+  margin: 0 auto;
+  max-width: 1400px;
+  min-height: 0;
+  min-width: 0;
+  overflow: hidden;
+  scroll-margin-top: 130px;
+  width: 100%;
+}
+
+.application-mgt-shell .section-header {
+  align-items: flex-start;
+  background: var(--app-form-surface) !important;
+  border-bottom: 1px solid var(--app-form-border-soft);
+  border-radius: 14px 14px 0 0;
+  display: flex;
+  gap: 12px;
+  min-height: 73px;
+  padding: 18px 26px;
+}
+
+.application-mgt-shell .section-header-icon {
+  align-items: center;
+  border-radius: 10px;
+  display: flex;
+  flex: 0 0 36px;
+  height: 36px;
+  justify-content: center;
+  width: 36px;
+}
+
+.application-mgt-shell .section-header--teal .section-header-icon {
+  background: var(--app-form-teal-tint) !important;
+  color: var(--app-form-teal-deep);
+}
+
+.application-mgt-shell .section-header--coral .section-header-icon {
+  background: var(--app-form-coral-tint) !important;
+  color: var(--app-form-coral-deep);
+}
+
+.application-mgt-shell .section-header--amber .section-header-icon {
+  background: var(--app-form-amber-tint) !important;
+  color: var(--app-form-amber-deep);
+}
+
+.application-mgt-shell .section-header--violet .section-header-icon {
+  background: var(--app-form-violet-tint) !important;
+  color: var(--app-form-violet-deep);
+}
+
+.application-mgt-shell .section-header-icon .anticon,
+.application-mgt-shell .section-header-icon svg {
+  color: currentColor !important;
+  font-size: 16px !important;
+}
+
+.application-mgt-shell .section-header-title {
+  color: var(--app-form-ink);
+  font-family: "Space Grotesk", "Inter", sans-serif;
+  font-size: 16px;
+  font-weight: 700;
+  line-height: 1.25;
+  margin: 0 0 2px;
+}
+
+.application-mgt-shell .section-header-subtitle {
+  color: var(--app-form-ink-soft);
+  font-size: 12.5px;
+  line-height: 1.4;
+  margin: 0;
+}
+
+.application-mgt-shell .form-grid {
+  align-items: start;
+  column-gap: 20px;
   display: grid;
-  column-gap: 16px;
+  grid-auto-rows: auto;
+  row-gap: 16px;
+  width: 100%;
+}
+
+.application-mgt-shell .section-card > .form-grid {
+  padding: 22px 26px 26px;
+}
+
+.application-mgt-shell .form-grid .form-grid {
+  padding: 0;
+}
+
+.application-mgt-shell .form-grid--3 {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.application-mgt-shell .form-grid--2,
+.application-mgt-shell .form-grid--contact-phones {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.application-mgt-shell .form-grid--33-67,
+.application-mgt-shell .form-grid--search-eircode {
+  grid-template-columns: minmax(0, 1fr) minmax(0, 2fr);
+}
+
+.application-mgt-shell .form-grid--40-60 {
+  grid-template-columns: minmax(0, 2fr) minmax(0, 3fr);
+}
+
+.application-mgt-shell .form-grid--nursing-row {
+  grid-template-columns: minmax(0, 1.35fr) minmax(0, 0.65fr);
+}
+
+.application-mgt-shell .form-grid--trade-union-row {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.application-mgt-shell .form-grid--trade-union-row--3 {
+  grid-template-columns: minmax(0, 2fr) minmax(0, 1fr) minmax(0, 2fr);
+}
+
+.application-mgt-shell .form-grid-cell {
+  align-self: stretch;
+  display: flex;
+  flex-direction: column;
+  height: auto;
+  min-height: 0;
+  min-width: 0;
+  overflow: visible;
+}
+
+.application-mgt-shell .form-grid-cell-inner {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  gap: 0;
+  height: auto;
+  min-height: 0;
+  min-width: 0;
+  overflow: visible;
+  width: 100%;
+}
+
+.application-mgt-shell .form-col-full {
+  grid-column: 1 / -1;
+}
+
+.application-mgt-shell .form-col-2 {
+  grid-column: span 2;
+}
+
+.application-mgt-shell .form-field-stack,
+.application-mgt-shell .info-box--field-aligned,
+.application-mgt-shell .form-grid-cell-inner > .my-input-wrapper,
+.application-mgt-shell
+  .form-grid-cell-inner
+  > div:not(.form-grid):not(.info-box):not(.question-box):not(.consent-box):not(
+    .notice-box
+  ):not(.checkbox-notice-box) {
+  display: grid;
+  grid-template-rows:
+    minmax(16px, auto)
+    minmax(var(--app-form-control-height), auto);
+  height: auto;
+  margin-bottom: 0 !important;
+  min-height: 0;
+  min-width: 0;
   row-gap: 6px;
   width: 100%;
 }
 
-.application-form.compact .form-grid-cell-inner > .form-grid {
-  display: grid;
+.application-mgt-shell .my-input-wrapper > .d-flex,
+.application-mgt-shell .form-grid-cell-inner > div > .d-flex,
+.application-mgt-shell .form-field-stack > label,
+.application-mgt-shell .form-grid-cell-inner > div > label.my-input-label,
+.application-mgt-shell .info-box--field-aligned > .my-input-label {
+  align-items: flex-start !important;
+  align-self: start;
+  line-height: 1.3 !important;
+  min-height: 16px;
   width: 100%;
 }
 
-.application-form.compact .form-grid--3 {
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-}
-
-.application-form.compact .form-grid--2 {
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-}
-
-.application-form.compact .form-grid--33-67 {
-  grid-template-columns: minmax(0, 1fr) minmax(0, 2fr);
-}
-
-.application-form.compact .form-grid--40-60 {
-  grid-template-columns: minmax(0, 2fr) minmax(0, 3fr);
-}
-
-/* Full-width rows must not inherit field-row track sizing */
-.application-form.compact .form-grid-cell.form-col-full {
-  display: flex;
-  flex-direction: column;
-  grid-row: auto;
-}
-
-/* Each field cell: fixed label row + fixed control row */
-.application-form.compact
-  .form-grid--3
-  > .form-grid-cell:not(.form-col-full):not(:has(.consent-box)):not(
-    :has(.question-box)
-  ):not(:has(.notice-box)):not(:has(.checkbox-notice-box)),
-.application-form.compact
-  .form-grid--2
-  > .form-grid-cell:not(.form-col-full):not(:has(.consent-box)):not(
-    :has(.question-box)
-  ):not(:has(.notice-box)):not(:has(.checkbox-notice-box)),
-.application-form.compact
-  .form-grid--33-67
-  > .form-grid-cell:not(.form-col-full):not(:has(.consent-box)):not(
-    :has(.question-box)
-  ):not(:has(.notice-box)):not(:has(.checkbox-notice-box)),
-.application-form.compact .form-grid--search-eircode > .form-grid-cell,
-.application-form.compact .form-grid--contact-phones > .form-grid-cell,
-.application-form.compact .form-grid--contact-emails > .form-grid-cell,
-.application-form.compact
-  .form-grid--nursing-row
-  > .form-grid-cell:not(.form-col-full):not(:has(.question-box)),
-.application-form.compact .form-grid--trade-union-row > .form-grid-cell {
-  display: grid;
-  grid-template-rows: minmax(20px, auto) 36px;
-  gap: 2px;
-  align-content: start;
-  min-width: 0;
-}
-
-.application-form.compact
-  .form-grid--3
-  > .form-grid-cell:not(.form-col-full):not(:has(.consent-box)):not(
-    :has(.question-box)
-  ):not(:has(.notice-box)):not(:has(.checkbox-notice-box))
-  > .form-grid-cell-inner,
-.application-form.compact
-  .form-grid--2
-  > .form-grid-cell:not(.form-col-full):not(:has(.consent-box)):not(
-    :has(.question-box)
-  ):not(:has(.notice-box)):not(:has(.checkbox-notice-box))
-  > .form-grid-cell-inner,
-.application-form.compact
-  .form-grid--33-67
-  > .form-grid-cell:not(.form-col-full):not(:has(.consent-box)):not(
-    :has(.question-box)
-  ):not(:has(.notice-box)):not(:has(.checkbox-notice-box))
-  > .form-grid-cell-inner,
-.application-form.compact
-  .form-grid--search-eircode
-  > .form-grid-cell
-  > .form-grid-cell-inner,
-.application-form.compact
-  .form-grid--contact-phones
-  > .form-grid-cell
-  > .form-grid-cell-inner,
-.application-form.compact
-  .form-grid--contact-emails
-  > .form-grid-cell
-  > .form-grid-cell-inner,
-.application-form.compact
-  .form-grid--nursing-row
-  > .form-grid-cell:not(.form-col-full)
-  > .form-grid-cell-inner,
-.application-form.compact
-  .form-grid--trade-union-row
-  > .form-grid-cell
-  > .form-grid-cell-inner {
-  display: contents;
-}
-
-/* Flatten wrappers so label + control sit on the cell's two grid rows */
-.application-form.compact
-  .form-grid--3
-  > .form-grid-cell:not(.form-col-full)
-  .form-grid-cell-inner
-  > .my-input-wrapper,
-.application-form.compact
-  .form-grid--2
-  > .form-grid-cell:not(.form-col-full)
-  .form-grid-cell-inner
-  > .my-input-wrapper,
-.application-form.compact
-  .form-grid--33-67
-  > .form-grid-cell:not(.form-col-full)
-  .form-grid-cell-inner
-  > .my-input-wrapper,
-.application-form.compact
-  .form-grid--search-eircode
-  > .form-grid-cell
-  .form-grid-cell-inner
-  > .my-input-wrapper,
-.application-form.compact
-  .form-grid--contact-phones
-  > .form-grid-cell
-  .form-grid-cell-inner
-  > .my-input-wrapper,
-.application-form.compact
-  .form-grid--contact-emails
-  > .form-grid-cell
-  .form-grid-cell-inner
-  > .my-input-wrapper,
-.application-form.compact
-  .form-grid--nursing-row
-  > .form-grid-cell
-  .form-grid-cell-inner
-  > .my-input-wrapper,
-.application-form.compact
-  .form-grid--trade-union-row
-  > .form-grid-cell
-  .form-grid-cell-inner
-  > .my-input-wrapper,
-.application-form.compact
-  .form-grid--3
-  > .form-grid-cell:not(.form-col-full)
-  .form-grid-cell-inner
-  > .info-box--field-aligned,
-.application-form.compact
-  .form-grid--2
-  > .form-grid-cell:not(.form-col-full)
-  .form-grid-cell-inner
-  > .info-box--field-aligned,
-.application-form.compact
-  .form-grid--33-67
-  > .form-grid-cell:not(.form-col-full)
-  .form-grid-cell-inner
-  > .info-box--field-aligned,
-.application-form.compact
-  .form-grid--contact-emails
-  > .form-grid-cell
-  .form-grid-cell-inner
-  > .info-box--field-aligned,
-.application-form.compact
-  .form-grid--nursing-row
-  > .form-grid-cell
-  .form-grid-cell-inner
-  > .info-box--field-aligned,
-.application-form.compact
-  .form-grid--trade-union-row
-  > .form-grid-cell
-  .form-grid-cell-inner
-  > .info-box--field-aligned,
-.application-form.compact
-  .form-grid--3
-  > .form-grid-cell:not(.form-col-full)
-  .form-grid-cell-inner
-  > .form-field-stack,
-.application-form.compact
-  .form-grid--2
-  > .form-grid-cell:not(.form-col-full)
-  .form-grid-cell-inner
-  > .form-field-stack,
-.application-form.compact
-  .form-grid--33-67
-  > .form-grid-cell:not(.form-col-full)
-  .form-grid-cell-inner
-  > .form-field-stack,
-.application-form.compact
-  .form-grid--3
-  > .form-grid-cell:not(.form-col-full)
-  .form-grid-cell-inner
-  > div:not(.form-grid):not(.consent-box):not(.notice-box):not(
-    .checkbox-notice-box
-  ):not(.info-box),
-.application-form.compact
-  .form-grid--2
-  > .form-grid-cell:not(.form-col-full)
-  .form-grid-cell-inner
-  > div:not(.form-grid):not(.consent-box):not(.notice-box):not(
-    .checkbox-notice-box
-  ):not(.info-box),
-.application-form.compact
-  .form-grid--33-67
-  > .form-grid-cell:not(.form-col-full)
-  .form-grid-cell-inner
-  > div:not(.form-grid):not(.consent-box):not(.notice-box):not(
-    .checkbox-notice-box
-  ):not(.info-box),
-.application-form.compact
-  .form-grid--search-eircode
-  > .form-grid-cell
-  .form-grid-cell-inner
-  > div:not(.form-grid):not(.consent-box):not(.notice-box):not(
-    .checkbox-notice-box
-  ):not(.info-box),
-.application-form.compact
-  .form-grid--contact-phones
-  > .form-grid-cell
-  .form-grid-cell-inner
-  > div:not(.form-grid):not(.consent-box):not(.notice-box):not(
-    .checkbox-notice-box
-  ):not(.info-box),
-.application-form.compact
-  .form-grid--contact-emails
-  > .form-grid-cell
-  .form-grid-cell-inner
-  > div:not(.form-grid):not(.consent-box):not(.notice-box):not(
-    .checkbox-notice-box
-  ):not(.info-box),
-.application-form.compact
-  .form-grid--nursing-row
-  > .form-grid-cell
-  .form-grid-cell-inner
-  > div:not(.form-grid):not(.consent-box):not(.notice-box):not(
-    .checkbox-notice-box
-  ):not(.info-box),
-.application-form.compact
-  .form-grid--trade-union-row
-  > .form-grid-cell
-  .form-grid-cell-inner
-  > div:not(.form-grid):not(.consent-box):not(.notice-box):not(
-    .checkbox-notice-box
-  ):not(.info-box) {
-  display: contents;
-}
-
-/* Default cell layout (full-width blocks, consent, notices) */
-.application-form.compact .form-grid-cell {
-  display: flex;
-  flex-direction: column;
-  align-self: stretch;
-  min-width: 0;
-}
-
-.application-form.compact .form-grid-cell-inner {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  min-width: 0;
-  width: 100%;
-}
-
-/* Row 1 — labels (MyInput, CustomSelect, MyDatePicker) */
-.application-form.compact .form-grid-cell > .d-flex,
-.application-form.compact .form-grid-cell > .my-input-label,
-.application-form.compact
-  .form-grid-cell
-  .info-box--field-aligned
-  > .my-input-label {
-  align-self: end;
-  width: 100%;
-  min-width: 0;
-  margin-bottom: 0 !important;
-  display: flex;
-  align-items: flex-end !important;
-  box-sizing: border-box;
-  line-height: 1.2;
-}
-
-.application-form.compact .form-grid-cell > .d-flex > .d-flex {
-  align-items: flex-end !important;
-}
-
-.application-form.compact .form-grid-cell > .d-flex .my-input-label,
-.application-form.compact .form-grid-cell > .my-input-label {
-  margin-bottom: 0;
-}
-
-/* Row 2 — controls */
-.application-form.compact .form-grid-cell > .my-input-container,
-.application-form.compact .form-grid-cell > .form-control-band,
-.application-form.compact .form-grid-cell > div:has(> input[type="text"]) {
-  align-self: stretch;
-  width: 100%;
-  min-width: 0;
-  height: 36px !important;
-  min-height: 36px !important;
-  max-height: 36px !important;
-  box-sizing: border-box;
-}
-
-.application-form.compact .form-grid-cell input[type="text"] {
-  height: 36px !important;
-  min-height: 36px !important;
-  max-height: 36px !important;
-  font-size: 13px !important;
-  box-sizing: border-box;
-}
-
-.application-form.compact .form-control-band {
-  display: flex;
-  align-items: center;
-  padding: 0 12px;
-  border-radius: 8px;
-  box-sizing: border-box;
-  width: 100%;
-}
-
-.application-form.compact .form-control-band--plain {
-  padding: 0;
-  border: none;
-  background: transparent;
-}
-
-.application-form.compact .form-control-band--plain .member-search-field {
-  width: 100%;
-  min-width: 0;
-}
-
-.application-form.compact
-  .form-control-band--plain
-  .member-search-field
-  .ant-select-auto-complete,
-.application-form.compact
-  .form-control-band--plain
-  .member-search-field
-  .ant-input-affix-wrapper,
-.application-form.compact
-  .form-control-band--plain
-  .member-search-field
-  .ant-input-affix-wrapper.my-input-field {
-  width: 100% !important;
-  height: 36px !important;
-  min-height: 36px !important;
-  max-height: 36px !important;
-  display: inline-flex !important;
-  align-items: center !important;
-  box-sizing: border-box;
-  padding: 0 11px !important;
-}
-
-.application-form.compact
-  .form-control-band--plain
-  .member-search-field
-  .ant-input-affix-wrapper
-  .ant-input {
-  height: auto !important;
-  min-height: 0 !important;
-  padding: 0 0 0 8px !important;
-  font-size: 13px !important;
-  line-height: 22px !important;
-  border: none !important;
-  box-shadow: none !important;
-  background: transparent !important;
-}
-
-.application-form.compact
-  .form-control-band--plain
-  .member-search-field
-  .ant-input-affix-wrapper
-  .ant-input-prefix {
-  display: inline-flex;
-  align-items: center;
-  margin-inline-end: 0 !important;
-  line-height: 1;
-}
-
-.application-form.compact
-  .form-control-band--plain
-  .member-search-field
-  .ant-input-affix-wrapper
-  .ant-input-suffix {
-  display: inline-flex;
-  align-items: center;
-  margin-inline-start: 4px;
-}
-
-.application-form.compact .info-box--field-aligned {
-  background: transparent;
-  border: none;
-  padding: 0;
-  min-height: 0;
-  margin: 0;
-}
-
-.application-form.compact .info-box--field-aligned .form-control-band {
-  background-color: #1173d41a;
-  border: 1px solid #97c5efff;
-}
-
-.application-form.compact
-  .info-box--field-aligned.info-box--error
-  .form-control-band {
-  border-color: #ff4d4f;
-}
-
-.application-form.compact .form-grid--address-consent .consent-box--compact {
-  margin-bottom: 0;
-  flex: 1;
-  display: flex;
-  align-items: center;
-  min-height: 36px;
-  padding: 6px 12px;
-}
-
-.application-form.compact .consent-box--compact .ant-checkbox-wrapper {
+.application-mgt-shell label,
+.application-mgt-shell .my-input-label {
   align-items: flex-start;
-  width: 100%;
-  margin-inline-end: 0;
-  gap: 10px;
-}
-
-.application-form.compact .consent-box--compact .ant-checkbox {
-  align-self: flex-start;
-  margin-top: 2px;
-  margin-inline-end: 0;
-}
-
-.application-form.compact .consent-box--compact .ant-checkbox + span {
-  display: block;
-  line-height: 1.35;
-  padding-inline-start: 2px;
-  flex: 1;
-  min-width: 0;
-}
-
-.application-form.compact .consent-box--compact .consent-box-text {
+  color: var(--app-form-ink-soft) !important;
   display: flex;
-  flex-direction: column;
-  gap: 2px;
+  font-size: 12px !important;
+  font-weight: 600 !important;
+  gap: 4px;
+  line-height: 1.3 !important;
+  margin: 0 !important;
+  min-height: 16px !important;
+  white-space: normal;
 }
 
-.application-form.compact .consent-box--compact .consent-box-label {
-  display: block;
-  font-size: 13px;
-  font-weight: 500;
-  line-height: 1.35;
+.application-mgt-shell .form-grid-cell-inner > div > label.my-input-label,
+.application-mgt-shell .info-box--field-aligned > .my-input-label,
+.application-mgt-shell .notice-box .my-input-label {
+  min-height: 16px !important;
 }
 
-.application-form.compact .consent-box--compact .consent-box-note {
-  display: block;
-  font-size: 11px;
-  font-weight: 400;
-  line-height: 1.3;
-  margin: 0;
-  padding-left: 0;
+.application-mgt-shell .form-grid--personal-info .form-grid-cell {
+  align-self: start;
 }
 
-.application-form.compact
-  .form-grid--address-consent
-  > .form-grid-cell:has(.consent-box) {
-  display: flex;
-  flex-direction: column;
+.application-mgt-shell
+  .form-grid--personal-info
+  .form-grid-cell-inner
+  > .my-input-wrapper,
+.application-mgt-shell
+  .form-grid--personal-info
+  .form-grid-cell-inner
+  > div:not(.form-grid):not(.info-box):not(.question-box):not(.consent-box):not(
+    .notice-box
+  ):not(.checkbox-notice-box) {
+  grid-template-rows:
+    16px
+    var(--app-form-control-height);
 }
 
-.application-form.compact .info-box--field-aligned--wrap > .my-input-label {
-  align-items: flex-end;
-}
-
-.application-form.compact .nurse-type-box {
-  background-color: #1173d41a;
-  border: 1px solid #97c5efff;
-  min-height: 0;
-}
-
-.application-form.compact .nurse-type-box.info-box--error {
-  border-color: #ff4d4f;
-}
-
-.application-form.compact .nurse-type-box .my-input-label {
-  margin-bottom: 8px;
-}
-
-.application-form.compact .form-grid--contact-phones,
-.application-form.compact .form-grid--contact-emails,
-.application-form.compact .form-grid--nursing-row,
-.application-form.compact .form-grid--search-eircode {
-  width: 100%;
-}
-
-.application-form.compact .form-grid--trade-union-row {
-  width: 100%;
-  grid-template-rows: minmax(20px, auto) 36px;
-}
-
-.application-form.compact .form-grid--nursing-row {
-  grid-template-columns: minmax(0, 1.35fr) minmax(0, 0.65fr);
-}
-
-.application-form.compact
-  .info-box--field-aligned
-  .form-control-band:has(.ant-radio-group):not(.form-control-band--nurse-type) {
-  width: 100%;
-  min-width: 200px;
-}
-
-.application-form.compact .form-control-band .ant-radio-group {
-  display: inline-flex;
-  align-items: center;
-  gap: 24px;
-  width: 100%;
-}
-
-.application-form.compact .form-control-band .ant-radio-wrapper {
-  margin-inline-end: 0;
-  padding-inline: 4px 8px;
-}
-
-.application-form.compact .form-grid--trade-union-row--3 {
-  grid-template-columns: minmax(0, 2fr) minmax(0, 1fr) minmax(0, 2fr);
-}
-
-.application-form.compact .form-grid--trade-union-row > .form-grid-cell {
-  grid-row: span 2;
-  grid-template-rows: subgrid;
-}
-
-.application-form.compact
-  .form-grid--trade-union-row
-  .info-box--field-aligned--wrap
-  > .my-input-label,
-.application-form.compact
-  .form-grid--trade-union-row
-  > .form-grid-cell
-  .my-input-wrapper
-  > .d-flex {
-  min-height: 40px;
-  align-items: flex-end;
-}
-
-.application-form.compact .form-grid > .form-grid-cell.form-search-eircode-row {
-  margin-bottom: 0;
-}
-
-.application-form.compact .form-grid--search-eircode {
-  grid-template-columns: minmax(0, 1fr) minmax(0, 2fr);
-}
-
-.application-form.compact .address-search-field {
-  display: contents;
-}
-
-.application-form.compact .form-grid--contact-phones,
-.application-form.compact .form-grid--contact-emails {
-  row-gap: 0;
-}
-
-.application-form.compact
-  .form-grid
-  > .form-grid-cell.form-col-full:has(.form-grid--contact-phones)
-  + .form-grid-cell.form-col-full:has(.form-grid--contact-emails) {
-  margin-top: -2px;
-}
-
-.application-form.compact .form-grid-cell,
-.application-form.compact .form-grid > .ant-col {
-  min-width: 0;
-  margin-bottom: 0;
-  max-width: 100% !important;
-}
-
-.application-form.compact .form-grid.ant-row {
-  display: grid !important;
-  margin-left: 0 !important;
-  margin-right: 0 !important;
-  flex-wrap: unset !important;
-}
-
-.application-form.compact .form-grid.ant-row::before,
-.application-form.compact .form-grid.ant-row::after {
-  display: none !important;
-}
-
-.application-form.compact .form-grid > .ant-col {
-  flex: none !important;
-  width: auto !important;
-  padding-left: 0 !important;
-  padding-right: 0 !important;
-}
-
-.application-form.compact .form-grid-cell.form-col-full,
-.application-form.compact .form-grid > .ant-col.form-col-full {
-  grid-column: 1 / -1;
-}
-
-.application-form.compact .form-grid-cell.form-col-2,
-.application-form.compact .form-grid > .ant-col.form-col-2 {
-  grid-column: span 2;
-}
-
-@media (max-width: 991px) {
-  .application-form.compact .form-grid--3 {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-}
-
-@media (max-width: 767px) {
-  .application-form.compact .form-grid--contact-emails,
-  .application-form.compact .form-grid--nursing-row {
-    grid-template-columns: 1fr;
-  }
-
-  .application-form.compact
-    .form-grid--nursing-row
-    > .form-grid-cell.form-col-2 {
-    grid-column: span 1;
-  }
-}
-
-@media (max-width: 575px) {
-  .application-form.compact .form-grid--3,
-  .application-form.compact .form-grid--2,
-  .application-form.compact .form-grid--33-67,
-  .application-form.compact .form-grid--40-60,
-  .application-form.compact .form-grid--contact-phones {
-    grid-template-columns: 1fr;
-  }
-
-  .application-form.compact .form-grid-cell.form-col-2,
-  .application-form.compact .form-grid > .ant-col.form-col-2 {
-    grid-column: span 1;
-  }
-}
-
-.application-form.compact .form-item {
-  margin-bottom: 10px;
-}
-
-.application-form.compact .form-grid > .form-grid-cell.form-item,
-.application-form.compact .form-grid > .ant-col.form-item {
-  margin-bottom: 0;
-}
-
-.application-form.compact .form-grid .info-box,
-.application-form.compact .form-grid .consent-box,
-.application-form.compact .form-grid .question-box,
-.application-form.compact .form-grid .notice-box,
-.application-form.compact .form-grid .checkbox-notice-box {
-  margin-bottom: 0;
-}
-
-.application-form.compact .form-grid .form-grid {
-  width: 100%;
-}
-
-.application-form.compact label,
-.application-form.compact .my-input-label {
-  font-size: 13px;
-  font-weight: 500;
-  line-height: 1.2;
-}
-
-.application-form.compact .form-grid-cell-inner .my-input-label {
-  margin-bottom: 0;
-}
-
-.application-form-worklocation-iro {
-  color: var(--primary-color);
-  display: inline-block;
-  font-size: 12px;
-  font-weight: 600;
-  line-height: 1.2;
-  max-width: 220px;
+.application-mgt-shell .form-grid--personal-info .my-input-wrapper > .d-flex,
+.application-mgt-shell .form-grid--personal-info .form-grid-cell-inner > div > .d-flex,
+.application-mgt-shell .form-grid--personal-info .form-grid-cell-inner > div > label.my-input-label,
+.application-mgt-shell .form-grid--personal-info .my-input-label {
+  min-height: 16px !important;
   overflow: hidden;
-  text-align: right;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.application-form.compact .info-box,
-.application-form.compact .consent-box {
-  min-height: 48px;
-  padding: 10px 16px;
-  margin-bottom: 10px;
-  border-radius: 6px;
+.application-mgt-shell .required-star,
+.application-mgt-shell .text-danger,
+.application-mgt-shell .error-text1,
+.application-mgt-shell .my-input-label.error,
+.application-mgt-shell .error-message {
+  color: var(--app-form-coral) !important;
 }
 
-.application-form.compact .info-box {
-  background-color: #1173d41a;
-  border: 1px solid #97c5efff;
-}
-
-.application-form.compact .info-box.info-box--error {
-  border-color: #ff4d4f;
-}
-
-.application-form.compact .info-box .info-box-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 8px;
-  flex-wrap: wrap;
-}
-
-.application-form.compact .consent-box {
-  background-color: #fffbeb;
-  border: 1px solid #fde68a;
-  color: #78350f;
-}
-
-.application-form.compact .consent-box .ant-checkbox-wrapper {
-  color: #78350f;
-  font-size: 13px;
-  line-height: 1.3;
-}
-
-.application-form.compact .consent-box-note {
-  color: #78350f;
-  font-size: 12px;
-  line-height: 1.3;
-}
-
-.application-form.compact p.consent-box-note {
-  margin: 4px 0 0;
-}
-
-.application-form.compact .contact-subsection {
-  margin-bottom: 0;
-}
-
-.application-form.compact .contact-subsection-title {
-  font-size: 15px;
+.application-mgt-shell .label-extra,
+.application-mgt-shell .application-form-worklocation-iro {
+  color: var(--app-form-teal-deep);
+  font-size: 11.5px;
   font-weight: 600;
-  color: #1a1a1a;
-  margin: 0;
-  padding-bottom: 4px;
-  line-height: 1.2;
+  line-height: 1.25;
 }
 
-.application-form.compact .contact-subsection-subtitle {
-  font-size: 13px;
-  color: #666;
-  margin: 2px 0 0;
-  line-height: 1.2;
+.application-mgt-shell .my-input-container,
+.application-mgt-shell .form-control-band,
+.application-mgt-shell .ant-input,
+.application-mgt-shell .ant-input-affix-wrapper,
+.application-mgt-shell .ant-select-selector,
+.application-mgt-shell .ant-picker,
+.application-mgt-shell input[type="text"],
+.application-mgt-shell .country-code-select,
+.application-mgt-shell .mobile-number-input {
+  background: #fbfdfd !important;
+  border: 1.5px solid var(--app-form-border) !important;
+  border-radius: var(--app-form-control-radius) !important;
+  color: var(--app-form-ink) !important;
+  font-size: 13.5px !important;
+  height: var(--app-form-control-height) !important;
+  line-height: 1.3 !important;
+  min-height: var(--app-form-control-height) !important;
+  width: 100% !important;
 }
 
-/* Compact labels and controls */
-.application-form.compact .my-input-wrapper {
+.application-mgt-shell .my-input-container {
+  align-items: center;
   display: flex;
-  flex-direction: column;
-  margin-bottom: 0 !important;
-  min-width: 0;
+  justify-content: center;
+  padding: 0;
 }
 
-.application-form.compact .form-grid-cell-inner .my-input-wrapper {
+.application-mgt-shell .my-input-container.textarea-container {
+  height: auto !important;
+  min-height: 96px !important;
+}
+
+.application-mgt-shell .my-input-field,
+.application-mgt-shell .my-input-field-select,
+.application-mgt-shell .ant-input,
+.application-mgt-shell input[type="text"] {
+  align-items: center;
+  display: flex;
+  height: var(--app-form-control-height) !important;
+  line-height: 1.3 !important;
+  min-height: var(--app-form-control-height) !important;
+  padding: 0 12px !important;
+}
+
+.application-mgt-shell .my-input-ant-select {
+  height: var(--app-form-control-height) !important;
   width: 100%;
 }
 
-.application-form.compact .my-input-container {
-  height: 36px !important;
-  min-height: 36px !important;
-  max-height: 36px !important;
-  box-sizing: border-box;
+.application-mgt-shell .ant-select {
+  height: var(--app-form-control-height) !important;
+  width: 100% !important;
 }
 
-.application-form.compact .my-input-field,
-.application-form.compact .my-input-field-select {
-  height: 100% !important;
-  min-height: 0 !important;
-  font-size: 13px;
-  box-sizing: border-box;
-}
-
-.application-form.compact .my-input-container .my-input-field {
-  font-size: 13px;
-}
-
-.application-form.compact .my-input-container .ant-picker {
-  height: 36px !important;
-  min-height: 36px !important;
-  font-size: 13px !important;
-}
-
-.application-form.compact .form-grid-cell > .my-input-container {
-  align-items: stretch !important;
-}
-
-.application-form.compact .my-input-container .my-input-ant-select {
-  height: 100% !important;
-  min-height: 100% !important;
-  align-self: stretch;
-}
-
-.application-form.compact
-  .my-input-container
-  .my-input-ant-select
-  .ant-select-selector {
-  min-height: 100% !important;
-  height: 100% !important;
-  padding: 0 32px 0 12px !important;
-  display: flex !important;
-  align-items: center !important;
-}
-
-.application-form.compact
-  .my-input-container
-  .my-input-ant-select
-  .ant-select-selection-wrap,
-.application-form.compact
-  .my-input-container
-  .my-input-ant-select
-  .ant-select-selection-search {
-  height: 100% !important;
-}
-
-.application-form.compact
-  .my-input-container
-  .my-input-ant-select
-  .ant-select-selection-item,
-.application-form.compact
-  .my-input-container
-  .my-input-ant-select
-  .ant-select-selection-placeholder,
-.application-form.compact
-  .my-input-container
-  .my-input-ant-select
-  .ant-select-selection-search-input {
-  line-height: 1.2 !important;
-  font-size: 13px !important;
-}
-
-.application-form.compact .country-code-select,
-.application-form.compact .mobile-number-input {
-  height: 36px;
-  min-height: 36px;
-  font-size: 13px;
-}
-
-.application-form.compact .ant-input,
-.application-form.compact .ant-select-selector,
-.application-form.compact .ant-picker {
-  height: 36px !important;
-  min-height: 36px !important;
-}
-
-.application-form.compact .ant-select-selection-item,
-.application-form.compact .ant-select-selection-placeholder {
-  line-height: 34px !important;
-}
-
-.application-form.compact .ant-radio-wrapper,
-.application-form.compact .ant-checkbox-wrapper {
-  font-size: 13px;
-}
-
-.application-form.compact .question-box {
-  padding: 10px 16px;
-  margin-bottom: 10px;
-  border-radius: 6px;
-  min-height: 48px;
-}
-
-.application-form.compact .question-box .my-input-label {
-  margin-bottom: 6px;
-}
-
-.application-form.compact .notice-box {
-  padding: 8px 12px;
-  border-radius: 6px;
-  margin-bottom: 10px;
-}
-
-.application-form.compact .checkbox-notice-box {
-  min-height: 48px;
-  padding: 10px 16px;
-  border-radius: 6px;
-  background-color: #fffbeb;
-  border: 1px solid #fde68a;
-  display: flex;
+.application-mgt-shell .my-input-ant-select .ant-select-selector,
+.application-mgt-shell .ant-select-selector {
   align-items: center;
-}
-
-.application-form.compact .checkbox-notice-box .ant-checkbox-wrapper {
-  color: #78350f;
-  font-size: 13px;
-  line-height: 1.3;
-}
-
-.application-form.compact .form-grid--final-checkboxes > .form-grid-cell {
   display: flex;
-  flex-direction: column;
+  height: var(--app-form-control-height) !important;
+  min-height: var(--app-form-control-height) !important;
+  padding: 0 12px !important;
 }
 
-.application-form.compact .form-grid--final-checkboxes .checkbox-notice-box {
-  flex: 1;
-  height: 100%;
-  align-items: flex-start;
-}
-
-.duplicate-merge-indicator {
-  margin: 0 1.5rem 0.5rem;
-  padding: 10px 14px;
-  background: linear-gradient(90deg, #e6f4ff 0%, #f0f7ff 100%);
-  border: 1px solid #91caff;
-  border-left: 4px solid #1677ff;
-  border-radius: 6px;
-  display: flex;
+.application-mgt-shell .ant-select-selection-item,
+.application-mgt-shell .ant-select-selection-placeholder,
+.application-mgt-shell .ant-picker-input > input {
   align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  flex-shrink: 0;
-  flex-wrap: wrap;
+  color: var(--app-form-ink) !important;
+  display: flex;
+  font-size: 13.5px !important;
+  height: calc(var(--app-form-control-height) - 3px) !important;
+  line-height: calc(var(--app-form-control-height) - 3px) !important;
+  white-space: normal;
 }
 
-.duplicate-merge-indicator__main {
-  flex: 1;
+.application-mgt-shell .ant-picker {
+  align-items: center;
+  display: flex;
+  padding: 0 12px !important;
+}
+
+.application-mgt-shell .my-input-container:focus-within,
+.application-mgt-shell .form-control-band:focus-within,
+.application-mgt-shell .ant-input:focus,
+.application-mgt-shell .ant-input-affix-wrapper-focused,
+.application-mgt-shell .ant-input-affix-wrapper:focus-within,
+.application-mgt-shell .ant-picker-focused,
+.application-mgt-shell .ant-select-focused .ant-select-selector,
+.application-mgt-shell input[type="text"]:focus {
+  background: #fff !important;
+  border-color: var(--app-form-teal) !important;
+  box-shadow: 0 0 0 3px rgba(14, 158, 147, 0.14) !important;
+  outline: none !important;
+}
+
+.application-mgt-shell .my-input-container.error,
+.application-mgt-shell .my-input-field.error,
+.application-mgt-shell .my-input-field-select.error,
+.application-mgt-shell .info-box--error .form-control-band,
+.application-mgt-shell .radio-error {
+  border-color: var(--app-form-coral) !important;
+}
+
+.application-mgt-shell .my-input-field::placeholder,
+.application-mgt-shell .ant-input::placeholder,
+.application-mgt-shell .ant-select-selection-placeholder {
+  color: #a6b5b6 !important;
+}
+
+.application-mgt-shell .mobile-input-group {
+  align-items: center;
+  display: flex;
+  height: var(--app-form-control-height);
+  width: 100%;
+}
+
+.application-mgt-shell .country-code-select {
+  border-bottom-right-radius: 0 !important;
+  border-right: 1px solid var(--app-form-border) !important;
+  border-top-right-radius: 0 !important;
+  flex: 0 0 118px;
+  max-width: 118px;
+}
+
+.application-mgt-shell .mobile-number-input {
+  border-bottom-left-radius: 0 !important;
+  border-left: 0 !important;
+  border-top-left-radius: 0 !important;
+  flex: 1 1 auto;
   min-width: 0;
 }
 
-.duplicate-merge-indicator__title-row {
-  display: flex;
+.application-mgt-shell .form-control-band {
   align-items: center;
-  gap: 8px;
-  flex-wrap: wrap;
-  margin-bottom: 4px;
+  display: flex;
+  height: var(--app-form-control-height);
+  min-height: var(--app-form-control-height);
+  padding: 3px;
 }
 
-.duplicate-merge-indicator__icon {
-  color: #1677ff;
-  font-size: 16px;
+.application-mgt-shell .form-control-band--plain {
+  height: var(--app-form-control-height);
+  min-height: var(--app-form-control-height);
+  padding: 0;
 }
 
-.duplicate-merge-indicator__title {
-  font-weight: 600;
-  color: #0958d9;
+.application-mgt-shell .form-grid--correspondence {
+  --app-form-control-height: 40px;
+  row-gap: 16px;
+}
+
+.application-mgt-shell .correspondence-preferred-row {
+  margin-bottom: 0;
+}
+
+.application-mgt-shell .correspondence-preferred-field {
+  row-gap: 6px;
+}
+
+.application-mgt-shell .form-control-band--segmented-wide {
+  align-items: stretch;
+  border-radius: 12px !important;
+  justify-content: flex-start;
+  padding: 4px !important;
+}
+
+.application-mgt-shell .form-control-band--segmented-wide .ant-radio-group {
+  align-items: stretch;
+  display: flex;
+  gap: 4px;
+  height: 100%;
+  width: 100%;
+}
+
+.application-mgt-shell .form-control-band--segmented-wide .ant-radio-wrapper {
+  align-items: center;
+  border-radius: 10px;
+  color: var(--app-form-ink-soft) !important;
+  display: inline-flex;
   font-size: 14px;
+  font-weight: 700;
+  height: 100%;
+  justify-content: center;
+  line-height: 1;
+  margin: 0;
+  min-width: 104px;
+  padding: 0 24px;
 }
 
-.duplicate-merge-indicator__tag {
-  margin: 0;
+.application-mgt-shell
+  .form-control-band--segmented-wide
+  .ant-radio-wrapper
+  .ant-radio {
+  display: none;
 }
 
-.duplicate-merge-indicator__message {
-  margin: 0;
-  color: #003a8c;
+.application-mgt-shell
+  .form-control-band--segmented-wide
+  .ant-radio-wrapper:has(.ant-radio-checked) {
+  background: var(--app-form-teal-tint);
+  color: var(--app-form-teal-deep) !important;
+}
+
+.application-mgt-shell .address-search-field {
+  display: block !important;
+  width: 100%;
+}
+
+.application-mgt-shell .address-search-control {
+  position: relative;
+  width: 100%;
+}
+
+.application-mgt-shell .address-search-control .my-input-container {
+  padding-right: 44px;
+}
+
+.application-mgt-shell .address-search-icon {
+  color: #8fa0a1;
+  font-size: 17px;
+  pointer-events: none;
+  position: absolute;
+  right: 18px;
+  top: calc(16px + 6px + (var(--app-form-control-height) / 2));
+  transform: translateY(-50%);
+  z-index: 2;
+}
+
+.application-mgt-shell .form-control-band .ant-radio-group {
+  align-items: center;
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 2px;
+}
+
+.application-mgt-shell .form-control-band .ant-radio-wrapper {
+  align-items: center;
+  border-radius: 8px;
+  color: var(--app-form-ink-soft) !important;
+  display: inline-flex;
   font-size: 13px;
+  font-weight: 600;
+  height: 32px;
+  justify-content: center;
+  line-height: 1.25;
+  margin-inline-end: 0;
+  min-height: 32px;
+  padding: 0 16px;
+}
+
+.application-mgt-shell
+  .form-control-band
+  .ant-radio-wrapper:has(.ant-radio-checked) {
+  background: var(--app-form-teal-tint);
+  color: var(--app-form-teal-deep) !important;
+}
+
+.application-mgt-shell .form-control-band--segmented-wide .ant-radio-group {
+  align-items: stretch;
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 4px;
+  height: 100%;
+  width: 100%;
+}
+
+.application-mgt-shell .form-control-band--segmented-wide .ant-radio-wrapper {
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 700;
+  height: 100%;
+  line-height: 1;
+  margin: 0;
+  min-height: 0;
+  min-width: 104px;
+  padding: 0 24px;
+}
+
+.application-mgt-shell .info-box,
+.application-mgt-shell .question-box,
+.application-mgt-shell .consent-box,
+.application-mgt-shell .notice-box,
+.application-mgt-shell .checkbox-notice-box {
+  height: auto;
+  max-height: none;
+  min-height: 0;
+  overflow: visible;
+  width: 100%;
+}
+
+.application-mgt-shell .info-box--field-aligned {
+  background: transparent !important;
+  border: 0 !important;
+  color: var(--app-form-ink);
+  padding: 0 !important;
+}
+
+.application-mgt-shell .info-box--field-aligned.info-box--error {
+  background: transparent !important;
+}
+
+.application-mgt-shell .info-box:not(.info-box--field-aligned),
+.application-mgt-shell .question-box {
+  background: var(--app-form-teal-tint) !important;
+  border: 1px solid #bfe7e2 !important;
+  border-radius: 12px;
+  color: var(--app-form-teal-deep);
+  padding: 13px 16px;
+}
+
+.application-mgt-shell .consent-box,
+.application-mgt-shell .checkbox-notice-box {
+  align-items: flex-start;
+  background: var(--app-form-amber-tint) !important;
+  border: 1px solid #f5dfa8 !important;
+  border-radius: 12px;
+  color: var(--app-form-amber-deep) !important;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0;
+  padding: 13px 16px;
+}
+
+.application-mgt-shell .consent-box .ant-checkbox-wrapper,
+.application-mgt-shell .checkbox-notice-box .ant-checkbox-wrapper {
+  align-items: flex-start;
+  color: var(--app-form-amber-deep) !important;
+  display: flex;
+  gap: 10px;
+  line-height: 1.45;
+  width: 100%;
+}
+
+.application-mgt-shell .consent-box-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.application-mgt-shell .consent-box-label {
+  font-weight: 700;
+}
+
+.application-mgt-shell .consent-box-note,
+.application-mgt-shell .checkbox-notice-box a,
+.application-mgt-shell .consent-box a {
+  color: var(--app-form-amber-deep) !important;
+  font-size: 12.5px;
   line-height: 1.45;
 }
 
-.duplicate-merge-indicator__actions {
-  display: flex;
+.application-mgt-shell .consent-box--correspondence {
   align-items: center;
-  gap: 8px;
-  flex-shrink: 0;
-  flex-wrap: wrap;
+  border-color: #f5d082 !important;
+  border-radius: 12px;
+  min-height: 86px;
+  padding: 20px 28px;
+}
+
+.application-mgt-shell .consent-box--correspondence .ant-checkbox-wrapper {
+  align-items: center;
+  gap: 18px;
+}
+
+.application-mgt-shell .consent-box--correspondence .ant-checkbox {
+  align-self: center;
+}
+
+.application-mgt-shell .consent-box--correspondence .ant-checkbox-inner {
+  background: var(--app-form-teal) !important;
+  border-color: var(--app-form-teal) !important;
+  border-radius: 4px;
+  height: 22px;
+  width: 22px;
+}
+
+.application-mgt-shell .consent-box--correspondence .consent-box-label,
+.application-mgt-shell .consent-box--correspondence .consent-box-note {
+  font-size: 14px;
+  line-height: 1.25;
+}
+
+.application-mgt-shell .notice-box {
+  background: transparent !important;
+  border: 0 !important;
+  padding: 0 !important;
+}
+
+.application-mgt-shell .notice-box .my-input-label {
+  display: block;
+  margin-bottom: 6px !important;
+}
+
+.application-mgt-shell .notice-box .ant-radio-group {
+  width: 100%;
+}
+
+.application-mgt-shell .notice-box .ant-radio-group > div {
+  display: grid !important;
+  gap: 12px !important;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+}
+
+.application-mgt-shell .notice-box .ant-radio-wrapper {
+  align-items: center;
+  background: #fbfdfd;
+  border: 1.5px solid var(--app-form-border);
+  border-radius: 12px;
+  color: var(--app-form-ink) !important;
+  display: flex;
+  font-size: 12.5px;
+  font-weight: 600;
+  justify-content: center;
+  line-height: 1.3;
+  margin: 0;
+  min-height: 68px;
+  padding: 14px 12px;
+  text-align: center;
+  transition: 0.15s ease;
+  width: 100% !important;
+}
+
+.application-mgt-shell .notice-box .ant-radio-wrapper:hover {
+  border-color: var(--app-form-teal);
+}
+
+.application-mgt-shell .notice-box .ant-radio-wrapper:has(.ant-radio-checked) {
+  background: var(--app-form-teal-tint);
+  border-color: var(--app-form-teal);
+  box-shadow: 0 0 0 3px rgba(14, 158, 147, 0.14);
+}
+
+.application-mgt-shell .contact-subsection {
+  border-top: 1px solid var(--app-form-border-soft);
+  padding-top: 8px;
+  scroll-margin-top: 130px;
+}
+
+.application-mgt-shell .contact-subsection-title {
+  color: var(--app-form-ink);
+  font-family: "Space Grotesk", "Inter", sans-serif;
+  font-size: 16px;
+  font-weight: 700;
+  margin: 0 0 2px;
+}
+
+.application-mgt-shell .contact-subsection-subtitle {
+  color: var(--app-form-ink-soft);
+  font-size: 12.5px;
+  margin: 0;
+}
+
+.application-mgt-shell .address-search-field {
+  width: 100%;
+}
+
+.application-mgt-shell .form-grid--final-checkboxes {
+  align-items: stretch;
+}
+
+.application-mgt-shell .form-grid--final-checkboxes .checkbox-notice-box {
+  height: 100%;
+}
+
+@media (max-width: 1100px) {
+  .application-form-topbar {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .application-form-stepper,
+  .application-form-topbar-actions {
+    justify-content: flex-start;
+    width: 100%;
+  }
+
+  .application-mgt-shell .form-grid--3,
+  .application-mgt-shell .form-grid--33-67,
+  .application-mgt-shell .form-grid--40-60,
+  .application-mgt-shell .form-grid--nursing-row,
+  .application-mgt-shell .form-grid--trade-union-row,
+  .application-mgt-shell .form-grid--trade-union-row--3 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .application-mgt-shell .notice-box .ant-radio-group > div {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 700px) {
+  .application-form-topbar {
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+
+  .application-mgt-shell .application-form {
+    padding: 16px 12px 48px;
+  }
+
+  .application-mgt-shell .section-header,
+  .application-mgt-shell .section-card > .form-grid {
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+
+  .application-mgt-shell .form-grid--3,
+  .application-mgt-shell .form-grid--2,
+  .application-mgt-shell .form-grid--33-67,
+  .application-mgt-shell .form-grid--40-60,
+  .application-mgt-shell .form-grid--contact-phones,
+  .application-mgt-shell .form-grid--nursing-row,
+  .application-mgt-shell .form-grid--trade-union-row,
+  .application-mgt-shell .form-grid--trade-union-row--3,
+  .application-mgt-shell .notice-box .ant-radio-group > div {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .application-mgt-shell .form-col-2 {
+    grid-column: 1 / -1;
+  }
 }

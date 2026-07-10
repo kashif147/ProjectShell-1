@@ -149,7 +149,7 @@ const EventDetails = () => {
                 const colors = {
                     'VIP': { color: '#722ed1', bg: '#f9f0ff', border: '#d3adf7' },
                     'SPEAKER': { color: '#08979c', bg: '#e6fffb', border: '#87e8de' },
-                    'MEMBER': { color: '#1890ff', bg: '#e6f7ff', border: '#91d5ff' }
+                    'MEMBER': { color: 'var(--app-brand-accent)', bg: 'var(--app-brand-bg)', border: '#91d5ff' }
                 };
                 const style = colors[category] || colors['MEMBER'];
                 return (

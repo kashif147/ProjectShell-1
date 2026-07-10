@@ -10,8 +10,23 @@ import MyInput from "../common/MyInput";
 import MyDatePicker from "../common/MyDatePicker";
 import CustomSelect from "../common/CustomSelect";
 import MyAlert from "../common/MyAlert";
-import { IoBagRemoveOutline } from "react-icons/io5";
-import { CiCreditCard1 } from "react-icons/ci";
+import {
+  BadgePlus,
+  Briefcase,
+  ClipboardList,
+  Clock,
+  CreditCard,
+  GraduationCap,
+  List,
+  MapPin,
+  Phone,
+  ShieldCheck,
+  ShoppingBag,
+  Umbrella,
+  User,
+  UserPlus,
+  Wallet,
+} from "lucide-react";
 import { useSelector, useDispatch } from "react-redux";
 import { useSearchParams } from "react-router-dom";
 import { getCategoryLookup } from "../../features/CategoryLookupSlice";
@@ -508,8 +523,8 @@ function isSameDayValue(a, b) {
 }
 
 const membershipSaveButtonStyle = {
-  backgroundColor: "#45669d",
-  borderColor: "#45669d",
+  backgroundColor: "var(--app-brand-primary)",
+  borderColor: "var(--app-brand-primary)",
 };
 
 function hasRequiredText(value) {
@@ -551,10 +566,48 @@ function MembershipFormField({ field, fieldErrors, children }) {
   );
 }
 
-function MembershipFormCard({ title, children, className = "" }) {
+const MEMBERSHIP_FORM_CARD_ICONS = {
+  "Personal Information": { icon: User, tone: "blue" },
+  "Correspondence Details": { icon: MapPin, tone: "green" },
+  "Contact Details": { icon: Phone, tone: "amber" },
+  "Consent Management": { icon: ShieldCheck, tone: "violet" },
+  "Employment Details": { icon: Briefcase, tone: "coral" },
+  "Section Details": { icon: List, tone: "blue" },
+  "Nursing Registration & Specialization": {
+    icon: ClipboardList,
+    tone: "green",
+  },
+  "Recruitment Details": { icon: UserPlus, tone: "violet" },
+  "Subscription Details": { icon: Wallet, tone: "green" },
+  "Payment Information": { icon: CreditCard, tone: "amber" },
+  "Educational Details": { icon: GraduationCap, tone: "blue" },
+  "Retirement Details": { icon: Clock, tone: "coral" },
+  "Reminders & Cancellations": { icon: Clock, tone: "violet" },
+  "Additional Memberships": { icon: BadgePlus, tone: "green" },
+  "Income Protection Scheme": { icon: Umbrella, tone: "blue" },
+  CornMarket: { icon: ShoppingBag, tone: "amber" },
+};
+
+function MembershipFormCard({ title, children, className = "", headerExtra }) {
+  const iconConfig = MEMBERSHIP_FORM_CARD_ICONS[title] || {
+    icon: ClipboardList,
+    tone: "blue",
+  };
+  const SectionIcon = iconConfig.icon;
+
   return (
     <Card className={`membership-form-card ${className}`.trim()}>
-      <h3 className="membership-form-card-header">{title}</h3>
+      <div className="membership-form-card-header">
+        <span className={`membership-form-card-icon ${iconConfig.tone}`}>
+          <SectionIcon size={16} strokeWidth={2.2} aria-hidden="true" />
+        </span>
+        <h3>{title}</h3>
+        {headerExtra ? (
+          <span className="membership-form-card-header-extra">
+            {headerExtra}
+          </span>
+        ) : null}
+      </div>
       <div className="membership-form-card-body">{children}</div>
     </Card>
   );
@@ -2740,7 +2793,17 @@ const MembershipForm = ({
             </MembershipFormCard>
           </MembershipFormCol>
           <MembershipFormCol>
-            <MembershipFormCard title="Subscription Details">
+            <MembershipFormCard
+              title="Subscription Details"
+              className="membership-form-card--subscription"
+              headerExtra={
+                formData.subscriptionYear ? (
+                  <span className="membership-form-year-pill">
+                    {formData.subscriptionYear}
+                  </span>
+                ) : null
+              }
+            >
               <MembershipFormGrid>
                 <MembershipFormGridFull>
                   <MembershipFormField
@@ -2813,7 +2876,10 @@ const MembershipForm = ({
               </MembershipFormGrid>
             </MembershipFormCard>
 
-            <MembershipFormCard title="Payment Information">
+            <MembershipFormCard
+              title="Payment Information"
+              className="membership-form-card--payment"
+            >
               <div
                 ref={paymentTypeSectionRef}
                 style={paymentTypeHighlightStyle}

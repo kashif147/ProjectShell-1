@@ -298,8 +298,8 @@ const CreateEventDrawer = ({ open, onClose }) => {
         type="primary"
         onClick={handleSave}
         style={{
-          backgroundColor: "#215E97",
-          borderColor: "#215E97",
+          backgroundColor: "var(--app-brand-primary)",
+          borderColor: "var(--app-brand-primary)",
           padding: "0 32px",
         }}
       >

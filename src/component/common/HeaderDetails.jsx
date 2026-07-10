@@ -229,7 +229,7 @@ function HeaderDetails({
     marginRight: "50px",
     color: "white",
     borderRadius: "3px",
-    backgroundColor: "#45669d",
+    backgroundColor: "var(--app-brand-primary)",
   };
 
   const openPaymentFormCreate = (formType = "STANDING_ORDER") => {
@@ -642,8 +642,8 @@ function HeaderDetails({
           disabled: !isValidDecisionDate(date) || loading,
           loading,
           style: {
-            backgroundColor: "#45669d",
-            borderColor: "#45669d",
+            backgroundColor: "var(--app-brand-primary)",
+            borderColor: "var(--app-brand-primary)",
             color: "white",
             opacity: loading ? 0.7 : 1,
           },
@@ -680,8 +680,8 @@ function HeaderDetails({
       okButtonProps: {
         disabled: !isValidDecisionDate(initialDate),
         style: {
-          backgroundColor: "#45669d",
-          borderColor: "#45669d",
+          backgroundColor: "var(--app-brand-primary)",
+          borderColor: "var(--app-brand-primary)",
           color: "white",
         },
       },
@@ -826,8 +826,8 @@ function HeaderDetails({
             disabled: !enabled || loading,
             loading,
             style: {
-              backgroundColor: "#45669d",
-              borderColor: "#45669d",
+              backgroundColor: "var(--app-brand-primary)",
+              borderColor: "var(--app-brand-primary)",
               color: "white",
               opacity: loading ? 0.7 : 1,
             },
@@ -875,10 +875,10 @@ function HeaderDetails({
                 }}
               >
                 <LoadingOutlined
-                  style={{ fontSize: 32, color: "#45669d", marginBottom: 15 }}
+                  style={{ fontSize: 32, color: "var(--app-brand-primary)", marginBottom: 15 }}
                 />
                 <div
-                  style={{ fontSize: 16, fontWeight: 500, color: "#45669d" }}
+                  style={{ fontSize: 16, fontWeight: 500, color: "var(--app-brand-primary)" }}
                 >
                   Processing {selectedApplications.length} application(s)...
                 </div>
@@ -894,8 +894,8 @@ function HeaderDetails({
         okButtonProps: {
           disabled: !isValidProcessingDate(initialDate),
           style: {
-            backgroundColor: "#45669d",
-            borderColor: "#45669d",
+            backgroundColor: "var(--app-brand-primary)",
+            borderColor: "var(--app-brand-primary)",
             color: "white",
           },
         },
@@ -1392,7 +1392,7 @@ function HeaderDetails({
           <FaClipboardList
             style={{
               fontSize: "15px",
-              color: "#45669d",
+              color: "var(--app-brand-primary)",
             }}
           />
         )}
@@ -1427,7 +1427,18 @@ function HeaderDetails({
   }, [nav, defaultMenuItems, editCasesItem]);
 
   return (
-    <div className="" style={{ width: "100%", minWidth: 0 }}>
+    <div
+      className=""
+      style={{
+        width: "100%",
+        minWidth: 0,
+        // Single left/right origin for breadcrumb + title + search + Filter,
+        // matching the table content start (.common-table paddingLeft: 34px)
+        paddingLeft: 34,
+        paddingRight: 34,
+        boxSizing: "border-box",
+      }}
+    >
       {/* New Breadcrumb Component */}
       {!hideBreadcrumb &&
         location?.pathname !== "/CommunicationBatchDetail" &&
@@ -1477,7 +1488,7 @@ function HeaderDetails({
                       marginRight: "50px",
                       color: "white",
                       borderRadius: "3px",
-                      backgroundColor: "#45669d",
+                      backgroundColor: "var(--app-brand-primary)",
                     }}
                     onClick={() => {
                       if (nav == "/ClaimsById") handlClaimDrawerChng();
@@ -1710,7 +1721,7 @@ function HeaderDetails({
                         marginRight: "50px", // This gives the margin right
                         color: "white",
                         borderRadius: "3px",
-                        backgroundColor: "#45669d",
+                        backgroundColor: "var(--app-brand-primary)",
                       }}
                       className="butn"
                     >
@@ -1867,7 +1878,7 @@ function HeaderDetails({
                             marginRight: "50px",
                             color: "white",
                             borderRadius: "3px",
-                            backgroundColor: "#45669d",
+                            backgroundColor: "var(--app-brand-primary)",
                           }}
                           className="butn"
                         >
@@ -1975,7 +1986,7 @@ function HeaderDetails({
                     htmlType="button"
                     onClick={reminderApplySearch}
                     style={{
-                      backgroundColor: "#45669d",
+                      backgroundColor: "var(--app-brand-primary)",
                       borderRadius: "4px",
                       border: "none",
                       height: "32px",
@@ -2032,7 +2043,7 @@ function HeaderDetails({
                     htmlType="button"
                     onClick={cbFilter.applySearch}
                     style={{
-                      backgroundColor: "#45669d",
+                      backgroundColor: "var(--app-brand-primary)",
                       borderRadius: "4px",
                       border: "none",
                       height: "32px",

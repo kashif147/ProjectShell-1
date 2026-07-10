@@ -228,7 +228,7 @@ function CancallationDrawer({ isOpen, onClose, }) {
                       icon: <BsFiletypeXls style={{
                         fontSize: "12px",
                         marginRight: "10px",
-                        color: "#45669d",
+                        color: "var(--app-brand-primary)",
                       }} />,
                       onClick: () => {
                         downloadCSV()
@@ -240,7 +240,7 @@ function CancallationDrawer({ isOpen, onClose, }) {
                       icon: <BsFiletypeXls style={{
                         fontSize: "12px",
                         marginRight: "10px",
-                        color: "#45669d",
+                        color: "var(--app-brand-primary)",
                       }} />,
                     }
                   ]} />

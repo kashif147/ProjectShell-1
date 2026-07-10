@@ -27,12 +27,12 @@
 }
 
 .header-discard-btn:hover {
-  border-color: #40a9ff;
-  color: #40a9ff;
+  border-color: var(--app-brand-accent);
+  color: var(--app-brand-accent);
 }
 
 .header-save-btn {
-  background-color: #1890ff;
+  background-color: var(--app-brand-accent);
   border: none;
   color: #ffffff;
   font-weight: 500;
@@ -42,7 +42,7 @@
 }
 
 .header-save-btn:hover {
-  background-color: #40a9ff;
+  background-color: var(--app-brand-accent);
 }
 
 /* Form Sections */
@@ -152,12 +152,12 @@
 
 .sidebar-card-link {
   font-size: 13px;
-  color: #1890ff;
+  color: var(--app-brand-accent);
   text-decoration: none;
 }
 
 .sidebar-card-link:hover {
-  color: #40a9ff;
+  color: var(--app-brand-accent);
   text-decoration: underline;
 }
 
@@ -172,13 +172,13 @@
 .cost-currency {
   font-size: 20px;
   font-weight: 600;
-  color: #1890ff;
+  color: var(--app-brand-accent);
 }
 
 .cost-amount {
   font-size: 32px;
   font-weight: 700;
-  color: #1890ff;
+  color: var(--app-brand-accent);
 }
 
 .cost-period {
@@ -199,7 +199,7 @@
 .cost-progress-bar {
   width: 70%;
   height: 100%;
-  background: linear-gradient(90deg, #1890ff 0%, #52c41a 100%);
+  background: linear-gradient(90deg, var(--app-brand-accent) 0%, #52c41a 100%);
   border-radius: 4px;
 }
 
@@ -230,7 +230,7 @@
 
 .tip-card-link {
   font-size: 13px;
-  color: #40a9ff;
+  color: var(--app-brand-accent);
   text-decoration: none;
 }
 

@@ -1,11 +1,11 @@
 .selected-dev{
 border-radius: 5px !important;
-background-color: var(--secoundry-bg-color) !important;
-color:  #C97A2F !important;
+background-color: var(--app-selected-bg, var(--secoundry-bg-color)) !important;
+color:  var(--secoundry-color, #c97a2f) !important;
 }
 .icon-collapsed{
-background-color: var(--secoundry-bg-color) !important;
-color: #C97A2F !important;
+background-color: var(--app-selected-bg, var(--secoundry-bg-color)) !important;
+color: var(--secoundry-color, #c97a2f) !important;
 /* padding: 7px; */
 border-radius: 5px;
 font-size: 26px !important;

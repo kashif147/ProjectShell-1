@@ -781,7 +781,7 @@ const SaveViewMenu = ({ className, style }) => {
       >
         {isPinned ? (
           <StarFilled
-            style={{ color: "#1890ff", fontSize: 16, cursor: "default" }}
+            style={{ color: "var(--app-brand-accent)", fontSize: 16, cursor: "default" }}
             title="This is your default view. Star another view to change it."
             aria-label="This is your default view"
             role="img"

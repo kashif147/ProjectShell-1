@@ -11,7 +11,7 @@ import {
 const { Text } = Typography;
 
 export const iconMap = {
-  DEFAULT: <FileTextOutlined style={{ color: "#1890ff" }} />,
+  DEFAULT: <FileTextOutlined style={{ color: "var(--app-brand-accent)" }} />,
   SUCCESS: <CheckCircleOutlined style={{ color: "#52c41a" }} />,
   USER: <UserOutlined style={{ color: "#fa8c16" }} />,
   MAIL: <MailOutlined style={{ color: "#722ed1" }} />,
@@ -54,7 +54,7 @@ export function NotificationRow({ item, onRowClick, padding = "16px 24px" }) {
         avatar={
           <Avatar
             icon={iconMap.DEFAULT}
-            style={{ backgroundColor: "#e6f7ff" }}
+            style={{ backgroundColor: "var(--app-brand-bg)" }}
             size="large"
           />
         }
@@ -85,7 +85,7 @@ export function NotificationRow({ item, onRowClick, padding = "16px 24px" }) {
                   {includedCount + excludedCount}
                 </Text>
               )}
-              {!item.isRead && <Badge status="processing" color="#1890ff" />}
+              {!item.isRead && <Badge status="processing" color="var(--app-brand-accent)" />}
             </div>
           </div>
         }

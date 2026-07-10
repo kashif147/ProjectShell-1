@@ -283,7 +283,7 @@ const ReportViewer = ({
         <Row justify="space-between" align="middle">
           <Col>
             <div>
-              <Title level={2} style={{ margin: 0, color: "#1976d2" }}>
+              <Title level={2} style={{ margin: 0, color: "var(--app-brand-accent)" }}>
                 {title}
               </Title>
               <Text type="secondary" style={{ fontSize: 16 }}>
@@ -300,7 +300,7 @@ const ReportViewer = ({
         <Row gutter={16}>
           <Col span={6}>
             <div style={{ textAlign: "center" }}>
-              <Badge count={data?.length || 0} showZero color="#1976d2" />
+              <Badge count={data?.length || 0} showZero color="var(--app-brand-accent)" />
               <div style={{ fontSize: 12, color: "#666", marginTop: 4 }}>
                 Total Records
               </div>
@@ -318,7 +318,7 @@ const ReportViewer = ({
           </Col>
           <Col span={6}>
             <div style={{ textAlign: "center" }}>
-              <Text strong style={{ color: "#1890ff" }}>
+              <Text strong style={{ color: "var(--app-brand-accent)" }}>
                 {moment().format("HH:mm")}
               </Text>
               <div style={{ fontSize: 12, color: "#666", marginTop: 4 }}>

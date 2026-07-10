@@ -270,7 +270,7 @@ function CancelledMembersReport() {
     { month: "Jun", cancelled: 9 },
   ];
 
-  const COLORS = ["#ff4d4f", "#1890ff", "#52c41a", "#faad14", "#722ed1"];
+  const COLORS = ["#ff4d4f", "var(--app-brand-accent)", "#52c41a", "#faad14", "#722ed1"];
 
   // Table columns
   const columns = [
@@ -536,7 +536,7 @@ function CancelledMembersReport() {
                 value={cancellationRate}
                 suffix="%"
                 prefix={<BarChartOutlined />}
-                valueStyle={{ color: "#1890ff" }}
+                valueStyle={{ color: "var(--app-brand-accent)" }}
                 precision={1}
               />
             </Card>

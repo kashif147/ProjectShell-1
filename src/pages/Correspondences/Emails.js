@@ -498,7 +498,7 @@ function Emails() {
                     style={{
                       cursor: "pointer",
                       fontSize: "14px",
-                      color: "#215e97",
+                      color: "var(--app-brand-primary)",
                       transition: "color 0.3s ease",
                       marginLeft: "4px",
                     }}
@@ -508,10 +508,10 @@ function Emails() {
                     }}
                     title="Refresh"
                     onMouseEnter={(e) => {
-                      e.currentTarget.style.color = "#1890ff";
+                      e.currentTarget.style.color = "var(--app-brand-accent)";
                     }}
                     onMouseLeave={(e) => {
-                      e.currentTarget.style.color = "#215e97";
+                      e.currentTarget.style.color = "var(--app-brand-primary)";
                     }}
                   />
                 </span>

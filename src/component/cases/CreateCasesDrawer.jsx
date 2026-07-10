@@ -249,7 +249,7 @@ const CreateCasesDrawer = ({ open, onClose }) => {
       <label className="form-label">Attachments</label>
       <Dragger className="case-upload-dragger">
         <p className="upload-icon-wrapper">
-          <InboxOutlined style={{ fontSize: "32px", color: "#1890ff" }} />
+          <InboxOutlined style={{ fontSize: "32px", color: "var(--app-brand-accent)" }} />
         </p>
         <p className="upload-hint">
           Drag & drop or tap to select PDFs, PNGs, or DOCX
@@ -322,7 +322,7 @@ const CreateCasesDrawer = ({ open, onClose }) => {
             percent={25}
             showInfo={false}
             strokeWidth={4}
-            strokeColor="#1890ff"
+            strokeColor="var(--app-brand-accent)"
             trailColor="#d9d9d9"
           />
         </div>

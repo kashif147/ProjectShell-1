@@ -117,7 +117,7 @@
 
 .reminder-details-kpi-icon--r1 {
   background: #e6f4ff;
-  color: #215e97;
+  color: var(--app-brand-primary);
 }
 
 .reminder-details-kpi-icon--r2 {
@@ -132,7 +132,7 @@
 
 .reminder-details-kpi-icon--batch {
   background: #e6f4ff;
-  color: #215e97;
+  color: var(--app-brand-primary);
 }
 
 .reminder-details-kpi-body {
@@ -268,7 +268,7 @@
   cursor: pointer;
   font-size: 11px;
   font-weight: 500;
-  color: var(--mainBlue, #215e97);
+  color: var(--mainBlue, var(--app-brand-primary));
   transition: color 0.15s, border-color 0.15s, background 0.15s;
   white-space: nowrap;
 }
@@ -312,7 +312,7 @@
 }
 
 .reminder-details-channel-tab-icon--email {
-  color: #215e97;
+  color: var(--app-brand-primary);
 }
 
 .reminder-details-channel-tab-icon--inapp {

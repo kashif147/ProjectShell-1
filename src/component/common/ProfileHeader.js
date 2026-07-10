@@ -56,8 +56,9 @@ import { useTenantBranding } from "../../context/TenantBrandingContext";
 
 const DEFAULT_BRAND = {
   primary: "#215e97",
-  secondary: "#1a4a7a",
-  accent: "#0ea5e9",
+  secondary: "#475569",
+  accent: "#0d9488",
+  secondaryBackground: "#eef2f6",
 };
 
 const ACTIVATE_MEMBERSHIP_DISABLED_TITLE =
@@ -192,8 +193,15 @@ const ProfileHeader = forwardRef(function ProfileHeader(
       "--ph-primary": branding?.primaryColor || DEFAULT_BRAND.primary,
       "--ph-secondary": branding?.secondaryColor || DEFAULT_BRAND.secondary,
       "--ph-accent": branding?.accentColor || DEFAULT_BRAND.accent,
+      "--ph-secondary-bg":
+        branding?.secondaryBackgroundColor || DEFAULT_BRAND.secondaryBackground,
     }),
-    [branding?.primaryColor, branding?.secondaryColor, branding?.accentColor],
+    [
+      branding?.primaryColor,
+      branding?.secondaryColor,
+      branding?.accentColor,
+      branding?.secondaryBackgroundColor,
+    ],
   );
 
   // Function to calculate age from date of birth using dayjs
@@ -578,12 +586,6 @@ const ProfileHeader = forwardRef(function ProfileHeader(
     })}`;
     const balanceIndicator =
       numericLedgerBalance > 0 ? "Dr" : numericLedgerBalance < 0 ? "Cr" : "";
-    const balanceColor =
-      balanceIndicator === "Dr"
-        ? "#cf1322"
-        : balanceIndicator === "Cr"
-          ? "#389e0d"
-          : "#faad14";
     const lastPayment = `€${centsToEuro(lastPaymentAmount || 0).toLocaleString("en-IE", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 
     // Payment date only from account summary (cash receipt crediting 2020); not subscription start.
@@ -630,13 +632,7 @@ const ProfileHeader = forwardRef(function ProfileHeader(
       // Financial Info
       balance: balanceAmount,
       balanceIndicator,
-      balanceColor,
-      balanceValueClassName: [
-        "member-balance-value",
-        balanceIndicator === "Dr" ? "member-balance-value-dr" : "",
-      ]
-        .filter(Boolean)
-        .join(" "),
+      balanceValueClassName: "member-balance-value",
       lastPayment,
       paymentDate,
       paymentCode: paymentCodeToUse,
@@ -1011,7 +1007,12 @@ const ProfileHeader = forwardRef(function ProfileHeader(
             className="member-meta-tile member-meta-tile-category"
             title={memberData.category}
           >
-            {renderCompactLine(<FaUsers />, "", memberData.category)}
+            {renderCompactLine(
+              <FaUsers />,
+              "",
+              memberData.category,
+              "member-profile-badge-value",
+            )}
           </div>
         ) : null}
         {memberData.grade ? (
@@ -1019,11 +1020,24 @@ const ProfileHeader = forwardRef(function ProfileHeader(
             className="member-meta-tile member-meta-tile-grade"
             title={memberData.grade}
           >
-            {renderCompactLine(<FaStar />, "", memberData.grade)}
+            {renderCompactLine(
+              <FaStar />,
+              "",
+              memberData.grade,
+              "member-profile-badge-value",
+            )}
           </div>
         ) : null}
-        <div className="member-meta-tile" title={memberData.paymentType}>
-          {renderCompactLine(<FaCreditCard />, "", memberData.paymentType)}
+        <div
+          className="member-meta-tile member-meta-tile-payment"
+          title={memberData.paymentType}
+        >
+          {renderCompactLine(
+            <FaCreditCard />,
+            "",
+            memberData.paymentType,
+            "member-profile-badge-value member-profile-badge-payment",
+          )}
         </div>
       </>
     ) : null;
@@ -1039,8 +1053,16 @@ const ProfileHeader = forwardRef(function ProfileHeader(
         ) : (
           <>
             {memberData?.category ? (
-              <div className="member-meta-tile" title={memberData.category}>
-                {renderCompactLine(<FaUsers />, "", memberData.category)}
+              <div
+                className="member-meta-tile member-meta-tile-category"
+                title={memberData.category}
+              >
+                {renderCompactLine(
+                  <FaUsers />,
+                  "",
+                  memberData.category,
+                  "member-profile-badge-value",
+                )}
               </div>
             ) : null}
             {memberData.grade ? (
@@ -1048,11 +1070,24 @@ const ProfileHeader = forwardRef(function ProfileHeader(
                 className="member-meta-tile member-meta-tile-grade"
                 title={memberData.grade}
               >
-                {renderCompactLine(<FaStar />, "", memberData.grade)}
+                {renderCompactLine(
+                  <FaStar />,
+                  "",
+                  memberData.grade,
+                  "member-profile-badge-value",
+                )}
               </div>
             ) : null}
-            <div className="member-meta-tile" title={memberData.paymentType}>
-              {renderCompactLine(<FaCreditCard />, "", memberData.paymentType)}
+            <div
+              className="member-meta-tile member-meta-tile-payment"
+              title={memberData.paymentType}
+            >
+              {renderCompactLine(
+                <FaCreditCard />,
+                "",
+                memberData.paymentType,
+                "member-profile-badge-value member-profile-badge-payment",
+              )}
             </div>
             <div className="member-meta-tile" title={memberData.paymentCode}>
               {renderCompactLine(
@@ -1233,14 +1268,21 @@ const ProfileHeader = forwardRef(function ProfileHeader(
             )
           : null}
         {memberData.category
-          ? renderSideDetailRow(<FaUsers />, "", memberData.category)
+          ? renderSideDetailRow(<FaUsers />, "", memberData.category, {
+              valueClassName: "member-profile-detail-badge",
+            })
           : null}
         {renderSideDetailRow(<FaCalendarAlt />, "Joined:", memberData.joined)}
         {renderSideDetailRow(<FaShieldAlt />, "Expires:", memberData.expires)}
         {memberData.grade
-          ? renderSideDetailRow(<FaStar />, "", memberData.grade)
+          ? renderSideDetailRow(<FaStar />, "", memberData.grade, {
+              valueClassName: "member-profile-detail-badge",
+            })
           : null}
-        {renderSideDetailRow(<FaCreditCard />, "", memberData.paymentType)}
+        {renderSideDetailRow(<FaCreditCard />, "", memberData.paymentType, {
+          valueClassName:
+            "member-profile-detail-badge member-profile-detail-badge-payment",
+        })}
         {renderSideDetailRow(
           <FaExclamationTriangle />,
           "Balance:",
@@ -1255,10 +1297,6 @@ const ProfileHeader = forwardRef(function ProfileHeader(
           {
             valueClassName: memberData.balanceValueClassName,
             valueStyle: {
-              color:
-                memberData.balanceIndicator === "Dr"
-                  ? undefined
-                  : memberData.balanceColor || "#faad14",
               fontWeight: 600,
             },
           },
@@ -1357,10 +1395,6 @@ const ProfileHeader = forwardRef(function ProfileHeader(
             memberData.balanceValueClassName,
             "member-financial-col-right",
             {
-              color:
-                memberData.balanceIndicator === "Dr"
-                  ? undefined
-                  : memberData.balanceColor || "#faad14",
               fontWeight: 500,
             },
           )}

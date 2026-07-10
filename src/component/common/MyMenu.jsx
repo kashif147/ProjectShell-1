@@ -15,7 +15,7 @@ const DropdownIcon = styled(EllipsisOutlined)`
   color: #123c63;
 
   &:hover {
-    color: #40a9ff;
+    color: var(--app-brand-accent);
   }
 
   &:active {
@@ -33,7 +33,7 @@ const CustomMenu = styled(Menu)`
     color: #123c63;
 
     &:hover {
-      background-color: #e6f7ff;
+      background-color: var(--app-brand-bg);
     }
 
     .anticon {

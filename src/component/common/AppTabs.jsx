@@ -225,7 +225,7 @@ function buildPaymentReminderBanner(subscription) {
 }
 
 const MEMBERSHIP_MORE_ICON = {
-  edit: "#1890ff",
+  edit: "var(--app-brand-accent)",
   duplicate: "#722ed1",
   activate: "#52c41a",
   activateMuted: "rgba(82, 196, 26, 0.45)",
@@ -238,8 +238,8 @@ function membershipMoreIcon(Icon, color) {
 }
 
 const profileMoreActionsButtonStyle = {
-  backgroundColor: "#45669d",
-  borderColor: "#45669d",
+  backgroundColor: "var(--app-brand-primary)",
+  borderColor: "var(--app-brand-primary)",
   color: "#fff",
 };
 
@@ -541,7 +541,7 @@ function AppTabs({
           ...col,
           render: (text, record) => (
             <a
-              style={{ color: "#1890ff", fontWeight: "500" }}
+              style={{ color: "var(--app-brand-accent)", fontWeight: "500" }}
               onClick={() => {
                 const appId = record._id || record.id;
                 dispatch(getApplicationById({ id: appId }));
@@ -570,7 +570,7 @@ function AppTabs({
       key: "membershipCategory",
       render: (text, record) => (
         <a
-          style={{ color: "#1890ff", fontWeight: 500 }}
+          style={{ color: "var(--app-brand-accent)", fontWeight: 500 }}
           onClick={(e) => {
             e.stopPropagation();
             openHistorySubscriptionDetail(record);
@@ -635,7 +635,7 @@ function AppTabs({
       key: "membershipCategory",
       render: (text, record) => (
         <a
-          style={{ color: "#1890ff", fontWeight: "500" }}
+          style={{ color: "var(--app-brand-accent)", fontWeight: "500" }}
           onClick={() => {
             dispatch(getApplicationById({ id: record.applicationId }));
             navigate({
@@ -1060,7 +1060,7 @@ function AppTabs({
       key: "9",
       label: "Projects",
       icon: <FaProjectDiagram />,
-      iconColor: "#1890ff",
+      iconColor: "var(--app-brand-accent)",
       onClick: () => handleMenuClick("9"),
     },
     {
@@ -1195,7 +1195,7 @@ function AppTabs({
           {
             key: "documents-create-payment-form",
             label: "Create payment form",
-            icon: membershipMoreIcon(FaFileAlt, "#45669d"),
+            icon: membershipMoreIcon(FaFileAlt, "var(--app-brand-primary)"),
             onClick: () =>
               documentsActionsRef.current?.openCreatePaymentForm?.(),
           },

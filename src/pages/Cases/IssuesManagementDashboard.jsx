@@ -25,7 +25,7 @@ import "../../styles/EventsDashboard.css";
 const PRIORITY_MIX = [
   { name: "Critical", value: 8, color: "#dc2626" },
   { name: "High", value: 22, color: "#ea580c" },
-  { name: "Medium", value: 45, color: "#215e97" },
+  { name: "Medium", value: 45, color: "var(--app-brand-primary)" },
   { name: "Low", value: 25, color: "#94a3b8" },
 ];
 
@@ -113,7 +113,7 @@ function issueIcon(priority) {
   if (priority === "High") {
     return <ExclamationCircleOutlined style={{ color: "#ea580c", fontSize: sz }} />;
   }
-  return <ExclamationCircleOutlined style={{ color: "#215e97", fontSize: sz }} />;
+  return <ExclamationCircleOutlined style={{ color: "var(--app-brand-primary)", fontSize: sz }} />;
 }
 
 function IssuesManagementDashboard() {
@@ -126,7 +126,7 @@ function IssuesManagementDashboard() {
         value: "186",
         trend: "↘ 6 vs last week",
         trendMuted: true,
-        barColor: "#215e97",
+        barColor: "var(--app-brand-primary)",
         barPercent: 62,
       },
       {
@@ -170,8 +170,8 @@ function IssuesManagementDashboard() {
                 width: 40,
                 height: 40,
                 borderRadius: 8,
-                backgroundColor: "#e6f7ff",
-                color: "#215e97",
+                backgroundColor: "var(--app-brand-bg)",
+                color: "var(--app-brand-primary)",
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
@@ -284,8 +284,8 @@ function IssuesManagementDashboard() {
                 <AreaChart data={ISSUE_TREND} margin={{ top: 4, right: 8, left: 0, bottom: 4 }}>
                   <defs>
                     <linearGradient id="issuesOpenedFill" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stopColor="#215e97" stopOpacity={0.35} />
-                      <stop offset="100%" stopColor="#215e97" stopOpacity={0.02} />
+                      <stop offset="0%" stopColor="var(--app-brand-primary)" stopOpacity={0.35} />
+                      <stop offset="100%" stopColor="var(--app-brand-primary)" stopOpacity={0.02} />
                     </linearGradient>
                   </defs>
                   <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" vertical={false} />
@@ -311,7 +311,7 @@ function IssuesManagementDashboard() {
                     type="monotone"
                     dataKey="opened"
                     name="Opened"
-                    stroke="#215e97"
+                    stroke="var(--app-brand-primary)"
                     strokeWidth={2}
                     fill="url(#issuesOpenedFill)"
                   />
@@ -437,7 +437,7 @@ function IssuesManagementDashboard() {
             </p>
             <div className="events-dashboard__ticket-label">BACKLOG VS NEW</div>
             <div className="events-dashboard__ticket-bars" title="Existing backlog vs new intakes">
-              <span aria-label="Backlog" style={{ flex: 58, background: "#215e97" }} />
+              <span aria-label="Backlog" style={{ flex: 58, background: "var(--app-brand-primary)" }} />
               <span aria-label="New" style={{ flex: 42, background: "#94a3b8" }} />
             </div>
             <div className="events-dashboard__ticket-legend">

@@ -214,7 +214,7 @@ const FilterDropdown = ({
                 padding: "8px 12px",
                 cursor: "pointer",
                 backgroundColor: selectedKeys?.includes(option.value)
-                  ? "#e6f7ff"
+                  ? "var(--app-brand-bg)"
                   : "transparent",
                 borderBottom: "1px solid #f0f0f0",
                 display: "flex",
@@ -2649,7 +2649,7 @@ const Configuration = () => {
       ),
       onFilter: (value, record) => (record.code || "").toString() === value,
       filterIcon: (filtered) => (
-        <SearchOutlined style={{ color: filtered ? "#1890ff" : undefined }} />
+        <SearchOutlined style={{ color: filtered ? "var(--app-brand-accent)" : undefined }} />
       ),
     },
     {
@@ -2664,7 +2664,7 @@ const Configuration = () => {
       onFilter: (value, record) =>
         (record.lookupname || "").toString() === value,
       filterIcon: (filtered) => (
-        <SearchOutlined style={{ color: filtered ? "#1890ff" : undefined }} />
+        <SearchOutlined style={{ color: filtered ? "var(--app-brand-accent)" : undefined }} />
       ),
     },
     {
@@ -2700,7 +2700,7 @@ const Configuration = () => {
         return (email || "").toString() === value;
       },
       filterIcon: (filtered) => (
-        <SearchOutlined style={{ color: filtered ? "#1890ff" : undefined }} />
+        <SearchOutlined style={{ color: filtered ? "var(--app-brand-accent)" : undefined }} />
       ),
       render: (_, record) => {
         const o = record?.officer;
@@ -2774,7 +2774,7 @@ const Configuration = () => {
       ),
       onFilter: (value, record) => (record.code || "").toString() === value,
       filterIcon: (filtered) => (
-        <SearchOutlined style={{ color: filtered ? "#1890ff" : undefined }} />
+        <SearchOutlined style={{ color: filtered ? "var(--app-brand-accent)" : undefined }} />
       ),
     },
     {
@@ -2789,7 +2789,7 @@ const Configuration = () => {
       onFilter: (value, record) =>
         (record.lookupname || "").toString() === value,
       filterIcon: (filtered) => (
-        <SearchOutlined style={{ color: filtered ? "#1890ff" : undefined }} />
+        <SearchOutlined style={{ color: filtered ? "var(--app-brand-accent)" : undefined }} />
       ),
     },
     {
@@ -2805,7 +2805,7 @@ const Configuration = () => {
       onFilter: (value, record) =>
         (record.DisplayName || "").toString() === value,
       filterIcon: (filtered) => (
-        <SearchOutlined style={{ color: filtered ? "#1890ff" : undefined }} />
+        <SearchOutlined style={{ color: filtered ? "var(--app-brand-accent)" : undefined }} />
       ),
     },
     {
@@ -2821,7 +2821,7 @@ const Configuration = () => {
       onFilter: (value, record) =>
         (record.Parentlookup || "").toString() === value,
       filterIcon: (filtered) => (
-        <SearchOutlined style={{ color: filtered ? "#1890ff" : undefined }} />
+        <SearchOutlined style={{ color: filtered ? "var(--app-brand-accent)" : undefined }} />
       ),
     },
     {
@@ -2850,7 +2850,7 @@ const Configuration = () => {
         return (email || "").toString() === value;
       },
       filterIcon: (filtered) => (
-        <SearchOutlined style={{ color: filtered ? "#1890ff" : undefined }} />
+        <SearchOutlined style={{ color: filtered ? "var(--app-brand-accent)" : undefined }} />
       ),
       render: (_, record) => {
         const o = record?.officer;
@@ -2952,7 +2952,7 @@ const Configuration = () => {
       ),
       onFilter: (value, record) => (record.code || "").toString() === value,
       filterIcon: (filtered) => (
-        <SearchOutlined style={{ color: filtered ? "#1890ff" : undefined }} />
+        <SearchOutlined style={{ color: filtered ? "var(--app-brand-accent)" : undefined }} />
       ),
     },
     {
@@ -2967,7 +2967,7 @@ const Configuration = () => {
       onFilter: (value, record) =>
         (record.lookupname || "").toString() === value,
       filterIcon: (filtered) => (
-        <SearchOutlined style={{ color: filtered ? "#1890ff" : undefined }} />
+        <SearchOutlined style={{ color: filtered ? "var(--app-brand-accent)" : undefined }} />
       ),
     },
     {
@@ -2983,7 +2983,7 @@ const Configuration = () => {
       onFilter: (value, record) =>
         (record.DisplayName || "").toString() === value,
       filterIcon: (filtered) => (
-        <SearchOutlined style={{ color: filtered ? "#1890ff" : undefined }} />
+        <SearchOutlined style={{ color: filtered ? "var(--app-brand-accent)" : undefined }} />
       ),
     },
     {
@@ -2999,7 +2999,7 @@ const Configuration = () => {
       onFilter: (value, record) =>
         (record.Parentlookup || "").toString() === value,
       filterIcon: (filtered) => (
-        <SearchOutlined style={{ color: filtered ? "#1890ff" : undefined }} />
+        <SearchOutlined style={{ color: filtered ? "var(--app-brand-accent)" : undefined }} />
       ),
     },
     {
@@ -3025,7 +3025,7 @@ const Configuration = () => {
         return (email || "").toString() === value;
       },
       filterIcon: (filtered) => (
-        <SearchOutlined style={{ color: filtered ? "#1890ff" : undefined }} />
+        <SearchOutlined style={{ color: filtered ? "var(--app-brand-accent)" : undefined }} />
       ),
       render: (_, record) => {
         const o = record?.officer;
@@ -3121,7 +3121,7 @@ const Configuration = () => {
       ),
       onFilter: (value, record) => (record.code || "").toString() === value,
       filterIcon: (filtered) => (
-        <SearchOutlined style={{ color: filtered ? "#1890ff" : undefined }} />
+        <SearchOutlined style={{ color: filtered ? "var(--app-brand-accent)" : undefined }} />
       ),
     },
     {
@@ -3136,7 +3136,7 @@ const Configuration = () => {
       onFilter: (value, record) =>
         (record.lookupname || "").toString() === value,
       filterIcon: (filtered) => (
-        <SearchOutlined style={{ color: filtered ? "#1890ff" : undefined }} />
+        <SearchOutlined style={{ color: filtered ? "var(--app-brand-accent)" : undefined }} />
       ),
     },
     {
@@ -3172,7 +3172,7 @@ const Configuration = () => {
         return (email || "").toString() === value;
       },
       filterIcon: (filtered) => (
-        <SearchOutlined style={{ color: filtered ? "#1890ff" : undefined }} />
+        <SearchOutlined style={{ color: filtered ? "var(--app-brand-accent)" : undefined }} />
       ),
       render: (_, record) => {
         const o = record?.officer;
@@ -5495,7 +5495,7 @@ const Configuration = () => {
       onFilter: (value, record) =>
         (record.regionName || "").toString() === value,
       filterIcon: (filtered) => (
-        <SearchOutlined style={{ color: filtered ? "#1890ff" : undefined }} />
+        <SearchOutlined style={{ color: filtered ? "var(--app-brand-accent)" : undefined }} />
       ),
     };
 
