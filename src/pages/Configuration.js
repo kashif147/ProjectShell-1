@@ -119,6 +119,8 @@ import {
   mapLookupTypeToFormValues,
   mapLookupToFormValues,
   buildLookupApiPayload,
+  getParentLookupType,
+  getDrawerParentFieldLabel,
 } from "../utils/lookupHierarchy";
 import ParentLookupSelect from "../component/configuration/ParentLookupSelect";
 import ParentLookupTypeSelect from "../component/configuration/ParentLookupTypeSelect";
@@ -419,8 +421,14 @@ const Configuration = () => {
       "StudyLocation",
       lookupsTypes,
     );
-    return getLookupsForLookupType(lookupType, lookups);
-  }, [lookupsTypes, lookups]);
+    const byType = getLookupsForLookupType(lookupType, lookups);
+    if (byType.length) return byType;
+    return (
+      groupedLookups["Study Location"] ||
+      groupedLookups.StudyLocation ||
+      []
+    );
+  }, [lookupsTypes, lookups, groupedLookups]);
 
   const filteredStudyLocations = useMemo(() => {
     if (!searchTermStudyLocation.trim()) return studyLocationRecords;
@@ -763,7 +771,16 @@ const Configuration = () => {
         error?.response?.data?.error?.message ||
         error?.message ||
         "Delete failed";
-      MyAlert("error", "Delete failed", errMsg);
+
+      const isParentBlocked = /parent of other lookups/i.test(errMsg);
+
+      MyAlert(
+        "error",
+        isParentBlocked ? "Cannot delete this record" : "Delete failed",
+        isParentBlocked
+          ? "This lookup is used as a parent by other records. Reassign or delete those child lookups first, then try again."
+          : errMsg,
+      );
 
       // ✅ Also close modals on error
       Modal.destroyAll();
@@ -1277,6 +1294,11 @@ const Configuration = () => {
     [activeStandardLookupType, lookups],
   );
 
+  const ranksTableData = useMemo(() => {
+    const gradeType = getLookupTypeRecordForDrawer("Ranks", lookupsTypes);
+    return getLookupsForLookupType(gradeType, lookups);
+  }, [lookupsTypes, lookups]);
+
   useEffect(() => {
     if (!lookups || !Array.isArray(lookups) || !lookupsTypes?.length) return;
 
@@ -1728,7 +1750,7 @@ const Configuration = () => {
       DisplayName: "",
       lookupname: "",
       code: "",
-      Parentlookupid: "674a195dcc0986f64ca36fc2",
+      Parentlookupid: null,
       Parentlookup: "",
       ParentlookuptypeId: null,
       Parentlookuptype: "",
@@ -1917,6 +1939,16 @@ const Configuration = () => {
   }, [lookupsTypes]);
 
   const drawrInptChng = (drawer, field, value) => {
+    // MyInput passes a synthetic event; some handlers also pass the raw string.
+    const nextValue =
+      value != null &&
+      typeof value === "object" &&
+      Object.prototype.hasOwnProperty.call(value, "target")
+        ? value.target?.type === "checkbox"
+          ? value.target.checked
+          : value.target?.value
+        : value;
+
     setdrawerIpnuts((prevState) => {
       // Check if the field is nested inside ContactAddress
       if (field.includes(".")) {
@@ -1927,7 +1959,7 @@ const Configuration = () => {
             ...prevState[drawer],
             [parent]: {
               ...prevState[drawer][parent], // Preserve existing values
-              [child]: value, // Update only the specific nested field
+              [child]: nextValue, // Update only the specific nested field
             },
           },
         };
@@ -1936,7 +1968,7 @@ const Configuration = () => {
           ...prevState,
           [drawer]: {
             ...prevState[drawer],
-            [field]: value, // Update top-level field
+            [field]: nextValue, // Update top-level field
           },
         };
       }
@@ -1944,18 +1976,45 @@ const Configuration = () => {
   };
 
   const handleParentLookupChange = (drawer, { parentId, parentLabel }) => {
+    const parentType = getParentLookupType(
+      lookupsTypes,
+      drawerIpnuts?.[drawer]?.lookuptypeId,
+      drawer,
+    );
+    const parentTypeLabel =
+      getDrawerParentFieldLabel(drawer, "") ||
+      parentType?.lookuptype ||
+      parentType?.DisplayName ||
+      "";
+
     setdrawerIpnuts((prev) => ({
       ...prev,
       [drawer]: {
         ...prev[drawer],
         Parentlookupid: parentId,
         Parentlookup: parentLabel ?? "",
+        ...(parentType
+          ? {
+              ParentlookuptypeId: parentType._id || parentType.id || null,
+              Parentlookuptype: parentTypeLabel || parentType.lookuptype || "",
+            }
+          : {}),
       },
     }));
   };
 
-  const getLookupDrawerPayload = (drawerKey) =>
-    buildLookupApiPayload(drawerIpnuts?.[drawerKey] || {});
+  const getLookupDrawerPayload = (drawerKey) => {
+    const form = drawerIpnuts?.[drawerKey] || {};
+    const forcedTypeId =
+      drawerKey === "StandardLookup" && activeStandardLookupType?._id
+        ? String(activeStandardLookupType._id)
+        : null;
+    return buildLookupApiPayload(
+      forcedTypeId ? { ...form, lookuptypeId: forcedTypeId } : form,
+      lookupsTypes,
+      drawerKey,
+    );
+  };
 
   const handleOfficerChange = (drawer, options, e) => {
     const selectedId = e.target.value === "" ? null : e.target.value;
@@ -2254,10 +2313,19 @@ const Configuration = () => {
     );
 
   const resetCounteries = (drawer, callback) => {
-    setdrawerIpnuts((prevState) => ({
-      ...prevState,
-      [drawer]: getDrawerInputsTemplate(drawer),
-    }));
+    setdrawerIpnuts((prevState) => {
+      let nextForm = getDrawerInputsTemplate(drawer);
+      if (drawer === "StandardLookup" && activeStandardLookupType?._id) {
+        nextForm = {
+          ...nextForm,
+          lookuptypeId: String(activeStandardLookupType._id),
+        };
+      }
+      return {
+        ...prevState,
+        [drawer]: nextForm,
+      };
+    });
     if (callback && typeof callback === "function") {
       callback();
     }
@@ -2318,8 +2386,12 @@ const Configuration = () => {
           setdrawerIpnuts((prev) => ({
             ...prev,
             [name]: {
-              ...(prev[name] || getDrawerInputsTemplate(name) || {}),
-              lookuptypeId: lookupType._id,
+              // StandardLookup: start a clean form with the selected card type
+              // (Bank, Secondary Section, …), not leftover state from another card.
+              ...(name === "StandardLookup"
+                ? getDrawerInputsTemplate(name)
+                : prev[name] || getDrawerInputsTemplate(name) || {}),
+              lookuptypeId: String(lookupType._id),
             },
           }));
         }
@@ -2570,9 +2642,10 @@ const Configuration = () => {
                 title: "Confirm Deletion",
                 message: "Do You Want To Delete This Item?",
                 onConfirm: async () => {
-                  await deleteFtn(`countries/${record?._id}`, () =>
-                    dispatch(fetchCountries()),
-                  );
+                  await deleteFtn("/lookup/", { id: record?._id }, () => {
+                    dispatch(resetLookups());
+                    dispatch(getAllLookups());
+                  });
                 },
               });
             }}
@@ -6305,7 +6378,7 @@ const Configuration = () => {
           if (!validateForm("counties")) return;
           insertDataFtn(
             `/lookup`,
-            drawerIpnuts?.counties,
+            getLookupDrawerPayload("counties"),
             "Data inserted successfully:",
             "Data did not insert:",
             () => resetCounteries("counties", dispatch(getAllLookups())),
@@ -6313,7 +6386,7 @@ const Configuration = () => {
         }}
         update={async () => {
           if (!validateForm("counties")) return;
-          await updateFtn("/lookup", drawerIpnuts?.counties, () =>
+          await updateFtn("/lookup", getLookupDrawerPayload("counties"), () =>
             resetCounteries("counties", () => dispatch(getAllLookups())),
           );
           dispatch(getAllLookups());
@@ -6695,7 +6768,7 @@ const Configuration = () => {
           if (!validateForm("Cities")) return;
           insertDataFtn(
             `/lookup`,
-            drawerIpnuts?.Cities,
+            getLookupDrawerPayload("Cities"),
             "Data inserted successfully:",
             "Data did not insert:",
             () => {
@@ -6707,7 +6780,7 @@ const Configuration = () => {
         }}
         update={async () => {
           if (!validateForm("Cities")) return;
-          await updateFtn("/lookup", drawerIpnuts?.Cities, () =>
+          await updateFtn("/lookup", getLookupDrawerPayload("Cities"), () =>
             resetCounteries("Cities", () => dispatch(getAllLookups())),
           );
           dispatch(getAllLookups());
@@ -7932,18 +8005,16 @@ const Configuration = () => {
         }
         isPagination={true}
         onClose={() => openCloseDrawerFtn("StudyLocation")}
-        add={() => {
+        add={async () => {
           if (!validateForm("StudyLocation")) return;
-          insertDataFtn(
+          await insertDataFtn(
             `/lookup`,
             getLookupDrawerPayload("StudyLocation"),
             "Data inserted successfully:",
             "Data did not insert:",
-            () => {
-              resetCounteries("StudyLocation", () => dispatch(getAllLookups()));
-            },
+            () => resetCounteries("StudyLocation"),
           );
-          dispatch(getAllLookups());
+          await dispatch(getAllLookups());
         }}
         isEdit={isUpdateRec?.StudyLocation}
         update={async () => {
@@ -7951,10 +8022,9 @@ const Configuration = () => {
           await updateFtn(
             "/lookup",
             getLookupDrawerPayload("StudyLocation"),
-            () =>
-              resetCounteries("StudyLocation", () => dispatch(getAllLookups())),
+            () => resetCounteries("StudyLocation"),
           );
-          dispatch(getAllLookups());
+          await dispatch(getAllLookups());
           IsUpdateFtn("StudyLocation", false);
         }}
       >
@@ -8593,7 +8663,7 @@ const Configuration = () => {
         }}
         add={async () => {
           await insertDataFtn(
-            `${baseURL}/regiontype`,
+            `/regiontype`,
             {
               ...drawerIpnuts?.RegionType,
               userid: "67f3f9d812b014a0a7a94081",
@@ -8739,7 +8809,7 @@ const Configuration = () => {
         add={async () => {
           await insertDataFtn(
             `/lookup`,
-            drawerIpnuts?.Lookup,
+            getLookupDrawerPayload("Lookup"),
             "Data inserted successfully",
             "Data did not insert",
             () =>
@@ -8749,7 +8819,7 @@ const Configuration = () => {
         }}
         isEdit={isUpdateRec?.Lookup}
         update={async () => {
-          await updateFtn("/lookup", drawerIpnuts?.Lookup, () =>
+          await updateFtn("/lookup", getLookupDrawerPayload("Lookup"), () =>
             resetCounteries("Lookup", () => dispatch(getAllLookups())),
           );
           dispatch(getAllLookups());
@@ -8940,7 +9010,7 @@ const Configuration = () => {
           if (!validateForm("StandardLookup")) return;
           await insertDataFtn(
             `/lookup`,
-            drawerIpnuts?.StandardLookup,
+            getLookupDrawerPayload("StandardLookup"),
             "Data inserted successfully",
             "Data did not insert",
             () =>
@@ -8952,8 +9022,13 @@ const Configuration = () => {
         }}
         update={async () => {
           if (!validateForm("StandardLookup")) return;
-          await updateFtn("/lookup", drawerIpnuts?.StandardLookup, () =>
-            resetCounteries("StandardLookup", () => dispatch(getAllLookups())),
+          await updateFtn(
+            "/lookup",
+            getLookupDrawerPayload("StandardLookup"),
+            () =>
+              resetCounteries("StandardLookup", () =>
+                dispatch(getAllLookups()),
+              ),
           );
           dispatch(getAllLookups());
           IsUpdateFtn("StandardLookup", false);
@@ -9416,7 +9491,7 @@ const Configuration = () => {
           if (!validateForm("Cities")) return;
           insertDataFtn(
             `/lookup`,
-            drawerIpnuts?.Cities,
+            getLookupDrawerPayload("Cities"),
             "Data inserted successfully:",
             "Data did not insert:",
             () => resetCounteries("Cities", () => dispatch(getAllLookups())),
@@ -9425,7 +9500,7 @@ const Configuration = () => {
         }}
         update={async () => {
           if (!validateForm("Cities")) return;
-          await updateFtn("/lookup", drawerIpnuts?.Cities, () =>
+          await updateFtn("/lookup", getLookupDrawerPayload("Cities"), () =>
             resetCounteries("Cities", () => dispatch(getAllLookups())),
           );
           dispatch(getAllLookups());
@@ -9717,9 +9792,11 @@ const Configuration = () => {
                   label="Code"
                   required
                   disabled={isDisable}
-                  value={drawerIpnuts?.RosterType?.code}
-                  onChange={(val) => drawrInptChng("RosterType", "code", val)}
-                  error={errors?.RosterType?.code}
+                  value={drawerIpnuts?.RosterType?.code || ""}
+                  onChange={(e) =>
+                    drawrInptChng("RosterType", "code", e.target.value)
+                  }
+                  hasError={!!errors?.RosterType?.code}
                 />
               </Col>
               <Col span={12}>
@@ -9727,11 +9804,11 @@ const Configuration = () => {
                   label="Roster Type Name"
                   required
                   disabled={isDisable}
-                  value={drawerIpnuts?.RosterType?.lookupname}
-                  onChange={(val) =>
-                    drawrInptChng("RosterType", "lookupname", val)
+                  value={drawerIpnuts?.RosterType?.lookupname || ""}
+                  onChange={(e) =>
+                    drawrInptChng("RosterType", "lookupname", e.target.value)
                   }
-                  error={errors?.RosterType?.lookupname}
+                  hasError={!!errors?.RosterType?.lookupname}
                 />
               </Col>
             </Row>
@@ -9741,9 +9818,9 @@ const Configuration = () => {
                 <MyInput
                   label="Display Name"
                   disabled={isDisable}
-                  value={drawerIpnuts?.RosterType?.DisplayName}
-                  onChange={(val) =>
-                    drawrInptChng("RosterType", "DisplayName", val)
+                  value={drawerIpnuts?.RosterType?.DisplayName || ""}
+                  onChange={(e) =>
+                    drawrInptChng("RosterType", "DisplayName", e.target.value)
                   }
                 />
               </Col>
@@ -9826,8 +9903,8 @@ const Configuration = () => {
         add={async () => {
           if (!validateForm("MaritalStatus")) return;
           await insertDataFtn(
-            `${baseURL}/lookup`,
-            drawerIpnuts?.MaritalStatus,
+            `/lookup`,
+            getLookupDrawerPayload("MaritalStatus"),
             "Data inserted successfully",
             "Data did not insert",
             () =>
@@ -9838,8 +9915,8 @@ const Configuration = () => {
         update={async () => {
           if (!validateForm("MaritalStatus")) return;
           await updateFtn(
-            `${baseURL}/lookup`,
-            drawerIpnuts?.MaritalStatus,
+            "/lookup",
+            getLookupDrawerPayload("MaritalStatus"),
             () =>
               resetCounteries("MaritalStatus", () => dispatch(getAllLookups())),
           );
@@ -9931,7 +10008,7 @@ const Configuration = () => {
             <h6 className="mb-3 text-primary">Existing Marital Status</h6>
             <Table
               pagination={false}
-              columns={columnGender}
+              columns={columnMaritalStatus}
               dataSource={groupedLookups["Marital Status"]}
               loading={lookupsloading}
               className="drawer-tbl"
@@ -9967,7 +10044,7 @@ const Configuration = () => {
           if (!validateForm("ProjectTypes")) return;
           await insertDataFtn(
             `/lookup`,
-            drawerIpnuts?.ProjectTypes,
+            getLookupDrawerPayload("ProjectTypes"),
             "Data inserted successfully",
             "Data did not insert",
             () =>
@@ -9978,8 +10055,11 @@ const Configuration = () => {
         isEdit={isUpdateRec?.ProjectTypes}
         update={async () => {
           if (!validateForm("ProjectTypes")) return;
-          await updateFtn("/lookup", drawerIpnuts?.ProjectTypes, () =>
-            resetCounteries("ProjectTypes", () => dispatch(getAllLookups())),
+          await updateFtn(
+            "/lookup",
+            getLookupDrawerPayload("ProjectTypes"),
+            () =>
+              resetCounteries("ProjectTypes", () => dispatch(getAllLookups())),
           );
           dispatch(getAllLookups());
           IsUpdateFtn("ProjectTypes", false);
@@ -10899,9 +10979,11 @@ const Configuration = () => {
                   label="Code"
                   required
                   disabled={isDisable}
-                  value={drawerIpnuts?.Duties?.code}
-                  onChange={(val) => drawrInptChng("Duties", "code", val)}
-                  error={errors?.Duties?.code}
+                  value={drawerIpnuts?.Duties?.code || ""}
+                  onChange={(e) =>
+                    drawrInptChng("Duties", "code", e.target.value)
+                  }
+                  hasError={!!errors?.Duties?.code}
                 />
               </Col>
               <Col span={12}>
@@ -10909,9 +10991,11 @@ const Configuration = () => {
                   label="Duties Name"
                   required
                   disabled={isDisable}
-                  value={drawerIpnuts?.Duties?.lookupname}
-                  onChange={(val) => drawrInptChng("Duties", "lookupname", val)}
-                  error={errors?.Duties?.lookupname}
+                  value={drawerIpnuts?.Duties?.lookupname || ""}
+                  onChange={(e) =>
+                    drawrInptChng("Duties", "lookupname", e.target.value)
+                  }
+                  hasError={!!errors?.Duties?.lookupname}
                 />
               </Col>
             </Row>
@@ -10921,9 +11005,9 @@ const Configuration = () => {
                 <MyInput
                   label="Display Name"
                   disabled={isDisable}
-                  value={drawerIpnuts?.Duties?.DisplayName}
-                  onChange={(val) =>
-                    drawrInptChng("Duties", "DisplayName", val)
+                  value={drawerIpnuts?.Duties?.DisplayName || ""}
+                  onChange={(e) =>
+                    drawrInptChng("Duties", "DisplayName", e.target.value)
                   }
                 />
               </Col>
@@ -11001,7 +11085,7 @@ const Configuration = () => {
           if (!validateForm("Ranks")) return;
           await insertDataFtn(
             `/lookup`,
-            drawerIpnuts?.Ranks,
+            getLookupDrawerPayload("Ranks"),
             "Data inserted successfully",
             "Data did not insert",
             () => resetCounteries("Ranks", () => dispatch(getAllLookups())),
@@ -11011,7 +11095,7 @@ const Configuration = () => {
         isEdit={isUpdateRec?.Ranks}
         update={async () => {
           if (!validateForm("Ranks")) return;
-          await updateFtn("/lookup", drawerIpnuts?.Ranks, () =>
+          await updateFtn("/lookup", getLookupDrawerPayload("Ranks"), () =>
             resetCounteries("Ranks", () => dispatch(getAllLookups())),
           );
           dispatch(getAllLookups());
@@ -11027,9 +11111,11 @@ const Configuration = () => {
                   label="Code"
                   required
                   disabled={isDisable}
-                  value={drawerIpnuts?.Ranks?.code}
-                  onChange={(val) => drawrInptChng("Ranks", "code", val)}
-                  error={errors?.Ranks?.code}
+                  value={drawerIpnuts?.Ranks?.code || ""}
+                  onChange={(e) =>
+                    drawrInptChng("Ranks", "code", e.target.value)
+                  }
+                  hasError={!!errors?.Ranks?.code}
                 />
               </Col>
               <Col span={12}>
@@ -11037,9 +11123,11 @@ const Configuration = () => {
                   label="Grade"
                   required
                   disabled={isDisable}
-                  value={drawerIpnuts?.Ranks?.lookupname}
-                  onChange={(val) => drawrInptChng("Ranks", "lookupname", val)}
-                  error={errors?.Ranks?.lookupname}
+                  value={drawerIpnuts?.Ranks?.lookupname || ""}
+                  onChange={(e) =>
+                    drawrInptChng("Ranks", "lookupname", e.target.value)
+                  }
+                  hasError={!!errors?.Ranks?.lookupname}
                 />
               </Col>
             </Row>
@@ -11049,8 +11137,10 @@ const Configuration = () => {
                 <MyInput
                   label="Display Name"
                   disabled={isDisable}
-                  value={drawerIpnuts?.Ranks?.DisplayName}
-                  onChange={(val) => drawrInptChng("Ranks", "DisplayName", val)}
+                  value={drawerIpnuts?.Ranks?.DisplayName || ""}
+                  onChange={(e) =>
+                    drawrInptChng("Ranks", "DisplayName", e.target.value)
+                  }
                 />
               </Col>
               <ParentLookupSelect
@@ -11094,7 +11184,7 @@ const Configuration = () => {
             <Table
               pagination={false}
               columns={columnRanks}
-              dataSource={groupedLookups["Ranks"]}
+              dataSource={ranksTableData}
               loading={lookupsloading}
               className="drawer-tbl"
               size="small"
@@ -11952,7 +12042,7 @@ const Configuration = () => {
         isAddMemeber={true}
         add={async () => {
           await insertDataFtn(
-            `${baseURL}/lookup`,
+            `/lookup`,
             { region: drawerIpnuts?.Committees },
             "Data inserted successfully",
             "Data did not insert",
@@ -12117,9 +12207,11 @@ const Configuration = () => {
                   label="Code"
                   required
                   disabled={isDisable}
-                  value={drawerIpnuts?.Sections?.code}
-                  onChange={(val) => drawrInptChng("Sections", "code", val)}
-                  error={errors?.Sections?.code}
+                  value={drawerIpnuts?.Sections?.code || ""}
+                  onChange={(e) =>
+                    drawrInptChng("Sections", "code", e.target.value)
+                  }
+                  hasError={!!errors?.Sections?.code}
                 />
               </Col>
               <Col span={12}>
@@ -12127,11 +12219,11 @@ const Configuration = () => {
                   label="Section Name"
                   required
                   disabled={isDisable}
-                  value={drawerIpnuts?.Sections?.lookupname}
-                  onChange={(val) =>
-                    drawrInptChng("Sections", "lookupname", val)
+                  value={drawerIpnuts?.Sections?.lookupname || ""}
+                  onChange={(e) =>
+                    drawrInptChng("Sections", "lookupname", e.target.value)
                   }
-                  error={errors?.Sections?.lookupname}
+                  hasError={!!errors?.Sections?.lookupname}
                 />
               </Col>
             </Row>
@@ -12141,9 +12233,9 @@ const Configuration = () => {
                 <MyInput
                   label="Display Name"
                   disabled={isDisable}
-                  value={drawerIpnuts?.Sections?.DisplayName}
-                  onChange={(val) =>
-                    drawrInptChng("Sections", "DisplayName", val)
+                  value={drawerIpnuts?.Sections?.DisplayName || ""}
+                  onChange={(e) =>
+                    drawrInptChng("Sections", "DisplayName", e.target.value)
                   }
                 />
               </Col>

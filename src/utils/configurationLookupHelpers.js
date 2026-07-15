@@ -115,8 +115,11 @@ const LOOKUP_TYPE_NAME_TO_DRAWER_KEY = {
   documenttype: "DocumentType",
   duties: "Duties",
   gender: "Gender",
+  // Dedicated Grade drawer (legacy key "Ranks"). Rank/Ranks use StandardLookup.
   grade: "Ranks",
-  ranks: "Ranks",
+  grades: "Ranks",
+  ranks: "StandardLookup",
+  rank: "StandardLookup",
   lookup: "Lookup",
   "lookup type": "LookupType",
   lookuptype: "LookupType",
@@ -132,11 +135,13 @@ const LOOKUP_TYPE_NAME_TO_DRAWER_KEY = {
   provinces: "Provinces",
   province: "Provinces",
   reasons: "Reasons",
+  // Branch and Region have dedicated drawers (keys Districts / Divisions).
+  // Districts / Divisions lookup types use StandardLookup — do not open Branch/Region.
   region: "Divisions",
   regions: "Divisions",
   regiontype: "RegionType",
-  divisions: "Divisions",
-  division: "Divisions",
+  divisions: "StandardLookup",
+  division: "StandardLookup",
   "roster type": "RosterType",
   rostertype: "RosterType",
   schemes: "Schemes",
@@ -157,10 +162,11 @@ const LOOKUP_TYPE_NAME_TO_DRAWER_KEY = {
   "work locations": "Station",
   worklocation: "Station",
   worklocations: "Station",
-  station: "Station",
-  stations: "Station",
-  districts: "Districts",
-  district: "Districts",
+  // Dedicated Work Location drawer (legacy key "Station"). Station type uses StandardLookup.
+  station: "StandardLookup",
+  stations: "StandardLookup",
+  districts: "StandardLookup",
+  district: "StandardLookup",
   discipline: "StandardLookup",
   bank: "StandardLookup",
   "template type": "StandardLookup",
@@ -287,14 +293,35 @@ export function resolveConfigurationDrawerKey(lookupType, fallbackKey = "") {
 
 export function getLookupsForLookupType(lookupType, lookups = []) {
   if (!lookupType || !Array.isArray(lookups)) return [];
-  const typeId = lookupType._id;
-  const typeName = lookupType.lookuptype;
-  return lookups.filter(
-    (item) =>
-      String(item?.lookuptypeId?._id) === String(typeId) ||
-      item?.lookuptypeId?.lookuptype === typeName ||
-      item?.lookuptypeName === typeName,
-  );
+  const typeId = String(lookupType._id || lookupType.id || "");
+  const typeName = lookupType.lookuptype || lookupType.DisplayName || lookupType.name || "";
+  const typeNameKey = normalizeLookupTypeName(typeName).replace(/\s+/g, "");
+
+  return lookups.filter((item) => {
+    const itemTypeId = String(
+      item?.lookuptypeId?._id ||
+        item?.typeId ||
+        (typeof item?.lookuptypeId === "string" ||
+        typeof item?.lookuptypeId === "number"
+          ? item.lookuptypeId
+          : "") ||
+        "",
+    );
+    if (typeId && itemTypeId && itemTypeId === typeId) return true;
+
+    const itemTypeName =
+      item?.lookuptypeName ||
+      item?.lookuptypeId?.lookuptype ||
+      item?.type ||
+      "";
+    if (typeName && itemTypeName === typeName) return true;
+
+    const itemTypeKey = normalizeLookupTypeName(itemTypeName).replace(
+      /\s+/g,
+      "",
+    );
+    return Boolean(typeNameKey && itemTypeKey && itemTypeKey === typeNameKey);
+  });
 }
 
 export function getLookupTypeFieldPropsForRecord(lookupType, selectedId) {
@@ -310,8 +337,30 @@ export function getLookupTypeFieldPropsForRecord(lookupType, selectedId) {
 
 export function getLookupTypeRecordForDrawer(drawerKey, lookupsTypes = []) {
   if (!drawerKey || !Array.isArray(lookupsTypes)) return null;
+
+  // Some drawers keep a legacy key that no longer matches the API type name
+  // (e.g. drawer "Ranks" is Grade). Prefer the real product type name.
+  const preferredTypeNames = {
+    Ranks: ["grade", "grades"],
+    Districts: ["branch", "branches"],
+    Divisions: ["region", "regions"],
+    StudyLocation: ["study location", "studylocation"],
+    Station: ["work location", "worklocation", "work locations"],
+  };
+  const preferred = preferredTypeNames[drawerKey];
+  if (preferred?.length) {
+    const preferredMatch = lookupsTypes.find((lt) => {
+      const name = normalizeLookupTypeName(
+        lt.lookuptype || lt.DisplayName || lt.name || "",
+      );
+      return preferred.includes(name);
+    });
+    if (preferredMatch) return preferredMatch;
+  }
+
   return (
-    lookupsTypes.find((lt) => getDrawerKeyForLookupType(lt) === drawerKey) || null
+    lookupsTypes.find((lt) => getDrawerKeyForLookupType(lt) === drawerKey) ||
+    null
   );
 }
 
@@ -410,6 +459,9 @@ export function getLookupsForDrawer(drawerKey, { lookupsTypes = [], groupedLooku
 
 export function withDynamicLookupTypeId(template, drawerKey, lookupsTypes = []) {
   if (!template || typeof template !== "object") return template;
+  // Shared drawer for many types (Bank, Secondary Section, …) — never
+  // auto-pick the first matching type or creates land under the wrong type.
+  if (drawerKey === "StandardLookup") return { ...template };
   const next = { ...template };
   const lookupType = getLookupTypeRecordForDrawer(drawerKey, lookupsTypes);
   if (lookupType?._id && Object.prototype.hasOwnProperty.call(next, "lookuptypeId")) {
