@@ -564,10 +564,10 @@
 }
 
 .main-table-scroll-container .ant-table-thead > tr > th {
-  background: var(--background-tertiary);
+  background: var(--app-table-header-light-bg) !important;
   border-bottom: 2px solid var(--border-color);
   font-weight: 600;
-  color: #fff !important;
+  color: var(--app-table-header-text) !important;
   white-space: nowrap;
   position: sticky;
   top: 0;
@@ -579,7 +579,7 @@
 }
 
 .main-table-scroll-container .ant-table-thead > tr > th * {
-  color: #fff !important;
+  color: var(--app-table-header-text) !important;
 }
 
 .main-table-scroll-container .ant-table-tbody > tr > td {
@@ -614,10 +614,10 @@
 }
 
 .table-scroll-container .ant-table-thead > tr > th {
-  background: var(--background-tertiary);
+  background: var(--app-table-header-light-bg) !important;
   border-bottom: 2px solid var(--border-color);
   font-weight: 600;
-  color: #fff !important;
+  color: var(--app-table-header-text) !important;
   white-space: nowrap;
   border-left: none !important;
   border-right: none !important;
@@ -626,7 +626,7 @@
 }
 
 .table-scroll-container .ant-table-thead > tr > th * {
-  color: #fff !important;
+  color: var(--app-table-header-text) !important;
 }
 
 .table-scroll-container .ant-table-tbody > tr > td {

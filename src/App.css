@@ -307,31 +307,50 @@ textarea:focus,
   /* Change this value to your desired margin */
 }
 
+.ant-checkbox .ant-checkbox-inner {
+  background-color: #ffffff;
+  border-color: color-mix(in srgb, var(--app-brand-primary, #215e97) 24%, #cbd5e1);
+  border-radius: 5px;
+  box-shadow: inset 0 1px 1px rgba(15, 23, 42, 0.04);
+  transition:
+    background-color 0.15s ease,
+    border-color 0.15s ease,
+    box-shadow 0.15s ease;
+}
+
+.ant-checkbox-wrapper:hover .ant-checkbox-inner,
+.ant-checkbox:hover .ant-checkbox-inner {
+  border-color: color-mix(in srgb, var(--app-brand-primary, #215e97) 58%, #93c5fd);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--app-brand-primary, #215e97) 10%, transparent);
+}
+
 .ant-select-selector {
   border-radius: 3px !important;
   /* Set your desired border-radius */
 }
 
 .ant-checkbox-checked .ant-checkbox-inner {
-  background-color: var(--secoundry-color) !important;
-  /* Set your desired color */
-  border-color: var(--secoundry-color) !important;
-  /* Match border to background */
+  background-color: color-mix(in srgb, var(--app-brand-primary, #215e97) 76%, #38bdf8) !important;
+  border-color: color-mix(in srgb, var(--app-brand-primary, #215e97) 72%, #38bdf8) !important;
+  box-shadow: 0 2px 5px color-mix(in srgb, var(--app-brand-primary, #215e97) 18%, transparent);
 }
 
 .ant-checkbox-checked .ant-checkbox-inner::after {
-  border-color: var(--brand-on-secondary, #ffffff);
-  /* Optional: Change the checkmark color */
+  border-color: #ffffff !important;
+}
+
+.ant-checkbox-input:focus-visible + .ant-checkbox-inner {
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--app-brand-primary, #215e97) 16%, transparent);
 }
 
 .consent-checkbox-indeterminate .ant-checkbox-inner {
-  background-color: color-mix(in srgb, var(--secoundry-color, #c97a2f) 30%, transparent) !important;
-  border-color: var(--secoundry-color) !important;
+  background-color: color-mix(in srgb, var(--app-brand-primary, #215e97) 18%, #ffffff) !important;
+  border-color: color-mix(in srgb, var(--app-brand-primary, #215e97) 56%, #93c5fd) !important;
 }
 
 .consent-checkbox-indeterminate .ant-checkbox-inner::after {
-  border-color: var(--brand-on-secondary, #ffffff) !important;
-  background-color: var(--secoundry-color) !important;
+  border-color: color-mix(in srgb, var(--app-brand-primary, #215e97) 72%, #38bdf8) !important;
+  background-color: color-mix(in srgb, var(--app-brand-primary, #215e97) 72%, #38bdf8) !important;
 }
 
 .ant-table-cell-fix-left {
@@ -483,26 +502,25 @@ select {
   box-shadow: var(--app-button-focus-ring) !important;
 }
 
-.ant-btn-default:not(.ant-btn-dangerous):not([disabled]):not(:disabled),
-.ant-btn-dashed:not(.ant-btn-dangerous):not([disabled]):not(:disabled),
-.ant-btn-background-ghost:not(.ant-btn-dangerous):not([disabled]):not(:disabled),
+.ant-btn-default:not(.ant-btn-dangerous):not([disabled]):not(:disabled):not(.primary-btn):not(.create-button):not(.custom-primary-btn):not(.theme-btn-primary):not(.toolbar-filter-action--primary):not([style*="background"]),
+.ant-btn-dashed:not(.ant-btn-dangerous):not([disabled]):not(:disabled):not(.primary-btn):not(.create-button):not(.custom-primary-btn):not(.theme-btn-primary):not(.toolbar-filter-action--primary):not([style*="background"]),
+.ant-btn-background-ghost:not(.ant-btn-dangerous):not([disabled]):not(:disabled):not(.primary-btn):not(.create-button):not(.custom-primary-btn):not(.theme-btn-primary):not(.toolbar-filter-action--primary):not([style*="background"]),
 .butn.secoundry-btn:not([disabled]):not(:disabled),
 .butn.gray-btn:not([disabled]):not(:disabled),
 .theme-btn.theme-btn-secondary:not([disabled]):not(:disabled),
 .custom-secondary-btn:not([disabled]):not(:disabled),
 .cancel-button:not([disabled]):not(:disabled) {
-  background: var(--app-control-surface) !important;
   border-color: var(--app-control-border) !important;
   color: var(--app-brand-primary) !important;
   box-shadow: none !important;
 }
 
-.ant-btn-default:not(.ant-btn-dangerous):not([disabled]):not(:disabled):hover,
-.ant-btn-default:not(.ant-btn-dangerous):not([disabled]):not(:disabled):focus,
-.ant-btn-dashed:not(.ant-btn-dangerous):not([disabled]):not(:disabled):hover,
-.ant-btn-dashed:not(.ant-btn-dangerous):not([disabled]):not(:disabled):focus,
-.ant-btn-background-ghost:not(.ant-btn-dangerous):not([disabled]):not(:disabled):hover,
-.ant-btn-background-ghost:not(.ant-btn-dangerous):not([disabled]):not(:disabled):focus,
+.ant-btn-default:not(.ant-btn-dangerous):not([disabled]):not(:disabled):not(.primary-btn):not(.create-button):not(.custom-primary-btn):not(.theme-btn-primary):not(.toolbar-filter-action--primary):not([style*="background"]):hover,
+.ant-btn-default:not(.ant-btn-dangerous):not([disabled]):not(:disabled):not(.primary-btn):not(.create-button):not(.custom-primary-btn):not(.theme-btn-primary):not(.toolbar-filter-action--primary):not([style*="background"]):focus,
+.ant-btn-dashed:not(.ant-btn-dangerous):not([disabled]):not(:disabled):not(.primary-btn):not(.create-button):not(.custom-primary-btn):not(.theme-btn-primary):not(.toolbar-filter-action--primary):not([style*="background"]):hover,
+.ant-btn-dashed:not(.ant-btn-dangerous):not([disabled]):not(:disabled):not(.primary-btn):not(.create-button):not(.custom-primary-btn):not(.theme-btn-primary):not(.toolbar-filter-action--primary):not([style*="background"]):focus,
+.ant-btn-background-ghost:not(.ant-btn-dangerous):not([disabled]):not(:disabled):not(.primary-btn):not(.create-button):not(.custom-primary-btn):not(.theme-btn-primary):not(.toolbar-filter-action--primary):not([style*="background"]):hover,
+.ant-btn-background-ghost:not(.ant-btn-dangerous):not([disabled]):not(:disabled):not(.primary-btn):not(.create-button):not(.custom-primary-btn):not(.theme-btn-primary):not(.toolbar-filter-action--primary):not([style*="background"]):focus,
 .butn.secoundry-btn:not([disabled]):not(:disabled):hover,
 .butn.secoundry-btn:not([disabled]):not(:disabled):focus,
 .butn.gray-btn:not([disabled]):not(:disabled):hover,
@@ -776,6 +794,13 @@ body {
 
 .ant-table-container {
   overflow: auto;
+}
+
+/* Strip the outer left/top border on bordered tables so they match the
+   borderless look of the /Applications table, app-wide. */
+.ant-table-wrapper .ant-table.ant-table-bordered > .ant-table-container {
+  border-inline-start: none !important;
+  border-top: none !important;
 }
 
 .ant-table-header {
@@ -1648,8 +1673,8 @@ th.ant-table-cell.ant-table-cell-fix-left.ant-table-cell-fix-left-last {
   background-color: var(--app-table-header-light-bg) !important;
   color: var(--app-table-header-text) !important;
   font-family: var(--fontFamily) !important;
-  font-weight: 700;
-  text-transform: uppercase;
+  font-weight: 500;
+  text-transform: capitalize;
   letter-spacing: 0;
 }
 
@@ -1763,8 +1788,8 @@ th.ant-table-cell.ant-table-cell-fix-left.ant-table-cell-fix-left-last {
 
 .common-table table tr td {
   padding: 0 18px;
-  font-weight: 500;
-  color: var(--app-table-body-text) !important;
+  font-weight: 400;
+  color: #215e97 !important;
   height: 74px !important;
   line-height: 74px !important;
   border-bottom: 1px solid color-mix(in srgb, var(--app-table-border) 58%, #ffffff) !important;

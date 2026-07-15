@@ -4080,7 +4080,7 @@ function ApplicationMgtDrawer({
               </>
             )}
             <Checkbox
-              className="application-form-toggle-chip"
+              className="application-form-toggle-chip application-form-action--process"
               name="Approve"
               checked={selected.Approve}
               disabled={
@@ -4091,7 +4091,7 @@ function ApplicationMgtDrawer({
               Process
             </Checkbox>
             <Checkbox
-              className="application-form-toggle-chip"
+              className="application-form-toggle-chip application-form-action--reject"
               name="Reject"
               disabled={
                 isDisable ||
@@ -4112,22 +4112,6 @@ function ApplicationMgtDrawer({
                 onClick={() => handleSave()}
               >
                 Save
-              </Button>
-            )}
-            {application?.applicationId &&
-              !["processed", "rejected"].includes(
-                (
-                  application?.applicationStatus ||
-                  application?.personalDetails?.applicationStatus ||
-                  ""
-                ).toLowerCase(),
-              ) && (
-              <Button
-                className="butn"
-                disabled={!application?.applicationId}
-                onClick={() => openDuplicateReviewDrawer(true)}
-              >
-                Detect Duplicate
               </Button>
             )}
             {!isEdit && (
@@ -4250,7 +4234,7 @@ function ApplicationMgtDrawer({
               }
               title="Personal Information"
               subTitle="Please provide your details as they appear on your official documents."
-              tone="teal"
+              tone="blue"
             />
 
             <AppFormGrid className="form-grid--personal-info">
@@ -4358,7 +4342,7 @@ function ApplicationMgtDrawer({
               }
               title="Correspondence Details"
               subTitle="Let us know the best way to contact you"
-              tone="teal"
+              tone="green"
             />
 
             <AppFormGrid className="form-grid--correspondence">
@@ -4553,7 +4537,7 @@ function ApplicationMgtDrawer({
               }
               title="Contact Details"
               subTitle="Provide your email and contact number"
-              tone="violet"
+              tone="amber"
             />
 
             <AppFormGrid>
@@ -5321,7 +5305,7 @@ function ApplicationMgtDrawer({
               }
               title="Subscription Details"
               subTitle="Choose how and when your membership begins."
-              tone="amber"
+              tone="green"
             />
 
             <AppFormGrid>
@@ -5457,21 +5441,12 @@ function ApplicationMgtDrawer({
                       width: "100%",
                     }}
                   >
-                    <div
-                      className="d-flex justify-content-between align-items-baseline flex-wrap"
-                      style={{ gap: "8px" }}
-                    >
-                      <Radio
-                        value="new"
-                        style={{ color: "#14532d", width: "14%" }}
-                      >
+                    <div className="membership-status-options">
+                      <Radio value="new" style={{ color: "#14532d" }}>
                         New member
                       </Radio>
 
-                      <Radio
-                        value="graduate"
-                        style={{ color: "#14532d", width: "14%" }}
-                      >
+                      <Radio value="graduate" style={{ color: "#14532d" }}>
                         Newly graduated
                       </Radio>
 
@@ -5479,7 +5454,6 @@ function ApplicationMgtDrawer({
                         value="rejoin"
                         style={{
                           color: "#14532d",
-                          width: "28%",
                           whiteSpace: "normal",
                           lineHeight: "1.2",
                         }}
@@ -5492,7 +5466,6 @@ function ApplicationMgtDrawer({
                         value="careerBreak"
                         style={{
                           color: "#14532d",
-                          width: "18%",
                           whiteSpace: "normal",
                           lineHeight: "1.2",
                         }}
@@ -5504,7 +5477,6 @@ function ApplicationMgtDrawer({
                         value="nursingAbroad"
                         style={{
                           color: "#14532d",
-                          width: "18%",
                           whiteSpace: "normal",
                           lineHeight: "1.2",
                         }}
@@ -5920,7 +5892,7 @@ function ApplicationMgtDrawer({
                   <label className="my-input-label">
                     Validate Recruited By Information
                   </label>
-                  <div className="form-control-band form-control-band--plain">
+                  <div className="form-control-band form-control-band--plain recruited-by-search-control">
                     <MemberSearch
                       compact
                       showStatus={false}
