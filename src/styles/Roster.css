@@ -15,8 +15,8 @@
   /* .rbc-now {
     border-radius: 50%; 
     background-color: rgba(0, 123, 255, 0.1); 
-    border: 2px solid #007bff; 
-    color: #007bff; 
+    border: 2px solid var(--theme-color-primary);
+    color: var(--theme-color-primary);
     font-weight: bold; 
     width: 25px; 
     height: 25px;

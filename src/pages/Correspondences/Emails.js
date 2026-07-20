@@ -221,7 +221,7 @@ function Emails() {
                 {record.name || "Untitled"}
               </div>
             </div>
-            <div style={{ ...stackRow2, color: "#8c8c8c" }}>
+            <div style={{ ...stackRow2, color: "var(--theme-text-muted)" }}>
               ID: {String(record._id || "").slice(-8) || "—"}
             </div>
           </>
@@ -243,7 +243,7 @@ function Emails() {
                   {formatCampaignStatusLabel(record.status)}
                 </Tag>
               </div>
-              <div style={{ ...stackRow2, color: "#8c8c8c" }}>
+              <div style={{ ...stackRow2, color: "var(--theme-text-muted)" }}>
                 {statusSubtitle(record)}
               </div>
             </div>
@@ -280,7 +280,7 @@ function Emails() {
                 {record.createdByName || record.createdBy || "—"}
               </div>
             </div>
-            <div style={{ ...stackRow2, color: "#8c8c8c" }}>
+            <div style={{ ...stackRow2, color: "var(--theme-text-muted)" }}>
               {record.createdAt
                 ? formatDateDdMmYyyy(record.createdAt)
                 : "—"}{" "}
@@ -319,7 +319,7 @@ function Emails() {
                   {n.toLocaleString()}
                 </div>
               </div>
-              <div style={{ ...stackRow2, color: "#8c8c8c" }}>
+              <div style={{ ...stackRow2, color: "var(--theme-text-muted)" }}>
                 Profiles selected
               </div>
             </div>
@@ -396,7 +396,7 @@ function Emails() {
                   {excluded.toLocaleString()}
                 </div>
               </div>
-              <div style={{ ...stackRow2, color: "#8c8c8c" }}>Consent</div>
+              <div style={{ ...stackRow2, color: "var(--theme-text-muted)" }}>Consent</div>
             </div>
           );
         },

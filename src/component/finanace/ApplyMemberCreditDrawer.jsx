@@ -73,7 +73,7 @@ const ApplyMemberCreditDrawer = ({
             </Col>
           ) : null}
           <Col span={24}>
-            <p style={{ margin: 0, color: "#595959", fontSize: 13 }}>
+            <p style={{ margin: 0, color: "var(--theme-text-muted)", fontSize: 13 }}>
               Applies available credit to outstanding balance. Maximum{" "}
               <strong>€{maxEuro.toFixed(2)}</strong>.
             </p>

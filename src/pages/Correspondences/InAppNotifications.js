@@ -43,7 +43,7 @@ const InAppNotifications = () => {
                         >
                             {text}
                         </div>
-                        <div style={{ fontSize: '12px', color: '#8c8c8c' }}>{record.batchId}</div>
+                        <div style={{ fontSize: '12px', color: 'var(--theme-text-muted)' }}>{record.batchId}</div>
                     </div>
                 </div>
             )
@@ -61,7 +61,7 @@ const InAppNotifications = () => {
             render: (count) => (
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                     <span style={{ fontWeight: 500 }}>{count.toLocaleString()}</span>
-                    <span style={{ color: '#8c8c8c', fontSize: '12px' }}>members</span>
+                    <span style={{ color: 'var(--theme-text-muted)', fontSize: '12px' }}>members</span>
                 </div>
             )
         },

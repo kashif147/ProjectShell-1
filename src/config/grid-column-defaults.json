@@ -379,6 +379,35 @@
         { "dataIndex": "sourceType", "title": "Source", "isGride": true, "isVisible": true, "ellipsis": true, "width": 70 },
         { "dataIndex": "_actions", "title": "Actions", "key": "actions", "isGride": true, "isVisible": true, "width": 72, "fixed": "right" }
       ]
+    },
+    "eventssummary": {
+      "screenKey": "Events",
+      "templateType": "eventssummary",
+      "service": "events-service",
+      "filters": {
+        "eventName": { "operator": "equal_to", "values": [] },
+        "status": { "operator": "equal_to", "values": [] },
+        "eventCategory": { "operator": "equal_to", "values": [] },
+        "eventType": { "operator": "equal_to", "values": [] },
+        "venue": { "operator": "equal_to", "values": [] },
+        "startDate": { "operator": "between", "values": [] },
+        "endDate": { "operator": "between", "values": [] }
+      },
+      "columns": [
+        { "dataIndex": "eventName", "title": "Event Name", "isGride": true, "isVisible": true, "ellipsis": true, "width": 220 },
+        { "dataIndex": "status", "title": "Status", "isGride": true, "isVisible": true, "ellipsis": true, "width": 140 },
+        { "dataIndex": "eventCategory", "title": "Category", "isGride": true, "isVisible": true, "ellipsis": true, "width": 150 },
+        { "dataIndex": "eventType", "title": "Event Type", "isGride": true, "isVisible": true, "ellipsis": true, "width": 150 },
+        { "dataIndex": "venue", "title": "Venue", "isGride": true, "isVisible": true, "ellipsis": true, "width": 180 },
+        { "dataIndex": "startDate", "title": "Start Date", "filterValueType": "date", "isGride": true, "isVisible": true, "ellipsis": true, "width": 130 },
+        { "dataIndex": "endDate", "title": "End Date", "filterValueType": "date", "isGride": true, "isVisible": true, "ellipsis": true, "width": 130 },
+        { "dataIndex": "memberPrice", "title": "Member Price", "isGride": true, "isVisible": true, "ellipsis": true, "width": 130 },
+        { "dataIndex": "nonMemberPrice", "title": "Non-Member Price", "isGride": true, "isVisible": true, "ellipsis": true, "width": 150 },
+        { "dataIndex": "createdBy", "title": "Created By", "isGride": true, "isVisible": true, "ellipsis": true, "width": 190 },
+        { "dataIndex": "createdAt", "title": "Created At", "filterValueType": "date", "isGride": true, "isVisible": true, "ellipsis": true, "width": 140 },
+        { "dataIndex": "updatedBy", "title": "Updated By", "isGride": true, "isVisible": true, "ellipsis": true, "width": 190 },
+        { "dataIndex": "_actions", "title": "Actions", "key": "actions", "isGride": true, "isVisible": true, "width": 90, "fixed": "right" }
+      ]
     }
   }
 }

@@ -1781,6 +1781,11 @@ const MembershipForm = ({
   const isLimitedMembershipEdit = editScope !== "full";
   const membershipDetailsReadOnly =
     isFormReadOnly || isLimitedMembershipEdit;
+  // Non-member (event/course attendee-only) profiles have no membership
+  // number - Subscription Details and Payment Information are membership-
+  // specific and must never be editable for those, independent of edit mode.
+  const isNonMemberProfile = !formData.membershipNumber;
+  const membershipSectionsReadOnly = membershipDetailsReadOnly || isNonMemberProfile;
 
   useEffect(() => {
     if (!isEditMode || isFormReadOnly) {
@@ -2818,7 +2823,7 @@ const MembershipForm = ({
                       onChange={(e) =>
                         handleChange("membershipCategory", e.target.value)
                       }
-                      disabled={membershipDetailsReadOnly}
+                      disabled={membershipSectionsReadOnly}
                       required={true}
                     />
                   </MembershipFormField>
@@ -2845,7 +2850,7 @@ const MembershipForm = ({
                       placeholder="Select start date"
                       value={formData.startDate}
                       onChange={(date) => handleChange("startDate", date)}
-                      disabled={membershipDetailsReadOnly}
+                      disabled={membershipSectionsReadOnly}
                     />
                   </div>
                 </MembershipFormField>
@@ -2905,7 +2910,7 @@ const MembershipForm = ({
                     onChange={(e) =>
                       handleChange("paymentType", e.target.value)
                     }
-                    disabled={membershipDetailsReadOnly}
+                    disabled={membershipSectionsReadOnly}
                     required={!isFormReadOnly && !isPaymentOptionalCategory}
                     isIDs={false}
                     options={filteredPaymentTypeOptions}
@@ -2922,7 +2927,7 @@ const MembershipForm = ({
                     onChange={(e) =>
                       handleChange("payrollNumber", e.target.value)
                     }
-                    disabled={membershipDetailsReadOnly || !payrollDeductionPayment}
+                    disabled={membershipSectionsReadOnly || !payrollDeductionPayment}
                     required={
                       payrollDeductionPayment &&
                       !isFormReadOnly &&
@@ -2938,10 +2943,57 @@ const MembershipForm = ({
                   onChange={(e) =>
                     handleChange("paymentFrequency", e.target.value)
                   }
-                  disabled={membershipDetailsReadOnly}
+                  disabled={membershipSectionsReadOnly}
                 />
               </MembershipFormGrid>
             </MembershipFormCard>
+
+            {showRemindersCancellations && (
+              <MembershipFormCard title="Reminders & Cancellations">
+                <MembershipFormGrid>
+                  <MyDatePicker
+                    label="First Reminder"
+                    placeholder="Select first reminder date"
+                    value={formData.firstReminderDate}
+                    onChange={(date) => handleChange("firstReminderDate", date)}
+                    disabled={true}
+                  />
+                  <MyDatePicker
+                    label="Second Reminder"
+                    placeholder="Select second reminder date"
+                    value={formData.secondReminderDate}
+                    onChange={(date) => handleChange("secondReminderDate", date)}
+                    disabled={true}
+                  />
+                  <MyDatePicker
+                    label="Third Reminder"
+                    placeholder="Select third reminder date"
+                    value={formData.thirdReminderDate}
+                    onChange={(date) => handleChange("thirdReminderDate", date)}
+                    disabled={true}
+                  />
+                  <MyDatePicker
+                    label="Cancellation / Resignation Date"
+                    placeholder="Select cancellation date"
+                    value={formData.dateCancelled}
+                    onChange={(date) => handleChange("dateCancelled", date)}
+                    disabled={true}
+                  />
+                  <MembershipFormGridFull>
+                    <MembershipFormSelect
+                      label="Cancellation / Resignation Reason"
+                      placeholder="Select reason"
+                      options={cancellationReasonOptions}
+                      value={formData.cancellationReason}
+                      onChange={(e) =>
+                        handleChange("cancellationReason", e.target.value)
+                      }
+                      disabled={true}
+                    />
+                  </MembershipFormGridFull>
+                </MembershipFormGrid>
+              </MembershipFormCard>
+            )}
 
             {undergradEducationalActive && (
               <MembershipFormCard title="Educational Details">
@@ -3023,53 +3075,6 @@ const MembershipForm = ({
                       required={!isFormReadOnly}
                     />
                   </MembershipFormField>
-                </MembershipFormGrid>
-              </MembershipFormCard>
-            )}
-
-            {showRemindersCancellations && (
-              <MembershipFormCard title="Reminders & Cancellations">
-                <MembershipFormGrid>
-                  <MyDatePicker
-                    label="First Reminder"
-                    placeholder="Select first reminder date"
-                    value={formData.firstReminderDate}
-                    onChange={(date) => handleChange("firstReminderDate", date)}
-                    disabled={true}
-                  />
-                  <MyDatePicker
-                    label="Second Reminder"
-                    placeholder="Select second reminder date"
-                    value={formData.secondReminderDate}
-                    onChange={(date) => handleChange("secondReminderDate", date)}
-                    disabled={true}
-                  />
-                  <MyDatePicker
-                    label="Third Reminder"
-                    placeholder="Select third reminder date"
-                    value={formData.thirdReminderDate}
-                    onChange={(date) => handleChange("thirdReminderDate", date)}
-                    disabled={true}
-                  />
-                  <MyDatePicker
-                    label="Cancellation / Resignation Date"
-                    placeholder="Select cancellation date"
-                    value={formData.dateCancelled}
-                    onChange={(date) => handleChange("dateCancelled", date)}
-                    disabled={true}
-                  />
-                  <MembershipFormGridFull>
-                    <MembershipFormSelect
-                      label="Cancellation / Resignation Reason"
-                      placeholder="Select reason"
-                      options={cancellationReasonOptions}
-                      value={formData.cancellationReason}
-                      onChange={(e) =>
-                        handleChange("cancellationReason", e.target.value)
-                      }
-                      disabled={true}
-                    />
-                  </MembershipFormGridFull>
                 </MembershipFormGrid>
               </MembershipFormCard>
             )}

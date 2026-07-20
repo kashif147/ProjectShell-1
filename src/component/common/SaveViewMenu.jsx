@@ -60,6 +60,7 @@ import {
 } from "../../features/paymentFormsWithFilterSlice";
 import { resetScreenChanged } from "../../features/views/ScreenFilterChangSlice";
 import { bumpCreditNotesReload } from "../../utils/creditNotesWorkspace";
+import { bumpEventsReload } from "../../utils/eventsWorkspace";
 import { bumpJournalAdjustmentsReload } from "../../utils/journalAdjustmentsWorkspace";
 import { bumpOnlinePaymentsReload } from "../../utils/onlinePaymentsWorkspace";
 import { bumpRefundsReload } from "../../utils/refundsWorkspace";
@@ -260,6 +261,10 @@ const SaveViewMenu = ({ className, style }) => {
           limit: 500,
         }),
       );
+      return;
+    }
+    if (activePage === "Events") {
+      bumpEventsReload();
       return;
     }
     if (activePage === "CreditNotes") {

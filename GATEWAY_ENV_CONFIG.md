@@ -42,6 +42,9 @@ REACT_APP_NOTIFICATION_SERVICE_URL=http://projectshell-vm.northeurope.cloudapp.a
 
 # Audit Service (member audit history, audit log grids)
 REACT_APP_AUDIT_SERVICE_URL=http://projectshell-vm.northeurope.cloudapp.azure.com/audit-service/api
+
+# Events & Courses Service (if used)
+REACT_APP_EVENTS_SERVICE_URL=http://projectshell-vm.northeurope.cloudapp.azure.com/events-service/api
 ```
 
 ## Gateway Route Mappings
@@ -60,6 +63,7 @@ Based on `default.conf`, the gateway routes are:
 | Reporting Service | `/reporting-service/api/` | `REACT_APP_REPORTING_SERVICE_URL` |
 | Notification Service | `/notification-service/api/` | `REACT_APP_NOTIFICATION_SERVICE_URL` |
 | Audit Service | `/audit-service/api/` | `REACT_APP_AUDIT_SERVICE_URL` |
+| Events & Courses Service | `/events-service/api/` | `REACT_APP_EVENTS_SERVICE_URL` |
 
 ## Audit service 502
 

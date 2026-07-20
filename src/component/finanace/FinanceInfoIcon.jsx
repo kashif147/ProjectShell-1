@@ -17,7 +17,7 @@ export default function FinanceInfoIcon({
         aria-label={ariaLabel}
         onClick={(e) => e.stopPropagation()}
         style={{
-          color: "#8c8c8c",
+          color: "var(--theme-text-muted)",
           fontSize: 12,
           flexShrink: 0,
           cursor: "help",

@@ -207,7 +207,7 @@
 }
 
 .duplicate-profile-merge-drawer .duplicate-merge-value-hint {
-  color: #6b7280;
+  color: var(--theme-text-muted);
   font-weight: 500;
 }
 

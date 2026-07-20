@@ -59,7 +59,7 @@
 .dd-form__footer {
   text-align: center;
   font-size: 12px;
-  color: #6b7280;
+  color: var(--theme-text-muted);
   margin-top: 12px;
   margin-bottom: 0;
 }

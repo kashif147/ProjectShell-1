@@ -1136,6 +1136,10 @@ const ProfileHeader = forwardRef(function ProfileHeader(
   const showStatusDotOnName = statusDotTone === "muted";
 
   const membershipNo = memberIdForLedger || memberData.memberId;
+  // Authoritative "is this profile a member" signal - independent of the
+  // display-value fallback chain above (which can resolve via regNo/subscription
+  // data), since an attendee-only profile has no membershipNumber at all.
+  const isNonMember = !getSafe(source, "membershipNumber");
 
   const renderMemberName = () => (
     <div className="member-name-row">
@@ -1154,36 +1158,63 @@ const ProfileHeader = forwardRef(function ProfileHeader(
 
   const renderMemberDetailsLine = () => (
     <p className="member-details">
-      {memberData.dob} ({memberData.gender}) • {memberData.age}
+      <span className="member-details-strong">{memberData.dob}</span> (
+      <span className="member-details-strong">{memberData.gender}</span>) •{" "}
+      <span className="member-details-strong">{memberData.age}</span>
     </p>
   );
 
-  const renderStatusBadge = () => (
-    <Tooltip
-      title={statusBadgeTooltip || undefined}
-      trigger={["hover", "focus"]}
-      mouseEnterDelay={0.05}
-      mouseLeaveDelay={0.05}
-    >
-      <span
-        className={statusBadgeClass}
-        style={{ cursor: statusBadgeTooltip ? "help" : undefined }}
+  const renderStatusBadge = () => {
+    if (isNonMember) {
+      return (
+        <Tooltip title="This profile has no membership number">
+          <span className="member-status-badge member-status-badge-non-member">
+            Non-Member
+          </span>
+        </Tooltip>
+      );
+    }
+    return (
+      <Tooltip
+        title={statusBadgeTooltip || undefined}
+        trigger={["hover", "focus"]}
+        mouseEnterDelay={0.05}
+        mouseLeaveDelay={0.05}
       >
-        {statusDotTone === "active" || statusDotTone === "danger" ? (
-          <span
-            className={`member-status-dot member-status-dot-${statusDotTone}`}
-            aria-hidden="true"
-          />
-        ) : null}
-        {memberData.status}
-        {subscriptionData?.isCurrent && " (Current)"}
-        {subscriptionData?.reinstated && " (Reinstated)"}
-      </span>
-    </Tooltip>
-  );
+        <span
+          className={statusBadgeClass}
+          style={{ cursor: statusBadgeTooltip ? "help" : undefined }}
+        >
+          {statusDotTone === "active" || statusDotTone === "danger" ? (
+            <span
+              className={`member-status-dot member-status-dot-${statusDotTone}`}
+              aria-hidden="true"
+            />
+          ) : null}
+          {memberData.status}
+          {subscriptionData?.isCurrent && " (Current)"}
+          {subscriptionData?.reinstated && " (Reinstated)"}
+        </span>
+      </Tooltip>
+    );
+  };
 
   const renderMembershipStatusRow = ({ stacked = false } = {}) => {
     const statusBadge = renderStatusBadge();
+    if (isNonMember) {
+      return (
+        <div
+          className={[
+            "member-membership-status-row",
+            stacked ? "member-membership-status-row-stacked" : "",
+          ]
+            .filter(Boolean)
+            .join(" ")}
+        >
+          {statusBadge}
+        </div>
+      );
+    }
     if (!membershipNo && !memberData.status) return null;
 
     return (

@@ -354,7 +354,7 @@ function CasesDetails() {
       label: "Updated Priority Level",
       old: "Medium Priority",
       new: "Critical Priority",
-      oldTxt: "#8c8c8c",
+      oldTxt: "var(--theme-text-muted)",
       newTxt: "var(--primary-blue)",
     },
     {
@@ -824,7 +824,7 @@ function CasesDetails() {
                   background: "#f8faff",
                   padding: "12px",
                   borderRadius: "8px",
-                  color: "#595959",
+                  color: "var(--theme-text-muted)",
                   fontSize: "14px",
                 }}
                 dangerouslySetInnerHTML={{ __html: note.text }}

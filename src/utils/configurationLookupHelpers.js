@@ -44,6 +44,7 @@ export const CONFIGURATION_DRAWER_KEYS = new Set([
   "DivisionsForStation",
   "Station",
   "StudyLocation",
+  "Venue",
   "ContactType",
   "LookupType",
   "Lookup",
@@ -90,6 +91,8 @@ export function isLookupDrawerKey(drawerKey) {
 }
 
 const LOOKUP_TYPE_NAME_TO_DRAWER_KEY = {
+  "accreditation body": "StandardLookup",
+  accreditationbody: "StandardLookup",
   boards: "Boards",
   bookmarks: "Bookmarks",
   branch: "Districts",
@@ -149,6 +152,8 @@ const LOOKUP_TYPE_NAME_TO_DRAWER_KEY = {
   spokenlanguages: "SpokenLanguages",
   "study location": "StudyLocation",
   studylocation: "StudyLocation",
+  venue: "Venue",
+  venues: "Venue",
   titles: "Title",
   title: "Title",
   trainings: "Trainings",
@@ -162,6 +167,8 @@ const LOOKUP_TYPE_NAME_TO_DRAWER_KEY = {
   districts: "Districts",
   district: "Districts",
   discipline: "StandardLookup",
+  "event type": "StandardLookup",
+  eventtype: "StandardLookup",
   bank: "StandardLookup",
   "template type": "StandardLookup",
   templatetype: "StandardLookup",

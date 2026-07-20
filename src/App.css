@@ -7,57 +7,57 @@
 
 /* Legacy CSS Variables - Maintained for backward compatibility */
 :root {
-  --mainBlue: var(--primary-color, #215e97);
-  --second: var(--secoundry-color, #c97a2f);
+  --mainBlue: var(--theme-color-primary, var(--primary-color, #215e97));
+  --second: var(--theme-color-secondary, var(--secoundry-color, #475569));
   /*#ad8135 */
-  --FontsColor: color-mix(in srgb, var(--primary-color, #215e97) 72%, #111827);
-  --borderColor: #d9d9d9;
+  --FontsColor: color-mix(in srgb, var(--theme-color-primary, var(--primary-color, #215e97)) 72%, #111827);
+  --borderColor: var(--theme-border, color-mix(in srgb, var(--primary-color, #215e97) 12%, #d9d9d9));
   --fontFamily: "Roboto", sans-serif;
-  --labelColor: #393b3d;
-  --table-row: color-mix(in srgb, var(--secoundry-bg-color, #e6f7ff) 22%, #ffffff);
-  --btn-hover: color-mix(in srgb, var(--secoundry-bg-color, #e6f7ff) 68%, #ffffff);
+  --labelColor: var(--theme-text, color-mix(in srgb, var(--primary-color, #215e97) 72%, #111827));
+  --table-row: color-mix(in srgb, var(--theme-color-surface, var(--secoundry-bg-color, #eef2f6)) 22%, #ffffff);
+  --btn-hover: color-mix(in srgb, var(--theme-color-surface, var(--secoundry-bg-color, #eef2f6)) 68%, #ffffff);
   --app-table-surface-bg: #ffffff;
-  --app-table-row-alt-bg: color-mix(in srgb, var(--secoundry-bg-color, #e6f7ff) 30%, #ffffff);
-  --app-table-border: color-mix(in srgb, var(--primary-color, #215e97) 10%, #dce4ee);
-  --app-table-header-light-bg: color-mix(in srgb, var(--secoundry-bg-color, #e6f7ff) 68%, #ffffff);
-  --app-table-header-text: var(--primary-color, #215e97);
-  --app-table-body-text: #26323f;
-  --app-table-muted-text: #65758b;
-  --gray: rgba(9, 30, 66, 0.04);
-  --app-brand-primary: var(--primary-color, #215e97);
-  --app-brand-secondary: var(--secoundry-color, #c97a2f);
-  --app-brand-accent: var(--accent-color, #0ea5e9);
-  --app-brand-bg: var(--secoundry-bg-color, #e6f7ff);
+  --app-table-row-alt-bg: color-mix(in srgb, var(--theme-color-surface, var(--secoundry-bg-color, #eef2f6)) 30%, #ffffff);
+  --app-table-border: color-mix(in srgb, var(--theme-color-primary, var(--primary-color, #215e97)) 10%, #dce4ee);
+  --app-table-header-light-bg: color-mix(in srgb, var(--theme-color-surface, var(--secoundry-bg-color, #eef2f6)) 68%, #ffffff);
+  --app-table-header-text: var(--theme-color-primary, var(--primary-color, #215e97));
+  --app-table-body-text: color-mix(in srgb, var(--theme-color-primary, var(--primary-color, #215e97)) 30%, #26323f);
+  --app-table-muted-text: var(--theme-text-muted, color-mix(in srgb, var(--primary-color, #215e97) 38%, #64748b));
+  --gray: color-mix(in srgb, var(--theme-color-surface, var(--secoundry-bg-color, #eef2f6)) 20%, transparent);
+  --app-brand-primary: var(--theme-color-primary, var(--primary-color, #215e97));
+  --app-brand-secondary: var(--theme-color-secondary, var(--secoundry-color, #475569));
+  --app-brand-accent: var(--theme-color-accent, var(--accent-color, #0d9488));
+  --app-brand-bg: var(--theme-color-surface, var(--secoundry-bg-color, #eef2f6));
   --app-shell-gradient: linear-gradient(
     135deg,
-    color-mix(in srgb, var(--primary-color, #215e97) 92%, #061824) 0%,
-    color-mix(in srgb, var(--accent-color, #0ea5e9) 24%, var(--primary-color, #215e97)) 58%,
-    color-mix(in srgb, var(--secoundry-color, #c97a2f) 28%, var(--primary-color, #215e97)) 100%
+    color-mix(in srgb, var(--app-brand-primary) 92%, #061824) 0%,
+    color-mix(in srgb, var(--app-brand-accent) 24%, var(--app-brand-primary)) 58%,
+    color-mix(in srgb, var(--app-brand-secondary) 28%, var(--app-brand-primary)) 100%
   );
   --app-sidebar-gradient: linear-gradient(
     180deg,
-    color-mix(in srgb, var(--primary-color, #215e97) 88%, #071827) 0%,
-    color-mix(in srgb, var(--accent-color, #0ea5e9) 18%, var(--primary-color, #215e97)) 52%,
-    color-mix(in srgb, var(--primary-color, #215e97) 72%, #061824) 100%
+    color-mix(in srgb, var(--app-brand-primary) 88%, #071827) 0%,
+    color-mix(in srgb, var(--app-brand-accent) 18%, var(--app-brand-primary)) 52%,
+    color-mix(in srgb, var(--app-brand-primary) 72%, #061824) 100%
   );
-  --app-table-header-bg: color-mix(in srgb, var(--primary-color, #215e97) 86%, #0f172a);
-  --app-selected-bg: color-mix(in srgb, var(--secoundry-bg-color, #e6f7ff) 78%, #ffffff);
-  --app-selected-border: color-mix(in srgb, var(--secoundry-color, #c97a2f) 35%, transparent);
-  --app-brand-shadow: 0 10px 28px color-mix(in srgb, var(--primary-color, #215e97) 18%, transparent);
-  --app-button-bg: var(--primary-color, #215e97);
-  --app-button-bg-hover: color-mix(in srgb, var(--primary-color, #215e97) 84%, #000000);
-  --app-button-bg-soft: color-mix(in srgb, var(--primary-color, #215e97) 10%, #ffffff);
-  --app-button-border-soft: color-mix(in srgb, var(--primary-color, #215e97) 26%, #d9d9d9);
-  --app-button-focus-ring: 0 0 0 2px color-mix(in srgb, var(--primary-color, #215e97) 20%, transparent);
-  --app-control-surface: color-mix(in srgb, var(--secoundry-bg-color, #e6f7ff) 18%, #ffffff);
-  --app-control-surface-hover: color-mix(in srgb, var(--secoundry-bg-color, #e6f7ff) 34%, #ffffff);
-  --app-control-border: color-mix(in srgb, var(--primary-color, #215e97) 14%, #d9d9d9);
+  --app-table-header-bg: color-mix(in srgb, var(--app-brand-primary) 86%, #0f172a);
+  --app-selected-bg: color-mix(in srgb, var(--app-brand-bg) 78%, #ffffff);
+  --app-selected-border: color-mix(in srgb, var(--app-brand-secondary) 35%, transparent);
+  --app-brand-shadow: 0 10px 28px color-mix(in srgb, var(--app-brand-primary) 18%, transparent);
+  --app-button-bg: var(--app-brand-primary);
+  --app-button-bg-hover: color-mix(in srgb, var(--app-brand-primary) 84%, #000000);
+  --app-button-bg-soft: color-mix(in srgb, var(--app-brand-primary) 10%, #ffffff);
+  --app-button-border-soft: color-mix(in srgb, var(--app-brand-primary) 26%, #d9d9d9);
+  --app-button-focus-ring: 0 0 0 2px color-mix(in srgb, var(--app-brand-primary) 20%, transparent);
+  --app-control-surface: color-mix(in srgb, var(--app-brand-bg) 18%, #ffffff);
+  --app-control-surface-hover: color-mix(in srgb, var(--app-brand-bg) 34%, #ffffff);
+  --app-control-border: color-mix(in srgb, var(--app-brand-primary) 14%, #d9d9d9);
   --app-detail-page-bg: color-mix(
     in srgb,
-    var(--accent-color, #0ea5e9) 7%,
-    #f4f7f8
+    var(--theme-color-surface, var(--secoundry-bg-color, #eef2f6)) 18%,
+    #ffffff
   );
-  --app-detail-page-border: color-mix(in srgb, var(--primary-color, #215e97) 8%, #e5edf1);
+  --app-detail-page-border: var(--theme-border, color-mix(in srgb, var(--primary-color, #215e97) 12%, #d9d9d9));
 }
 
 .ql-container.ql-snow {
@@ -1789,7 +1789,7 @@ th.ant-table-cell.ant-table-cell-fix-left.ant-table-cell-fix-left-last {
 .common-table table tr td {
   padding: 0 18px;
   font-weight: 400;
-  color: #215e97 !important;
+  color: var(--app-table-body-text) !important;
   height: 74px !important;
   line-height: 74px !important;
   border-bottom: 1px solid color-mix(in srgb, var(--app-table-border) 58%, #ffffff) !important;

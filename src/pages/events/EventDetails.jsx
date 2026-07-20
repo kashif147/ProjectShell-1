@@ -1,127 +1,150 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
+import { useSelector } from 'react-redux';
 import {
     Button,
     Row,
     Col,
-    Card,
     Input,
     Tag,
-    Checkbox,
     Avatar,
     Typography,
-    Space
+    Descriptions,
+    message
 } from 'antd';
 import {
-    LeftOutlined,
     SearchOutlined,
     PlusOutlined,
-    CheckCircleFilled,
-    EnvironmentOutlined
+    EditOutlined,
+    CopyOutlined
 } from '@ant-design/icons';
 import MyTable from '../../component/common/MyTable';
-import MyInput from '../../component/common/MyInput';
-import MyDatePicker1 from '../../component/common/MyDatePicker1';
-import CustomSelect from '../../component/common/CustomSelect';
 import "../../styles/EventDetails.css";
 import "../../styles/CreateEventDrawer.css";
 import dayjs from 'dayjs';
 
-import Breadcrumb from '../../component/common/Breadcrumb';
-import { Activity, CheckCircle, Shuffle, XCircle, Clock } from "lucide-react";
 import CreateAttendeeDrawer from '../../component/event/CreateAttendeeDrawer';
+import CreateEventDrawer from '../../component/event/CreateEventDrawer';
+import { fetchEventById, fetchRegistrations, cancelRegistration } from '../../services/eventsApi';
 
-const { Title, Text } = Typography;
+const { Text, Title } = Typography;
+
+const REGISTRATION_STATUS_TABS = [
+    { label: 'All', value: 'All' },
+    { label: 'Pending', value: 'pending' },
+    { label: 'Confirmed', value: 'confirmed' },
+    { label: 'Attended', value: 'attended' },
+    { label: 'Cancelled', value: 'cancelled' },
+    { label: 'No-show', value: 'no-show' },
+];
+
+const STATUS_TAG_STYLE = {
+    pending: { color: '#d48806', bg: '#fffbe6', border: '#ffe58f' },
+    confirmed: { color: 'var(--app-brand-accent)', bg: 'var(--app-brand-bg)', border: '#91d5ff' },
+    attended: { color: '#389e0d', bg: '#f6ffed', border: '#b7eb8f' },
+    cancelled: { color: '#cf1322', bg: '#fff1f0', border: '#ffa39e' },
+    'no-show': { color: '#8c8c8c', bg: '#fafafa', border: '#d9d9d9' },
+};
+
+// Mirrors the Status color scheme used on the Event Configuration drawer.
+const EVENT_STATUS_TAG_STYLE = {
+    draft: { color: '#ad6800', bg: '#fffbe6', border: '#ffe58f' },
+    published: { color: '#389e0d', bg: '#f6ffed', border: '#b7eb8f' },
+    completed: { color: 'var(--app-brand-accent)', bg: 'var(--app-brand-bg)', border: '#91d5ff' },
+    cancelled: { color: '#cf1322', bg: '#fff1f0', border: '#ffa39e' },
+};
+
+function formatDateTime(value) {
+    return value ? dayjs(value).format('DD/MM/YYYY HH:mm') : null;
+}
+
+function mapRegistrationToAttendeeRow(reg) {
+    const snapshot = reg.attendeeSnapshot || {};
+    return {
+        key: reg._id,
+        registrationId: reg._id,
+        name: `${snapshot.firstName || ''} ${snapshot.lastName || ''}`.trim() || snapshot.email || '-',
+        membershipNo: reg.membershipNumber || '-',
+        category: reg.isMemberAtRegistration ? 'Member' : 'Non-member',
+        status: reg.status || 'pending',
+        paymentStatus: reg.paymentStatus || '-',
+        amount: reg.amount,
+        currency: reg.currency,
+        registeredAt: reg.createdAt,
+    };
+}
 
 const EventDetails = () => {
     const location = useLocation();
     const navigate = useNavigate();
-    const eventId = location.state?.eventId || 'EVT-001';
+    const eventId = location.state?.eventId;
+    const { eventTypeOptions, venueOptions } = useSelector((state) => state.lookups);
+
     const [selectedRowKeys, setSelectedRowKeys] = useState([]);
     const [isAttendeeDrawerVisible, setIsAttendeeDrawerVisible] = useState(false);
+    const [isEditEventDrawerVisible, setIsEditEventDrawerVisible] = useState(false);
+    const [isCloneEventDrawerVisible, setIsCloneEventDrawerVisible] = useState(false);
 
+    const [event, setEvent] = useState(null);
+    const [loadingEvent, setLoadingEvent] = useState(false);
 
-    // Event data state
-    const [eventData, setEventData] = useState({
-        eventName: 'Annual Conference 2024',
-        eventDate: dayjs('04/12/2024', 'DD/MM/YYYY'),
-        seatLimit: '1000000',
-        description: 'A multi-day event focused on emerging technologies and accelerative development strategies for 2024 and beyond.',
-        venueName: 'Convention Center East',
-        address: '123 Innovation Drive, SF',
-        cpdCredits: '5.0',
-        accreditationBody: 'NMBI',
-        certificationType: 'Digital Certificate',
-        autoIssueOnFinish: true
-    });
-
-    // Sample dynamic attendee data based on the screenshot
-    const [attendees, setAttendees] = useState([
-        {
-            key: '1',
-            name: 'Alex Rivera',
-            avatar: '', // Random avatar or placeholder
-            membershipNo: '#88291',
-            category: 'VIP',
-            status: 'Registered',
-            cpdEligible: true,
-            cpdStatus: 'Earned',
-            attendance: { D1: true, D2: true, D3: true, D4: true }
-        },
-        {
-            key: '2',
-            name: 'Sarah Jenkins',
-            avatar: '',
-            membershipNo: '#44210',
-            category: 'SPEAKER',
-            status: 'Registered',
-            cpdEligible: true,
-            cpdStatus: 'Pending',
-            attendance: { D1: true, D2: true, D3: false, D4: false }
-        },
-        {
-            key: '3',
-            name: 'Michael Chen',
-            avatar: '',
-            membershipNo: '#12345',
-            category: 'MEMBER',
-            status: 'Cancelled',
-            cpdEligible: false,
-            cpdStatus: 'N/A',
-            attendance: { D1: false, D2: false, D3: false, D4: false }
-        }
-    ]);
+    const [attendees, setAttendees] = useState([]);
+    const [loadingAttendees, setLoadingAttendees] = useState(false);
 
     const [searchText, setSearchText] = useState('');
     const [statusFilter, setStatusFilter] = useState('All');
 
-    const handleAttendanceChange = (key, day) => {
-        setAttendees(prev => prev.map(item => {
-            if (item.key === key && item.status === 'Registered') {
-                return {
-                    ...item,
-                    attendance: {
-                        ...item.attendance,
-                        [day]: !item.attendance[day]
-                    }
-                };
-            }
-            return item;
-        }));
-    };
+    const loadEvent = useCallback(() => {
+        if (!eventId) return;
+        setLoadingEvent(true);
+        fetchEventById(eventId)
+            .then((data) => {
+                setEvent(data || null);
+                // Self-heal the breadcrumb's record label with the real title,
+                // in case the referring page didn't already pass recordName.
+                if (data?.title && location.state?.recordName !== data.title) {
+                    navigate(location.pathname, {
+                        state: { ...location.state, recordName: data.title },
+                        replace: true,
+                    });
+                }
+            })
+            .catch(() => setEvent(null))
+            .finally(() => setLoadingEvent(false));
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [eventId]);
+
+    const loadAttendees = useCallback(() => {
+        if (!eventId) return;
+        setLoadingAttendees(true);
+        fetchRegistrations({ eventId })
+            .then((data) => {
+                const rows = Array.isArray(data) ? data : [];
+                setAttendees(rows.map(mapRegistrationToAttendeeRow));
+            })
+            .catch(() => setAttendees([]))
+            .finally(() => setLoadingAttendees(false));
+    }, [eventId]);
+
+    useEffect(() => {
+        loadEvent();
+        loadAttendees();
+    }, [loadEvent, loadAttendees]);
 
     const handleSelectionChange = (keys) => {
         setSelectedRowKeys(keys);
     };
 
-    const handleCancelAttendance = () => {
-        console.log('Cancelling attendance for:', selectedRowKeys);
-        // Add actual logic here (API call etc)
-    };
-
-    const handleProcessRefund = () => {
-        console.log('Processing refund for:', selectedRowKeys);
-        // Add actual logic here (API call etc)
+    const handleCancelAttendance = async () => {
+        if (!selectedRowKeys.length) return;
+        try {
+            await Promise.all(selectedRowKeys.map((id) => cancelRegistration(id)));
+            message.success('Selected registrations cancelled');
+            setSelectedRowKeys([]);
+            loadAttendees();
+        } catch (err) {
+            message.error(err?.response?.data?.error?.message || err?.message || 'Failed to cancel registrations');
+        }
     };
 
     const columns = [
@@ -131,7 +154,7 @@ const EventDetails = () => {
             key: 'name',
             render: (text, record) => (
                 <div className="attendee-info-cell">
-                    <Avatar size={40} src={record.avatar} icon={!record.avatar && <span style={{ fontSize: '10px' }}>AV</span>} />
+                    <Avatar size={40} icon={<span style={{ fontSize: '10px' }}>AV</span>} />
                     <span className="attendee-name">{text}</span>
                 </div>
             )
@@ -146,12 +169,10 @@ const EventDetails = () => {
             dataIndex: 'category',
             key: 'category',
             render: (category) => {
-                const colors = {
-                    'VIP': { color: '#722ed1', bg: '#f9f0ff', border: '#d3adf7' },
-                    'SPEAKER': { color: '#08979c', bg: '#e6fffb', border: '#87e8de' },
-                    'MEMBER': { color: 'var(--app-brand-accent)', bg: 'var(--app-brand-bg)', border: '#91d5ff' }
-                };
-                const style = colors[category] || colors['MEMBER'];
+                const isMember = category === 'Member';
+                const style = isMember
+                    ? { color: 'var(--app-brand-accent)', bg: 'var(--app-brand-bg)', border: '#91d5ff' }
+                    : { color: '#595959', bg: '#fafafa', border: '#d9d9d9' };
                 return (
                     <Tag style={{
                         color: style.color,
@@ -166,51 +187,77 @@ const EventDetails = () => {
             }
         },
         {
-            title: 'ELIGIBLE',
-            key: 'cpdEligible',
+            title: 'STATUS',
+            dataIndex: 'status',
+            key: 'status',
             align: 'center',
-            render: (_, record) => (
-                record.cpdEligible ? <CheckCircleFilled className="cpd-eligible-icon" /> : <span>-</span>
-            )
+            render: (status) => {
+                const style = STATUS_TAG_STYLE[status] || STATUS_TAG_STYLE.pending;
+                return (
+                    <Tag style={{
+                        color: style.color,
+                        backgroundColor: style.bg,
+                        border: `1px solid ${style.border}`,
+                        borderRadius: '12px',
+                        padding: '0 10px',
+                        textTransform: 'capitalize',
+                    }}>
+                        {status}
+                    </Tag>
+                );
+            }
         },
         {
-            title: 'CPD STATUS',
-            key: 'cpdStatus',
+            title: 'PAYMENT',
+            dataIndex: 'paymentStatus',
+            key: 'paymentStatus',
             align: 'center',
-            render: (_, record) => (
-                <span className={`cpd-status ${record.cpdStatus.toLowerCase()}`}>
-                    {record.cpdStatus !== 'N/A' && <span style={{ fontSize: '16px', marginRight: '4px' }}>•</span>}
-                    {record.cpdStatus}
+            render: (paymentStatus, record) => (
+                <span style={{ textTransform: 'capitalize' }}>
+                    {paymentStatus}
+                    {record.amount != null ? ` · ${record.amount} ${(record.currency || '').toUpperCase()}` : ''}
                 </span>
             )
         },
         {
-            title: 'ATTENDANCE',
-            key: 'attendance',
+            title: 'REGISTERED',
+            dataIndex: 'registeredAt',
+            key: 'registeredAt',
             align: 'center',
-            render: (_, record) => (
-                <div style={{ display: 'flex', justifyContent: 'space-around', width: '160px', margin: '0 auto' }}>
-                    {['D1', 'D2', 'D3', 'D4'].map(day => (
-                        <div key={day} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                            <span style={{ fontSize: '10px', color: '#8c8c8c', marginBottom: '4px' }}>{day}</span>
-                            <Checkbox
-                                checked={record.attendance[day]}
-                                disabled={record.status !== 'Registered'}
-                                onChange={() => handleAttendanceChange(record.key, day)}
-                            />
-                        </div>
-                    ))}
-                </div>
-            )
+            render: (registeredAt) => (registeredAt ? dayjs(registeredAt).format('DD/MM/YYYY') : '-')
         }
     ];
 
     const filteredAttendees = attendees.filter(a => {
-        const matchesSearch = a.name.toLowerCase().includes(searchText.toLowerCase()) ||
-            a.membershipNo.includes(searchText);
+        const matchesSearch =
+            a.name.toLowerCase().includes(searchText.toLowerCase()) ||
+            String(a.membershipNo).toLowerCase().includes(searchText.toLowerCase());
         const matchesStatus = statusFilter === 'All' || a.status === statusFilter;
         return matchesSearch && matchesStatus;
     });
+
+    const eventTypeLabel = (eventTypeOptions || []).find(
+        (opt) => String(opt.value) === String(event?.eventTypeId),
+    )?.label || '-';
+    // Looked up live from the Venue lookup (rather than trusting the
+    // point-in-time `event.venue` snapshot string) so the address always
+    // reflects the venue's current record.
+    const selectedVenue = (venueOptions || []).find(
+        (v) => String(v.value) === String(event?.venueId),
+    ) || null;
+    const venueAddressDisplay = (() => {
+        const addr = selectedVenue?.venueAddress;
+        if (!addr) return '';
+        return (
+            addr.fullAddress ||
+            [addr.buildingOrHouse, addr.streetOrRoad, addr.areaOrTown, addr.countyCityOrPostCode, addr.country, addr.eircode]
+                .filter(Boolean)
+                .join(', ')
+        );
+    })();
+    const eventStatusKey = String(event?.status || 'draft').toLowerCase();
+    const eventStatusStyle = EVENT_STATUS_TAG_STYLE[eventStatusKey] || EVENT_STATUS_TAG_STYLE.draft;
+    const totalCosts = (event?.costs || []).reduce((sum, c) => sum + (Number(c.amount) || 0), 0);
 
     return (
         <div className="event-details-page hide-scroll-webkit">
@@ -219,115 +266,115 @@ const EventDetails = () => {
                 style={{}}
             >
                 <div className="event-details-container" style={{ padding: '0 34px' }}>
+                    <div className="event-details-title-row" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0 0 16px' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 12, minWidth: 0 }}>
+                            <Title level={4} style={{ margin: 0 }} ellipsis={{ tooltip: event?.title }}>
+                                {event?.title || (loadingEvent ? 'Loading…' : 'Event')}
+                            </Title>
+                            <Tag style={{
+                                color: eventStatusStyle.color,
+                                backgroundColor: eventStatusStyle.bg,
+                                border: `1px solid ${eventStatusStyle.border}`,
+                                borderRadius: '12px',
+                                padding: '0 10px',
+                            }}>
+                                {event?.status || 'Draft'}
+                            </Tag>
+                            <Tag color={event?.isActive !== false ? 'green' : 'default'}>
+                                {event?.isActive !== false ? 'Active' : 'Inactive'}
+                            </Tag>
+                        </div>
+                        <div style={{ display: 'flex', gap: 8 }}>
+                            <Button
+                                className="butn"
+                                icon={<CopyOutlined />}
+                                onClick={() => setIsCloneEventDrawerVisible(true)}
+                            >
+                                Clone Event
+                            </Button>
+                            <Button
+                                className="butn primary-btn"
+                                icon={<EditOutlined />}
+                                onClick={() => setIsEditEventDrawerVisible(true)}
+                            >
+                                Edit Event
+                            </Button>
+                        </div>
+                    </div>
                     <Row gutter={[24]} align="stretch">
                         <Col xs={24} lg={16}>
                             {/* BASIC INFORMATION SECTION */}
                             <div className="form-section" style={{ height: '100%', marginBottom: 0, padding: '24px' }}>
-                                <Row gutter={[24, 0]}>
-                                    {/* Row 1: Event Name */}
-                                    <Col span={24}>
-                                        <MyInput
-                                            label="Event Name"
-                                            value={eventData.eventName}
-                                            disabled
-                                        />
-                                    </Col>
+                                <Descriptions
+                                    bordered
+                                    size="small"
+                                    column={2}
+                                    labelStyle={{ width: '30%', fontWeight: 500 }}
+                                >
+                                    <Descriptions.Item label="Category">{event?.eventCategoryCode || '-'}</Descriptions.Item>
+                                    <Descriptions.Item label="Event Type">{eventTypeLabel}</Descriptions.Item>
+                                    <Descriptions.Item label="Start Date">{formatDateTime(event?.startDate) || '-'}</Descriptions.Item>
+                                    <Descriptions.Item label="End Date">{formatDateTime(event?.endDate) || '-'}</Descriptions.Item>
+                                    <Descriptions.Item label="Seat Limit">{event?.capacity != null ? event.capacity : '-'}</Descriptions.Item>
+                                    <Descriptions.Item label="Format">{event?.isVirtual ? 'Virtual' : 'In-person'}</Descriptions.Item>
+                                    <Descriptions.Item label="Venue" span={2}>
+                                        {event?.isVirtual ? 'Virtual' : (
+                                            <div>
+                                                <div>{selectedVenue?.label || event?.venue || '-'}</div>
+                                                {venueAddressDisplay && (
+                                                    <Text type="secondary" style={{ fontSize: '12px' }}>
+                                                        {venueAddressDisplay}
+                                                    </Text>
+                                                )}
+                                            </div>
+                                        )}
+                                    </Descriptions.Item>
+                                </Descriptions>
 
-                                    {/* Row 2: Date & Seat Limit */}
-                                    <Col xs={24} sm={12}>
-                                        <MyDatePicker1
-                                            label="Event Date"
-                                            value={eventData.eventDate}
-                                            format="DD/MM/YYYY"
-                                            disabled
-                                        />
-                                    </Col>
-                                    <Col xs={24} sm={12}>
-                                        <CustomSelect
-                                            label="Seat Limit"
-                                            value={eventData.seatLimit}
-                                            options={[{ label: '1000000', value: '1000000' }]}
-                                            disabled
-                                        />
-                                    </Col>
-
-                                    {/* Row 3: Venue & Address */}
-                                    <Col xs={24} sm={12}>
-                                        <MyInput
-                                            label="Venue Name"
-                                            value={eventData.venueName}
-                                            disabled
-                                        />
-                                    </Col>
-                                    <Col xs={24} sm={12}>
-                                        <MyInput
-                                            label="Address"
-                                            value={eventData.address}
-                                            disabled
-                                        />
-                                    </Col>
-
-                                    {/* Row 4: Description */}
-                                    <Col span={24}>
-                                        <MyInput
-                                            label="Description"
-                                            value={eventData.description}
-                                            type="textarea"
-                                            rows={2}
-                                            disabled
-                                        />
-                                    </Col>
-                                </Row>
+                                {/* Description (scrolls internally instead of spilling out) */}
+                                <div style={{ marginTop: 16 }}>
+                                    <Text type="secondary" style={{ fontSize: '13px', fontWeight: 500, display: 'block', marginBottom: 8 }}>Description</Text>
+                                    <div
+                                        className="event-description-display"
+                                        dangerouslySetInnerHTML={{ __html: event?.description || '<p>-</p>' }}
+                                    />
+                                </div>
                             </div>
                         </Col>
 
                         <Col xs={24} lg={8}>
-                            {/* CPD & ACCREDITATIONS SECTION */}
+                            {/* PRICING, ACCREDITATION & RECORD INFO SECTION */}
                             <div className="form-section" style={{ height: '100%', marginBottom: 0, padding: '24px' }}>
-                                <Row gutter={[0, 0]}>
-                                    {/* Row 1: Aligned with Event Name */}
-                                    <Col span={24}>
-                                        <MyInput
-                                            label="CPD Credits"
-                                            value={eventData.cpdCredits}
-                                            suffix="HRS"
-                                            disabled
-                                        />
-                                    </Col>
+                                <Descriptions
+                                    bordered
+                                    size="small"
+                                    column={1}
+                                    labelStyle={{ width: '45%', fontWeight: 500 }}
+                                >
+                                    <Descriptions.Item label="Member Price">{event?.memberPrice != null ? `€${event.memberPrice}` : '-'}</Descriptions.Item>
+                                    <Descriptions.Item label="Non-Member Price">{event?.nonMemberPrice != null ? `€${event.nonMemberPrice}` : '-'}</Descriptions.Item>
+                                    <Descriptions.Item label="CPD Credits">{event?.cpdCredits != null ? `${event.cpdCredits} HRS` : '-'}</Descriptions.Item>
+                                    <Descriptions.Item label="Accreditation Body">{event?.accreditationBody || '-'}</Descriptions.Item>
+                                    <Descriptions.Item label="Certification Type">{event?.certificationType || '-'}</Descriptions.Item>
+                                    <Descriptions.Item label="Total Costs">{totalCosts ? `€${totalCosts.toLocaleString()}` : '-'}</Descriptions.Item>
+                                    <Descriptions.Item label="Refund Policy">
+                                        {event?.refundPolicyDays != null
+                                            ? (event.refundPolicyDays === 0
+                                                ? 'No refunds'
+                                                : `Up to ${event.refundPolicyDays} day${event.refundPolicyDays === 1 ? '' : 's'} before event`)
+                                            : '-'}
+                                    </Descriptions.Item>
+                                    <Descriptions.Item label="Auto-Issue on Finish">
+                                        <Tag color={event?.autoIssueOnFinish ? "green" : "red"} style={{ borderRadius: '4px', fontSize: '12px', fontWeight: 600 }}>
+                                            {event?.autoIssueOnFinish ? "ENABLED" : "DISABLED"}
+                                        </Tag>
+                                    </Descriptions.Item>
+                                </Descriptions>
 
-                                    {/* Row 2: Aligned with Date & Seat Limit */}
-                                    <Col span={24}>
-                                        <MyInput
-                                            label="Accreditation Body"
-                                            value={eventData.accreditationBody}
-                                            disabled
-                                        />
-                                    </Col>
-
-                                    {/* Row 3: Aligned with Venue & Address */}
-                                    <Col span={24}>
-                                        <CustomSelect
-                                            label="Certification Type"
-                                            value={eventData.certificationType}
-                                            options={[{ label: 'Digital Certificate', value: 'Digital Certificate' }]}
-                                            disabled
-                                        />
-                                    </Col>
-
-                                    {/* Row 4: Aligned with Description (matching height/alignment) */}
-                                    <Col span={24}>
-                                        <div style={{ display: 'flex', flexDirection: 'column' }}>
-                                            <Text type="secondary" style={{ fontSize: '13px', fontWeight: 500, marginBottom: '8px' }}>Auto-Issue on Finish</Text>
-                                            <div style={{ height: '40px', display: 'flex', alignItems: 'center' }}>
-                                                <div style={{ width: '100%', display: 'flex', justifyContent: 'flex-end' }}>
-                                                    <Tag color={eventData.autoIssueOnFinish ? "green" : "red"} style={{ borderRadius: '4px', padding: '4px 12px', fontSize: '13px', fontWeight: 600 }}>
-                                                        {eventData.autoIssueOnFinish ? "ENABLED" : "DISABLED"}
-                                                    </Tag>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </Col>
-                                </Row>
+                                <div className="event-record-meta">
+                                    <div>Created by {event?.createdByEmail || '-'}{event?.createdAt ? ` on ${formatDateTime(event.createdAt)}` : ''}</div>
+                                    <div>Updated by {event?.updatedByEmail || '-'}{event?.updatedAt ? ` on ${formatDateTime(event.updatedAt)}` : ''}</div>
+                                </div>
                             </div>
                         </Col>
                     </Row>
@@ -353,12 +400,7 @@ const EventDetails = () => {
                             />
                         </div>
                         <div style={{ display: 'flex', backgroundColor: '#f3f4f6', padding: '4px', borderRadius: '8px', border: '1px solid #e5e7eb' }}>
-                            {[
-                                { label: 'All', value: 'All', count: attendees.length },
-                                { label: 'Registered', value: 'Registered', count: attendees.filter(a => a.status === 'Registered').length },
-                                { label: 'Cancelled', value: 'Cancelled', count: attendees.filter(a => a.status === 'Cancelled').length },
-                                { label: 'Refund', value: 'Refund', count: attendees.filter(a => a.status === 'Refund').length }
-                            ].map(item => (
+                            {REGISTRATION_STATUS_TABS.map(item => (
                                 <div
                                     key={item.value}
                                     onClick={() => setStatusFilter(item.value)}
@@ -374,7 +416,10 @@ const EventDetails = () => {
                                         transition: 'all 0.2s ease'
                                     }}
                                 >
-                                    {item.label} <span style={{ opacity: 0.6, marginLeft: '4px' }}>({item.count})</span>
+                                    {item.label}{' '}
+                                    <span style={{ opacity: 0.6, marginLeft: '4px' }}>
+                                        ({item.value === 'All' ? attendees.length : attendees.filter(a => a.status === item.value).length})
+                                    </span>
                                 </div>
                             ))}
                         </div>
@@ -383,14 +428,9 @@ const EventDetails = () => {
                             <Button
                                 className="butn primary-btn"
                                 onClick={handleCancelAttendance}
+                                disabled={!selectedRowKeys.length}
                             >
                                 Cancel Attendee
-                            </Button>
-                            <Button
-                                className="butn primary-btn"
-                                onClick={handleProcessRefund}
-                            >
-                                Process Refund
                             </Button>
                             <Button
                                 className="butn primary-btn"
@@ -406,6 +446,7 @@ const EventDetails = () => {
                         <MyTable
                             dataSource={filteredAttendees}
                             columns={columns}
+                            loading={loadingAttendees}
                             pagination={{ pageSize: 500 }}
                             rowSelection={{
                                 selectedRowKeys,
@@ -418,6 +459,25 @@ const EventDetails = () => {
                 <CreateAttendeeDrawer
                     open={isAttendeeDrawerVisible}
                     onClose={() => setIsAttendeeDrawerVisible(false)}
+                />
+
+                <CreateEventDrawer
+                    open={isEditEventDrawerVisible}
+                    onClose={() => {
+                        setIsEditEventDrawerVisible(false);
+                        loadEvent();
+                    }}
+                    onDeleted={() => {
+                        setIsEditEventDrawerVisible(false);
+                        navigate('/EventsSummary');
+                    }}
+                    eventId={eventId}
+                />
+
+                <CreateEventDrawer
+                    open={isCloneEventDrawerVisible}
+                    onClose={() => setIsCloneEventDrawerVisible(false)}
+                    cloneFromEventId={isCloneEventDrawerVisible ? eventId : undefined}
                 />
             </div>
         </div>

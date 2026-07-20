@@ -300,6 +300,7 @@ const Configuration = () => {
   const [branchesWithRegionData, setBranchesWithRegionData] = useState([]);
   const [searchTermStation, setSearchTermStation] = useState("");
   const [searchTermStudyLocation, setSearchTermStudyLocation] = useState("");
+  const [searchTermVenue, setSearchTermVenue] = useState("");
   const [searchTermRegion, setSearchTermRegion] = useState("");
 
   const groupedLookups = useMemo(() => {
@@ -435,6 +436,23 @@ const Configuration = () => {
     );
   }, [studyLocationRecords, searchTermStudyLocation]);
 
+  const venueRecords = useMemo(() => {
+    const lookupType = getLookupTypeRecordForDrawer("Venue", lookupsTypes);
+    return getLookupsForLookupType(lookupType, lookups);
+  }, [lookupsTypes, lookups]);
+
+  const filteredVenues = useMemo(() => {
+    if (!searchTermVenue.trim()) return venueRecords;
+    const term = searchTermVenue.toLowerCase().trim();
+    return venueRecords.filter(
+      (item) =>
+        (item.lookupname || "").toLowerCase().includes(term) ||
+        (item.code || "").toLowerCase().includes(term) ||
+        (item.DisplayName || "").toLowerCase().includes(term) ||
+        (item.venueAddress?.fullAddress || "").toLowerCase().includes(term),
+    );
+  }, [venueRecords, searchTermVenue]);
+
   const filteredRegions = useMemo(() => {
     const regionData = groupedLookups?.Region || [];
     if (!searchTermRegion.trim()) return regionData;
@@ -457,6 +475,8 @@ const Configuration = () => {
   const handleStudyLocationSearchChange = (e) =>
     setSearchTermStudyLocation(e.target.value);
   const clearStudyLocationSearch = () => setSearchTermStudyLocation("");
+  const handleVenueSearchChange = (e) => setSearchTermVenue(e.target.value);
+  const clearVenueSearch = () => setSearchTermVenue("");
 
   const handleRegionSearchChange = (e) => setSearchTermRegion(e.target.value);
   const clearRegionSearch = () => setSearchTermRegion("");
@@ -942,8 +962,10 @@ const Configuration = () => {
   const [addressSearchValue, setAddressSearchValue] = useState("");
   const [studyLocationAddressSearchValue, setStudyLocationAddressSearchValue] =
     useState("");
+  const [venueAddressSearchValue, setVenueAddressSearchValue] = useState("");
   const addressInputRef = useRef(null);
   const studyLocationAddressInputRef = useRef(null);
+  const venueAddressInputRef = useRef(null);
   const mapsLibraries = ["places", "maps"];
   const { isLoaded: isMapsLoaded } = useJsApiLoader({
     id: "google-map-script",
@@ -955,6 +977,7 @@ const Configuration = () => {
     drawerKey,
     searchBoxRef,
     setSearchValue,
+    addressFieldName = "worklocationAddress",
   ) => {
     const places = searchBoxRef.current?.getPlaces();
     if (!places || places.length === 0) return;
@@ -1013,8 +1036,8 @@ const Configuration = () => {
           ...prev,
           [drawerKey]: {
             ...prev[drawerKey],
-            worklocationAddress: {
-              ...prev[drawerKey]?.worklocationAddress,
+            [addressFieldName]: {
+              ...prev[drawerKey]?.[addressFieldName],
               buildingOrHouse: `${streetNumber} ${route}`.trim(),
               streetOrRoad: neighborhood,
               areaOrTown: town,
@@ -1034,6 +1057,7 @@ const Configuration = () => {
       "Station",
       addressInputRef,
       setAddressSearchValue,
+      "worklocationAddress",
     );
 
   const handleStudyLocationPlacesChanged = () =>
@@ -1041,6 +1065,15 @@ const Configuration = () => {
       "StudyLocation",
       studyLocationAddressInputRef,
       setStudyLocationAddressSearchValue,
+      "worklocationAddress",
+    );
+
+  const handleVenuePlacesChanged = () =>
+    handleLocationPlacesChanged(
+      "Venue",
+      venueAddressInputRef,
+      setVenueAddressSearchValue,
+      "venueAddress",
     );
   // ---- End Work Location Eircode Search ----
   const [membershipModal, setMembershipModal] = useState(false);
@@ -1111,6 +1144,7 @@ const Configuration = () => {
     counties: false,
     Countries: false,
     StudyLocation: false,
+    Venue: false,
     Provinces: false,
     Cities: false,
     PostCode: false,
@@ -1161,6 +1195,7 @@ const Configuration = () => {
     Districts: false,
     Divisions: false,
     StudyLocation: false,
+    Venue: false,
     Station: false,
     ContactType: false,
     LookupType: false,
@@ -1861,6 +1896,24 @@ const Configuration = () => {
       officer: null,
       officerLabel: "",
       worklocationAddress: {
+        eircode: "",
+        buildingOrHouse: "",
+        streetOrRoad: "",
+        areaOrTown: "",
+        countyCityOrPostCode: "",
+        country: "",
+        fullAddress: "",
+      },
+    },
+    Venue: {
+      lookuptypeId: "",
+      DisplayName: "",
+      lookupname: "",
+      code: "",
+      userid: "67f3f9d812b014a0a7a94081",
+      isactive: true,
+      isDeleted: false,
+      venueAddress: {
         eircode: "",
         buildingOrHouse: "",
         streetOrRoad: "",
@@ -3109,6 +3162,122 @@ const Configuration = () => {
       ),
     },
   ];
+
+  const columnVenues = [
+    {
+      title: "Code",
+      dataIndex: "code",
+      key: "code",
+      sorter: (a, b) => (a.code || "").localeCompare(b.code || ""),
+      filterDropdown: createFilterDropdown(
+        venueRecords,
+        (record) => record.code,
+      ),
+      onFilter: (value, record) => (record.code || "").toString() === value,
+      filterIcon: (filtered) => (
+        <SearchOutlined style={{ color: filtered ? "var(--app-brand-accent)" : undefined }} />
+      ),
+    },
+    {
+      title: "Venue Name",
+      dataIndex: "lookupname",
+      key: "lookupname",
+      sorter: (a, b) => (a.lookupname || "").localeCompare(b.lookupname || ""),
+      filterDropdown: createFilterDropdown(
+        venueRecords,
+        (record) => record.lookupname,
+      ),
+      onFilter: (value, record) =>
+        (record.lookupname || "").toString() === value,
+      filterIcon: (filtered) => (
+        <SearchOutlined style={{ color: filtered ? "var(--app-brand-accent)" : undefined }} />
+      ),
+    },
+    {
+      title: "Display Name",
+      dataIndex: "DisplayName",
+      key: "DisplayName",
+      sorter: (a, b) =>
+        (a.DisplayName || "").localeCompare(b.DisplayName || ""),
+      filterDropdown: createFilterDropdown(
+        venueRecords,
+        (record) => record.DisplayName,
+      ),
+      onFilter: (value, record) =>
+        (record.DisplayName || "").toString() === value,
+      filterIcon: (filtered) => (
+        <SearchOutlined style={{ color: filtered ? "var(--app-brand-accent)" : undefined }} />
+      ),
+    },
+    {
+      title: "Address",
+      key: "venueAddress",
+      render: (_, record) => {
+        const addr = record?.venueAddress;
+        if (!addr) return "-";
+        return (
+          [
+            addr.buildingOrHouse,
+            addr.streetOrRoad,
+            addr.areaOrTown,
+            addr.countyCityOrPostCode,
+            addr.country,
+            addr.eircode,
+          ]
+            .filter(Boolean)
+            .join(", ") || "-"
+        );
+      },
+    },
+    {
+      title: "Active",
+      render: (_, record) => (
+        <Checkbox disabled={isDisable} checked={record?.isactive}></Checkbox>
+      ),
+    },
+    {
+      title: (
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
+          <FaRegCircleQuestion size={16} style={{ marginRight: "8px" }} />
+          Action
+        </div>
+      ),
+      key: "action",
+      align: "center",
+      render: (_, record) => (
+        <Space size="middle">
+          <FaEdit
+            size={16}
+            style={{ marginRight: "10px", cursor: "pointer" }}
+            onClick={() => loadLookupForEdit("Venue", record)}
+          />
+          <AiFillDelete
+            size={16}
+            style={{ cursor: "pointer" }}
+            onClick={() => {
+              MyConfirm({
+                title: "Confirm Deletion",
+                message: "Do You Want To Delete This Item?",
+                onConfirm: async () => {
+                  await deleteFtn("/lookup/", { id: record?._id }, () => {
+                    dispatch(resetLookups());
+                    dispatch(getAllLookups());
+                  });
+                },
+              });
+            }}
+          />
+        </Space>
+      ),
+    },
+  ];
+
   const columnDivisions = [
     {
       title: "Code",
@@ -8288,6 +8457,280 @@ const Configuration = () => {
         </div>
       </MyDrawer>
       <MyDrawer
+        title="Venue"
+        open={drawerOpen?.Venue}
+        isLoading={lookupDetailLoading && editingLookupDrawer === "Venue"}
+        isPagination={true}
+        onClose={() => openCloseDrawerFtn("Venue")}
+        add={() => {
+          if (!validateForm("Venue")) return;
+          insertDataFtn(
+            `/lookup`,
+            getLookupDrawerPayload("Venue"),
+            "Data inserted successfully:",
+            "Data did not insert:",
+            () => {
+              resetCounteries("Venue", () => dispatch(getAllLookups()));
+            },
+          );
+          dispatch(getAllLookups());
+        }}
+        isEdit={isUpdateRec?.Venue}
+        update={async () => {
+          if (!validateForm("Venue")) return;
+          await updateFtn(
+            "/lookup",
+            getLookupDrawerPayload("Venue"),
+            () => resetCounteries("Venue", () => dispatch(getAllLookups())),
+          );
+          dispatch(getAllLookups());
+          IsUpdateFtn("Venue", false);
+        }}
+      >
+        <div className="drawer-main-cntainer p-4 me-2 ms-2">
+          <div className="mb-4 pb-4">
+            <Row gutter={24}>
+              <Col span={12}>
+                <MyInput
+                  label="Code"
+                  name="code"
+                  value={drawerIpnuts?.Venue?.code}
+                  onChange={(val) =>
+                    drawrInptChng("Venue", "code", val.target.value)
+                  }
+                  disabled={isDisable}
+                  hasError={!!errors?.Venue?.code}
+                  errorMessage={errors?.Venue?.code}
+                  required
+                />
+              </Col>
+              <Col span={12}>
+                <MyInput
+                  label="Venue Name"
+                  name="lookupname"
+                  value={drawerIpnuts?.Venue?.lookupname}
+                  onChange={(val) =>
+                    drawrInptChng("Venue", "lookupname", val.target.value)
+                  }
+                  disabled={isDisable}
+                  hasError={!!errors?.Venue?.lookupname}
+                  errorMessage={errors?.Venue?.lookupname}
+                  required
+                />
+              </Col>
+            </Row>
+
+            <Row gutter={24}>
+              <Col span={12}>
+                <MyInput
+                  label="Display Name"
+                  name="DisplayName"
+                  value={drawerIpnuts?.Venue?.DisplayName}
+                  onChange={(val) =>
+                    drawrInptChng("Venue", "DisplayName", val.target.value)
+                  }
+                  disabled={isDisable}
+                />
+              </Col>
+              <Col span={12}>
+                <Checkbox
+                  disabled={isDisable}
+                  checked={drawerIpnuts?.Venue?.isactive}
+                  onChange={(e) =>
+                    drawrInptChng("Venue", "isactive", e.target.checked)
+                  }
+                >
+                  Active
+                </Checkbox>
+              </Col>
+            </Row>
+
+            <Row gutter={24} style={{ marginTop: 16 }}>
+              <Col span={24}>
+                <div className="mt-1 mb-2">
+                  <h4
+                    style={{
+                      fontSize: "15px",
+                      fontWeight: 600,
+                      color: "#1a1a1a",
+                      margin: 0,
+                      paddingBottom: "4px",
+                      borderBottom: "1px solid #f0f0f0",
+                    }}
+                  >
+                    Address
+                  </h4>
+                </div>
+              </Col>
+
+              <Col span={24}>
+                {isMapsLoaded && (
+                  <StandaloneSearchBox
+                    onLoad={(ref) => (venueAddressInputRef.current = ref)}
+                    onPlacesChanged={handleVenuePlacesChanged}
+                  >
+                    <MyInput
+                      label="Search by Address or Eircode"
+                      name="venueAddressSearch"
+                      placeholder="Enter Eircode (e.g., D01X4X0) or address"
+                      disabled={isDisable}
+                      value={venueAddressSearchValue}
+                      onChange={(e) =>
+                        setVenueAddressSearchValue(e.target.value)
+                      }
+                    />
+                  </StandaloneSearchBox>
+                )}
+              </Col>
+
+              <Col xs={24} md={12}>
+                <MyInput
+                  label="Address Line 1 (Building or House)"
+                  name="buildingOrHouse"
+                  value={
+                    drawerIpnuts?.Venue?.venueAddress?.buildingOrHouse
+                  }
+                  onChange={(val) =>
+                    drawrInptChng(
+                      "Venue",
+                      "venueAddress.buildingOrHouse",
+                      val.target.value,
+                    )
+                  }
+                  disabled={isDisable}
+                />
+              </Col>
+
+              <Col xs={24} md={12}>
+                <MyInput
+                  label="Address Line 2 (Street or Road)"
+                  name="streetOrRoad"
+                  value={drawerIpnuts?.Venue?.venueAddress?.streetOrRoad}
+                  onChange={(val) =>
+                    drawrInptChng(
+                      "Venue",
+                      "venueAddress.streetOrRoad",
+                      val.target.value,
+                    )
+                  }
+                  disabled={isDisable}
+                />
+              </Col>
+
+              <Col xs={24} md={12}>
+                <MyInput
+                  label="Address Line 3 (Area or Town)"
+                  name="areaOrTown"
+                  value={drawerIpnuts?.Venue?.venueAddress?.areaOrTown}
+                  onChange={(val) =>
+                    drawrInptChng(
+                      "Venue",
+                      "venueAddress.areaOrTown",
+                      val.target.value,
+                    )
+                  }
+                  disabled={isDisable}
+                />
+              </Col>
+
+              <Col xs={24} md={12}>
+                <MyInput
+                  label="Address Line 4 (County, City or Postcode)"
+                  name="countyCityOrPostCode"
+                  value={
+                    drawerIpnuts?.Venue?.venueAddress?.countyCityOrPostCode
+                  }
+                  onChange={(val) =>
+                    drawrInptChng(
+                      "Venue",
+                      "venueAddress.countyCityOrPostCode",
+                      val.target.value,
+                    )
+                  }
+                  disabled={isDisable}
+                />
+              </Col>
+
+              <Col xs={24} md={12}>
+                <MyInput
+                  label="Eircode"
+                  name="eircode"
+                  placeholder="Enter Eircode (e.g., D01X4X0)"
+                  value={drawerIpnuts?.Venue?.venueAddress?.eircode}
+                  onChange={(val) =>
+                    drawrInptChng(
+                      "Venue",
+                      "venueAddress.eircode",
+                      val.target.value,
+                    )
+                  }
+                  disabled={isDisable}
+                />
+              </Col>
+
+              <Col xs={24} md={12}>
+                <CustomSelect
+                  label="Country"
+                  name="country"
+                  value={drawerIpnuts?.Venue?.venueAddress?.country}
+                  options={countriesOptions}
+                  onChange={(val) =>
+                    drawrInptChng(
+                      "Venue",
+                      "venueAddress.country",
+                      val.target.value,
+                    )
+                  }
+                  disabled={isDisable}
+                />
+              </Col>
+            </Row>
+          </div>
+
+          <div className="mt-4 config-tbl-container">
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                marginBottom: "12px",
+              }}
+            >
+              <h6 className="m-0 text-primary">Existing Venues</h6>
+              <MyInput
+                placeholder="Search venues..."
+                style={{ width: 250 }}
+                prefix={<SearchOutlined />}
+                value={searchTermVenue}
+                onChange={handleVenueSearchChange}
+                onClear={clearVenueSearch}
+                allowClear
+              />
+            </div>
+            <Table
+              pagination={true}
+              columns={columnVenues}
+              dataSource={filteredVenues}
+              className="drawer-tbl"
+              size="small"
+              scroll={{ x: "max-content" }}
+              loading={lookupsloading}
+              rowKey={(record, index) =>
+                record._id || record.id || record.key || index
+              }
+              rowClassName={(record, index) =>
+                index % 2 !== 0 ? "odd-row" : "even-row"
+              }
+              rowSelection={{
+                type: selectionType,
+                ...rowSelection,
+              }}
+              bordered
+            />
+          </div>
+        </div>
+      </MyDrawer>
+      <MyDrawer
         title="Contact Types"
         open={drawerOpen?.ContactType}
         isPagination={true}
@@ -8739,7 +9182,7 @@ const Configuration = () => {
         add={async () => {
           await insertDataFtn(
             `/lookup`,
-            drawerIpnuts?.Lookup,
+            getLookupDrawerPayload("Lookup"),
             "Data inserted successfully",
             "Data did not insert",
             () =>
@@ -8749,7 +9192,7 @@ const Configuration = () => {
         }}
         isEdit={isUpdateRec?.Lookup}
         update={async () => {
-          await updateFtn("/lookup", drawerIpnuts?.Lookup, () =>
+          await updateFtn("/lookup", getLookupDrawerPayload("Lookup"), () =>
             resetCounteries("Lookup", () => dispatch(getAllLookups())),
           );
           dispatch(getAllLookups());
@@ -8940,7 +9383,7 @@ const Configuration = () => {
           if (!validateForm("StandardLookup")) return;
           await insertDataFtn(
             `/lookup`,
-            drawerIpnuts?.StandardLookup,
+            getLookupDrawerPayload("StandardLookup"),
             "Data inserted successfully",
             "Data did not insert",
             () =>
@@ -8952,7 +9395,7 @@ const Configuration = () => {
         }}
         update={async () => {
           if (!validateForm("StandardLookup")) return;
-          await updateFtn("/lookup", drawerIpnuts?.StandardLookup, () =>
+          await updateFtn("/lookup", getLookupDrawerPayload("StandardLookup"), () =>
             resetCounteries("StandardLookup", () => dispatch(getAllLookups())),
           );
           dispatch(getAllLookups());

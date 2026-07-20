@@ -5,7 +5,8 @@ import {
     Col,
     Switch,
     TimePicker,
-    Input
+    Input,
+    Checkbox
 } from 'antd';
 import { EnvironmentOutlined, PlusOutlined, DeleteOutlined, LinkOutlined } from '@ant-design/icons';
 import MyDrawer from '../common/MyDrawer';
@@ -24,6 +25,9 @@ const ScheduleManagementDrawer = ({
     onAddSessionToDay,
     onRemoveSession,
     allowAddDay = false,
+    multipleDayEvent = false,
+    onMultipleDayEventChange,
+    multipleDayEventDisabled = false,
 }) => {
     const headerActions = (
         <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
@@ -55,6 +59,16 @@ const ScheduleManagementDrawer = ({
             rootClassName="hide-scroll-webkit"
         >
             <div className="schedule-management-container hide-scroll-webkit">
+                <div className="card-row" style={{ marginBottom: '16px' }}>
+                    <Checkbox
+                        checked={multipleDayEvent}
+                        onChange={(e) => onMultipleDayEventChange?.(e.target.checked)}
+                        disabled={multipleDayEventDisabled}
+                    >
+                        Multiple Day Event
+                    </Checkbox>
+                </div>
+
                 {scheduleData.map((day) => (
                     <div key={day.id} className="day-card">
                         <div className="day-card-header">

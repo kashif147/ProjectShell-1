@@ -650,7 +650,7 @@ const TableComponent = ({
           />
           {location?.pathname === "/BatchMemberSummary" && (
             <MdKeyboard
-              style={{ fontSize: "15px", color: "#595959" }}
+              style={{ fontSize: "15px", color: "var(--theme-text-muted)" }}
               onClick={() => {
                 setmanualPayment(!isBatchmemberOpen);
                 handleRowClick(record, index);

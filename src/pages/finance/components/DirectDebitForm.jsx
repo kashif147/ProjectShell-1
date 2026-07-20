@@ -167,7 +167,7 @@ const DirectDebitForm = ({ initialData, onSubmit, creditorName: creditorNameProp
     },
     authDesc: {
       fontSize: "14px",
-      color: "#6b7280", // gray-500
+      color: "var(--theme-text-muted)", // gray-500
       margin: 0,
       lineHeight: 1.6,
     },
@@ -245,7 +245,7 @@ const DirectDebitForm = ({ initialData, onSubmit, creditorName: creditorNameProp
                 placeholder="Street, City, Postal Code"
               />
               <p
-                style={{ marginTop: "4px", fontSize: "12px", color: "#6b7280" }}
+                style={{ marginTop: "4px", fontSize: "12px", color: "var(--theme-text-muted)" }}
               >
                 Pre-populated from member file.
               </p>
@@ -305,7 +305,7 @@ const DirectDebitForm = ({ initialData, onSubmit, creditorName: creditorNameProp
                 </select>
               </div>
               <p
-                style={{ marginTop: "4px", fontSize: "12px", color: "#6b7280" }}
+                style={{ marginTop: "4px", fontSize: "12px", color: "var(--theme-text-muted)" }}
               >
                 Branch address will be populated automatically based on
                 selection.
@@ -329,7 +329,7 @@ const DirectDebitForm = ({ initialData, onSubmit, creditorName: creditorNameProp
                   overflow: "hidden",
                   backgroundColor: "#f9fafb", // bg-gray-50
                   resize: "none",
-                  color: "#6b7280",
+                  color: "var(--theme-text-muted)",
                 }}
               />
             </div>

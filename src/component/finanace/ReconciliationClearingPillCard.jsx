@@ -63,7 +63,7 @@ function getTheme(code) {
     CLEARING_CHIP_THEMES[String(code)] || {
       label: code,
       icon: <AppstoreOutlined />,
-      iconColor: "#64748b",
+      iconColor: "var(--theme-text-muted)",
       iconBg: "var(--theme-section-bg)",
     }
   );
@@ -212,7 +212,7 @@ function ReconciliationClearingChip({
               display: "block",
               fontSize: 11,
               fontWeight: 500,
-              color: "#64748b",
+              color: "var(--theme-text-muted)",
               lineHeight: 1.2,
               marginBottom: 2,
               overflow: "hidden",

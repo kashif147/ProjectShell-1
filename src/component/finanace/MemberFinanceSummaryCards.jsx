@@ -163,7 +163,7 @@ const MemberFinanceSummaryCards = ({
             alignItems: "center",
             gap: "4px 10px",
             fontSize: 12,
-            color: "#595959",
+            color: "var(--theme-text-muted)",
             lineHeight: 1.4,
           }}
         >

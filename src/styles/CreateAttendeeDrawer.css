@@ -51,7 +51,7 @@
 
 .day-date {
     font-size: 12px;
-    color: #6b7280;
+    color: var(--theme-text-muted);
 }
 
 .day-price {
@@ -89,7 +89,7 @@
 .summary-table-label {
     font-size: 12px;
     font-weight: 700;
-    color: #64748b;
+    color: var(--theme-text-muted);
 }
 
 .summary-table-value {

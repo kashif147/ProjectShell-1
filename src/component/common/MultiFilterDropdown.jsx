@@ -97,7 +97,7 @@ const MultiFilterDropdown = ({
                 <div style={{ marginBottom: "8px" }}>
                   {warningMessage.replace("⚠️ ", "")}
                 </div>
-                <div style={{ fontSize: "12px", color: "#8c8c8c", fontStyle: "italic" }}>
+                <div style={{ fontSize: "12px", color: "var(--theme-text-muted)", fontStyle: "italic" }}>
                   {isGeoFilter
                     ? "Try adjusting or clearing other Region, Branch, or Work Location filters."
                     : "No data available for the selected criteria."}
@@ -146,7 +146,7 @@ const MultiFilterDropdown = ({
                 <div style={{ marginBottom: "8px" }}>
                   No options returned for {label} with the current filter combination.
                 </div>
-                <div style={{ fontSize: "12px", color: "#8c8c8c", fontStyle: "italic" }}>
+                <div style={{ fontSize: "12px", color: "var(--theme-text-muted)", fontStyle: "italic" }}>
                   Try adjusting Region, Branch, or Work Location selections.
                 </div>
               </div>
@@ -316,7 +316,7 @@ style.innerHTML = `
   }
 
   .filter-button1.disabled-state .filter-label {
-    color: #595959;
+    color: var(--theme-text-muted);
   }
 
   .filter-button1 .red-badge.ant-badge {
@@ -352,7 +352,7 @@ style.innerHTML = `
   }
 
   .filter-button1.disabled-state .dropdown-icon {
-    color: #8c8c8c;
+    color: var(--theme-text-muted);
   }
 
   .filter-dropdown-menu {

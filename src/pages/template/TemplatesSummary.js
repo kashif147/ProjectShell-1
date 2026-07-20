@@ -162,7 +162,7 @@ const TemplatesSummary = () => {
           <div style={{ fontWeight: 600, marginBottom: 2 }}>
             {record.templateName}
           </div>
-          <div style={{ color: "#6b7280" }}>{record.description}</div>
+          <div style={{ color: "var(--theme-text-muted)" }}>{record.description}</div>
         </div>
       ),
     },
@@ -211,7 +211,7 @@ const TemplatesSummary = () => {
           <div style={{ fontWeight: 600, marginBottom: 2 }}>
             {record.updatedBy}
           </div>
-          <div style={{ color: "#6b7280" }}>{record.lastUpdated}</div>
+          <div style={{ color: "var(--theme-text-muted)" }}>{record.lastUpdated}</div>
         </div>
       ),
     },

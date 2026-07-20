@@ -2126,7 +2126,7 @@ const TemplateConfiguration = () => {
             style={{
               color:
                 generatedFile.action === "no_changes"
-                  ? "#8c8c8c"
+                  ? "var(--theme-text-muted)"
                   : generatedFile.action === "metadata_updated_only"
                     ? "#faad14"
                     : "#389e0d",
@@ -2869,7 +2869,7 @@ const TemplateConfiguration = () => {
         style={{ top: 5 }}
         styles={{
           header: {
-            background: "#2f6bff",
+            background: "var(--theme-color-primary)",
             borderBottom: "none",
             padding: "16px 24px",
             borderRadius: "8px 8px 0 0",

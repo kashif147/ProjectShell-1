@@ -56,7 +56,7 @@
 .section-title {
   font-size: 12px;
   font-weight: 600;
-  color: #8c8c8c;
+  color: var(--theme-text-muted);
   letter-spacing: 0.5px;
   margin: 0 0 8px 0;
   text-transform: uppercase;
@@ -116,7 +116,7 @@
 
 .cancel-event-description {
   font-size: 13px;
-  color: #8c8c8c;
+  color: var(--theme-text-muted);
   margin: 0;
   line-height: 1.5;
 }
@@ -183,7 +183,7 @@
 
 .cost-period {
   font-size: 14px;
-  color: #8c8c8c;
+  color: var(--theme-text-muted);
   margin-left: 4px;
 }
 
@@ -266,4 +266,25 @@
   .cancel-event-btn {
     width: 100%;
   }
+}
+
+/* Description rich text editor - defaults to ~4 visible lines, grows with content */
+.event-description-editor {
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.event-description-editor .ql-toolbar.ql-snow {
+  border-color: #ced4da;
+  border-radius: 6px 6px 0 0;
+}
+
+.event-description-editor .ql-container.ql-snow {
+  border-color: #ced4da;
+  border-radius: 0 0 6px 6px;
+  font-size: 14px;
+}
+
+.event-description-editor .ql-editor {
+  min-height: 96px;
 }

@@ -310,6 +310,12 @@ export const buildLookupApiPayload = (formValues = {}) => {
     );
   }
 
+  if (Object.prototype.hasOwnProperty.call(formValues, "venueAddress")) {
+    payload.venueAddress = normalizeWorklocationAddressForApi(
+      formValues.venueAddress,
+    );
+  }
+
   delete payload.officerLabel;
   delete payload.lookuptypeName;
   delete payload._id;
@@ -361,6 +367,12 @@ export const mapLookupToFormValues = (record, lookupsTypes = []) => {
   if (Object.prototype.hasOwnProperty.call(normalized, "worklocationAddress")) {
     mapped.worklocationAddress = getWorklocationAddressFormValues(
       normalized.worklocationAddress,
+    );
+  }
+
+  if (Object.prototype.hasOwnProperty.call(normalized, "venueAddress")) {
+    mapped.venueAddress = getWorklocationAddressFormValues(
+      normalized.venueAddress,
     );
   }
 

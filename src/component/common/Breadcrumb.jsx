@@ -397,7 +397,8 @@ const Breadcrumb = () => {
       page: "Event Details",
       moduleIcon: "📅",
       pageIcon: "📅",
-      recordIdField: "eventId",
+      // No recordIdField: EventDetails passes a human-readable event title via
+      // location.state.recordName instead of showing the raw eventId.
     },
     "/Attendees": {
       module: "Events",
@@ -860,7 +861,7 @@ const Breadcrumb = () => {
       Finance: "/onlinePayment",
       Reports: "/Reports",
       "Year-End Renewal": "/YearEndRenewal",
-      Events: "/EventsDashboard",
+      Events: "/EventsSummary",
       Settings: "/Configuration",
       Courses: "/Courses",
       "Professional Development": "/ProfessionalDevelopment",
@@ -1126,7 +1127,7 @@ const Breadcrumb = () => {
           <span style={{ marginRight: 4 }}>📄</span>
           <span style={{ fontWeight: 600 }}>{recordId}</span>
           {isBatchPage && batchId && (
-            <span style={{ color: "#64748b", fontSize: "12px" }}>({batchId.slice(-6).toUpperCase()})</span>
+            <span style={{ color: "var(--theme-text-muted)", fontSize: "12px" }}>({batchId.slice(-6).toUpperCase()})</span>
           )}
         </span>
       ),

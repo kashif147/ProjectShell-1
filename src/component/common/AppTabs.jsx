@@ -81,6 +81,7 @@ const DuplicateMembers = lazy(() => import("../profile/DuplicateMembers"));
 const SubscriptionHistoryDetail = lazy(
   () => import("../common/SubscriptionHistoryDetail"),
 );
+const ProfileEventsTab = lazy(() => import("../event/ProfileEventsTab"));
 
 /** Events ("16") and Claims ("7") are overflow-only, not shown on first load. */
 const staticTabKeys = ["1", "2", "4", "5", "6", "3"];
@@ -917,7 +918,9 @@ function AppTabs({
     {
       key: "16",
       label: "Events",
-      children: <div>Events</div>,
+      children: (
+        <ProfileEventsTab profileId={profileDetails?._id || profileDetails?.id} />
+      ),
     },
     { key: "7", label: "Claims", children: <ClaimsById /> },
     { key: "8", label: "Roster", children: <Roster /> },

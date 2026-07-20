@@ -1,5 +1,5 @@
 .event-details-page {
-    padding: 24px;
+    padding: 8px 24px 24px;
     background-color: var(--app-page-bg, #f8f9f9);
     height: calc(100vh - 64px);
     overflow-y: auto;
@@ -110,7 +110,7 @@
 .attendance-header {
     text-align: center;
     font-size: 11px;
-    color: #8c8c8c;
+    color: var(--theme-text-muted);
 }
 
 .attendance-checkbox {
@@ -126,6 +126,41 @@
 .hide-scrollbar::-webkit-scrollbar,
 .hide-scroll-webkit::-webkit-scrollbar {
     display: none;
+}
+
+.event-description-display {
+    min-height: 40px;
+    padding: 8px 12px;
+    background-color: #f5f5f5;
+    border: 1px solid #d9d9d9;
+    border-radius: 6px;
+    color: rgba(0, 0, 0, 0.88);
+    font-size: 14px;
+    line-height: 1.5;
+    white-space: normal;
+    word-wrap: break-word;
+    overflow-wrap: anywhere;
+}
+
+.event-description-display * {
+    max-width: 100%;
+}
+
+.event-record-meta {
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px solid #f0f0f0;
+    font-size: 12px;
+    color: var(--theme-text-muted, #8c8c8c);
+    line-height: 1.6;
+}
+
+.event-description-display p {
+    margin: 0 0 8px;
+}
+
+.event-description-display p:last-child {
+    margin-bottom: 0;
 }
 
 .hide-scrollbar,

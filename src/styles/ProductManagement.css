@@ -923,6 +923,14 @@
   font-size: 12px;
 }
 
+.product-description-preview {
+  max-width: 260px;
+  white-space: normal;
+  word-wrap: break-word;
+  overflow-wrap: anywhere;
+  line-height: 1.4;
+}
+
 .stats-card {
   text-align: center;
   padding: 20px;

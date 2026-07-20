@@ -1,6 +1,6 @@
 export const PROFILE_INVALIDATE_EVENT = "profile-invalidate";
 
-/** @typedef {'finance' | 'subscription' | 'profile' | 'all'} ProfileInvalidateScope */
+/** @typedef {'finance' | 'subscription' | 'profile' | 'events' | 'all'} ProfileInvalidateScope */
 
 /**
  * Tell profile UI to refetch only what changed (no tab-switch polling).

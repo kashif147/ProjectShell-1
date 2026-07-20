@@ -18,22 +18,14 @@ const getAuthHeaders = () => ({
   "Content-Type": "application/json",
 });
 
-// Sort utility function
-const isWorkLocationLookupTypeName = (typeName) => {
-  const key = String(typeName || "")
+// Normalize a LookupType's display name before matching, so bucketing
+// survives however an admin actually typed it (casing/whitespace vary -
+// e.g. "Event Type" vs "Event type" vs "EVENT TYPE " all match the same way).
+const normalizeTypeKey = (typeName) =>
+  String(typeName || "")
     .trim()
     .toLowerCase()
     .replace(/\s+/g, "");
-  return key === "worklocation";
-};
-
-const isPaymentTypeLookupTypeName = (typeName) => {
-  const key = String(typeName || "")
-    .trim()
-    .toLowerCase()
-    .replace(/\s+/g, "");
-  return key === "paymenttype";
-};
 
 const sortArray = (array, key, order = 'asc') => {
   if (!Array.isArray(array)) return [];
@@ -106,7 +98,10 @@ const lookupsSlice = createSlice({
     youthForumOptions: [],
     countryOptions: [],
     provincesOption: [],
-    
+    eventTypeOptions: [],
+    venueOptions: [],
+    accreditationBodyOptions: [],
+
     selectedWorkLocations: [], // Adding selectedWorkLocations to Redux
 
     // Raw API response (optional - remove if not needed)
@@ -141,6 +136,9 @@ const lookupsSlice = createSlice({
       state.youthForumOptions = [];
       state.countryOptions = [];
       state.provincesOption = [];
+      state.eventTypeOptions = [];
+      state.venueOptions = [];
+      state.accreditationBodyOptions = [];
       state.selectedWorkLocations = [];
       state.lookups = [];
     },
@@ -173,73 +171,84 @@ const lookupsSlice = createSlice({
         state.youthForumOptions = [];
         state.countryOptions = [];
         state.provincesOption = []
+        state.eventTypeOptions = [];
+        state.venueOptions = [];
+        state.accreditationBodyOptions = [];
 
         if (Array.isArray(state.lookups)) {
           state.lookups.forEach((item) => {
             const lookuptype = getLookupTypeName(item);
+            const normalizedType = normalizeTypeKey(lookuptype);
             const optionItem = {
               value: getLookupId(item),
               key: getLookupId(item),
               label: getLookupName(item),
-              ...(isWorkLocationLookupTypeName(lookuptype)
+              ...(normalizedType === "worklocation"
                 ? { processSalaryDeduction: !!item.processSalaryDeduction }
                 : {}),
             };
-            switch (lookuptype) {
-              case "Title":
+            // Matched on a normalized (trimmed/lowercased/whitespace-stripped)
+            // key so bucketing survives however an admin actually typed the
+            // LookupType name when creating it via Configuration.
+            switch (normalizedType) {
+              case "title":
                 state.titleOptions.push(optionItem);
                 break;
-              case "Gender":
+              case "gender":
                 state.genderOptions.push(optionItem);
                 break;
-              case "workLocation":
-              case "Work Location":
+              case "worklocation":
                 state.workLocationOptions.push(optionItem);
                 break;
-              case "Grade":
+              case "grade":
                 state.gradeOptions.push(optionItem);
                 break;
-              case "Section":
+              case "section":
                 state.sectionOptions.push(optionItem);
                 break;
-              case "MembershipCategory":
+              case "membershipcategory":
                 state.membershipCategoryOptions.push(optionItem);
                 break;
-              case "Payment Type":
+              case "paymenttype":
                 state.paymentTypeOptions.push(optionItem);
                 break;
-              case "Branch":
+              case "branch":
                 state.branchOptions.push(optionItem);
                 break;
-              case "Region":
+              case "region":
                 state.regionOptions.push(optionItem);
                 break;
-              case "Secondary Section":
+              case "secondarysection":
                 state.secondarySectionOptions.push(optionItem);
                 break;
-              case "Study Location":
+              case "studylocation":
                 state.studyLocationOptions.push(optionItem);
                 break;
-              case "Discipline":
+              case "discipline":
                 state.disciplineOptions.push(optionItem);
                 break;
-              case "Youth Forum":
-              case "youthForum":
-              case "Youth forum":
+              case "eventtype":
+                state.eventTypeOptions.push(optionItem);
+                break;
+              case "accreditationbody":
+                state.accreditationBodyOptions.push(optionItem);
+                break;
+              case "venue":
+                state.venueOptions.push({
+                  ...optionItem,
+                  venueAddress: item.venueAddress || null,
+                });
+                break;
+              case "youthforum":
                 state.youthForumOptions.push(optionItem);
                 break;
-              case "Country":
+              case "country":
                 state.countryOptions.push(optionItem);
-                break
-              case "Provinces":
+                break;
+              case "provinces":
                 state.provincesOption.push(optionItem);
                 break;
               default:
-                if (isWorkLocationLookupTypeName(lookuptype)) {
-                  state.workLocationOptions.push(optionItem);
-                } else if (isPaymentTypeLookupTypeName(lookuptype)) {
-                  state.paymentTypeOptions.push(optionItem);
-                }
                 break;
             }
           });
@@ -304,6 +313,9 @@ const lookupsSlice = createSlice({
         state.secondarySectionOptions = sortArray(state.secondarySectionOptions, 'label', 'asc');
         state.studyLocationOptions = sortArray(state.studyLocationOptions, 'label', 'asc');
         state.disciplineOptions = sortArray(state.disciplineOptions, 'label', 'asc');
+        state.eventTypeOptions = sortArray(state.eventTypeOptions, 'label', 'asc');
+        state.venueOptions = sortArray(state.venueOptions, 'label', 'asc');
+        state.accreditationBodyOptions = sortArray(state.accreditationBodyOptions, 'label', 'asc');
         state.youthForumOptions = sortArray(state.youthForumOptions, 'label', 'asc');
         state.countryOptions = sortArray(state.countryOptions, 'label', 'asc');
         state.Provinces = sortArray(state.Provinces, 'label', 'asc');

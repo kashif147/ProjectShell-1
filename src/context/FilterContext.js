@@ -105,6 +105,7 @@ export const FilterProvider = ({ children }) => {
     paymentTypeOptions,
     genderOptions,
     sectionOptions,
+    eventTypeOptions,
     lookups: lookupsRaw,
     lookupsloading,
   } = useSelector((state) => state.lookups);
@@ -832,7 +833,14 @@ export const FilterProvider = ({ children }) => {
         "Stakeholder",
         "Priority",
       ],
-      Events: ["Event", "Event Type", "Event Date"],
+      Events: [
+        "Event",
+        "Event Type",
+        "Event Date",
+        "Event Status",
+        "Event Category",
+        "Venue",
+      ],
       MembershipDashboard: [
         "Membership Category",
         "Grade",
@@ -973,7 +981,14 @@ export const FilterProvider = ({ children }) => {
     OnlinePayment: ["Membership Status", "Payment Status"],
     Communication: ["Grade", "Work Location"],
     Cases: ["Incident Date", "Case Type", "Stakeholder", "Priority"],
-    Events: ["Event", "Event Type", "Event Date"],
+    Events: [
+      "Event",
+      "Event Type",
+      "Event Date",
+      "Event Status",
+      "Event Category",
+      "Venue",
+    ],
     Attendees: [
       "Event",
       "Event Type",
@@ -1381,6 +1396,18 @@ export const FilterProvider = ({ children }) => {
         },
         "Event Date": {
           operator: "between",
+          selectedValues: [],
+        },
+        "Event Status": {
+          operator: "==",
+          selectedValues: [],
+        },
+        "Event Category": {
+          operator: "==",
+          selectedValues: [],
+        },
+        Venue: {
+          operator: "==",
           selectedValues: [],
         },
       },
@@ -2306,7 +2333,11 @@ export const FilterProvider = ({ children }) => {
       "Case Type": ["", "General", "Legal", "Financial", "Other"],
       Priority: ["", "Low", "Medium", "High", "Critical"],
       Stakeholder: ["", "Internal", "External", "Partner"],
-      "Event Type": ["", "Internal", "Workshop", "External"],
+      "Event Type":
+        lookupsloading && !eventTypeOptions?.length
+          ? ["Loading..."]
+          : ["", ...getLookupOptions(eventTypeOptions || [])],
+      "Event Status": ["", "Draft", "Published", "Cancelled", "Completed"],
       Status: ["", "Active", "Planning", "Review", "Canceled"],
       "CN Status": ["", "Draft", "Approved", "Cancelled", "Posted"],
       "JA Status": ["", "Draft", "Approved", "Cancelled"],
@@ -2331,13 +2362,7 @@ export const FilterProvider = ({ children }) => {
       "Member / Application No": [],
       "Full Name": [],
       Phone: [],
-      Event: [
-        "",
-        "Annual Nursing Conference",
-        "Advanced Clinical Skills",
-        "Infection Control Essentials",
-        "Leadership Forum",
-      ],
+      Event: [],
       "Registration Status": [
         "",
         "Registered",
@@ -2439,6 +2464,7 @@ export const FilterProvider = ({ children }) => {
     gradeOptions,
     categoryData,
     paymentTypeOptions,
+    eventTypeOptions,
     genderOptions,
     sectionOptions,
     filteredWLOptions,

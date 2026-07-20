@@ -4394,7 +4394,9 @@ function ApplicationMgtDrawer({
           <div className="section-card" id="application-form-personal">
             <SectionHeader
               icon={
-                <UserOutlined style={{ color: "#2f6bff", fontSize: "16px" }} />
+                <UserOutlined
+                  style={{ color: "var(--app-form-icon-blue)", fontSize: "16px" }}
+                />
               }
               title="Personal Information"
               subTitle="Please provide your details as they appear on your official documents."
@@ -4501,7 +4503,7 @@ function ApplicationMgtDrawer({
             <SectionHeader
               icon={
                 <EnvironmentOutlined
-                  style={{ color: "green", fontSize: "16px" }}
+                  style={{ color: "var(--app-form-icon-green)", fontSize: "16px" }}
                 />
               }
               title="Correspondence Details"
@@ -4697,7 +4699,9 @@ function ApplicationMgtDrawer({
           <div className="section-card" id="application-form-contact">
             <SectionHeader
               icon={
-                <MailOutlined style={{ color: "#5340c4", fontSize: "16px" }} />
+                <MailOutlined
+                  style={{ color: "var(--app-form-icon-amber)", fontSize: "16px" }}
+                />
               }
               title="Contact Details"
               subTitle="Provide your email and contact number"
@@ -4832,7 +4836,7 @@ function ApplicationMgtDrawer({
             <SectionHeader
               icon={
                 <IoBagRemoveOutline
-                  style={{ color: "#bf86f3", fontSize: "16px" }}
+                  style={{ color: "var(--app-form-icon-coral)", fontSize: "16px" }}
                 />
               }
               title="Professional Details"
@@ -5462,7 +5466,9 @@ function ApplicationMgtDrawer({
           <div className="section-card" id="application-form-subscription">
             <SectionHeader
               icon={
-                <CiCreditCard1 style={{ color: "#ec6d28", fontSize: "16px" }} />
+                <CiCreditCard1
+                  style={{ color: "var(--app-form-icon-green)", fontSize: "16px" }}
+                />
               }
               title="Subscription Details"
               subTitle="Choose how and when your membership begins."
@@ -5889,7 +5895,7 @@ function ApplicationMgtDrawer({
                           target="_blank"
                           rel="noopener noreferrer"
                           style={{
-                            color: "#78350f",
+                            color: "var(--app-form-amber-deep)",
                             textDecoration: "underline",
                           }}
                           onClick={(e) => e.stopPropagation()}
@@ -5964,7 +5970,7 @@ function ApplicationMgtDrawer({
                           target="_blank"
                           rel="noopener noreferrer"
                           style={{
-                            color: "#78350f",
+                            color: "var(--app-form-amber-deep)",
                             textDecoration: "underline",
                           }}
                           onClick={(e) => e.stopPropagation()}
@@ -6148,14 +6154,14 @@ function ApplicationMgtDrawer({
                             e.target.checked,
                           )
                         }
-                        style={{ color: "#78350f" }}
+                        style={{ color: "var(--app-form-amber-deep)" }}
                         disabled={isDisable}
                       >
                         I have read and agree to the{" "}
                         <a
                           href="#"
                           style={{
-                            color: "#78350f",
+                            color: "var(--app-form-amber-deep)",
                             textDecoration: "underline",
                           }}
                         >
@@ -6166,7 +6172,7 @@ function ApplicationMgtDrawer({
                         <a
                           href="#"
                           style={{
-                            color: "#78350f",
+                            color: "var(--app-form-amber-deep)",
                             textDecoration: "underline",
                           }}
                         >
@@ -6176,7 +6182,7 @@ function ApplicationMgtDrawer({
                         <a
                           href="#"
                           style={{
-                            color: "#78350f",
+                            color: "var(--app-form-amber-deep)",
                             textDecoration: "underline",
                           }}
                         >

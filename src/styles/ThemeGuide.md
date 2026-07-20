@@ -23,7 +23,7 @@ This document outlines the unified theme system implemented across the applicati
 
 - `--font-color`: #123c63 (Primary text)
 - `--font-color-light`: #374151 (Secondary text)
-- `--font-color-lighter`: #6b7280 (Tertiary text)
+- `--font-color-lighter`: var(--theme-text-muted) (Tertiary text)
 - `--border-color`: #d9d9d9 (Primary borders)
 - `--border-color-light`: #e5e7eb (Light borders)
 - `--background-primary`: #ffffff (Main background)
