@@ -30,18 +30,18 @@ import {
   Heart,
   Crown,
 } from "lucide-react";
+import { lookupTypeRequiresParent } from "./lookupHierarchy";
 
-/** Drawer keys that have a dedicated MyDrawer UI in Configuration.js */
+/**
+ * Drawer keys with a dedicated MyDrawer UI in Configuration.js.
+ * Simple /lookup types route to StandardLookup (LookupRecordDrawer).
+ * Specialized location/hierarchy drawers remain dedicated until Phase 2.
+ */
 export const CONFIGURATION_DRAWER_KEYS = new Set([
-  "counties",
   "Countries",
-  "Provinces",
-  "Cities",
-  "PostCode",
   "Districts",
   "Divisions",
   "DivisionsForDistrict",
-  "DivisionsForStation",
   "Station",
   "StudyLocation",
   "ContactType",
@@ -50,24 +50,6 @@ export const CONFIGURATION_DRAWER_KEYS = new Set([
   "RegionType",
   "Bookmarks",
   "Solicitors",
-  "Gender",
-  "Title",
-  "ProjectTypes",
-  "Trainings",
-  "Ranks",
-  "Duties",
-  "Boards",
-  "ClaimType",
-  "Schemes",
-  "Reasons",
-  "RosterType",
-  "Sections",
-  "Councils",
-  "CorrespondenceType",
-  "DocumentType",
-  "SpokenLanguages",
-  "MaritalStatus",
-  "Committees",
   "StandardLookup",
 ]);
 
@@ -89,79 +71,86 @@ export function isLookupDrawerKey(drawerKey) {
   );
 }
 
+/**
+ * Maps API lookup type names → Configuration drawer keys.
+ * Simple /lookup types use StandardLookup (shared LookupRecordDrawer).
+ * Keep Branch / Region / Work Location / Study Location specialized until Phase 2.
+ */
 const LOOKUP_TYPE_NAME_TO_DRAWER_KEY = {
-  boards: "Boards",
   bookmarks: "Bookmarks",
   branch: "Districts",
-  cities: "Cities",
-  city: "Cities",
-  "claim type": "ClaimType",
-  claimtype: "ClaimType",
-  committees: "Committees",
-  committee: "Committees",
   "contact types": "ContactType",
   "contact type": "ContactType",
   contacttypes: "ContactType",
   contacttype: "ContactType",
-  "correspondence type": "CorrespondenceType",
-  correspondencetype: "CorrespondenceType",
-  councils: "Councils",
-  council: "Councils",
   countries: "Countries",
   country: "Countries",
-  counties: "counties",
-  county: "counties",
-  "document type": "DocumentType",
-  documenttype: "DocumentType",
-  duties: "Duties",
-  gender: "Gender",
-  // Dedicated Grade drawer (legacy key "Ranks"). Rank/Ranks use StandardLookup.
-  grade: "Ranks",
-  grades: "Ranks",
-  ranks: "StandardLookup",
-  rank: "StandardLookup",
   lookup: "Lookup",
   "lookup type": "LookupType",
   lookuptype: "LookupType",
-  "marital status": "MaritalStatus",
-  maritalstatus: "MaritalStatus",
-  "post codes": "PostCode",
-  "post code": "PostCode",
-  postcode: "PostCode",
-  postcodes: "PostCode",
-  "project types": "ProjectTypes",
-  projecttypes: "ProjectTypes",
-  projecttype: "ProjectTypes",
-  provinces: "Provinces",
-  province: "Provinces",
-  reasons: "Reasons",
-  // Branch and Region have dedicated drawers (keys Districts / Divisions).
-  // Districts / Divisions lookup types use StandardLookup — do not open Branch/Region.
+  // Branch and Region keep dedicated drawers (keys Districts / Divisions).
   region: "Divisions",
   regions: "Divisions",
   regiontype: "RegionType",
-  divisions: "StandardLookup",
-  division: "StandardLookup",
-  "roster type": "RosterType",
-  rostertype: "RosterType",
-  schemes: "Schemes",
-  scheme: "Schemes",
-  sections: "Sections",
-  section: "Sections",
   solicitors: "Solicitors",
   solicitor: "Solicitors",
-  "spoken languages": "SpokenLanguages",
-  spokenlanguages: "SpokenLanguages",
   "study location": "StudyLocation",
   studylocation: "StudyLocation",
-  titles: "Title",
-  title: "Title",
-  trainings: "Trainings",
-  training: "Trainings",
   "work location": "Station",
   "work locations": "Station",
   worklocation: "Station",
   worklocations: "Station",
+  // Everything else that uses /lookup → shared StandardLookup drawer
+  boards: "StandardLookup",
+  board: "StandardLookup",
+  cities: "StandardLookup",
+  city: "StandardLookup",
+  "claim type": "StandardLookup",
+  claimtype: "StandardLookup",
+  committees: "StandardLookup",
+  committee: "StandardLookup",
+  "correspondence type": "StandardLookup",
+  correspondencetype: "StandardLookup",
+  councils: "StandardLookup",
+  council: "StandardLookup",
+  counties: "StandardLookup",
+  county: "StandardLookup",
+  "document type": "StandardLookup",
+  documenttype: "StandardLookup",
+  duties: "StandardLookup",
+  duty: "StandardLookup",
+  gender: "StandardLookup",
+  grade: "StandardLookup",
+  grades: "StandardLookup",
+  ranks: "StandardLookup",
+  rank: "StandardLookup",
+  "marital status": "StandardLookup",
+  maritalstatus: "StandardLookup",
+  "post codes": "StandardLookup",
+  "post code": "StandardLookup",
+  postcode: "StandardLookup",
+  postcodes: "StandardLookup",
+  "project types": "StandardLookup",
+  projecttypes: "StandardLookup",
+  projecttype: "StandardLookup",
+  provinces: "StandardLookup",
+  province: "StandardLookup",
+  reasons: "StandardLookup",
+  reason: "StandardLookup",
+  divisions: "StandardLookup",
+  division: "StandardLookup",
+  "roster type": "StandardLookup",
+  rostertype: "StandardLookup",
+  schemes: "StandardLookup",
+  scheme: "StandardLookup",
+  sections: "StandardLookup",
+  section: "StandardLookup",
+  "spoken languages": "StandardLookup",
+  spokenlanguages: "StandardLookup",
+  titles: "StandardLookup",
+  title: "StandardLookup",
+  trainings: "StandardLookup",
+  training: "StandardLookup",
   // Dedicated Work Location drawer (legacy key "Station"). Station type uses StandardLookup.
   station: "StandardLookup",
   stations: "StandardLookup",
@@ -482,5 +471,22 @@ export function getLookupTypeFieldProps(
     options: lookupType
       ? [{ label: lookupType.lookuptype, value: lookupType._id }]
       : [],
+  };
+}
+
+export function getLookupDrawerFeatures(lookupType, lookupsTypes = []) {
+  const typeName =
+    lookupType?.lookuptype || lookupType?.DisplayName || lookupType?.name || "Lookup";
+  const typeId = lookupType?._id || lookupType?.id || null;
+  return {
+    nameLabel: `${typeName} Name:`,
+    showParent: !!lookupTypeRequiresParent(
+      lookupsTypes,
+      typeId || lookupType,
+      "StandardLookup",
+    ),
+    showProcessSalaryDeduction: isWorkLocationLookupType(lookupType, lookupsTypes),
+    officerRole: null,
+    showAddress: false,
   };
 }
