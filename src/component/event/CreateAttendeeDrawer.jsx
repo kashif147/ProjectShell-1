@@ -9,17 +9,16 @@ import {
     Radio,
     message
 } from 'antd';
-import { CreditCardOutlined } from '@ant-design/icons';
+import { CreditCardOutlined, MinusOutlined, PlusOutlined } from '@ant-design/icons';
 import MyInput from '../common/MyInput';
 import CustomSelect from '../common/CustomSelect';
 import MemberSearch from '../profile/MemberSearch';
-import MySearchInput from '../common/MySearchInput';
 import { useJsApiLoader, StandaloneSearchBox } from '@react-google-maps/api';
 import { useDispatch, useSelector } from 'react-redux';
 import { fetchCountries } from '../../features/CountriesSlice';
 import { Elements, useStripe, useElements, CardNumberElement, CardExpiryElement, CardCvcElement } from '@stripe/react-stripe-js';
 import { loadStripe } from '@stripe/stripe-js';
-import { fetchEvents, fetchEventById, fetchRegistrations, createRegistration } from '../../services/eventsApi';
+import { fetchEvents, fetchEventById, createRegistration } from '../../services/eventsApi';
 import { dispatchProfileInvalidate } from '../../utils/profileRealtimeEvents';
 import "../../styles/CreateAttendeeDrawer.css";
 
@@ -60,20 +59,18 @@ const CreateAttendeeDrawerInner = ({ open, onClose }) => {
     const stripe = useStripe();
     const elements = useElements();
 
-    const [registrationType, setRegistrationType] = useState('Member');
     const [selectedSessionIds, setSelectedSessionIds] = useState([]);
     const [events, setEvents] = useState([]);
     const [selectedEventId, setSelectedEventId] = useState('');
     const [eventSessions, setEventSessions] = useState([]);
-    const [selectedEventVenue, setSelectedEventVenue] = useState('');
+    const [selectedEvent, setSelectedEvent] = useState(null);
+    const [quantity, setQuantity] = useState(1);
     const [paymentMethod, setPaymentMethod] = useState('stripe');
     const [submitting, setSubmitting] = useState(false);
     const [cardComplete, setCardComplete] = useState({ number: false, expiry: false, cvc: false });
     const [isNewAttendee, setIsNewAttendee] = useState(false);
     const [selectedProfileId, setSelectedProfileId] = useState(null);
     const [attendeeMembershipNumber, setAttendeeMembershipNumber] = useState(null);
-    const [previousAttendeeQuery, setPreviousAttendeeQuery] = useState('');
-    const [previousAttendeeResults, setPreviousAttendeeResults] = useState([]);
     const [computedAmount, setComputedAmount] = useState(null);
 
     const inputRef = useRef(null);
@@ -100,21 +97,59 @@ const CreateAttendeeDrawerInner = ({ open, onClose }) => {
     useEffect(() => {
         if (!selectedEventId) {
             setEventSessions([]);
-            setSelectedEventVenue('');
+            setSelectedEvent(null);
+            setSelectedSessionIds([]);
             return;
         }
         fetchEventById(selectedEventId)
             .then((data) => {
-                setEventSessions(Array.isArray(data?.sessions) ? data.sessions : []);
-                setSelectedEventVenue(data?.venue || '');
+                const sessions = Array.isArray(data?.sessions) ? data.sessions : [];
+                setEventSessions(sessions);
+                setSelectedEvent(data || null);
+                // Full-attendance events (allowPartialAttendance false/default)
+                // must include every day - only let the operator pick a subset
+                // when the event explicitly allows partial attendance.
+                setSelectedSessionIds(data?.allowPartialAttendance ? [] : sessions.map((s) => s._id));
             })
-            .catch(() => setEventSessions([]));
+            .catch(() => {
+                setEventSessions([]);
+                setSelectedEvent(null);
+                setSelectedSessionIds([]);
+            });
     }, [selectedEventId]);
 
     useEffect(() => {
-        setSelectedSessionIds([]);
         setComputedAmount(null);
+        setQuantity(1);
     }, [selectedEventId]);
+
+    const remainingCapacity = (() => {
+        let remaining = Infinity;
+        if (selectedEvent?.capacity != null) {
+            remaining = selectedEvent.capacity - (selectedEvent.seatsBooked || 0);
+        }
+        for (const sessionId of selectedSessionIds) {
+            const session = eventSessions.find((s) => s._id === sessionId);
+            if (session?.capacity != null) {
+                remaining = Math.min(remaining, session.capacity - (session.seatsBooked || 0));
+            }
+        }
+        return remaining;
+    })();
+
+    useEffect(() => {
+        if (Number.isFinite(remainingCapacity)) {
+            setQuantity((q) => Math.min(q, Math.max(remainingCapacity, 1)));
+        }
+    }, [remainingCapacity]);
+
+    const decrementQuantity = () => setQuantity((q) => Math.max(1, q - 1));
+    const incrementQuantity = () => setQuantity((q) => (
+        Number.isFinite(remainingCapacity) ? Math.min(remainingCapacity, q + 1) : q + 1
+    ));
+
+    const unitPrice = attendeeMembershipNumber ? selectedEvent?.memberPrice : selectedEvent?.nonMemberPrice;
+    const estimatedTotal = unitPrice != null ? unitPrice * quantity : null;
 
     const [formData, setFormData] = useState({
         firstName: '',
@@ -133,12 +168,6 @@ const CreateAttendeeDrawerInner = ({ open, onClose }) => {
         eircode: '',
         country: 'Ireland',
     });
-
-    const resetAttendeeSelection = () => {
-        setIsNewAttendee(false);
-        setSelectedProfileId(null);
-        setAttendeeMembershipNumber(null);
-    };
 
     const handleInputChange = (e) => {
         const { name, value } = e.target;
@@ -189,37 +218,6 @@ const CreateAttendeeDrawerInner = ({ open, onClose }) => {
             surname: surname || prev.surname,
         }));
         message.info('No existing profile found - this will register a new (non-member) attendee.');
-    };
-
-    const handlePreviousAttendeeSearch = async (term) => {
-        setPreviousAttendeeQuery(term);
-        if (!term || term.trim().length < 2) {
-            setPreviousAttendeeResults([]);
-            return;
-        }
-        try {
-            const results = await fetchRegistrations({ q: term.trim() });
-            setPreviousAttendeeResults(Array.isArray(results) ? results : []);
-        } catch (err) {
-            setPreviousAttendeeResults([]);
-        }
-    };
-
-    const handleSelectPreviousAttendee = (registration) => {
-        const snapshot = registration.attendeeSnapshot || {};
-        setSelectedProfileId(registration.profileId || null);
-        setAttendeeMembershipNumber(registration.membershipNumber || null);
-        setIsNewAttendee(false);
-        setFormData((prev) => ({
-            ...prev,
-            firstName: snapshot.firstName || prev.firstName,
-            surname: snapshot.lastName || prev.surname,
-            email: snapshot.email || prev.email,
-            phone: snapshot.phone || prev.phone,
-            workPlace: snapshot.workLocation || prev.workPlace,
-            grade: snapshot.grade || prev.grade,
-        }));
-        setPreviousAttendeeResults([]);
     };
 
     const handlePlacesChanged = () => {
@@ -276,6 +274,8 @@ const CreateAttendeeDrawerInner = ({ open, onClose }) => {
     const isOtherSelection = (value) =>
         typeof value === 'string' && value.trim().toLowerCase() === 'other';
 
+    const fieldsEnabled = isNewAttendee || !!selectedProfileId;
+
     const eventOptions = events.map((ev) => ({ label: ev.title, value: ev._id }));
 
     const handleSubmit = async () => {
@@ -296,6 +296,7 @@ const CreateAttendeeDrawerInner = ({ open, onClose }) => {
                 registrationType: 'event',
                 eventId: selectedEventId,
                 sessionIds: selectedSessionIds,
+                quantity,
                 profile: {
                     profileId: selectedProfileId || undefined,
                     email: formData.email,
@@ -361,75 +362,26 @@ const CreateAttendeeDrawerInner = ({ open, onClose }) => {
                 <Row gutter={40}>
                     {/* LEFT COLUMN: Attendee Details */}
                     <Col span={12}>
-                        <div className="my-input-wrapper">
-                            <label className="my-input-label">Registration type</label>
-                            <div style={{
-                                display: 'flex',
-                                justifyContent: 'space-between',
-                                padding: '0 16px',
-                                backgroundColor: 'var(--theme-muted-bg)',
-                                borderRadius: '8px',
-                                border: '1px solid #eef2f6',
-                                height: '40px',
-                                alignItems: 'center'
-                            }}>
-                                <Checkbox
-                                    checked={registrationType === 'Member'}
-                                    onChange={() => { setRegistrationType('Member'); resetAttendeeSelection(); }}
-                                >
-                                    <Text style={{ fontSize: '13px', fontWeight: 600, color: 'var(--theme-text-muted)' }}>Member</Text>
-                                </Checkbox>
-                                <Checkbox
-                                    checked={registrationType === 'PreviousAttendee'}
-                                    onChange={() => { setRegistrationType('PreviousAttendee'); resetAttendeeSelection(); }}
-                                >
-                                    <Text style={{ fontSize: '13px', fontWeight: 600, color: 'var(--theme-text-muted)' }}>Previous attendee</Text>
-                                </Checkbox>
-                            </div>
+                        <div style={{ marginBottom: '24px' }}>
+                            <label className="my-input-label">Profile Search</label>
+                            <MemberSearch
+                                fullWidth={true}
+                                onSelectBehavior="callback"
+                                onSelectCallback={handleMemberSelect}
+                                onAddMember={handleAddNewAttendee}
+                                addMemberLabel="Add as new attendee"
+                            />
+                            {isNewAttendee && (
+                                <Text type="warning" style={{ display: 'block', marginTop: 8 }}>
+                                    Registering a new, non-member attendee - no membership number will be created.
+                                </Text>
+                            )}
+                            {!fieldsEnabled && (
+                                <Text type="secondary" style={{ display: 'block', marginTop: 8 }}>
+                                    Search for a profile above, or add a new one, to enable the attendee details below.
+                                </Text>
+                            )}
                         </div>
-
-                        {registrationType === 'Member' && (
-                            <div style={{ marginBottom: '24px' }}>
-                                <label className="my-input-label">Member search</label>
-                                <MemberSearch
-                                    fullWidth={true}
-                                    onSelectBehavior="callback"
-                                    onSelectCallback={handleMemberSelect}
-                                    onAddMember={handleAddNewAttendee}
-                                    addMemberLabel="Add as new attendee"
-                                />
-                                {isNewAttendee && (
-                                    <Text type="warning" style={{ display: 'block', marginTop: 8 }}>
-                                        Registering a new, non-member attendee - no membership number will be created.
-                                    </Text>
-                                )}
-                            </div>
-                        )}
-
-                        {registrationType === 'PreviousAttendee' && (
-                            <div style={{ marginBottom: '24px' }}>
-                                <div className="drawer-subsection-title">Previous attendee search</div>
-                                <MySearchInput
-                                    placeholder="Search by name or email..."
-                                    value={previousAttendeeQuery}
-                                    onChange={(e) => handlePreviousAttendeeSearch(e.target.value)}
-                                />
-                                {previousAttendeeResults.length > 0 && (
-                                    <div className="previous-attendee-results">
-                                        {previousAttendeeResults.map((reg) => (
-                                            <div
-                                                key={reg._id}
-                                                className="previous-attendee-result-row"
-                                                onClick={() => handleSelectPreviousAttendee(reg)}
-                                                style={{ cursor: 'pointer', padding: '6px 8px', borderBottom: '1px solid #eef2f6' }}
-                                            >
-                                                {reg.attendeeSnapshot?.firstName} {reg.attendeeSnapshot?.lastName} — {reg.attendeeSnapshot?.email}
-                                            </div>
-                                        ))}
-                                    </div>
-                                )}
-                            </div>
-                        )}
 
                         <Row gutter={16}>
                             <Col span={12}>
@@ -439,6 +391,7 @@ const CreateAttendeeDrawerInner = ({ open, onClose }) => {
                                     value={formData.firstName}
                                     onChange={handleInputChange}
                                     placeholder="John"
+                                    disabled={!fieldsEnabled}
                                 />
                             </Col>
                             <Col span={12}>
@@ -448,6 +401,7 @@ const CreateAttendeeDrawerInner = ({ open, onClose }) => {
                                     value={formData.surname}
                                     onChange={handleInputChange}
                                     placeholder="Doe"
+                                    disabled={!fieldsEnabled}
                                 />
                             </Col>
                         </Row>
@@ -458,6 +412,7 @@ const CreateAttendeeDrawerInner = ({ open, onClose }) => {
                             value={formData.email}
                             onChange={handleInputChange}
                             placeholder="john.doe@example.com"
+                            disabled={!fieldsEnabled}
                         />
 
                         <MyInput
@@ -466,6 +421,7 @@ const CreateAttendeeDrawerInner = ({ open, onClose }) => {
                             value={formData.phone}
                             onChange={handleInputChange}
                             type="mobile"
+                            disabled={!fieldsEnabled}
                         />
 
                         <CustomSelect
@@ -475,6 +431,7 @@ const CreateAttendeeDrawerInner = ({ open, onClose }) => {
                             onChange={handleInputChange}
                             options={workLocationOptions}
                             placeholder="Select work location"
+                            disabled={!fieldsEnabled}
                         />
                         {isOtherSelection(formData.workPlace) && (
                             <MyInput
@@ -483,6 +440,7 @@ const CreateAttendeeDrawerInner = ({ open, onClose }) => {
                                 value={formData.otherWorkPlace}
                                 onChange={handleInputChange}
                                 placeholder="Enter other work location"
+                                disabled={!fieldsEnabled}
                             />
                         )}
                         <CustomSelect
@@ -492,6 +450,7 @@ const CreateAttendeeDrawerInner = ({ open, onClose }) => {
                             onChange={handleInputChange}
                             options={gradeOptions}
                             placeholder="Select grade"
+                            disabled={!fieldsEnabled}
                         />
                         {isOtherSelection(formData.grade) && (
                             <MyInput
@@ -500,6 +459,7 @@ const CreateAttendeeDrawerInner = ({ open, onClose }) => {
                                 value={formData.otherGrade}
                                 onChange={handleInputChange}
                                 placeholder="Enter other grade"
+                                disabled={!fieldsEnabled}
                             />
                         )}
 
@@ -514,6 +474,7 @@ const CreateAttendeeDrawerInner = ({ open, onClose }) => {
                                     value={formData.searchAddress}
                                     onChange={handleInputChange}
                                     placeholder="Enter Eircode (e.g., D01X4X0)"
+                                    disabled={!fieldsEnabled}
                                 />
                             </StandaloneSearchBox>
                         )}
@@ -523,24 +484,28 @@ const CreateAttendeeDrawerInner = ({ open, onClose }) => {
                             name="addressLine1"
                             value={formData.addressLine1}
                             onChange={handleInputChange}
+                            disabled={!fieldsEnabled}
                         />
                         <MyInput
                             label="Address Line 2 (Street or Road)"
                             name="addressLine2"
                             value={formData.addressLine2}
                             onChange={handleInputChange}
+                            disabled={!fieldsEnabled}
                         />
                         <MyInput
                             label="Address Line 3 (Town/City)"
                             name="townCity"
                             value={formData.townCity}
                             onChange={handleInputChange}
+                            disabled={!fieldsEnabled}
                         />
                         <MyInput
                             label="Address Line 4 (County/State)"
                             name="countyState"
                             value={formData.countyState}
                             onChange={handleInputChange}
+                            disabled={!fieldsEnabled}
                         />
                         <Row gutter={16}>
                             <Col span={12}>
@@ -549,6 +514,7 @@ const CreateAttendeeDrawerInner = ({ open, onClose }) => {
                                     name="eircode"
                                     value={formData.eircode}
                                     onChange={handleInputChange}
+                                    disabled={!fieldsEnabled}
                                 />
                             </Col>
                             <Col span={12}>
@@ -559,6 +525,7 @@ const CreateAttendeeDrawerInner = ({ open, onClose }) => {
                                     onChange={handleInputChange}
                                     options={countriesOptions}
                                     placeholder="Select country"
+                                    disabled={!fieldsEnabled}
                                 />
                             </Col>
                         </Row>
@@ -578,6 +545,11 @@ const CreateAttendeeDrawerInner = ({ open, onClose }) => {
                         {eventSessions.length > 0 && (
                             <>
                                 <label className="my-input-label">Day/session selection</label>
+                                {!selectedEvent?.allowPartialAttendance && (
+                                    <Text type="secondary" style={{ display: 'block', marginBottom: 8 }}>
+                                        This event requires full attendance - every day is included.
+                                    </Text>
+                                )}
                                 {eventSessions.map(session => (
                                     <div
                                         key={session._id}
@@ -587,6 +559,7 @@ const CreateAttendeeDrawerInner = ({ open, onClose }) => {
                                             <Checkbox
                                                 checked={selectedSessionIds.includes(session._id)}
                                                 onChange={() => toggleSession(session._id)}
+                                                disabled={!selectedEvent?.allowPartialAttendance}
                                             />
                                             <div className="day-info">
                                                 <span className="day-title">{session.label}</span>
@@ -603,20 +576,56 @@ const CreateAttendeeDrawerInner = ({ open, onClose }) => {
                             <div className="summary-table">
                                 <div className="summary-table-row">
                                     <div className="summary-table-label">Venue</div>
-                                    <div className="summary-table-value">{selectedEventVenue || '-'}</div>
+                                    <div className="summary-table-value">{selectedEvent?.venue || '-'}</div>
                                 </div>
                                 <div className="summary-table-row">
                                     <div className="summary-table-label">Selected sessions</div>
                                     <div className="summary-table-value">{selectedSessionIds.length || 'All'}</div>
                                 </div>
+                                <div className="summary-table-row">
+                                    <div className="summary-table-label">Tickets</div>
+                                    <div className="summary-table-value">
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                            <Button
+                                                size="small"
+                                                icon={<MinusOutlined />}
+                                                onClick={decrementQuantity}
+                                                disabled={quantity <= 1}
+                                            />
+                                            <span style={{ minWidth: 20, textAlign: 'center' }}>{quantity}</span>
+                                            <Button
+                                                size="small"
+                                                icon={<PlusOutlined />}
+                                                onClick={incrementQuantity}
+                                                disabled={Number.isFinite(remainingCapacity) && quantity >= remainingCapacity}
+                                            />
+                                        </div>
+                                    </div>
+                                </div>
+                                {Number.isFinite(remainingCapacity) && (
+                                    <div className="summary-table-row">
+                                        <div className="summary-table-label">Seats remaining</div>
+                                        <div className="summary-table-value">{Math.max(remainingCapacity, 0)}</div>
+                                    </div>
+                                )}
                             </div>
                             <div className="total-fee-row">
                                 <div className="total-label">
                                     Total Registration Fee
-                                    <p>{computedAmount == null ? 'Calculated on submission (member pricing applies automatically)' : 'Charged'}</p>
+                                    <p>
+                                        {computedAmount != null
+                                            ? 'Charged'
+                                            : estimatedTotal != null
+                                                ? 'Estimated - exact fee confirmed on submission'
+                                                : 'Calculated on submission (member pricing applies automatically)'}
+                                    </p>
                                 </div>
                                 <div className="total-amount">
-                                    {computedAmount == null ? '-' : `€${(computedAmount / 100).toFixed(2)}`}
+                                    {computedAmount != null
+                                        ? `€${(computedAmount / 100).toFixed(2)}`
+                                        : estimatedTotal != null
+                                            ? `€${estimatedTotal.toFixed(2)}`
+                                            : '-'}
                                 </div>
                             </div>
                         </div>

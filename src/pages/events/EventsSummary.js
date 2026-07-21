@@ -1,8 +1,7 @@
 import React, { useCallback, useEffect, useState } from "react";
 import { useLocation } from "react-router-dom";
 import { useSelector } from "react-redux";
-import { Button, message, Spin } from "antd";
-import { DeleteOutlined } from "@ant-design/icons";
+import { message, Spin } from "antd";
 import TableComponent from "../../component/common/TableComponent";
 import MyConfirm from "../../component/common/MyConfirm";
 import CreateEventDrawer from "../../component/event/CreateEventDrawer";
@@ -19,7 +18,7 @@ import { useRegisterGridFilterRows } from "../../hooks/useRegisterGridFilterRows
 
 function EventsSummary() {
   const location = useLocation();
-  const { eventTypeOptions } = useSelector((state) => state.lookups);
+  const { eventTypeOptions, eventCategoryOptions } = useSelector((state) => state.lookups);
   const eventsRefreshVersion = useSelector((state) => state.eventsRefresh.version);
   const { filtersState } = useFilters();
   const { columns } = useTableColumns();
@@ -32,8 +31,6 @@ function EventsSummary() {
   const [events, setEvents] = useState([]);
   const [eventsSourceRows, setEventsSourceRows] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [selectedRowKeys, setSelectedRowKeys] = useState([]);
-  const [deleting, setDeleting] = useState(false);
   const [editEventId, setEditEventId] = useState(null);
   const [cloneEventId, setCloneEventId] = useState(null);
 
@@ -48,15 +45,22 @@ function EventsSummary() {
           const eventType = (eventTypeOptions || []).find(
             (opt) => String(opt.value) === String(ev.eventTypeId),
           );
+          // Category moved from a ProductType-code snapshot (eventCategoryCode)
+          // to a decoupled Lookup reference (eventCategoryLookupId/Code) -
+          // resolve via the lookup first (same as the Edit form) and fall back
+          // to the legacy fields for events created before that migration.
+          const eventCategory = (eventCategoryOptions || []).find(
+            (opt) => String(opt.value) === String(ev.eventCategoryLookupId),
+          );
           return {
             key: ev._id,
             eventId: ev._id,
             eventName: ev.title,
-            // Category is now whatever real (non-Membership) ProductType the
-            // admin picked in Product Management - display its own code
-            // rather than a hardcoded label map that can't know every
-            // possible category in advance.
-            eventCategory: ev.eventCategoryCode || "-",
+            eventCategory:
+              eventCategory?.label ||
+              ev.eventCategoryLookupCode ||
+              ev.eventCategoryCode ||
+              "-",
             eventType: eventType?.label || "-",
             venue: ev.isVirtual ? "Virtual" : ev.venue || "-",
             startDate: ev.startDate,
@@ -111,32 +115,6 @@ function EventsSummary() {
 
   useRegisterGridFilterRows("Events", eventsSourceRows, eventsColumns);
 
-  const selectedRows = events.filter((ev) => selectedRowKeys.includes(ev.key));
-  // Only Draft events can be deleted - matches the backend guard in
-  // event.controller.js's softDeleteEvent.
-  const canDeleteSelection =
-    selectedRows.length > 0 && selectedRows.every((ev) => ev.status === "Draft");
-
-  const handleDeleteSelected = () => {
-    MyConfirm({
-      title: "Delete Events",
-      message: `Permanently delete ${selectedRows.length} draft event${selectedRows.length > 1 ? "s" : ""}? This cannot be undone.`,
-      onConfirm: async () => {
-        setDeleting(true);
-        try {
-          await Promise.all(selectedRows.map((ev) => deleteEvent(ev.eventId)));
-          message.success("Event(s) deleted");
-          setSelectedRowKeys([]);
-          loadEvents();
-        } catch (err) {
-          message.error(err?.response?.data?.error?.message || err?.message || "Failed to delete event(s)");
-        } finally {
-          setDeleting(false);
-        }
-      },
-    });
-  };
-
   // Only a Draft event can be deleted - matches the backend guard in
   // event.controller.js's softDeleteEvent.
   const handleDeleteRow = useCallback((record) => {
@@ -189,25 +167,10 @@ function EventsSummary() {
 
   return (
     <div style={{ padding: "20px 0" }}>
-      <div style={{ display: "flex", justifyContent: "flex-end", padding: "0 20px 12px" }}>
-        <Button
-          danger
-          icon={<DeleteOutlined />}
-          disabled={!canDeleteSelection}
-          loading={deleting}
-          onClick={handleDeleteSelected}
-        >
-          Delete Selected
-        </Button>
-      </div>
       <TableComponent
         data={events}
         screenName="Events"
         isGrideLoading={loading}
-        selectionType="checkbox"
-        enableRowSelection={true}
-        selectedRowKeys={selectedRowKeys}
-        onSelectionChange={(keys) => setSelectedRowKeys(keys)}
         hideLegacyRowChrome
         rowActionsInGridmenu
       />

@@ -1,4 +1,5 @@
 import React from 'react';
+import dayjs from 'dayjs';
 import {
     Button,
     Row,
@@ -6,7 +7,8 @@ import {
     Switch,
     TimePicker,
     Input,
-    Checkbox
+    Checkbox,
+    Modal,
 } from 'antd';
 import { EnvironmentOutlined, PlusOutlined, DeleteOutlined, LinkOutlined } from '@ant-design/icons';
 import MyDrawer from '../common/MyDrawer';
@@ -29,6 +31,35 @@ const ScheduleManagementDrawer = ({
     onMultipleDayEventChange,
     multipleDayEventDisabled = false,
 }) => {
+    const getDisabledEndTime = (startTime) => {
+        if (!startTime) return {};
+        const start = dayjs(startTime);
+        const startHour = start.hour();
+        const startMinute = start.minute();
+        return {
+            disabledHours: () => Array.from({ length: startHour }, (_, i) => i),
+            disabledMinutes: (selectedHour) =>
+                selectedHour === startHour
+                    ? Array.from({ length: startMinute + 1 }, (_, i) => i)
+                    : [],
+        };
+    };
+
+    const handleMultipleDayEventCheckboxChange = (e) => {
+        const checked = e.target.checked;
+        if (!checked && (scheduleData?.length || 0) > 1) {
+            Modal.confirm({
+                title: 'Remove additional days?',
+                content: 'Days other than Day 1 will be removed. Are you sure?',
+                okText: 'Yes, remove',
+                cancelText: 'No',
+                onOk: () => onMultipleDayEventChange?.(false),
+            });
+            return;
+        }
+        onMultipleDayEventChange?.(checked);
+    };
+
     const headerActions = (
         <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
             {allowAddDay && (
@@ -62,7 +93,7 @@ const ScheduleManagementDrawer = ({
                 <div className="card-row" style={{ marginBottom: '16px' }}>
                     <Checkbox
                         checked={multipleDayEvent}
-                        onChange={(e) => onMultipleDayEventChange?.(e.target.checked)}
+                        onChange={handleMultipleDayEventCheckboxChange}
                         disabled={multipleDayEventDisabled}
                     >
                         Multiple Day Event
@@ -130,6 +161,8 @@ const ScheduleManagementDrawer = ({
                                             minuteStep={15}
                                             style={{ width: '100%' }}
                                             placeholder="00:00"
+                                            disabledTime={() => getDisabledEndTime(session.startTime)}
+                                            defaultOpenValue={session.startTime ? dayjs(session.startTime) : undefined}
                                         />
                                     </div>
                                 </Col>

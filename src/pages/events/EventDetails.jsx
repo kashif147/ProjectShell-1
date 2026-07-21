@@ -58,6 +58,20 @@ function formatDateTime(value) {
     return value ? dayjs(value).format('DD/MM/YYYY HH:mm') : null;
 }
 
+// Single-day (or no sessions yet): the event's own isVirtual flag decides.
+// Multi-day: derived from each day's isVirtual - all online, all in-person,
+// or a mix (Hybrid).
+function computeEventFormat(event) {
+    const sessions = event?.sessions || [];
+    if (sessions.length > 1) {
+        const onlineCount = sessions.filter((s) => !!s.isVirtual).length;
+        if (onlineCount === 0) return 'In-Person';
+        if (onlineCount === sessions.length) return 'Online';
+        return 'Hybrid';
+    }
+    return event?.isVirtual ? 'Online' : 'In-Person';
+}
+
 function mapRegistrationToAttendeeRow(reg) {
     const snapshot = reg.attendeeSnapshot || {};
     return {
@@ -78,7 +92,7 @@ const EventDetails = () => {
     const location = useLocation();
     const navigate = useNavigate();
     const eventId = location.state?.eventId;
-    const { eventTypeOptions, venueOptions } = useSelector((state) => state.lookups);
+    const { eventTypeOptions, eventCategoryOptions, venueOptions } = useSelector((state) => state.lookups);
 
     const [selectedRowKeys, setSelectedRowKeys] = useState([]);
     const [isAttendeeDrawerVisible, setIsAttendeeDrawerVisible] = useState(false);
@@ -239,6 +253,17 @@ const EventDetails = () => {
     const eventTypeLabel = (eventTypeOptions || []).find(
         (opt) => String(opt.value) === String(event?.eventTypeId),
     )?.label || '-';
+    // Category moved from a ProductType-code snapshot (eventCategoryCode) to a
+    // decoupled Lookup reference (eventCategoryLookupId/Code) - resolve via the
+    // lookup first (same as the Edit form) and fall back to the legacy fields
+    // for events created before that migration.
+    const eventCategoryLabel =
+        (eventCategoryOptions || []).find(
+            (opt) => String(opt.value) === String(event?.eventCategoryLookupId),
+        )?.label ||
+        event?.eventCategoryLookupCode ||
+        event?.eventCategoryCode ||
+        '-';
     // Looked up live from the Venue lookup (rather than trusting the
     // point-in-time `event.venue` snapshot string) so the address always
     // reflects the venue's current record.
@@ -311,14 +336,14 @@ const EventDetails = () => {
                                     column={2}
                                     labelStyle={{ width: '30%', fontWeight: 500 }}
                                 >
-                                    <Descriptions.Item label="Category">{event?.eventCategoryCode || '-'}</Descriptions.Item>
+                                    <Descriptions.Item label="Category">{eventCategoryLabel}</Descriptions.Item>
                                     <Descriptions.Item label="Event Type">{eventTypeLabel}</Descriptions.Item>
                                     <Descriptions.Item label="Start Date">{formatDateTime(event?.startDate) || '-'}</Descriptions.Item>
                                     <Descriptions.Item label="End Date">{formatDateTime(event?.endDate) || '-'}</Descriptions.Item>
                                     <Descriptions.Item label="Seat Limit">{event?.capacity != null ? event.capacity : '-'}</Descriptions.Item>
-                                    <Descriptions.Item label="Format">{event?.isVirtual ? 'Virtual' : 'In-person'}</Descriptions.Item>
+                                    <Descriptions.Item label="Format">{computeEventFormat(event)}</Descriptions.Item>
                                     <Descriptions.Item label="Venue" span={2}>
-                                        {event?.isVirtual ? 'Virtual' : (
+                                        {computeEventFormat(event) === 'Online' ? 'Online' : (
                                             <div>
                                                 <div>{selectedVenue?.label || event?.venue || '-'}</div>
                                                 {venueAddressDisplay && (

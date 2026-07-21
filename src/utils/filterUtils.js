@@ -576,6 +576,22 @@ const APPLICATION_API_FILTER_KEY_TO_LABEL = {
     workLocations: "Work Location",
 };
 
+/**
+ * Several screens reuse the same generic API filter key ("status") for
+ * different, screen-specific toolbar labels (CN Status, WO Status, Event
+ * Status, ...). APPLICATION_API_FILTER_KEY_TO_LABEL is a single flat map and
+ * can only remember one label per key, so it previously always resolved
+ * "status" to "CN Status" regardless of screen. Disambiguate by templateType
+ * before falling back to that global map.
+ */
+const AMBIGUOUS_API_KEY_LABEL_BY_TEMPLATE_TYPE = {
+    status: {
+        creditnotes: "CN Status",
+        writeoffs: "WO Status",
+        eventssummary: "Event Status",
+    },
+};
+
 /** UI row field names that differ from template API filter keys. */
 const FILTER_API_KEY_ALIASES = {
     amountEuro: "amount",
@@ -758,8 +774,14 @@ export const transformFiltersFromApi = (apiFilters, screenCols, options = {}) =>
         }
 
         const filter = apiFilters[key];
+        const normalizedTemplateType = String(options.templateType || "").trim().toLowerCase();
+        const ambiguousLabel =
+            AMBIGUOUS_API_KEY_LABEL_BY_TEMPLATE_TYPE[key]?.[normalizedTemplateType];
         let label =
-            APPLICATION_API_FILTER_KEY_TO_LABEL[key] || keyToLabel[key] || key;
+            ambiguousLabel ||
+            APPLICATION_API_FILTER_KEY_TO_LABEL[key] ||
+            keyToLabel[key] ||
+            key;
         if (listingTemplate && (key === "dateRange" || label === "Date Range")) {
             label = "Membership Start Date";
         }

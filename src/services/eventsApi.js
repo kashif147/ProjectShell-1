@@ -51,6 +51,21 @@ export async function updateEvent(id, payload) {
   return withSyncWarning(data);
 }
 
+// eventId is optional - pass "draft" while the event hasn't been saved yet;
+// the returned URL rides along in the create/update payload afterwards.
+export async function uploadEventImage(eventId, file) {
+  const formData = new FormData();
+  formData.append("file", file);
+  const { data } = await axios.post(
+    `${getEventsServiceBaseUrl()}/events/${eventId || "draft"}/image`,
+    formData,
+    {
+      headers: { ...authHeaders(), "Content-Type": "multipart/form-data" },
+    },
+  );
+  return unwrap({ data });
+}
+
 export async function deleteEvent(id) {
   const { data } = await axios.delete(`${getEventsServiceBaseUrl()}/events/${id}`, {
     headers: authHeaders(),
@@ -62,6 +77,23 @@ export async function addEventSession(eventId, payload) {
   const { data } = await axios.post(
     `${getEventsServiceBaseUrl()}/events/${eventId}/sessions`,
     payload,
+    { headers: authHeaders() },
+  );
+  return unwrap({ data });
+}
+
+export async function updateEventSession(eventId, sessionId, payload) {
+  const { data } = await axios.put(
+    `${getEventsServiceBaseUrl()}/events/${eventId}/sessions/${sessionId}`,
+    payload,
+    { headers: authHeaders() },
+  );
+  return unwrap({ data });
+}
+
+export async function deleteEventSession(eventId, sessionId) {
+  const { data } = await axios.delete(
+    `${getEventsServiceBaseUrl()}/events/${eventId}/sessions/${sessionId}`,
     { headers: authHeaders() },
   );
   return unwrap({ data });

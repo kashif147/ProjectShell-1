@@ -4071,6 +4071,11 @@ const staticColumns = {
   ],
 };
 
+// EventsDashboard (KPI/chart page) filters independently from EventsSummary's
+// grid but uses the identical column/dataIndex shape so date/numeric/string
+// filter-type detection and label-to-key mapping stay consistent.
+staticColumns.EventsDashboard = staticColumns.Events;
+
 const staticSearchFilters = {
   Reconciliation: [
     {

@@ -192,6 +192,10 @@ export const FilterProvider = ({ children }) => {
       visibleFilters: [],
       filtersState: {},
     },
+    EventsDashboard: {
+      visibleFilters: [],
+      filtersState: {},
+    },
     Attendees: {
       visibleFilters: [],
       filtersState: {},
@@ -669,7 +673,7 @@ export const FilterProvider = ({ children }) => {
       "/communicationbatchdetail": "Communication",
       "/casessummary": "Cases",
       "/eventssummary": "Events",
-      "/eventsdashboard": "Events",
+      "/eventsdashboard": "EventsDashboard",
       "/correspondencedashboard": "Communication",
       "/issuesmanagementdashboard": "Cases",
       "/attendees": "Attendees",
@@ -841,6 +845,14 @@ export const FilterProvider = ({ children }) => {
         "Event Category",
         "Venue",
       ],
+      EventsDashboard: [
+        "Event",
+        "Event Type",
+        "Event Date",
+        "Event Status",
+        "Event Category",
+        "Venue",
+      ],
       MembershipDashboard: [
         "Membership Category",
         "Grade",
@@ -989,6 +1001,14 @@ export const FilterProvider = ({ children }) => {
       "Event Category",
       "Venue",
     ],
+    EventsDashboard: [
+      "Event",
+      "Event Type",
+      "Event Date",
+      "Event Status",
+      "Event Category",
+      "Venue",
+    ],
     Attendees: [
       "Event",
       "Event Type",
@@ -1120,6 +1140,7 @@ export const FilterProvider = ({ children }) => {
       Communication: getDefaultVisibleFilters("Communication"),
       Cases: getDefaultVisibleFilters("Cases"),
       Events: getDefaultVisibleFilters("Events"),
+      EventsDashboard: getDefaultVisibleFilters("EventsDashboard"),
       Attendees: getDefaultVisibleFilters("Attendees"),
       MembershipDashboard: getDefaultVisibleFilters("MembershipDashboard"),
       MembershipListingReport: getDefaultVisibleFilters("MembershipListingReport"),
