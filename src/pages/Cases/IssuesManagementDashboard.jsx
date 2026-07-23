@@ -289,11 +289,11 @@ function IssuesManagementDashboard() {
                     </linearGradient>
                   </defs>
                   <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" vertical={false} />
-                  <XAxis dataKey="month" tick={{ fill: "#64748b", fontSize: 11 }} axisLine={false} tickLine={false} />
+                  <XAxis dataKey="month" tick={{ fill: "var(--theme-text-muted)", fontSize: 11 }} axisLine={false} tickLine={false} />
                   <YAxis
                     tickFormatter={(v) => formatCountShort(v)}
                     domain={[0, 80]}
-                    tick={{ fill: "#64748b", fontSize: 11 }}
+                    tick={{ fill: "var(--theme-text-muted)", fontSize: 11 }}
                     axisLine={false}
                     tickLine={false}
                   />
@@ -363,7 +363,7 @@ function IssuesManagementDashboard() {
                     verticalAlign="middle"
                     align="right"
                     formatter={(value, entry) => (
-                      <span style={{ color: "#475569", fontSize: 12 }}>
+                      <span style={{ color: "var(--theme-text-muted)", fontSize: 12 }}>
                         {value}{" "}
                         <span style={{ fontWeight: 700, color: "#0f172a" }}>
                           {entry.payload.value}%

@@ -33,6 +33,7 @@ import {
   isStringFilterLabel,
 } from "../../utils/filterUtils";
 import { bumpCreditNotesReload } from "../../utils/creditNotesWorkspace";
+import { bumpEventsReload } from "../../utils/eventsWorkspace";
 import { bumpJournalAdjustmentsReload } from "../../utils/journalAdjustmentsWorkspace";
 import { bumpOnlinePaymentsReload } from "../../utils/onlinePaymentsWorkspace";
 import { bumpRefundsReload } from "../../utils/refundsWorkspace";
@@ -307,6 +308,7 @@ const Toolbar = () => {
     .replace(/\/$/, "")
     .toLowerCase();
   const isCreditNotesScreen = normalizedPath === "/creditnotes";
+  const isEventsScreen = normalizedPath === "/eventssummary";
   const isJournalAdjustmentsScreen = normalizedPath === "/journaladjustments";
   const isOnlinePaymentScreen = normalizedPath === "/onlinepayment";
   const isRefundsScreen = normalizedPath === "/refunds";
@@ -361,7 +363,9 @@ const Toolbar = () => {
 
   const gridTemplateType = isMembersScreen
     ? "members"
-    : isCreditNotesScreen
+    : isEventsScreen
+      ? "eventssummary"
+      : isCreditNotesScreen
       ? "creditnotes"
       : isJournalAdjustmentsScreen
         ? "journaladjustments"
@@ -581,6 +585,8 @@ const Toolbar = () => {
           columns: visibleColumns,
         }),
       );
+    } else if (isEventsScreen) {
+      bumpEventsReload();
     } else if (isCreditNotesScreen) {
       bumpCreditNotesReload();
     } else if (isJournalAdjustmentsScreen) {
@@ -646,6 +652,7 @@ const Toolbar = () => {
       isApplicationLikePage ||
       isProfileScreen ||
       isMembersScreen ||
+      isEventsScreen ||
       isCreditNotesScreen ||
       isJournalAdjustmentsScreen ||
       isOnlinePaymentScreen ||
@@ -727,6 +734,8 @@ const Toolbar = () => {
           limit: 500,
         }),
       );
+    } else if (isEventsScreen) {
+      bumpEventsReload();
     } else if (isCreditNotesScreen) {
       bumpCreditNotesReload();
     } else if (isJournalAdjustmentsScreen) {
@@ -887,6 +896,8 @@ const Toolbar = () => {
           limit: 500,
         }),
       );
+    } else if (isEventsScreen) {
+      bumpEventsReload();
     } else if (isCreditNotesScreen) {
       bumpCreditNotesReload();
     } else if (isJournalAdjustmentsScreen) {
@@ -1375,7 +1386,7 @@ const Toolbar = () => {
                       type="text"
                       size="small"
                       onClick={() => setAiQuery("")}
-                      style={{ paddingInline: 6, color: "#8c8c8c" }}
+                      style={{ paddingInline: 6, color: "var(--theme-text-muted)" }}
                     >
                       X
                     </Button>

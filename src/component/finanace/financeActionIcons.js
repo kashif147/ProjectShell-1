@@ -39,10 +39,10 @@ const FINANCE_ACTION_ICONS = {
   match: { Icon: LinkOutlined, color: "var(--app-brand-accent)" },
   suspense: { Icon: PauseCircleOutlined, color: "#fa8c16" },
   settle: { Icon: CheckCircleOutlined, color: "#52c41a" },
-  loading: { Icon: MoreOutlined, color: "#8c8c8c" },
+  loading: { Icon: MoreOutlined, color: "var(--theme-text-muted)" },
 };
 
-const DEFAULT_ACTION_ICON = { Icon: MoreOutlined, color: "#8c8c8c" };
+const DEFAULT_ACTION_ICON = { Icon: MoreOutlined, color: "var(--theme-text-muted)" };
 
 export function financeLedgerActionIcon(actionId) {
   const key = String(actionId || "").trim();

@@ -654,7 +654,7 @@ function formatLedgerBalanceCents(balanceCents, record, pendingCreditNotes = [])
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
   });
-  let color = "#595959";
+  let color = "var(--theme-text-muted)";
   if (n > 0) color = "#cf1322";
   else if (n < 0) color = "#389e0d";
 
@@ -710,12 +710,12 @@ function formatLedgerAmountCents(record) {
     if (rowHasOffsettingDebitCredit(record)) {
       return {
         text: "€0.00",
-        color: "#8c8c8c",
+        color: "var(--theme-text-muted)",
         tooltip:
           "Offsetting lines on this document — no net change to member balance.",
       };
     }
-    return { text: "", color: "#595959", tooltip: null };
+    return { text: "", color: "var(--theme-text-muted)", tooltip: null };
   }
   if (n > 0) {
     return {
@@ -869,6 +869,7 @@ const TransactionHistory = () => {
   const [reassignDrawerOpen, setReassignDrawerOpen] = useState(false);
   const [reassignSourceRows, setReassignSourceRows] = useState([]);
   const [ledgerView, setLedgerView] = useState("simple");
+  const [ledgerDomain, setLedgerDomain] = useState("all"); // "all" | "membership" | "events"
   const [memoColWidth, setMemoColWidth] = useState(MEMO_COL_DEFAULT_WIDTH);
   const [memoColExpanded, setMemoColExpanded] = useState(false);
   const [financeSummary, setFinanceSummary] = useState(null);
@@ -974,7 +975,10 @@ const TransactionHistory = () => {
       const response = await axios.get(
         `${getAccountServiceBaseUrl()}/reports/member/${memberId}/ledger`,
         {
-          params: { view: ledgerView },
+          params: {
+            view: ledgerView,
+            ...(ledgerDomain !== "all" ? { ledgerDomain } : {}),
+          },
           headers: {
             Authorization: `Bearer ${token}`,
           },
@@ -1115,7 +1119,7 @@ const TransactionHistory = () => {
     } finally {
       setLoading(false);
     }
-  }, [memberId, ledgerView, fetchPendingCreditNotes]);
+  }, [memberId, ledgerView, ledgerDomain, fetchPendingCreditNotes]);
 
   const fetchFinanceSummary = useCallback(async () => {
     if (!memberId) return;
@@ -2425,7 +2429,7 @@ const TransactionHistory = () => {
               {detailTip && !linkTip ? (
                 <Tooltip title={detailTip}>
                   <InfoCircleOutlined
-                    style={{ color: "#8c8c8c", flexShrink: 0, cursor: "help" }}
+                    style={{ color: "var(--theme-text-muted)", flexShrink: 0, cursor: "help" }}
                     aria-label="Document type description"
                   />
                 </Tooltip>
@@ -2647,7 +2651,7 @@ const TransactionHistory = () => {
                 }
               >
                 <InfoCircleOutlined
-                  style={{ color: "#8c8c8c", flexShrink: 0, cursor: "help" }}
+                  style={{ color: "var(--theme-text-muted)", flexShrink: 0, cursor: "help" }}
                   aria-label="Show reference"
                 />
               </Tooltip>
@@ -2973,6 +2977,16 @@ const TransactionHistory = () => {
           value={ledgerView}
           onChange={(v) => setLedgerView(v)}
         />
+        <Segmented
+          aria-label="Membership vs events/courses ledger"
+          options={[
+            { label: "All", value: "all" },
+            { label: "Membership", value: "membership" },
+            { label: "Events & Courses", value: "events" },
+          ]}
+          value={ledgerDomain}
+          onChange={(v) => setLedgerDomain(v)}
+        />
         <Dropdown
           menu={{
             items: withFinanceActionIcons([
@@ -3058,6 +3072,7 @@ const TransactionHistory = () => {
     canPerformFinanceActions,
     memberId,
     ledgerView,
+    ledgerDomain,
     refundMenuEnabled,
     writeOffMenuEnabled,
     reassignMenuEnabled,

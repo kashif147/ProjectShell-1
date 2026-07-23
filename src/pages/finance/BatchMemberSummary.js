@@ -84,7 +84,7 @@ const SummaryCard = ({ title, value, icon, color, iconBg }) => (
       <div>
         <div
           style={{
-            color: "#64748b",
+            color: "var(--theme-text-muted)",
             fontSize: "13px",
             fontWeight: "600",
             textTransform: "uppercase",
@@ -1643,7 +1643,7 @@ export default function BatchMemberSummary() {
           <div
             style={{
               fontSize: "11px",
-              color: "#64748b",
+              color: "var(--theme-text-muted)",
               fontWeight: "500",
               whiteSpace: "nowrap",
             }}
@@ -1685,7 +1685,7 @@ export default function BatchMemberSummary() {
           <div
             style={{
               fontSize: "11px",
-              color: "#64748b",
+              color: "var(--theme-text-muted)",
               fontWeight: "500",
               whiteSpace: "nowrap",
             }}
@@ -1719,7 +1719,7 @@ export default function BatchMemberSummary() {
           <div
             style={{
               fontSize: "11px",
-              color: "#64748b",
+              color: "var(--theme-text-muted)",
               fontWeight: "500",
               whiteSpace: "nowrap",
             }}
@@ -1753,7 +1753,7 @@ export default function BatchMemberSummary() {
           <div
             style={{
               fontSize: "11px",
-              color: "#64748b",
+              color: "var(--theme-text-muted)",
               fontWeight: "500",
               whiteSpace: "nowrap",
             }}
@@ -1787,7 +1787,7 @@ export default function BatchMemberSummary() {
           <div
             style={{
               fontSize: "11px",
-              color: "#64748b",
+              color: "var(--theme-text-muted)",
               fontWeight: "500",
               whiteSpace: "nowrap",
             }}
@@ -1821,7 +1821,7 @@ export default function BatchMemberSummary() {
           <div
             style={{
               fontSize: "11px",
-              color: "#64748b",
+              color: "var(--theme-text-muted)",
               fontWeight: "500",
               whiteSpace: "nowrap",
             }}
@@ -1858,7 +1858,7 @@ export default function BatchMemberSummary() {
               <div
                 style={{
                   fontSize: "11px",
-                  color: "#64748b",
+                  color: "var(--theme-text-muted)",
                   fontWeight: "500",
                   whiteSpace: "nowrap",
                 }}
@@ -1903,7 +1903,7 @@ export default function BatchMemberSummary() {
               <div
                 style={{
                   fontSize: "11px",
-                  color: "#64748b",
+                  color: "var(--theme-text-muted)",
                   fontWeight: "500",
                   whiteSpace: "nowrap",
                 }}
@@ -1956,7 +1956,7 @@ export default function BatchMemberSummary() {
             <div
               style={{
                 fontSize: "11px",
-                color: "#64748b",
+                color: "var(--theme-text-muted)",
                 fontWeight: "500",
                 whiteSpace: "nowrap",
               }}
@@ -2022,7 +2022,7 @@ export default function BatchMemberSummary() {
               <div
                 style={{
                   fontSize: "11px",
-                  color: "#64748b",
+                  color: "var(--theme-text-muted)",
                   fontWeight: "500",
                   lineHeight: "1.2",
                 }}
@@ -2081,7 +2081,7 @@ export default function BatchMemberSummary() {
               <div
                 style={{
                   fontSize: "11px",
-                  color: "#64748b",
+                  color: "var(--theme-text-muted)",
                   fontWeight: "500",
                   lineHeight: "1.2",
                 }}
@@ -2140,7 +2140,7 @@ export default function BatchMemberSummary() {
               <div
                 style={{
                   fontSize: "11px",
-                  color: "#64748b",
+                  color: "var(--theme-text-muted)",
                   fontWeight: "500",
                   lineHeight: "1.2",
                 }}
@@ -2199,7 +2199,7 @@ export default function BatchMemberSummary() {
               <div
                 style={{
                   fontSize: "11px",
-                  color: "#64748b",
+                  color: "var(--theme-text-muted)",
                   fontWeight: "500",
                   lineHeight: "1.2",
                 }}
@@ -2258,7 +2258,7 @@ export default function BatchMemberSummary() {
               <div
                 style={{
                   fontSize: "11px",
-                  color: "#64748b",
+                  color: "var(--theme-text-muted)",
                   fontWeight: "500",
                   lineHeight: "1.2",
                 }}
@@ -2306,7 +2306,7 @@ export default function BatchMemberSummary() {
                 display: "flex",
                 justifyContent: "center",
                 alignItems: "center",
-                color: "#64748b",
+                color: "var(--theme-text-muted)",
                 fontSize: "14px",
                 flexShrink: 0,
               }}
@@ -2317,7 +2317,7 @@ export default function BatchMemberSummary() {
               <div
                 style={{
                   fontSize: "11px",
-                  color: "#64748b",
+                  color: "var(--theme-text-muted)",
                   fontWeight: "500",
                   lineHeight: "1.2",
                 }}
@@ -2357,7 +2357,7 @@ export default function BatchMemberSummary() {
               display: "flex",
               justifyContent: "center",
               alignItems: "center",
-              color: "#64748b",
+              color: "var(--theme-text-muted)",
               fontSize: "14px",
               flexShrink: 0,
             }}
@@ -2368,7 +2368,7 @@ export default function BatchMemberSummary() {
             <div
               style={{
                 fontSize: "11px",
-                color: "#64748b",
+                color: "var(--theme-text-muted)",
                 fontWeight: "500",
                 lineHeight: "1.2",
               }}
@@ -2669,7 +2669,7 @@ export default function BatchMemberSummary() {
                   </div>
                   <div
                     style={{
-                      color: "#64748b",
+                      color: "var(--theme-text-muted)",
                       maxWidth: "300px",
                       margin: "0 auto 20px",
                       lineHeight: "1.5",

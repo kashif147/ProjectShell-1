@@ -74,7 +74,7 @@
 
 .membership-dashboard-as-of {
   font-size: 12px;
-  color: #6b7280;
+  color: var(--theme-text-muted);
   background: #f3f4f6;
   padding: 4px 10px;
   border-radius: 999px;
@@ -183,7 +183,7 @@
 
 .membership-kpi-chip__label {
   font-weight: 600;
-  color: #6b7280;
+  color: var(--theme-text-muted);
   text-transform: uppercase;
   letter-spacing: 0.04em;
   font-size: 10px;
@@ -229,7 +229,7 @@
 }
 
 .membership-kpi-chip__delta--neutral {
-  color: #6b7280;
+  color: var(--theme-text-muted);
   background: #f3f4f6;
 }
 

@@ -32,6 +32,7 @@ import { transformFiltersForApi } from "../../utils/filterUtils";
 import MyAlert from "./MyAlert";
 import { useAuthorization } from "../../context/AuthorizationContext";
 import { bumpCreditNotesReload } from "../../utils/creditNotesWorkspace";
+import { bumpEventsReload } from "../../utils/eventsWorkspace";
 import { bumpJournalAdjustmentsReload } from "../../utils/journalAdjustmentsWorkspace";
 import { bumpOnlinePaymentsReload } from "../../utils/onlinePaymentsWorkspace";
 import { bumpRefundsReload } from "../../utils/refundsWorkspace";
@@ -69,6 +70,8 @@ function Gridmenu({
     (location.pathname || "").toLowerCase() === "/applications";
   const isPaymentFormsScreen =
     (location.pathname || "").toLowerCase() === "/paymentforms";
+  const isEventsScreen =
+    (location.pathname || "").toLowerCase() === "/eventssummary";
   const isCreditNotesScreen =
     (location.pathname || "").toLowerCase() === "/creditnotes";
   const isJournalAdjustmentsScreen =
@@ -121,7 +124,9 @@ function Gridmenu({
 
   const gridTemplateType = isMembersScreen
     ? "members"
-    : isCreditNotesScreen
+    : isEventsScreen
+      ? "eventssummary"
+      : isCreditNotesScreen
       ? "creditnotes"
       : isJournalAdjustmentsScreen
         ? "journaladjustments"
@@ -245,6 +250,8 @@ function Gridmenu({
             limit: 500,
           }),
         );
+      } else if (isEventsScreen) {
+        bumpEventsReload();
       } else if (isCreditNotesScreen) {
         bumpCreditNotesReload();
       } else if (isJournalAdjustmentsScreen) {

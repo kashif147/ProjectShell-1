@@ -1,4 +1,6 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef, useMemo } from "react";
+import { useSelector, useDispatch } from "react-redux";
+import { bumpEventsRefresh } from "../../features/events/EventsRefreshSlice";
 import {
   Button,
   Row,
@@ -8,30 +10,84 @@ import {
   Switch,
   TimePicker,
   Input,
+  message,
+  Tooltip,
 } from "antd";
-import { EnvironmentOutlined } from "@ant-design/icons";
+import { EnvironmentOutlined, InfoCircleOutlined } from "@ant-design/icons";
+import ReactQuill from "react-quill-new";
+import "react-quill-new/dist/quill.snow.css";
 import MyDrawer from "../common/MyDrawer";
 import MyInput from "../common/MyInput";
 import MyDatePicker1 from "../common/MyDatePicker1";
 import CustomSelect from "../common/CustomSelect";
+import MyConfirm from "../common/MyConfirm";
 import "../../styles/CreateEventDrawer.css";
 import dayjs from "dayjs";
 import ScheduleManagementDrawer from "./ScheduleManagementDrawer";
 import CostsFeesDrawer from "./CostsFeesDrawer";
+import {
+  createEvent,
+  updateEvent as updateEventApi,
+  deleteEvent,
+  fetchEventById,
+  addEventSession,
+} from "../../services/eventsApi";
+import { fetchEventCategoryProductTypes } from "../../services/productTypesApi";
 
-const CreateEventDrawer = ({ open, onClose }) => {
+const DRAFT_STATUS_OPTIONS = [
+  { label: "Draft", value: "Draft" },
+  { label: "Published", value: "Published" },
+];
+
+const PUBLISHED_STATUS_OPTIONS = [
+  { label: "Published", value: "Published" },
+  { label: "Cancelled", value: "Cancelled" },
+  { label: "Completed", value: "Completed" },
+];
+
+const DESCRIPTION_EDITOR_MODULES = {
+  toolbar: [
+    ["bold", "italic", "underline"],
+    [{ list: "ordered" }, { list: "bullet" }],
+    ["link", "image", "video"],
+    ["clean"],
+  ],
+};
+
+const CreateEventDrawer = ({ open, onClose, eventId, onDeleted, cloneFromEventId }) => {
+  const dispatch = useDispatch();
+  const { eventTypeOptions, venueOptions, accreditationBodyOptions } = useSelector(
+    (state) => state.lookups,
+  );
+
   const [eventName, setEventName] = useState("");
   const [eventDate, setEventDate] = useState(null);
   const [eventType, setEventType] = useState("");
   const [seatLimit, setSeatLimit] = useState("");
   const [description, setDescription] = useState("");
-  const [venueName, setVenueName] = useState("");
-  const [address, setAddress] = useState("");
-  const [cpdCredits, setCpdCredits] = useState("5.0");
-  const [accreditationBody, setAccreditationBody] = useState("NMBI");
-  const [certificationType, setCertificationType] = useState(
-    "Digital Certificate"
-  );
+  const [venueId, setVenueId] = useState("");
+  const [status, setStatus] = useState("Draft");
+  const [initialStatus, setInitialStatus] = useState("Draft");
+  const [isActive, setIsActive] = useState(true);
+  // eventCategoryProductTypeId is the real user-service ProductType _id the
+  // admin picked (the authoritative reference); eventCategoryCode is that
+  // ProductType's own `code`, derived from the fetched list below, kept
+  // alongside for display/GL-mapping - never hardcoded or guessed.
+  const [eventCategoryProductTypeId, setEventCategoryProductTypeId] = useState("");
+  const [eventCategoryCode, setEventCategoryCode] = useState("");
+  const [eventCategoryOptions, setEventCategoryOptions] = useState([]);
+  const [loadingEventCategories, setLoadingEventCategories] = useState(true);
+  const [eventCategoryLoadError, setEventCategoryLoadError] = useState("");
+  const [memberPrice, setMemberPrice] = useState("");
+  const [nonMemberPrice, setNonMemberPrice] = useState("");
+  // Days before startDate up to which a refund is allowed - 0 means no
+  // refunds. Left empty (rather than defaulted) so the user must explicitly
+  // choose a value.
+  const [refundPolicyDays, setRefundPolicyDays] = useState("");
+  const [loadingEvent, setLoadingEvent] = useState(false);
+  const [cpdCredits, setCpdCredits] = useState("");
+  const [accreditationBody, setAccreditationBody] = useState("");
+  const [certificationType, setCertificationType] = useState("");
   const [autoIssueOnFinish, setAutoIssueOnFinish] = useState(true);
   const [accreditationType, setAccreditationType] = useState("");
   const [allowVirtualHosting, setAllowVirtualHosting] = useState(false);
@@ -51,10 +107,173 @@ const CreateEventDrawer = ({ open, onClose }) => {
     },
   ]);
 
-  const [costsData, setCostsData] = useState([
-    { id: 1, name: "Venue Rental", amount: "2500" },
-    { id: 2, name: "Catering Service", amount: "1200" },
-  ]);
+  const [costsData, setCostsData] = useState([]);
+
+  // Once a Published event is loaded for edit, every field except Status and
+  // Active locks - mirrors the backend guard in event.controller.js.
+  const isLocked = Boolean(eventId) && initialStatus === "Published";
+
+  // Event Category options are real ProductType records fetched from Product
+  // Management, not a hardcoded list - if neither the CPD nor Events
+  // ProductType has been set up yet, the dropdown is empty and says so,
+  // instead of letting a save fail deep in the Product/Pricing link step.
+  useEffect(() => {
+    if (!open) return;
+    let cancelled = false;
+    setLoadingEventCategories(true);
+    setEventCategoryLoadError("");
+    fetchEventCategoryProductTypes()
+      .then((productTypes) => {
+        if (cancelled) return;
+        setEventCategoryOptions(
+          productTypes.map((pt) => ({
+            value: pt._id,
+            key: pt._id,
+            label: pt.name,
+            code: pt.code,
+          })),
+        );
+      })
+      .catch((err) => {
+        if (cancelled) return;
+        setEventCategoryOptions([]);
+        // Surface the real reason (e.g. 403 = missing product-type:read
+        // permission) instead of looking identical to "none configured yet".
+        setEventCategoryLoadError(
+          err?.response?.status === 403
+            ? "You don't have permission to view Product Types (missing product-type:read)."
+            : err?.response?.data?.error?.message || err?.message || "Failed to load Event Categories",
+        );
+      })
+      .finally(() => {
+        if (!cancelled) setLoadingEventCategories(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [open]);
+
+  // Selected Venue lookup (pulled from Configuration > Venue), with its address.
+  const selectedVenue = useMemo(
+    () => venueOptions.find((v) => String(v.value) === String(venueId)) || null,
+    [venueOptions, venueId],
+  );
+  const venueName = selectedVenue?.label || "";
+  const venueAddressDisplay = useMemo(() => {
+    const addr = selectedVenue?.venueAddress;
+    if (!addr) return "";
+    return (
+      addr.fullAddress ||
+      [addr.buildingOrHouse, addr.streetOrRoad, addr.areaOrTown, addr.countyCityOrPostCode, addr.country, addr.eircode]
+        .filter(Boolean)
+        .join(", ")
+    );
+  }, [selectedVenue]);
+
+  useEffect(() => {
+    if (!open || !eventId) return;
+    let cancelled = false;
+    setLoadingEvent(true);
+    (async () => {
+      try {
+        const ev = await fetchEventById(eventId);
+        if (cancelled || !ev) return;
+        setEventName(ev.title || "");
+        setDescription(ev.description || "");
+        setEventDate(ev.startDate ? dayjs(ev.startDate) : null);
+        setSeatLimit(ev.capacity != null ? String(ev.capacity) : "");
+        setVenueId(ev.venueId || "");
+        setAllowVirtualHosting(!!ev.isVirtual);
+        setStatus(ev.status || "Draft");
+        setInitialStatus(ev.status || "Draft");
+        setIsActive(ev.isActive !== false);
+        setEventCategoryProductTypeId(ev.eventCategoryProductTypeId || "");
+        setEventCategoryCode(ev.eventCategoryCode || "");
+        setEventType(ev.eventTypeId || "");
+        setMemberPrice(ev.memberPrice != null ? String(ev.memberPrice) : "");
+        setNonMemberPrice(ev.nonMemberPrice != null ? String(ev.nonMemberPrice) : "");
+        setRefundPolicyDays(ev.refundPolicyDays != null ? String(ev.refundPolicyDays) : "");
+        setCpdCredits(ev.cpdCredits != null ? String(ev.cpdCredits) : "");
+        setAccreditationBody(ev.accreditationBody || "");
+        setCertificationType(ev.certificationType || "");
+        setAutoIssueOnFinish(ev.autoIssueOnFinish !== false);
+        setCostsData(
+          (ev.costs || []).map((c, idx) => ({
+            id: idx + 1,
+            name: c.name || "",
+            amount: c.amount != null ? String(c.amount) : "0",
+          })),
+        );
+      } catch (err) {
+        message.error(err?.response?.data?.error?.message || err?.message || "Failed to load event");
+      } finally {
+        if (!cancelled) setLoadingEvent(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [open, eventId]);
+
+  // Clone: seed every field from the source event except Event Date and the
+  // schedule/status, which reset so the user picks a fresh date and timeslot
+  // instead of unknowingly reusing the original's.
+  useEffect(() => {
+    if (!open || eventId || !cloneFromEventId) return;
+    let cancelled = false;
+    setLoadingEvent(true);
+    (async () => {
+      try {
+        const ev = await fetchEventById(cloneFromEventId);
+        if (cancelled || !ev) return;
+        setEventName(ev.title ? `${ev.title} (Copy)` : "");
+        setDescription(ev.description || "");
+        setEventDate(null);
+        setSeatLimit(ev.capacity != null ? String(ev.capacity) : "");
+        setVenueId(ev.venueId || "");
+        setAllowVirtualHosting(!!ev.isVirtual);
+        setStatus("Draft");
+        setInitialStatus("Draft");
+        setIsActive(true);
+        setEventCategoryProductTypeId(ev.eventCategoryProductTypeId || "");
+        setEventCategoryCode(ev.eventCategoryCode || "");
+        setEventType(ev.eventTypeId || "");
+        setMemberPrice(ev.memberPrice != null ? String(ev.memberPrice) : "");
+        setNonMemberPrice(ev.nonMemberPrice != null ? String(ev.nonMemberPrice) : "");
+        setRefundPolicyDays(ev.refundPolicyDays != null ? String(ev.refundPolicyDays) : "");
+        setCpdCredits(ev.cpdCredits != null ? String(ev.cpdCredits) : "");
+        setAccreditationBody(ev.accreditationBody || "");
+        setCertificationType(ev.certificationType || "");
+        setAutoIssueOnFinish(ev.autoIssueOnFinish !== false);
+        setCostsData(
+          (ev.costs || []).map((c, idx) => ({
+            id: idx + 1,
+            name: c.name || "",
+            amount: c.amount != null ? String(c.amount) : "0",
+          })),
+        );
+        setBookingOnMultipleDays(false);
+        setScheduleData([
+          {
+            id: 1,
+            day: "Day 1",
+            date: null,
+            location: "",
+            zoomLink: "",
+            isOnline: false,
+            sessions: [{ id: 1, startTime: null, endTime: null }],
+          },
+        ]);
+      } catch (err) {
+        message.error(err?.response?.data?.error?.message || err?.message || "Failed to load event to clone");
+      } finally {
+        if (!cancelled) setLoadingEvent(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [open, eventId, cloneFromEventId]);
 
   useEffect(() => {
     setScheduleData((prev) =>
@@ -63,6 +282,20 @@ const CreateEventDrawer = ({ open, onClose }) => {
         : prev
     );
   }, [eventDate]);
+
+  // Default each in-person day's schedule location to the event Venue Name,
+  // without clobbering a location the user has since typed something else into.
+  const lastAutoVenueRef = useRef("");
+  useEffect(() => {
+    setScheduleData((prev) =>
+      prev.map((day) => {
+        if (day.isOnline) return day;
+        const wasAutoFilledOrEmpty = !day.location || day.location === lastAutoVenueRef.current;
+        return wasAutoFilledOrEmpty ? { ...day, location: venueName } : day;
+      })
+    );
+    lastAutoVenueRef.current = venueName;
+  }, [venueName]);
 
   const totalSessionCount = scheduleData.reduce((sum, d) => sum + (d.sessions?.length ?? 0), 0);
   const dayCount = scheduleData.length;
@@ -110,7 +343,7 @@ const CreateEventDrawer = ({ open, onClose }) => {
         id: newDayId,
         day: `Day ${newDayNum}`,
         date: nextDate,
-        location: "",
+        location: venueName,
         zoomLink: "",
         isOnline: false,
         sessions: [{ id: newSessionId, startTime: null, endTime: null }],
@@ -139,7 +372,16 @@ const CreateEventDrawer = ({ open, onClose }) => {
 
   const handleDayChange = (dayId, field, value) => {
     setScheduleData((prev) =>
-      prev.map((d) => (d.id === dayId ? { ...d, [field]: value } : d))
+      prev.map((d) => {
+        if (d.id !== dayId) return d;
+        const next = { ...d, [field]: value };
+        // Switching a day back to in-person defaults its location to the
+        // event Venue Name if it doesn't already have one set.
+        if (field === "isOnline" && value === false && !d.location) {
+          next.location = venueName;
+        }
+        return next;
+      })
     );
   };
 
@@ -264,31 +506,186 @@ const CreateEventDrawer = ({ open, onClose }) => {
     );
   };
 
-
-  const handleSave = () => {
-    console.log({
-      eventName,
-      eventDate,
-      eventType,
-      seatLimit,
-      description,
-      venueName,
-      address,
-      cpdCredits,
-      accreditationBody,
-      certificationType,
-      autoIssueOnFinish,
-      accreditationType,
-      allowVirtualHosting,
-      bookingOnMultipleDays,
-      scheduleData,
-      costsData,
-    });
-    onClose();
+  // Schedule Management only collects a time-of-day (no date) per session -
+  // merge it onto the day's date so Event.startDate/endDate carry a real
+  // time instead of defaulting to midnight.
+  const combineDateAndTime = (date, time) => {
+    if (!date) return null;
+    const d = dayjs(date);
+    if (!time) return d;
+    const t = dayjs(time);
+    return d.hour(t.hour()).minute(t.minute()).second(0).millisecond(0);
   };
 
-  const handleCancel = () => {
-    onClose();
+
+  const [saving, setSaving] = useState(false);
+
+  const handleSave = async () => {
+    if (isLocked) {
+      setSaving(true);
+      try {
+        await updateEventApi(eventId, { status, isActive });
+        message.success("Event updated");
+        dispatch(bumpEventsRefresh());
+        onClose();
+      } catch (err) {
+        message.error(err?.response?.data?.error?.message || err?.message || "Failed to update event");
+      } finally {
+        setSaving(false);
+      }
+      return;
+    }
+
+    if (!eventName) {
+      message.error("Event name is required");
+      return;
+    }
+    if (!eventCategoryProductTypeId) {
+      message.error("Event category is required");
+      return;
+    }
+    if (!eventDate) {
+      message.error("Start date is required");
+      return;
+    }
+    if (!description.replace(/<[^>]*>/g, "").trim()) {
+      message.error("Description is required");
+      return;
+    }
+    if (!venueId) {
+      message.error("Venue is required");
+      return;
+    }
+    if (refundPolicyDays === "") {
+      message.error("Refund policy is required");
+      return;
+    }
+    if (Number(refundPolicyDays) < 0) {
+      message.error("Refund policy must be 0 or more days");
+      return;
+    }
+    if (eventCategoryProductTypeId && (!memberPrice || !nonMemberPrice)) {
+      message.error("Member Price and Non-Member Price are required when an Event Category is selected");
+      return;
+    }
+
+    setSaving(true);
+    try {
+      // Span the event across the earliest and latest scheduled day, not
+      // array position - a day's date can be edited to any value, so it
+      // isn't guaranteed to stay in chronological order in scheduleData.
+      const daysWithDates = scheduleData.filter((d) => d.date);
+      const minDateDay =
+        daysWithDates.reduce(
+          (min, d) => (!min || dayjs(d.date).isBefore(dayjs(min.date), "day") ? d : min),
+          null,
+        ) || scheduleData[0];
+      const maxDateDay =
+        daysWithDates.reduce(
+          (max, d) => (!max || dayjs(d.date).isAfter(dayjs(max.date), "day") ? d : max),
+          null,
+        ) || scheduleData[scheduleData.length - 1];
+
+      const firstSession = minDateDay?.sessions?.[0];
+      const startDateTime =
+        combineDateAndTime(minDateDay?.date || eventDate, firstSession?.startTime) ||
+        dayjs(eventDate);
+      const startDate = startDateTime.toISOString();
+
+      const maxDaySessions = maxDateDay?.sessions || [];
+      const lastSession = maxDaySessions[maxDaySessions.length - 1];
+      const endDateTime =
+        combineDateAndTime(
+          maxDateDay?.date || minDateDay?.date || eventDate,
+          lastSession?.endTime || lastSession?.startTime,
+        ) || startDateTime;
+      const endDate = endDateTime.toISOString();
+
+      const payload = {
+        title: eventName,
+        description,
+        venueId: venueId || undefined,
+        venue: venueName
+          ? `${venueName}${venueAddressDisplay ? `, ${venueAddressDisplay}` : ""}`
+          : undefined,
+        isVirtual: allowVirtualHosting,
+        startDate,
+        endDate,
+        capacity: seatLimit ? Number(seatLimit) : undefined,
+        status,
+        isActive,
+        eventCategoryProductTypeId: eventCategoryProductTypeId || undefined,
+        eventCategoryCode: eventCategoryCode || undefined,
+        eventTypeId: eventType || undefined,
+        memberPrice: memberPrice ? Number(memberPrice) : undefined,
+        nonMemberPrice: nonMemberPrice ? Number(nonMemberPrice) : undefined,
+        refundPolicyDays: Number(refundPolicyDays),
+        cpdCredits: cpdCredits ? Number(cpdCredits) : undefined,
+        accreditationBody: accreditationBody || undefined,
+        certificationType: certificationType || undefined,
+        autoIssueOnFinish,
+        costs: costsData
+          .filter((c) => c.name)
+          .map((c) => ({ name: c.name, amount: Number(c.amount) || 0 })),
+      };
+
+      const event = eventId
+        ? await updateEventApi(eventId, payload)
+        : await createEvent(payload);
+
+      // Persist multi-day schedule as sessions (per-session registration
+      // pricing is not modelled per-day - configure via product catalog).
+      if (!eventId && bookingOnMultipleDays && event?._id) {
+        for (const day of scheduleData) {
+          if (!day.date) continue;
+          await addEventSession(event._id, {
+            label: day.day,
+            date: dayjs(day.date).toISOString(),
+          });
+        }
+      }
+
+      if (event?.__syncWarning) {
+        message.warning(event.__syncWarning);
+      }
+      message.success(eventId ? "Event updated" : "Event created");
+      dispatch(bumpEventsRefresh());
+      onClose();
+    } catch (err) {
+      message.error(err?.response?.data?.error?.message || err?.message || `Failed to ${eventId ? "update" : "create"} event`);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  // Only a saved Draft event can be deleted - matches the backend guard in
+  // event.controller.js's softDeleteEvent.
+  const canDelete = Boolean(eventId) && initialStatus === "Draft";
+
+  const [deleting, setDeleting] = useState(false);
+
+  const handleDeleteEvent = () => {
+    MyConfirm({
+      title: "Delete Event",
+      message: "This will permanently remove this draft event. This cannot be undone. Continue?",
+      onConfirm: async () => {
+        setDeleting(true);
+        try {
+          await deleteEvent(eventId);
+          message.success("Event deleted");
+          dispatch(bumpEventsRefresh());
+          if (onDeleted) {
+            onDeleted();
+          } else {
+            onClose();
+          }
+        } catch (err) {
+          message.error(err?.response?.data?.error?.message || err?.message || "Failed to delete event");
+        } finally {
+          setDeleting(false);
+        }
+      },
+    });
   };
 
   const headerActions = (
@@ -296,6 +693,7 @@ const CreateEventDrawer = ({ open, onClose }) => {
       <Button
         className="header-save-btn"
         type="primary"
+        loading={saving}
         onClick={handleSave}
         style={{
           backgroundColor: "var(--app-brand-primary)",
@@ -303,7 +701,7 @@ const CreateEventDrawer = ({ open, onClose }) => {
           padding: "0 32px",
         }}
       >
-        Create
+        Save
       </Button>
     </div>
   );
@@ -315,11 +713,12 @@ const CreateEventDrawer = ({ open, onClose }) => {
 
   return (
     <MyDrawer
-      title="Event Configuration"
+      title={eventId ? "Edit Event" : cloneFromEventId ? "Clone Event" : "Event Configuration"}
       onClose={onClose}
       open={open}
       width={1200}
       extra={headerActions}
+      isLoading={loadingEvent}
       rootClassName="hide-scroll-webkit"
     >
       <div className="event-drawer-container hide-scroll-webkit">
@@ -329,31 +728,109 @@ const CreateEventDrawer = ({ open, onClose }) => {
             <div className="form-section">
               <h3 className="section-title">BASIC INFORMATION</h3>
 
+              <Row gutter={[16, 0]} align="bottom">
+                <Col xs={24} sm={12}>
+                  <CustomSelect
+                    label="Status"
+                    value={status}
+                    onChange={(e) => setStatus(e.target.value)}
+                    options={initialStatus === "Published" ? PUBLISHED_STATUS_OPTIONS : DRAFT_STATUS_OPTIONS}
+                    isIDs={true}
+                  />
+                </Col>
+                <Col xs={24} sm={12}>
+                  <div className="my-input-wrapper">
+                    <div className="d-flex justify-content-between align-items-center">
+                      <div className="d-flex align-items-center gap-1">
+                        <label className="my-input-label mb-0" style={{ visibility: "hidden" }}>
+                          Active
+                        </label>
+                      </div>
+                    </div>
+                    <div
+                      className="my-input-container"
+                      style={{ border: "none", background: "transparent" }}
+                    >
+                      <Checkbox
+                        checked={isActive}
+                        onChange={(e) => setIsActive(e.target.checked)}
+                      >
+                        Active
+                      </Checkbox>
+                    </div>
+                  </div>
+                </Col>
+              </Row>
+
               <MyInput
                 label="Event Name"
                 name="eventName"
                 value={eventName}
                 onChange={(e) => setEventName(e.target.value)}
                 placeholder="Innovation Days 2024"
-                extra={
-                  <Checkbox
-                    checked={bookingOnMultipleDays}
-                    onChange={(e) => setBookingOnMultipleDays(e.target.checked)}
-                  >
-                    Booking on Multiple days
-                  </Checkbox>
-                }
+                disabled={isLocked}
+                required
               />
 
               <Row gutter={[16, 0]}>
                 <Col xs={24} sm={12}>
+                  <CustomSelect
+                    label="Event Category"
+                    placeholder={
+                      loadingEventCategories
+                        ? "Loading categories..."
+                        : eventCategoryLoadError
+                          ? "Failed to load — see message below"
+                          : eventCategoryOptions.length
+                            ? "Select Category"
+                            : "None configured — create in Product Management"
+                    }
+                    value={eventCategoryProductTypeId}
+                    onChange={(e) => {
+                      const nextId = e.target.value;
+                      const selected = eventCategoryOptions.find(
+                        (opt) => String(opt.value) === String(nextId),
+                      );
+                      setEventCategoryProductTypeId(nextId);
+                      setEventCategoryCode(selected?.code || "");
+                    }}
+                    options={eventCategoryOptions}
+                    disabled={isLocked || loadingEventCategories}
+                    hasError={!!eventCategoryLoadError}
+                    errorMessage={eventCategoryLoadError}
+                    isIDs={true}
+                    required
+                  />
+                </Col>
+                <Col xs={24} sm={12}>
+                  <CustomSelect
+                    label="Event Type"
+                    placeholder="Select Type (optional)"
+                    value={eventType}
+                    onChange={(e) => setEventType(e.target.value)}
+                    options={eventTypeOptions}
+                    disabled={isLocked}
+                    isIDs={true}
+                  />
+                </Col>
+              </Row>
+
+              <Row gutter={[16, 0]}>
+                <Col xs={24} sm={12}>
                   <MyDatePicker1
-                    label="Event Date"
+                    label="Start Date"
                     name="eventDate"
                     value={eventDate}
-                    onChange={setEventDate}
+                    onChange={(date) => {
+                      setEventDate(date);
+                      // Adding a date is the trigger to start configuring
+                      // times/days - open Schedule Management right away.
+                      if (date) setIsScheduleDrawerVisible(true);
+                    }}
                     format="DD/MM/YYYY"
                     placeholder="DD/MM/YYYY"
+                    disabled={isLocked}
+                    required
                   />
                 </Col>
                 <Col xs={24} sm={12}>
@@ -364,19 +841,25 @@ const CreateEventDrawer = ({ open, onClose }) => {
                     value={seatLimit}
                     onChange={(e) => setSeatLimit(e.target.value)}
                     placeholder="e.g. 100"
+                    disabled={isLocked}
                   />
                 </Col>
               </Row>
 
-              <MyInput
-                label="Description"
-                name="description"
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
-                placeholder="A multi-day event focused on emerging technologies and accelerative development strategies for 2024 and beyond."
-                type="textarea"
-                rows={3}
-              />
+              <div className="my-input-wrapper">
+                <label className="my-input-label mb-0">
+                  Description<span className="required-star"> *</span>
+                </label>
+                <ReactQuill
+                  theme="snow"
+                  value={description}
+                  onChange={setDescription}
+                  readOnly={isLocked}
+                  placeholder="A multi-day event focused on emerging technologies and accelerative development strategies for 2024 and beyond."
+                  modules={DESCRIPTION_EDITOR_MODULES}
+                  className="event-description-editor"
+                />
+              </div>
             </div>
 
             {/* VENUE & LOCATION */}
@@ -385,21 +868,83 @@ const CreateEventDrawer = ({ open, onClose }) => {
 
               <Row gutter={[16, 0]}>
                 <Col xs={24} sm={12}>
-                  <MyInput
-                    label="Venue Name"
-                    name="venueName"
-                    value={venueName}
-                    onChange={(e) => setVenueName(e.target.value)}
-                    placeholder="Convention Center East"
+                  <CustomSelect
+                    label="Venue"
+                    placeholder="Select Venue"
+                    value={venueId}
+                    onChange={(e) => setVenueId(e.target.value)}
+                    options={venueOptions}
+                    disabled={isLocked}
+                    isIDs={true}
+                    showSearch
+                    required
                   />
                 </Col>
                 <Col xs={24} sm={12}>
                   <MyInput
                     label="Address"
-                    name="address"
-                    value={address}
-                    onChange={(e) => setAddress(e.target.value)}
-                    placeholder="123 Innovation Drive, SF"
+                    name="venueAddressDisplay"
+                    value={venueAddressDisplay}
+                    disabled
+                    placeholder="Address populates from the selected venue"
+                  />
+                </Col>
+              </Row>
+            </div>
+
+            {/* PRICING */}
+            <div className="form-section">
+              <h3 className="section-title">PRICING</h3>
+
+              <Row gutter={[16, 0]}>
+                <Col xs={24} sm={12}>
+                  <MyInput
+                    label="Member Price"
+                    name="memberPrice"
+                    type="number"
+                    value={memberPrice}
+                    onChange={(e) => setMemberPrice(e.target.value)}
+                    placeholder="0.00"
+                    prefix="€"
+                    disabled={isLocked}
+                    required={!!eventCategoryProductTypeId}
+                  />
+                </Col>
+                <Col xs={24} sm={12}>
+                  <MyInput
+                    label="Non-Member Price"
+                    name="nonMemberPrice"
+                    type="number"
+                    value={nonMemberPrice}
+                    onChange={(e) => setNonMemberPrice(e.target.value)}
+                    placeholder="0.00"
+                    prefix="€"
+                    disabled={isLocked}
+                    required={!!eventCategoryProductTypeId}
+                  />
+                </Col>
+              </Row>
+
+              <Row gutter={[16, 0]}>
+                <Col xs={24} sm={12}>
+                  <MyInput
+                    label={
+                      <>
+                        Refund Policy
+                        <span className="required-star"> *</span>{" "}
+                        <Tooltip title="Number of days before the event up to which a refund is allowed. Enter 0 for no refunds.">
+                          <InfoCircleOutlined style={{ color: "var(--theme-text-muted)", cursor: "help" }} />
+                        </Tooltip>
+                      </>
+                    }
+                    name="refundPolicyDays"
+                    type="number"
+                    min="0"
+                    value={refundPolicyDays}
+                    onChange={(e) => setRefundPolicyDays(e.target.value)}
+                    placeholder="0"
+                    suffix="days before event"
+                    disabled={isLocked}
                   />
                 </Col>
               </Row>
@@ -418,15 +963,18 @@ const CreateEventDrawer = ({ open, onClose }) => {
                     onChange={(e) => setCpdCredits(e.target.value)}
                     placeholder="5.0"
                     suffix="HRS"
+                    disabled={isLocked}
                   />
                 </Col>
                 <Col xs={24} sm={12}>
-                  <MyInput
+                  <CustomSelect
                     label="Accreditation Body"
-                    name="accreditationBody"
+                    placeholder="Select Accreditation Body"
                     value={accreditationBody}
                     onChange={(e) => setAccreditationBody(e.target.value)}
-                    placeholder="NMBI"
+                    options={accreditationBodyOptions}
+                    disabled={isLocked}
+                    showSearch
                   />
                 </Col>
               </Row>
@@ -435,6 +983,7 @@ const CreateEventDrawer = ({ open, onClose }) => {
                 <Col xs={24} sm={12}>
                   <CustomSelect
                     label="Certification Type"
+                    placeholder="Select Certification Type"
                     value={certificationType}
                     onChange={(e) => setCertificationType(e.target.value)}
                     options={[
@@ -449,6 +998,7 @@ const CreateEventDrawer = ({ open, onClose }) => {
                       { label: "Both", value: "Both" },
                     ]}
                     isMarginBtm={false}
+                    disabled={isLocked}
                   />
                 </Col>
                 <Col xs={24} sm={12}>
@@ -470,31 +1020,34 @@ const CreateEventDrawer = ({ open, onClose }) => {
                     <Switch
                       checked={autoIssueOnFinish}
                       onChange={setAutoIssueOnFinish}
+                      disabled={isLocked}
                     />
                   </div>
                 </Col>
               </Row>
             </div>
 
-            {/* CANCEL EVENT SECTION */}
-            <div className="cancel-event-section">
-              <div className="cancel-event-content">
-                <div className="cancel-event-text">
-                  <h4 className="cancel-event-title">Cancel Event</h4>
-                  <p className="cancel-event-description">
-                    Permanently remove all event information and archive
-                    relevant documentation.
-                  </p>
+            {/* DELETE EVENT SECTION - Draft only */}
+            {canDelete && (
+              <div className="cancel-event-section">
+                <div className="cancel-event-content">
+                  <div className="cancel-event-text">
+                    <h4 className="cancel-event-title">Delete Event</h4>
+                    <p className="cancel-event-description">
+                      Permanently remove this draft event. This cannot be undone.
+                    </p>
+                  </div>
+                  <Button
+                    danger
+                    className="cancel-event-btn"
+                    loading={deleting}
+                    onClick={handleDeleteEvent}
+                  >
+                    Delete Event
+                  </Button>
                 </div>
-                <Button
-                  danger
-                  className="cancel-event-btn"
-                  onClick={handleCancel}
-                >
-                  Cancel Event
-                </Button>
               </div>
-            </div>
+            )}
           </Col>
 
           {/* RIGHT SIDEBAR */}
@@ -571,6 +1124,9 @@ const CreateEventDrawer = ({ open, onClose }) => {
         onAddSessionToDay={handleAddSessionToDay}
         onRemoveSession={handleRemoveSession}
         allowAddDay={bookingOnMultipleDays}
+        multipleDayEvent={bookingOnMultipleDays}
+        onMultipleDayEventChange={setBookingOnMultipleDays}
+        multipleDayEventDisabled={isLocked}
       />
 
       <CostsFeesDrawer

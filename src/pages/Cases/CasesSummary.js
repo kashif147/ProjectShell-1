@@ -100,7 +100,7 @@ function CasesSummary() {
     const statusConfig = {
       Open: { color: "#52c41a", bg: "#f6ffed", border: "#b7eb8f" },
       Pending: { color: "#faad14", bg: "#fffbe6", border: "#ffe58f" },
-      Closed: { color: "#8c8c8c", bg: "#fafafa", border: "#d9d9d9" },
+      Closed: { color: "var(--theme-text-muted)", bg: "#fafafa", border: "#d9d9d9" },
     };
     const config = statusConfig[status] || statusConfig["Pending"];
     return (
@@ -237,7 +237,7 @@ function CasesSummary() {
           <Card bordered={false} className="stats-card">
             <Statistic
               title={
-                <span style={{ fontSize: "14px", color: "#8c8c8c" }}>
+                <span style={{ fontSize: "14px", color: "var(--theme-text-muted)" }}>
                   Open Issues
                 </span>
               }
@@ -261,7 +261,7 @@ function CasesSummary() {
           <Card bordered={false} className="stats-card">
             <Statistic
               title={
-                <span style={{ fontSize: "14px", color: "#8c8c8c" }}>
+                <span style={{ fontSize: "14px", color: "var(--theme-text-muted)" }}>
                   Critical Issues
                 </span>
               }
@@ -285,7 +285,7 @@ function CasesSummary() {
           <Card bordered={false} className="stats-card">
             <Statistic
               title={
-                <span style={{ fontSize: "14px", color: "#8c8c8c" }}>
+                <span style={{ fontSize: "14px", color: "var(--theme-text-muted)" }}>
                   Pending Review
                 </span>
               }

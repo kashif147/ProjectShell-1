@@ -289,7 +289,7 @@
 }
 
 .my-input-clear:hover {
-  color: #8c8c8c;
+  color: var(--theme-text-muted);
 }
 
 .my-input-container.disabled .my-input-clear {

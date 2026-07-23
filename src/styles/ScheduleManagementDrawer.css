@@ -95,7 +95,7 @@
     margin-bottom: 8px;
     font-size: 13px;
     font-weight: 600;
-    color: #595959;
+    color: var(--theme-text-muted);
 }
 
 .location-input-container {
@@ -107,7 +107,7 @@
     margin-bottom: 8px;
     font-size: 13px;
     font-weight: 600;
-    color: #595959;
+    color: var(--theme-text-muted);
 }
 
 /* Customizing Ant Design elements within the card */

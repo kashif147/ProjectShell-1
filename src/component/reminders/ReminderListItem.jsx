@@ -49,7 +49,7 @@ const ReminderListItem = ({ item, onView, onEdit }) => {
         <p
           style={{
             fontSize: "12px",
-            color: "#8c8c8c",
+            color: "var(--theme-text-muted)",
             marginBottom: "10px",
           }}
         >

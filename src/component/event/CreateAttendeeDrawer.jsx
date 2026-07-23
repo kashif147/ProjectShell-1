@@ -6,14 +6,10 @@ import {
     Col,
     Checkbox,
     Typography,
-    Space,
-    Avatar,
-    Switch,
-    Radio
+    Radio,
+    message
 } from 'antd';
-import {
-    CreditCardOutlined
-} from '@ant-design/icons';
+import { CreditCardOutlined } from '@ant-design/icons';
 import MyInput from '../common/MyInput';
 import CustomSelect from '../common/CustomSelect';
 import MemberSearch from '../profile/MemberSearch';
@@ -21,18 +17,65 @@ import MySearchInput from '../common/MySearchInput';
 import { useJsApiLoader, StandaloneSearchBox } from '@react-google-maps/api';
 import { useDispatch, useSelector } from 'react-redux';
 import { fetchCountries } from '../../features/CountriesSlice';
-import { useLocation } from 'react-router-dom';
+import { Elements, useStripe, useElements, CardNumberElement, CardExpiryElement, CardCvcElement } from '@stripe/react-stripe-js';
+import { loadStripe } from '@stripe/stripe-js';
+import { fetchEvents, fetchEventById, fetchRegistrations, createRegistration } from '../../services/eventsApi';
+import { dispatchProfileInvalidate } from '../../utils/profileRealtimeEvents';
 import "../../styles/CreateAttendeeDrawer.css";
 
-const { Title, Text } = Typography;
+const { Text } = Typography;
 const libraries = ['places', 'maps'];
 
-const CreateAttendeeDrawer = ({ open, onClose }) => {
-    const location = useLocation();
-    const isAttendeesPage = location?.pathname === '/Attendees';
+// Publishable key is not a secret; same key used across the app's Stripe integrations.
+const stripePromise = loadStripe(
+    process.env.REACT_APP_STRIPE_PUBLISHABLE_KEY ||
+    'pk_test_51SBAG4FTlZb0wcbr19eI8nC5u62DfuaUWRVS51VTERBocxSM9JSEs4ubrW57hYTCAHK9d6jrarrT4SAViKFMqKjT00TrEr3PNV',
+);
+
+const STRIPE_ELEMENT_OPTIONS = {
+    style: {
+        base: {
+            fontSize: '14px',
+            color: '#424770',
+            letterSpacing: '0.025em',
+            '::placeholder': { color: '#aab7c4' },
+        },
+        invalid: { color: '#9e2146' },
+    },
+};
+
+function splitSearchTerm(term) {
+    const value = String(term || '').trim();
+    if (!value) return { email: '', firstName: '', surname: '' };
+    if (value.includes('@')) return { email: value, firstName: '', surname: '' };
+    const parts = value.split(/\s+/);
+    return {
+        email: '',
+        firstName: parts[0] || '',
+        surname: parts.slice(1).join(' ') || '',
+    };
+}
+
+const CreateAttendeeDrawerInner = ({ open, onClose }) => {
+    const stripe = useStripe();
+    const elements = useElements();
+
     const [registrationType, setRegistrationType] = useState('Member');
-    const [selectedDays, setSelectedDays] = useState([]);
-    const [selectedEvent, setSelectedEvent] = useState(isAttendeesPage ? '' : 'Global Innovation Summit 2024');
+    const [selectedSessionIds, setSelectedSessionIds] = useState([]);
+    const [events, setEvents] = useState([]);
+    const [selectedEventId, setSelectedEventId] = useState('');
+    const [eventSessions, setEventSessions] = useState([]);
+    const [selectedEventVenue, setSelectedEventVenue] = useState('');
+    const [paymentMethod, setPaymentMethod] = useState('stripe');
+    const [submitting, setSubmitting] = useState(false);
+    const [cardComplete, setCardComplete] = useState({ number: false, expiry: false, cvc: false });
+    const [isNewAttendee, setIsNewAttendee] = useState(false);
+    const [selectedProfileId, setSelectedProfileId] = useState(null);
+    const [attendeeMembershipNumber, setAttendeeMembershipNumber] = useState(null);
+    const [previousAttendeeQuery, setPreviousAttendeeQuery] = useState('');
+    const [previousAttendeeResults, setPreviousAttendeeResults] = useState([]);
+    const [computedAmount, setComputedAmount] = useState(null);
+
     const inputRef = useRef(null);
     const dispatch = useDispatch();
     const { countriesOptions } = useSelector((state) => state.countries);
@@ -47,14 +90,40 @@ const CreateAttendeeDrawer = ({ open, onClose }) => {
         dispatch(fetchCountries());
     }, [dispatch]);
 
+    useEffect(() => {
+        if (!open) return;
+        fetchEvents({ status: 'Published' })
+            .then((data) => setEvents(Array.isArray(data) ? data : []))
+            .catch(() => setEvents([]));
+    }, [open]);
+
+    useEffect(() => {
+        if (!selectedEventId) {
+            setEventSessions([]);
+            setSelectedEventVenue('');
+            return;
+        }
+        fetchEventById(selectedEventId)
+            .then((data) => {
+                setEventSessions(Array.isArray(data?.sessions) ? data.sessions : []);
+                setSelectedEventVenue(data?.venue || '');
+            })
+            .catch(() => setEventSessions([]));
+    }, [selectedEventId]);
+
+    useEffect(() => {
+        setSelectedSessionIds([]);
+        setComputedAmount(null);
+    }, [selectedEventId]);
+
     const [formData, setFormData] = useState({
-        firstName: 'John',
-        surname: 'Doe',
-        email: 'john.doe@example.com',
-        phone: '+353 87 900 0538',
-        workPlace: 'Acme Corp',
+        firstName: '',
+        surname: '',
+        email: '',
+        phone: '',
+        workPlace: '',
         otherWorkPlace: '',
-        grade: 'Level 4',
+        grade: '',
         otherGrade: '',
         searchAddress: '',
         addressLine1: '',
@@ -63,10 +132,13 @@ const CreateAttendeeDrawer = ({ open, onClose }) => {
         countyState: '',
         eircode: '',
         country: 'Ireland',
-        cardNumber: '',
-        expiryDate: '',
-        cvv: ''
     });
+
+    const resetAttendeeSelection = () => {
+        setIsNewAttendee(false);
+        setSelectedProfileId(null);
+        setAttendeeMembershipNumber(null);
+    };
 
     const handleInputChange = (e) => {
         const { name, value } = e.target;
@@ -83,6 +155,9 @@ const CreateAttendeeDrawer = ({ open, onClose }) => {
     };
 
     const handleMemberSelect = (memberData) => {
+        setSelectedProfileId(memberData._id || memberData.profileId || null);
+        setAttendeeMembershipNumber(memberData.membershipNumber || null);
+        setIsNewAttendee(false);
         setFormData({
             ...formData,
             firstName: memberData.personalInfo?.forename || '',
@@ -100,6 +175,51 @@ const CreateAttendeeDrawer = ({ open, onClose }) => {
             eircode: memberData.contactInfo?.eircode || '',
             country: memberData.contactInfo?.country || 'Ireland'
         });
+    };
+
+    const handleAddNewAttendee = (searchTerm) => {
+        const { email, firstName, surname } = splitSearchTerm(searchTerm);
+        setIsNewAttendee(true);
+        setSelectedProfileId(null);
+        setAttendeeMembershipNumber(null);
+        setFormData((prev) => ({
+            ...prev,
+            email: email || prev.email,
+            firstName: firstName || prev.firstName,
+            surname: surname || prev.surname,
+        }));
+        message.info('No existing profile found - this will register a new (non-member) attendee.');
+    };
+
+    const handlePreviousAttendeeSearch = async (term) => {
+        setPreviousAttendeeQuery(term);
+        if (!term || term.trim().length < 2) {
+            setPreviousAttendeeResults([]);
+            return;
+        }
+        try {
+            const results = await fetchRegistrations({ q: term.trim() });
+            setPreviousAttendeeResults(Array.isArray(results) ? results : []);
+        } catch (err) {
+            setPreviousAttendeeResults([]);
+        }
+    };
+
+    const handleSelectPreviousAttendee = (registration) => {
+        const snapshot = registration.attendeeSnapshot || {};
+        setSelectedProfileId(registration.profileId || null);
+        setAttendeeMembershipNumber(registration.membershipNumber || null);
+        setIsNewAttendee(false);
+        setFormData((prev) => ({
+            ...prev,
+            firstName: snapshot.firstName || prev.firstName,
+            surname: snapshot.lastName || prev.surname,
+            email: snapshot.email || prev.email,
+            phone: snapshot.phone || prev.phone,
+            workPlace: snapshot.workLocation || prev.workPlace,
+            grade: snapshot.grade || prev.grade,
+        }));
+        setPreviousAttendeeResults([]);
     };
 
     const handlePlacesChanged = () => {
@@ -145,67 +265,83 @@ const CreateAttendeeDrawer = ({ open, onClose }) => {
         );
     };
 
-    const toggleDay = (day) => {
-        setSelectedDays(prev =>
-            prev.includes(day)
-                ? prev.filter(d => d !== day)
-                : [...prev, day]
+    const toggleSession = (sessionId) => {
+        setSelectedSessionIds(prev =>
+            prev.includes(sessionId)
+                ? prev.filter(d => d !== sessionId)
+                : [...prev, sessionId]
         );
     };
 
     const isOtherSelection = (value) =>
         typeof value === 'string' && value.trim().toLowerCase() === 'other';
 
-    const eventDaysMap = {
-        'Global Innovation Summit 2024': [
-            { id: 'Day 1', label: 'Day 1: Opening Keynote', date: 'Oct 24, 2024', price: 120 },
-            { id: 'Day 2', label: 'Day 2: Breakout Sessions', date: 'Oct 25, 2024', price: 150 },
-            { id: 'Day 3', label: 'Day 3: Networking & Gala', date: 'Oct 26, 2024', price: 95 },
-        ],
-        'Annual Nursing Conference': [
-            { id: 'Day 1', label: 'Day 1: Clinical Leadership', date: 'Nov 04, 2024', price: 110 },
-            { id: 'Day 2', label: 'Day 2: Policy & Advocacy', date: 'Nov 05, 2024', price: 130 },
-        ],
-        'Advanced Clinical Skills': [
-            { id: 'Module 1', label: 'Module 1: Acute Care Workshop', date: 'Sep 12, 2024', price: 95 },
-            { id: 'Module 2', label: 'Module 2: Simulation Lab', date: 'Sep 13, 2024', price: 105 },
-            { id: 'Module 3', label: 'Module 3: Assessment', date: 'Sep 14, 2024', price: 80 },
-        ],
-        'Infection Control Essentials': [
-            { id: 'Session 1', label: 'Session 1: Prevention Basics', date: 'Aug 21, 2024', price: 70 },
-            { id: 'Session 2', label: 'Session 2: Clinical Practice', date: 'Aug 22, 2024', price: 85 },
-        ],
-    };
-    const eventOptions = [
-        { label: 'Global Innovation Summit 2024', value: '1' },
-        { label: 'Annual Nursing Conference', value: '2' },
-        { label: 'Advanced Clinical Skills', value: '3' },
-        { label: 'Infection Control Essentials', value: '4' },
-    ];
-    const days = selectedEvent ? (eventDaysMap[selectedEvent] || []) : [];
+    const eventOptions = events.map((ev) => ({ label: ev.title, value: ev._id }));
 
-    useEffect(() => {
-        if (!selectedEvent || days.length === 0) {
-            setSelectedDays([]);
+    const handleSubmit = async () => {
+        if (!selectedEventId) {
+            message.error('Please select an event');
+            return;
+        }
+        if (!formData.email) {
+            message.error('Email is required');
             return;
         }
 
-        // Keep only valid selections for the newly selected event.
-        setSelectedDays((prev) => {
-            const validIds = new Set(days.map((day) => day.id));
-            const retained = prev.filter((id) => validIds.has(id));
-            return retained.length ? retained : [days[0].id];
-        });
-    }, [selectedEvent]);
+        setSubmitting(true);
+        try {
+            let paymentIntentClientSecret = null;
 
-    const totalPrice = days
-        .filter(d => selectedDays.includes(d.id))
-        .reduce((sum, d) => sum + d.price, 0);
+            const payload = {
+                registrationType: 'event',
+                eventId: selectedEventId,
+                sessionIds: selectedSessionIds,
+                profile: {
+                    profileId: selectedProfileId || undefined,
+                    email: formData.email,
+                    firstName: formData.firstName,
+                    lastName: formData.surname,
+                    phone: formData.phone,
+                    workLocation: isOtherSelection(formData.workPlace) ? formData.otherWorkPlace : formData.workPlace,
+                    grade: isOtherSelection(formData.grade) ? formData.otherGrade : formData.grade,
+                },
+                paymentMethod,
+                registeredVia: 'crm',
+            };
+
+            const result = await createRegistration(payload);
+            setComputedAmount(result?.registration?.amount ?? null);
+
+            if (paymentMethod === 'stripe' && result?.payment?.clientSecret) {
+                if (!stripe || !elements) {
+                    message.error('Stripe has not finished loading - please try again.');
+                    return;
+                }
+                const cardNumberElement = elements.getElement(CardNumberElement);
+                const confirmResult = await stripe.confirmCardPayment(result.payment.clientSecret, {
+                    payment_method: { card: cardNumberElement },
+                });
+                if (confirmResult.error) {
+                    message.error(confirmResult.error.message || 'Card payment failed');
+                    return;
+                }
+            }
+
+            message.success('Attendee registered successfully');
+            dispatchProfileInvalidate({ scopes: ['events'], profileId: selectedProfileId || result?.registration?.profileId });
+            if (onClose) onClose();
+        } catch (err) {
+            message.error(err?.response?.data?.error?.message || err?.message || 'Failed to register attendee');
+        } finally {
+            setSubmitting(false);
+        }
+    };
 
     const headerExtra = (
         <Button
             className="butn primary-btn"
-            onClick={() => console.log('Adding attendee...', formData)}
+            loading={submitting}
+            onClick={handleSubmit}
         >
             Add Attendee
         </Button>
@@ -239,15 +375,15 @@ const CreateAttendeeDrawer = ({ open, onClose }) => {
                             }}>
                                 <Checkbox
                                     checked={registrationType === 'Member'}
-                                    onChange={() => setRegistrationType('Member')}
+                                    onChange={() => { setRegistrationType('Member'); resetAttendeeSelection(); }}
                                 >
-                                    <Text style={{ fontSize: '13px', fontWeight: 600, color: '#475569' }}>Member</Text>
+                                    <Text style={{ fontSize: '13px', fontWeight: 600, color: 'var(--theme-text-muted)' }}>Member</Text>
                                 </Checkbox>
                                 <Checkbox
                                     checked={registrationType === 'PreviousAttendee'}
-                                    onChange={() => setRegistrationType('PreviousAttendee')}
+                                    onChange={() => { setRegistrationType('PreviousAttendee'); resetAttendeeSelection(); }}
                                 >
-                                    <Text style={{ fontSize: '13px', fontWeight: 600, color: '#475569' }}>Previous attendee</Text>
+                                    <Text style={{ fontSize: '13px', fontWeight: 600, color: 'var(--theme-text-muted)' }}>Previous attendee</Text>
                                 </Checkbox>
                             </div>
                         </div>
@@ -259,7 +395,14 @@ const CreateAttendeeDrawer = ({ open, onClose }) => {
                                     fullWidth={true}
                                     onSelectBehavior="callback"
                                     onSelectCallback={handleMemberSelect}
+                                    onAddMember={handleAddNewAttendee}
+                                    addMemberLabel="Add as new attendee"
                                 />
+                                {isNewAttendee && (
+                                    <Text type="warning" style={{ display: 'block', marginTop: 8 }}>
+                                        Registering a new, non-member attendee - no membership number will be created.
+                                    </Text>
+                                )}
                             </div>
                         )}
 
@@ -268,8 +411,23 @@ const CreateAttendeeDrawer = ({ open, onClose }) => {
                                 <div className="drawer-subsection-title">Previous attendee search</div>
                                 <MySearchInput
                                     placeholder="Search by name or email..."
-                                    onChange={(e) => console.log('Searching attendee...', e.target.value)}
+                                    value={previousAttendeeQuery}
+                                    onChange={(e) => handlePreviousAttendeeSearch(e.target.value)}
                                 />
+                                {previousAttendeeResults.length > 0 && (
+                                    <div className="previous-attendee-results">
+                                        {previousAttendeeResults.map((reg) => (
+                                            <div
+                                                key={reg._id}
+                                                className="previous-attendee-result-row"
+                                                onClick={() => handleSelectPreviousAttendee(reg)}
+                                                style={{ cursor: 'pointer', padding: '6px 8px', borderBottom: '1px solid #eef2f6' }}
+                                            >
+                                                {reg.attendeeSnapshot?.firstName} {reg.attendeeSnapshot?.lastName} — {reg.attendeeSnapshot?.email}
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
                             </div>
                         )}
 
@@ -408,89 +566,119 @@ const CreateAttendeeDrawer = ({ open, onClose }) => {
 
                     {/* RIGHT COLUMN: Event & Payment */}
                     <Col span={12}>
-                        {/* <h3 className="drawer-section-title">Event & Payment</h3> */}
-
-
                         <CustomSelect
-                            value={selectedEvent}
+                            value={selectedEventId}
                             label="Event selection"
                             options={eventOptions}
                             placeholder="Select event"
-                            onChange={(e) => setSelectedEvent(e.target.value)}
+                            onChange={(e) => setSelectedEventId(e.target.value)}
                             isMarginBtm={true}
                         />
 
-                        <label className="my-input-label">Day selection</label>
-                        {days.map(day => (
-                            <div
-                                key={day.id}
-                                className={`day-selection-card ${selectedDays.includes(day.id) ? 'selected' : ''}`}
-                            >
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                                    <Checkbox
-                                        checked={selectedDays.includes(day.id)}
-                                        onChange={() => toggleDay(day.id)}
-                                    />
-                                    <div className="day-info">
-                                        <span className="day-title">{day.label}</span>
-                                        <span className="day-date">{day.date}</span>
+                        {eventSessions.length > 0 && (
+                            <>
+                                <label className="my-input-label">Day/session selection</label>
+                                {eventSessions.map(session => (
+                                    <div
+                                        key={session._id}
+                                        className={`day-selection-card ${selectedSessionIds.includes(session._id) ? 'selected' : ''}`}
+                                    >
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                                            <Checkbox
+                                                checked={selectedSessionIds.includes(session._id)}
+                                                onChange={() => toggleSession(session._id)}
+                                            />
+                                            <div className="day-info">
+                                                <span className="day-title">{session.label}</span>
+                                                <span className="day-date">{session.date ? new Date(session.date).toLocaleDateString() : ''}</span>
+                                            </div>
+                                        </div>
                                     </div>
-                                </div>
-                                <div className="day-price">${day.price.toFixed(2)}</div>
-                            </div>
-                        ))}
+                                ))}
+                            </>
+                        )}
 
                         <div className="event-summary-box">
                             <label className="my-input-label">Event summary</label>
                             <div className="summary-table">
                                 <div className="summary-table-row">
                                     <div className="summary-table-label">Venue</div>
-                                    <div className="summary-table-value">Convention</div>
+                                    <div className="summary-table-value">{selectedEventVenue || '-'}</div>
                                 </div>
                                 <div className="summary-table-row">
-                                    <div className="summary-table-label">Selected days</div>
-                                    <div className="summary-table-value">{selectedDays.length ? selectedDays.join(', ') : '-'}</div>
+                                    <div className="summary-table-label">Selected sessions</div>
+                                    <div className="summary-table-value">{selectedSessionIds.length || 'All'}</div>
                                 </div>
                             </div>
                             <div className="total-fee-row">
                                 <div className="total-label">
                                     Total Registration Fee
-                                    <p>Recalculated in real-time</p>
+                                    <p>{computedAmount == null ? 'Calculated on submission (member pricing applies automatically)' : 'Charged'}</p>
                                 </div>
-                                <div className="total-amount">${totalPrice.toFixed(2)}</div>
+                                <div className="total-amount">
+                                    {computedAmount == null ? '-' : `€${(computedAmount / 100).toFixed(2)}`}
+                                </div>
                             </div>
                         </div>
 
                         <div className="payment-details-section">
-                            <div className="drawer-subsection-title">Payment details</div>
-                            <MyInput
-                                label="Card number"
-                                name="cardNumber"
-                                value={formData.cardNumber}
-                                onChange={handleInputChange}
-                                placeholder="0000 0000 0000 0000"
-                                prefix={<CreditCardOutlined style={{ color: '#bfbfbf' }} />}
-                            />
-                            <Row gutter={16}>
-                                <Col span={12}>
-                                    <MyInput
-                                        label="Expiry date"
-                                        name="expiryDate"
-                                        value={formData.expiryDate}
-                                        onChange={handleInputChange}
-                                        placeholder="MM/YY"
-                                    />
-                                </Col>
-                                <Col span={12}>
-                                    <MyInput
-                                        label="Cvv"
-                                        name="cvv"
-                                        value={formData.cvv}
-                                        onChange={handleInputChange}
-                                        placeholder="***"
-                                    />
-                                </Col>
-                            </Row>
+                            <div className="drawer-subsection-title">Payment method</div>
+                            <Radio.Group
+                                value={paymentMethod}
+                                onChange={(e) => setPaymentMethod(e.target.value)}
+                                style={{ marginBottom: 16 }}
+                            >
+                                <Radio value="stripe">Card (Stripe)</Radio>
+                                <Radio value="invoice">Invoice</Radio>
+                                <Radio value="comp">Complimentary</Radio>
+                                <Radio value="manual">Manual (cash/cheque received)</Radio>
+                            </Radio.Group>
+
+                            {paymentMethod === 'stripe' && (
+                                <>
+                                    <div className="my-input-wrapper">
+                                        <label className="my-input-label">Card number</label>
+                                        <div className="stripe-element-input">
+                                            <CreditCardOutlined style={{ marginRight: 8, color: '#bfbfbf' }} />
+                                            <CardNumberElement
+                                                options={STRIPE_ELEMENT_OPTIONS}
+                                                onChange={(e) => setCardComplete((prev) => ({ ...prev, number: e.complete }))}
+                                            />
+                                        </div>
+                                    </div>
+                                    <Row gutter={16}>
+                                        <Col span={12}>
+                                            <div className="my-input-wrapper">
+                                                <label className="my-input-label">Expiry date</label>
+                                                <div className="stripe-element-input">
+                                                    <CardExpiryElement
+                                                        options={STRIPE_ELEMENT_OPTIONS}
+                                                        onChange={(e) => setCardComplete((prev) => ({ ...prev, expiry: e.complete }))}
+                                                    />
+                                                </div>
+                                            </div>
+                                        </Col>
+                                        <Col span={12}>
+                                            <div className="my-input-wrapper">
+                                                <label className="my-input-label">Cvv</label>
+                                                <div className="stripe-element-input">
+                                                    <CardCvcElement
+                                                        options={STRIPE_ELEMENT_OPTIONS}
+                                                        onChange={(e) => setCardComplete((prev) => ({ ...prev, cvc: e.complete }))}
+                                                    />
+                                                </div>
+                                            </div>
+                                        </Col>
+                                    </Row>
+                                </>
+                            )}
+                            {paymentMethod !== 'stripe' && (
+                                <Text type="secondary">
+                                    {paymentMethod === 'invoice' && 'An invoice will be posted to the ledger; the attendee is billed separately.'}
+                                    {paymentMethod === 'comp' && 'No payment will be collected; the registration fee is waived and recorded as a write-off.'}
+                                    {paymentMethod === 'manual' && 'Record this as already paid via cash/cheque/bank transfer outside Stripe.'}
+                                </Text>
+                            )}
                         </div>
 
                     </Col>
@@ -499,5 +687,11 @@ const CreateAttendeeDrawer = ({ open, onClose }) => {
         </Drawer>
     );
 };
+
+const CreateAttendeeDrawer = (props) => (
+    <Elements stripe={stripePromise}>
+        <CreateAttendeeDrawerInner {...props} />
+    </Elements>
+);
 
 export default CreateAttendeeDrawer;

@@ -36,7 +36,7 @@ function authHeaders() {
 const AMBER_BG = "#fff7e6";
 const AMBER_BORDER = "#ffd591";
 const AMBER_TEXT = "#d48806";
-const INACTIVE_LABEL = "#8c8c8c";
+const INACTIVE_LABEL = "var(--theme-text-muted)";
 
 function campaignHeaderStatusStyle(status) {
   const s = String(status || "").toLowerCase();
@@ -225,7 +225,7 @@ export default function EmailCampaignDetail() {
                   display: "flex",
                   flexWrap: "wrap",
                   gap: "16px 24px",
-                  color: "#595959",
+                  color: "var(--theme-text-muted)",
                   fontSize: 14,
                 }}
               >
@@ -251,7 +251,7 @@ export default function EmailCampaignDetail() {
                   style={{
                     marginTop: 12,
                     fontSize: 13,
-                    color: "#595959",
+                    color: "var(--theme-text-muted)",
                     lineHeight: 1.55,
                     display: "flex",
                     flexWrap: "wrap",
@@ -368,7 +368,7 @@ export default function EmailCampaignDetail() {
               style={{
                 fontSize: 13,
                 fontWeight: 600,
-                color: "#595959",
+                color: "var(--theme-text-muted)",
               }}
             >
               Total: {totalRecipientRows.toLocaleString()} rows

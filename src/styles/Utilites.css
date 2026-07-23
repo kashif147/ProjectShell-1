@@ -3,30 +3,30 @@
   --secoundry-color: #475569;
   --accent-color: #0d9488;
   --secoundry-bg-color: #eef2f6;
-  --app-page-bg: #f8f9f9;
-  --mainBlue: var(--primary-color, #215e97);
-  --second: var(--secoundry-color, #c97a2f);
-  --app-brand-primary: var(--primary-color, #215e97);
-  --app-brand-secondary: var(--secoundry-color, #c97a2f);
-  --app-brand-accent: var(--accent-color, #0ea5e9);
-  --app-brand-bg: var(--secoundry-bg-color, #e6f7ff);
+  --app-page-bg: var(--theme-page-bg, color-mix(in srgb, var(--secoundry-bg-color, #eef2f6) 18%, #ffffff));
+  --mainBlue: var(--theme-color-primary, var(--primary-color, #215e97));
+  --second: var(--theme-color-secondary, var(--secoundry-color, #475569));
+  --app-brand-primary: var(--theme-color-primary, var(--primary-color, #215e97));
+  --app-brand-secondary: var(--theme-color-secondary, var(--secoundry-color, #475569));
+  --app-brand-accent: var(--theme-color-accent, var(--accent-color, #0d9488));
+  --app-brand-bg: var(--theme-color-surface, var(--secoundry-bg-color, #eef2f6));
   --app-shell-gradient: linear-gradient(
     135deg,
     color-mix(in srgb, var(--app-brand-primary) 92%, #061824) 0%,
-    color-mix(in srgb, var(--accent-color, #0ea5e9) 24%, var(--app-brand-primary)) 58%,
-    color-mix(in srgb, var(--secoundry-color, #c97a2f) 28%, var(--app-brand-primary)) 100%
+    color-mix(in srgb, var(--app-brand-accent) 24%, var(--app-brand-primary)) 58%,
+    color-mix(in srgb, var(--app-brand-secondary) 28%, var(--app-brand-primary)) 100%
   );
   --app-sidebar-gradient: linear-gradient(
     180deg,
     color-mix(in srgb, var(--app-brand-primary) 88%, #071827) 0%,
-    color-mix(in srgb, var(--accent-color, #0ea5e9) 18%, var(--app-brand-primary)) 52%,
+    color-mix(in srgb, var(--app-brand-accent) 18%, var(--app-brand-primary)) 52%,
     color-mix(in srgb, var(--app-brand-primary) 72%, #061824) 100%
   );
   --app-table-header-bg: color-mix(in srgb, var(--app-brand-primary) 86%, #0f172a);
   --app-selected-bg: color-mix(in srgb, var(--app-brand-bg) 78%, #ffffff);
-  --app-selected-border: color-mix(in srgb, var(--secoundry-color, #c97a2f) 35%, transparent);
+  --app-selected-border: color-mix(in srgb, var(--app-brand-secondary) 35%, transparent);
   --app-brand-shadow: 0 10px 28px color-mix(in srgb, var(--app-brand-primary) 18%, transparent);
-  --gray: rgba(9, 30, 66, 0.04);
+  --gray: color-mix(in srgb, var(--app-brand-bg) 20%, transparent);
 }
 
 /* Full header section */

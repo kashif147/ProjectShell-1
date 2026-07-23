@@ -1629,7 +1629,7 @@ function HeaderDetails({
                         style={{
                           margin: 0,
                           fontSize: 14,
-                          color: "#595959",
+                          color: "var(--theme-text-muted)",
                           fontWeight: 400,
                         }}
                       >
@@ -1645,7 +1645,7 @@ function HeaderDetails({
                         style={{
                           margin: 0,
                           fontSize: 14,
-                          color: "#595959",
+                          color: "var(--theme-text-muted)",
                           fontWeight: 400,
                         }}
                       >
@@ -2693,7 +2693,7 @@ function HeaderDetails({
         okText="Import"
         width={560}
       >
-        <p style={{ fontSize: 13, color: "#595959" }}>
+        <p style={{ fontSize: 13, color: "var(--theme-text-muted)" }}>
           One line per entry: <code>reference, amount</code> (amount in euros,
           e.g. <code>PO_abc123, 31.50</code>).
         </p>
@@ -2839,7 +2839,7 @@ function HeaderDetails({
         >
           {selectedCaseRows.length === 0 ? (
             <div className="create-case-drawer-content">
-              <p style={{ color: "#8c8c8c" }}>
+              <p style={{ color: "var(--theme-text-muted)" }}>
                 Select one or more cases from the table to edit.
               </p>
             </div>

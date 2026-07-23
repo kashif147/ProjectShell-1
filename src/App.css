@@ -7,57 +7,57 @@
 
 /* Legacy CSS Variables - Maintained for backward compatibility */
 :root {
-  --mainBlue: var(--primary-color, #215e97);
-  --second: var(--secoundry-color, #c97a2f);
+  --mainBlue: var(--theme-color-primary, var(--primary-color, #215e97));
+  --second: var(--theme-color-secondary, var(--secoundry-color, #475569));
   /*#ad8135 */
-  --FontsColor: color-mix(in srgb, var(--primary-color, #215e97) 72%, #111827);
-  --borderColor: #d9d9d9;
+  --FontsColor: color-mix(in srgb, var(--theme-color-primary, var(--primary-color, #215e97)) 72%, #111827);
+  --borderColor: var(--theme-border, color-mix(in srgb, var(--primary-color, #215e97) 12%, #d9d9d9));
   --fontFamily: "Roboto", sans-serif;
-  --labelColor: #393b3d;
-  --table-row: color-mix(in srgb, var(--secoundry-bg-color, #e6f7ff) 22%, #ffffff);
-  --btn-hover: color-mix(in srgb, var(--secoundry-bg-color, #e6f7ff) 68%, #ffffff);
+  --labelColor: var(--theme-text, color-mix(in srgb, var(--primary-color, #215e97) 72%, #111827));
+  --table-row: color-mix(in srgb, var(--theme-color-surface, var(--secoundry-bg-color, #eef2f6)) 22%, #ffffff);
+  --btn-hover: color-mix(in srgb, var(--theme-color-surface, var(--secoundry-bg-color, #eef2f6)) 68%, #ffffff);
   --app-table-surface-bg: #ffffff;
-  --app-table-row-alt-bg: color-mix(in srgb, var(--secoundry-bg-color, #e6f7ff) 30%, #ffffff);
-  --app-table-border: color-mix(in srgb, var(--primary-color, #215e97) 10%, #dce4ee);
-  --app-table-header-light-bg: color-mix(in srgb, var(--secoundry-bg-color, #e6f7ff) 68%, #ffffff);
-  --app-table-header-text: var(--primary-color, #215e97);
-  --app-table-body-text: #26323f;
-  --app-table-muted-text: #65758b;
-  --gray: rgba(9, 30, 66, 0.04);
-  --app-brand-primary: var(--primary-color, #215e97);
-  --app-brand-secondary: var(--secoundry-color, #c97a2f);
-  --app-brand-accent: var(--accent-color, #0ea5e9);
-  --app-brand-bg: var(--secoundry-bg-color, #e6f7ff);
+  --app-table-row-alt-bg: color-mix(in srgb, var(--theme-color-surface, var(--secoundry-bg-color, #eef2f6)) 30%, #ffffff);
+  --app-table-border: color-mix(in srgb, var(--theme-color-primary, var(--primary-color, #215e97)) 10%, #dce4ee);
+  --app-table-header-light-bg: color-mix(in srgb, var(--theme-color-surface, var(--secoundry-bg-color, #eef2f6)) 68%, #ffffff);
+  --app-table-header-text: var(--theme-color-primary, var(--primary-color, #215e97));
+  --app-table-body-text: color-mix(in srgb, var(--theme-color-primary, var(--primary-color, #215e97)) 30%, #26323f);
+  --app-table-muted-text: var(--theme-text-muted, color-mix(in srgb, var(--primary-color, #215e97) 38%, #64748b));
+  --gray: color-mix(in srgb, var(--theme-color-surface, var(--secoundry-bg-color, #eef2f6)) 20%, transparent);
+  --app-brand-primary: var(--theme-color-primary, var(--primary-color, #215e97));
+  --app-brand-secondary: var(--theme-color-secondary, var(--secoundry-color, #475569));
+  --app-brand-accent: var(--theme-color-accent, var(--accent-color, #0d9488));
+  --app-brand-bg: var(--theme-color-surface, var(--secoundry-bg-color, #eef2f6));
   --app-shell-gradient: linear-gradient(
     135deg,
-    color-mix(in srgb, var(--primary-color, #215e97) 92%, #061824) 0%,
-    color-mix(in srgb, var(--accent-color, #0ea5e9) 24%, var(--primary-color, #215e97)) 58%,
-    color-mix(in srgb, var(--secoundry-color, #c97a2f) 28%, var(--primary-color, #215e97)) 100%
+    color-mix(in srgb, var(--app-brand-primary) 92%, #061824) 0%,
+    color-mix(in srgb, var(--app-brand-accent) 24%, var(--app-brand-primary)) 58%,
+    color-mix(in srgb, var(--app-brand-secondary) 28%, var(--app-brand-primary)) 100%
   );
   --app-sidebar-gradient: linear-gradient(
     180deg,
-    color-mix(in srgb, var(--primary-color, #215e97) 88%, #071827) 0%,
-    color-mix(in srgb, var(--accent-color, #0ea5e9) 18%, var(--primary-color, #215e97)) 52%,
-    color-mix(in srgb, var(--primary-color, #215e97) 72%, #061824) 100%
+    color-mix(in srgb, var(--app-brand-primary) 88%, #071827) 0%,
+    color-mix(in srgb, var(--app-brand-accent) 18%, var(--app-brand-primary)) 52%,
+    color-mix(in srgb, var(--app-brand-primary) 72%, #061824) 100%
   );
-  --app-table-header-bg: color-mix(in srgb, var(--primary-color, #215e97) 86%, #0f172a);
-  --app-selected-bg: color-mix(in srgb, var(--secoundry-bg-color, #e6f7ff) 78%, #ffffff);
-  --app-selected-border: color-mix(in srgb, var(--secoundry-color, #c97a2f) 35%, transparent);
-  --app-brand-shadow: 0 10px 28px color-mix(in srgb, var(--primary-color, #215e97) 18%, transparent);
-  --app-button-bg: var(--primary-color, #215e97);
-  --app-button-bg-hover: color-mix(in srgb, var(--primary-color, #215e97) 84%, #000000);
-  --app-button-bg-soft: color-mix(in srgb, var(--primary-color, #215e97) 10%, #ffffff);
-  --app-button-border-soft: color-mix(in srgb, var(--primary-color, #215e97) 26%, #d9d9d9);
-  --app-button-focus-ring: 0 0 0 2px color-mix(in srgb, var(--primary-color, #215e97) 20%, transparent);
-  --app-control-surface: color-mix(in srgb, var(--secoundry-bg-color, #e6f7ff) 18%, #ffffff);
-  --app-control-surface-hover: color-mix(in srgb, var(--secoundry-bg-color, #e6f7ff) 34%, #ffffff);
-  --app-control-border: color-mix(in srgb, var(--primary-color, #215e97) 14%, #d9d9d9);
+  --app-table-header-bg: color-mix(in srgb, var(--app-brand-primary) 86%, #0f172a);
+  --app-selected-bg: color-mix(in srgb, var(--app-brand-bg) 78%, #ffffff);
+  --app-selected-border: color-mix(in srgb, var(--app-brand-secondary) 35%, transparent);
+  --app-brand-shadow: 0 10px 28px color-mix(in srgb, var(--app-brand-primary) 18%, transparent);
+  --app-button-bg: var(--app-brand-primary);
+  --app-button-bg-hover: color-mix(in srgb, var(--app-brand-primary) 84%, #000000);
+  --app-button-bg-soft: color-mix(in srgb, var(--app-brand-primary) 10%, #ffffff);
+  --app-button-border-soft: color-mix(in srgb, var(--app-brand-primary) 26%, #d9d9d9);
+  --app-button-focus-ring: 0 0 0 2px color-mix(in srgb, var(--app-brand-primary) 20%, transparent);
+  --app-control-surface: color-mix(in srgb, var(--app-brand-bg) 18%, #ffffff);
+  --app-control-surface-hover: color-mix(in srgb, var(--app-brand-bg) 34%, #ffffff);
+  --app-control-border: color-mix(in srgb, var(--app-brand-primary) 14%, #d9d9d9);
   --app-detail-page-bg: color-mix(
     in srgb,
-    var(--accent-color, #0ea5e9) 7%,
-    #f4f7f8
+    var(--theme-color-surface, var(--secoundry-bg-color, #eef2f6)) 18%,
+    #ffffff
   );
-  --app-detail-page-border: color-mix(in srgb, var(--primary-color, #215e97) 8%, #e5edf1);
+  --app-detail-page-border: var(--theme-border, color-mix(in srgb, var(--primary-color, #215e97) 12%, #d9d9d9));
 }
 
 .ql-container.ql-snow {
@@ -307,31 +307,50 @@ textarea:focus,
   /* Change this value to your desired margin */
 }
 
+.ant-checkbox .ant-checkbox-inner {
+  background-color: #ffffff;
+  border-color: color-mix(in srgb, var(--app-brand-primary, #215e97) 24%, #cbd5e1);
+  border-radius: 5px;
+  box-shadow: inset 0 1px 1px rgba(15, 23, 42, 0.04);
+  transition:
+    background-color 0.15s ease,
+    border-color 0.15s ease,
+    box-shadow 0.15s ease;
+}
+
+.ant-checkbox-wrapper:hover .ant-checkbox-inner,
+.ant-checkbox:hover .ant-checkbox-inner {
+  border-color: color-mix(in srgb, var(--app-brand-primary, #215e97) 58%, #93c5fd);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--app-brand-primary, #215e97) 10%, transparent);
+}
+
 .ant-select-selector {
   border-radius: 3px !important;
   /* Set your desired border-radius */
 }
 
 .ant-checkbox-checked .ant-checkbox-inner {
-  background-color: var(--secoundry-color) !important;
-  /* Set your desired color */
-  border-color: var(--secoundry-color) !important;
-  /* Match border to background */
+  background-color: color-mix(in srgb, var(--app-brand-primary, #215e97) 76%, #38bdf8) !important;
+  border-color: color-mix(in srgb, var(--app-brand-primary, #215e97) 72%, #38bdf8) !important;
+  box-shadow: 0 2px 5px color-mix(in srgb, var(--app-brand-primary, #215e97) 18%, transparent);
 }
 
 .ant-checkbox-checked .ant-checkbox-inner::after {
-  border-color: var(--brand-on-secondary, #ffffff);
-  /* Optional: Change the checkmark color */
+  border-color: #ffffff !important;
+}
+
+.ant-checkbox-input:focus-visible + .ant-checkbox-inner {
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--app-brand-primary, #215e97) 16%, transparent);
 }
 
 .consent-checkbox-indeterminate .ant-checkbox-inner {
-  background-color: color-mix(in srgb, var(--secoundry-color, #c97a2f) 30%, transparent) !important;
-  border-color: var(--secoundry-color) !important;
+  background-color: color-mix(in srgb, var(--app-brand-primary, #215e97) 18%, #ffffff) !important;
+  border-color: color-mix(in srgb, var(--app-brand-primary, #215e97) 56%, #93c5fd) !important;
 }
 
 .consent-checkbox-indeterminate .ant-checkbox-inner::after {
-  border-color: var(--brand-on-secondary, #ffffff) !important;
-  background-color: var(--secoundry-color) !important;
+  border-color: color-mix(in srgb, var(--app-brand-primary, #215e97) 72%, #38bdf8) !important;
+  background-color: color-mix(in srgb, var(--app-brand-primary, #215e97) 72%, #38bdf8) !important;
 }
 
 .ant-table-cell-fix-left {
@@ -483,26 +502,25 @@ select {
   box-shadow: var(--app-button-focus-ring) !important;
 }
 
-.ant-btn-default:not(.ant-btn-dangerous):not([disabled]):not(:disabled),
-.ant-btn-dashed:not(.ant-btn-dangerous):not([disabled]):not(:disabled),
-.ant-btn-background-ghost:not(.ant-btn-dangerous):not([disabled]):not(:disabled),
+.ant-btn-default:not(.ant-btn-dangerous):not([disabled]):not(:disabled):not(.primary-btn):not(.create-button):not(.custom-primary-btn):not(.theme-btn-primary):not(.toolbar-filter-action--primary):not([style*="background"]),
+.ant-btn-dashed:not(.ant-btn-dangerous):not([disabled]):not(:disabled):not(.primary-btn):not(.create-button):not(.custom-primary-btn):not(.theme-btn-primary):not(.toolbar-filter-action--primary):not([style*="background"]),
+.ant-btn-background-ghost:not(.ant-btn-dangerous):not([disabled]):not(:disabled):not(.primary-btn):not(.create-button):not(.custom-primary-btn):not(.theme-btn-primary):not(.toolbar-filter-action--primary):not([style*="background"]),
 .butn.secoundry-btn:not([disabled]):not(:disabled),
 .butn.gray-btn:not([disabled]):not(:disabled),
 .theme-btn.theme-btn-secondary:not([disabled]):not(:disabled),
 .custom-secondary-btn:not([disabled]):not(:disabled),
 .cancel-button:not([disabled]):not(:disabled) {
-  background: var(--app-control-surface) !important;
   border-color: var(--app-control-border) !important;
   color: var(--app-brand-primary) !important;
   box-shadow: none !important;
 }
 
-.ant-btn-default:not(.ant-btn-dangerous):not([disabled]):not(:disabled):hover,
-.ant-btn-default:not(.ant-btn-dangerous):not([disabled]):not(:disabled):focus,
-.ant-btn-dashed:not(.ant-btn-dangerous):not([disabled]):not(:disabled):hover,
-.ant-btn-dashed:not(.ant-btn-dangerous):not([disabled]):not(:disabled):focus,
-.ant-btn-background-ghost:not(.ant-btn-dangerous):not([disabled]):not(:disabled):hover,
-.ant-btn-background-ghost:not(.ant-btn-dangerous):not([disabled]):not(:disabled):focus,
+.ant-btn-default:not(.ant-btn-dangerous):not([disabled]):not(:disabled):not(.primary-btn):not(.create-button):not(.custom-primary-btn):not(.theme-btn-primary):not(.toolbar-filter-action--primary):not([style*="background"]):hover,
+.ant-btn-default:not(.ant-btn-dangerous):not([disabled]):not(:disabled):not(.primary-btn):not(.create-button):not(.custom-primary-btn):not(.theme-btn-primary):not(.toolbar-filter-action--primary):not([style*="background"]):focus,
+.ant-btn-dashed:not(.ant-btn-dangerous):not([disabled]):not(:disabled):not(.primary-btn):not(.create-button):not(.custom-primary-btn):not(.theme-btn-primary):not(.toolbar-filter-action--primary):not([style*="background"]):hover,
+.ant-btn-dashed:not(.ant-btn-dangerous):not([disabled]):not(:disabled):not(.primary-btn):not(.create-button):not(.custom-primary-btn):not(.theme-btn-primary):not(.toolbar-filter-action--primary):not([style*="background"]):focus,
+.ant-btn-background-ghost:not(.ant-btn-dangerous):not([disabled]):not(:disabled):not(.primary-btn):not(.create-button):not(.custom-primary-btn):not(.theme-btn-primary):not(.toolbar-filter-action--primary):not([style*="background"]):hover,
+.ant-btn-background-ghost:not(.ant-btn-dangerous):not([disabled]):not(:disabled):not(.primary-btn):not(.create-button):not(.custom-primary-btn):not(.theme-btn-primary):not(.toolbar-filter-action--primary):not([style*="background"]):focus,
 .butn.secoundry-btn:not([disabled]):not(:disabled):hover,
 .butn.secoundry-btn:not([disabled]):not(:disabled):focus,
 .butn.gray-btn:not([disabled]):not(:disabled):hover,
@@ -776,6 +794,13 @@ body {
 
 .ant-table-container {
   overflow: auto;
+}
+
+/* Strip the outer left/top border on bordered tables so they match the
+   borderless look of the /Applications table, app-wide. */
+.ant-table-wrapper .ant-table.ant-table-bordered > .ant-table-container {
+  border-inline-start: none !important;
+  border-top: none !important;
 }
 
 .ant-table-header {
@@ -1648,8 +1673,8 @@ th.ant-table-cell.ant-table-cell-fix-left.ant-table-cell-fix-left-last {
   background-color: var(--app-table-header-light-bg) !important;
   color: var(--app-table-header-text) !important;
   font-family: var(--fontFamily) !important;
-  font-weight: 700;
-  text-transform: uppercase;
+  font-weight: 500;
+  text-transform: capitalize;
   letter-spacing: 0;
 }
 
@@ -1763,7 +1788,7 @@ th.ant-table-cell.ant-table-cell-fix-left.ant-table-cell-fix-left-last {
 
 .common-table table tr td {
   padding: 0 18px;
-  font-weight: 500;
+  font-weight: 400;
   color: var(--app-table-body-text) !important;
   height: 74px !important;
   line-height: 74px !important;

@@ -1,8 +1,8 @@
 .membership-form {
-  --membership-brand-primary: var(--app-brand-primary);
-  --membership-brand-secondary: var(--secoundry-color, #c97a2f);
-  --membership-brand-accent: var(--accent-color, #0ea5e9);
-  --membership-brand-bg: var(--membership-brand-accent);
+  --membership-brand-primary: var(--theme-color-primary, var(--app-brand-primary, #215e97));
+  --membership-brand-secondary: var(--theme-color-secondary, var(--secoundry-color, #475569));
+  --membership-brand-accent: var(--theme-color-accent, var(--accent-color, #0d9488));
+  --membership-brand-bg: var(--theme-color-surface, var(--secoundry-bg-color, #eef2f6));
   --membership-ink: color-mix(
     in srgb,
     var(--membership-brand-primary) 72%,
@@ -15,8 +15,8 @@
   );
   --membership-bg: color-mix(
     in srgb,
-    var(--membership-brand-bg) 8%,
-    #f3f6f6
+    var(--membership-brand-bg) 18%,
+    #ffffff
   );
   --membership-surface: #ffffff;
   --membership-border: color-mix(
@@ -62,16 +62,16 @@
     var(--membership-brand-accent) 14%,
     #ffffff
   );
-  --membership-icon-blue: #3b82f6;
-  --membership-icon-blue-tint: #eff6ff;
-  --membership-icon-green: #10b981;
-  --membership-icon-green-tint: #ecfdf5;
-  --membership-icon-amber: #f59e0b;
-  --membership-icon-amber-tint: #fffbeb;
-  --membership-icon-coral: #ef4444;
-  --membership-icon-coral-tint: #fef2f2;
-  --membership-icon-violet: #8b5cf6;
-  --membership-icon-violet-tint: #f5f3ff;
+  --membership-icon-blue: var(--membership-brand-primary);
+  --membership-icon-blue-tint: color-mix(in srgb, var(--membership-brand-bg) 44%, #ffffff);
+  --membership-icon-green: var(--membership-brand-secondary);
+  --membership-icon-green-tint: color-mix(in srgb, var(--membership-brand-secondary) 12%, #ffffff);
+  --membership-icon-amber: var(--membership-brand-accent);
+  --membership-icon-amber-tint: color-mix(in srgb, var(--membership-brand-accent) 12%, #ffffff);
+  --membership-icon-coral: color-mix(in srgb, var(--membership-brand-secondary) 58%, var(--membership-brand-accent));
+  --membership-icon-coral-tint: color-mix(in srgb, var(--membership-icon-coral) 12%, #ffffff);
+  --membership-icon-violet: color-mix(in srgb, var(--membership-brand-primary) 58%, var(--membership-brand-accent));
+  --membership-icon-violet-tint: color-mix(in srgb, var(--membership-icon-violet) 12%, #ffffff);
   --membership-shadow-sm: 0 1px 2px rgba(15, 46, 51, 0.06);
   --membership-shadow-md: 0 8px 24px rgba(15, 46, 51, 0.08);
   --membership-radius: 14px;
@@ -200,11 +200,11 @@
 
 .membership-form-year-pill {
   align-items: center;
-  background: var(--membership-teal-tint);
+  background: var(--membership-amber-tint);
   border: 1px solid
-    color-mix(in srgb, var(--membership-teal) 18%, transparent);
+    color-mix(in srgb, var(--membership-amber) 24%, var(--membership-border));
   border-radius: 999px;
-  color: var(--membership-teal-deep);
+  color: var(--membership-amber-deep);
   display: inline-flex;
   font-size: 11.5px;
   font-weight: 700;
@@ -352,7 +352,8 @@
 
 .membership-form-notice {
   background-color: var(--membership-amber-tint);
-  border: 1px solid #f8cf83;
+  border: 1px solid
+    color-mix(in srgb, var(--membership-brand-accent) 24%, var(--membership-border));
   border-radius: 10px;
   padding: 8px 12px;
   margin-bottom: 0;
@@ -615,25 +616,25 @@
 
 .membership-form.compact .ant-radio-inner,
 .membership-form.compact .ant-checkbox-inner {
-  border-color: #bfd0d0;
+  border-color: var(--membership-border);
 }
 
 .membership-form.compact .ant-radio-wrapper .ant-radio-checked .ant-radio-inner,
 .membership-form.compact .ant-checkbox-wrapper .ant-checkbox-checked .ant-checkbox-inner {
-  background-color: var(--membership-teal);
-  border-color: var(--membership-teal);
+  background-color: var(--membership-amber);
+  border-color: var(--membership-amber);
 }
 
 .membership-form.compact
   .ant-checkbox-wrapper
   .ant-checkbox-checked
   .ant-checkbox-inner::after {
-  border-color: var(--brand-on-primary, #ffffff);
+  border-color: var(--brand-on-accent, #ffffff);
 }
 
 .membership-form.compact .ant-radio-wrapper:hover .ant-radio-inner,
 .membership-form.compact .ant-checkbox-wrapper:hover .ant-checkbox-inner {
-  border-color: var(--membership-teal);
+  border-color: var(--membership-amber);
 }
 
 .membership-form.compact .label-extra {
@@ -660,6 +661,14 @@
     flex: 0 0 50%;
     max-width: 50%;
   }
+
+  .membership-form-columns > .membership-form-col.ant-col:nth-child(3) {
+    order: 2;
+  }
+
+  .membership-form-columns > .membership-form-col.ant-col:nth-child(2) {
+    order: 3;
+  }
 }
 
 @media (max-width: 980px) {
@@ -670,6 +679,7 @@
   .membership-form-columns > .membership-form-col.ant-col {
     flex: 0 0 100%;
     max-width: 100%;
+    order: initial;
   }
 }
 

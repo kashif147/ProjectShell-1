@@ -50,6 +50,24 @@ import {
 } from "../../utils/Utilities";
 import PricingDrawer from "./components/PricingForm";
 
+const DESCRIPTION_PREVIEW_LENGTH = 500;
+
+const truncateDescription = (text) => {
+  const value = String(text || "");
+  if (value.length <= DESCRIPTION_PREVIEW_LENGTH) return value;
+  return `${value.slice(0, DESCRIPTION_PREVIEW_LENGTH)}...`;
+};
+
+const DescriptionPreview = ({ text }) => {
+  if (!text) return null;
+  const truncated = truncateDescription(text);
+  return (
+    <Tooltip title={truncated.length < text.length ? text : undefined}>
+      <div className="text-muted small product-description-preview">{truncated}</div>
+    </Tooltip>
+  );
+};
+
 const ProductTypesManagement = () => {
   const dispatch = useDispatch();
   const { productTypes } = useSelector((state) => state.productTypes);
@@ -184,10 +202,11 @@ const ProductTypesManagement = () => {
       title: "Product Type",
       dataIndex: "name",
       key: "name",
+      width: 280,
       render: (text, record) => (
         <div>
           <div className="font-weight-bold">{text}</div>
-          <div className="text-muted small">{record.description}</div>
+          <DescriptionPreview text={record.description} />
         </div>
       ),
       sorter: { compare: (a, b) => (a.name || "").localeCompare(b.name || "") },
@@ -412,10 +431,11 @@ const ProductTypesManagement = () => {
         title: "Product Name",
         dataIndex: "name",
         key: "name",
+        width: 520,
         render: (text, record) => (
           <div>
             <div className="font-weight-bold">{text}</div>
-            <div className="text-muted small">{record?.description}</div>
+            <DescriptionPreview text={record?.description} />
           </div>
         ),
         sorter: (a, b) => (a.name || "").localeCompare(b.name || ""),
@@ -424,12 +444,14 @@ const ProductTypesManagement = () => {
         title: "Code",
         dataIndex: "code",
         key: "code",
+        width: 90,
         sorter: (a, b) => (a.code || "").localeCompare(b.code || ""),
       },
       {
         title: "Status",
         dataIndex: "status",
         key: "status",
+        width: 90,
         render: (status) => (
           <Tag color={status ? "green" : "red"}>
             {status ? "Active" : "Inactive"}
@@ -449,6 +471,7 @@ const ProductTypesManagement = () => {
         title: "Price",
         dataIndex: "price",
         key: "price",
+        width: 110,
         render: (_, record) => {
           const currency = record?.currentPricing?.currency;
           let price = record?.currentPricing?.price;
@@ -470,6 +493,7 @@ const ProductTypesManagement = () => {
           title: "Member Price",
           dataIndex: "memberPrice",
           key: "memberPrice",
+          width: 110,
           render: (_, record) => {
             const currency = record?.currentPricing?.currency;
             let price = record?.currentPricing?.memberPrice;
@@ -491,6 +515,7 @@ const ProductTypesManagement = () => {
           title: "Non-Member Price",
           dataIndex: "nonMemberPrice",
           key: "nonMemberPrice",
+          width: 120,
           render: (_, record) => {
             const currency = record?.currentPricing?.currency;
             let price = record?.currentPricing?.nonMemberPrice;
@@ -515,6 +540,7 @@ const ProductTypesManagement = () => {
     baseColumns.push({
       title: "Actions",
       key: "actions",
+      width: 110,
       render: (_, record, index, productType) => (
         <Space>
           <Tooltip title="Manage Pricing">

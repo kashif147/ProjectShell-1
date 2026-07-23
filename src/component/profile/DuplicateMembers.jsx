@@ -116,7 +116,7 @@ const DuplicateMembers = () => {
         <Button
           type="primary"
           size="small"
-          style={{ backgroundColor: "#135bec", borderColor: "#135bec" }}
+          style={{ backgroundColor: "var(--theme-color-primary)", borderColor: "var(--theme-color-primary)" }}
           onClick={() => {
             setSelectedMember(record);
             setIsMergeDrawerOpen(true);

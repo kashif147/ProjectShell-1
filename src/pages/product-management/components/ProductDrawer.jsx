@@ -15,7 +15,7 @@ const ProductForm = ({ product, productType, onClose, onSubmit, hidePricing }) =
     status: "Active",
     memberPrice: "",
     nonMemberPrice: "",
-    currency: "",
+    currency: "EUR",
     effectiveFrom: null,
     effectiveTo: null,
   };
@@ -53,7 +53,7 @@ const ProductForm = ({ product, productType, onClose, onSubmit, hidePricing }) =
             ? convertSandToEuro(product.currentPricing.price)
             : "",
         nonMemberPrice: product.currentPricing?.nonMemberPrice ? convertSandToEuro(product.currentPricing.nonMemberPrice) : "",
-        currency: product.currentPricing?.currency || "",
+        currency: product.currentPricing?.currency || "EUR",
         effectiveFrom: product.currentPricing?.effectiveFrom ? dayjs(product.currentPricing.effectiveFrom) : null,
         effectiveTo: product.currentPricing?.effectiveTo ? dayjs(product.currentPricing.effectiveTo) : null,
       });
@@ -197,6 +197,17 @@ const ProductForm = ({ product, productType, onClose, onSubmit, hidePricing }) =
     if (isProduct && !hidePricing) {
       if (!formData.effectiveFrom)
         newErrors.effectiveFrom = "Effective from date is required";
+      if (!formData.currency)
+        newErrors.currency = "Currency is required";
+      if (productType?.name === "Membership") {
+        if (!formData.memberPrice)
+          newErrors.memberPrice = "Price is required";
+      } else {
+        if (!formData.memberPrice)
+          newErrors.memberPrice = "Member price is required";
+        if (!formData.nonMemberPrice)
+          newErrors.nonMemberPrice = "Non-member price is required";
+      }
     }
 
     setErrors(newErrors);
@@ -321,6 +332,8 @@ const ProductForm = ({ product, productType, onClose, onSubmit, hidePricing }) =
               }
               options={CURRENCY_OPTIONS}
               placeholder="Select currency"
+              hasError={!!errors.currency}
+              errorMessage={errors.currency}
             />
           </div>
 

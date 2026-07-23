@@ -14,7 +14,8 @@ const MyDatePicker1 = ({
   disabled = false,
   placeholder = 'DD/MM/YYYY',
   isMarginBtm = true,
-  format = "DD/MM/YYYY"
+  format = "DD/MM/YYYY",
+  extra = null,
 }) => {
   const [isFocused, setIsFocused] = useState(false);
   const [inputValue, setInputValue] = useState('');
@@ -209,17 +210,20 @@ const MyDatePicker1 = ({
       style={{ marginBottom: isMarginBtm ? '16px' : '0' }}
       ref={containerRef}
     >
-      <label 
-        className='my-input-label'
-        htmlFor={name} 
-        style={getLabelStyles()}
-      >
-        {label}
-        {required && <span style={{ color: '#ff4d4f', marginLeft: '4px' }}>*</span>}
-        {hasError && !disabled && (
-          <span style={{ color: '#ff4d4f', marginLeft: '4px' }}> ({errorMessage})</span>
-        )}
-      </label>
+      <div className="d-flex justify-content-between align-items-center">
+        <label
+          className='my-input-label'
+          htmlFor={name}
+          style={getLabelStyles()}
+        >
+          {label}
+          {required && <span style={{ color: '#ff4d4f', marginLeft: '4px' }}>*</span>}
+          {hasError && !disabled && (
+            <span style={{ color: '#ff4d4f', marginLeft: '4px' }}> ({errorMessage})</span>
+          )}
+        </label>
+        {extra && <div className="ml-2">{extra}</div>}
+      </div>
 
       <div style={containerStyles}>
         {/* Manual Input Field */}

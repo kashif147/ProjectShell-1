@@ -467,6 +467,10 @@ export const getLabelToKeyMap = (screenCols) => {
         'Processed At Date': 'processedDateRange',
         'Last Payment Date': 'paymentDate',
         'Payment Method': 'paymentType',
+        'Event': 'eventName',
+        'Event Date': 'startDate',
+        'Event Status': 'status',
+        'Event Category': 'eventCategory',
     };
 
     if (screenCols && Array.isArray(screenCols)) {

@@ -67,7 +67,7 @@ export function FinanceCompactKpiTile({
         <div
           style={{
             fontSize: "11px",
-            color: "#64748b",
+            color: "var(--theme-text-muted)",
             fontWeight: "500",
             lineHeight: "1.2",
           }}

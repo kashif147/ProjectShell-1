@@ -46,6 +46,12 @@ import {
   isOnlinePaymentRefundableUnapproved,
 } from "../utils/onlinePaymentsWorkspace";
 import { resolvePaidAmountEuro } from "../utils/onlinePaymentAmount";
+import {
+  callEventsEdit,
+  callEventsClone,
+  callEventsDelete,
+  isEventsDeletable,
+} from "../utils/eventsWorkspace";
 import { callWriteOffReverse } from "../utils/writeOffsWorkspace";
 import { callRefundsAssociate } from "../utils/refundsWorkspace";
 import {
@@ -3372,14 +3378,6 @@ const staticColumns = {
   ],
   Events: [
     {
-      dataIndex: "eventId",
-      title: "Event ID",
-      ellipsis: true,
-      isGride: true,
-      isVisible: true,
-      width: 140,
-    },
-    {
       dataIndex: "eventName",
       title: "Event Name",
       ellipsis: true,
@@ -3393,7 +3391,7 @@ const staticColumns = {
         return (
           <Link
             to="/EventDetails"
-            state={{ eventId }}
+            state={{ eventId, recordName: name }}
             onClick={(e) => e.stopPropagation()}
             style={{
               color: "#0000FF",
@@ -3406,6 +3404,33 @@ const staticColumns = {
       },
     },
     {
+      dataIndex: "status",
+      title: "Status",
+      ellipsis: true,
+      isGride: true,
+      isVisible: true,
+      width: 140,
+      render: (status) => {
+        if (!status) return "-";
+        const statusLower = String(status).toLowerCase();
+        let color = "default";
+        if (statusLower === "draft") color = "gold";
+        else if (statusLower === "published") color = "green";
+        else if (statusLower === "completed") color = "blue";
+        else if (statusLower === "cancelled" || statusLower === "canceled")
+          color = "red";
+        return <Tag color={color}>{status}</Tag>;
+      },
+    },
+    {
+      dataIndex: "eventCategory",
+      title: "Category",
+      ellipsis: true,
+      isGride: true,
+      isVisible: true,
+      width: 150,
+    },
+    {
       dataIndex: "eventType",
       title: "Event Type",
       ellipsis: true,
@@ -3414,12 +3439,56 @@ const staticColumns = {
       width: 150,
     },
     {
+      dataIndex: "venue",
+      title: "Venue",
+      ellipsis: true,
+      isGride: true,
+      isVisible: true,
+      width: 180,
+    },
+    {
+      dataIndex: "startDate",
+      title: "Start Date",
+      ellipsis: true,
+      isGride: true,
+      isVisible: true,
+      width: 130,
+      render: (value) => (value ? formatDateOnly(value) : "-"),
+    },
+    {
+      dataIndex: "endDate",
+      title: "End Date",
+      ellipsis: true,
+      isGride: true,
+      isVisible: true,
+      width: 130,
+      render: (value) => (value ? formatDateOnly(value) : "-"),
+    },
+    {
+      dataIndex: "memberPrice",
+      title: "Member Price",
+      ellipsis: true,
+      isGride: true,
+      isVisible: true,
+      width: 130,
+      render: (value) => (value != null ? formatCurrency(value) : "-"),
+    },
+    {
+      dataIndex: "nonMemberPrice",
+      title: "Non-Member Price",
+      ellipsis: true,
+      isGride: true,
+      isVisible: true,
+      width: 150,
+      render: (value) => (value != null ? formatCurrency(value) : "-"),
+    },
+    {
       dataIndex: "createdBy",
       title: "Created By",
       ellipsis: true,
       isGride: true,
       isVisible: true,
-      width: 160,
+      width: 190,
     },
     {
       dataIndex: "createdAt",
@@ -3431,23 +3500,53 @@ const staticColumns = {
       render: (value) => formatDateOnly(value),
     },
     {
-      dataIndex: "status",
-      title: "Status",
+      dataIndex: "updatedBy",
+      title: "Updated By",
       ellipsis: true,
       isGride: true,
       isVisible: true,
-      width: 140,
-      render: (status) => {
-        if (!status) return "-";
-        const statusLower = String(status).toLowerCase();
-        let color = "default";
-        if (statusLower === "active") color = "green";
-        else if (statusLower === "planning") color = "blue";
-        else if (statusLower === "review") color = "gold";
-        else if (statusLower === "canceled" || statusLower === "cancelled")
-          color = "default";
-        return <Tag color={color}>{status}</Tag>;
-      },
+      width: 190,
+    },
+    {
+      dataIndex: "_actions",
+      title: "Actions",
+      key: "actions",
+      isGride: true,
+      isVisible: true,
+      width: 90,
+      render: (_, record) => (
+        <Dropdown
+          menu={{
+            items: [
+              {
+                key: "Edit",
+                label: "Edit",
+                onClick: () => callEventsEdit(record),
+              },
+              {
+                key: "Clone",
+                label: "Clone",
+                onClick: () => callEventsClone(record),
+              },
+              {
+                key: "Delete",
+                label: "Delete",
+                danger: true,
+                disabled: !isEventsDeletable(record),
+                onClick: () => callEventsDelete(record),
+              },
+            ],
+          }}
+          trigger={["click"]}
+          placement="bottomRight"
+        >
+          <Button
+            type="text"
+            icon={<MoreOutlined style={{ fontSize: "20px" }} />}
+            onClick={(e) => e.stopPropagation()}
+          />
+        </Dropdown>
+      ),
     },
   ],
   Batches: [

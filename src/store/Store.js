@@ -54,6 +54,7 @@ import viewByIdReducer from "../features/views/ViewByIdSlice";
 import activeTemplateReducer from "../features/views/ActiveTemplateSlice";
 
 import profileApplicationsReducer from "../features/profiles/profileApplicationsSlice";
+import eventsRefreshReducer from "../features/events/EventsRefreshSlice";
 
 const store = configureStore({
   reducer: {
@@ -108,6 +109,7 @@ const store = configureStore({
     viewById: viewByIdReducer,
     activeTemplate: activeTemplateReducer,
     profileApplications: profileApplicationsReducer,
+    eventsRefresh: eventsRefreshReducer,
   },
 });
 

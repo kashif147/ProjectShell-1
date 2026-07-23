@@ -204,7 +204,7 @@
 }
 
 .member-header-top-band.member-deceased {
-  background: linear-gradient(135deg, #9ca3af 0%, #6b7280 55%, #4b5563 100%);
+  background: linear-gradient(135deg, #9ca3af 0%, var(--theme-text-muted) 55%, #4b5563 100%);
 }
 
 .member-header-top-band .member-header-top {
@@ -975,7 +975,7 @@
 }
 
 .member-header-branded.member-deceased {
-  background: linear-gradient(135deg, #9ca3af 0%, #6b7280 55%, #4b5563 100%);
+  background: linear-gradient(135deg, #9ca3af 0%, var(--theme-text-muted) 55%, #4b5563 100%);
 }
 
 .member-header-hero {
@@ -1843,11 +1843,11 @@
 
 .grade-label {
   font-weight: 400;
-  color: #595959;
+  color: var(--theme-text-muted);
 }
 
 .grade-value {
-  color: #595959;
+  color: var(--theme-text-muted);
 }
 
 /* Cancel Membership Button */
@@ -1876,8 +1876,8 @@
 /* Membership profile redesign treatment, kept compact for the details workspace */
 .member-header-container {
   --ph-brand-primary: var(--ph-primary, var(--app-brand-primary));
-  --ph-brand-secondary: var(--ph-secondary, var(--secoundry-color, #c97a2f));
-  --ph-brand-accent: var(--ph-accent, var(--accent-color, #0ea5e9));
+  --ph-brand-secondary: var(--ph-secondary, var(--theme-color-secondary, var(--secoundry-color, #475569)));
+  --ph-brand-accent: var(--ph-accent, var(--theme-color-accent, var(--accent-color, #0d9488)));
   --ph-brand-bg: var(--ph-secondary-bg, var(--app-brand-bg));
   --ph-redesign-ink: color-mix(
     in srgb,
@@ -1973,10 +1973,11 @@
       transparent 46%
     ),
     linear-gradient(
-      120deg,
-      var(--ph-redesign-hero-start) 0%,
+      128deg,
+      color-mix(in srgb, var(--ph-redesign-hero-end) 88%, #061f24) 0%,
+      color-mix(in srgb, var(--ph-redesign-hero-mid) 92%, var(--ph-brand-accent)) 38%,
       var(--ph-redesign-hero-mid) 62%,
-      var(--ph-redesign-hero-end) 100%
+      color-mix(in srgb, var(--ph-redesign-hero-start) 88%, #123f44) 100%
     );
 }
 
@@ -2088,6 +2089,11 @@
   font-size: 11.5px;
 }
 
+.member-details .member-details-strong {
+  color: #ffffff;
+  font-weight: 700;
+}
+
 .member-header-top-band .member-membership-no-line,
 .member-hero-text .member-membership-no-line {
   color: rgba(255, 255, 255, 0.9);
@@ -2188,7 +2194,7 @@
 }
 
 .member-header-top-band .member-financial-card {
-  background: rgba(255, 255, 255, 0.065);
+  background: transparent;
   border-left: 1px solid rgba(255, 255, 255, 0.14);
 }
 
@@ -2533,7 +2539,7 @@
 .centered-text-large {
   font-weight: bold;
   font-size: 20px;
-  color: var(--secoundry-color, #c97a2f);
+  color: var(--theme-color-secondary, var(--secoundry-color, #475569));
   text-align: center;
 }
 

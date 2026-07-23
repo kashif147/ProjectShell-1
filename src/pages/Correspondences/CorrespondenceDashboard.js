@@ -185,7 +185,7 @@ const CorrespondenceDashboard = () => {
               >
                 {text}
               </div>
-              <div style={{ fontSize: "12px", color: "#8c8c8c" }}>
+              <div style={{ fontSize: "12px", color: "var(--theme-text-muted)" }}>
                 {record.campaignId} · {record.channel}
               </div>
             </div>
@@ -197,7 +197,7 @@ const CorrespondenceDashboard = () => {
         title: "Sent",
         width: 200,
         render: (text) => (
-          <span style={{ color: "#64748b", fontSize: 13 }}>{text}</span>
+          <span style={{ color: "var(--theme-text-muted)", fontSize: 13 }}>{text}</span>
         ),
       },
       {
@@ -314,11 +314,11 @@ const CorrespondenceDashboard = () => {
                     </linearGradient>
                   </defs>
                   <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" vertical={false} />
-                  <XAxis dataKey="month" tick={{ fill: "#64748b", fontSize: 11 }} axisLine={false} tickLine={false} />
+                  <XAxis dataKey="month" tick={{ fill: "var(--theme-text-muted)", fontSize: 11 }} axisLine={false} tickLine={false} />
                   <YAxis
                     tickFormatter={(v) => formatVolumeShort(v)}
                     domain={[0, 60000]}
-                    tick={{ fill: "#64748b", fontSize: 11 }}
+                    tick={{ fill: "var(--theme-text-muted)", fontSize: 11 }}
                     axisLine={false}
                     tickLine={false}
                   />
@@ -353,7 +353,7 @@ const CorrespondenceDashboard = () => {
                     type="monotone"
                     dataKey="bounced"
                     name="Bounced"
-                    stroke="#64748b"
+                    stroke="var(--theme-text-muted)"
                     strokeWidth={2}
                     dot={{ r: 3, strokeWidth: 1, fill: "#fff" }}
                     activeDot={{ r: 4 }}
@@ -388,7 +388,7 @@ const CorrespondenceDashboard = () => {
                     verticalAlign="middle"
                     align="right"
                     formatter={(value, entry) => (
-                      <span style={{ color: "#475569", fontSize: 12 }}>
+                      <span style={{ color: "var(--theme-text-muted)", fontSize: 12 }}>
                         {value}{" "}
                         <span style={{ fontWeight: 700, color: "#0f172a" }}>
                           {entry.payload.value}%

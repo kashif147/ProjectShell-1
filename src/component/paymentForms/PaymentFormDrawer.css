@@ -68,7 +68,7 @@
 }
 
 .payment-form-drawer__intro {
-  color: #475569;
+  color: var(--theme-text-muted);
   font-size: 13px;
   line-height: 1.55;
   margin: 0 0 9px;
@@ -99,7 +99,7 @@
 
 .payment-form-drawer__static-text {
   font-size: 13px;
-  color: #475569;
+  color: var(--theme-text-muted);
   line-height: 1.6;
   margin-bottom: 9px;
   white-space: pre-wrap;
@@ -133,7 +133,7 @@
 
 .payment-form-drawer__auth-text {
   font-size: 13px;
-  color: #475569;
+  color: var(--theme-text-muted);
   line-height: 1.6;
   white-space: pre-wrap;
 }
@@ -202,7 +202,7 @@
 
 .payment-form-drawer__hint {
   font-size: 12px;
-  color: #64748b;
+  color: var(--theme-text-muted);
   margin: -4px 0 8px;
   line-height: 1.45;
 }
@@ -229,7 +229,7 @@
 }
 
 .payment-form-drawer__readonly-label {
-  color: #64748b;
+  color: var(--theme-text-muted);
   font-weight: 500;
 }
 
@@ -348,7 +348,7 @@
 .payment-form-drawer__signature-inline-label {
   font-size: 12px;
   font-weight: 500;
-  color: #475569;
+  color: var(--theme-text-muted);
 }
 
 .payment-form-drawer__signature-image {
@@ -378,7 +378,7 @@
 .payment-form-drawer__signature-evidence-label {
   font-size: 12px;
   font-weight: 600;
-  color: #475569;
+  color: var(--theme-text-muted);
   margin-bottom: 6px;
   text-transform: uppercase;
   letter-spacing: 0.04em;
@@ -386,7 +386,7 @@
 
 .payment-form-drawer__signature-evidence-hint {
   font-size: 13px;
-  color: #64748b;
+  color: var(--theme-text-muted);
 }
 
 .payment-form-drawer__signature-evidence-links {
@@ -462,7 +462,7 @@
   align-items: center;
   gap: 12px;
   font-size: 12px;
-  color: #475569;
+  color: var(--theme-text-muted);
 }
 
 .payment-form-drawer__scan-name {
@@ -476,7 +476,7 @@
 .payment-form-drawer__header-source {
   font-size: 12px;
   font-weight: 500;
-  color: #64748b;
+  color: var(--theme-text-muted);
 }
 
 .payment-form-drawer__gdpr {
@@ -514,7 +514,7 @@
 }
 
 .payment-form-drawer__create-hint {
-  color: #64748b;
+  color: var(--theme-text-muted);
   font-size: 13px;
   line-height: 1.55;
   margin-bottom: 10px;

@@ -1,4 +1,4 @@
-import React, { useMemo } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { Card, Col, Row, Table } from "antd";
 import { EnvironmentOutlined } from "@ant-design/icons";
 import {
@@ -15,7 +15,13 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
+import { fetchEvents, fetchRegistrations } from "../../services/eventsApi";
 import "../../styles/EventsDashboard.css";
+
+// Revenue trend / revenue-by-type / sentiment / check-in metrics below have no
+// backing analytics endpoint yet (events-service only tracks Events/Registrations,
+// not time-series revenue or attendee sentiment) - left as illustrative mock data.
+// KPI cards and the Recent Events table are wired to real data.
 
 /** Amounts in whole euros (typically low tens of thousands). */
 const REVENUE_TREND = [
@@ -33,45 +39,6 @@ const REVENUE_BY_TYPE = [
   { name: "Workshop", value: 1350, color: "#dc2626" },
 ];
 
-const RECENT_EVENTS = [
-  {
-    key: "1",
-    name: "Global Tech Summit 2024",
-    location: "San Francisco, CA",
-    status: "ACTIVE",
-    attendees: 1850,
-    capacity: 2200,
-    revenue: 19800,
-    head: 2100,
-    cancelled: 52,
-    refunds: 14,
-  },
-  {
-    key: "2",
-    name: "Digital Health Webinar Series",
-    location: "Virtual",
-    status: "UPCOMING",
-    attendees: 420,
-    capacity: 800,
-    revenue: 8200,
-    head: 920,
-    cancelled: 18,
-    refunds: 4,
-  },
-  {
-    key: "3",
-    name: "Annual Leadership Workshop",
-    location: "Chicago, IL",
-    status: "PAST",
-    attendees: 96,
-    capacity: 120,
-    revenue: 1950,
-    head: 210,
-    cancelled: 3,
-    refunds: 1,
-  },
-];
-
 function formatMoneyShort(n) {
   const x = Number(n);
   if (!Number.isFinite(x)) return "€0";
@@ -85,43 +52,92 @@ function formatMoneyShort(n) {
 }
 
 function EventsDashboard() {
-  const kpis = useMemo(
-    () => [
+  const [events, setEvents] = useState([]);
+  const [registrations, setRegistrations] = useState([]);
+
+  useEffect(() => {
+    let cancelled = false;
+    Promise.all([fetchEvents(), fetchRegistrations()])
+      .then(([eventsData, registrationsData]) => {
+        if (cancelled) return;
+        setEvents(Array.isArray(eventsData) ? eventsData : []);
+        setRegistrations(Array.isArray(registrationsData) ? registrationsData : []);
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setEvents([]);
+          setRegistrations([]);
+        }
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const recentEvents = useMemo(
+    () =>
+      events.slice(0, 10).map((ev) => {
+        const evRegistrations = registrations.filter((r) => r.eventId === ev._id);
+        const revenue = evRegistrations
+          .filter((r) => r.paymentStatus === "succeeded" || r.paymentStatus === "manual")
+          .reduce((sum, r) => sum + (r.amount || 0), 0);
+        return {
+          key: ev._id,
+          name: ev.title,
+          location: ev.venue || (ev.isVirtual ? "Virtual" : ""),
+          status: ev.status?.toUpperCase() || "DRAFT",
+          attendees: evRegistrations.length,
+          capacity: ev.capacity || evRegistrations.length || 1,
+          revenue: revenue / 100,
+          head: evRegistrations.length,
+          cancelled: evRegistrations.filter((r) => r.status === "cancelled").length,
+          refunds: evRegistrations.filter((r) => r.paymentStatus === "refunded").length,
+        };
+      }),
+    [events, registrations],
+  );
+
+  const kpis = useMemo(() => {
+    const totalRevenue = registrations
+      .filter((r) => r.paymentStatus === "succeeded" || r.paymentStatus === "manual")
+      .reduce((sum, r) => sum + (r.amount || 0), 0);
+    const liveEvents = events.filter((e) => e.status === "Published").length;
+
+    return [
       {
         label: "Total Events",
-        value: "8",
-        trend: "↗ 12%",
-        trendMuted: false,
+        value: String(events.length),
+        trend: "",
+        trendMuted: true,
         barColor: "var(--app-brand-primary)",
-        barPercent: 72,
+        barPercent: Math.min(100, events.length * 10),
       },
       {
         label: "Total Attendees",
-        value: "3.0k",
-        trend: "↗ 8.4%",
-        trendMuted: false,
+        value: String(registrations.length),
+        trend: "",
+        trendMuted: true,
         barColor: "#dc2626",
-        barPercent: 64,
+        barPercent: Math.min(100, registrations.length),
       },
       {
         label: "Total Revenue",
-        value: "€61k",
-        trend: "↗ 24%",
-        trendMuted: false,
+        value: formatMoneyShort(totalRevenue / 100),
+        trend: "",
+        trendMuted: true,
         barColor: "#10b981",
         barPercent: 78,
       },
       {
         label: "Live Events",
-        value: "2",
-        trend: "4 UPCOMING",
+        value: String(liveEvents),
+        trend: `${events.length - liveEvents} OTHER`,
         trendMuted: true,
         barColor: "#c4b5fd",
-        barPercent: 40,
+        barPercent: Math.min(100, liveEvents * 20),
       },
-    ],
-    [],
-  );
+    ];
+  }, [events, registrations]);
 
   const columns = [
     {
@@ -274,11 +290,11 @@ function EventsDashboard() {
                     </linearGradient>
                   </defs>
                   <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" vertical={false} />
-                  <XAxis dataKey="month" tick={{ fill: "#64748b", fontSize: 11 }} axisLine={false} tickLine={false} />
+                  <XAxis dataKey="month" tick={{ fill: "var(--theme-text-muted)", fontSize: 11 }} axisLine={false} tickLine={false} />
                   <YAxis
                     tickFormatter={(v) => formatMoneyShort(v)}
                     domain={[0, 16000]}
-                    tick={{ fill: "#64748b", fontSize: 11 }}
+                    tick={{ fill: "var(--theme-text-muted)", fontSize: 11 }}
                     axisLine={false}
                     tickLine={false}
                   />
@@ -304,7 +320,7 @@ function EventsDashboard() {
                     type="monotone"
                     dataKey="cancelled"
                     name="Cancelled"
-                    stroke="#64748b"
+                    stroke="var(--theme-text-muted)"
                     strokeWidth={2}
                     dot={{ r: 3, strokeWidth: 1, fill: "#fff" }}
                     activeDot={{ r: 4 }}
@@ -348,7 +364,7 @@ function EventsDashboard() {
                     verticalAlign="middle"
                     align="right"
                     formatter={(value, entry) => (
-                      <span style={{ color: "#475569", fontSize: 12 }}>
+                      <span style={{ color: "var(--theme-text-muted)", fontSize: 12 }}>
                         {value}{" "}
                         <span style={{ fontWeight: 700, color: "#0f172a" }}>
                           {formatMoneyShort(entry.payload.value)}
@@ -377,7 +393,7 @@ function EventsDashboard() {
             </div>
             <Table
               columns={columns}
-              dataSource={RECENT_EVENTS}
+              dataSource={recentEvents}
               pagination={false}
               size="small"
               rowKey="key"
