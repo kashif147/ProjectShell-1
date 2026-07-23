@@ -99,6 +99,7 @@ const lookupsSlice = createSlice({
     countryOptions: [],
     provincesOption: [],
     eventTypeOptions: [],
+    eventCategoryOptions: [],
     venueOptions: [],
     accreditationBodyOptions: [],
 
@@ -137,6 +138,7 @@ const lookupsSlice = createSlice({
       state.countryOptions = [];
       state.provincesOption = [];
       state.eventTypeOptions = [];
+      state.eventCategoryOptions = [];
       state.venueOptions = [];
       state.accreditationBodyOptions = [];
       state.selectedWorkLocations = [];
@@ -172,6 +174,7 @@ const lookupsSlice = createSlice({
         state.countryOptions = [];
         state.provincesOption = []
         state.eventTypeOptions = [];
+        state.eventCategoryOptions = [];
         state.venueOptions = [];
         state.accreditationBodyOptions = [];
 
@@ -228,7 +231,15 @@ const lookupsSlice = createSlice({
                 state.disciplineOptions.push(optionItem);
                 break;
               case "eventtype":
-                state.eventTypeOptions.push(optionItem);
+                // Retain the parent Event Category lookup id so the Event
+                // Drawer can filter Event Type options by selected category.
+                state.eventTypeOptions.push({
+                  ...optionItem,
+                  eventCategoryLookupId: item.Parentlookupid || null,
+                });
+                break;
+              case "eventcategory":
+                state.eventCategoryOptions.push({ ...optionItem, code: item.code || null });
                 break;
               case "accreditationbody":
                 state.accreditationBodyOptions.push(optionItem);
@@ -314,6 +325,7 @@ const lookupsSlice = createSlice({
         state.studyLocationOptions = sortArray(state.studyLocationOptions, 'label', 'asc');
         state.disciplineOptions = sortArray(state.disciplineOptions, 'label', 'asc');
         state.eventTypeOptions = sortArray(state.eventTypeOptions, 'label', 'asc');
+        state.eventCategoryOptions = sortArray(state.eventCategoryOptions, 'label', 'asc');
         state.venueOptions = sortArray(state.venueOptions, 'label', 'asc');
         state.accreditationBodyOptions = sortArray(state.accreditationBodyOptions, 'label', 'asc');
         state.youthForumOptions = sortArray(state.youthForumOptions, 'label', 'asc');

@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
+import { useSelector } from "react-redux";
 import { Card, Col, Row, Table } from "antd";
 import { EnvironmentOutlined } from "@ant-design/icons";
 import {
@@ -16,6 +17,10 @@ import {
   YAxis,
 } from "recharts";
 import { fetchEvents, fetchRegistrations } from "../../services/eventsApi";
+import { useFilters } from "../../context/FilterContext";
+import { useTableColumns } from "../../context/TableColumnsContext ";
+import { applyClientSideRowFilters } from "../../utils/filterUtils";
+import { useRegisterGridFilterRows } from "../../hooks/useRegisterGridFilterRows";
 import "../../styles/EventsDashboard.css";
 
 // Revenue trend / revenue-by-type / sentiment / check-in metrics below have no
@@ -52,6 +57,13 @@ function formatMoneyShort(n) {
 }
 
 function EventsDashboard() {
+  const { eventTypeOptions } = useSelector((state) => state.lookups);
+  const { filtersState } = useFilters();
+  const { columns: tableColumnsMap } = useTableColumns();
+  // Own FilterContext screen ("EventsDashboard") so its filter chips are
+  // independent of EventsSummary's ("Events") - same column/dataIndex shape,
+  // separate filter/visibleFilters state and dirty-tracking.
+  const eventsColumns = tableColumnsMap.EventsDashboard || [];
   const [events, setEvents] = useState([]);
   const [registrations, setRegistrations] = useState([]);
 
@@ -74,10 +86,55 @@ function EventsDashboard() {
     };
   }, []);
 
+  // Same row shape (dataIndex keys) as the Events grid (EventsSummary) so the
+  // shared Toolbar filters for screen "Events" - Event, Event Type, Event
+  // Date, Event Status, Event Category, Venue - apply here too.
+  const filterableEvents = useMemo(
+    () =>
+      events.map((ev) => {
+        const eventType = (eventTypeOptions || []).find(
+          (opt) => String(opt.value) === String(ev.eventTypeId),
+        );
+        return {
+          eventId: ev._id,
+          eventName: ev.title,
+          eventCategory: ev.eventCategoryCode || "-",
+          eventType: eventType?.label || "-",
+          venue: ev.isVirtual ? "Virtual" : ev.venue || "-",
+          startDate: ev.startDate,
+          endDate: ev.endDate,
+          memberPrice: ev.memberPrice,
+          nonMemberPrice: ev.nonMemberPrice,
+          createdBy: ev.createdByEmail || "-",
+          createdAt: ev.createdAt,
+          updatedBy: ev.updatedByEmail || "-",
+          status: ev.status,
+        };
+      }),
+    [events, eventTypeOptions],
+  );
+
+  useRegisterGridFilterRows("EventsDashboard", filterableEvents, eventsColumns);
+
+  const filteredEventIds = useMemo(() => {
+    const filtered = applyClientSideRowFilters(filterableEvents, filtersState, eventsColumns);
+    return new Set(filtered.map((row) => row.eventId));
+  }, [filterableEvents, filtersState, eventsColumns]);
+
+  const visibleEvents = useMemo(
+    () => events.filter((ev) => filteredEventIds.has(ev._id)),
+    [events, filteredEventIds],
+  );
+
+  const visibleRegistrations = useMemo(
+    () => registrations.filter((r) => filteredEventIds.has(r.eventId)),
+    [registrations, filteredEventIds],
+  );
+
   const recentEvents = useMemo(
     () =>
-      events.slice(0, 10).map((ev) => {
-        const evRegistrations = registrations.filter((r) => r.eventId === ev._id);
+      visibleEvents.slice(0, 10).map((ev) => {
+        const evRegistrations = visibleRegistrations.filter((r) => r.eventId === ev._id);
         const revenue = evRegistrations
           .filter((r) => r.paymentStatus === "succeeded" || r.paymentStatus === "manual")
           .reduce((sum, r) => sum + (r.amount || 0), 0);
@@ -94,31 +151,31 @@ function EventsDashboard() {
           refunds: evRegistrations.filter((r) => r.paymentStatus === "refunded").length,
         };
       }),
-    [events, registrations],
+    [visibleEvents, visibleRegistrations],
   );
 
   const kpis = useMemo(() => {
-    const totalRevenue = registrations
+    const totalRevenue = visibleRegistrations
       .filter((r) => r.paymentStatus === "succeeded" || r.paymentStatus === "manual")
       .reduce((sum, r) => sum + (r.amount || 0), 0);
-    const liveEvents = events.filter((e) => e.status === "Published").length;
+    const liveEvents = visibleEvents.filter((e) => e.status === "Published").length;
 
     return [
       {
         label: "Total Events",
-        value: String(events.length),
+        value: String(visibleEvents.length),
         trend: "",
         trendMuted: true,
         barColor: "var(--app-brand-primary)",
-        barPercent: Math.min(100, events.length * 10),
+        barPercent: Math.min(100, visibleEvents.length * 10),
       },
       {
         label: "Total Attendees",
-        value: String(registrations.length),
+        value: String(visibleRegistrations.length),
         trend: "",
         trendMuted: true,
         barColor: "#dc2626",
-        barPercent: Math.min(100, registrations.length),
+        barPercent: Math.min(100, visibleRegistrations.length),
       },
       {
         label: "Total Revenue",
@@ -131,13 +188,13 @@ function EventsDashboard() {
       {
         label: "Live Events",
         value: String(liveEvents),
-        trend: `${events.length - liveEvents} OTHER`,
+        trend: `${visibleEvents.length - liveEvents} OTHER`,
         trendMuted: true,
         barColor: "#c4b5fd",
         barPercent: Math.min(100, liveEvents * 20),
       },
     ];
-  }, [events, registrations]);
+  }, [visibleEvents, visibleRegistrations]);
 
   const columns = [
     {

@@ -18,6 +18,8 @@ export const CLIENT_SIDE_GRID_FILTER_SCREENS = new Set([
   "CreditorsListReport",
   "DebtorsListReport",
   "Events",
+  "EventsDashboard",
+  "Attendees",
 ]);
 
 const registry = new Map();
@@ -70,6 +72,10 @@ function canonicalFilterOptionLabel(value) {
   const text = String(value ?? "").trim();
   if (!text) return "";
   if (!text.includes(" ") && /^[a-zA-Z]+$/.test(text)) {
+    // Preserve values that are already fully uppercase (e.g. acronyms/codes
+    // like "CPD", "NMBI") instead of forcing them into Title Case — only
+    // normalize genuinely inconsistent casing (e.g. "pending" -> "Pending").
+    if (text === text.toUpperCase()) return text;
     return text.charAt(0).toUpperCase() + text.slice(1).toLowerCase();
   }
   return text;
@@ -167,6 +173,8 @@ const CLOSED_ENUM_FILTER_LABELS = new Set([
   "Source",
   "Event Type",
   "Event Status",
+  "Event Category",
+  "Registration Status",
 ]);
 
 function filterDerivedToStaticAllowlist(derivedOpts = [], staticOpts = []) {

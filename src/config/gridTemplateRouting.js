@@ -56,6 +56,7 @@ const LEGACY_TEMPLATE_TYPE_SERVICE = {
   historybyid: "audit-service",
   /** Events grids */
   eventssummary: "events-service",
+  attendees: "events-service",
 };
 
 /**

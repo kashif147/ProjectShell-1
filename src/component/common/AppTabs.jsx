@@ -362,6 +362,18 @@ function AppTabs({
     [ProfileSubData],
   );
 
+  const hasSubscription = useMemo(() => {
+    if (!ProfileSubData) return false;
+    if (Array.isArray(ProfileSubData.data)) return ProfileSubData.data.length > 0;
+    if (
+      ProfileSubData.data &&
+      typeof ProfileSubData.data === "object" &&
+      Array.isArray(ProfileSubData.data.data)
+    )
+      return ProfileSubData.data.data.length > 0;
+    return false;
+  }, [ProfileSubData]);
+
   const paymentReminderBanner = useMemo(
     () => buildPaymentReminderBanner(primarySubscriptionRow),
     [primarySubscriptionRow],
@@ -872,7 +884,7 @@ function AppTabs({
   const allItems = [
     {
       key: "1",
-      label: "Membership",
+      label: hasSubscription ? "Membership" : "Profile",
       children: (
         <MyDeatails
           isEditMode={isEditMode}

@@ -10,10 +10,12 @@ import {
   Switch,
   TimePicker,
   Input,
+  Upload,
   message,
   Tooltip,
 } from "antd";
-import { EnvironmentOutlined, InfoCircleOutlined } from "@ant-design/icons";
+import { EnvironmentOutlined, InfoCircleOutlined, UploadOutlined, LoadingOutlined } from "@ant-design/icons";
+import ImgCrop from "antd-img-crop";
 import ReactQuill from "react-quill-new";
 import "react-quill-new/dist/quill.snow.css";
 import MyDrawer from "../common/MyDrawer";
@@ -31,8 +33,10 @@ import {
   deleteEvent,
   fetchEventById,
   addEventSession,
+  updateEventSession,
+  deleteEventSession,
+  uploadEventImage,
 } from "../../services/eventsApi";
-import { fetchEventCategoryProductTypes } from "../../services/productTypesApi";
 
 const DRAFT_STATUS_OPTIONS = [
   { label: "Draft", value: "Draft" },
@@ -45,6 +49,115 @@ const PUBLISHED_STATUS_OPTIONS = [
   { label: "Completed", value: "Completed" },
 ];
 
+// Optional additional pricing tiers - each keyed by its tierType, mirroring
+// the backend's pricingTiers array shape. `enabled` drives the UI toggle;
+// the other fields are only meaningful (and sent) when enabled is true.
+export const DEFAULT_PRICING_TIERS = {
+  EARLY_BIRD_MEMBER: { enabled: false, price: "", cutoffDate: null },
+  EARLY_BIRD_NON_MEMBER: { enabled: false, price: "", cutoffDate: null },
+  STUDENT: { enabled: false, price: "" },
+  GROUP_STUDENT: { enabled: false, price: "", minGroupSize: "" },
+};
+
+const TIER_TYPE_TO_LABEL = {
+  EARLY_BIRD_MEMBER: "Early Bird Member",
+  EARLY_BIRD_NON_MEMBER: "Early Bird Non-Member",
+  STUDENT: "Student",
+  GROUP_STUDENT: "Group Student",
+};
+
+// Drives the four optional-tier toggle blocks in the PRICING section - kept
+// as data so CreateEventDrawer and ScheduleManagementDrawer render the exact
+// same fields for event-level vs per-day tiers.
+export const PRICING_TIER_FIELDS = [
+  { tierType: "EARLY_BIRD_MEMBER", label: "Early Bird Member Price", hasCutoff: true },
+  { tierType: "EARLY_BIRD_NON_MEMBER", label: "Early Bird Non-Member Price", hasCutoff: true },
+  { tierType: "STUDENT", label: "Student Price", hasCutoff: false },
+  { tierType: "GROUP_STUDENT", label: "Group Student Price", hasCutoff: false, hasGroupSize: true },
+];
+
+/** Converts a loaded event/session's pricingTiers array into the keyed UI state shape. */
+export function pricingTiersToState(tiers) {
+  const byType = Object.fromEntries((tiers || []).map((t) => [t.tierType, t]));
+  const next = {};
+  for (const tierType of Object.keys(DEFAULT_PRICING_TIERS)) {
+    const tier = byType[tierType];
+    next[tierType] = {
+      enabled: !!tier,
+      price: tier?.price != null ? String(tier.price) : "",
+      ...(tierType.startsWith("EARLY_BIRD_")
+        ? { cutoffDate: tier?.cutoffDate ? dayjs(tier.cutoffDate) : null }
+        : {}),
+      ...(tierType === "GROUP_STUDENT"
+        ? { minGroupSize: tier?.minGroupSize != null ? String(tier.minGroupSize) : "" }
+        : {}),
+    };
+  }
+  return next;
+}
+
+/** Converts the keyed UI state shape into the API's pricingTiers array (enabled tiers only). */
+export function buildPricingTiersPayload(tiersState) {
+  const state = tiersState || DEFAULT_PRICING_TIERS;
+  const out = [];
+  if (state.EARLY_BIRD_MEMBER?.enabled) {
+    out.push({
+      tierType: "EARLY_BIRD_MEMBER",
+      price: Number(state.EARLY_BIRD_MEMBER.price) || 0,
+      cutoffDate: state.EARLY_BIRD_MEMBER.cutoffDate
+        ? dayjs(state.EARLY_BIRD_MEMBER.cutoffDate).endOf("day").toISOString()
+        : null,
+      isActive: true,
+    });
+  }
+  if (state.EARLY_BIRD_NON_MEMBER?.enabled) {
+    out.push({
+      tierType: "EARLY_BIRD_NON_MEMBER",
+      price: Number(state.EARLY_BIRD_NON_MEMBER.price) || 0,
+      cutoffDate: state.EARLY_BIRD_NON_MEMBER.cutoffDate
+        ? dayjs(state.EARLY_BIRD_NON_MEMBER.cutoffDate).endOf("day").toISOString()
+        : null,
+      isActive: true,
+    });
+  }
+  if (state.STUDENT?.enabled) {
+    out.push({ tierType: "STUDENT", price: Number(state.STUDENT.price) || 0, isActive: true });
+  }
+  if (state.GROUP_STUDENT?.enabled) {
+    out.push({
+      tierType: "GROUP_STUDENT",
+      price: Number(state.GROUP_STUDENT.price) || 0,
+      minGroupSize: Number(state.GROUP_STUDENT.minGroupSize) || 2,
+      isActive: true,
+    });
+  }
+  return out;
+}
+
+/** True when every enabled tier has its required companion field(s) filled in. */
+export function validatePricingTiersState(tiersState) {
+  const state = tiersState || DEFAULT_PRICING_TIERS;
+  if (state.EARLY_BIRD_MEMBER?.enabled && (!state.EARLY_BIRD_MEMBER.price || !state.EARLY_BIRD_MEMBER.cutoffDate)) {
+    return "Early Bird Member pricing needs both a price and a cutoff date";
+  }
+  if (
+    state.EARLY_BIRD_NON_MEMBER?.enabled &&
+    (!state.EARLY_BIRD_NON_MEMBER.price || !state.EARLY_BIRD_NON_MEMBER.cutoffDate)
+  ) {
+    return "Early Bird Non-Member pricing needs both a price and a cutoff date";
+  }
+  if (state.STUDENT?.enabled && !state.STUDENT.price) {
+    return "Student pricing needs a price";
+  }
+  if (
+    state.GROUP_STUDENT?.enabled &&
+    (!state.GROUP_STUDENT.price || !state.GROUP_STUDENT.minGroupSize || Number(state.GROUP_STUDENT.minGroupSize) < 2)
+  ) {
+    return "Group Student pricing needs a price and a minimum group size of 2 or more";
+  }
+  return null;
+}
+
 const DESCRIPTION_EDITOR_MODULES = {
   toolbar: [
     ["bold", "italic", "underline"],
@@ -56,7 +169,7 @@ const DESCRIPTION_EDITOR_MODULES = {
 
 const CreateEventDrawer = ({ open, onClose, eventId, onDeleted, cloneFromEventId }) => {
   const dispatch = useDispatch();
-  const { eventTypeOptions, venueOptions, accreditationBodyOptions } = useSelector(
+  const { eventTypeOptions, eventCategoryOptions, venueOptions, accreditationBodyOptions } = useSelector(
     (state) => state.lookups,
   );
 
@@ -66,20 +179,31 @@ const CreateEventDrawer = ({ open, onClose, eventId, onDeleted, cloneFromEventId
   const [seatLimit, setSeatLimit] = useState("");
   const [description, setDescription] = useState("");
   const [venueId, setVenueId] = useState("");
+  const [imageUrl, setImageUrl] = useState("");
+  const [uploadingImage, setUploadingImage] = useState(false);
   const [status, setStatus] = useState("Draft");
   const [initialStatus, setInitialStatus] = useState("Draft");
   const [isActive, setIsActive] = useState(true);
   // eventCategoryProductTypeId is the real user-service ProductType _id the
   // admin picked (the authoritative reference); eventCategoryCode is that
-  // ProductType's own `code`, derived from the fetched list below, kept
-  // alongside for display/GL-mapping - never hardcoded or guessed.
+  // ProductType's own `code`. Legacy pair, kept alongside the new
+  // Lookup-based pair below during migration so the old backend path (GL
+  // mapping via a synced Product record) keeps working until it's retired.
   const [eventCategoryProductTypeId, setEventCategoryProductTypeId] = useState("");
   const [eventCategoryCode, setEventCategoryCode] = useState("");
-  const [eventCategoryOptions, setEventCategoryOptions] = useState([]);
-  const [loadingEventCategories, setLoadingEventCategories] = useState(true);
-  const [eventCategoryLoadError, setEventCategoryLoadError] = useState("");
+  // Decoupled Event Category: a user-service Lookup under LookupType "Event
+  // Category" (CPD | EVENT), sourced from Redux (state.lookups.eventCategoryOptions)
+  // rather than a live ProductType fetch. This is the target-state pair used
+  // for the Event Type cascading filter and for account-service's GL mapping.
+  const [eventCategoryLookupId, setEventCategoryLookupId] = useState("");
+  const [eventCategoryLookupCode, setEventCategoryLookupCode] = useState("");
   const [memberPrice, setMemberPrice] = useState("");
   const [nonMemberPrice, setNonMemberPrice] = useState("");
+  // Optional additional pricing tiers (early bird, student, group student) -
+  // keyed by tierType, see DEFAULT_PRICING_TIERS above.
+  const [pricingTiers, setPricingTiers] = useState(DEFAULT_PRICING_TIERS);
+  const handleTierFieldChange = (tierType, field, value) =>
+    setPricingTiers((prev) => ({ ...prev, [tierType]: { ...prev[tierType], [field]: value } }));
   // Days before startDate up to which a refund is allowed - 0 means no
   // refunds. Left empty (rather than defaulted) so the user must explicitly
   // choose a value.
@@ -95,17 +219,19 @@ const CreateEventDrawer = ({ open, onClose, eventId, onDeleted, cloneFromEventId
   const [isScheduleDrawerVisible, setIsScheduleDrawerVisible] = useState(false);
   const [isCostsDrawerVisible, setIsCostsDrawerVisible] = useState(false);
 
-  const [scheduleData, setScheduleData] = useState([
-    {
-      id: 1,
-      day: "Day 1",
-      date: null,
-      location: "",
-      zoomLink: "",
-      isOnline: false,
-      sessions: [{ id: 1, startTime: null, endTime: null }],
-    },
-  ]);
+  const DEFAULT_SCHEDULE_DAY = {
+    id: 1,
+    day: "Day 1",
+    date: null,
+    location: "",
+    zoomLink: "",
+    isOnline: false,
+    sessions: [{ id: 1, sessionId: null, startTime: dayjs("09:00", "HH:mm"), endTime: null }],
+  };
+
+  const [scheduleData, setScheduleData] = useState([{ ...DEFAULT_SCHEDULE_DAY }]);
+  // Sessions removed from a loaded (edit) event's schedule - deleted on save.
+  const [removedSessionIds, setRemovedSessionIds] = useState([]);
 
   const [costsData, setCostsData] = useState([]);
 
@@ -113,45 +239,9 @@ const CreateEventDrawer = ({ open, onClose, eventId, onDeleted, cloneFromEventId
   // Active locks - mirrors the backend guard in event.controller.js.
   const isLocked = Boolean(eventId) && initialStatus === "Published";
 
-  // Event Category options are real ProductType records fetched from Product
-  // Management, not a hardcoded list - if neither the CPD nor Events
-  // ProductType has been set up yet, the dropdown is empty and says so,
-  // instead of letting a save fail deep in the Product/Pricing link step.
   useEffect(() => {
-    if (!open) return;
-    let cancelled = false;
-    setLoadingEventCategories(true);
-    setEventCategoryLoadError("");
-    fetchEventCategoryProductTypes()
-      .then((productTypes) => {
-        if (cancelled) return;
-        setEventCategoryOptions(
-          productTypes.map((pt) => ({
-            value: pt._id,
-            key: pt._id,
-            label: pt.name,
-            code: pt.code,
-          })),
-        );
-      })
-      .catch((err) => {
-        if (cancelled) return;
-        setEventCategoryOptions([]);
-        // Surface the real reason (e.g. 403 = missing product-type:read
-        // permission) instead of looking identical to "none configured yet".
-        setEventCategoryLoadError(
-          err?.response?.status === 403
-            ? "You don't have permission to view Product Types (missing product-type:read)."
-            : err?.response?.data?.error?.message || err?.message || "Failed to load Event Categories",
-        );
-      })
-      .finally(() => {
-        if (!cancelled) setLoadingEventCategories(false);
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [open]);
+    if (!certificationType) setAutoIssueOnFinish(false);
+  }, [certificationType]);
 
   // Selected Venue lookup (pulled from Configuration > Venue), with its address.
   const selectedVenue = useMemo(
@@ -170,6 +260,20 @@ const CreateEventDrawer = ({ open, onClose, eventId, onDeleted, cloneFromEventId
     );
   }, [selectedVenue]);
 
+  // Event Type options filtered to the selected Event Category, via each
+  // option's eventCategoryLookupId (that Event Type lookup's own
+  // Parentlookupid, retained in LookupsSlice.js). Show every Event Type
+  // unfiltered until a category is picked, matching today's behavior.
+  const filteredEventTypeOptions = useMemo(
+    () =>
+      eventTypeOptions.filter(
+        (opt) =>
+          !eventCategoryLookupId ||
+          String(opt.eventCategoryLookupId) === String(eventCategoryLookupId),
+      ),
+    [eventTypeOptions, eventCategoryLookupId],
+  );
+
   useEffect(() => {
     if (!open || !eventId) return;
     let cancelled = false;
@@ -183,15 +287,19 @@ const CreateEventDrawer = ({ open, onClose, eventId, onDeleted, cloneFromEventId
         setEventDate(ev.startDate ? dayjs(ev.startDate) : null);
         setSeatLimit(ev.capacity != null ? String(ev.capacity) : "");
         setVenueId(ev.venueId || "");
+        setImageUrl(ev.imageUrl || "");
         setAllowVirtualHosting(!!ev.isVirtual);
         setStatus(ev.status || "Draft");
         setInitialStatus(ev.status || "Draft");
         setIsActive(ev.isActive !== false);
         setEventCategoryProductTypeId(ev.eventCategoryProductTypeId || "");
         setEventCategoryCode(ev.eventCategoryCode || "");
+        setEventCategoryLookupId(ev.eventCategoryLookupId || "");
+        setEventCategoryLookupCode(ev.eventCategoryLookupCode || "");
         setEventType(ev.eventTypeId || "");
         setMemberPrice(ev.memberPrice != null ? String(ev.memberPrice) : "");
         setNonMemberPrice(ev.nonMemberPrice != null ? String(ev.nonMemberPrice) : "");
+        setPricingTiers(pricingTiersToState(ev.pricingTiers));
         setRefundPolicyDays(ev.refundPolicyDays != null ? String(ev.refundPolicyDays) : "");
         setCpdCredits(ev.cpdCredits != null ? String(ev.cpdCredits) : "");
         setAccreditationBody(ev.accreditationBody || "");
@@ -204,6 +312,48 @@ const CreateEventDrawer = ({ open, onClose, eventId, onDeleted, cloneFromEventId
             amount: c.amount != null ? String(c.amount) : "0",
           })),
         );
+        setRemovedSessionIds([]);
+        if (ev.sessions?.length) {
+          setBookingOnMultipleDays(true);
+          // Multiple EventSession records can share the same date - group
+          // them back into one day card with several time-slot sessions,
+          // the inverse of what the save logic below does.
+          const sortedSessions = [...ev.sessions].sort((a, b) => {
+            const dateDiff = dayjs(a.date).valueOf() - dayjs(b.date).valueOf();
+            if (dateDiff !== 0) return dateDiff;
+            return (a.startTime || "").localeCompare(b.startTime || "");
+          });
+          const days = [];
+          const dayByDateKey = new Map();
+          let sessionCounter = 0;
+          sortedSessions.forEach((s) => {
+            const dateKey = s.date ? dayjs(s.date).format("YYYY-MM-DD") : `no-date-${days.length}`;
+            let day = dayByDateKey.get(dateKey);
+            if (!day) {
+              day = {
+                id: days.length + 1,
+                day: `Day ${days.length + 1}`,
+                date: s.date ? dayjs(s.date) : null,
+                location: "",
+                zoomLink: "",
+                isOnline: !!s.isVirtual,
+                sessions: [],
+              };
+              days.push(day);
+              dayByDateKey.set(dateKey, day);
+            }
+            day.sessions.push({
+              id: ++sessionCounter,
+              sessionId: s._id,
+              startTime: s.startTime ? dayjs(s.startTime, "HH:mm") : null,
+              endTime: s.endTime ? dayjs(s.endTime, "HH:mm") : null,
+            });
+          });
+          setScheduleData(days);
+        } else {
+          setBookingOnMultipleDays(false);
+          setScheduleData([{ ...DEFAULT_SCHEDULE_DAY }]);
+        }
       } catch (err) {
         message.error(err?.response?.data?.error?.message || err?.message || "Failed to load event");
       } finally {
@@ -231,15 +381,27 @@ const CreateEventDrawer = ({ open, onClose, eventId, onDeleted, cloneFromEventId
         setEventDate(null);
         setSeatLimit(ev.capacity != null ? String(ev.capacity) : "");
         setVenueId(ev.venueId || "");
+        setImageUrl(ev.imageUrl || "");
         setAllowVirtualHosting(!!ev.isVirtual);
         setStatus("Draft");
         setInitialStatus("Draft");
         setIsActive(true);
         setEventCategoryProductTypeId(ev.eventCategoryProductTypeId || "");
         setEventCategoryCode(ev.eventCategoryCode || "");
+        setEventCategoryLookupId(ev.eventCategoryLookupId || "");
+        setEventCategoryLookupCode(ev.eventCategoryLookupCode || "");
         setEventType(ev.eventTypeId || "");
         setMemberPrice(ev.memberPrice != null ? String(ev.memberPrice) : "");
         setNonMemberPrice(ev.nonMemberPrice != null ? String(ev.nonMemberPrice) : "");
+        {
+          // Cloned early-bird cutoff dates are almost certainly stale (tied
+          // to the source event's own timeline) - clear them like eventDate,
+          // leaving the prices themselves intact for the user to edit.
+          const clonedTiers = pricingTiersToState(ev.pricingTiers);
+          clonedTiers.EARLY_BIRD_MEMBER.cutoffDate = null;
+          clonedTiers.EARLY_BIRD_NON_MEMBER.cutoffDate = null;
+          setPricingTiers(clonedTiers);
+        }
         setRefundPolicyDays(ev.refundPolicyDays != null ? String(ev.refundPolicyDays) : "");
         setCpdCredits(ev.cpdCredits != null ? String(ev.cpdCredits) : "");
         setAccreditationBody(ev.accreditationBody || "");
@@ -253,17 +415,8 @@ const CreateEventDrawer = ({ open, onClose, eventId, onDeleted, cloneFromEventId
           })),
         );
         setBookingOnMultipleDays(false);
-        setScheduleData([
-          {
-            id: 1,
-            day: "Day 1",
-            date: null,
-            location: "",
-            zoomLink: "",
-            isOnline: false,
-            sessions: [{ id: 1, startTime: null, endTime: null }],
-          },
-        ]);
+        setRemovedSessionIds([]);
+        setScheduleData([{ ...DEFAULT_SCHEDULE_DAY }]);
       } catch (err) {
         message.error(err?.response?.data?.error?.message || err?.message || "Failed to load event to clone");
       } finally {
@@ -326,6 +479,25 @@ const CreateEventDrawer = ({ open, onClose, eventId, onDeleted, cloneFromEventId
     setIsCostsDrawerVisible(false);
   };
 
+  // Image can be picked before the event is first saved - the upload
+  // endpoint accepts eventId="draft" for that case, and the returned URL
+  // rides along in the create/update payload afterwards.
+  const handleImageUpload = async ({ file, onSuccess, onError }) => {
+    setUploadingImage(true);
+    try {
+      const result = await uploadEventImage(eventId, file);
+      if (!result?.url) throw new Error("No URL returned from upload");
+      setImageUrl(result.url);
+      onSuccess(result);
+      message.success("Image uploaded");
+    } catch (err) {
+      message.error(err?.response?.data?.error?.message || err?.message || "Failed to upload image");
+      onError(err);
+    } finally {
+      setUploadingImage(false);
+    }
+  };
+
   const getAllSessionIds = () =>
     scheduleData.flatMap((d) => (d.sessions || []).map((s) => s.id));
 
@@ -341,17 +513,23 @@ const CreateEventDrawer = ({ open, onClose, eventId, onDeleted, cloneFromEventId
       ...scheduleData,
       {
         id: newDayId,
+        sessionId: null,
         day: `Day ${newDayNum}`,
         date: nextDate,
         location: venueName,
         zoomLink: "",
         isOnline: false,
-        sessions: [{ id: newSessionId, startTime: null, endTime: null }],
+        sessions: [{ id: newSessionId, sessionId: null, startTime: dayjs("09:00", "HH:mm"), endTime: null }],
       },
     ]);
   };
 
   const handleScheduleRemoveDay = (dayId) => {
+    const removedDay = scheduleData.find((d) => d.id === dayId);
+    const removedIds = (removedDay?.sessions || []).map((s) => s.sessionId).filter(Boolean);
+    if (removedIds.length) {
+      setRemovedSessionIds((prev) => [...prev, ...removedIds]);
+    }
     const removedIndex = scheduleData.findIndex((d) => d.id === dayId);
     const newData = scheduleData
       .filter((d) => d.id !== dayId)
@@ -368,6 +546,22 @@ const CreateEventDrawer = ({ open, onClose, eventId, onDeleted, cloneFromEventId
         };
       });
     setScheduleData(newData);
+  };
+
+  const handleMultipleDayEventChange = (checked) => {
+    setBookingOnMultipleDays(checked);
+    if (!checked) {
+      // Turning multi-day off removes every day but Day 1 (confirmed by the
+      // user beforehand in ScheduleManagementDrawer).
+      const removedIds = scheduleData
+        .slice(1)
+        .flatMap((day) => (day.sessions || []).map((s) => s.sessionId))
+        .filter(Boolean);
+      if (removedIds.length) {
+        setRemovedSessionIds((prev) => [...prev, ...removedIds]);
+      }
+      setScheduleData((prev) => prev.slice(0, 1));
+    }
   };
 
   const handleDayChange = (dayId, field, value) => {
@@ -454,31 +648,42 @@ const CreateEventDrawer = ({ open, onClose, eventId, onDeleted, cloneFromEventId
     const newSessionId =
       getAllSessionIds().length > 0 ? Math.max(...getAllSessionIds()) + 1 : 1;
     setScheduleData((prev) =>
-      prev.map((d) =>
-        d.id === dayId
-          ? {
-              ...d,
-              sessions: [
-                ...(d.sessions || []),
-                { id: newSessionId, startTime: null, endTime: null },
-              ],
-            }
-          : d
-      )
+      prev.map((d) => {
+        if (d.id !== dayId) return d;
+        const existingSessions = d.sessions || [];
+        const lastSession = existingSessions[existingSessions.length - 1];
+        // New sessions default to starting 1 hour after the previous
+        // session's end time.
+        const newStartTime = lastSession?.endTime
+          ? dayjs(lastSession.endTime).add(1, "hour")
+          : dayjs("09:00", "HH:mm");
+        return {
+          ...d,
+          sessions: [
+            ...existingSessions,
+            { id: newSessionId, sessionId: null, startTime: newStartTime, endTime: null },
+          ],
+        };
+      })
     );
   };
 
   const handleRemoveSession = (dayId, sessionId) => {
-    setScheduleData((prev) => {
-      const removedDayIndex = prev.findIndex((d) => d.id === dayId);
-      const dayHadOneSession = (prev[removedDayIndex]?.sessions?.length ?? 0) === 1;
-      const afterRemoval = prev.map((d) => {
-        if (d.id !== dayId) return d;
-        const sessions = (d.sessions || []).filter((s) => s.id !== sessionId);
-        return { ...d, sessions };
-      });
-      const filtered = afterRemoval.filter((d) => d.sessions?.length > 0);
-      return filtered.map((day, index) => {
+    const removedDayIndex = scheduleData.findIndex((d) => d.id === dayId);
+    const removedDay = scheduleData[removedDayIndex];
+    const dayHadOneSession = (removedDay?.sessions?.length ?? 0) === 1;
+    const removedSession = removedDay?.sessions?.find((s) => s.id === sessionId);
+    if (removedSession?.sessionId) {
+      setRemovedSessionIds((prev) => [...prev, removedSession.sessionId]);
+    }
+    const afterRemoval = scheduleData.map((d) => {
+      if (d.id !== dayId) return d;
+      const sessions = (d.sessions || []).filter((s) => s.id !== sessionId);
+      return { ...d, sessions };
+    });
+    const filtered = afterRemoval.filter((d) => d.sessions?.length > 0);
+    setScheduleData(
+      filtered.map((day, index) => {
         const wasAfterRemoved =
           dayHadOneSession && removedDayIndex >= 0 && index >= removedDayIndex;
         const adjustedDate =
@@ -486,8 +691,8 @@ const CreateEventDrawer = ({ open, onClose, eventId, onDeleted, cloneFromEventId
             ? dayjs(day.date).subtract(1, "day")
             : day.date;
         return { ...day, date: adjustedDate, day: `Day ${index + 1}` };
-      });
-    });
+      }),
+    );
   };
 
   const handleAddCost = () => {
@@ -540,7 +745,7 @@ const CreateEventDrawer = ({ open, onClose, eventId, onDeleted, cloneFromEventId
       message.error("Event name is required");
       return;
     }
-    if (!eventCategoryProductTypeId) {
+    if (!eventCategoryLookupId) {
       message.error("Event category is required");
       return;
     }
@@ -564,8 +769,13 @@ const CreateEventDrawer = ({ open, onClose, eventId, onDeleted, cloneFromEventId
       message.error("Refund policy must be 0 or more days");
       return;
     }
-    if (eventCategoryProductTypeId && (!memberPrice || !nonMemberPrice)) {
+    if (eventCategoryLookupId && (!memberPrice || !nonMemberPrice)) {
       message.error("Member Price and Non-Member Price are required when an Event Category is selected");
+      return;
+    }
+    const tiersError = validatePricingTiersState(pricingTiers);
+    if (tiersError) {
+      message.error(tiersError);
       return;
     }
 
@@ -609,6 +819,7 @@ const CreateEventDrawer = ({ open, onClose, eventId, onDeleted, cloneFromEventId
           ? `${venueName}${venueAddressDisplay ? `, ${venueAddressDisplay}` : ""}`
           : undefined,
         isVirtual: allowVirtualHosting,
+        imageUrl: imageUrl || null,
         startDate,
         endDate,
         capacity: seatLimit ? Number(seatLimit) : undefined,
@@ -616,9 +827,12 @@ const CreateEventDrawer = ({ open, onClose, eventId, onDeleted, cloneFromEventId
         isActive,
         eventCategoryProductTypeId: eventCategoryProductTypeId || undefined,
         eventCategoryCode: eventCategoryCode || undefined,
+        eventCategoryLookupId: eventCategoryLookupId || undefined,
+        eventCategoryLookupCode: eventCategoryLookupCode || undefined,
         eventTypeId: eventType || undefined,
         memberPrice: memberPrice ? Number(memberPrice) : undefined,
         nonMemberPrice: nonMemberPrice ? Number(nonMemberPrice) : undefined,
+        pricingTiers: buildPricingTiersPayload(pricingTiers),
         refundPolicyDays: Number(refundPolicyDays),
         cpdCredits: cpdCredits ? Number(cpdCredits) : undefined,
         accreditationBody: accreditationBody || undefined,
@@ -633,15 +847,32 @@ const CreateEventDrawer = ({ open, onClose, eventId, onDeleted, cloneFromEventId
         ? await updateEventApi(eventId, payload)
         : await createEvent(payload);
 
-      // Persist multi-day schedule as sessions (per-session registration
-      // pricing is not modelled per-day - configure via product catalog).
-      if (!eventId && bookingOnMultipleDays && event?._id) {
+      // Persist the multi-day schedule as sessions - create/update/delete to
+      // match scheduleData. A day with multiple time-slots (added via "Add
+      // session") becomes one EventSession record per slot, all sharing the
+      // day's date.
+      if (bookingOnMultipleDays && event?._id) {
         for (const day of scheduleData) {
           if (!day.date) continue;
-          await addEventSession(event._id, {
-            label: day.day,
-            date: dayjs(day.date).toISOString(),
-          });
+          const daySessions = day.sessions || [];
+          for (let i = 0; i < daySessions.length; i++) {
+            const session = daySessions[i];
+            const sessionPayload = {
+              label: daySessions.length > 1 ? `${day.day} - Session ${i + 1}` : day.day,
+              date: dayjs(day.date).toISOString(),
+              startTime: session.startTime ? dayjs(session.startTime).format("HH:mm") : undefined,
+              endTime: session.endTime ? dayjs(session.endTime).format("HH:mm") : undefined,
+              isVirtual: !!day.isOnline,
+            };
+            if (session.sessionId) {
+              await updateEventSession(event._id, session.sessionId, sessionPayload);
+            } else {
+              await addEventSession(event._id, sessionPayload);
+            }
+          }
+        }
+        for (const sessionId of removedSessionIds) {
+          await deleteEventSession(event._id, sessionId);
         }
       }
 
@@ -777,27 +1008,29 @@ const CreateEventDrawer = ({ open, onClose, eventId, onDeleted, cloneFromEventId
                   <CustomSelect
                     label="Event Category"
                     placeholder={
-                      loadingEventCategories
-                        ? "Loading categories..."
-                        : eventCategoryLoadError
-                          ? "Failed to load — see message below"
-                          : eventCategoryOptions.length
-                            ? "Select Category"
-                            : "None configured — create in Product Management"
+                      eventCategoryOptions.length
+                        ? "Select Category"
+                        : "None configured — create in Configuration"
                     }
-                    value={eventCategoryProductTypeId}
+                    value={eventCategoryLookupId}
                     onChange={(e) => {
                       const nextId = e.target.value;
                       const selected = eventCategoryOptions.find(
                         (opt) => String(opt.value) === String(nextId),
                       );
-                      setEventCategoryProductTypeId(nextId);
-                      setEventCategoryCode(selected?.code || "");
+                      setEventCategoryLookupId(nextId);
+                      setEventCategoryLookupCode(selected?.code || "");
+                      // Cascading reset: clear Event Type if it no longer
+                      // belongs to the newly selected category.
+                      const currentEventTypeStillValid = eventTypeOptions.some(
+                        (opt) =>
+                          String(opt.value) === String(eventType) &&
+                          String(opt.eventCategoryLookupId) === String(nextId),
+                      );
+                      if (!currentEventTypeStillValid) setEventType("");
                     }}
                     options={eventCategoryOptions}
-                    disabled={isLocked || loadingEventCategories}
-                    hasError={!!eventCategoryLoadError}
-                    errorMessage={eventCategoryLoadError}
+                    disabled={isLocked}
                     isIDs={true}
                     required
                   />
@@ -808,7 +1041,7 @@ const CreateEventDrawer = ({ open, onClose, eventId, onDeleted, cloneFromEventId
                     placeholder="Select Type (optional)"
                     value={eventType}
                     onChange={(e) => setEventType(e.target.value)}
-                    options={eventTypeOptions}
+                    options={filteredEventTypeOptions}
                     disabled={isLocked}
                     isIDs={true}
                   />
@@ -907,7 +1140,7 @@ const CreateEventDrawer = ({ open, onClose, eventId, onDeleted, cloneFromEventId
                     placeholder="0.00"
                     prefix="€"
                     disabled={isLocked}
-                    required={!!eventCategoryProductTypeId}
+                    required={!!eventCategoryLookupId}
                   />
                 </Col>
                 <Col xs={24} sm={12}>
@@ -920,10 +1153,74 @@ const CreateEventDrawer = ({ open, onClose, eventId, onDeleted, cloneFromEventId
                     placeholder="0.00"
                     prefix="€"
                     disabled={isLocked}
-                    required={!!eventCategoryProductTypeId}
+                    required={!!eventCategoryLookupId}
                   />
                 </Col>
               </Row>
+
+              <div className="pricing-tiers-block">
+                {PRICING_TIER_FIELDS.map(({ tierType, label, hasCutoff, hasGroupSize }) => {
+                  const tier = pricingTiers[tierType];
+                  return (
+                    <div key={tierType} style={{ marginBottom: 12 }}>
+                      <Checkbox
+                        checked={tier.enabled}
+                        disabled={isLocked}
+                        onChange={(e) => handleTierFieldChange(tierType, "enabled", e.target.checked)}
+                      >
+                        Enable {label}
+                      </Checkbox>
+                      {tier.enabled && (
+                        <Row gutter={[16, 0]} style={{ marginTop: 8 }}>
+                          <Col xs={24} sm={hasCutoff || hasGroupSize ? 12 : 24}>
+                            <MyInput
+                              label={label}
+                              name={`${tierType}-price`}
+                              type="number"
+                              value={tier.price}
+                              onChange={(e) => handleTierFieldChange(tierType, "price", e.target.value)}
+                              placeholder="0.00"
+                              prefix="€"
+                              disabled={isLocked}
+                              required
+                            />
+                          </Col>
+                          {hasCutoff && (
+                            <Col xs={24} sm={12}>
+                              <MyDatePicker1
+                                label="Cutoff Date"
+                                name={`${tierType}-cutoffDate`}
+                                value={tier.cutoffDate}
+                                onChange={(date) => handleTierFieldChange(tierType, "cutoffDate", date)}
+                                format="DD/MM/YYYY"
+                                placeholder="DD/MM/YYYY"
+                                disabled={isLocked}
+                                required
+                              />
+                            </Col>
+                          )}
+                          {hasGroupSize && (
+                            <Col xs={24} sm={12}>
+                              <MyInput
+                                label="Minimum Group Size"
+                                name={`${tierType}-minGroupSize`}
+                                type="number"
+                                min="2"
+                                value={tier.minGroupSize}
+                                onChange={(e) => handleTierFieldChange(tierType, "minGroupSize", e.target.value)}
+                                placeholder="e.g. 5"
+                                suffix="people"
+                                disabled={isLocked}
+                                required
+                              />
+                            </Col>
+                          )}
+                        </Row>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
 
               <Row gutter={[16, 0]}>
                 <Col xs={24} sm={12}>
@@ -1011,16 +1308,18 @@ const CreateEventDrawer = ({ open, onClose, eventId, onDeleted, cloneFromEventId
                       justifyContent: "space-between",
                     }}
                   >
-                    <span
-                      className="my-input-label"
-                      style={{ marginBottom: 0 }}
-                    >
-                      Auto-Issue on Finish
-                    </span>
+                    <Tooltip title={!certificationType ? "Select a Certification Type to enable this" : ""}>
+                      <span
+                        className="my-input-label"
+                        style={{ marginBottom: 0 }}
+                      >
+                        Auto-Issue on Finish
+                      </span>
+                    </Tooltip>
                     <Switch
                       checked={autoIssueOnFinish}
                       onChange={setAutoIssueOnFinish}
-                      disabled={isLocked}
+                      disabled={isLocked || !certificationType}
                     />
                   </div>
                 </Col>
@@ -1096,17 +1395,47 @@ const CreateEventDrawer = ({ open, onClose, eventId, onDeleted, cloneFromEventId
               </a>
             </Card>
 
-            {/* CONFIGURATION TIP */}
-            <Card className="event-sidebar-card tip-card">
-              <div className="tip-card-icon">⚙️</div>
-              <h6 className="tip-card-title">Configuration Tip</h6>
-              <p className="tip-card-text">
-                Ensure your CPD credits are accurate and the time of publication
-                to prevent conflicts or attendances.
-              </p>
-              <a href="#/" className="tip-card-link">
-                Learn more
-              </a>
+            {/* EVENT IMAGE */}
+            <Card className="event-sidebar-card">
+              <div className="sidebar-card-icon">🖼️</div>
+              <h5 className="sidebar-card-title">Event Image</h5>
+              {imageUrl ? (
+                <div className="event-image-preview">
+                  <img src={imageUrl} alt="Event" />
+                </div>
+              ) : (
+                <p className="text-sm text-slate-500">
+                  No image uploaded yet.
+                </p>
+              )}
+              <div className="event-image-actions">
+                <ImgCrop rotationSlider aspect={16 / 9} quality={0.9}>
+                  <Upload
+                    accept="image/png,image/jpeg,image/jpg,image/webp,image/gif"
+                    showUploadList={false}
+                    customRequest={handleImageUpload}
+                    disabled={isLocked || uploadingImage}
+                  >
+                    <Button
+                      icon={uploadingImage ? <LoadingOutlined /> : <UploadOutlined />}
+                      loading={uploadingImage}
+                      disabled={isLocked}
+                    >
+                      {imageUrl ? "Replace Image" : "Upload Image"}
+                    </Button>
+                  </Upload>
+                </ImgCrop>
+                {imageUrl && !isLocked ? (
+                  <Button
+                    type="link"
+                    danger
+                    onClick={() => setImageUrl("")}
+                    className="event-image-remove-btn"
+                  >
+                    Remove Image
+                  </Button>
+                ) : null}
+              </div>
             </Card>
           </Col>
         </Row>
@@ -1125,7 +1454,7 @@ const CreateEventDrawer = ({ open, onClose, eventId, onDeleted, cloneFromEventId
         onRemoveSession={handleRemoveSession}
         allowAddDay={bookingOnMultipleDays}
         multipleDayEvent={bookingOnMultipleDays}
-        onMultipleDayEventChange={setBookingOnMultipleDays}
+        onMultipleDayEventChange={handleMultipleDayEventChange}
         multipleDayEventDisabled={isLocked}
       />
 

@@ -72,6 +72,8 @@ function Gridmenu({
     (location.pathname || "").toLowerCase() === "/paymentforms";
   const isEventsScreen =
     (location.pathname || "").toLowerCase() === "/eventssummary";
+  const isAttendeesScreen =
+    (location.pathname || "").toLowerCase() === "/attendees";
   const isCreditNotesScreen =
     (location.pathname || "").toLowerCase() === "/creditnotes";
   const isJournalAdjustmentsScreen =
@@ -126,7 +128,9 @@ function Gridmenu({
     ? "members"
     : isEventsScreen
       ? "eventssummary"
-      : isCreditNotesScreen
+      : isAttendeesScreen
+        ? "attendees"
+        : isCreditNotesScreen
       ? "creditnotes"
       : isJournalAdjustmentsScreen
         ? "journaladjustments"

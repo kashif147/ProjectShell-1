@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Tag } from "antd";
 import MyTable from "../common/MyTable";
+import EventRegistrationViewDrawer from "./EventRegistrationViewDrawer";
 import { fetchRegistrationsByProfile } from "../../services/eventsApi";
 import {
   PROFILE_INVALIDATE_EVENT,
@@ -61,6 +62,7 @@ const columns = [
 const ProfileEventsTab = ({ profileId }) => {
   const [registrations, setRegistrations] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [selectedRegistration, setSelectedRegistration] = useState(null);
 
   const load = React.useCallback(() => {
     if (!profileId) {
@@ -90,13 +92,21 @@ const ProfileEventsTab = ({ profileId }) => {
   }, [load, profileId]);
 
   return (
-    <MyTable
-      columns={columns}
-      dataSource={registrations.map((r) => ({ ...r, key: r._id }))}
-      loading={loading}
-      selection={false}
-      tablePadding={{ paddingLeft: "0", paddingRight: "0" }}
-    />
+    <>
+      <MyTable
+        columns={columns}
+        dataSource={registrations.map((r) => ({ ...r, key: r._id }))}
+        loading={loading}
+        selection={false}
+        tablePadding={{ paddingLeft: "0", paddingRight: "0" }}
+        onRowClick={(record) => setSelectedRegistration(record)}
+      />
+      <EventRegistrationViewDrawer
+        open={Boolean(selectedRegistration)}
+        onClose={() => setSelectedRegistration(null)}
+        registration={selectedRegistration}
+      />
+    </>
   );
 };
 

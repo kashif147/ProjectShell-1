@@ -26,6 +26,20 @@ export async function fetchEventById(id) {
   return unwrap({ data });
 }
 
+// Live price quote (member/non-member, early bird, student, group student -
+// all resolved server-side from the attendee's real, active membership).
+// profileId is optional - omit it for a not-yet-linked/new attendee.
+export async function fetchEventPriceQuote(eventId, { profileId, quantity } = {}) {
+  const { data } = await axios.get(
+    `${getEventsServiceBaseUrl()}/events/${eventId}/price-quote`,
+    {
+      params: { profileId: profileId || undefined, quantity },
+      headers: authHeaders(),
+    },
+  );
+  return unwrap({ data });
+}
+
 // Attaches a non-fatal `__syncWarning` (e.g. Product/Pricing link failure) from
 // the response envelope onto the unwrapped event, without disturbing the
 // `unwrap` contract every other call here relies on.
@@ -51,6 +65,21 @@ export async function updateEvent(id, payload) {
   return withSyncWarning(data);
 }
 
+// eventId is optional - pass "draft" while the event hasn't been saved yet;
+// the returned URL rides along in the create/update payload afterwards.
+export async function uploadEventImage(eventId, file) {
+  const formData = new FormData();
+  formData.append("file", file);
+  const { data } = await axios.post(
+    `${getEventsServiceBaseUrl()}/events/${eventId || "draft"}/image`,
+    formData,
+    {
+      headers: { ...authHeaders(), "Content-Type": "multipart/form-data" },
+    },
+  );
+  return unwrap({ data });
+}
+
 export async function deleteEvent(id) {
   const { data } = await axios.delete(`${getEventsServiceBaseUrl()}/events/${id}`, {
     headers: authHeaders(),
@@ -62,6 +91,23 @@ export async function addEventSession(eventId, payload) {
   const { data } = await axios.post(
     `${getEventsServiceBaseUrl()}/events/${eventId}/sessions`,
     payload,
+    { headers: authHeaders() },
+  );
+  return unwrap({ data });
+}
+
+export async function updateEventSession(eventId, sessionId, payload) {
+  const { data } = await axios.put(
+    `${getEventsServiceBaseUrl()}/events/${eventId}/sessions/${sessionId}`,
+    payload,
+    { headers: authHeaders() },
+  );
+  return unwrap({ data });
+}
+
+export async function deleteEventSession(eventId, sessionId) {
+  const { data } = await axios.delete(
+    `${getEventsServiceBaseUrl()}/events/${eventId}/sessions/${sessionId}`,
     { headers: authHeaders() },
   );
   return unwrap({ data });
@@ -107,9 +153,41 @@ export async function createRegistration(payload) {
   return unwrap({ data });
 }
 
+// Read-only duplicate check for a would-be new attendee, run before
+// registering them - resolves to "exact" (reuse this profile silently),
+// "review" (show these candidates and let the CRM user pick one or confirm
+// creating new), or "none" (safe to create a new profile).
+export async function checkAttendeeDuplicates({
+  email,
+  firstName,
+  lastName,
+  phone,
+  addressLine1,
+  townCity,
+  countyState,
+  eircode,
+  country,
+}) {
+  const { data } = await axios.post(
+    `${getEventsServiceBaseUrl()}/registrations/attendee-duplicate-check`,
+    { email, firstName, lastName, phone, addressLine1, townCity, countyState, eircode, country },
+    { headers: authHeaders() },
+  );
+  return unwrap({ data });
+}
+
 export async function cancelRegistration(id) {
   const { data } = await axios.put(
     `${getEventsServiceBaseUrl()}/registrations/${id}/cancel`,
+    {},
+    { headers: authHeaders() },
+  );
+  return unwrap({ data });
+}
+
+export async function approveRegistration(id) {
+  const { data } = await axios.put(
+    `${getEventsServiceBaseUrl()}/registrations/${id}/approve`,
     {},
     { headers: authHeaders() },
   );

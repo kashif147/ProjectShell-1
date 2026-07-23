@@ -499,6 +499,7 @@ const Sidebar = () => {
   const selectedKey = useMemo(() => {
     const routeKeyMap = {
       "/Summary": "Profiles",
+      "/Details": "Profiles",
       "/ClaimSummary": "Claims",
       "/ClaimsById": "Claims",
       "/CasesSummary": "Cases",
@@ -589,6 +590,13 @@ const Sidebar = () => {
     if (!currentPath) return "";
 
     // Handle context-specific mappings
+    if (currentPath === "/Details") {
+      const searchParams = new URLSearchParams(location.search);
+      if (searchParams.get("subscriptionId")) {
+        return "Membership";
+      }
+      return "Profiles";
+    }
     if (currentPath === "/CasesSummary" && activeKey === "Cases") {
       return "Dashboard";
     }
@@ -616,7 +624,7 @@ const Sidebar = () => {
     }
 
     return routeKeyMap[currentPath] || "";
-  }, [location.pathname, activeKey, location.state]);
+  }, [location.pathname, location.search, activeKey, location.state]);
 
   const handleClick = ({ key }) => {
     // We can keep this for any special handling if needed, 

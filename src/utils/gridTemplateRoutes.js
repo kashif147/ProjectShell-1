@@ -9,6 +9,7 @@ export const GRID_SCREEN_PATH_TO_TEMPLATE_TYPE = {
   summary: "profile",
   eventsdashboard: "eventsdashboard",
   eventssummary: "eventssummary",
+  attendees: "attendees",
   creditnotes: "creditnotes",
   journaladjustments: "journaladjustments",
   onlinepayment: "onlinepayment",

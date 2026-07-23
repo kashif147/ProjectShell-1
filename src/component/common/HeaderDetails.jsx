@@ -227,9 +227,7 @@ function HeaderDetails({
 
   const paymentFormCreateBtnStyle = {
     marginRight: "50px",
-    color: "white",
     borderRadius: "3px",
-    backgroundColor: "var(--app-brand-primary)",
   };
 
   const openPaymentFormCreate = (formType = "STANDING_ORDER") => {
@@ -1712,6 +1710,8 @@ function HeaderDetails({
                   {/* For templateSummary, only show Create button */}
                   {nav === "/templateSummary" ? (
                     <Button
+                      type="primary"
+                      icon={<PlusOutlined />}
                       onClick={() => {
                         navigate("/templateConfig", {
                           state: { state: "templates" },
@@ -1719,11 +1719,9 @@ function HeaderDetails({
                       }}
                       style={{
                         marginRight: "50px", // This gives the margin right
-                        color: "white",
                         borderRadius: "3px",
-                        backgroundColor: "var(--app-brand-primary)",
                       }}
-                      className="butn"
+                      className="butn primary-btn"
                     >
                       Create
                     </Button>
@@ -1782,24 +1780,30 @@ function HeaderDetails({
                         isReportHeaderPath(nav) ? null : nav ===
                         "/PaymentForms" ? (
                         <Button
+                          type="primary"
+                          icon={<PlusOutlined />}
                           onClick={() =>
                             openPaymentFormCreate("STANDING_ORDER")
                           }
                           style={paymentFormCreateBtnStyle}
-                          className="butn"
+                          className="butn primary-btn"
                         >
                           Create
                         </Button>
                       ) : nav === "/DirectDebitAuthorization" ? (
                         <Button
+                          type="primary"
+                          icon={<PlusOutlined />}
                           onClick={() => openPaymentFormCreate("DD_MANDATE")}
                           style={paymentFormCreateBtnStyle}
-                          className="butn"
+                          className="butn primary-btn"
                         >
                           Create
                         </Button>
                       ) : (
                         <Button
+                          type="primary"
+                          icon={<PlusOutlined />}
                           onClick={() => {
                             if (nav == "/Applications") {
                               navigate("/applicationMgt");
@@ -1876,11 +1880,9 @@ function HeaderDetails({
                           }}
                           style={{
                             marginRight: "50px",
-                            color: "white",
                             borderRadius: "3px",
-                            backgroundColor: "var(--app-brand-primary)",
                           }}
-                          className="butn"
+                          className="butn primary-btn"
                         >
                           {nav === "/Attendees" ? "Add Attendee" : "Create"}
                         </Button>

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate, Link } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import {
     Button,
@@ -10,6 +10,7 @@ import {
     Avatar,
     Typography,
     Descriptions,
+    Space,
     message
 } from 'antd';
 import {
@@ -25,7 +26,10 @@ import dayjs from 'dayjs';
 
 import CreateAttendeeDrawer from '../../component/event/CreateAttendeeDrawer';
 import CreateEventDrawer from '../../component/event/CreateEventDrawer';
+import EventRegistrationViewDrawer from '../../component/event/EventRegistrationViewDrawer';
 import { fetchEventById, fetchRegistrations, cancelRegistration } from '../../services/eventsApi';
+import { computeEventFormat } from '../../utils/eventFormat';
+import { buildDetailsSearch } from '../../utils/detailsRoute';
 
 const { Text, Title } = Typography;
 
@@ -71,6 +75,8 @@ function mapRegistrationToAttendeeRow(reg) {
         amount: reg.amount,
         currency: reg.currency,
         registeredAt: reg.createdAt,
+        profileId: reg.profileId,
+        __registration: reg,
     };
 }
 
@@ -78,7 +84,7 @@ const EventDetails = () => {
     const location = useLocation();
     const navigate = useNavigate();
     const eventId = location.state?.eventId;
-    const { eventTypeOptions, venueOptions } = useSelector((state) => state.lookups);
+    const { eventTypeOptions, eventCategoryOptions, venueOptions } = useSelector((state) => state.lookups);
 
     const [selectedRowKeys, setSelectedRowKeys] = useState([]);
     const [isAttendeeDrawerVisible, setIsAttendeeDrawerVisible] = useState(false);
@@ -93,6 +99,9 @@ const EventDetails = () => {
 
     const [searchText, setSearchText] = useState('');
     const [statusFilter, setStatusFilter] = useState('All');
+
+    const [selectedRegistration, setSelectedRegistration] = useState(null);
+    const [isRegistrationDrawerVisible, setIsRegistrationDrawerVisible] = useState(false);
 
     const loadEvent = useCallback(() => {
         if (!eventId) return;
@@ -215,7 +224,9 @@ const EventDetails = () => {
             render: (paymentStatus, record) => (
                 <span style={{ textTransform: 'capitalize' }}>
                     {paymentStatus}
-                    {record.amount != null ? ` · ${record.amount} ${(record.currency || '').toUpperCase()}` : ''}
+                    {record.amount != null
+                        ? ` · ${(record.amount / 100).toFixed(2)} ${(record.currency || 'eur').toUpperCase()}`
+                        : ''}
                 </span>
             )
         },
@@ -225,6 +236,31 @@ const EventDetails = () => {
             key: 'registeredAt',
             align: 'center',
             render: (registeredAt) => (registeredAt ? dayjs(registeredAt).format('DD/MM/YYYY') : '-')
+        },
+        {
+            title: 'ACTIONS',
+            dataIndex: '_actions',
+            key: '_actions',
+            render: (_, record) => (
+                <Space size={8}>
+                    {record.profileId ? (
+                        <Link to={{ pathname: '/Details', search: buildDetailsSearch(record.profileId) }}>
+                            Profile
+                        </Link>
+                    ) : null}
+                    <Button
+                        type="link"
+                        size="small"
+                        style={{ padding: 0 }}
+                        onClick={() => {
+                            setSelectedRegistration(record.__registration || record);
+                            setIsRegistrationDrawerVisible(true);
+                        }}
+                    >
+                        Registration
+                    </Button>
+                </Space>
+            )
         }
     ];
 
@@ -239,6 +275,17 @@ const EventDetails = () => {
     const eventTypeLabel = (eventTypeOptions || []).find(
         (opt) => String(opt.value) === String(event?.eventTypeId),
     )?.label || '-';
+    // Category moved from a ProductType-code snapshot (eventCategoryCode) to a
+    // decoupled Lookup reference (eventCategoryLookupId/Code) - resolve via the
+    // lookup first (same as the Edit form) and fall back to the legacy fields
+    // for events created before that migration.
+    const eventCategoryLabel =
+        (eventCategoryOptions || []).find(
+            (opt) => String(opt.value) === String(event?.eventCategoryLookupId),
+        )?.label ||
+        event?.eventCategoryLookupCode ||
+        event?.eventCategoryCode ||
+        '-';
     // Looked up live from the Venue lookup (rather than trusting the
     // point-in-time `event.venue` snapshot string) so the address always
     // reflects the venue's current record.
@@ -311,14 +358,14 @@ const EventDetails = () => {
                                     column={2}
                                     labelStyle={{ width: '30%', fontWeight: 500 }}
                                 >
-                                    <Descriptions.Item label="Category">{event?.eventCategoryCode || '-'}</Descriptions.Item>
+                                    <Descriptions.Item label="Category">{eventCategoryLabel}</Descriptions.Item>
                                     <Descriptions.Item label="Event Type">{eventTypeLabel}</Descriptions.Item>
                                     <Descriptions.Item label="Start Date">{formatDateTime(event?.startDate) || '-'}</Descriptions.Item>
                                     <Descriptions.Item label="End Date">{formatDateTime(event?.endDate) || '-'}</Descriptions.Item>
                                     <Descriptions.Item label="Seat Limit">{event?.capacity != null ? event.capacity : '-'}</Descriptions.Item>
-                                    <Descriptions.Item label="Format">{event?.isVirtual ? 'Virtual' : 'In-person'}</Descriptions.Item>
+                                    <Descriptions.Item label="Format">{computeEventFormat(event)}</Descriptions.Item>
                                     <Descriptions.Item label="Venue" span={2}>
-                                        {event?.isVirtual ? 'Virtual' : (
+                                        {computeEventFormat(event) === 'Online' ? 'Online' : (
                                             <div>
                                                 <div>{selectedVenue?.label || event?.venue || '-'}</div>
                                                 {venueAddressDisplay && (
@@ -459,6 +506,14 @@ const EventDetails = () => {
                 <CreateAttendeeDrawer
                     open={isAttendeeDrawerVisible}
                     onClose={() => setIsAttendeeDrawerVisible(false)}
+                    eventId={eventId}
+                />
+
+                <EventRegistrationViewDrawer
+                    open={isRegistrationDrawerVisible}
+                    onClose={() => setIsRegistrationDrawerVisible(false)}
+                    registration={selectedRegistration}
+                    onApproved={loadAttendees}
                 />
 
                 <CreateEventDrawer
