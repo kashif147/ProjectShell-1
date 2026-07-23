@@ -484,7 +484,11 @@ const ProfileHeader = forwardRef(function ProfileHeader(
     return false;
   }, [ProfileSubData]);
 
-  // Helper function to safely get nested properties
+  // Helper function to safely get nested properties - a Profile field left
+  // unset (e.g. gender on an attendee-only profile created via the events
+  // registration flow) is stored as an explicit null, not undefined, so both
+  // must fall back to defaultValue or callers doing .charAt()/.toUpperCase()
+  // on the result crash.
   const getSafe = (obj, path, defaultValue = "") => {
     const keys = path.split(".");
     let result = obj;
@@ -494,7 +498,7 @@ const ProfileHeader = forwardRef(function ProfileHeader(
       result = result[key];
     }
 
-    return result !== undefined ? result : defaultValue;
+    return result !== undefined && result !== null ? result : defaultValue;
   };
 
   // FIXED: Derive member data from source - now properly reactive
@@ -568,7 +572,7 @@ const ProfileHeader = forwardRef(function ProfileHeader(
     // const category = getSafe(source, 'membershipCategory', ' ');
     const category = subscriptionData?.membershipCategory || "";
     // Subscription Info
-    const paymentType = subscriptionData?.paymentType || "Salary Deduction";
+    const paymentType = subscriptionData?.paymentType || "";
     const subscriptionYear = subscriptionData?.subscriptionYear || "";
 
     // Financial Info - Now using fetched summary data
@@ -1028,17 +1032,19 @@ const ProfileHeader = forwardRef(function ProfileHeader(
             )}
           </div>
         ) : null}
-        <div
-          className="member-meta-tile member-meta-tile-payment"
-          title={memberData.paymentType}
-        >
-          {renderCompactLine(
-            <FaCreditCard />,
-            "",
-            memberData.paymentType,
-            "member-profile-badge-value member-profile-badge-payment",
-          )}
-        </div>
+        {memberData.paymentType ? (
+          <div
+            className="member-meta-tile member-meta-tile-payment"
+            title={memberData.paymentType}
+          >
+            {renderCompactLine(
+              <FaCreditCard />,
+              "",
+              memberData.paymentType,
+              "member-profile-badge-value member-profile-badge-payment",
+            )}
+          </div>
+        ) : null}
       </>
     ) : null;
 
@@ -1078,17 +1084,19 @@ const ProfileHeader = forwardRef(function ProfileHeader(
                 )}
               </div>
             ) : null}
-            <div
-              className="member-meta-tile member-meta-tile-payment"
-              title={memberData.paymentType}
-            >
-              {renderCompactLine(
-                <FaCreditCard />,
-                "",
-                memberData.paymentType,
-                "member-profile-badge-value member-profile-badge-payment",
-              )}
-            </div>
+            {memberData.paymentType ? (
+              <div
+                className="member-meta-tile member-meta-tile-payment"
+                title={memberData.paymentType}
+              >
+                {renderCompactLine(
+                  <FaCreditCard />,
+                  "",
+                  memberData.paymentType,
+                  "member-profile-badge-value member-profile-badge-payment",
+                )}
+              </div>
+            ) : null}
             <div className="member-meta-tile" title={memberData.paymentCode}>
               {renderCompactLine(
                 <FaBarcode />,
@@ -1310,10 +1318,12 @@ const ProfileHeader = forwardRef(function ProfileHeader(
               valueClassName: "member-profile-detail-badge",
             })
           : null}
-        {renderSideDetailRow(<FaCreditCard />, "", memberData.paymentType, {
-          valueClassName:
-            "member-profile-detail-badge member-profile-detail-badge-payment",
-        })}
+        {memberData.paymentType
+          ? renderSideDetailRow(<FaCreditCard />, "", memberData.paymentType, {
+              valueClassName:
+                "member-profile-detail-badge member-profile-detail-badge-payment",
+            })
+          : null}
         {renderSideDetailRow(
           <FaExclamationTriangle />,
           "Balance:",

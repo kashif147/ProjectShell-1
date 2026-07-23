@@ -32,6 +32,7 @@ import { buildDetailsSearch } from "../utils/detailsRoute";
 import reconciliationWorkspace from "../utils/reconciliationWorkspace";
 import { financeLedgerActionIcon } from "../component/finanace/financeActionIcons";
 import { callJournalAdjustmentApprove } from "../utils/journalAdjustmentsWorkspace";
+import { callAttendeesOpenRegistration } from "../utils/eventsWorkspace";
 import {
   callCreditNoteApprove,
   callCreditNoteCancel,
@@ -3609,6 +3610,14 @@ const staticColumns = {
       width: 150,
     },
     {
+      dataIndex: "eventCategory",
+      title: "Event Category",
+      ellipsis: true,
+      isGride: true,
+      isVisible: true,
+      width: 150,
+    },
+    {
       dataIndex: "eventName",
       title: "Event",
       ellipsis: true,
@@ -3623,17 +3632,12 @@ const staticColumns = {
       isGride: true,
       isVisible: true,
       width: 140,
+      filterValueType: "date",
       render: (value) => formatDateOnly(value),
     },
     {
-      dataIndex: "attendeeId",
-      title: "Attendee ID",
-      ellipsis: true,
-      isGride: true,
-      isVisible: true,
-      width: 140,
-    },
-    {
+      // Matches Registration.status in events-service: pending, confirmed,
+      // cancelled, attended, no-show.
       dataIndex: "status",
       title: "Registration Status",
       ellipsis: true,
@@ -3643,23 +3647,27 @@ const staticColumns = {
       render: (status) => {
         if (!status) return "-";
         const statusLower = String(status).toLowerCase();
-        return (
-          <Tag color={statusLower === "registered" ? "green" : "default"}>
-            {status}
-          </Tag>
-        );
+        let color = "default";
+        if (statusLower === "confirmed" || statusLower === "attended") color = "green";
+        else if (statusLower === "pending") color = "orange";
+        else if (statusLower === "cancelled" || statusLower === "no-show") color = "red";
+        return <Tag color={color}>{status}</Tag>;
       },
     },
     {
+      // Registration.amount is stored in cents (events-service) - convert to
+      // euros for display, matching every other cent-stored money column.
       dataIndex: "totalFee",
       title: "Total Fee",
       ellipsis: true,
       isGride: true,
       isVisible: true,
       width: 130,
-      render: (value) => formatCurrency(value),
+      render: (value) => formatCurrency(Number(value || 0) / 100),
     },
     {
+      // Matches Registration.paymentStatus in events-service: pending,
+      // succeeded, failed, waived, manual.
       dataIndex: "paymentStatus",
       title: "Payment Status",
       ellipsis: true,
@@ -3670,18 +3678,10 @@ const staticColumns = {
         if (!status) return "-";
         const statusLower = String(status).toLowerCase();
         let color = "default";
-        if (statusLower === "paid" || statusLower === "captured") color = "green";
-        else if (statusLower === "authorised" || statusLower === "requires capture")
-          color = "blue";
-        else if (statusLower === "pending" || statusLower === "payment required")
-          color = "orange";
-        else if (statusLower === "unpaid") color = "red";
-        else if (statusLower === "cancelled" || statusLower === "canceled")
-          color = "default";
-        else if (statusLower === "refund required" || statusLower === "manual review")
-          color = "purple";
-        else if (statusLower === "authorisation expired") color = "volcano";
-        else if (statusLower === "refunded") color = "purple";
+        if (statusLower === "succeeded" || statusLower === "waived" || statusLower === "manual")
+          color = "green";
+        else if (statusLower === "pending") color = "orange";
+        else if (statusLower === "failed") color = "red";
         return <Tag color={color}>{status}</Tag>;
       },
     },
@@ -3740,6 +3740,31 @@ const staticColumns = {
       isGride: true,
       isVisible: true,
       width: 150,
+    },
+    {
+      dataIndex: "_actions",
+      title: "Actions",
+      ellipsis: false,
+      isGride: true,
+      isVisible: true,
+      width: 160,
+      render: (_, record) => (
+        <Space size={8}>
+          {record.profileId ? (
+            <Link to={{ pathname: "/Details", search: buildDetailsSearch(record.profileId) }}>
+              Profile
+            </Link>
+          ) : null}
+          <Button
+            type="link"
+            size="small"
+            style={{ padding: 0 }}
+            onClick={() => callAttendeesOpenRegistration(record)}
+          >
+            Registration
+          </Button>
+        </Space>
+      ),
     },
   ],
   Popout: [

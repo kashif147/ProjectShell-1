@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate, Link } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import {
     Button,
@@ -10,6 +10,7 @@ import {
     Avatar,
     Typography,
     Descriptions,
+    Space,
     message
 } from 'antd';
 import {
@@ -25,7 +26,10 @@ import dayjs from 'dayjs';
 
 import CreateAttendeeDrawer from '../../component/event/CreateAttendeeDrawer';
 import CreateEventDrawer from '../../component/event/CreateEventDrawer';
+import EventRegistrationViewDrawer from '../../component/event/EventRegistrationViewDrawer';
 import { fetchEventById, fetchRegistrations, cancelRegistration } from '../../services/eventsApi';
+import { computeEventFormat } from '../../utils/eventFormat';
+import { buildDetailsSearch } from '../../utils/detailsRoute';
 
 const { Text, Title } = Typography;
 
@@ -58,20 +62,6 @@ function formatDateTime(value) {
     return value ? dayjs(value).format('DD/MM/YYYY HH:mm') : null;
 }
 
-// Single-day (or no sessions yet): the event's own isVirtual flag decides.
-// Multi-day: derived from each day's isVirtual - all online, all in-person,
-// or a mix (Hybrid).
-function computeEventFormat(event) {
-    const sessions = event?.sessions || [];
-    if (sessions.length > 1) {
-        const onlineCount = sessions.filter((s) => !!s.isVirtual).length;
-        if (onlineCount === 0) return 'In-Person';
-        if (onlineCount === sessions.length) return 'Online';
-        return 'Hybrid';
-    }
-    return event?.isVirtual ? 'Online' : 'In-Person';
-}
-
 function mapRegistrationToAttendeeRow(reg) {
     const snapshot = reg.attendeeSnapshot || {};
     return {
@@ -85,6 +75,8 @@ function mapRegistrationToAttendeeRow(reg) {
         amount: reg.amount,
         currency: reg.currency,
         registeredAt: reg.createdAt,
+        profileId: reg.profileId,
+        __registration: reg,
     };
 }
 
@@ -107,6 +99,9 @@ const EventDetails = () => {
 
     const [searchText, setSearchText] = useState('');
     const [statusFilter, setStatusFilter] = useState('All');
+
+    const [selectedRegistration, setSelectedRegistration] = useState(null);
+    const [isRegistrationDrawerVisible, setIsRegistrationDrawerVisible] = useState(false);
 
     const loadEvent = useCallback(() => {
         if (!eventId) return;
@@ -229,7 +224,9 @@ const EventDetails = () => {
             render: (paymentStatus, record) => (
                 <span style={{ textTransform: 'capitalize' }}>
                     {paymentStatus}
-                    {record.amount != null ? ` · ${record.amount} ${(record.currency || '').toUpperCase()}` : ''}
+                    {record.amount != null
+                        ? ` · ${(record.amount / 100).toFixed(2)} ${(record.currency || 'eur').toUpperCase()}`
+                        : ''}
                 </span>
             )
         },
@@ -239,6 +236,31 @@ const EventDetails = () => {
             key: 'registeredAt',
             align: 'center',
             render: (registeredAt) => (registeredAt ? dayjs(registeredAt).format('DD/MM/YYYY') : '-')
+        },
+        {
+            title: 'ACTIONS',
+            dataIndex: '_actions',
+            key: '_actions',
+            render: (_, record) => (
+                <Space size={8}>
+                    {record.profileId ? (
+                        <Link to={{ pathname: '/Details', search: buildDetailsSearch(record.profileId) }}>
+                            Profile
+                        </Link>
+                    ) : null}
+                    <Button
+                        type="link"
+                        size="small"
+                        style={{ padding: 0 }}
+                        onClick={() => {
+                            setSelectedRegistration(record.__registration || record);
+                            setIsRegistrationDrawerVisible(true);
+                        }}
+                    >
+                        Registration
+                    </Button>
+                </Space>
+            )
         }
     ];
 
@@ -484,6 +506,14 @@ const EventDetails = () => {
                 <CreateAttendeeDrawer
                     open={isAttendeeDrawerVisible}
                     onClose={() => setIsAttendeeDrawerVisible(false)}
+                    eventId={eventId}
+                />
+
+                <EventRegistrationViewDrawer
+                    open={isRegistrationDrawerVisible}
+                    onClose={() => setIsRegistrationDrawerVisible(false)}
+                    registration={selectedRegistration}
+                    onApproved={loadAttendees}
                 />
 
                 <CreateEventDrawer

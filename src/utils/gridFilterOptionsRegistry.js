@@ -19,6 +19,7 @@ export const CLIENT_SIDE_GRID_FILTER_SCREENS = new Set([
   "DebtorsListReport",
   "Events",
   "EventsDashboard",
+  "Attendees",
 ]);
 
 const registry = new Map();
@@ -172,6 +173,8 @@ const CLOSED_ENUM_FILTER_LABELS = new Set([
   "Source",
   "Event Type",
   "Event Status",
+  "Event Category",
+  "Registration Status",
 ]);
 
 function filterDerivedToStaticAllowlist(derivedOpts = [], staticOpts = []) {

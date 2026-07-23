@@ -106,6 +106,7 @@ export const FilterProvider = ({ children }) => {
     genderOptions,
     sectionOptions,
     eventTypeOptions,
+    eventCategoryOptions,
     lookups: lookupsRaw,
     lookupsloading,
   } = useSelector((state) => state.lookups);
@@ -903,6 +904,7 @@ export const FilterProvider = ({ children }) => {
       Attendees: [
         "Event",
         "Event Type",
+        "Event Category",
         "Registration Status",
         "Event Date",
         "Payment Status",
@@ -1012,6 +1014,7 @@ export const FilterProvider = ({ children }) => {
     Attendees: [
       "Event",
       "Event Type",
+      "Event Category",
       "Registration Status",
       "Event Date",
       "Payment Status",
@@ -1693,6 +1696,10 @@ export const FilterProvider = ({ children }) => {
           operator: "==",
           selectedValues: [],
         },
+        "Event Category": {
+          operator: "==",
+          selectedValues: [],
+        },
         "Registration Status": {
           operator: "==",
           selectedValues: [],
@@ -2349,7 +2356,15 @@ export const FilterProvider = ({ children }) => {
         lookupsloading && !paymentTypeOptions?.length
           ? ["Loading..."]
           : ["", ...getLookupOptions(paymentTypeOptions || [])],
-      "Payment Status": ["", "Paid", "Pending", "Failed", "Refunded"],
+      // Shared label across screens with different underlying enums -
+      // Attendees (Registration.paymentStatus: pending/succeeded/failed/
+      // waived/manual) vs Online Payment (Stripe-flavoured Paid/Pending/
+      // Failed/Refunded). Resolve per current screen so each sees its own
+      // real values instead of a generic label collision.
+      "Payment Status":
+        activePage === "Attendees"
+          ? ["", "Pending", "Succeeded", "Failed", "Waived", "Manual"]
+          : ["", "Paid", "Pending", "Failed", "Refunded"],
       "Billing Cycle": ["", "Annual", "Monthly"],
       "Case Type": ["", "General", "Legal", "Financial", "Other"],
       Priority: ["", "Low", "Medium", "High", "Critical"],
@@ -2358,6 +2373,10 @@ export const FilterProvider = ({ children }) => {
         lookupsloading && !eventTypeOptions?.length
           ? ["Loading..."]
           : ["", ...getLookupOptions(eventTypeOptions || [])],
+      "Event Category":
+        lookupsloading && !eventCategoryOptions?.length
+          ? ["Loading..."]
+          : ["", ...getLookupOptions(eventCategoryOptions || [])],
       "Event Status": ["", "Draft", "Published", "Cancelled", "Completed"],
       Status: ["", "Active", "Planning", "Review", "Canceled"],
       "CN Status": ["", "Draft", "Approved", "Cancelled", "Posted"],
@@ -2384,14 +2403,17 @@ export const FilterProvider = ({ children }) => {
       "Full Name": [],
       Phone: [],
       Event: [],
+      // Matches Registration.status in events-service exactly (pending,
+      // confirmed, cancelled, attended, no-show) - not the earlier
+      // placeholder values ("Registered"/"Waitlisted") which never existed.
       "Registration Status": [
         "",
-        "Registered",
-        "Cancelled",
         "Pending",
-        "Waitlisted",
+        "Confirmed",
+        "Cancelled",
+        "Attended",
+        "No-show",
       ],
-
       // 🔹 Text input filters
       Email: [],
       "Membership No": [],
@@ -2486,6 +2508,7 @@ export const FilterProvider = ({ children }) => {
     categoryData,
     paymentTypeOptions,
     eventTypeOptions,
+    eventCategoryOptions,
     genderOptions,
     sectionOptions,
     filteredWLOptions,

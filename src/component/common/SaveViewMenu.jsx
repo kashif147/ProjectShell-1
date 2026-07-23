@@ -60,7 +60,7 @@ import {
 } from "../../features/paymentFormsWithFilterSlice";
 import { resetScreenChanged } from "../../features/views/ScreenFilterChangSlice";
 import { bumpCreditNotesReload } from "../../utils/creditNotesWorkspace";
-import { bumpEventsReload } from "../../utils/eventsWorkspace";
+import { bumpEventsReload, bumpAttendeesReload } from "../../utils/eventsWorkspace";
 import { bumpJournalAdjustmentsReload } from "../../utils/journalAdjustmentsWorkspace";
 import { bumpOnlinePaymentsReload } from "../../utils/onlinePaymentsWorkspace";
 import { bumpRefundsReload } from "../../utils/refundsWorkspace";
@@ -267,6 +267,10 @@ const SaveViewMenu = ({ className, style }) => {
       bumpEventsReload();
       return;
     }
+    if (activePage === "Attendees") {
+      bumpAttendeesReload();
+      return;
+    }
     if (activePage === "CreditNotes") {
       bumpCreditNotesReload();
       return;
@@ -405,6 +409,7 @@ const SaveViewMenu = ({ className, style }) => {
       dispatch(resetScreenChanged({}));
       resetScreenInitState();
       dispatch(clearActiveTemplateId());
+      dispatch(clearSelectedView());
       lastScreen.current = targetTemplateType;
     }
 
@@ -523,9 +528,18 @@ const SaveViewMenu = ({ className, style }) => {
       lastAppliedTemplateIdRef.current = null;
       return;
     }
+    // selectedView/activeTemplateId are single global values (not scoped per
+    // screen) and don't clear synchronously on route change, so on the first
+    // render after switching screens this effect can still see the PREVIOUS
+    // screen's stale view here even though its _id still happens to match
+    // activeTemplateId (both stale from the same render). Checking the
+    // fetched document's own templateType - not just timing - is what
+    // actually prevents a cross-screen template (e.g. Events) from being
+    // applied onto a different screen's columns (e.g. Attendees).
     if (
       !selectedView ||
-      String(selectedView._id) !== String(activeTemplateId)
+      String(selectedView._id) !== String(activeTemplateId) ||
+      !isTemplateForCurrentType(selectedView)
     ) {
       return;
     }

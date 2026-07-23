@@ -5705,7 +5705,7 @@ const Configuration = () => {
           </div>
         </div>
         <div
-          className="bg-white rounded shadow-sm p-3 flex-grow-1 hide-scroll-webkit configuration-cards-panel"
+          className="flex-grow-1 hide-scroll-webkit configuration-cards-panel"
           style={{
             overflowY: "auto",
             maxHeight: "calc(100vh - 160px)",

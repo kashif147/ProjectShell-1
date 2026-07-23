@@ -1773,11 +1773,13 @@ const MembershipForm = ({
     }
   }, [propIsDeceased]);
 
-  // Check if form should be read-only (either not in edit mode or member is deceased or resigned)
+  // Check if form should be read-only (either not in edit mode, member is deceased,
+  // or actually resigned per subscription data). A profile with no subscription at
+  // all is not the same as "Resigned" and must remain editable.
   const isFormReadOnly =
     !isEditMode ||
     formData.isDeceased ||
-    formData.subscriptionStatus === "Resigned";
+    (subscriptionData && formData.subscriptionStatus === "Resigned");
   const isLimitedMembershipEdit = editScope !== "full";
   const membershipDetailsReadOnly =
     isFormReadOnly || isLimitedMembershipEdit;
@@ -2017,7 +2019,7 @@ const MembershipForm = ({
     if (
       !isEditMode ||
       formData.isDeceased ||
-      formData.subscriptionStatus === "Resigned"
+      (subscriptionData && formData.subscriptionStatus === "Resigned")
     ) {
       return;
     }

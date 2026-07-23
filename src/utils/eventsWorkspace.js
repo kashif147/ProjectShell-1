@@ -36,3 +36,32 @@ export function subscribeEventsReload(handler) {
   window.addEventListener(RELOAD_EVENT, handler);
   return () => window.removeEventListener(RELOAD_EVENT, handler);
 }
+
+/** Save View / Toolbar reload signal for the Attendees grid. */
+const ATTENDEES_RELOAD_EVENT = "attendees-reload";
+
+export function bumpAttendeesReload() {
+  window.dispatchEvent(new CustomEvent(ATTENDEES_RELOAD_EVENT));
+}
+
+export function subscribeAttendeesReload(handler) {
+  window.addEventListener(ATTENDEES_RELOAD_EVENT, handler);
+  return () => window.removeEventListener(ATTENDEES_RELOAD_EVENT, handler);
+}
+
+/** Row-action handlers for the Attendees grid (registered by AttendeesSummary),
+ * used by the static "_actions" column render in TableColumnsContext to open
+ * the Registration Details drawer - the column has no React state of its own. */
+let attendeesRowHandlers = null;
+
+export function registerAttendeesRowActions(next) {
+  attendeesRowHandlers = next;
+}
+
+export function clearAttendeesRowActions() {
+  attendeesRowHandlers = null;
+}
+
+export function callAttendeesOpenRegistration(record) {
+  attendeesRowHandlers?.onOpenRegistration?.(record);
+}

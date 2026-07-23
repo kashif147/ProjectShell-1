@@ -309,6 +309,7 @@ const Toolbar = () => {
     .toLowerCase();
   const isCreditNotesScreen = normalizedPath === "/creditnotes";
   const isEventsScreen = normalizedPath === "/eventssummary";
+  const isAttendeesScreen = normalizedPath === "/attendees";
   const isJournalAdjustmentsScreen = normalizedPath === "/journaladjustments";
   const isOnlinePaymentScreen = normalizedPath === "/onlinepayment";
   const isRefundsScreen = normalizedPath === "/refunds";
@@ -365,7 +366,9 @@ const Toolbar = () => {
     ? "members"
     : isEventsScreen
       ? "eventssummary"
-      : isCreditNotesScreen
+      : isAttendeesScreen
+        ? "attendees"
+        : isCreditNotesScreen
       ? "creditnotes"
       : isJournalAdjustmentsScreen
         ? "journaladjustments"

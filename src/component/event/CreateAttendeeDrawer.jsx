@@ -4,7 +4,6 @@ import {
     Button,
     Row,
     Col,
-    Checkbox,
     Typography,
     Radio,
     message
@@ -18,12 +17,28 @@ import { useDispatch, useSelector } from 'react-redux';
 import { fetchCountries } from '../../features/CountriesSlice';
 import { Elements, useStripe, useElements, CardNumberElement, CardExpiryElement, CardCvcElement } from '@stripe/react-stripe-js';
 import { loadStripe } from '@stripe/stripe-js';
-import { fetchEvents, fetchEventById, createRegistration } from '../../services/eventsApi';
+import {
+    fetchEvents,
+    fetchEventById,
+    fetchEventPriceQuote,
+    checkAttendeeDuplicates,
+    createRegistration,
+} from '../../services/eventsApi';
 import { dispatchProfileInvalidate } from '../../utils/profileRealtimeEvents';
+import { computeEventFormat } from '../../utils/eventFormat';
 import "../../styles/CreateAttendeeDrawer.css";
 
 const { Text } = Typography;
 const libraries = ['places', 'maps'];
+
+const TIER_LABELS = {
+    MEMBER: 'Member price',
+    NON_MEMBER: 'Non-member price',
+    EARLY_BIRD_MEMBER: 'Early Bird Member',
+    EARLY_BIRD_NON_MEMBER: 'Early Bird Non-member',
+    STUDENT: 'Student',
+    GROUP_STUDENT: 'Group Student',
+};
 
 // Publishable key is not a secret; same key used across the app's Stripe integrations.
 const stripePromise = loadStripe(
@@ -43,6 +58,33 @@ const STRIPE_ELEMENT_OPTIONS = {
     },
 };
 
+const INITIAL_FORM_DATA = {
+    firstName: '',
+    surname: '',
+    email: '',
+    phone: '',
+    workPlace: '',
+    otherWorkPlace: '',
+    grade: '',
+    otherGrade: '',
+    searchAddress: '',
+    addressLine1: '',
+    addressLine2: '',
+    townCity: '',
+    countyState: '',
+    eircode: '',
+    country: 'Ireland',
+};
+
+function toTitleCase(value) {
+    return String(value || '')
+        .trim()
+        .split(/\s+/)
+        .filter(Boolean)
+        .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+        .join(' ');
+}
+
 function splitSearchTerm(term) {
     const value = String(term || '').trim();
     if (!value) return { email: '', firstName: '', surname: '' };
@@ -55,7 +97,7 @@ function splitSearchTerm(term) {
     };
 }
 
-const CreateAttendeeDrawerInner = ({ open, onClose }) => {
+const CreateAttendeeDrawerInner = ({ open, onClose, eventId }) => {
     const stripe = useStripe();
     const elements = useElements();
 
@@ -64,7 +106,8 @@ const CreateAttendeeDrawerInner = ({ open, onClose }) => {
     const [selectedEventId, setSelectedEventId] = useState('');
     const [eventSessions, setEventSessions] = useState([]);
     const [selectedEvent, setSelectedEvent] = useState(null);
-    const [quantity, setQuantity] = useState(1);
+    const [tierQuantities, setTierQuantities] = useState({});
+    const [userEditedTiers, setUserEditedTiers] = useState(false);
     const [paymentMethod, setPaymentMethod] = useState('stripe');
     const [submitting, setSubmitting] = useState(false);
     const [cardComplete, setCardComplete] = useState({ number: false, expiry: false, cvc: false });
@@ -72,11 +115,15 @@ const CreateAttendeeDrawerInner = ({ open, onClose }) => {
     const [selectedProfileId, setSelectedProfileId] = useState(null);
     const [attendeeMembershipNumber, setAttendeeMembershipNumber] = useState(null);
     const [computedAmount, setComputedAmount] = useState(null);
+    const [priceQuote, setPriceQuote] = useState(null);
+    const [quoteLoading, setQuoteLoading] = useState(false);
+    const [duplicateCandidates, setDuplicateCandidates] = useState(null);
+    const [confirmedNewProfile, setConfirmedNewProfile] = useState(false);
 
     const inputRef = useRef(null);
     const dispatch = useDispatch();
     const { countriesOptions } = useSelector((state) => state.countries);
-    const { workLocationOptions, gradeOptions } = useSelector((state) => state.lookups);
+    const { workLocationOptions, gradeOptions, eventTypeOptions, eventCategoryOptions } = useSelector((state) => state.lookups);
     const { isLoaded } = useJsApiLoader({
         id: 'google-map-script',
         googleMapsApiKey: 'AIzaSyCJYpj8WV5Rzof7O3jGhW9XabD0J4Yqe1o',
@@ -89,10 +136,16 @@ const CreateAttendeeDrawerInner = ({ open, onClose }) => {
 
     useEffect(() => {
         if (!open) return;
+        if (eventId) {
+            // Came from the event's own page - lock straight to it instead of
+            // fetching the general (Published-only) list.
+            setSelectedEventId(eventId);
+            return;
+        }
         fetchEvents({ status: 'Published' })
             .then((data) => setEvents(Array.isArray(data) ? data : []))
             .catch(() => setEvents([]));
-    }, [open]);
+    }, [open, eventId]);
 
     useEffect(() => {
         if (!selectedEventId) {
@@ -106,10 +159,9 @@ const CreateAttendeeDrawerInner = ({ open, onClose }) => {
                 const sessions = Array.isArray(data?.sessions) ? data.sessions : [];
                 setEventSessions(sessions);
                 setSelectedEvent(data || null);
-                // Full-attendance events (allowPartialAttendance false/default)
-                // must include every day - only let the operator pick a subset
-                // when the event explicitly allows partial attendance.
-                setSelectedSessionIds(data?.allowPartialAttendance ? [] : sessions.map((s) => s._id));
+                // Always register for every session of the event - there's no
+                // per-day selection in this drawer.
+                setSelectedSessionIds(sessions.map((s) => s._id));
             })
             .catch(() => {
                 setEventSessions([]);
@@ -120,7 +172,8 @@ const CreateAttendeeDrawerInner = ({ open, onClose }) => {
 
     useEffect(() => {
         setComputedAmount(null);
-        setQuantity(1);
+        setTierQuantities({});
+        setUserEditedTiers(false);
     }, [selectedEventId]);
 
     const remainingCapacity = (() => {
@@ -137,37 +190,44 @@ const CreateAttendeeDrawerInner = ({ open, onClose }) => {
         return remaining;
     })();
 
+    // Live membership check for the linked (or not-yet-linked) attendee -
+    // resolves their real, active membership/category, purely to suggest
+    // which pricing row to pre-fill. Never gates which rows the CRM can add
+    // tickets against.
     useEffect(() => {
-        if (Number.isFinite(remainingCapacity)) {
-            setQuantity((q) => Math.min(q, Math.max(remainingCapacity, 1)));
+        if (!selectedEventId) {
+            setPriceQuote(null);
+            return;
         }
-    }, [remainingCapacity]);
+        let cancelled = false;
+        setQuoteLoading(true);
+        fetchEventPriceQuote(selectedEventId, { profileId: selectedProfileId || undefined, quantity: 1 })
+            .then((data) => {
+                if (!cancelled) setPriceQuote(data || null);
+            })
+            .catch(() => {
+                if (!cancelled) setPriceQuote(null);
+            })
+            .finally(() => {
+                if (!cancelled) setQuoteLoading(false);
+            });
+        return () => {
+            cancelled = true;
+        };
+    }, [selectedEventId, selectedProfileId]);
 
-    const decrementQuantity = () => setQuantity((q) => Math.max(1, q - 1));
-    const incrementQuantity = () => setQuantity((q) => (
-        Number.isFinite(remainingCapacity) ? Math.min(remainingCapacity, q + 1) : q + 1
-    ));
+    // Pre-fill 1 ticket on the suggested/eligible tier as a convenience
+    // default - keeps re-syncing to whatever the linked profile's real
+    // membership resolves to (e.g. Non-member -> Member once a member
+    // profile is searched/selected) right up until the CRM user manually
+    // touches a counter themselves, at which point we stop overwriting.
+    useEffect(() => {
+        if (userEditedTiers) return;
+        if (!priceQuote?.appliedTier) return;
+        setTierQuantities({ [priceQuote.appliedTier]: 1 });
+    }, [priceQuote, userEditedTiers]);
 
-    const unitPrice = attendeeMembershipNumber ? selectedEvent?.memberPrice : selectedEvent?.nonMemberPrice;
-    const estimatedTotal = unitPrice != null ? unitPrice * quantity : null;
-
-    const [formData, setFormData] = useState({
-        firstName: '',
-        surname: '',
-        email: '',
-        phone: '',
-        workPlace: '',
-        otherWorkPlace: '',
-        grade: '',
-        otherGrade: '',
-        searchAddress: '',
-        addressLine1: '',
-        addressLine2: '',
-        townCity: '',
-        countyState: '',
-        eircode: '',
-        country: 'Ireland',
-    });
+    const [formData, setFormData] = useState(INITIAL_FORM_DATA);
 
     const handleInputChange = (e) => {
         const { name, value } = e.target;
@@ -187,10 +247,18 @@ const CreateAttendeeDrawerInner = ({ open, onClose }) => {
         setSelectedProfileId(memberData._id || memberData.profileId || null);
         setAttendeeMembershipNumber(memberData.membershipNumber || null);
         setIsNewAttendee(false);
+        setDuplicateCandidates(null);
+        setConfirmedNewProfile(false);
+        // Switching to a different attendee starts pricing over - any tier
+        // manually picked for whoever was previously selected (e.g. an Early
+        // Bird Member ticket left over from a member profile) must not carry
+        // over and silently get charged alongside this attendee's own tier.
+        setTierQuantities({});
+        setUserEditedTiers(false);
         setFormData({
             ...formData,
-            firstName: memberData.personalInfo?.forename || '',
-            surname: memberData.personalInfo?.surname || '',
+            firstName: toTitleCase(memberData.personalInfo?.forename),
+            surname: toTitleCase(memberData.personalInfo?.surname),
             email: memberData.contactInfo?.personalEmail || '',
             phone: memberData.contactInfo?.mobileNumber || '',
             workPlace: memberData.professionalDetails?.workLocation || '',
@@ -211,13 +279,40 @@ const CreateAttendeeDrawerInner = ({ open, onClose }) => {
         setIsNewAttendee(true);
         setSelectedProfileId(null);
         setAttendeeMembershipNumber(null);
-        setFormData((prev) => ({
-            ...prev,
-            email: email || prev.email,
-            firstName: firstName || prev.firstName,
-            surname: surname || prev.surname,
-        }));
+        setDuplicateCandidates(null);
+        setConfirmedNewProfile(false);
+        // Same reset as handleMemberSelect - a previously selected member's
+        // leftover tier (e.g. Early Bird Member) must not persist onto this
+        // new non-member attendee.
+        setTierQuantities({});
+        setUserEditedTiers(false);
+        // Clear out whatever was left over from a previous selection (e.g. a
+        // different member's workLocation/grade/address/phone) before
+        // loading this search term's parsed name - a blank slate plus the
+        // new attendee's name, not a merge with stale data.
+        setFormData({
+            ...INITIAL_FORM_DATA,
+            email,
+            firstName: toTitleCase(firstName),
+            surname: toTitleCase(surname),
+        });
         message.info('No existing profile found - this will register a new (non-member) attendee.');
+    };
+
+    // Clearing the profile search box (the × button) starts the attendee
+    // over completely - wipes the linked/new-attendee state, the form, any
+    // pending duplicate-review panel, and the ticket counters (which then
+    // re-sync to the non-member default via the price-quote effect).
+    const handleClearAttendee = () => {
+        setSelectedProfileId(null);
+        setAttendeeMembershipNumber(null);
+        setIsNewAttendee(false);
+        setDuplicateCandidates(null);
+        setConfirmedNewProfile(false);
+        setFormData(INITIAL_FORM_DATA);
+        setComputedAmount(null);
+        setTierQuantities({});
+        setUserEditedTiers(false);
     };
 
     const handlePlacesChanged = () => {
@@ -263,40 +358,117 @@ const CreateAttendeeDrawerInner = ({ open, onClose }) => {
         );
     };
 
-    const toggleSession = (sessionId) => {
-        setSelectedSessionIds(prev =>
-            prev.includes(sessionId)
-                ? prev.filter(d => d !== sessionId)
-                : [...prev, sessionId]
-        );
-    };
-
     const isOtherSelection = (value) =>
         typeof value === 'string' && value.trim().toLowerCase() === 'other';
 
     const fieldsEnabled = isNewAttendee || !!selectedProfileId;
 
-    const eventOptions = events.map((ev) => ({ label: ev.title, value: ev._id }));
+    const eventOptions = eventId
+        ? (selectedEvent ? [{ label: selectedEvent.title, value: selectedEvent._id }] : [])
+        : events.map((ev) => ({ label: ev.title, value: ev._id }));
 
-    const handleSubmit = async () => {
-        if (!selectedEventId) {
-            message.error('Please select an event');
-            return;
-        }
-        if (!formData.email) {
-            message.error('Email is required');
-            return;
-        }
+    const eventCategoryLabel =
+        (eventCategoryOptions || []).find(
+            (opt) => String(opt.value) === String(selectedEvent?.eventCategoryLookupId),
+        )?.label ||
+        selectedEvent?.eventCategoryLookupCode ||
+        selectedEvent?.eventCategoryCode ||
+        '-';
+    const eventTypeLabel = (eventTypeOptions || []).find(
+        (opt) => String(opt.value) === String(selectedEvent?.eventTypeId),
+    )?.label || '-';
+    const eventFormat = selectedEvent ? computeEventFormat(selectedEvent) : '-';
+    const registeredCount = selectedEvent?.seatsBooked || 0;
+    const availableCapacity = selectedEvent?.capacity != null
+        ? Math.max(selectedEvent.capacity - registeredCount, 0)
+        : null;
+    const membershipStatusLabel = quoteLoading
+        ? 'Checking…'
+        : priceQuote?.isActiveMember
+            ? `Active Member${priceQuote.membershipCategory ? ` — ${priceQuote.membershipCategory}` : ''}`
+            : 'Non-member';
 
+    // One row per pricing option actually available to buy right now - early
+    // bird rows drop off once their cutoff has passed.
+    const now = new Date();
+    const findActiveTier = (tierType) =>
+        (selectedEvent?.pricingTiers || []).find((t) => t.tierType === tierType && t.isActive !== false);
+
+    const tierRows = [];
+    if (selectedEvent?.memberPrice != null) {
+        tierRows.push({ key: 'MEMBER', label: TIER_LABELS.MEMBER, unitPrice: Number(selectedEvent.memberPrice) });
+    }
+    if (selectedEvent?.nonMemberPrice != null) {
+        tierRows.push({ key: 'NON_MEMBER', label: TIER_LABELS.NON_MEMBER, unitPrice: Number(selectedEvent.nonMemberPrice) });
+    }
+    const earlyBirdMemberTier = findActiveTier('EARLY_BIRD_MEMBER');
+    if (earlyBirdMemberTier?.cutoffDate && new Date(earlyBirdMemberTier.cutoffDate) >= now) {
+        tierRows.push({
+            key: 'EARLY_BIRD_MEMBER',
+            label: TIER_LABELS.EARLY_BIRD_MEMBER,
+            unitPrice: Number(earlyBirdMemberTier.price),
+            note: `until ${new Date(earlyBirdMemberTier.cutoffDate).toLocaleDateString()}`,
+        });
+    }
+    const earlyBirdNonMemberTier = findActiveTier('EARLY_BIRD_NON_MEMBER');
+    if (earlyBirdNonMemberTier?.cutoffDate && new Date(earlyBirdNonMemberTier.cutoffDate) >= now) {
+        tierRows.push({
+            key: 'EARLY_BIRD_NON_MEMBER',
+            label: TIER_LABELS.EARLY_BIRD_NON_MEMBER,
+            unitPrice: Number(earlyBirdNonMemberTier.price),
+            note: `until ${new Date(earlyBirdNonMemberTier.cutoffDate).toLocaleDateString()}`,
+        });
+    }
+    const studentTier = findActiveTier('STUDENT');
+    if (studentTier) {
+        tierRows.push({ key: 'STUDENT', label: TIER_LABELS.STUDENT, unitPrice: Number(studentTier.price) });
+    }
+    const groupStudentTier = findActiveTier('GROUP_STUDENT');
+    if (groupStudentTier) {
+        const minGroupSize = groupStudentTier.minGroupSize || 2;
+        tierRows.push({
+            key: 'GROUP_STUDENT',
+            label: TIER_LABELS.GROUP_STUDENT,
+            unitPrice: Number(groupStudentTier.price),
+            minGroupSize,
+            note: `min ${minGroupSize} tickets`,
+        });
+    }
+
+    const totalTicketCount = Object.values(tierQuantities).reduce((sum, q) => sum + (q || 0), 0);
+    const estimatedTotal = tierRows.reduce(
+        (sum, row) => sum + row.unitPrice * (tierQuantities[row.key] || 0),
+        0,
+    );
+    const invalidGroupRow = tierRows.find(
+        (row) => row.key === 'GROUP_STUDENT' && tierQuantities.GROUP_STUDENT > 0 && tierQuantities.GROUP_STUDENT < row.minGroupSize,
+    );
+
+    const decrementTierQuantity = (key) => {
+        setUserEditedTiers(true);
+        setTierQuantities((prev) => ({ ...prev, [key]: Math.max(0, (prev[key] || 0) - 1) }));
+    };
+    const incrementTierQuantity = (key) => {
+        setUserEditedTiers(true);
+        setTierQuantities((prev) => {
+            const total = Object.values(prev).reduce((sum, q) => sum + (q || 0), 0);
+            if (Number.isFinite(remainingCapacity) && total >= remainingCapacity) return prev;
+            return { ...prev, [key]: (prev[key] || 0) + 1 };
+        });
+    };
+
+    const submitRegistration = async () => {
         setSubmitting(true);
         try {
-            let paymentIntentClientSecret = null;
+            const lineItems = tierRows
+                .filter((row) => (tierQuantities[row.key] || 0) > 0)
+                .map((row) => ({ tierKey: row.key, quantity: tierQuantities[row.key] }));
 
             const payload = {
                 registrationType: 'event',
                 eventId: selectedEventId,
                 sessionIds: selectedSessionIds,
-                quantity,
+                lineItems,
                 profile: {
                     profileId: selectedProfileId || undefined,
                     email: formData.email,
@@ -305,6 +477,12 @@ const CreateAttendeeDrawerInner = ({ open, onClose }) => {
                     phone: formData.phone,
                     workLocation: isOtherSelection(formData.workPlace) ? formData.otherWorkPlace : formData.workPlace,
                     grade: isOtherSelection(formData.grade) ? formData.otherGrade : formData.grade,
+                    addressLine1: formData.addressLine1,
+                    addressLine2: formData.addressLine2,
+                    townCity: formData.townCity,
+                    countyState: formData.countyState,
+                    eircode: formData.eircode,
+                    country: formData.country,
                 },
                 paymentMethod,
                 registeredVia: 'crm',
@@ -338,10 +516,77 @@ const CreateAttendeeDrawerInner = ({ open, onClose }) => {
         }
     };
 
+    const handleUseDuplicateCandidate = (candidate) => {
+        setSelectedProfileId(candidate.profileId);
+        setAttendeeMembershipNumber(candidate.membershipNumber || null);
+        setDuplicateCandidates(null);
+        submitRegistration();
+    };
+
+    const handleConfirmCreateNew = () => {
+        setDuplicateCandidates(null);
+        setConfirmedNewProfile(true);
+        submitRegistration();
+    };
+
+    const handleSubmit = async () => {
+        if (!selectedEventId) {
+            message.error('Please select an event');
+            return;
+        }
+        if (!formData.email) {
+            message.error('Email is required');
+            return;
+        }
+        if (totalTicketCount < 1) {
+            message.error('Please add at least one ticket');
+            return;
+        }
+        if (invalidGroupRow) {
+            message.error(`Group Student pricing requires at least ${invalidGroupRow.minGroupSize} tickets`);
+            return;
+        }
+
+        // New, not-yet-linked attendee - resolve against existing profiles
+        // before registering, so we never silently create a duplicate.
+        if (isNewAttendee && !selectedProfileId && !confirmedNewProfile) {
+            setSubmitting(true);
+            try {
+                const result = await checkAttendeeDuplicates({
+                    email: formData.email,
+                    firstName: formData.firstName,
+                    lastName: formData.surname,
+                    phone: formData.phone,
+                    addressLine1: formData.addressLine1,
+                    townCity: formData.townCity,
+                    countyState: formData.countyState,
+                    eircode: formData.eircode,
+                    country: formData.country,
+                });
+                if (result?.resolution === 'review' && result.candidates?.length) {
+                    setDuplicateCandidates(result.candidates);
+                    return;
+                }
+                // "exact" or "none": createRegistration's own find-or-create
+                // step already handles both safely (reuses the exact match,
+                // or creates fresh since we've just confirmed there's no
+                // likely duplicate).
+            } catch (err) {
+                message.error('Failed to check for existing profiles - please try again.');
+                return;
+            } finally {
+                setSubmitting(false);
+            }
+        }
+
+        await submitRegistration();
+    };
+
     const headerExtra = (
         <Button
             className="butn primary-btn"
             loading={submitting}
+            disabled={!!duplicateCandidates}
             onClick={handleSubmit}
         >
             Add Attendee
@@ -370,11 +615,61 @@ const CreateAttendeeDrawerInner = ({ open, onClose }) => {
                                 onSelectCallback={handleMemberSelect}
                                 onAddMember={handleAddNewAttendee}
                                 addMemberLabel="Add as new attendee"
+                                onClear={handleClearAttendee}
                             />
                             {isNewAttendee && (
                                 <Text type="warning" style={{ display: 'block', marginTop: 8 }}>
-                                    Registering a new, non-member attendee - no membership number will be created.
+                                    Registering a new, non-member attendee.
                                 </Text>
+                            )}
+                            {duplicateCandidates && (
+                                <div
+                                    style={{
+                                        border: '1px solid #ffd591',
+                                        background: '#fff7e6',
+                                        borderRadius: 8,
+                                        padding: 12,
+                                        marginTop: 8,
+                                    }}
+                                >
+                                    <Text strong>Possible existing profiles found</Text>
+                                    <Text type="secondary" style={{ display: 'block', marginBottom: 8 }}>
+                                        Review before creating a new one, to avoid duplicate records.
+                                    </Text>
+                                    {duplicateCandidates.map((candidate) => (
+                                        <div
+                                            key={candidate.profileId}
+                                            style={{
+                                                display: 'flex',
+                                                justifyContent: 'space-between',
+                                                alignItems: 'center',
+                                                padding: '6px 0',
+                                                borderBottom: '1px solid #ffe7ba',
+                                            }}
+                                        >
+                                            <div>
+                                                <div>{candidate.name || '-'}</div>
+                                                <Text type="secondary" style={{ fontSize: 12 }}>
+                                                    {candidate.email || 'no email'}
+                                                    {candidate.membershipNumber ? ` · ${candidate.membershipNumber}` : ''}
+                                                    {candidate.classification ? ` · ${candidate.classification}` : ''}
+                                                </Text>
+                                            </div>
+                                            <Button size="small" onClick={() => handleUseDuplicateCandidate(candidate)}>
+                                                Use this profile
+                                            </Button>
+                                        </div>
+                                    ))}
+                                    <Button
+                                        style={{ marginTop: 8 }}
+                                        size="small"
+                                        danger
+                                        type="text"
+                                        onClick={handleConfirmCreateNew}
+                                    >
+                                        None of these - create new profile
+                                    </Button>
+                                </div>
                             )}
                             {!fieldsEnabled && (
                                 <Text type="secondary" style={{ display: 'block', marginTop: 8 }}>
@@ -432,6 +727,7 @@ const CreateAttendeeDrawerInner = ({ open, onClose }) => {
                             options={workLocationOptions}
                             placeholder="Select work location"
                             disabled={!fieldsEnabled}
+                            showSearch
                         />
                         {isOtherSelection(formData.workPlace) && (
                             <MyInput
@@ -451,6 +747,7 @@ const CreateAttendeeDrawerInner = ({ open, onClose }) => {
                             options={gradeOptions}
                             placeholder="Select grade"
                             disabled={!fieldsEnabled}
+                            showSearch
                         />
                         {isOtherSelection(formData.grade) && (
                             <MyInput
@@ -526,6 +823,7 @@ const CreateAttendeeDrawerInner = ({ open, onClose }) => {
                                     options={countriesOptions}
                                     placeholder="Select country"
                                     disabled={!fieldsEnabled}
+                                    showSearch
                                 />
                             </Col>
                         </Row>
@@ -540,72 +838,84 @@ const CreateAttendeeDrawerInner = ({ open, onClose }) => {
                             placeholder="Select event"
                             onChange={(e) => setSelectedEventId(e.target.value)}
                             isMarginBtm={true}
+                            disabled={!!eventId}
+                            showSearch
+                            isIDs
                         />
-
-                        {eventSessions.length > 0 && (
-                            <>
-                                <label className="my-input-label">Day/session selection</label>
-                                {!selectedEvent?.allowPartialAttendance && (
-                                    <Text type="secondary" style={{ display: 'block', marginBottom: 8 }}>
-                                        This event requires full attendance - every day is included.
-                                    </Text>
-                                )}
-                                {eventSessions.map(session => (
-                                    <div
-                                        key={session._id}
-                                        className={`day-selection-card ${selectedSessionIds.includes(session._id) ? 'selected' : ''}`}
-                                    >
-                                        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                                            <Checkbox
-                                                checked={selectedSessionIds.includes(session._id)}
-                                                onChange={() => toggleSession(session._id)}
-                                                disabled={!selectedEvent?.allowPartialAttendance}
-                                            />
-                                            <div className="day-info">
-                                                <span className="day-title">{session.label}</span>
-                                                <span className="day-date">{session.date ? new Date(session.date).toLocaleDateString() : ''}</span>
-                                            </div>
-                                        </div>
-                                    </div>
-                                ))}
-                            </>
-                        )}
 
                         <div className="event-summary-box">
                             <label className="my-input-label">Event summary</label>
                             <div className="summary-table">
                                 <div className="summary-table-row">
+                                    <div className="summary-table-label">Category</div>
+                                    <div className="summary-table-value">{eventCategoryLabel}</div>
+                                </div>
+                                <div className="summary-table-row">
+                                    <div className="summary-table-label">Event type</div>
+                                    <div className="summary-table-value">{eventTypeLabel}</div>
+                                </div>
+                                <div className="summary-table-row">
+                                    <div className="summary-table-label">Format</div>
+                                    <div className="summary-table-value">{eventFormat}</div>
+                                </div>
+                                <div className="summary-table-row">
                                     <div className="summary-table-label">Venue</div>
                                     <div className="summary-table-value">{selectedEvent?.venue || '-'}</div>
                                 </div>
                                 <div className="summary-table-row">
-                                    <div className="summary-table-label">Selected sessions</div>
-                                    <div className="summary-table-value">{selectedSessionIds.length || 'All'}</div>
+                                    <div className="summary-table-label">Total capacity</div>
+                                    <div className="summary-table-value">{selectedEvent?.capacity != null ? selectedEvent.capacity : 'Unlimited'}</div>
                                 </div>
                                 <div className="summary-table-row">
-                                    <div className="summary-table-label">Tickets</div>
-                                    <div className="summary-table-value">
-                                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                            <Button
-                                                size="small"
-                                                icon={<MinusOutlined />}
-                                                onClick={decrementQuantity}
-                                                disabled={quantity <= 1}
-                                            />
-                                            <span style={{ minWidth: 20, textAlign: 'center' }}>{quantity}</span>
-                                            <Button
-                                                size="small"
-                                                icon={<PlusOutlined />}
-                                                onClick={incrementQuantity}
-                                                disabled={Number.isFinite(remainingCapacity) && quantity >= remainingCapacity}
-                                            />
+                                    <div className="summary-table-label">Registered</div>
+                                    <div className="summary-table-value">{registeredCount}</div>
+                                </div>
+                                <div className="summary-table-row">
+                                    <div className="summary-table-label">Available capacity</div>
+                                    <div className="summary-table-value">{availableCapacity != null ? availableCapacity : 'Unlimited'}</div>
+                                </div>
+                                <div className="summary-table-row">
+                                    <div className="summary-table-label">Membership status</div>
+                                    <div className="summary-table-value">{membershipStatusLabel}</div>
+                                </div>
+
+                                {tierRows.map((row) => (
+                                    <div className="summary-table-row" key={row.key}>
+                                        <div className="summary-table-label">
+                                            {row.label}
+                                            <div style={{ fontSize: 12, color: '#8c8c8c', fontWeight: 400 }}>
+                                                €{row.unitPrice.toFixed(2)}{row.note ? ` (${row.note})` : ''}
+                                            </div>
+                                        </div>
+                                        <div className="summary-table-value">
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                                <Button
+                                                    size="small"
+                                                    icon={<MinusOutlined />}
+                                                    onClick={() => decrementTierQuantity(row.key)}
+                                                    disabled={!(tierQuantities[row.key] > 0)}
+                                                />
+                                                <span style={{ minWidth: 20, textAlign: 'center' }}>{tierQuantities[row.key] || 0}</span>
+                                                <Button
+                                                    size="small"
+                                                    icon={<PlusOutlined />}
+                                                    onClick={() => incrementTierQuantity(row.key)}
+                                                    disabled={Number.isFinite(remainingCapacity) && totalTicketCount >= remainingCapacity}
+                                                />
+                                            </div>
+                                            {row.key === 'GROUP_STUDENT' && tierQuantities.GROUP_STUDENT > 0 && tierQuantities.GROUP_STUDENT < row.minGroupSize && (
+                                                <Text type="danger" style={{ fontSize: 12, display: 'block' }}>
+                                                    Requires at least {row.minGroupSize} tickets
+                                                </Text>
+                                            )}
                                         </div>
                                     </div>
-                                </div>
+                                ))}
+
                                 {Number.isFinite(remainingCapacity) && (
                                     <div className="summary-table-row">
                                         <div className="summary-table-label">Seats remaining</div>
-                                        <div className="summary-table-value">{Math.max(remainingCapacity, 0)}</div>
+                                        <div className="summary-table-value">{Math.max(remainingCapacity - totalTicketCount, 0)}</div>
                                     </div>
                                 )}
                             </div>
@@ -615,15 +925,15 @@ const CreateAttendeeDrawerInner = ({ open, onClose }) => {
                                     <p>
                                         {computedAmount != null
                                             ? 'Charged'
-                                            : estimatedTotal != null
-                                                ? 'Estimated - exact fee confirmed on submission'
-                                                : 'Calculated on submission (member pricing applies automatically)'}
+                                            : totalTicketCount > 0
+                                                ? `${totalTicketCount} ticket${totalTicketCount === 1 ? '' : 's'} - exact fee confirmed on submission`
+                                                : 'Add tickets above to calculate the fee'}
                                     </p>
                                 </div>
                                 <div className="total-amount">
                                     {computedAmount != null
                                         ? `€${(computedAmount / 100).toFixed(2)}`
-                                        : estimatedTotal != null
+                                        : totalTicketCount > 0
                                             ? `€${estimatedTotal.toFixed(2)}`
                                             : '-'}
                                 </div>
