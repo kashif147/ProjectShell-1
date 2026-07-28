@@ -437,7 +437,7 @@
         { "dataIndex": "fullAddress", "title": "Full Address", "isGride": true, "isVisible": true, "ellipsis": true, "width": 260 },
         { "dataIndex": "workLocation", "title": "Work Location", "isGride": true, "isVisible": true, "ellipsis": true, "width": 180 },
         { "dataIndex": "grade", "title": "Grade", "isGride": true, "isVisible": true, "ellipsis": true, "width": 160 },
-        { "dataIndex": "attendeeType", "title": "Type", "isGride": true, "isVisible": true, "ellipsis": true, "width": 150 },
+        { "dataIndex": "membershipNo", "title": "Membership No", "isGride": true, "isVisible": true, "ellipsis": true, "width": 150 },
         { "dataIndex": "_actions", "title": "Actions", "isGride": true, "isVisible": true, "ellipsis": false, "width": 160 }
       ]
     }

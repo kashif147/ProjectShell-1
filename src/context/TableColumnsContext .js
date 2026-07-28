@@ -7,7 +7,7 @@ import React, {
   useCallback,
 } from "react";
 import { Tag, Button, Space, Dropdown } from "antd";
-import { MoreOutlined } from "@ant-design/icons";
+import { MoreOutlined, WarningOutlined } from "@ant-design/icons";
 import { tableData } from "../Data";
 import { useLocation, useNavigate, Link } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
@@ -3395,8 +3395,9 @@ const staticColumns = {
             state={{ eventId, recordName: name }}
             onClick={(e) => e.stopPropagation()}
             style={{
-              color: "#0000FF",
+              color: "blue",
               textDecoration: "underline",
+              cursor: "pointer",
             }}
           >
             {name}
@@ -3644,14 +3645,43 @@ const staticColumns = {
       isGride: true,
       isVisible: true,
       width: 170,
-      render: (status) => {
+      render: (status, record) => {
         if (!status) return "-";
         const statusLower = String(status).toLowerCase();
         let color = "default";
         if (statusLower === "confirmed" || statusLower === "attended") color = "green";
         else if (statusLower === "pending") color = "orange";
         else if (statusLower === "cancelled" || statusLower === "no-show") color = "red";
-        return <Tag color={color}>{status}</Tag>;
+        return (
+          <Space size={4}>
+            <Tag
+              color={color}
+              style={{ cursor: "pointer" }}
+              onClick={() => callAttendeesOpenRegistration(record)}
+            >
+              {status}
+            </Tag>
+            {record.approvalStatus === "pending_review" &&
+              (record.duplicateReviewStatus === "POTENTIAL_MATCH" ? (
+                <Tag
+                  icon={<WarningOutlined />}
+                  color="red"
+                  style={{ cursor: "pointer" }}
+                  onClick={() => callAttendeesOpenRegistration(record)}
+                >
+                  Possible Duplicate
+                </Tag>
+              ) : (
+                <Tag
+                  color="orange"
+                  style={{ cursor: "pointer" }}
+                  onClick={() => callAttendeesOpenRegistration(record)}
+                >
+                  Needs Review
+                </Tag>
+              ))}
+          </Space>
+        );
       },
     },
     {
@@ -3692,6 +3722,17 @@ const staticColumns = {
       isGride: true,
       isVisible: true,
       width: 180,
+      render: (name, record) =>
+        record.profileId ? (
+          <Link
+            to={{ pathname: "/Details", search: buildDetailsSearch(record.profileId) }}
+            style={{ color: "blue", textDecoration: "underline", cursor: "pointer" }}
+          >
+            {name}
+          </Link>
+        ) : (
+          name
+        ),
     },
     {
       dataIndex: "email",
@@ -3734,37 +3775,12 @@ const staticColumns = {
       width: 160,
     },
     {
-      dataIndex: "attendeeType",
-      title: "Type",
+      dataIndex: "membershipNo",
+      title: "Membership No",
       ellipsis: true,
       isGride: true,
       isVisible: true,
       width: 150,
-    },
-    {
-      dataIndex: "_actions",
-      title: "Actions",
-      ellipsis: false,
-      isGride: true,
-      isVisible: true,
-      width: 160,
-      render: (_, record) => (
-        <Space size={8}>
-          {record.profileId ? (
-            <Link to={{ pathname: "/Details", search: buildDetailsSearch(record.profileId) }}>
-              Profile
-            </Link>
-          ) : null}
-          <Button
-            type="link"
-            size="small"
-            style={{ padding: 0 }}
-            onClick={() => callAttendeesOpenRegistration(record)}
-          >
-            Registration
-          </Button>
-        </Space>
-      ),
     },
   ],
   Popout: [
@@ -5870,7 +5886,7 @@ const staticSearchFilters = {
       comp: "==",
     },
     {
-      titleColumn: "Type",
+      titleColumn: "Membership No",
       isSearch: true,
       isCheck: false,
       lookups: {},

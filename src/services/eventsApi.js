@@ -162,6 +162,7 @@ export async function checkAttendeeDuplicates({
   firstName,
   lastName,
   phone,
+  nmbiNumber,
   addressLine1,
   townCity,
   countyState,
@@ -170,7 +171,7 @@ export async function checkAttendeeDuplicates({
 }) {
   const { data } = await axios.post(
     `${getEventsServiceBaseUrl()}/registrations/attendee-duplicate-check`,
-    { email, firstName, lastName, phone, addressLine1, townCity, countyState, eircode, country },
+    { email, firstName, lastName, phone, nmbiNumber, addressLine1, townCity, countyState, eircode, country },
     { headers: authHeaders() },
   );
   return unwrap({ data });
@@ -185,9 +186,27 @@ export async function cancelRegistration(id) {
   return unwrap({ data });
 }
 
-export async function approveRegistration(id) {
+// Resolves/links the attendee's Profile (per the recorded duplicateReview
+// verdict, or the reviewer's decision below when it's a POTENTIAL_MATCH) and
+// captures/posts payment - the point where a Profile actually gets created
+// and money actually moves. `decision`/`candidateProfileId` are only
+// required when the registration's duplicateReview.status is
+// "POTENTIAL_MATCH".
+export async function approveRegistration(id, { decision, candidateProfileId } = {}) {
   const { data } = await axios.put(
     `${getEventsServiceBaseUrl()}/registrations/${id}/approve`,
+    { decision, candidateProfileId },
+    { headers: authHeaders() },
+  );
+  return unwrap({ data });
+}
+
+// Releases the Stripe authorization (no refund - nothing was captured) or
+// voids the recorded-but-unposted manual/comp/invoice payment, then cancels
+// the registration and frees the seat.
+export async function rejectRegistration(id) {
+  const { data } = await axios.put(
+    `${getEventsServiceBaseUrl()}/registrations/${id}/reject`,
     {},
     { headers: authHeaders() },
   );

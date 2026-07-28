@@ -19,36 +19,15 @@ import { useSelector } from "react-redux";
 import { buildDetailsSearch } from "../../utils/detailsRoute";
 import MyTable from "../common/MyTable";
 import DuplicateProfileMergeDrawer from "../applications/DuplicateProfileMergeDrawer";
+import {
+  CLASSIFICATION_COLORS,
+  resolveMatchClassification,
+  formatMatchDetail,
+} from "../../utils/duplicateMatch";
 import "../applications/DuplicateProfileReview.css";
 import "../applications/DuplicateProfileMergeModal.css";
 
 const { Text } = Typography;
-
-const CLASSIFICATION_COLORS = {
-  "Exact Duplicate": "red",
-  "Strong Match": "orange",
-  "Possible Match": "gold",
-  "Weak Match": "blue",
-  Ignore: "default",
-};
-
-function classificationFromScore(score) {
-  if (score === null || score === undefined || score === "") return null;
-  const n = Number(score);
-  if (!Number.isFinite(n)) return null;
-  if (n >= 100) return "Exact Duplicate";
-  if (n >= 80) return "Strong Match";
-  if (n >= 60) return "Possible Match";
-  if (n >= 40) return "Weak Match";
-  return "Ignore";
-}
-
-function resolveMatchClassification(record = {}) {
-  const fromScore = classificationFromScore(record.score);
-  if (fromScore) return fromScore;
-  const fromApi = String(record.classification || "").trim();
-  return fromApi || "—";
-}
 
 function membershipCategoryCompareKey(s) {
   if (s == null || s === "") return "";
@@ -82,28 +61,6 @@ function withRowKeys(rows = []) {
     acc.push({ ...row, key });
     return acc;
   }, []);
-}
-
-function formatMatchDetail(record = {}) {
-  const reason = String(record.matchReason || "").trim();
-  const fields = Array.isArray(record.matchedFields)
-    ? [
-        ...new Set(
-          record.matchedFields
-            .map((field) => String(field || "").trim())
-            .filter(Boolean),
-        ),
-      ]
-    : [];
-  if (!reason && fields.length === 0) return "";
-  if (!reason) return fields.join(", ");
-  if (fields.length === 0) return reason;
-  const reasonLower = reason.toLowerCase();
-  const extraFields = fields.filter(
-    (field) => !reasonLower.includes(field.toLowerCase()),
-  );
-  if (extraFields.length === 0) return reason;
-  return `${reason} · ${extraFields.join(", ")}`;
 }
 
 const ProfileDuplicateReview = ({
