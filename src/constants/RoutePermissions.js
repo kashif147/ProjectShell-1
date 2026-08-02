@@ -96,7 +96,6 @@ export const RoutePermissions = {
   // the pre-existing `"/CasesSummary"`/`"/CasesDetails"`/`"/CasesById"` lookups above, which
   // don't actually match these keys due to the slash and so are effectively ungated today -
   // a pre-existing gap, not introduced here, and left alone since fixing it isn't this task).
-  "CasesSummaryOpen": "issues:read",
   "CasesSummaryClosed": "issues:read",
   "Complaints": "issues-complaints:read",
   "FitnessToPractice": "issues-ftp:read",

@@ -67,8 +67,14 @@ function emptyFormValues() {
  * CreateAttendeeDrawer accepts an `eventId` prop to lock/pre-populate its event field.
  * When omitted, the drawer behaves exactly as before (opened from the Issues grid header
  * with no member pre-linked).
+ *
+ * `defaultIssueType` (one of ISSUE_TYPES) is optional and lets a caller (the dedicated
+ * Complaints/Fitness to Practice/Industrial Relations/Data Protection side-nav pages, via
+ * HeaderDetails.jsx's "+ Create" button) open the drawer with Issue Type already selected
+ * to match that page - still a plain editable field, not locked, since the doc only asks
+ * for a *default*.
  */
-const CreateCasesDrawer = ({ open, onClose, presetMember }) => {
+const CreateCasesDrawer = ({ open, onClose, presetMember, defaultIssueType }) => {
   const [formValues, setFormValues] = useState(emptyFormValues);
   const [memberLabels, setMemberLabels] = useState({});
   const [saving, setSaving] = useState(false);
@@ -89,6 +95,14 @@ const CreateCasesDrawer = ({ open, onClose, presetMember }) => {
       [presetMemberId]: presetMember?.displayName || presetMemberId,
     }));
   }, [open, presetMemberId, presetMember?.displayName]);
+
+  // Only sets it when the form doesn't already have one selected (each fresh open starts
+  // from emptyFormValues()'s issueType:null, so this fires exactly once per open unless the
+  // user has already picked something) - never overrides an in-progress user choice.
+  useEffect(() => {
+    if (!open || !defaultIssueType) return;
+    setFormValues((prev) => (prev.issueType ? prev : { ...prev, issueType: defaultIssueType }));
+  }, [open, defaultIssueType]);
 
   const handleChange = (field, value) => {
     setFormValues((prev) => ({ ...prev, [field]: value }));

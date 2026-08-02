@@ -48,8 +48,11 @@ import { useRegisterGridFilterRows } from "../../hooks/useRegisterGridFilterRows
 // that route - switching scope is a side-nav click away (the "dedicated sections ... as a
 // separate side navigation tab" requirement), not a toolbar chip to clear.
 const DEFAULT_VIEW_FILTERS = {
+  // "all" backs "/CasesSummary", relabeled "Open Issues" in the side nav - no separate
+  // "/CasesSummary/Open" route/hard filter exists; the page's own default-filter template
+  // (grid-column-defaults.json's issuessummary entry) already excludes CLOSED by default,
+  // and it's still toolbar-clearable like every other filter on this page.
   all: () => true,
-  open: (row) => row.issueStatus !== "CLOSED",
   closed: (row) => row.issueStatus === "CLOSED",
   complaints: (row) => row.issueType === "COMPLAINT",
   ftp: (row) => row.issueType === "FTP",

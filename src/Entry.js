@@ -516,29 +516,18 @@ function Entry() {
                             "I should have a dedicated sections for complaints, fitness to
                             practice, Data Protection, and Industrial relations issues as a
                             separate side navigation tab and only authorised users have
-                            access to each section based on their roles") plus Open/Closed
-                            views ("We can create a separate view for open issues, closed
+                            access to each section based on their roles") plus a Closed
+                            view ("We can create a separate view for open issues, closed
                             issues, complaints, fitness to practice, and industrial
-                            relations issues"). All six reuse CasesSummary.js - one shared
-                            grid component, pre-filtered client-side by its `defaultView`
-                            prop - not separate pages; see that file's own comment for why.
-                            RoutePermissions.js keys are looked up WITHOUT a leading slash
-                            here (unlike "/CasesSummary" above) - see the comment on those
-                            keys for why that distinction matters.
+                            relations issues" - "open issues" is "/CasesSummary" itself,
+                            relabeled "Open Issues" in the side nav, rather than a separate
+                            route). All reuse CasesSummary.js - one shared grid component,
+                            pre-filtered client-side by its `defaultView` prop - not separate
+                            pages; see that file's own comment for why. RoutePermissions.js
+                            keys are looked up WITHOUT a leading slash here (unlike
+                            "/CasesSummary" above) - see the comment on those keys for why
+                            that distinction matters.
                           */}
-                          <Route
-                            path="CasesSummary/Open"
-                            element={
-                              <ProtectedRoute
-                                requiredPermission={
-                                  RoutePermissions["CasesSummaryOpen"]
-                                }
-                              >
-                                <CasesSummary defaultView="open" />
-                              </ProtectedRoute>
-                            }
-                          />
-
                           <Route
                             path="CasesSummary/Closed"
                             element={

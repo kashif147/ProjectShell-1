@@ -192,15 +192,14 @@ const Sidebar = () => {
       case "Cases":
       case "All Issues":
       case "All cases":
-        return { path: "/CasesSummary", state: { search: "All Issues" } };
+      case "Open Issues":
+        return { path: "/CasesSummary", state: { search: "Open Issues" } };
       case "Assigned to me":
         return { path: "/CasesSummary", state: { search: "Assigned to me" } };
       // Dedicated Issue Management side-nav sections (SideNavWithAuth.js's `issuesItems`) -
       // all render the same CasesSummary.js component, pre-filtered by route
       // (`defaultView` prop wired in Entry.js). See RoutePermissions.js for the
       // per-team permission each one is gated on.
-      case "Open":
-        return { path: "/CasesSummary/Open", state: { search: "Open" } };
       case "Closed":
         return { path: "/CasesSummary/Closed", state: { search: "Closed" } };
       case "Complaints":
@@ -527,11 +526,10 @@ const Sidebar = () => {
       "/Details": "Profiles",
       "/ClaimSummary": "Claims",
       "/ClaimsById": "Claims",
-      // These two must come before the bare "/CasesSummary" entry below - `currentPath` is
-      // resolved via `.startsWith(route)` over `Object.keys()` insertion order, and
-      // "/CasesSummary/Open".startsWith("/CasesSummary") is also true, so the more specific
-      // routes have to win first.
-      "/CasesSummary/Open": "Open",
+      // Must come before the bare "/CasesSummary" entry below - `currentPath` is resolved
+      // via `.startsWith(route)` over `Object.keys()` insertion order, and
+      // "/CasesSummary/Closed".startsWith("/CasesSummary") is also true, so the more
+      // specific route has to win first.
       "/CasesSummary/Closed": "Closed",
       "/CasesSummary": "Cases",
       "/CasesById": "Cases",
@@ -636,16 +634,13 @@ const Sidebar = () => {
       return "Dashboard";
     }
     if (currentPath === "/CasesSummary" && activeKey === "Issues Management") {
-      // Check location state to determine if it's "All Issues" or "Assigned to me"
+      // Check location state to determine if it's "Open Issues" or "Assigned to me"
       const searchState = location.state?.search;
-      if (searchState === "All Issues") {
-        return "All Issues";
-      }
       if (searchState === "Assigned to me") {
         return "Assigned to me";
       }
-      // Default to "All Issues" for Issues Management context
-      return "All Issues";
+      // Default to "Open Issues" for Issues Management context
+      return "Open Issues";
     }
     if (currentPath === "/CasesSummary" && activeKey === "Cases") {
       // Check location state for Cases context

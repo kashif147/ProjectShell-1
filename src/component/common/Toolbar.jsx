@@ -290,7 +290,6 @@ const Toolbar = () => {
       // CasesSummary.js's routes (see its own top-of-file comment) share the "Issues"
       // screen key.
       "/casessummary": "Issues",
-      "/casessummary/open": "Issues",
       "/casessummary/closed": "Issues",
       "/complaints": "Issues",
       "/fitnesstopractice": "Issues",
@@ -321,7 +320,6 @@ const Toolbar = () => {
   const isEventsScreen = normalizedPath === "/eventssummary";
   const isIssuesScreen =
     normalizedPath === "/casessummary" ||
-    normalizedPath === "/casessummary/open" ||
     normalizedPath === "/casessummary/closed" ||
     normalizedPath === "/complaints" ||
     normalizedPath === "/fitnesstopractice" ||

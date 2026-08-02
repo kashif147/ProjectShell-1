@@ -103,7 +103,7 @@ const Breadcrumb = () => {
     // Cases Pages
     "/CasesSummary": {
       module: "Issues Management",
-      page: "Issues Summary",
+      page: "Open Issues",
       icon: "📋",
     },
     "/IssuesManagementDashboard": {
@@ -122,11 +122,6 @@ const Breadcrumb = () => {
       page: "Case Details",
       icon: "📋",
       recordIdField: "caseId",
-    },
-    "/CasesSummary/Open": {
-      module: "Issues Management",
-      page: "Open Issues",
-      icon: "📋",
     },
     "/CasesSummary/Closed": {
       module: "Issues Management",

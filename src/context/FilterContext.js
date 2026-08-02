@@ -692,13 +692,12 @@ export const FilterProvider = ({ children }) => {
       "/members": "Members",
       "/onlinepayment": "OnlinePayment",
       "/communicationbatchdetail": "Communication",
-      // /CasesSummary(/Open|/Closed) plus the dedicated Complaints/FTP/IR/Data Protection
+      // /CasesSummary(/Closed) plus the dedicated Complaints/FTP/IR/Data Protection
       // side-nav routes (Entry.js) all reuse the same CasesSummary.js component,
       // pre-filtered client-side by a `defaultView` prop - see that file's own comment for
       // why. All of them share this one "Issues" FilterContext screen key (same toolbar
       // filters / Save-View template as the plain "All" view), not a key per route.
       "/casessummary": "Issues",
-      "/casessummary/open": "Issues",
       "/casessummary/closed": "Issues",
       "/complaints": "Issues",
       "/fitnesstopractice": "Issues",

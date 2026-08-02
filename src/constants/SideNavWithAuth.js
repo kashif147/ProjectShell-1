@@ -457,15 +457,9 @@ export const issuesItems = [
     ["issues:read"]
   ),
   createMenuItem(
-    "All Issues",
+    "Open Issues",
     <FaFolderOpen />,
-    "All Issues",
-    ["issues:read"]
-  ),
-  createMenuItem(
-    "Open",
-    <FaClipboardList />,
-    "Open",
+    "Open Issues",
     ["issues:read"]
   ),
   createMenuItem(
