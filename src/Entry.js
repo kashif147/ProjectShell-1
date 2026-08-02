@@ -78,7 +78,6 @@ const CasesById = lazyWithRetry(() => import("./pages/Cases/CasesById"));
 const IssuesManagementDashboard = lazyWithRetry(
   () => import("./pages/Cases/IssuesManagementDashboard"),
 );
-const FindIssues = lazyWithRetry(() => import("./pages/Cases/FindIssues"));
 const Filter = lazyWithRetry(() => import("./pages/Filters/Filter"));
 const TransferSummary = lazyWithRetry(
   () => import("./pages/Transfers/TransferSummary"),
@@ -614,19 +613,6 @@ function Entry() {
                                 }
                               >
                                 <IssuesManagementDashboard />
-                              </ProtectedRoute>
-                            }
-                          />
-
-                          <Route
-                            path="FindIssues"
-                            element={
-                              <ProtectedRoute
-                                requiredPermission={
-                                  RoutePermissions["FindIssues"]
-                                }
-                              >
-                                <FindIssues />
                               </ProtectedRoute>
                             }
                           />

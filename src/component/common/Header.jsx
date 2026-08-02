@@ -4,7 +4,6 @@ import {
   BellOutlined,
   UserOutlined,
   LogoutOutlined,
-  FileSearchOutlined,
 } from "@ant-design/icons";
 import {
   FaRegUserCircle,
@@ -243,7 +242,7 @@ function Header() {
   const dispatch = useDispatch();
   const isLoggingOutRef = useRef(false);
   const navigate = useNavigate();
-  const { clearAuth: clearAuthContext, hasPermission } = useAuthorization();
+  const { clearAuth: clearAuthContext } = useAuthorization();
   const { branding } = useTenantBranding();
   const headerLogo =
     String(branding?.onPrimaryColor || "").toLowerCase() === "#ffffff"
@@ -381,23 +380,6 @@ function Header() {
         </div>
 
         <div className="app-top-nav__actions input-container">
-          {hasPermission("issues:read") ? (
-            <span
-              className="top-icon"
-              role="button"
-              tabIndex={0}
-              aria-label="Find Issues"
-              title="Find Issues"
-              onClick={() => navigate("/FindIssues")}
-              onKeyDown={(e) => {
-                if (e.key === "Enter" || e.key === " ") navigate("/FindIssues");
-              }}
-              style={{ cursor: "pointer" }}
-            >
-              <FileSearchOutlined />
-            </span>
-          ) : null}
-
           <Popover
             content={
               <NotificationPopover
