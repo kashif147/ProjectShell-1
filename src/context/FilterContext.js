@@ -189,6 +189,16 @@ export const FilterProvider = ({ children }) => {
       visibleFilters: [],
       filtersState: {},
     },
+    // Issue Management grid (/CasesSummary). Deliberately its own key, separate
+    // from the legacy `Cases` bucket (still used by /IssuesManagementDashboard
+    // until that page's own rewrite) - Events made the mistake of reusing one
+    // screen key for both a grid and its dashboard and had to fix it in a
+    // follow-up commit (see TEMPLATE_IMPLEMENTATION_PLAYBOOK.md's 2026-07-21
+    // entries); not repeating that here.
+    Issues: {
+      visibleFilters: [],
+      filtersState: {},
+    },
     Events: {
       visibleFilters: [],
       filtersState: {},
@@ -672,7 +682,7 @@ export const FilterProvider = ({ children }) => {
       "/members": "Members",
       "/onlinepayment": "OnlinePayment",
       "/communicationbatchdetail": "Communication",
-      "/casessummary": "Cases",
+      "/casessummary": "Issues",
       "/eventssummary": "Events",
       "/eventsdashboard": "EventsDashboard",
       "/correspondencedashboard": "Communication",
@@ -838,6 +848,7 @@ export const FilterProvider = ({ children }) => {
         "Stakeholder",
         "Priority",
       ],
+      Issues: ["Priority", "Issue Type", "Case Status", "Owner"],
       Events: [
         "Event",
         "Event Type",
@@ -995,6 +1006,7 @@ export const FilterProvider = ({ children }) => {
     OnlinePayment: ["Membership Status", "Payment Status"],
     Communication: ["Grade", "Work Location"],
     Cases: ["Incident Date", "Case Type", "Stakeholder", "Priority"],
+    Issues: ["Priority", "Case Status"],
     Events: [
       "Event",
       "Event Type",
@@ -1142,6 +1154,7 @@ export const FilterProvider = ({ children }) => {
       OnlinePayment: getDefaultVisibleFilters("OnlinePayment"),
       Communication: getDefaultVisibleFilters("Communication"),
       Cases: getDefaultVisibleFilters("Cases"),
+      Issues: getDefaultVisibleFilters("Issues"),
       Events: getDefaultVisibleFilters("Events"),
       EventsDashboard: getDefaultVisibleFilters("EventsDashboard"),
       Attendees: getDefaultVisibleFilters("Attendees"),
@@ -1405,6 +1418,24 @@ export const FilterProvider = ({ children }) => {
           selectedValues: [],
         },
         Priority: {
+          operator: "==",
+          selectedValues: [],
+        },
+      },
+      Issues: {
+        Priority: {
+          operator: "==",
+          selectedValues: [],
+        },
+        "Issue Type": {
+          operator: "==",
+          selectedValues: [],
+        },
+        "Case Status": {
+          operator: "==",
+          selectedValues: [],
+        },
+        Owner: {
           operator: "==",
           selectedValues: [],
         },

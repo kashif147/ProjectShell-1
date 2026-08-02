@@ -82,6 +82,36 @@ function formatStatusLabel(value, labels) {
   return labels[String(value).toLowerCase()] || value;
 }
 
+/** issue-service enums are SCREAMING_SNAKE_CASE (e.g. "ACTIVE_BEFORE_BOARD") - render as Title Case. */
+function formatIssueEnumLabel(value) {
+  if (!value) return "-";
+  return String(value)
+    .split("_")
+    .filter(Boolean)
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+    .join(" ");
+}
+
+const ISSUE_PRIORITY_TAG_COLORS = {
+  HIGH: "red",
+  MEDIUM: "gold",
+  LOW: "green",
+};
+
+function getIssuePriorityTagColor(priority) {
+  return ISSUE_PRIORITY_TAG_COLORS[String(priority || "").toUpperCase()] || "default";
+}
+
+function getIssueStatusTagColor(status) {
+  const normalized = String(status || "").toUpperCase();
+  if (normalized === "CLOSED") return "default";
+  if (normalized.startsWith("PENDING") || normalized === "AWAITING_OUTCOME_THIRD_PARTY")
+    return "gold";
+  if (normalized.startsWith("ACTIVE")) return "green";
+  if (normalized === "FOR_REVIEW_BY_OFFICIAL") return "blue";
+  return "default";
+}
+
 function buildCreditNotesColumns() {
   return mergeGridColumnDefaults(GRID_COLUMN_DEFAULTS.CreditNotes || [], {
     docNo: {
@@ -2171,127 +2201,148 @@ const staticColumns = {
       editable: false,
     },
   ],
-  Cases: [
+  // Issue Management grid (/CasesSummary) - real issue-service-backed columns.
+  // Replaces the previously stale/dead `Cases` array (leftover regNo/fullName/
+  // rank/station/district/division/duty fields from an unrelated old page that
+  // CasesSummary.js never actually rendered - see TEMPLATE_IMPLEMENTATION_PLAYBOOK.md).
+  Issues: [
     {
-      dataIndex: "regNo",
+      dataIndex: "caseTitle",
+      title: "Issue",
+      ellipsis: true,
+      isGride: true,
+      isVisible: true,
+      width: 260,
+      render: (text, record) => {
+        const label = text || record?.internalReferenceNumber || "-";
+        const issueId = record?.issueId;
+        if (!issueId) return label;
+        return (
+          <Link
+            to="/CasesDetails"
+            state={{ issueId, recordName: label }}
+            onClick={(e) => e.stopPropagation()}
+            style={{ color: "blue", textDecoration: "underline", cursor: "pointer" }}
+          >
+            {label}
+          </Link>
+        );
+      },
+    },
+    {
+      // No profile-service batch member-name lookup wired yet (explicitly out
+      // of scope for this task) - shows the raw linked profileId(s) until the
+      // CasesDetails.js rewrite adds real member-name resolution.
+      dataIndex: "memberIds",
+      title: "Member Name",
+      ellipsis: true,
+      isGride: true,
+      isVisible: true,
+      width: 200,
+      render: (value) => (Array.isArray(value) && value.length ? value.join(", ") : "-"),
+    },
+    {
+      // Same member-lookup gap as Member Name above.
+      dataIndex: "membershipNo",
       title: "Membership No",
       ellipsis: true,
       isGride: true,
       isVisible: true,
       width: 150,
-      editable: true,
+      render: (value) => value || "-",
     },
     {
-      dataIndex: "fullName",
-      title: "Full Name",
+      dataIndex: "caseFileNumber",
+      title: "Case File Number",
       ellipsis: true,
       isGride: true,
       isVisible: true,
-      width: 200,
+      width: 170,
+      render: (value) => value || "-",
     },
     {
-      dataIndex: "rank",
-      title: "Grade",
+      dataIndex: "nmbiReference",
+      title: "NMBI Reference No",
       ellipsis: true,
       isGride: true,
       isVisible: true,
-      width: 150,
+      width: 170,
+      render: (value) => value || "-",
     },
     {
-      dataIndex: "station",
-      title: "Station",
-      ellipsis: true,
-      isGride: true,
-      isVisible: true,
-      width: 150,
-    },
-    {
-      dataIndex: "distric",
-      title: "District",
+      // Not on the Issue payload directly (would need a profile-service
+      // workLocation lookup) - blank placeholder, same scope note as Member Name.
+      dataIndex: "location",
+      title: "Location",
       ellipsis: true,
       isGride: true,
       isVisible: true,
       width: 150,
+      render: (value) => value || "-",
     },
     {
-      dataIndex: "division",
-      title: "Division",
+      dataIndex: "dateReceived",
+      title: "Date Received",
       ellipsis: true,
       isGride: true,
       isVisible: true,
       width: 150,
+      render: (value) => (value ? formatDateOnly(value) : "-"),
     },
     {
-      dataIndex: "duty",
-      title: "Duty",
+      dataIndex: "criteriaLetterStatus",
+      title: "Criteria Letter",
+      ellipsis: true,
+      isGride: true,
+      isVisible: true,
+      width: 140,
+      render: (value) => formatIssueEnumLabel(value),
+    },
+    {
+      dataIndex: "legislation",
+      title: "Legislation",
+      ellipsis: true,
+      isGride: true,
+      isVisible: true,
+      width: 140,
+      render: (value) => formatIssueEnumLabel(value),
+    },
+    {
+      dataIndex: "issueStatus",
+      title: "Case Status",
+      ellipsis: true,
+      isGride: true,
+      isVisible: true,
+      width: 190,
+      render: (status) => {
+        if (!status) return "-";
+        return (
+          <Tag color={getIssueStatusTagColor(status)}>{formatIssueEnumLabel(status)}</Tag>
+        );
+      },
+    },
+    {
+      dataIndex: "priority",
+      title: "Priority",
+      ellipsis: true,
+      isGride: true,
+      isVisible: true,
+      width: 110,
+      render: (priority) => {
+        if (!priority) return "-";
+        return (
+          <Tag color={getIssuePriorityTagColor(priority)}>{formatIssueEnumLabel(priority)}</Tag>
+        );
+      },
+    },
+    {
+      dataIndex: "ownerTeam",
+      title: "Owner",
       ellipsis: true,
       isGride: true,
       isVisible: true,
       width: 150,
-    },
-    {
-      dataIndex: "Case Type",
-      title: "Case Type",
-      ellipsis: true,
-      isGride: true,
-      isVisible: true,
-      width: 150,
-    },
-    {
-      dataIndex: "Case ID",
-      title: "Case ID",
-      ellipsis: true,
-      isGride: true,
-      isVisible: true,
-      width: 150,
-    },
-    {
-      dataIndex: "Case Title",
-      title: "Case Title",
-      ellipsis: true,
-      isGride: true,
-      isVisible: true,
-      width: 150,
-    },
-    {
-      dataIndex: "Incident detail",
-      title: "Incident detail",
-      ellipsis: true,
-      isGride: true,
-      isVisible: true,
-      width: 300,
-    },
-    {
-      dataIndex: "Incident Date",
-      title: "Incident Date",
-      ellipsis: true,
-      isGride: true,
-      isVisible: true,
-      width: 150,
-    },
-    {
-      dataIndex: "case Status",
-      title: "case Status",
-      ellipsis: true,
-      isGride: true,
-      isVisible: true,
-      width: 150,
-    },
-    {
-      dataIndex: "Assignee",
-      title: "Assignee",
-      ellipsis: true,
-      isGride: true,
-      isVisible: true,
-      width: 150,
-    },
-    {
-      dataIndex: "Assignee",
-      title: "Assignee",
-      ellipsis: true,
-      isGride: true,
-      isVisible: true,
-      width: 150,
+      render: (value) => (value ? formatIssueEnumLabel(value) : "Unassigned"),
     },
   ],
   Claims: [
@@ -4565,145 +4616,37 @@ const staticSearchFilters = {
       lookups: { "Partner Consent": false },
     },
   ],
-  Cases: [
+  // Search-filter definitions for the Issues grid (/CasesSummary). Replaces the
+  // previously stale/dead `Cases` array (Grade/Duty/Region/District/Station/...
+  // leftovers from an unrelated old page - see TEMPLATE_IMPLEMENTATION_PLAYBOOK.md).
+  Issues: [
     {
-      titleColumn: "Grade",
+      titleColumn: "Priority",
       isSearch: true,
       isCheck: false,
-      lookups: { "All Ranks": false, "0001": false, "0021": false },
-      comp: "!=",
+      lookups: {},
+      comp: "==",
     },
     {
-      titleColumn: "Duty",
-      isSearch: true,
-      comp: "!=",
-      isCheck: false,
-      lookups: { "All Duties": false, Sargent: false, Garda: false },
-    },
-    {
-      titleColumn: "Region",
+      titleColumn: "Issue Type",
       isSearch: true,
       isCheck: false,
-      lookups: {
-        "All Divisions": false,
-        Northland: false,
-        Southland: false,
-        Eastland: false,
-      },
+      lookups: {},
+      comp: "==",
     },
     {
-      titleColumn: "District",
+      titleColumn: "Case Status",
       isSearch: true,
       isCheck: false,
-      lookups: { "All District": false },
+      lookups: {},
+      comp: "==",
     },
     {
-      titleColumn: "Station",
+      titleColumn: "Owner",
       isSearch: true,
       isCheck: false,
-      lookups: { Male: false, Female: false, Other: false },
-    },
-    {
-      titleColumn: "Station ID",
-      isSearch: false,
-      isCheck: false,
-      lookups: { Male: false, Female: false, Other: false },
-    },
-    {
-      titleColumn: "Pensioner",
-      isSearch: false,
-      isCheck: false,
-      lookups: { Pensioner: false },
-    },
-    {
-      titleColumn: "Date Of Birth",
-      isSearch: false,
-      isCheck: false,
-      lookups: { Male: false, Female: false, Other: false },
-    },
-    {
-      titleColumn: "Date Retired",
-      isSearch: false,
-      isCheck: false,
-      lookups: { Male: false, Female: false, Other: false },
-    },
-    {
-      titleColumn: "Date Aged 65",
-      isSearch: false,
-      isCheck: false,
-      lookups: { Male: false, Female: false, Other: false },
-    },
-    {
-      titleColumn: "Date Of Death",
-      isSearch: false,
-      isCheck: false,
-      lookups: { Male: false, Female: false, Other: false },
-    },
-    {
-      titleColumn: "Station Phone",
-      isSearch: false,
-      isCheck: false,
-      lookups: { Male: false, Female: false, Other: false },
-    },
-    {
-      titleColumn: "Distric Rep",
-      isSearch: false,
-      isCheck: false,
-      lookups: { "Distric Rep": false },
-    },
-    {
-      titleColumn: "Division Rep",
-      isSearch: false,
-      isCheck: false,
-      lookups: { "Division Rep": false },
-    },
-    {
-      titleColumn: "Pension No",
-      isSearch: false,
-      isCheck: false,
-      lookups: { Male: false, Female: false, Other: false },
-    },
-    // {
-    //   titleColumn: "GRA Member",
-    //   isSearch: false,
-    //   isCheck: false,
-    //   lookups: { Male: false, Female: false, Other: false },
-    // },
-    {
-      titleColumn: "Date Joined",
-      isSearch: false,
-      isCheck: false,
-      lookups: { Male: false, Female: false, Other: false },
-    },
-    {
-      titleColumn: "Date Left",
-      isSearch: false,
-      isCheck: false,
-      lookups: { Male: false, Female: false, Other: false },
-    },
-    {
-      titleColumn: "Associate Member",
-      isSearch: false,
-      isCheck: false,
-      lookups: { Male: false, Female: false, Other: false },
-    },
-    {
-      titleColumn: "Address",
-      isSearch: false,
-      isCheck: false,
-      lookups: { Male: false, Female: false, Other: false },
-    },
-    {
-      titleColumn: "Status",
-      isSearch: false,
-      isCheck: false,
-      lookups: { Male: false, Female: false, Other: false },
-    },
-    {
-      titleColumn: "Updated",
-      isSearch: false,
-      isCheck: false,
-      lookups: { Male: false, Female: false, Other: false },
+      lookups: {},
+      comp: "==",
     },
   ],
   Claims: [
@@ -6276,7 +6219,7 @@ export const TableColumnsProvider = ({ children }) => {
     "/Summary": "Profile",
     "/members": "Members",
     "/Members": "Members",
-    "/CasesSummary": "Cases",
+    "/CasesSummary": "Issues",
     "/EventsSummary": "Events",
     "/Attendees": "Attendees",
   };

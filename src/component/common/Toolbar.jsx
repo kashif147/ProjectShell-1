@@ -286,6 +286,7 @@ const Toolbar = () => {
       "/eventsdashboard": "EventsDashboard",
       "/correspondencedashboard": "Communication",
       "/issuesmanagementdashboard": "Cases",
+      "/casessummary": "Issues",
       "/attendees": "Attendees",
       "/membershipdashboard": "MembershipDashboard",
       "/creditnotes": "CreditNotes",
@@ -309,6 +310,7 @@ const Toolbar = () => {
     .toLowerCase();
   const isCreditNotesScreen = normalizedPath === "/creditnotes";
   const isEventsScreen = normalizedPath === "/eventssummary";
+  const isIssuesScreen = normalizedPath === "/casessummary";
   const isAttendeesScreen = normalizedPath === "/attendees";
   const isJournalAdjustmentsScreen = normalizedPath === "/journaladjustments";
   const isOnlinePaymentScreen = normalizedPath === "/onlinepayment";
@@ -366,7 +368,9 @@ const Toolbar = () => {
     ? "members"
     : isEventsScreen
       ? "eventssummary"
-      : isAttendeesScreen
+      : isIssuesScreen
+        ? "issuessummary"
+        : isAttendeesScreen
         ? "attendees"
         : isCreditNotesScreen
       ? "creditnotes"
@@ -590,6 +594,11 @@ const Toolbar = () => {
       );
     } else if (isEventsScreen) {
       bumpEventsReload();
+    } else if (isIssuesScreen) {
+      // Issues grid filters client-side from already-loaded rows
+      // (CLIENT_SIDE_GRID_FILTER_SCREENS), same as CreditNotes/OnlinePayment/etc -
+      // CasesSummary.js's data-loading effect already depends on `filtersState`
+      // and re-applies reactively, so no reload trigger is needed here.
     } else if (isCreditNotesScreen) {
       bumpCreditNotesReload();
     } else if (isJournalAdjustmentsScreen) {
@@ -739,6 +748,9 @@ const Toolbar = () => {
       );
     } else if (isEventsScreen) {
       bumpEventsReload();
+    } else if (isIssuesScreen) {
+      // See handleSearch's isIssuesScreen branch - client-side filtered, no
+      // reload trigger needed on reset either.
     } else if (isCreditNotesScreen) {
       bumpCreditNotesReload();
     } else if (isJournalAdjustmentsScreen) {
@@ -901,6 +913,9 @@ const Toolbar = () => {
       );
     } else if (isEventsScreen) {
       bumpEventsReload();
+    } else if (isIssuesScreen) {
+      // See handleSearch's isIssuesScreen branch - client-side filtered, no
+      // reload trigger needed here either.
     } else if (isCreditNotesScreen) {
       bumpCreditNotesReload();
     } else if (isJournalAdjustmentsScreen) {
@@ -1184,7 +1199,7 @@ const Toolbar = () => {
                   isMembershipListingStyleReportScreen
                     ? "Membership No or Name"
                     : location.pathname === "/CasesSummary"
-                      ? "Search Case ID, team, or stakeholder"
+                      ? "Search Issue or Reference No"
                       : location.pathname === "/EventsSummary"
                         ? "Search Event ID or Name"
                         : location.pathname === "/Attendees"

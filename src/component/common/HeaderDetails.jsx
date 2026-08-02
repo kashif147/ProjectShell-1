@@ -1450,6 +1450,7 @@ function HeaderDetails({
         className={`details-header d-flex w-100 overflow-hidden ${
           location?.pathname == "/Details" ||
           location?.pathname == "/CasesById" ||
+          location?.pathname == "/CasesDetails" ||
           location?.pathname == "/AddNewProfile" ||
           location?.pathname == "/ClaimsById" ||
           location?.pathname == "/AddClaims" ||
@@ -1462,6 +1463,7 @@ function HeaderDetails({
           {/* Action buttons for detail pages */}
           {(location?.pathname == "/Details" ||
             location?.pathname == "/CasesById" ||
+            location?.pathname == "/CasesDetails" ||
             location?.pathname == "/AddNewProfile" ||
             location?.pathname == "/ClaimsById" ||
             location?.pathname == "/AddClaims" ||

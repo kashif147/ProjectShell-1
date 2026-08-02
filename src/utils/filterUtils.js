@@ -472,6 +472,10 @@ export const getLabelToKeyMap = (screenCols) => {
         'Event Status': 'status',
         'Event Category': 'eventCategory',
         'Registration Status': 'registrationStatus',
+        'Priority': 'priority',
+        'Issue Type': 'issueType',
+        'Case Status': 'issueStatus',
+        'Owner': 'ownerTeam',
     };
 
     if (screenCols && Array.isArray(screenCols)) {
@@ -588,6 +592,10 @@ const APPLICATION_API_FILTER_KEY_TO_LABEL = {
     eventCategory: "Event Category",
     eventType: "Event Type",
     eventName: "Event",
+    priority: "Priority",
+    issueType: "Issue Type",
+    issueStatus: "Case Status",
+    ownerTeam: "Owner",
 };
 
 /**

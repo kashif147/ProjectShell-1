@@ -182,3 +182,32 @@ export function getEventsServiceBaseUrl() {
 
   return "";
 }
+
+/** Issue Management service API base (e.g. https://host/issue-service/api) */
+export function getIssueServiceBaseUrl() {
+  const explicit = trimTrailingSlashes(process.env.REACT_APP_ISSUE_SERVICE_URL);
+  if (explicit) return explicit;
+
+  const gateway = trimTrailingSlashes(process.env.REACT_APP_GATEWAY_URL);
+  if (gateway) return `${gateway}/issue-service/api`;
+
+  const sibling =
+    process.env.REACT_APP_PROFILE_SERVICE_URL ||
+    process.env.REACT_APP_ACCOUNT_SERVICE_URL ||
+    process.env.REACT_APP_SUBSCRIPTION_SERVICE_URL ||
+    process.env.REACT_APP_NOTIFICATION_SERVICE_URL ||
+    process.env.REACT_APP_REPORTING_SERVICE_URL;
+  const siblingUrl = trimTrailingSlashes(sibling);
+  const serviceRoot = siblingUrl.match(
+    /^(.*)\/(profile|account|subscription|notification|reporting)-service(\/api(\/v1)?)?$/i,
+  );
+  if (serviceRoot) {
+    return `${serviceRoot[1]}/issue-service/api`;
+  }
+
+  if (process.env.NODE_ENV === "development") {
+    return "http://localhost:4012/api";
+  }
+
+  return "";
+}
