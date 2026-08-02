@@ -21,6 +21,7 @@ export const CLIENT_SIDE_GRID_FILTER_SCREENS = new Set([
   "EventsDashboard",
   "Attendees",
   "Issues",
+  "IssuesDashboard",
 ]);
 
 const registry = new Map();

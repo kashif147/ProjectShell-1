@@ -4173,6 +4173,11 @@ const staticColumns = {
 // filter-type detection and label-to-key mapping stay consistent.
 staticColumns.EventsDashboard = staticColumns.Events;
 
+// Same pattern for the Issues dashboard (/IssuesManagementDashboard) - its own
+// FilterContext screen key ("IssuesDashboard", see FilterContext.js), but reuses
+// the Issues grid's column/dataIndex shape rather than duplicating column defs.
+staticColumns.IssuesDashboard = staticColumns.Issues;
+
 const staticSearchFilters = {
   Reconciliation: [
     {

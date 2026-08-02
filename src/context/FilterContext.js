@@ -185,17 +185,27 @@ export const FilterProvider = ({ children }) => {
       visibleFilters: [],
       filtersState: {},
     },
+    // Legacy bucket, now unreferenced - /IssuesManagementDashboard moved to its
+    // own `IssuesDashboard` key below. Left in place rather than deleted (low
+    // risk either way; matches how EventsDashboard's fix left `Events` alone).
     Cases: {
       visibleFilters: [],
       filtersState: {},
     },
     // Issue Management grid (/CasesSummary). Deliberately its own key, separate
-    // from the legacy `Cases` bucket (still used by /IssuesManagementDashboard
-    // until that page's own rewrite) - Events made the mistake of reusing one
-    // screen key for both a grid and its dashboard and had to fix it in a
-    // follow-up commit (see TEMPLATE_IMPLEMENTATION_PLAYBOOK.md's 2026-07-21
-    // entries); not repeating that here.
+    // from both the legacy `Cases` bucket and the dashboard's own `IssuesDashboard`
+    // key below - Events made the mistake of reusing one screen key for both a
+    // grid and its dashboard and had to fix it in a follow-up commit (see
+    // TEMPLATE_IMPLEMENTATION_PLAYBOOK.md's 2026-07-21 entries); not repeating
+    // that here.
     Issues: {
+      visibleFilters: [],
+      filtersState: {},
+    },
+    // Issue Management dashboard (/IssuesManagementDashboard). Separate from
+    // `Issues` (the grid) for the same reason `Issues` is separate from `Cases`
+    // above - see the comment on `Issues` just above.
+    IssuesDashboard: {
       visibleFilters: [],
       filtersState: {},
     },
@@ -686,7 +696,7 @@ export const FilterProvider = ({ children }) => {
       "/eventssummary": "Events",
       "/eventsdashboard": "EventsDashboard",
       "/correspondencedashboard": "Communication",
-      "/issuesmanagementdashboard": "Cases",
+      "/issuesmanagementdashboard": "IssuesDashboard",
       "/attendees": "Attendees",
       "/membershipdashboard": "MembershipDashboard",
       "/membershiplistingreport": "MembershipListingReport",
@@ -849,6 +859,7 @@ export const FilterProvider = ({ children }) => {
         "Priority",
       ],
       Issues: ["Priority", "Issue Type", "Case Status", "Owner"],
+      IssuesDashboard: ["Priority", "Issue Type", "Case Status", "Owner"],
       Events: [
         "Event",
         "Event Type",
@@ -1007,6 +1018,7 @@ export const FilterProvider = ({ children }) => {
     Communication: ["Grade", "Work Location"],
     Cases: ["Incident Date", "Case Type", "Stakeholder", "Priority"],
     Issues: ["Priority", "Case Status"],
+    IssuesDashboard: ["Priority", "Case Status"],
     Events: [
       "Event",
       "Event Type",
@@ -1155,6 +1167,7 @@ export const FilterProvider = ({ children }) => {
       Communication: getDefaultVisibleFilters("Communication"),
       Cases: getDefaultVisibleFilters("Cases"),
       Issues: getDefaultVisibleFilters("Issues"),
+      IssuesDashboard: getDefaultVisibleFilters("IssuesDashboard"),
       Events: getDefaultVisibleFilters("Events"),
       EventsDashboard: getDefaultVisibleFilters("EventsDashboard"),
       Attendees: getDefaultVisibleFilters("Attendees"),
@@ -1423,6 +1436,24 @@ export const FilterProvider = ({ children }) => {
         },
       },
       Issues: {
+        Priority: {
+          operator: "==",
+          selectedValues: [],
+        },
+        "Issue Type": {
+          operator: "==",
+          selectedValues: [],
+        },
+        "Case Status": {
+          operator: "==",
+          selectedValues: [],
+        },
+        Owner: {
+          operator: "==",
+          selectedValues: [],
+        },
+      },
+      IssuesDashboard: {
         Priority: {
           operator: "==",
           selectedValues: [],

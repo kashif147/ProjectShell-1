@@ -285,7 +285,7 @@ const Toolbar = () => {
       "/eventssummary": "Events",
       "/eventsdashboard": "EventsDashboard",
       "/correspondencedashboard": "Communication",
-      "/issuesmanagementdashboard": "Cases",
+      "/issuesmanagementdashboard": "IssuesDashboard",
       "/casessummary": "Issues",
       "/attendees": "Attendees",
       "/membershipdashboard": "MembershipDashboard",
