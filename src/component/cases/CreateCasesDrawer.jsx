@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { Progress, Radio, Upload, Button, Row, Col, Tag, message } from "antd";
 import { InboxOutlined } from "@ant-design/icons";
 import MyDrawer from "../common/MyDrawer";
@@ -58,11 +58,35 @@ function emptyFormValues() {
  * DataProtectionFields, same components CasesDetails.js uses for editing) renders inline,
  * before the first save. Previously had no Save handler at all - now wired to
  * issuesApi.createIssue.
+ *
+ * `presetMember` ({_id, displayName}) is optional and lets a caller (e.g. the Profile
+ * detail page's "Log an Issue" action) open the drawer with a member already linked,
+ * skipping the MemberSearch step for the obvious case. Mirrors how
+ * CreateAttendeeDrawer accepts an `eventId` prop to lock/pre-populate its event field.
+ * When omitted, the drawer behaves exactly as before (opened from the Issues grid header
+ * with no member pre-linked).
  */
-const CreateCasesDrawer = ({ open, onClose }) => {
+const CreateCasesDrawer = ({ open, onClose, presetMember }) => {
   const [formValues, setFormValues] = useState(emptyFormValues);
   const [memberLabels, setMemberLabels] = useState({});
   const [saving, setSaving] = useState(false);
+
+  const presetMemberId = presetMember?._id || presetMember?.id || null;
+
+  // Re-applied every time the drawer opens (not just on mount) so the preset member is
+  // still there after a previous open/close/reset cycle.
+  useEffect(() => {
+    if (!open || !presetMemberId) return;
+    setFormValues((prev) => {
+      const current = Array.isArray(prev.memberIds) ? prev.memberIds : [];
+      if (current.includes(presetMemberId)) return prev;
+      return { ...prev, memberIds: [...current, presetMemberId] };
+    });
+    setMemberLabels((prev) => ({
+      ...prev,
+      [presetMemberId]: presetMember?.displayName || presetMemberId,
+    }));
+  }, [open, presetMemberId, presetMember?.displayName]);
 
   const handleChange = (field, value) => {
     setFormValues((prev) => ({ ...prev, [field]: value }));
@@ -86,6 +110,9 @@ const CreateCasesDrawer = ({ open, onClose }) => {
   };
 
   const handleRemoveMember = (id) => {
+    // The preset/originating member (set via the `presetMember` prop) stays linked -
+    // it's why the drawer was opened in the first place.
+    if (id === presetMemberId) return;
     setFormValues((prev) => ({
       ...prev,
       memberIds: (prev.memberIds || []).filter((m) => m !== id),
@@ -273,11 +300,21 @@ const CreateCasesDrawer = ({ open, onClose }) => {
         </Col>
       </Row>
       <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginTop: 8 }}>
-        {memberIds.map((id) => (
-          <Tag key={id} closable onClose={() => handleRemoveMember(id)}>
-            {memberLabels[id] || id}
-          </Tag>
-        ))}
+        {memberIds.map((id) => {
+          const isPreset = id === presetMemberId;
+          return (
+            <Tag
+              key={id}
+              color={isPreset ? "blue" : undefined}
+              closable={!isPreset}
+              onClose={isPreset ? undefined : () => handleRemoveMember(id)}
+              title={isPreset ? "Originating member - added from the member's Profile" : undefined}
+            >
+              {memberLabels[id] || id}
+              {isPreset ? " (member)" : ""}
+            </Tag>
+          );
+        })}
       </div>
       {/* TODO(Group linking): profile-service's Group feature (static/dynamic member
           cohorts) has a backend but no frontend picker yet - wire Issue.groupId here once

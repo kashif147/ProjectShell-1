@@ -42,6 +42,7 @@ import {
   FaCalendarAlt,
   FaBalanceScale,
   FaFileAlt,
+  FaExclamationCircle,
 } from "react-icons/fa";
 import { useTableColumns } from "../../context/TableColumnsContext ";
 import { getTransferRequestHistoryById } from "../../constants/TransferRequestHistory";
@@ -62,6 +63,7 @@ import {
   hasMembershipProfileWritePermission,
 } from "../../utils/profileRoleAccess";
 import ProfileDuplicateReview from "../profile/ProfileDuplicateReview";
+import CreateCasesDrawer from "../cases/CreateCasesDrawer";
 
 const { TabPane } = Tabs;
 
@@ -232,6 +234,7 @@ const MEMBERSHIP_MORE_ICON = {
   activateMuted: "rgba(82, 196, 26, 0.45)",
   cancel: "#ff4d4f",
   deceased: "#fa8c16",
+  logIssue: "#fa541c",
 };
 
 function membershipMoreIcon(Icon, color) {
@@ -295,8 +298,11 @@ function AppTabs({
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const confirmLeaveUnsavedChanges = useConfirmUnsavedLeave();
-  const { roles: userRoles = [], permissions: userPermissions = [] } =
-    useAuthorization();
+  const {
+    roles: userRoles = [],
+    permissions: userPermissions = [],
+    hasPermission,
+  } = useAuthorization();
   const location = useLocation();
   const [searchParams] = useSearchParams();
   const profileIdParam = normalizeRouteId(
@@ -415,6 +421,7 @@ function AppTabs({
   ]);
 
   const [isDuplicateDrawerOpen, setIsDuplicateDrawerOpen] = useState(false);
+  const [isLogIssueDrawerOpen, setIsLogIssueDrawerOpen] = useState(false);
   const [isApplicationDrawerOpen, setIsApplicationDrawerOpen] = useState(false);
   const [selectedHistorySubscription, setSelectedHistorySubscription] =
     useState(null);
@@ -445,6 +452,28 @@ function AppTabs({
     hasMembershipProfileWritePermission(userPermissions);
   const canEditMembership = canFullEditMembership || canLimitedEditMembership;
   const membershipEditScope = canFullEditMembership ? "full" : "personal";
+  const canLogIssue = hasPermission("issues:write");
+
+  /** Reuses the already-loaded profile - no extra fetch - as the CreateCasesDrawer's
+   * `presetMember`, so "Log an Issue" from a member's Profile opens the drawer pre-linked
+   * to that member (see requirements doc: "An issue can also be created directly from the
+   * member record"). */
+  const logIssuePresetMember = useMemo(() => {
+    const id = profileDetails?._id || profileDetails?.id;
+    if (!id) return null;
+    const pi = profileDetails?.personalInfo || {};
+    const displayName =
+      `${pi.forename || ""} ${pi.surname || ""}`.trim() ||
+      (profileDetails?.membershipNumber != null
+        ? String(profileDetails.membershipNumber)
+        : String(id));
+    return { _id: id, displayName };
+  }, [
+    profileDetails?._id,
+    profileDetails?.id,
+    profileDetails?.personalInfo,
+    profileDetails?.membershipNumber,
+  ]);
 
   const [financeTabBarExtra, setFinanceTabBarExtra] = useState(null);
   useEffect(() => {
@@ -1142,6 +1171,17 @@ function AppTabs({
             onClick: () => setIsDuplicateDrawerOpen(true),
           },
         ];
+        if (canLogIssue && logIssuePresetMember) {
+          items.push({
+            key: "membership-log-issue",
+            label: "Log an Issue",
+            icon: membershipMoreIcon(
+              FaExclamationCircle,
+              MEMBERSHIP_MORE_ICON.logIssue,
+            ),
+            onClick: () => setIsLogIssueDrawerOpen(true),
+          });
+        }
         if (canEditMembership) {
           items.unshift({
             key: "membership-edit",
@@ -1243,6 +1283,8 @@ function AppTabs({
     activeKey,
     canEditMembership,
     canFullEditMembership,
+    canLogIssue,
+    logIssuePresetMember,
     isEditMode,
     isDeceased,
     membershipHeaderActionsMeta,
@@ -1426,6 +1468,12 @@ function AppTabs({
         ProfileDetails={profileDetails}
         columnHistory={columnHistory}
         historyData={historyData}
+      />
+
+      <CreateCasesDrawer
+        open={isLogIssueDrawerOpen}
+        onClose={() => setIsLogIssueDrawerOpen(false)}
+        presetMember={logIssuePresetMember}
       />
 
       <Drawer
