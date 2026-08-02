@@ -18,6 +18,15 @@ export function buildEventDetailsSearch(eventId) {
   return `?${params.toString()}`;
 }
 
+/** Query string for /CasesDetails so the issue id survives browser refresh. */
+export function buildIssueDetailsSearch(issueId) {
+  const normalized = normalizeRouteId(issueId);
+  if (!normalized) return "";
+  const params = new URLSearchParams();
+  params.set("issueId", normalized);
+  return `?${params.toString()}`;
+}
+
 function normalizeRouteId(value) {
   const raw = String(value ?? "").trim();
   if (!raw) return "";

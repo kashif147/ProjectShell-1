@@ -28,7 +28,11 @@ import {
   getSubscriptionById,
   profileDetailActiveSubscriptionArgs,
 } from "../features/subscription/profileSubscriptionSlice";
-import { buildDetailsSearch, buildEventDetailsSearch } from "../utils/detailsRoute";
+import {
+  buildDetailsSearch,
+  buildEventDetailsSearch,
+  buildIssueDetailsSearch,
+} from "../utils/detailsRoute";
 import reconciliationWorkspace from "../utils/reconciliationWorkspace";
 import { financeLedgerActionIcon } from "../component/finanace/financeActionIcons";
 import { callJournalAdjustmentApprove } from "../utils/journalAdjustmentsWorkspace";
@@ -445,6 +449,7 @@ function rowIdentifierCandidates(record) {
     record.membershipNo,
     record.membershipNumber,
     record.personalDetails?.membershipNo,
+    record.issueId,
     record.key,
   ].filter((v) => v != null && v !== "");
   return [...new Set(raw.map((v) => String(v)))];
@@ -6571,6 +6576,34 @@ export const TableColumnsProvider = ({ children }) => {
     [gridData, ProfileDetails],
   );
 
+  // Issue Management (/CasesDetails) prev/next - a plain issueId-keyed navigation, not the
+  // Profile/Subscription-oriented flow the rest of this function does for every other detail
+  // screen (buildDetailsSearch is hardcoded to profileId/subscriptionId query params, and
+  // dispatching getProfileDetailsById/getSubscriptionByProfileId here makes no sense for an
+  // Issue row). CasesDetails.js reads `location.state.issueId` (matching how the Issues
+  // grid's row link navigates - see TableColumnsContext's own `staticColumns.Issues` "Issue"
+  // column render()) with a `?issueId=` fallback for direct links/refresh.
+  const navigateToIssueRecord = useCallback(
+    (record, newIndex) => {
+      const issueId = record?.issueId || record?._id || record?.key;
+      if (!issueId) return;
+      setProfileDetails([record]);
+      setRowIndex(newIndex);
+      navigate(
+        { pathname: location.pathname, search: buildIssueDetailsSearch(issueId) },
+        {
+          replace: true,
+          state: {
+            ...location.state,
+            issueId,
+            recordName: record?.caseTitle || record?.internalReferenceNumber,
+          },
+        },
+      );
+    },
+    [location.pathname, location.state, navigate],
+  );
+
   const profilNextBtnFtn = useCallback(() => {
     if (!gridData?.length) return;
     const currentIndex = resolveGridNavigationIndex(gridData, ProfileDetails);
@@ -6578,6 +6611,10 @@ export const TableColumnsProvider = ({ children }) => {
     const newIndex = currentIndex + 1;
     if (newIndex < gridData.length) {
       const record = gridData[newIndex];
+      if (location.pathname === "/CasesDetails") {
+        navigateToIssueRecord(record, newIndex);
+        return;
+      }
       const profileId = record?.profileId;
       const subscriptionRowId = record?._id;
       const idToUse =
@@ -6629,6 +6666,7 @@ export const TableColumnsProvider = ({ children }) => {
     location.pathname,
     location.state,
     navigate,
+    navigateToIssueRecord,
   ]);
 
   const profilPrevBtnFtn = useCallback(() => {
@@ -6638,6 +6676,10 @@ export const TableColumnsProvider = ({ children }) => {
     const newIndex = currentIndex - 1;
     if (newIndex >= 0) {
       const record = gridData[newIndex];
+      if (location.pathname === "/CasesDetails") {
+        navigateToIssueRecord(record, newIndex);
+        return;
+      }
       const profileId = record?.profileId;
       const subscriptionRowId = record?._id;
       const idToUse =
@@ -6689,6 +6731,7 @@ export const TableColumnsProvider = ({ children }) => {
     location.pathname,
     location.state,
     navigate,
+    navigateToIssueRecord,
   ]);
 
   const filterByRegNo = useCallback(

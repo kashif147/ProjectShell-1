@@ -1541,6 +1541,7 @@ function HeaderDetails({
                         "/ClaimsById",
                         "/AddClaims",
                         "/CasesById",
+                        "/CasesDetails",
                         "/AddNewProfile",
                         "/AproveMembersip",
                         "/ChangeCatById",
