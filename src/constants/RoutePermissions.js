@@ -73,10 +73,16 @@ export const RoutePermissions = {
   "SuspendedMembersReport": "crm:member:read",
 
   // Cases & Issues
-  "CasesSummary": "portal:read",
-  "IssuesManagementDashboard": "portal:read",
+  // Reachability floor only - real team-based visibility (Complaints/FTP/IR/Data
+  // Protection) is always enforced server-side by issue-service, never by this string.
+  // CasesById is left on its pre-existing permission: it's also used as a per-member
+  // "Cases" tab (component/common/AppTabs.jsx) and profile sub-nav item
+  // (component/common/SideNav.jsx) outside Issue Management's scope, not just a dead
+  // duplicate grid as originally assumed - see the task's own report for detail.
+  "CasesSummary": "issues:read",
+  "IssuesManagementDashboard": "issues:read",
   "CasesById": "portal:read",
-  "CasesDetails": "portal:read",
+  "CasesDetails": "issues:read",
   "ClaimSummary": "portal:read",
   "ClaimsDetails": "portal:read",
   "ClaimsById": "portal:read",

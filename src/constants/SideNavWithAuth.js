@@ -430,59 +430,45 @@ export const reportItems = [
   ),
 ];
 
-export const casesItems = [
-  createMenuItem(
-    "Dashboard",
-    <FaChartPie />,
-    "Dashboard",
-    []
-  ),
-  createMenuItem(
-    "All cases",
-    <FaFolderOpen />,
-    "All cases",
-    []
-  ),
-  createMenuItem(
-    "Assigned to me",
-    <FaUserShield />,
-    "Assigned to me",
-    []
-  ),
-  createMenuItem(
-    "Reports setting",
-    <FaWrench />,
-    "Reports setting",
-    []
-  ),
-];
-
+// Single source of truth for the Issue Management side nav - "Cases" and "Issues
+// Management" previously rendered two independently-maintained, un-permission-gated
+// (permissions: []) item lists that happened to route to the same pages
+// (Sidebar.js's getNavLinkData resolves "Cases"/"All Issues"/"All cases" to the same
+// /CasesSummary etc.). `casesItems` is kept as an alias, not a duplicate, so any other
+// file still importing it (Sidebar.js's itemsMap.Cases) renders the identical,
+// permission-gated list rather than a second, divergent one.
+//
+// Every item requires at least base "issues:read" - team-specific visibility
+// (issues-complaints/ftp/ir/dataprotection) is always enforced server-side by
+// issue-service; this is only a reachability gate for the nav entry itself.
 export const issuesItems = [
   createMenuItem(
     "Dashboard",
     <FaChartPie />,
     "Dashboard",
-    []
+    ["issues:read"]
   ),
   createMenuItem(
     "All Issues",
     <FaFolderOpen />,
     "All Issues",
-    []
+    ["issues:read"]
   ),
   createMenuItem(
     "Assigned to me",
     <FaUserShield />,
     "Assigned to me",
-    []
+    ["issues:read"]
   ),
   createMenuItem(
     "Reports setting",
     <FaWrench />,
     "Reports setting",
-    []
+    ["issues:read"]
   ),
 ];
+
+export const casesItems = issuesItems;
 
 export const eventsItems = [
   createMenuItem(
