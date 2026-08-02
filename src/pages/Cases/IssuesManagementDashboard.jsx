@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { Card, Col, Row, Tag, Button, Table, Segmented } from "antd";
+import { Card, Col, Row, Tag, Button, Table, Segmented, Alert } from "antd";
 import {
   ExclamationCircleOutlined,
   WarningOutlined,
@@ -9,6 +9,8 @@ import {
 import {
   Area,
   AreaChart,
+  Bar,
+  BarChart,
   CartesianGrid,
   Cell,
   Legend,
@@ -91,6 +93,15 @@ function formatDateTime(value) {
   });
 }
 
+// Year-over-year % change label, e.g. "+18%" / "-6%" / "0%". prev === 0 is treated as
+// "no baseline" (+100% if curr > 0, else flat) rather than dividing by zero.
+function pctChangeLabel(curr, prev) {
+  if (!prev) return curr ? "+100%" : "0%";
+  const delta = ((curr - prev) / prev) * 100;
+  const sign = delta >= 0 ? "+" : "";
+  return `${sign}${Math.round(delta)}%`;
+}
+
 function computeRangeStart(rangeKey) {
   const now = new Date();
   if (rangeKey === "1M") {
@@ -142,6 +153,15 @@ function IssuesManagementDashboard() {
 
   const canViewDataProtection = hasPermission("issues-dataprotection:read");
   const [dpOnly, setDpOnly] = useState(false);
+
+  // Local chart drill-down (doc: "I should be able to filter the list of issue by drilling
+  // down to the charts"). Deliberately a *local* filter on top of the existing
+  // filtersState-derived chain, not a navigation to the main Issues grid - clicking a
+  // priority-pie slice or a trend-chart point narrows KPIs/recent-issues below to just that
+  // segment, with a visible banner + clear action. The charts themselves (priorityMix/
+  // issueTrend) keep rendering the undrilled scopedIssues so the chart doesn't collapse to
+  // a single slice/point once you've clicked it - only the "view" below the charts narrows.
+  const [drillFilter, setDrillFilter] = useState(null); // { type: "priority"|"month", value, label } | null
 
   const [issues, setIssues] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -206,9 +226,29 @@ function IssuesManagementDashboard() {
     [visibleIssues, dpOnly],
   );
 
+  // Drill-down applied on top of the DPO-scoped list. Everything below the charts (KPIs,
+  // recent-issues table, focus issue, member-vs-other split) reads from `drilledIssues`;
+  // the charts themselves (priorityMix/issueTrend) and the new YoY/resolved-by-owner
+  // sections deliberately keep reading `scopedIssues` so they still show the full picture
+  // to drill down from/into rather than shrinking to match their own selection.
+  const drilledIssues = useMemo(() => {
+    if (!drillFilter) return scopedIssues;
+    if (drillFilter.type === "priority") {
+      return scopedIssues.filter((iss) => iss.priority === drillFilter.value);
+    }
+    if (drillFilter.type === "month") {
+      return scopedIssues.filter((iss) => {
+        const created = iss.createdOn ? new Date(iss.createdOn) : null;
+        if (!created || Number.isNaN(created.getTime())) return false;
+        return `${created.getFullYear()}-${created.getMonth()}` === drillFilter.value;
+      });
+    }
+    return scopedIssues;
+  }, [scopedIssues, drillFilter]);
+
   const openIssues = useMemo(
-    () => scopedIssues.filter((iss) => iss.issueStatus !== "CLOSED"),
-    [scopedIssues],
+    () => drilledIssues.filter((iss) => iss.issueStatus !== "CLOSED"),
+    [drilledIssues],
   );
 
   // Header's global 1M/3M/YTD/ALL range toggle (HeaderDetails.jsx's HEADER_DASHBOARD_RANGE_NAVS
@@ -238,7 +278,7 @@ function IssuesManagementDashboard() {
       return false;
     }).length;
 
-    const resolvedInPeriod = scopedIssues.filter((iss) => {
+    const resolvedInPeriod = drilledIssues.filter((iss) => {
       if (!iss.dateResolved) return false;
       if (!rangeStart) return true;
       const resolved = new Date(iss.dateResolved).getTime();
@@ -255,7 +295,7 @@ function IssuesManagementDashboard() {
 
     return [
       {
-        label: "Open issues",
+        label: drillFilter ? "Open issues (filtered)" : "Open issues",
         value: String(openCount),
         trend: "",
         trendMuted: true,
@@ -287,21 +327,52 @@ function IssuesManagementDashboard() {
         barPercent: openCount ? Math.min(100, Math.round((atRiskCount / openCount) * 100)) : 0,
       },
     ];
-  }, [openIssues, scopedIssues, rangeStart, activeRange]);
+  }, [openIssues, drilledIssues, rangeStart, activeRange, drillFilter]);
 
+  // Undrilled open-issue count, feeding the priority pie *chart itself* - kept separate from
+  // the `openIssues` used by the KPI cards so clicking a slice narrows the KPIs/table below
+  // without the pie collapsing to a single 100% slice of itself.
   const priorityMix = useMemo(() => {
     const counts = { HIGH: 0, MEDIUM: 0, LOW: 0 };
-    openIssues.forEach((iss) => {
-      if (Object.prototype.hasOwnProperty.call(counts, iss.priority)) counts[iss.priority] += 1;
-    });
+    scopedIssues
+      .filter((iss) => iss.issueStatus !== "CLOSED")
+      .forEach((iss) => {
+        if (Object.prototype.hasOwnProperty.call(counts, iss.priority)) counts[iss.priority] += 1;
+      });
     const total = counts.HIGH + counts.MEDIUM + counts.LOW || 1;
     return ["HIGH", "MEDIUM", "LOW"].map((p) => ({
       name: formatEnumLabel(p),
+      priorityKey: p,
       value: counts[p],
       pct: Math.round((counts[p] / total) * 100),
       color: PRIORITY_CHART_COLORS[p],
     }));
-  }, [openIssues]);
+  }, [scopedIssues]);
+
+  // Chart drill-down handlers - toggle off if the same segment is clicked again.
+  const handlePrioritySliceClick = (entry) => {
+    const key = entry && entry.priorityKey;
+    if (!key) return;
+    setDrillFilter((prev) =>
+      prev && prev.type === "priority" && prev.value === key
+        ? null
+        : { type: "priority", value: key, label: `Priority: ${formatEnumLabel(key)}` },
+    );
+  };
+
+  const handleTrendPointClick = (state) => {
+    const payload = state && state.activePayload && state.activePayload[0] && state.activePayload[0].payload;
+    if (!payload || !payload.key) return;
+    setDrillFilter((prev) =>
+      prev && prev.type === "month" && prev.value === payload.key
+        ? null
+        : {
+            type: "month",
+            value: payload.key,
+            label: `Created in ${payload.month} ${payload.year}`,
+          },
+    );
+  };
 
   // Approximate, and deliberately kept simple rather than faked: derived from
   // issue-service's current-state list (GET /api/issues), not a time-series/append-log
@@ -318,6 +389,7 @@ function IssuesManagementDashboard() {
       months.push({
         key: `${d.getFullYear()}-${d.getMonth()}`,
         month: d.toLocaleString("en", { month: "short" }),
+        year: d.getFullYear(),
         opened: 0,
         closed: 0,
       });
@@ -348,7 +420,7 @@ function IssuesManagementDashboard() {
 
   const recentIssues = useMemo(
     () =>
-      [...scopedIssues]
+      [...drilledIssues]
         .sort((a, b) => {
           const at = new Date(a.lastActivityAt || a.updatedAt || a.createdOn || 0).getTime();
           const bt = new Date(b.lastActivityAt || b.updatedAt || b.createdOn || 0).getTime();
@@ -365,25 +437,25 @@ function IssuesManagementDashboard() {
           ownerTeam: iss.owner?.team || null,
           updated: iss.lastActivityAt || iss.updatedAt || iss.createdOn,
         })),
-    [scopedIssues],
+    [drilledIssues],
   );
 
   // Real (not fabricated) member-vs-other split - issueSource is a base-schema field on
   // every issue type.
   const sourceSplit = useMemo(() => {
-    const total = scopedIssues.length || 1;
-    const memberCount = scopedIssues.filter((iss) => iss.issueSource === "MEMBER").length;
-    const otherCount = scopedIssues.length - memberCount;
+    const total = drilledIssues.length || 1;
+    const memberCount = drilledIssues.filter((iss) => iss.issueSource === "MEMBER").length;
+    const otherCount = drilledIssues.length - memberCount;
     return {
       memberPct: Math.round((memberCount / total) * 100),
       otherPct: Math.round((otherCount / total) * 100),
       memberCount,
       otherCount,
     };
-  }, [scopedIssues]);
+  }, [drilledIssues]);
 
   const focusIssue = useMemo(() => {
-    const pool = openIssues.length ? openIssues : scopedIssues;
+    const pool = openIssues.length ? openIssues : drilledIssues;
     if (!pool.length) return null;
     const weight = { HIGH: 0, MEDIUM: 1, LOW: 2 };
     return [...pool].sort((a, b) => {
@@ -392,11 +464,99 @@ function IssuesManagementDashboard() {
       if (wa !== wb) return wa - wb;
       return new Date(b.createdOn || 0).getTime() - new Date(a.createdOn || 0).getTime();
     })[0];
-  }, [openIssues, scopedIssues]);
+  }, [openIssues, drilledIssues]);
 
   const focusDaysOpen = focusIssue
     ? Math.max(0, Math.floor((Date.now() - new Date(focusIssue.createdOn || focusIssue.createdAt).getTime()) / DAY_MS))
     : null;
+
+  // Year-over-year (doc: "I should be able to see year on year comparison of the issues").
+  // Honest limitation: the data source is issue-service's live current-state list
+  // (GET /api/issues), not a point-in-time snapshot, so a genuine "issues that existed as
+  // of last year" comparison isn't derivable from it - that would need reporting-service's
+  // ingested snapshot events, which have no HTTP route yet (see file-header comment/
+  // TEMPLATE_IMPLEMENTATION_PLAYBOOK.md). What IS honestly derivable from current state:
+  // createdOn grouped by year (issue-creation volume, unaffected by later status changes)
+  // and dateResolved grouped by year (resolution volume) - both computed here, month by
+  // month, for the current year vs the prior year. A soft-deleted issue (meta.deleted)
+  // still drops out of these counts once deleted, same caveat as the 6-month trend above.
+  const yearOverYear = useMemo(() => {
+    const currentYear = new Date().getFullYear();
+    const prevYear = currentYear - 1;
+    const monthNames = Array.from({ length: 12 }, (_, i) =>
+      new Date(2000, i, 1).toLocaleString("en", { month: "short" }),
+    );
+
+    function monthlyCountsByYear(dateField) {
+      const rows = monthNames.map((month) => ({ month, [prevYear]: 0, [currentYear]: 0 }));
+      scopedIssues.forEach((iss) => {
+        const raw = iss[dateField];
+        if (!raw) return;
+        const d = new Date(raw);
+        if (Number.isNaN(d.getTime())) return;
+        const y = d.getFullYear();
+        if (y !== prevYear && y !== currentYear) return;
+        rows[d.getMonth()][y] += 1;
+      });
+      return rows;
+    }
+
+    const createdByMonth = monthlyCountsByYear("createdOn");
+    const resolvedByMonth = monthlyCountsByYear("dateResolved");
+
+    const sumYear = (rows, year) => rows.reduce((sum, r) => sum + r[year], 0);
+
+    return {
+      prevYear,
+      currentYear,
+      createdByMonth,
+      resolvedByMonth,
+      createdTotals: { [prevYear]: sumYear(createdByMonth, prevYear), [currentYear]: sumYear(createdByMonth, currentYear) },
+      resolvedTotals: { [prevYear]: sumYear(resolvedByMonth, prevYear), [currentYear]: sumYear(resolvedByMonth, currentYear) },
+    };
+  }, [scopedIssues]);
+
+  // Resolved-by-user/team breakdown (doc: "I should be able to see no of issues resolved by
+  // a user or team on closed issues"). resolvedByUserId only exists on the Complaint/IR/
+  // DataProtection discriminators (models/issue.complaint.model.js, issue.ir.model.js,
+  // issue.dataprotection.model.js) - FTP has no such field (models/issue.ftp.model.js) - so
+  // fall back to the base schema's owner.userId (present on every issue type) when it's
+  // unset. No user-directory lookup is wired into the frontend yet (a separate, parallel
+  // task is building one), so the raw userId is shown as-is for now; swap this label for a
+  // real display-name lookup once that lands.
+  const resolvedBreakdown = useMemo(() => {
+    const closedIssues = scopedIssues.filter((iss) => iss.issueStatus === "CLOSED");
+    const byUser = new Map();
+    const byTeam = new Map();
+    closedIssues.forEach((iss) => {
+      const userId = iss.resolvedByUserId || iss.owner?.userId || null;
+      const userKey = userId || "__unassigned__";
+      byUser.set(userKey, (byUser.get(userKey) || 0) + 1);
+
+      const team = iss.owner?.team || null;
+      const teamKey = team || "__unassigned__";
+      byTeam.set(teamKey, (byTeam.get(teamKey) || 0) + 1);
+    });
+
+    const userRows = Array.from(byUser.entries())
+      .map(([key, count]) => ({
+        key,
+        // TODO: replace with a real display-name lookup once the user-directory work lands.
+        label: key === "__unassigned__" ? "Unassigned" : key,
+        count,
+      }))
+      .sort((a, b) => b.count - a.count);
+
+    const teamRows = Array.from(byTeam.entries())
+      .map(([key, count]) => ({
+        key,
+        label: key === "__unassigned__" ? "Unassigned" : formatEnumLabel(key),
+        count,
+      }))
+      .sort((a, b) => b.count - a.count);
+
+    return { totalClosed: closedIssues.length, userRows, teamRows };
+  }, [scopedIssues]);
 
   const columns = [
     {
@@ -484,6 +644,26 @@ function IssuesManagementDashboard() {
         </Row>
       )}
 
+      {drillFilter && (
+        <Row style={{ marginBottom: 12 }}>
+          <Col span={24}>
+            <Alert
+              type="info"
+              showIcon
+              closable
+              onClose={() => setDrillFilter(null)}
+              message={`Drilled down to: ${drillFilter.label}`}
+              description="KPIs and Recent Issues below reflect this selection only - the charts above still show the full picture."
+              action={
+                <Button size="small" onClick={() => setDrillFilter(null)}>
+                  Clear drill-down
+                </Button>
+              }
+            />
+          </Col>
+        </Row>
+      )}
+
       <Row gutter={[12, 12]} style={{ marginBottom: 12 }}>
         {kpis.map((k) => (
           <Col xs={24} sm={12} lg={6} key={k.label}>
@@ -528,9 +708,15 @@ function IssuesManagementDashboard() {
           <Card className="events-dashboard__card" bordered={false}>
             <p className="events-dashboard__section-title">ISSUE FLOW (last 6 months)</p>
             <div className="events-dashboard__section-note">{trendNote}</div>
-            <div style={{ height: 196 }}>
+            {/* Chart drill-down: click a point on the "Opened" line to filter the KPIs/
+                recent-issues table below to issues created that month. */}
+            <div style={{ height: 196, cursor: "pointer" }}>
               <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={issueTrend} margin={{ top: 4, right: 8, left: 0, bottom: 4 }}>
+                <AreaChart
+                  data={issueTrend}
+                  margin={{ top: 4, right: 8, left: 0, bottom: 4 }}
+                  onClick={handleTrendPointClick}
+                >
                   <defs>
                     <linearGradient id="issuesOpenedFill" x1="0" y1="0" x2="0" y2="1">
                       <stop offset="0%" stopColor="var(--app-brand-primary)" stopOpacity={0.35} />
@@ -581,7 +767,9 @@ function IssuesManagementDashboard() {
         <Col xs={24} lg={10}>
           <Card className="events-dashboard__card" bordered={false}>
             <p className="events-dashboard__section-title">OPEN ISSUES BY PRIORITY</p>
-            <div style={{ height: 168 }}>
+            {/* Chart drill-down: click a slice to filter the KPIs/recent-issues table below
+                to that priority. */}
+            <div style={{ height: 168, cursor: "pointer" }}>
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
                   <Pie
@@ -593,9 +781,15 @@ function IssuesManagementDashboard() {
                     innerRadius={48}
                     outerRadius={72}
                     paddingAngle={2}
+                    onClick={handlePrioritySliceClick}
                   >
                     {priorityMix.map((entry) => (
-                      <Cell key={entry.name} fill={entry.color} />
+                      <Cell
+                        key={entry.name}
+                        fill={entry.color}
+                        stroke={drillFilter?.type === "priority" && drillFilter.value === entry.priorityKey ? "#0f172a" : "none"}
+                        strokeWidth={drillFilter?.type === "priority" && drillFilter.value === entry.priorityKey ? 2 : 0}
+                      />
                     ))}
                   </Pie>
                   <Legend
@@ -712,6 +906,122 @@ function IssuesManagementDashboard() {
             >
               Open issue
             </button>
+          </Card>
+        </Col>
+      </Row>
+
+      {/* Year-over-year (doc: "I should be able to see year on year comparison of the
+          issues"). Built from createdOn/dateResolved on the live current-state list - see
+          the yearOverYear useMemo above for why a true point-in-time "issues that existed
+          as of last year" comparison isn't possible from this data source. */}
+      <Row gutter={[12, 12]} style={{ marginTop: 12 }}>
+        <Col xs={24} lg={12}>
+          <Card className="events-dashboard__card" bordered={false}>
+            <p className="events-dashboard__section-title">
+              ISSUES CREATED - YEAR OVER YEAR
+            </p>
+            <div className="events-dashboard__section-note">
+              {yearOverYear.currentYear}: {yearOverYear.createdTotals[yearOverYear.currentYear]} (
+              {pctChangeLabel(
+                yearOverYear.createdTotals[yearOverYear.currentYear],
+                yearOverYear.createdTotals[yearOverYear.prevYear],
+              )}{" "}
+              vs {yearOverYear.prevYear})
+            </div>
+            <div style={{ height: 196 }}>
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={yearOverYear.createdByMonth} margin={{ top: 4, right: 8, left: 0, bottom: 4 }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" vertical={false} />
+                  <XAxis dataKey="month" tick={{ fill: "var(--theme-text-muted)", fontSize: 11 }} axisLine={false} tickLine={false} />
+                  <YAxis
+                    allowDecimals={false}
+                    tickFormatter={(v) => formatCountShort(v)}
+                    tick={{ fill: "var(--theme-text-muted)", fontSize: 11 }}
+                    axisLine={false}
+                    tickLine={false}
+                  />
+                  <Tooltip contentStyle={{ borderRadius: 8, border: "1px solid #e2e8f0" }} />
+                  <Legend wrapperStyle={{ fontSize: 11, paddingTop: 4 }} verticalAlign="bottom" height={28} />
+                  <Bar dataKey={String(yearOverYear.prevYear)} name={String(yearOverYear.prevYear)} fill="#94a3b8" radius={[3, 3, 0, 0]} />
+                  <Bar dataKey={String(yearOverYear.currentYear)} name={String(yearOverYear.currentYear)} fill="var(--app-brand-primary)" radius={[3, 3, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          </Card>
+        </Col>
+        <Col xs={24} lg={12}>
+          <Card className="events-dashboard__card" bordered={false}>
+            <p className="events-dashboard__section-title">
+              ISSUES RESOLVED - YEAR OVER YEAR
+            </p>
+            <div className="events-dashboard__section-note">
+              {yearOverYear.currentYear}: {yearOverYear.resolvedTotals[yearOverYear.currentYear]} (
+              {pctChangeLabel(
+                yearOverYear.resolvedTotals[yearOverYear.currentYear],
+                yearOverYear.resolvedTotals[yearOverYear.prevYear],
+              )}{" "}
+              vs {yearOverYear.prevYear})
+            </div>
+            <div style={{ height: 196 }}>
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={yearOverYear.resolvedByMonth} margin={{ top: 4, right: 8, left: 0, bottom: 4 }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" vertical={false} />
+                  <XAxis dataKey="month" tick={{ fill: "var(--theme-text-muted)", fontSize: 11 }} axisLine={false} tickLine={false} />
+                  <YAxis
+                    allowDecimals={false}
+                    tickFormatter={(v) => formatCountShort(v)}
+                    tick={{ fill: "var(--theme-text-muted)", fontSize: 11 }}
+                    axisLine={false}
+                    tickLine={false}
+                  />
+                  <Tooltip contentStyle={{ borderRadius: 8, border: "1px solid #e2e8f0" }} />
+                  <Legend wrapperStyle={{ fontSize: 11, paddingTop: 4 }} verticalAlign="bottom" height={28} />
+                  <Bar dataKey={String(yearOverYear.prevYear)} name={String(yearOverYear.prevYear)} fill="#94a3b8" radius={[3, 3, 0, 0]} />
+                  <Bar dataKey={String(yearOverYear.currentYear)} name={String(yearOverYear.currentYear)} fill="#10b981" radius={[3, 3, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          </Card>
+        </Col>
+      </Row>
+
+      {/* Doc: "I should be able to see no of issues resolved by a user or team on closed
+          issues." userId is shown raw - see the resolvedBreakdown useMemo above for why. */}
+      <Row gutter={[12, 12]} style={{ marginTop: 12 }}>
+        <Col xs={24} lg={12}>
+          <Card className="events-dashboard__card" bordered={false}>
+            <p className="events-dashboard__section-title">
+              CLOSED ISSUES RESOLVED BY USER ({resolvedBreakdown.totalClosed} total)
+            </p>
+            <Table
+              size="small"
+              pagination={false}
+              rowKey="key"
+              dataSource={resolvedBreakdown.userRows}
+              locale={{ emptyText: "No closed issues match the current filters" }}
+              columns={[
+                { title: "USER ID", dataIndex: "label", ellipsis: true },
+                { title: "CLOSED ISSUES", dataIndex: "count", width: 130, align: "right" },
+              ]}
+            />
+          </Card>
+        </Col>
+        <Col xs={24} lg={12}>
+          <Card className="events-dashboard__card" bordered={false}>
+            <p className="events-dashboard__section-title">
+              CLOSED ISSUES RESOLVED BY TEAM ({resolvedBreakdown.totalClosed} total)
+            </p>
+            <Table
+              size="small"
+              pagination={false}
+              rowKey="key"
+              dataSource={resolvedBreakdown.teamRows}
+              locale={{ emptyText: "No closed issues match the current filters" }}
+              columns={[
+                { title: "TEAM", dataIndex: "label" },
+                { title: "CLOSED ISSUES", dataIndex: "count", width: 130, align: "right" },
+              ]}
+            />
           </Card>
         </Col>
       </Row>
