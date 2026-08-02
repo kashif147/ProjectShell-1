@@ -12,6 +12,16 @@
     margin-bottom: 8px;
 }
 
+.event-details-thumbnail {
+    width: 44px;
+    height: 44px;
+    object-fit: cover;
+    border-radius: 6px;
+    border: 1px solid #f0f0f0;
+    cursor: pointer;
+    flex-shrink: 0;
+}
+
 .back-link {
     color: var(--app-brand-primary);
     cursor: pointer;
@@ -140,6 +150,15 @@
     white-space: normal;
     word-wrap: break-word;
     overflow-wrap: anywhere;
+}
+
+.event-description-display.is-collapsed {
+    max-height: 160px;
+    overflow-y: auto;
+}
+
+.event-description-display.is-expanded {
+    max-height: none;
 }
 
 .event-description-display * {

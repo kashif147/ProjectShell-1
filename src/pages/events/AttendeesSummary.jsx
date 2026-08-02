@@ -8,6 +8,7 @@ import { fetchRegistrations } from "../../services/eventsApi";
 import { useFilters } from "../../context/FilterContext";
 import { useTableColumns } from "../../context/TableColumnsContext ";
 import { applyClientSideRowFilters } from "../../utils/filterUtils";
+import { resolveEventCategoryLabel } from "../../utils/eventCategory";
 import { useRegisterGridFilterRows } from "../../hooks/useRegisterGridFilterRows";
 import {
   subscribeAttendeesReload,
@@ -82,7 +83,6 @@ function AttendeesSummary() {
           eventTypeId: reg.eventTypeId,
           eventCategoryLookupId: reg.eventCategoryLookupId,
           eventCategoryLookupCode: reg.eventCategoryLookupCode,
-          eventCategoryCode: reg.eventCategoryCode,
           eventDate: reg.eventStartDate,
           registrationType: reg.registrationType,
           totalFee: reg.amount,
@@ -118,17 +118,10 @@ function AttendeesSummary() {
         const eventType = (eventTypeOptions || []).find(
           (opt) => String(opt.value) === String(row.eventTypeId),
         );
-        const eventCategory = (eventCategoryOptions || []).find(
-          (opt) => String(opt.value) === String(row.eventCategoryLookupId),
-        );
         return {
           ...row,
           eventType: eventType?.label || "-",
-          eventCategory:
-            eventCategory?.label ||
-            row.eventCategoryLookupCode ||
-            row.eventCategoryCode ||
-            "-",
+          eventCategory: resolveEventCategoryLabel(row, eventCategoryOptions),
         };
       }),
     [attendeesSourceRows, eventTypeOptions, eventCategoryOptions],

@@ -20,6 +20,7 @@ import { fetchEvents, fetchRegistrations } from "../../services/eventsApi";
 import { useFilters } from "../../context/FilterContext";
 import { useTableColumns } from "../../context/TableColumnsContext ";
 import { applyClientSideRowFilters } from "../../utils/filterUtils";
+import { resolveEventCategoryLabel } from "../../utils/eventCategory";
 import { useRegisterGridFilterRows } from "../../hooks/useRegisterGridFilterRows";
 import "../../styles/EventsDashboard.css";
 
@@ -57,7 +58,7 @@ function formatMoneyShort(n) {
 }
 
 function EventsDashboard() {
-  const { eventTypeOptions } = useSelector((state) => state.lookups);
+  const { eventTypeOptions, eventCategoryOptions } = useSelector((state) => state.lookups);
   const { filtersState } = useFilters();
   const { columns: tableColumnsMap } = useTableColumns();
   // Own FilterContext screen ("EventsDashboard") so its filter chips are
@@ -98,7 +99,7 @@ function EventsDashboard() {
         return {
           eventId: ev._id,
           eventName: ev.title,
-          eventCategory: ev.eventCategoryCode || "-",
+          eventCategory: resolveEventCategoryLabel(ev, eventCategoryOptions),
           eventType: eventType?.label || "-",
           venue: ev.isVirtual ? "Virtual" : ev.venue || "-",
           startDate: ev.startDate,
@@ -111,7 +112,7 @@ function EventsDashboard() {
           status: ev.status,
         };
       }),
-    [events, eventTypeOptions],
+    [events, eventTypeOptions, eventCategoryOptions],
   );
 
   useRegisterGridFilterRows("EventsDashboard", filterableEvents, eventsColumns);

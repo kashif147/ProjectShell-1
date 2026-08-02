@@ -35,6 +35,7 @@ import {
 } from '../../services/eventsApi';
 import { dispatchProfileInvalidate } from '../../utils/profileRealtimeEvents';
 import { computeEventFormat } from '../../utils/eventFormat';
+import { resolveEventCategoryLabel } from '../../utils/eventCategory';
 import "../../styles/CreateAttendeeDrawer.css";
 
 const { Text } = Typography;
@@ -485,13 +486,7 @@ const CreateAttendeeDrawerInner = ({ open, onClose, eventId, registration, onApp
         ? (selectedEvent ? [{ label: selectedEvent.title, value: selectedEvent._id }] : [])
         : events.map((ev) => ({ label: ev.title, value: ev._id }));
 
-    const eventCategoryLabel =
-        (eventCategoryOptions || []).find(
-            (opt) => String(opt.value) === String(selectedEvent?.eventCategoryLookupId),
-        )?.label ||
-        selectedEvent?.eventCategoryLookupCode ||
-        selectedEvent?.eventCategoryCode ||
-        '-';
+    const eventCategoryLabel = resolveEventCategoryLabel(selectedEvent, eventCategoryOptions);
     const eventTypeLabel = (eventTypeOptions || []).find(
         (opt) => String(opt.value) === String(selectedEvent?.eventTypeId),
     )?.label || '-';
