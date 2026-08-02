@@ -1,7 +1,10 @@
 import React, { useEffect, useRef, useState } from "react";
 import { Row, Col, Checkbox, Select, Spin } from "antd";
 import MyInput from "../common/MyInput";
+import CustomSelect from "../common/CustomSelect";
+import GroupPicker from "./GroupPicker";
 import { searchIssueDesignations } from "../../services/issuesApi";
+import { IR_CASE_TYPES, toOptions } from "./issueOptions";
 
 /**
  * IR (Industrial Relations) discriminator field set -
@@ -14,6 +17,15 @@ import { searchIssueDesignations } from "../../services/issuesApi";
  * system) - there is no "fetch all" endpoint for this lookup, so it can't use the plain
  * static-options CustomSelect used elsewhere on this form; it uses antd's Select directly
  * with `showSearch` + `onSearch`, debounced.
+ *
+ * Case Type ties this component to the Group-linking feature (GroupPicker.jsx,
+ * profile-service's Group model): per the requirements doc, "Members: Grid of contacts, to
+ * be used if IR Case Type = Group" - the doc's own "single, group and national issues"
+ * framing (Logging an Issue intro) is why NATIONAL is treated the same as GROUP here (both
+ * are multi-member scenarios), while INDIVIDUAL keeps the plain single/multi member link
+ * that already lives on the host page (CasesDetails.js / CreateCasesDrawer.jsx) unchanged.
+ * The resulting groupId is a base-Issue-schema field, not IR-specific - see
+ * issueOptions.js's TYPE_FIELDS.IR/buildIssueUpdatePayload for how it's carried.
  */
 function IrFields({ values = {}, onChange, disabled = false }) {
   const [designationOptions, setDesignationOptions] = useState(() =>
@@ -98,6 +110,20 @@ function IrFields({ values = {}, onChange, disabled = false }) {
           />
         </Col>
         <Col span={12}>
+          <CustomSelect
+            label="Case Type"
+            name="caseType"
+            value={values.caseType || "INDIVIDUAL"}
+            onChange={(e) => onChange("caseType", e.target.value)}
+            options={toOptions(IR_CASE_TYPES)}
+            disabled={disabled}
+            allowClear={false}
+          />
+        </Col>
+      </Row>
+
+      <Row gutter={16}>
+        <Col span={24}>
           <div className="my-input-wrapper">
             <label className="my-input-label">Issue Designation</label>
             <Select
@@ -124,6 +150,28 @@ function IrFields({ values = {}, onChange, disabled = false }) {
           </div>
         </Col>
       </Row>
+
+      {(values.caseType === "GROUP" || values.caseType === "NATIONAL") && (
+        <Row gutter={16}>
+          <Col span={24}>
+            <div className="my-input-wrapper">
+              <label className="my-input-label">
+                Members (Group) — {values.caseType === "NATIONAL" ? "National" : "Group"} case
+              </label>
+              <GroupPicker
+                value={values.groupId || null}
+                onChange={(groupId) => onChange("groupId", groupId)}
+                disabled={disabled}
+              />
+              <div style={{ fontSize: 12, color: "var(--theme-text-muted)", marginTop: 4 }}>
+                Case Type = {values.caseType === "NATIONAL" ? "National" : "Group"}: link or
+                create a Group here instead of the single member link above — every resolved
+                Group member is treated as linked to this case.
+              </div>
+            </div>
+          </Col>
+        </Row>
+      )}
 
       <Row gutter={16}>
         <Col span={8}>

@@ -107,6 +107,15 @@ export const COMPLAINT_TYPES = [
 ];
 export const SOLICITORS = ["O_CONNORS", "OTHER"];
 
+// Individual vs Group vs National - backend/issue-service/models/issue.ir.model.js's
+// Ir.CASE_TYPES, transcribed to match exactly (not fetched - this endpoint has no
+// enum-metadata route, same as every other IR/FTP/Complaint/DataProtection enum on this
+// page, all of which are transcribed constants rather than fetched). Drives whether
+// IrFields.jsx shows the single/simple member link (INDIVIDUAL) or the Group-linking
+// feature (GROUP/NATIONAL) - see IrFields.jsx's header comment for why NATIONAL is grouped
+// with GROUP here.
+export const IR_CASE_TYPES = ["INDIVIDUAL", "GROUP", "NATIONAL"];
+
 // ---- FTP (models/issue.ftp.model.js) ----
 export const CRITERIA_LETTER_STATUSES = ["PENDING", "SENT", "RECEIVED"];
 export const LEGISLATIONS = ["S55_1_I", "S58", "S55_PPC", "S55_INQUIRY"];
@@ -154,6 +163,7 @@ export const TYPE_FIELDS = {
     "nmbiReference",
   ],
   IR: [
+    "caseType",
     "issueDesignation",
     "correspondenceWithExternalParty",
     "resolvedByUserId",
@@ -227,6 +237,7 @@ export function buildIssueUpdatePayload(values, issueType, extraBaseFields = [])
     "dateReceived",
     "linkedIssueIds",
     "owner",
+    "groupId",
     ...extraBaseFields,
   ];
   const typeFields = TYPE_FIELDS[issueType] || [];
@@ -255,6 +266,7 @@ export function buildIssueCreatePayload(values, issueType) {
     "priority",
     "dateReceived",
     "memberIds",
+    "groupId",
     "linkedIssueIds",
     "issueStatus",
     "issueStatusOther",

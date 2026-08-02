@@ -53,6 +53,8 @@ import ComplaintFields from "../../component/cases/ComplaintFields";
 import FtpFields from "../../component/cases/FtpFields";
 import IrFields from "../../component/cases/IrFields";
 import DataProtectionFields from "../../component/cases/DataProtectionFields";
+import GroupPicker from "../../component/cases/GroupPicker";
+import LinkedCasesPicker from "../../component/cases/LinkedCasesPicker";
 import {
   ISSUE_STATUSES,
   ISSUE_SOURCES,
@@ -322,10 +324,68 @@ function CasesDetails() {
     persistMemberIds(memberIds.filter((m) => m !== id));
   };
 
-  // TODO(Group linking): profile-service's Group feature (static/dynamic member cohorts)
-  // has a backend (GET/POST /groups, GET /groups/:id/members) but wiring a frontend picker
-  // for Issue.groupId is out of scope for this task - add a "Link Group" control here,
-  // alongside member linking, once that UI is built.
+  // Group linking (profile-service's Group feature, GroupPicker.jsx) - persists immediately
+  // on select/create/clear, same "must survive navigating away without Save" reasoning as
+  // persistMemberIds above. Suppressed in the sidebar for IR Group/National cases, where
+  // IrFields.jsx already renders this same control prominently (Case Type-driven "Members:
+  // Grid of contacts" requirement) bound to the same formValues.groupId - see IrFields.jsx's
+  // header comment.
+  const [groupBusy, setGroupBusy] = useState(false);
+  const isIrGroupCase =
+    activeIssue?.issueType === "IR" &&
+    (formValues.caseType === "GROUP" || formValues.caseType === "NATIONAL");
+
+  const persistGroupId = async (nextGroupId) => {
+    if (!issueId) return;
+    setGroupBusy(true);
+    try {
+      await updateIssue(issueId, { groupId: nextGroupId });
+      setFormValues((prev) => ({ ...prev, groupId: nextGroupId }));
+      message.success(nextGroupId ? "Group linked" : "Group unlinked");
+    } catch (error) {
+      message.error(
+        error?.response?.data?.error?.message ||
+          error?.response?.data?.message ||
+          error?.message ||
+          "Failed to update linked group",
+      );
+    } finally {
+      setGroupBusy(false);
+    }
+  };
+
+  // Linked Cases (common field across all 4 issue types) - persists immediately via
+  // updateIssue, same pattern as member/group linking above.
+  const [linkedCasesBusy, setLinkedCasesBusy] = useState(false);
+  const linkedIssueIds = Array.isArray(formValues.linkedIssueIds) ? formValues.linkedIssueIds : [];
+
+  const persistLinkedIssueIds = async (nextIds) => {
+    if (!issueId) return;
+    setLinkedCasesBusy(true);
+    try {
+      await updateIssue(issueId, { linkedIssueIds: nextIds });
+      setFormValues((prev) => ({ ...prev, linkedIssueIds: nextIds }));
+      message.success("Linked cases updated");
+    } catch (error) {
+      message.error(
+        error?.response?.data?.error?.message ||
+          error?.response?.data?.message ||
+          error?.message ||
+          "Failed to update linked cases",
+      );
+    } finally {
+      setLinkedCasesBusy(false);
+    }
+  };
+
+  const handleAddLinkedIssue = (id) => {
+    if (!id || linkedIssueIds.includes(id)) return;
+    persistLinkedIssueIds([...linkedIssueIds, id]);
+  };
+
+  const handleRemoveLinkedIssue = (id) => {
+    persistLinkedIssueIds(linkedIssueIds.filter((x) => x !== id));
+  };
 
   // Activities
   const handleActivityFieldChange = (field, value) => {
@@ -947,17 +1007,37 @@ function CasesDetails() {
                     />
                   </div>
 
-                  <div className="summary-field-single">
+                  <div
+                    className="summary-field-single"
+                    style={{ flexDirection: "column", alignItems: "stretch" }}
+                  >
                     <span className="summary-label">Linked Cases</span>
-                    <Select
-                      mode="tags"
-                      value={Array.isArray(formValues.linkedIssueIds) ? formValues.linkedIssueIds : []}
-                      onChange={(v) => handleFieldChange("linkedIssueIds", v)}
-                      className="summary-input"
-                      bordered={false}
-                      placeholder="Paste linked issue id(s)"
-                      tokenSeparators={[","]}
+                    <LinkedCasesPicker
+                      issueId={issueId}
+                      linkedIssueIds={linkedIssueIds}
+                      onAdd={handleAddLinkedIssue}
+                      onRemove={handleRemoveLinkedIssue}
+                      disabled={linkedCasesBusy}
                     />
+                  </div>
+
+                  <div
+                    className="summary-field-single"
+                    style={{ flexDirection: "column", alignItems: "stretch" }}
+                  >
+                    <span className="summary-label">Linked Group</span>
+                    {isIrGroupCase ? (
+                      <span style={{ color: "var(--theme-text-muted)", fontSize: 12 }}>
+                        Managed in the Industrial Relations Details section (Case Type ={" "}
+                        {formValues.caseType === "NATIONAL" ? "National" : "Group"}).
+                      </span>
+                    ) : (
+                      <GroupPicker
+                        value={formValues.groupId || null}
+                        onChange={(groupId) => persistGroupId(groupId)}
+                        disabled={groupBusy}
+                      />
+                    )}
                   </div>
 
                   <div
@@ -1062,9 +1142,6 @@ function CasesDetails() {
                         </Tag>
                       ))}
                     </div>
-                    {/* TODO(Group linking): see the TODO above renderActivities/handleAddMember -
-                        profile-service's Group feature exists on the backend, no frontend
-                        picker built yet. */}
                   </div>
                 </div>
               </div>

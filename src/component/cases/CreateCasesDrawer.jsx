@@ -6,6 +6,7 @@ import MyInput from "../common/MyInput";
 import MyDatePicker1 from "../common/MyDatePicker1";
 import CustomSelect from "../common/CustomSelect";
 import MemberSearch from "../profile/MemberSearch";
+import GroupPicker from "./GroupPicker";
 import ComplaintFields from "./ComplaintFields";
 import FtpFields from "./FtpFields";
 import IrFields from "./IrFields";
@@ -48,6 +49,7 @@ function emptyFormValues() {
     issueStatusOther: "",
     priority: "MEDIUM",
     memberIds: [],
+    groupId: null,
     owner: { userId: "" },
   };
 }
@@ -157,6 +159,9 @@ const CreateCasesDrawer = ({ open, onClose, presetMember }) => {
   };
 
   const memberIds = Array.isArray(formValues.memberIds) ? formValues.memberIds : [];
+  const isIrGroupCase =
+    formValues.issueType === "IR" &&
+    (formValues.caseType === "GROUP" || formValues.caseType === "NATIONAL");
 
   const progressPercent = useMemo(() => {
     const checks = [
@@ -316,9 +321,25 @@ const CreateCasesDrawer = ({ open, onClose, presetMember }) => {
           );
         })}
       </div>
-      {/* TODO(Group linking): profile-service's Group feature (static/dynamic member
-          cohorts) has a backend but no frontend picker yet - wire Issue.groupId here once
-          that UI is built. */}
+      {/* Group linking (profile-service's Group feature, GroupPicker.jsx) - deferred to the
+          Save button like every other field in this drawer (no issue exists to persist
+          against yet). Suppressed here for IR Group/National cases: IrFields.jsx (rendered
+          above, via TypeFieldsComponent) already shows this same control prominently, bound
+          to the same formValues.groupId - see that file's header comment. */}
+      {isIrGroupCase ? (
+        <div style={{ marginTop: 12, fontSize: 12, color: "var(--theme-text-muted)" }}>
+          Group linking is handled in the Industrial Relations section above (Case Type ={" "}
+          {formValues.caseType === "NATIONAL" ? "National" : "Group"}).
+        </div>
+      ) : (
+        <div style={{ marginTop: 12 }}>
+          <label className="my-input-label">Related Group (optional)</label>
+          <GroupPicker
+            value={formValues.groupId || null}
+            onChange={(groupId) => handleChange("groupId", groupId)}
+          />
+        </div>
+      )}
     </div>
   );
 
