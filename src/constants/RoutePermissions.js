@@ -81,6 +81,7 @@ export const RoutePermissions = {
   // duplicate grid as originally assumed - see the task's own report for detail.
   "CasesSummary": "issues:read",
   "IssuesManagementDashboard": "issues:read",
+  "FindIssues": "issues:read",
   "CasesById": "portal:read",
   "CasesDetails": "issues:read",
   "ClaimSummary": "portal:read",

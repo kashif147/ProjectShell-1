@@ -80,6 +80,19 @@ export async function createActivity(issueId, payload) {
   return unwrap({ data });
 }
 
+// GET /issues/search?q= - "Find Issues" (see issue.controller.js's searchIssues). One
+// unified query string matched against internalReferenceNumber/caseFileNumber/wrcCaseNumber
+// locally, issueType on exact match, and membership no/email/surname/forename/mobile via
+// profile-service's member search - NOT dob/NMBI/address/workplace, a documented backend
+// gap, not something to work around here. Same Issue document shape as fetchIssues.
+export async function searchIssues(q) {
+  const { data } = await axios.get(`${getIssueServiceBaseUrl()}/issues/search`, {
+    params: { q },
+    headers: authHeaders(),
+  });
+  return unwrap({ data });
+}
+
 // IR-only. GET /issue-designations?search= - a thin read-through proxy over user-service's
 // Lookup system, no "fetch all" - always pass a query (see
 // issue-service/services/lookup.service.client.js's searchIssueDesignations).
