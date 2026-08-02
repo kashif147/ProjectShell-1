@@ -438,9 +438,17 @@ export const reportItems = [
 // file still importing it (Sidebar.js's itemsMap.Cases) renders the identical,
 // permission-gated list rather than a second, divergent one.
 //
-// Every item requires at least base "issues:read" - team-specific visibility
-// (issues-complaints/ftp/ir/dataprotection) is always enforced server-side by
-// issue-service; this is only a reachability gate for the nav entry itself.
+// Every item's `permissions` is the actual reachability gate for that nav entry
+// (Sidebar.js filters menuItems by `hasPermission`) - the dedicated Complaints/Fitness to
+// Practice/Industrial Relations/Data Protection entries below are gated on their own
+// team resource (`issues-<team>:read`, matching `services/issue.service.js`'s
+// `ISSUE_TYPE_PERMISSION_MAP` in issue-service) rather than the base "issues:read" every
+// other entry uses - this is the nav-level half of "only authorised users have access to
+// each section based on their roles" from the requirements doc; the real enforcement is
+// still server-side (issue-service's `GET /issues` already scopes results to the caller's
+// granted `issues-<team>:read` resources), this only stops a Complaints-only user from
+// even seeing a working link to, say, Industrial Relations. See
+// RoutePermissions.js/Entry.js for the matching route-level gate.
 export const issuesItems = [
   createMenuItem(
     "Dashboard",
@@ -455,16 +463,40 @@ export const issuesItems = [
     ["issues:read"]
   ),
   createMenuItem(
-    "Assigned to me",
-    <FaUserShield />,
-    "Assigned to me",
+    "Open",
+    <FaClipboardList />,
+    "Open",
     ["issues:read"]
   ),
   createMenuItem(
-    "Reports setting",
-    <FaWrench />,
-    "Reports setting",
+    "Closed",
+    <FaClipboardCheck />,
+    "Closed",
     ["issues:read"]
+  ),
+  createMenuItem(
+    "Complaints",
+    <FaExclamationTriangle />,
+    "Complaints",
+    ["issues-complaints:read"]
+  ),
+  createMenuItem(
+    "Fitness to Practice",
+    <FaGraduationCap />,
+    "Fitness to Practice",
+    ["issues-ftp:read"]
+  ),
+  createMenuItem(
+    "Industrial Relations",
+    <FaBalanceScale />,
+    "Industrial Relations",
+    ["issues-ir:read"]
+  ),
+  createMenuItem(
+    "Data Protection",
+    <FaShieldAlt />,
+    "Data Protection",
+    ["issues-dataprotection:read"]
   ),
 ];
 

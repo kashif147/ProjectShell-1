@@ -7,7 +7,7 @@ import React, {
   useCallback,
 } from "react";
 import { Tag, Button, Space, Dropdown } from "antd";
-import { MoreOutlined, WarningOutlined } from "@ant-design/icons";
+import { MoreOutlined, WarningOutlined, TeamOutlined } from "@ant-design/icons";
 import { tableData } from "../Data";
 import { useLocation, useNavigate, Link } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
@@ -2221,33 +2221,62 @@ const staticColumns = {
       render: (text, record) => {
         const label = text || record?.internalReferenceNumber || "-";
         const issueId = record?.issueId;
-        if (!issueId) return label;
-        return (
-          <Link
-            to="/CasesDetails"
-            state={{ issueId, recordName: label }}
-            onClick={(e) => e.stopPropagation()}
-            style={{ color: "blue", textDecoration: "underline", cursor: "pointer" }}
+        // "Group issues should be visually visible on the issue list" (requirements doc,
+        // Issue summary section) - small badge next to the title when this issue is linked
+        // to a group (CasesSummary.js maps the base Issue schema's `groupId` onto the row).
+        const groupBadge = record?.groupId ? (
+          <Tag
+            icon={<TeamOutlined />}
+            color="purple"
+            title="Linked to a group issue"
+            style={{ marginLeft: 6 }}
           >
-            {label}
-          </Link>
+            Group
+          </Tag>
+        ) : null;
+        if (!issueId) {
+          return (
+            <>
+              {label}
+              {groupBadge}
+            </>
+          );
+        }
+        return (
+          <>
+            <Link
+              to="/CasesDetails"
+              state={{ issueId, recordName: label }}
+              onClick={(e) => e.stopPropagation()}
+              style={{ color: "blue", textDecoration: "underline", cursor: "pointer" }}
+            >
+              {label}
+            </Link>
+            {groupBadge}
+          </>
         );
       },
     },
     {
-      // No profile-service batch member-name lookup wired yet (explicitly out
-      // of scope for this task) - shows the raw linked profileId(s) until the
-      // CasesDetails.js rewrite adds real member-name resolution.
+      // `record.memberName` is populated post-render by CasesSummary.js's best-effort
+      // profile-service batch-lookup enrichment (fetchProfilesBatchLookup, keyed off
+      // memberIds[0]) once it resolves; until then (or if it can't resolve - no linked
+      // member, lookup failure, etc.) this falls back to the raw linked profileId(s), same
+      // placeholder behavior as before that enrichment existed.
       dataIndex: "memberIds",
       title: "Member Name",
       ellipsis: true,
       isGride: true,
       isVisible: true,
       width: 200,
-      render: (value) => (Array.isArray(value) && value.length ? value.join(", ") : "-"),
+      render: (value, record) => {
+        if (record?.memberName) return record.memberName;
+        return Array.isArray(value) && value.length ? value.join(", ") : "-";
+      },
     },
     {
-      // Same member-lookup gap as Member Name above.
+      // Populated by the same profile-service batch-lookup enrichment as Member Name above
+      // (membershipNumber) once it resolves; "-" placeholder until then/if unresolved.
       dataIndex: "membershipNo",
       title: "Membership No",
       ellipsis: true,
@@ -2275,8 +2304,9 @@ const staticColumns = {
       render: (value) => value || "-",
     },
     {
-      // Not on the Issue payload directly (would need a profile-service
-      // workLocation lookup) - blank placeholder, same scope note as Member Name.
+      // Populated by the same profile-service batch-lookup enrichment as Member Name
+      // above (professionalDetails.workLocation) once it resolves; "-" placeholder
+      // until then/if unresolved (not on the Issue payload directly).
       dataIndex: "location",
       title: "Location",
       ellipsis: true,

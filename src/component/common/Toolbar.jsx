@@ -286,7 +286,16 @@ const Toolbar = () => {
       "/eventsdashboard": "EventsDashboard",
       "/correspondencedashboard": "Communication",
       "/issuesmanagementdashboard": "IssuesDashboard",
+      // Keep in sync with FilterContext.js's own copy of this path map - all of
+      // CasesSummary.js's routes (see its own top-of-file comment) share the "Issues"
+      // screen key.
       "/casessummary": "Issues",
+      "/casessummary/open": "Issues",
+      "/casessummary/closed": "Issues",
+      "/complaints": "Issues",
+      "/fitnesstopractice": "Issues",
+      "/industrialrelations": "Issues",
+      "/dataprotection": "Issues",
       "/attendees": "Attendees",
       "/membershipdashboard": "MembershipDashboard",
       "/creditnotes": "CreditNotes",
@@ -310,7 +319,14 @@ const Toolbar = () => {
     .toLowerCase();
   const isCreditNotesScreen = normalizedPath === "/creditnotes";
   const isEventsScreen = normalizedPath === "/eventssummary";
-  const isIssuesScreen = normalizedPath === "/casessummary";
+  const isIssuesScreen =
+    normalizedPath === "/casessummary" ||
+    normalizedPath === "/casessummary/open" ||
+    normalizedPath === "/casessummary/closed" ||
+    normalizedPath === "/complaints" ||
+    normalizedPath === "/fitnesstopractice" ||
+    normalizedPath === "/industrialrelations" ||
+    normalizedPath === "/dataprotection";
   const isAttendeesScreen = normalizedPath === "/attendees";
   const isJournalAdjustmentsScreen = normalizedPath === "/journaladjustments";
   const isOnlinePaymentScreen = normalizedPath === "/onlinepayment";
@@ -1198,7 +1214,7 @@ const Toolbar = () => {
                 placeholder={
                   isMembershipListingStyleReportScreen
                     ? "Membership No or Name"
-                    : location.pathname === "/CasesSummary"
+                    : isIssuesScreen
                       ? "Search Issue or Reference No"
                       : location.pathname === "/EventsSummary"
                         ? "Search Event ID or Name"

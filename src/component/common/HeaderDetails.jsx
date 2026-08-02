@@ -194,6 +194,18 @@ function HeaderDetails({
   const currentURL = `${location?.pathname}`;
   const nav = location?.pathname || "";
   const hideGridToolbar = isNonGridToolbarRoute(nav);
+  // Every route that renders CasesSummary.js (Entry.js) - the plain grid plus the
+  // Open/Closed views and the dedicated Complaints/Fitness to Practice/Industrial
+  // Relations/Data Protection side-nav sections - so this header's icon/title chrome
+  // treats them the same way it already treats "/CasesSummary".
+  const isIssuesGridRoute =
+    nav === "/CasesSummary" ||
+    nav === "/CasesSummary/Open" ||
+    nav === "/CasesSummary/Closed" ||
+    nav === "/Complaints" ||
+    nav === "/FitnessToPractice" ||
+    nav === "/IndustrialRelations" ||
+    nav === "/DataProtection";
   const headerDashboardRange = useMemo(() => {
     const r = searchParams.get("range");
     return HEADER_DASHBOARD_RANGE_KEYS.includes(r) ? r : "YTD";
@@ -1386,7 +1398,7 @@ function HeaderDetails({
           location?.pathname === "/MembershipDashboard" ||
           location?.pathname === "/EventsSummary" ||
           location?.pathname === "/Attendees" ||
-          location?.pathname === "/CasesSummary") && (
+          isIssuesGridRoute) && (
           <FaClipboardList
             style={{
               fontSize: "15px",
@@ -1574,7 +1586,7 @@ function HeaderDetails({
             location?.pathname == "/" ||
             location?.pathname == "/Summary" ||
             location?.pathname == "/Members" ||
-            location?.pathname == "/CasesSummary" ||
+            isIssuesGridRoute ||
             location?.pathname == "/Transfers" ||
             location?.pathname == "/CorrespondencesSummary" ||
             location?.pathname == "/RosterSummary" ||

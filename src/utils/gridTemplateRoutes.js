@@ -10,7 +10,18 @@ export const GRID_SCREEN_PATH_TO_TEMPLATE_TYPE = {
   eventsdashboard: "eventsdashboard",
   eventssummary: "eventssummary",
   attendees: "attendees",
+  // Last path segment (SaveViewMenu.jsx's `rawScreenName`) for every CasesSummary.js route -
+  // "/CasesSummary" itself, "/CasesSummary/Open|Closed", and the dedicated
+  // /Complaints, /FitnessToPractice, /IndustrialRelations, /DataProtection side-nav routes
+  // (Entry.js) - all one shared "issuessummary" grid template, per that component's own
+  // comment on why they share a single FilterContext screen key / templateType.
   casessummary: "issuessummary",
+  open: "issuessummary",
+  closed: "issuessummary",
+  complaints: "issuessummary",
+  fitnesstopractice: "issuessummary",
+  industrialrelations: "issuessummary",
+  dataprotection: "issuessummary",
   creditnotes: "creditnotes",
   journaladjustments: "journaladjustments",
   onlinepayment: "onlinepayment",

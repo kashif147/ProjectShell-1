@@ -195,6 +195,31 @@ const Sidebar = () => {
         return { path: "/CasesSummary", state: { search: "All Issues" } };
       case "Assigned to me":
         return { path: "/CasesSummary", state: { search: "Assigned to me" } };
+      // Dedicated Issue Management side-nav sections (SideNavWithAuth.js's `issuesItems`) -
+      // all render the same CasesSummary.js component, pre-filtered by route
+      // (`defaultView` prop wired in Entry.js). See RoutePermissions.js for the
+      // per-team permission each one is gated on.
+      case "Open":
+        return { path: "/CasesSummary/Open", state: { search: "Open" } };
+      case "Closed":
+        return { path: "/CasesSummary/Closed", state: { search: "Closed" } };
+      case "Complaints":
+        return { path: "/Complaints", state: { search: "Complaints" } };
+      case "Fitness to Practice":
+        return {
+          path: "/FitnessToPractice",
+          state: { search: "Fitness to Practice" },
+        };
+      case "Industrial Relations":
+        return {
+          path: "/IndustrialRelations",
+          state: { search: "Industrial Relations" },
+        };
+      case "Data Protection":
+        return {
+          path: "/DataProtection",
+          state: { search: "Data Protection" },
+        };
       case "Correspondences":
         return { path: "/CorrespondenceDashboard", state: { search: "" } };
       case "Dashboard":
@@ -502,8 +527,18 @@ const Sidebar = () => {
       "/Details": "Profiles",
       "/ClaimSummary": "Claims",
       "/ClaimsById": "Claims",
+      // These two must come before the bare "/CasesSummary" entry below - `currentPath` is
+      // resolved via `.startsWith(route)` over `Object.keys()` insertion order, and
+      // "/CasesSummary/Open".startsWith("/CasesSummary") is also true, so the more specific
+      // routes have to win first.
+      "/CasesSummary/Open": "Open",
+      "/CasesSummary/Closed": "Closed",
       "/CasesSummary": "Cases",
       "/CasesById": "Cases",
+      "/Complaints": "Complaints",
+      "/FitnessToPractice": "Fitness to Practice",
+      "/IndustrialRelations": "Industrial Relations",
+      "/DataProtection": "Data Protection",
       "/CorrespondencesSummary": "Correspondences",
       "/Transfers": "Transfer Requests",
       "/Configuration": "System Configuration",

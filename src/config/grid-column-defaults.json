@@ -416,7 +416,7 @@
       "filters": {
         "priority": { "operator": "equal_to", "values": [] },
         "issueType": { "operator": "equal_to", "values": [] },
-        "issueStatus": { "operator": "equal_to", "values": [] },
+        "issueStatus": { "operator": "not_equal_to", "values": ["CLOSED"] },
         "ownerTeam": { "operator": "equal_to", "values": [] },
         "dateReceived": { "operator": "between", "values": [] }
       },

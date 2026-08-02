@@ -84,6 +84,25 @@ export const RoutePermissions = {
   "FindIssues": "issues:read",
   "CasesById": "portal:read",
   "CasesDetails": "issues:read",
+  // Dedicated Issue Management side-nav sections (SideNavWithAuth.js's `issuesItems`) - all
+  // render CasesSummary.js pre-filtered by route. Open/Closed are cross-team, same base gate
+  // as the main grid; Complaints/FTP/IR/Data Protection are each gated on their own team
+  // resource, matching issue-service's own `ISSUE_TYPE_PERMISSION_MAP`
+  // (services/issue.service.js) - this is the nav/route-level half of "only authorised users
+  // have access to each section based on their roles"; issue-service's `GET /issues` is the
+  // real, server-side enforcement (it already scopes results to the caller's granted
+  // `issues-<team>:read` resources), this only keeps the route/nav link itself from being
+  // reachable/visible to a user without that team's permission. Entry.js looks these up
+  // without a leading slash (matching the working `"IssuesManagementDashboard"` lookup, not
+  // the pre-existing `"/CasesSummary"`/`"/CasesDetails"`/`"/CasesById"` lookups above, which
+  // don't actually match these keys due to the slash and so are effectively ungated today -
+  // a pre-existing gap, not introduced here, and left alone since fixing it isn't this task).
+  "CasesSummaryOpen": "issues:read",
+  "CasesSummaryClosed": "issues:read",
+  "Complaints": "issues-complaints:read",
+  "FitnessToPractice": "issues-ftp:read",
+  "IndustrialRelations": "issues-ir:read",
+  "DataProtection": "issues-dataprotection:read",
   "ClaimSummary": "portal:read",
   "ClaimsDetails": "portal:read",
   "ClaimsById": "portal:read",
