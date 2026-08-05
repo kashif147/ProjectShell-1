@@ -57,7 +57,7 @@ function statusTagColor(status) {
   return "default";
 }
 
-// issue-service enums are SCREAMING_SNAKE_CASE (e.g. "DATA_PROTECTION") - render Title Case.
+// issue-service enums are SCREAMING_SNAKE_CASE (e.g. "PENDING_RESPONSE_MEMBER") - render Title Case.
 // Duplicated from TableColumnsContext's own (unexported) formatIssueEnumLabel/tag-color
 // helpers rather than importing - that file doesn't export them.
 function formatEnumLabel(value) {
@@ -220,9 +220,9 @@ function IssuesManagementDashboard() {
   // itself is only rendered when the permission is present - see below). This is purely a
   // client-side narrowing convenience: the backend's GET /issues already scopes the returned
   // list to the caller's granted `issues-<team>:read` resources, so a user without DP
-  // visibility never receives DATA_PROTECTION-typed issues in `issues` to begin with.
+  // visibility never receives DP-typed issues in `issues` to begin with.
   const scopedIssues = useMemo(
-    () => (dpOnly ? visibleIssues.filter((iss) => iss.issueType === "DATA_PROTECTION") : visibleIssues),
+    () => (dpOnly ? visibleIssues.filter((iss) => iss.issueType === "DP") : visibleIssues),
     [visibleIssues, dpOnly],
   );
 
@@ -267,7 +267,7 @@ function IssuesManagementDashboard() {
     const now = Date.now();
     const openCount = openIssues.length;
 
-    // "At risk": HIGH priority, or (for COMPLAINT/DATA_PROTECTION, the only two issue types
+    // "At risk": HIGH priority, or (for COMPLAINT/DP, the only two issue types
     // with a `dueDate` field) a due date within 7 days or already overdue.
     const atRiskCount = openIssues.filter((iss) => {
       if (iss.priority === "HIGH") return true;
@@ -444,7 +444,7 @@ function IssuesManagementDashboard() {
   // every issue type.
   const sourceSplit = useMemo(() => {
     const total = drilledIssues.length || 1;
-    const memberCount = drilledIssues.filter((iss) => iss.issueSource === "MEMBER").length;
+    const memberCount = drilledIssues.filter((iss) => iss.issueSource === "MEMBER-IS").length;
     const otherCount = drilledIssues.length - memberCount;
     return {
       memberPct: Math.round((memberCount / total) * 100),

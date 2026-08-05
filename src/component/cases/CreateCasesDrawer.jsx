@@ -12,15 +12,8 @@ import FtpFields from "./FtpFields";
 import IrFields from "./IrFields";
 import DataProtectionFields from "./DataProtectionFields";
 import { createIssue } from "../../services/issuesApi";
-import {
-  ISSUE_TYPES,
-  ISSUE_TYPE_LABELS,
-  ISSUE_SOURCES,
-  ISSUE_STATUSES,
-  ORIGINS,
-  toOptions,
-  buildIssueCreatePayload,
-} from "./issueOptions";
+import { useIssueDropdownLookups, useIssueStatusOptions } from "../../hooks/useIssueLookups";
+import { buildIssueCreatePayload } from "./issueOptions";
 import "../../styles/CreateCasesDrawer.css";
 
 const { Dragger } = Upload;
@@ -29,13 +22,8 @@ const TYPE_FIELDS_COMPONENT = {
   COMPLAINT: ComplaintFields,
   FTP: FtpFields,
   IR: IrFields,
-  DATA_PROTECTION: DataProtectionFields,
+  DP: DataProtectionFields,
 };
-
-const ISSUE_TYPE_OPTIONS = ISSUE_TYPES.map((v) => ({
-  label: ISSUE_TYPE_LABELS[v] || v,
-  value: v,
-}));
 
 function emptyFormValues() {
   return {
@@ -45,7 +33,9 @@ function emptyFormValues() {
     issueType: null,
     issueSource: null,
     issueSourceOther: "",
-    issueStatus: "ACTIVE",
+    // Left empty until an Issue Type is picked - the type-scoping effect below fills it in
+    // with that type's "Active" status as soon as one is selected.
+    issueStatus: null,
     issueStatusOther: "",
     priority: "MEDIUM",
     memberIds: [],
@@ -78,6 +68,29 @@ const CreateCasesDrawer = ({ open, onClose, presetMember, defaultIssueType }) =>
   const [formValues, setFormValues] = useState(emptyFormValues);
   const [memberLabels, setMemberLabels] = useState({});
   const [saving, setSaving] = useState(false);
+
+  const { issueTypeOptions, originOptions, issueSourceOptions, priorityOptions, complaintTypeOptions } =
+    useIssueDropdownLookups();
+  const { options: issueStatusOptions } = useIssueStatusOptions(formValues.issueType);
+
+  // Default Issue Status to "Active" for whichever Issue Type is currently selected, then
+  // leave the user's choice alone. Issue Status options are type-scoped (see
+  // useIssueLookups.js) and each type's "Active" status has its own code (e.g. "ACTIVE" for
+  // Complaint, "ACTIVE-FTP" for FTP) sharing the same "Active" display label, so match by
+  // label rather than assuming a single "ACTIVE" code - falls back to the first option if a
+  // type has no status literally labeled "Active".
+  useEffect(() => {
+    if (!formValues.issueType || issueStatusOptions.length === 0) return;
+    const validCodes = issueStatusOptions.map((o) => o.value);
+    if (validCodes.includes(formValues.issueStatus)) return;
+    const activeOption = issueStatusOptions.find(
+      (o) => String(o.label || "").trim().toLowerCase() === "active",
+    );
+    setFormValues((prev) => ({
+      ...prev,
+      issueStatus: activeOption ? activeOption.value : validCodes[0],
+    }));
+  }, [issueStatusOptions, formValues.issueType, formValues.issueStatus]);
 
   const presetMemberId = presetMember?._id || presetMember?.id || null;
 
@@ -214,7 +227,8 @@ const CreateCasesDrawer = ({ open, onClose, presetMember, defaultIssueType }) =>
             value={formValues.issueType || ""}
             onChange={(e) => handleChange("issueType", e.target.value)}
             placeholder="Select issue type"
-            options={ISSUE_TYPE_OPTIONS}
+            options={issueTypeOptions}
+            isIDs
             required
           />
         </Col>
@@ -222,9 +236,12 @@ const CreateCasesDrawer = ({ open, onClose, presetMember, defaultIssueType }) =>
           <CustomSelect
             label="Issue Status"
             name="issueStatus"
-            value={formValues.issueStatus || "ACTIVE"}
+            value={formValues.issueStatus || ""}
             onChange={(e) => handleChange("issueStatus", e.target.value)}
-            options={toOptions(ISSUE_STATUSES)}
+            placeholder="Select issue type first"
+            options={issueStatusOptions}
+            disabled={!formValues.issueType}
+            isIDs
           />
         </Col>
       </Row>
@@ -234,6 +251,8 @@ const CreateCasesDrawer = ({ open, onClose, presetMember, defaultIssueType }) =>
           name="issueStatusOther"
           value={formValues.issueStatusOther || ""}
           onChange={(e) => handleChange("issueStatusOther", e.target.value)}
+          maxLength={45}
+          extra="Max 45 characters"
         />
       )}
       <MyInput
@@ -270,7 +289,8 @@ const CreateCasesDrawer = ({ open, onClose, presetMember, defaultIssueType }) =>
             value={formValues.origin || ""}
             onChange={(e) => handleChange("origin", e.target.value)}
             placeholder="How was this reported?"
-            options={toOptions(ORIGINS)}
+            options={originOptions}
+            isIDs
           />
         </Col>
         <Col span={8}>
@@ -280,11 +300,12 @@ const CreateCasesDrawer = ({ open, onClose, presetMember, defaultIssueType }) =>
             value={formValues.issueSource || ""}
             onChange={(e) => handleChange("issueSource", e.target.value)}
             placeholder="Select source"
-            options={toOptions(ISSUE_SOURCES)}
+            options={issueSourceOptions}
+            isIDs
           />
         </Col>
       </Row>
-      {formValues.issueSource === "OTHER" && (
+      {formValues.issueSource === "OTHR-IS" && (
         <MyInput
           label="Issue Source (Other)"
           name="issueSourceOther"
@@ -387,15 +408,11 @@ const CreateCasesDrawer = ({ open, onClose, presetMember, defaultIssueType }) =>
             buttonStyle="solid"
             className="priority-group"
           >
-            <Radio.Button value="LOW" className="priority-btn">
-              Low
-            </Radio.Button>
-            <Radio.Button value="MEDIUM" className="priority-btn">
-              Medium
-            </Radio.Button>
-            <Radio.Button value="HIGH" className="priority-btn">
-              High
-            </Radio.Button>
+            {priorityOptions.map((opt) => (
+              <Radio.Button key={opt.value} value={opt.value} className="priority-btn">
+                {opt.label}
+              </Radio.Button>
+            ))}
           </Radio.Group>
         </div>
       </div>
@@ -435,7 +452,11 @@ const CreateCasesDrawer = ({ open, onClose, presetMember, defaultIssueType }) =>
           {renderIssueOverview()}
           {renderIncidentDetails()}
           {TypeFieldsComponent && (
-            <TypeFieldsComponent values={formValues} onChange={handleChange} />
+            <TypeFieldsComponent
+              values={formValues}
+              onChange={handleChange}
+              complaintTypeOptions={complaintTypeOptions}
+            />
           )}
           {renderOwnership()}
           {renderWorkflow()}

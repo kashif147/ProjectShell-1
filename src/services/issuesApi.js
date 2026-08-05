@@ -103,3 +103,61 @@ export async function searchIssueDesignations(query) {
   });
   return unwrap({ data });
 }
+
+// GET /issue-dropdown-lookups - Issue Type + Origin + Issue Source + Priority + Complaint
+// Type in one round trip. Prefer this over calling the individual endpoints separately:
+// firing several as independent requests on every Create/Edit Cases mount was enough
+// concurrent traffic from one client to trip the gateway's per-client rate limit (nginx
+// api_rate zone, see frontend default.conf) on an ordinary page load. Returns
+// {issueTypes, origins, issueSources, priorities, complaintTypes}, each [{id, code, displayName}].
+export async function fetchIssueDropdownLookups() {
+  const { data } = await axios.get(`${getIssueServiceBaseUrl()}/issue-dropdown-lookups`, {
+    headers: authHeaders(),
+  });
+  return unwrap({ data });
+}
+
+// GET /issue-types - a thin read-through proxy over user-service's Lookup system (LookupType
+// code "ISST"), replacing the formerly-hardcoded ISSUE_TYPES constant. Returns
+// [{id, code, displayName}]; `code` is the value to submit as `issueType`. Prefer
+// fetchIssueDropdownLookups() when also fetching origins/issue sources on the same mount.
+export async function fetchIssueTypes() {
+  const { data } = await axios.get(`${getIssueServiceBaseUrl()}/issue-types`, {
+    headers: authHeaders(),
+  });
+  return unwrap({ data });
+}
+
+// GET /issue-statuses?issueType=<code> - Issue Status options are scoped to a given Issue
+// Type (Lookup hierarchy: each status is a child of its Issue Type's Lookup value, see
+// issue-service/services/lookup.service.client.js's fetchIssueStatuses). Returns
+// [{id, code, displayName}]; `code` is the value to submit as `issueStatus`.
+export async function fetchIssueStatuses(issueType) {
+  if (!issueType) return [];
+  const { data } = await axios.get(`${getIssueServiceBaseUrl()}/issue-statuses`, {
+    params: { issueType },
+    headers: authHeaders(),
+  });
+  return unwrap({ data });
+}
+
+// GET /origins - a thin read-through proxy over user-service's Lookup system (LookupType code
+// "ORIGIN"), replacing the formerly-hardcoded ORIGINS constant. Flat list, no issue-type
+// dependency. Returns [{id, code, displayName}]; `code` is the value to submit as `origin`.
+export async function fetchOrigins() {
+  const { data } = await axios.get(`${getIssueServiceBaseUrl()}/origins`, {
+    headers: authHeaders(),
+  });
+  return unwrap({ data });
+}
+
+// GET /issue-sources - a thin read-through proxy over user-service's Lookup system
+// (LookupType code "ISSUESRC"), replacing the formerly-hardcoded ISSUE_SOURCES constant.
+// Flat list, no issue-type dependency. Returns [{id, code, displayName}]; `code` is the
+// value to submit as `issueSource`.
+export async function fetchIssueSources() {
+  const { data } = await axios.get(`${getIssueServiceBaseUrl()}/issue-sources`, {
+    headers: authHeaders(),
+  });
+  return unwrap({ data });
+}

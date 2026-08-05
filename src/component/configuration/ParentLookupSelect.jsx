@@ -130,6 +130,7 @@ function ParentLookupSelect({
         options={options}
         isSimple={true}
         isIDs={true}
+        showSearch
         disabled={isDisabled}
         required={required && requiresParent}
         hasError={hasError}

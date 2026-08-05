@@ -12,7 +12,7 @@ import {
 } from "./issueOptions";
 
 /**
- * DATA_PROTECTION discriminator field set -
+ * DP discriminator field set -
  * backend/issue-service/models/issue.dataprotection.model.js. Same controlled
  * `values`/`onChange(field, value)` contract as the other 3 field-set components - see
  * ComplaintFields.jsx's header comment. `dpStatus` (not `status`) to avoid colliding with

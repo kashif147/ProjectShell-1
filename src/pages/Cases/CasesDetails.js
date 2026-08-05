@@ -55,12 +55,9 @@ import IrFields from "../../component/cases/IrFields";
 import DataProtectionFields from "../../component/cases/DataProtectionFields";
 import GroupPicker from "../../component/cases/GroupPicker";
 import LinkedCasesPicker from "../../component/cases/LinkedCasesPicker";
+import { useIssueStatusOptions, useIssueDropdownLookups } from "../../hooks/useIssueLookups";
 import {
-  ISSUE_STATUSES,
-  ISSUE_SOURCES,
-  ORIGINS,
   RESOLUTIONS,
-  PRIORITIES,
   ISSUE_TYPE_LABELS,
   toFormValues,
   buildIssueUpdatePayload,
@@ -72,7 +69,7 @@ const TYPE_FIELDS_COMPONENT = {
   COMPLAINT: ComplaintFields,
   FTP: FtpFields,
   IR: IrFields,
-  DATA_PROTECTION: DataProtectionFields,
+  DP: DataProtectionFields,
 };
 
 const ACTIVITY_TYPE_OPTIONS = [
@@ -133,6 +130,11 @@ function CasesDetails() {
   const issueId = location.state?.issueId || searchParams.get("issueId") || null;
 
   const { activeIssue, activities, loading } = useSelector((state) => state.issues);
+
+  // Issue Status options are scoped to the case's (fixed, non-editable-post-create) Issue
+  // Type - see hooks/useIssueLookups.js.
+  const { options: issueStatusOptions } = useIssueStatusOptions(activeIssue?.issueType);
+  const { originOptions, issueSourceOptions, priorityOptions, complaintTypeOptions } = useIssueDropdownLookups();
 
   const [formValues, setFormValues] = useState({});
   const [savingGeneral, setSavingGeneral] = useState(false);
@@ -804,6 +806,7 @@ function CasesDetails() {
                   <TypeFieldsComponent
                     values={formValues}
                     onChange={handleFieldChange}
+                    complaintTypeOptions={complaintTypeOptions}
                   />
                 </div>
               )}
@@ -953,10 +956,10 @@ function CasesDetails() {
                       bordered={false}
                       placeholder="Select source"
                       allowClear
-                      options={ISSUE_SOURCES.map((v) => ({ value: v, label: enumLabel(v) }))}
+                      options={issueSourceOptions}
                     />
                   </div>
-                  {formValues.issueSource === "OTHER" && (
+                  {formValues.issueSource === "OTHR-IS" && (
                     <div className="summary-field-single">
                       <span className="summary-label">Issue Source (Other)</span>
                       <Input
@@ -977,7 +980,7 @@ function CasesDetails() {
                       bordered={false}
                       placeholder="Select origin"
                       allowClear
-                      options={ORIGINS.map((v) => ({ value: v, label: enumLabel(v) }))}
+                      options={originOptions}
                     />
                   </div>
 
@@ -988,7 +991,7 @@ function CasesDetails() {
                       onChange={(v) => handleFieldChange("priority", v)}
                       className="summary-input"
                       bordered={false}
-                      options={PRIORITIES.map((v) => ({ value: v, label: enumLabel(v) }))}
+                      options={priorityOptions}
                     />
                   </div>
 
@@ -1056,17 +1059,23 @@ function CasesDetails() {
                       onChange={(v) => handleFieldChange("issueStatus", v)}
                       className="summary-input"
                       bordered={false}
-                      options={ISSUE_STATUSES.map((v) => ({ value: v, label: enumLabel(v) }))}
+                      options={issueStatusOptions}
                     />
                   </div>
                   {formValues.issueStatus === "OTHER" && (
                     <div className="summary-field-single">
-                      <span className="summary-label">Issue Status (Other)</span>
+                      <span className="summary-label">
+                        Issue Status (Other){" "}
+                        <span style={{ color: "var(--theme-text-muted)", fontSize: 12 }}>
+                          (Max 45 characters)
+                        </span>
+                      </span>
                       <Input
                         value={formValues.issueStatusOther || ""}
                         onChange={(e) => handleFieldChange("issueStatusOther", e.target.value)}
                         className="summary-input"
                         bordered={false}
+                        maxLength={45}
                       />
                     </div>
                   )}

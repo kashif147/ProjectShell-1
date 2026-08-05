@@ -213,7 +213,7 @@ function HeaderDetails({
     "/Complaints": "COMPLAINT",
     "/FitnessToPractice": "FTP",
     "/IndustrialRelations": "IR",
-    "/DataProtection": "DATA_PROTECTION",
+    "/DataProtection": "DP",
   };
   const isIssuesCreateRoute = nav === "/CasesSummary" || Boolean(ISSUE_TYPE_BY_ROUTE[nav]);
   const headerDashboardRange = useMemo(() => {

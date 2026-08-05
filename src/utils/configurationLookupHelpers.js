@@ -363,7 +363,35 @@ export const SYSTEM_CONFIGURATION_CARDS = [
     lookupType: null,
     isSystem: true,
   },
+  {
+    key: "ContactType",
+    lookupTypeId: "system-card-contact-type",
+    label: "Contact Type",
+    icon: <Briefcase size={LOOKUP_CARD_ICON_SIZE} color="#f59e0b" />,
+    lookupType: null,
+    isSystem: true,
+  },
 ];
+
+/**
+ * One dynamic tile per active ContactType (e.g. "Solicitor", "Doctor") - mirrors how
+ * apiCards below generates one tile per LookupType. Clicking a tile opens the Contacts
+ * drawer scoped to that contact type (Configuration.js's openConfigurationCard).
+ */
+export function buildContactTypeCards(contactTypes = []) {
+  return Array.isArray(contactTypes)
+    ? contactTypes
+        .filter((ct) => ct && ct.isactive !== false)
+        .map((ct) => ({
+          key: `ContactType:${ct._id}`,
+          lookupTypeId: `contact-type-${ct._id}`,
+          label: ct.contactType || ct.displayName || "Contact",
+          icon: <User size={LOOKUP_CARD_ICON_SIZE} color="#0ea5e9" />,
+          isContactTypeCard: true,
+          contactType: ct,
+        }))
+    : [];
+}
 
 const SYSTEM_DRAWER_KEYS = new Set(
   SYSTEM_CONFIGURATION_CARDS.map((card) => card.key),
@@ -376,7 +404,8 @@ const sortConfigurationCardsByLabel = (cards) =>
     }),
   );
 
-export function buildConfigurationCards(lookupsTypes = []) {
+export function buildConfigurationCards(lookupsTypes = [], contactTypes = []) {
+  const contactTypeCards = buildContactTypeCards(contactTypes);
   const apiCards = Array.isArray(lookupsTypes)
     ? lookupsTypes
         .map((lookupType, index) => {
@@ -399,6 +428,7 @@ export function buildConfigurationCards(lookupsTypes = []) {
 
   return sortConfigurationCardsByLabel([
     ...apiCards,
+    ...contactTypeCards,
     ...SYSTEM_CONFIGURATION_CARDS,
   ]);
 }

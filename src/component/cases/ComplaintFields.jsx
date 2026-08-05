@@ -4,7 +4,7 @@ import { DeleteOutlined, PlusOutlined } from "@ant-design/icons";
 import MyInput from "../common/MyInput";
 import CustomSelect from "../common/CustomSelect";
 import MyDatePicker1 from "../common/MyDatePicker1";
-import { COMPLAINT_TYPES, SOLICITORS, toOptions } from "./issueOptions";
+import { SOLICITORS, toOptions } from "./issueOptions";
 
 const EMPTY_RESPONDENT = { name: "", email: "", phone: "", relationship: "" };
 
@@ -15,7 +15,7 @@ const EMPTY_RESPONDENT = { name: "", email: "", phone: "", relationship: "" };
  * CreateCasesDrawer.jsx), which owns the full form state. Reused unmodified in both places
  * per the plan - render/edit logic lives here exactly once.
  */
-function ComplaintFields({ values = {}, onChange, disabled = false }) {
+function ComplaintFields({ values = {}, onChange, disabled = false, complaintTypeOptions = [] }) {
   const respondents =
     Array.isArray(values.respondents) && values.respondents.length
       ? values.respondents
@@ -45,6 +45,18 @@ function ComplaintFields({ values = {}, onChange, disabled = false }) {
 
       <Row gutter={16}>
         <Col span={12}>
+          <CustomSelect
+            label="Complaint Type"
+            name="complaintType"
+            value={values.complaintType || ""}
+            onChange={(e) => onChange("complaintType", e.target.value)}
+            options={complaintTypeOptions}
+            placeholder="Select complaint type"
+            disabled={disabled}
+            isIDs
+          />
+        </Col>
+        <Col span={12}>
           {/* Auto-set by the backend ("{contactName} {internalReferenceNumber}") - read-only
               here, never sent back on save. */}
           <MyInput
@@ -54,20 +66,9 @@ function ComplaintFields({ values = {}, onChange, disabled = false }) {
             disabled
           />
         </Col>
-        <Col span={12}>
-          <CustomSelect
-            label="Complaint Type"
-            name="complaintType"
-            value={values.complaintType || ""}
-            onChange={(e) => onChange("complaintType", e.target.value)}
-            options={toOptions(COMPLAINT_TYPES)}
-            placeholder="Select complaint type"
-            disabled={disabled}
-          />
-        </Col>
       </Row>
 
-      {values.complaintType === "MEMBER_ON_SERVICE_PROVIDER" && (
+      {values.complaintType === "MOSP" && (
         <Row gutter={16}>
           <Col span={12}>
             <MyInput

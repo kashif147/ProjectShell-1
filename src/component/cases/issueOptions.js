@@ -22,12 +22,12 @@ export function toOptions(values) {
 }
 
 // ---- Base Issue fields (models/issue.model.js) ----
-export const ISSUE_TYPES = ["COMPLAINT", "FTP", "IR", "DATA_PROTECTION"];
+export const ISSUE_TYPES = ["COMPLAINT", "FTP", "IR", "DP"];
 export const ISSUE_TYPE_LABELS = {
   COMPLAINT: "Complaint",
   FTP: "Fitness to Practice",
   IR: "Industrial Relations",
-  DATA_PROTECTION: "Data Protection",
+  DP: "Data Protection",
 };
 
 export const ISSUE_STATUSES = [
@@ -44,27 +44,9 @@ export const ISSUE_STATUSES = [
   "CLOSED",
 ];
 
-export const ISSUE_SOURCES = [
-  "MEMBER",
-  "PA",
-  "OFFICIAL",
-  "INFORMATION_DEPT",
-  "EXECUTIVE_COUNCIL",
-  "SENIOR_MANAGEMENT",
-  "OTHER",
-];
-
-export const ORIGINS = [
-  "PHONE",
-  "EMAIL",
-  "PORTAL",
-  "IN_PERSON",
-  "REFERRED_BY_EC",
-  "REPRESENTATIVE",
-  "DIRECT_CALL_TO_OFFICIAL",
-  "LETTER",
-  "SOCIAL_MEDIA",
-];
+// Issue Source and Origin are no longer static enums - both are now sourced live from
+// user-service's Lookup system (LookupType codes "ISSUESRC"/"ORIGIN"), see
+// hooks/useIssueLookups.js's useIssueSourceOptions()/useOriginOptions().
 
 export const OWNER_TEAMS = ["COMPLAINTS", "FTP", "IR", "DATA_PROTECTION"];
 
@@ -82,7 +64,8 @@ export const RESOLUTIONS = [
   "CLOSED",
 ];
 
-export const PRIORITIES = ["LOW", "MEDIUM", "HIGH"];
+// Priority is no longer a static enum - sourced live from user-service's Lookup system
+// (LookupType code "PRIORITY"), see hooks/useIssueLookups.js's useIssueDropdownLookups().
 
 // ---- Activity (models/activity.model.js) ----
 export const ACTIVITY_TYPES = [
@@ -99,12 +82,9 @@ export const ACTIVITY_TYPES = [
 ];
 
 // ---- Complaint (models/issue.complaint.model.js) ----
-export const COMPLAINT_TYPES = [
-  "MEMBER_ON_MEMBER",
-  "MEMBER_ON_ORGANISATION",
-  "MEMBER_ON_SERVICE_PROVIDER",
-  "THIRD_PARTY_COMPLAINT",
-];
+// Complaint Type is no longer a static enum - sourced live from user-service's Lookup
+// system (LookupType code "CMPLNTYPE"), see hooks/useIssueLookups.js's
+// useIssueDropdownLookups().
 export const SOLICITORS = ["O_CONNORS", "OTHER"];
 
 // Individual vs Group vs National - backend/issue-service/models/issue.ir.model.js's
@@ -130,7 +110,7 @@ export const ISSUE_TYPE_TO_TEAM = {
   COMPLAINT: "COMPLAINTS",
   FTP: "FTP",
   IR: "IR",
-  DATA_PROTECTION: "DATA_PROTECTION",
+  DP: "DATA_PROTECTION",
 };
 
 // issueType -> the discriminator-only field names accepted by that type's model, used to
@@ -173,7 +153,7 @@ export const TYPE_FIELDS = {
     "outcomeReceivedFromThirdParty",
     "wrcCaseNumber",
   ],
-  DATA_PROTECTION: [
+  DP: [
     "severity",
     "dpStatus",
     "dpIssueType",

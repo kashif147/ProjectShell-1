@@ -57,7 +57,7 @@ const DEFAULT_VIEW_FILTERS = {
   complaints: (row) => row.issueType === "COMPLAINT",
   ftp: (row) => row.issueType === "FTP",
   ir: (row) => row.issueType === "IR",
-  dataprotection: (row) => row.issueType === "DATA_PROTECTION",
+  dataprotection: (row) => row.issueType === "DP",
 };
 
 function applyDefaultViewFilter(rows, defaultView) {
