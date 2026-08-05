@@ -10,14 +10,14 @@ import {
     Avatar,
     Typography,
     Descriptions,
-    Space,
     message
 } from 'antd';
 import {
     SearchOutlined,
     PlusOutlined,
     EditOutlined,
-    CopyOutlined
+    CopyOutlined,
+    WarningOutlined
 } from '@ant-design/icons';
 import MyTable from '../../component/common/MyTable';
 import "../../styles/EventDetails.css";
@@ -26,7 +26,6 @@ import dayjs from 'dayjs';
 
 import CreateAttendeeDrawer from '../../component/event/CreateAttendeeDrawer';
 import CreateEventDrawer from '../../component/event/CreateEventDrawer';
-import EventRegistrationViewDrawer from '../../component/event/EventRegistrationViewDrawer';
 import { fetchEventById, fetchRegistrations, cancelRegistration } from '../../services/eventsApi';
 import { computeEventFormat } from '../../utils/eventFormat';
 import { buildDetailsSearch } from '../../utils/detailsRoute';
@@ -50,6 +49,17 @@ const STATUS_TAG_STYLE = {
     'no-show': { color: '#8c8c8c', bg: '#fafafa', border: '#d9d9d9' },
 };
 
+// Matches Registration.paymentStatus in events-service: pending, authorized,
+// succeeded, failed, waived, manual - same color grouping as the Attendees grid.
+const PAYMENT_STATUS_TAG_STYLE = {
+    pending: { color: '#d48806', bg: '#fffbe6', border: '#ffe58f' },
+    authorized: { color: 'var(--app-brand-accent)', bg: 'var(--app-brand-bg)', border: '#91d5ff' },
+    succeeded: { color: '#389e0d', bg: '#f6ffed', border: '#b7eb8f' },
+    waived: { color: '#389e0d', bg: '#f6ffed', border: '#b7eb8f' },
+    manual: { color: '#389e0d', bg: '#f6ffed', border: '#b7eb8f' },
+    failed: { color: '#cf1322', bg: '#fff1f0', border: '#ffa39e' },
+};
+
 // Mirrors the Status color scheme used on the Event Configuration drawer.
 const EVENT_STATUS_TAG_STYLE = {
     draft: { color: '#ad6800', bg: '#fffbe6', border: '#ffe58f' },
@@ -62,6 +72,21 @@ function formatDateTime(value) {
     return value ? dayjs(value).format('DD/MM/YYYY HH:mm') : null;
 }
 
+function buildAttendeeAddress(snapshot) {
+    if (!snapshot) return '-';
+    return [
+        snapshot.addressLine1,
+        snapshot.addressLine2,
+        snapshot.townCity,
+        snapshot.countyState,
+        snapshot.eircode,
+        snapshot.country,
+    ]
+        .map((part) => (part != null ? String(part).trim() : ''))
+        .filter(Boolean)
+        .join(', ') || '-';
+}
+
 function mapRegistrationToAttendeeRow(reg) {
     const snapshot = reg.attendeeSnapshot || {};
     return {
@@ -69,8 +94,15 @@ function mapRegistrationToAttendeeRow(reg) {
         registrationId: reg._id,
         name: `${snapshot.firstName || ''} ${snapshot.lastName || ''}`.trim() || snapshot.email || '-',
         membershipNo: reg.membershipNumber || '-',
-        category: reg.isMemberAtRegistration ? 'Member' : 'Non-member',
+        email: snapshot.email || '-',
+        mobileNumber: snapshot.phone || '-',
+        fullAddress: buildAttendeeAddress(snapshot),
+        nmbiNo: snapshot.nmbiNumber || '-',
+        workLocation: snapshot.workLocation || '-',
+        grade: snapshot.grade || '-',
         status: reg.status || 'pending',
+        approvalStatus: reg.approvalStatus || 'pending_review',
+        duplicateReviewStatus: reg.duplicateReview?.status || null,
         paymentStatus: reg.paymentStatus || '-',
         amount: reg.amount,
         currency: reg.currency,
@@ -164,71 +196,92 @@ const EventDetails = () => {
             render: (text, record) => (
                 <div className="attendee-info-cell">
                     <Avatar size={40} icon={<span style={{ fontSize: '10px' }}>AV</span>} />
-                    <span className="attendee-name">{text}</span>
+                    {record.profileId ? (
+                        <Link
+                            className="attendee-name"
+                            to={{ pathname: '/Details', search: buildDetailsSearch(record.profileId) }}
+                            style={{ color: 'blue', textDecoration: 'underline', cursor: 'pointer' }}
+                        >
+                            {text}
+                        </Link>
+                    ) : (
+                        <span className="attendee-name">{text}</span>
+                    )}
                 </div>
             )
         },
         {
-            title: 'MEMBERSHIP NO',
-            dataIndex: 'membershipNo',
-            key: 'membershipNo',
-        },
-        {
-            title: 'CATEGORY',
-            dataIndex: 'category',
-            key: 'category',
-            render: (category) => {
-                const isMember = category === 'Member';
-                const style = isMember
-                    ? { color: 'var(--app-brand-accent)', bg: 'var(--app-brand-bg)', border: '#91d5ff' }
-                    : { color: '#595959', bg: '#fafafa', border: '#d9d9d9' };
-                return (
-                    <Tag style={{
-                        color: style.color,
-                        backgroundColor: style.bg,
-                        border: `1px solid ${style.border}`,
-                        borderRadius: '12px',
-                        padding: '0 10px'
-                    }}>
-                        {category}
-                    </Tag>
-                );
-            }
-        },
-        {
-            title: 'STATUS',
+            title: 'REGISTRATION STATUS',
             dataIndex: 'status',
             key: 'status',
             align: 'center',
-            render: (status) => {
+            render: (status, record) => {
                 const style = STATUS_TAG_STYLE[status] || STATUS_TAG_STYLE.pending;
+                const openDrawer = () => {
+                    setSelectedRegistration(record.__registration || record);
+                    setIsRegistrationDrawerVisible(true);
+                };
                 return (
-                    <Tag style={{
-                        color: style.color,
-                        backgroundColor: style.bg,
-                        border: `1px solid ${style.border}`,
-                        borderRadius: '12px',
-                        padding: '0 10px',
-                        textTransform: 'capitalize',
-                    }}>
-                        {status}
-                    </Tag>
+                    <span style={{ display: 'inline-flex', gap: 4, alignItems: 'center' }}>
+                        <Tag
+                            style={{
+                                color: style.color,
+                                backgroundColor: style.bg,
+                                border: `1px solid ${style.border}`,
+                                borderRadius: '12px',
+                                padding: '0 10px',
+                                textTransform: 'capitalize',
+                                cursor: 'pointer',
+                            }}
+                            onClick={openDrawer}
+                        >
+                            {status}
+                        </Tag>
+                        {record.approvalStatus === 'pending_review' && (
+                            record.duplicateReviewStatus === 'POTENTIAL_MATCH' ? (
+                                <Tag
+                                    icon={<WarningOutlined />}
+                                    color="red"
+                                    style={{ borderRadius: '12px', cursor: 'pointer' }}
+                                    onClick={openDrawer}
+                                >
+                                    Possible Duplicate
+                                </Tag>
+                            ) : (
+                                <Tag color="orange" style={{ borderRadius: '12px', cursor: 'pointer' }} onClick={openDrawer}>
+                                    Needs Review
+                                </Tag>
+                            )
+                        )}
+                    </span>
                 );
             }
         },
         {
-            title: 'PAYMENT',
+            title: 'PAYMENT STATUS',
             dataIndex: 'paymentStatus',
             key: 'paymentStatus',
             align: 'center',
-            render: (paymentStatus, record) => (
-                <span style={{ textTransform: 'capitalize' }}>
-                    {paymentStatus}
-                    {record.amount != null
-                        ? ` · ${(record.amount / 100).toFixed(2)} ${(record.currency || 'eur').toUpperCase()}`
-                        : ''}
-                </span>
-            )
+            render: (paymentStatus, record) => {
+                const style = PAYMENT_STATUS_TAG_STYLE[paymentStatus] || PAYMENT_STATUS_TAG_STYLE.pending;
+                return (
+                    <Tag
+                        style={{
+                            color: style.color,
+                            backgroundColor: style.bg,
+                            border: `1px solid ${style.border}`,
+                            borderRadius: '12px',
+                            padding: '0 10px',
+                            textTransform: 'capitalize',
+                        }}
+                    >
+                        {paymentStatus}
+                        {record.amount != null
+                            ? ` · ${(record.amount / 100).toFixed(2)} ${(record.currency || 'eur').toUpperCase()}`
+                            : ''}
+                    </Tag>
+                );
+            }
         },
         {
             title: 'REGISTERED',
@@ -238,30 +291,41 @@ const EventDetails = () => {
             render: (registeredAt) => (registeredAt ? dayjs(registeredAt).format('DD/MM/YYYY') : '-')
         },
         {
-            title: 'ACTIONS',
-            dataIndex: '_actions',
-            key: '_actions',
-            render: (_, record) => (
-                <Space size={8}>
-                    {record.profileId ? (
-                        <Link to={{ pathname: '/Details', search: buildDetailsSearch(record.profileId) }}>
-                            Profile
-                        </Link>
-                    ) : null}
-                    <Button
-                        type="link"
-                        size="small"
-                        style={{ padding: 0 }}
-                        onClick={() => {
-                            setSelectedRegistration(record.__registration || record);
-                            setIsRegistrationDrawerVisible(true);
-                        }}
-                    >
-                        Registration
-                    </Button>
-                </Space>
-            )
-        }
+            title: 'MEMBERSHIP NO',
+            dataIndex: 'membershipNo',
+            key: 'membershipNo',
+        },
+        {
+            title: 'EMAIL',
+            dataIndex: 'email',
+            key: 'email',
+        },
+        {
+            title: 'MOBILE NO',
+            dataIndex: 'mobileNumber',
+            key: 'mobileNumber',
+        },
+        {
+            title: 'FULL ADDRESS',
+            dataIndex: 'fullAddress',
+            key: 'fullAddress',
+            ellipsis: true,
+        },
+        {
+            title: 'NMBI NO',
+            dataIndex: 'nmbiNo',
+            key: 'nmbiNo',
+        },
+        {
+            title: 'WORK LOCATION',
+            dataIndex: 'workLocation',
+            key: 'workLocation',
+        },
+        {
+            title: 'GRADE',
+            dataIndex: 'grade',
+            key: 'grade',
+        },
     ];
 
     const filteredAttendees = attendees.filter(a => {
@@ -509,7 +573,7 @@ const EventDetails = () => {
                     eventId={eventId}
                 />
 
-                <EventRegistrationViewDrawer
+                <CreateAttendeeDrawer
                     open={isRegistrationDrawerVisible}
                     onClose={() => setIsRegistrationDrawerVisible(false)}
                     registration={selectedRegistration}

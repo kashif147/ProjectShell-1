@@ -19,6 +19,12 @@ const STATUS_COLORS = {
 
 const columns = [
   {
+    title: "Event Name",
+    dataIndex: "title",
+    key: "title",
+    render: (title) => title || "-",
+  },
+  {
     title: "Type",
     dataIndex: "registrationType",
     key: "registrationType",

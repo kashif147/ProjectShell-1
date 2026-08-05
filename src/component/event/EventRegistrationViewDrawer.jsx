@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
-import { Drawer, Descriptions, Tag, Table, Spin, Checkbox, Button, message } from "antd";
-import { fetchEventById, approveRegistration } from "../../services/eventsApi";
+import { Drawer, Descriptions, Tag, Table, Spin, Checkbox, Button, Popconfirm, message } from "antd";
+import { fetchEventById, approveRegistration, cancelRegistration } from "../../services/eventsApi";
 import { dispatchProfileInvalidate } from "../../utils/profileRealtimeEvents";
 
 const STATUS_COLORS = {
@@ -57,7 +57,10 @@ const priceBreakdownColumns = [
     title: "Unit Price",
     dataIndex: "unitPrice",
     key: "unitPrice",
-    render: (v) => (v != null ? `€${(v / 100).toFixed(2)}` : "-"),
+    // unitPrice is stored in euros already (pricingResolution.service.js's
+    // resolveLineItemsAmount pushes unitPriceEuros directly) - unlike
+    // registration.amount, which is in cents. Don't divide by 100 here.
+    render: (v) => (v != null ? `€${Number(v).toFixed(2)}` : "-"),
   },
 ];
 
@@ -67,6 +70,7 @@ const EventRegistrationViewDrawer = ({ open, onClose, registration, onApproved }
   const [status, setStatus] = useState(registration?.status);
   const [confirmChecked, setConfirmChecked] = useState(false);
   const [approving, setApproving] = useState(false);
+  const [rejecting, setRejecting] = useState(false);
 
   useEffect(() => {
     if (!open || !registration?.eventId || registration.registrationType !== "event") {
@@ -103,6 +107,22 @@ const EventRegistrationViewDrawer = ({ open, onClose, registration, onApproved }
     }
   };
 
+  const handleReject = async () => {
+    if (!registration?._id) return;
+    setRejecting(true);
+    try {
+      const updated = await cancelRegistration(registration._id);
+      setStatus(updated?.status || "cancelled");
+      message.success("Registration rejected");
+      dispatchProfileInvalidate({ scopes: ["events"], profileId: registration.profileId });
+      onApproved?.(updated);
+    } catch (err) {
+      message.error(err?.response?.data?.error?.message || err?.message || "Failed to reject registration");
+    } finally {
+      setRejecting(false);
+    }
+  };
+
   const attendeeName = [
     registration.attendeeSnapshot?.firstName,
     registration.attendeeSnapshot?.lastName,
@@ -116,9 +136,10 @@ const EventRegistrationViewDrawer = ({ open, onClose, registration, onApproved }
       placement="right"
       open={open}
       onClose={onClose}
-      width={560}
+      width={640}
+      styles={{ body: { padding: "20px 28px" } }}
     >
-      <Descriptions title="Attendee" column={1} size="small" bordered>
+      <Descriptions title="Attendee" column={2} size="small" bordered>
         <Descriptions.Item label="Name">{attendeeName}</Descriptions.Item>
         <Descriptions.Item label="Email">
           {registration.attendeeSnapshot?.email || "-"}
@@ -132,19 +153,19 @@ const EventRegistrationViewDrawer = ({ open, onClose, registration, onApproved }
         <Descriptions.Item label="Grade">
           {registration.attendeeSnapshot?.grade || "-"}
         </Descriptions.Item>
-        <Descriptions.Item label="Address">
+        <Descriptions.Item label="Address" span={2}>
           {buildAttendeeAddress(registration.attendeeSnapshot)}
         </Descriptions.Item>
       </Descriptions>
 
       <Descriptions
         title={registration.registrationType === "course" ? "Course" : "Event"}
-        column={1}
+        column={2}
         size="small"
         bordered
-        style={{ marginTop: 24 }}
+        style={{ marginTop: 16 }}
       >
-        <Descriptions.Item label="Title">
+        <Descriptions.Item label="Title" span={2}>
           {eventLoading ? <Spin size="small" /> : event?.title || "-"}
         </Descriptions.Item>
         {event?.venue ? (
@@ -164,10 +185,10 @@ const EventRegistrationViewDrawer = ({ open, onClose, registration, onApproved }
 
       <Descriptions
         title="Registration"
-        column={1}
+        column={2}
         size="small"
         bordered
-        style={{ marginTop: 24 }}
+        style={{ marginTop: 16 }}
       >
         <Descriptions.Item label="Status">
           <Tag color={STATUS_COLORS[status] || "default"}>
@@ -181,28 +202,45 @@ const EventRegistrationViewDrawer = ({ open, onClose, registration, onApproved }
         <Descriptions.Item label="Registered Via">
           {registration.registeredVia || "-"}
         </Descriptions.Item>
-        <Descriptions.Item label="Registered On">
+        <Descriptions.Item label="Registered On" span={2}>
           {formatDateTime(registration.createdAt)}
         </Descriptions.Item>
       </Descriptions>
 
       {status === "pending" ? (
-        <div style={{ marginTop: 16, display: "flex", alignItems: "center", gap: 12 }}>
+        <div style={{ marginTop: 12, display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
           <Checkbox checked={confirmChecked} onChange={(e) => setConfirmChecked(e.target.checked)}>
             Confirm payment received
           </Checkbox>
-          <Button type="primary" size="small" disabled={!confirmChecked} loading={approving} onClick={handleApprove}>
-            Save
+          <Button
+            type="primary"
+            size="small"
+            disabled={!confirmChecked}
+            loading={approving}
+            onClick={handleApprove}
+          >
+            Approve
           </Button>
+          <Popconfirm
+            title="Reject this registration?"
+            description="The registration will be cancelled and the seat released."
+            okText="Reject"
+            okButtonProps={{ danger: true }}
+            onConfirm={handleReject}
+          >
+            <Button danger size="small" loading={rejecting}>
+              Reject
+            </Button>
+          </Popconfirm>
         </div>
       ) : null}
 
       <Descriptions
         title="Payment"
-        column={1}
+        column={2}
         size="small"
         bordered
-        style={{ marginTop: 24 }}
+        style={{ marginTop: 16 }}
       >
         <Descriptions.Item label="Payment Status">
           <Tag color={PAYMENT_STATUS_COLORS[registration.paymentStatus] || "default"}>
@@ -212,14 +250,14 @@ const EventRegistrationViewDrawer = ({ open, onClose, registration, onApproved }
         <Descriptions.Item label="Payment Method">
           {registration.paymentMethod || "-"}
         </Descriptions.Item>
-        <Descriptions.Item label="Amount">
+        <Descriptions.Item label="Amount" span={2}>
           {formatAmount(registration.amount, registration.currency)}
         </Descriptions.Item>
       </Descriptions>
 
       {Array.isArray(registration.priceBreakdown) && registration.priceBreakdown.length > 0 ? (
-        <div style={{ marginTop: 24 }}>
-          <h4>Price Breakdown</h4>
+        <div style={{ marginTop: 16 }}>
+          <h4 style={{ marginBottom: 8 }}>Price Breakdown</h4>
           <Table
             columns={priceBreakdownColumns}
             dataSource={registration.priceBreakdown.map((row, i) => ({ ...row, key: i }))}

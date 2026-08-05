@@ -1,9 +1,9 @@
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { useLocation } from "react-router-dom";
 import { useSelector } from "react-redux";
 import { Spin } from "antd";
 import TableComponent from "../../component/common/TableComponent";
-import EventRegistrationViewDrawer from "../../component/event/EventRegistrationViewDrawer";
+import CreateAttendeeDrawer from "../../component/event/CreateAttendeeDrawer";
 import { fetchRegistrations } from "../../services/eventsApi";
 import { useFilters } from "../../context/FilterContext";
 import { useTableColumns } from "../../context/TableColumnsContext ";
@@ -45,12 +45,19 @@ function AttendeesSummary() {
   const { templatesFetching: templatesLoading } = useSelector(
     (state) => state.templateFiltersColumnApi,
   );
-  const [attendees, setAttendees] = useState([]);
   const [attendeesSourceRows, setAttendeesSourceRows] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedRegistration, setSelectedRegistration] = useState(null);
   const [registrationDrawerOpen, setRegistrationDrawerOpen] = useState(false);
 
+  // Network fetch only - deliberately has no dependency on filtersState/
+  // attendeesColumns/eventTypeOptions/eventCategoryOptions. Those all feed
+  // client-side derivations below instead of retriggering a fetch, so a
+  // reference change in any of them (e.g. eventTypeOptions getting rebuilt by
+  // an unrelated getAllLookups() re-dispatch elsewhere in the app - see
+  // LookupsSlice.js, which always returns new arrays) can never cascade into
+  // a refetch loop the way it did when eventTypeOptions/eventCategoryOptions
+  // were previously included here directly.
   const loadAttendees = useCallback(() => {
     let cancelled = false;
     setLoading(true);
@@ -58,49 +65,39 @@ function AttendeesSummary() {
       .then((data) => {
         if (cancelled) return;
         const rows = Array.isArray(data) ? data : [];
-        const mapped = rows.map((reg) => {
-          const eventType = (eventTypeOptions || []).find(
-            (opt) => String(opt.value) === String(reg.eventTypeId),
-          );
-          const eventCategory = (eventCategoryOptions || []).find(
-            (opt) => String(opt.value) === String(reg.eventCategoryLookupId),
-          );
-          return {
-            key: reg._id,
-            attendeeId: reg._id,
-            attendeeName: `${reg.attendeeSnapshot?.firstName || ""} ${reg.attendeeSnapshot?.lastName || ""}`.trim(),
-            email: reg.attendeeSnapshot?.email,
-            mobileNumber: reg.attendeeSnapshot?.phone,
-            fullAddress: buildAttendeeAddress(reg.attendeeSnapshot),
-            workLocation: reg.attendeeSnapshot?.workLocation,
-            grade: reg.attendeeSnapshot?.grade,
-            attendeeType: reg.isMemberAtRegistration ? "Member" : "Non-member",
-            profileId: reg.profileId,
-            __registration: reg,
-            eventId: reg.eventId || reg.courseId,
-            eventName: reg.eventTitle || "-",
-            eventType: eventType?.label || "-",
-            eventCategory:
-              eventCategory?.label ||
-              reg.eventCategoryLookupCode ||
-              reg.eventCategoryCode ||
-              "-",
-            eventDate: reg.eventStartDate,
-            registrationType: reg.registrationType,
-            totalFee: reg.amount,
-            currency: reg.currency,
-            paymentStatus: reg.paymentStatus,
-            paymentMethod: reg.paymentMethod,
-            status: reg.status,
-          };
-        });
+        const mapped = rows.map((reg) => ({
+          key: reg._id,
+          attendeeId: reg._id,
+          attendeeName: `${reg.attendeeSnapshot?.firstName || ""} ${reg.attendeeSnapshot?.lastName || ""}`.trim(),
+          email: reg.attendeeSnapshot?.email,
+          mobileNumber: reg.attendeeSnapshot?.phone,
+          fullAddress: buildAttendeeAddress(reg.attendeeSnapshot),
+          workLocation: reg.attendeeSnapshot?.workLocation,
+          grade: reg.attendeeSnapshot?.grade,
+          membershipNo: reg.membershipNumber || "-",
+          profileId: reg.profileId,
+          __registration: reg,
+          eventId: reg.eventId || reg.courseId,
+          eventName: reg.eventTitle || "-",
+          eventTypeId: reg.eventTypeId,
+          eventCategoryLookupId: reg.eventCategoryLookupId,
+          eventCategoryLookupCode: reg.eventCategoryLookupCode,
+          eventCategoryCode: reg.eventCategoryCode,
+          eventDate: reg.eventStartDate,
+          registrationType: reg.registrationType,
+          totalFee: reg.amount,
+          currency: reg.currency,
+          paymentStatus: reg.paymentStatus,
+          paymentMethod: reg.paymentMethod,
+          status: reg.status,
+          approvalStatus: reg.approvalStatus || "pending_review",
+          duplicateReviewStatus: reg.duplicateReview?.status || null,
+        }));
         setAttendeesSourceRows(mapped);
-        setAttendees(applyClientSideRowFilters(mapped, filtersState, attendeesColumns));
       })
       .catch(() => {
         if (!cancelled) {
           setAttendeesSourceRows([]);
-          setAttendees([]);
         }
       })
       .finally(() => {
@@ -109,11 +106,38 @@ function AttendeesSummary() {
     return () => {
       cancelled = true;
     };
-    // eventTypeOptions/eventCategoryOptions intentionally excluded - app-wide
-    // state loaded once at startup, not something a fresh list needs to
-    // re-fetch for.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [filtersState, attendeesColumns]);
+  }, []);
+
+  // Resolves eventTypeId/eventCategoryLookupId (raw lookup ids from the
+  // fetch above) into display labels purely client-side, so Event
+  // Type/Event Category populate reactively once app-wide lookups finish
+  // loading without needing another network round-trip.
+  const resolvedSourceRows = useMemo(
+    () =>
+      attendeesSourceRows.map((row) => {
+        const eventType = (eventTypeOptions || []).find(
+          (opt) => String(opt.value) === String(row.eventTypeId),
+        );
+        const eventCategory = (eventCategoryOptions || []).find(
+          (opt) => String(opt.value) === String(row.eventCategoryLookupId),
+        );
+        return {
+          ...row,
+          eventType: eventType?.label || "-",
+          eventCategory:
+            eventCategory?.label ||
+            row.eventCategoryLookupCode ||
+            row.eventCategoryCode ||
+            "-",
+        };
+      }),
+    [attendeesSourceRows, eventTypeOptions, eventCategoryOptions],
+  );
+
+  const attendees = useMemo(
+    () => applyClientSideRowFilters(resolvedSourceRows, filtersState, attendeesColumns),
+    [resolvedSourceRows, filtersState, attendeesColumns],
+  );
 
   // Re-fetch every time this route is navigated to, and once template
   // init completes - matches the pattern used by EventsSummary.
@@ -156,7 +180,7 @@ function AttendeesSummary() {
     return () => clearAttendeesRowActions();
   }, []);
 
-  useRegisterGridFilterRows("Attendees", attendeesSourceRows, attendeesColumns);
+  useRegisterGridFilterRows("Attendees", resolvedSourceRows, attendeesColumns);
 
   if (!isInitialized || templatesLoading) {
     return (
@@ -185,7 +209,7 @@ function AttendeesSummary() {
         selectionType="checkbox"
         enableRowSelection={true}
       />
-      <EventRegistrationViewDrawer
+      <CreateAttendeeDrawer
         open={registrationDrawerOpen}
         onClose={() => setRegistrationDrawerOpen(false)}
         registration={selectedRegistration}
