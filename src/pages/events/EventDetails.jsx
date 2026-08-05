@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { useLocation, useNavigate, Link } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import {
@@ -10,6 +10,7 @@ import {
     Avatar,
     Typography,
     Descriptions,
+    Popover,
     message
 } from 'antd';
 import {
@@ -19,6 +20,8 @@ import {
     CopyOutlined,
     WarningOutlined
 } from '@ant-design/icons';
+import { FaAngleLeft } from 'react-icons/fa6';
+import { FaAngleRight } from 'react-icons/fa';
 import MyTable from '../../component/common/MyTable';
 import "../../styles/EventDetails.css";
 import "../../styles/CreateEventDrawer.css";
@@ -26,9 +29,11 @@ import dayjs from 'dayjs';
 
 import CreateAttendeeDrawer from '../../component/event/CreateAttendeeDrawer';
 import CreateEventDrawer from '../../component/event/CreateEventDrawer';
-import { fetchEventById, fetchRegistrations, cancelRegistration } from '../../services/eventsApi';
-import { computeEventFormat } from '../../utils/eventFormat';
-import { buildDetailsSearch } from '../../utils/detailsRoute';
+import { fetchEventById, fetchEvents, fetchRegistrations, cancelRegistration } from '../../services/eventsApi';
+import { computeEventFormat, resolveFallbackImageFormat } from '../../utils/eventFormat';
+import { resolveEventCategoryLabel } from '../../utils/eventCategory';
+import { buildDetailsSearch, buildEventDetailsSearch } from '../../utils/detailsRoute';
+import { buildEventFallbackImageDataUri } from '../../utils/eventFallbackImageDataUri';
 
 const { Text, Title } = Typography;
 
@@ -115,7 +120,7 @@ function mapRegistrationToAttendeeRow(reg) {
 const EventDetails = () => {
     const location = useLocation();
     const navigate = useNavigate();
-    const eventId = location.state?.eventId;
+    const eventId = new URLSearchParams(location.search).get('eventId');
     const { eventTypeOptions, eventCategoryOptions, venueOptions } = useSelector((state) => state.lookups);
 
     const [selectedRowKeys, setSelectedRowKeys] = useState([]);
@@ -125,6 +130,24 @@ const EventDetails = () => {
 
     const [event, setEvent] = useState(null);
     const [loadingEvent, setLoadingEvent] = useState(false);
+
+    // Description is capped at a fixed height with internal scroll so a long
+    // description can't push the always-visible Attendees section further down
+    // the page - "See more" lifts the cap when the content actually overflows it.
+    const descriptionContentRef = useRef(null);
+    const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false);
+    const [descriptionOverflows, setDescriptionOverflows] = useState(false);
+
+    useEffect(() => {
+        setIsDescriptionExpanded(false);
+    }, [eventId]);
+
+    useEffect(() => {
+        if (isDescriptionExpanded) return;
+        const el = descriptionContentRef.current;
+        if (!el) return;
+        setDescriptionOverflows(el.scrollHeight > el.clientHeight + 1);
+    }, [event?.description, isDescriptionExpanded]);
 
     const [attendees, setAttendees] = useState([]);
     const [loadingAttendees, setLoadingAttendees] = useState(false);
@@ -144,10 +167,13 @@ const EventDetails = () => {
                 // Self-heal the breadcrumb's record label with the real title,
                 // in case the referring page didn't already pass recordName.
                 if (data?.title && location.state?.recordName !== data.title) {
-                    navigate(location.pathname, {
-                        state: { ...location.state, recordName: data.title },
-                        replace: true,
-                    });
+                    navigate(
+                        { pathname: location.pathname, search: location.search },
+                        {
+                            state: { ...location.state, recordName: data.title },
+                            replace: true,
+                        }
+                    );
                 }
             })
             .catch(() => setEvent(null))
@@ -171,6 +197,40 @@ const EventDetails = () => {
         loadEvent();
         loadAttendees();
     }, [loadEvent, loadAttendees]);
+
+    // Fetched independently of the grid so prev/next works regardless of how the user
+    // arrived here (direct link, refresh, or from the Events grid) - the app-wide shared
+    // grid context is touched by unrelated screens and can't be relied on to still hold
+    // the events list by the time this page renders.
+    const [eventNavList, setEventNavList] = useState([]);
+    useEffect(() => {
+        let cancelled = false;
+        fetchEvents()
+            .then((data) => {
+                if (!cancelled) setEventNavList(Array.isArray(data) ? data.filter((ev) => ev?._id) : []);
+            })
+            .catch(() => {
+                if (!cancelled) setEventNavList([]);
+            });
+        return () => {
+            cancelled = true;
+        };
+    }, []);
+    const navigationIndex = useMemo(
+        () => eventNavList.findIndex((ev) => String(ev._id) === String(eventId)),
+        [eventNavList, eventId]
+    );
+    const goToEventIndex = useCallback((index) => {
+        const target = eventNavList[index];
+        if (!target) return;
+        navigate(
+            { pathname: location.pathname, search: buildEventDetailsSearch(target._id) },
+            {
+                state: { recordName: target.title },
+                replace: true,
+            }
+        );
+    }, [eventNavList, location.pathname, navigate]);
 
     const handleSelectionChange = (keys) => {
         setSelectedRowKeys(keys);
@@ -339,17 +399,7 @@ const EventDetails = () => {
     const eventTypeLabel = (eventTypeOptions || []).find(
         (opt) => String(opt.value) === String(event?.eventTypeId),
     )?.label || '-';
-    // Category moved from a ProductType-code snapshot (eventCategoryCode) to a
-    // decoupled Lookup reference (eventCategoryLookupId/Code) - resolve via the
-    // lookup first (same as the Edit form) and fall back to the legacy fields
-    // for events created before that migration.
-    const eventCategoryLabel =
-        (eventCategoryOptions || []).find(
-            (opt) => String(opt.value) === String(event?.eventCategoryLookupId),
-        )?.label ||
-        event?.eventCategoryLookupCode ||
-        event?.eventCategoryCode ||
-        '-';
+    const eventCategoryLabel = resolveEventCategoryLabel(event, eventCategoryOptions);
     // Looked up live from the Venue lookup (rather than trusting the
     // point-in-time `event.venue` snapshot string) so the address always
     // reflects the venue's current record.
@@ -370,6 +420,23 @@ const EventDetails = () => {
     const eventStatusStyle = EVENT_STATUS_TAG_STYLE[eventStatusKey] || EVENT_STATUS_TAG_STYLE.draft;
     const totalCosts = (event?.costs || []).reduce((sum, c) => sum + (Number(c.amount) || 0), 0);
 
+    // Older events saved before the image-upload feature shipped can have a
+    // null imageUrl - build the same placeholder CreateEventDrawer generates
+    // so the preview is never blank.
+    const fallbackImageDataUri = useMemo(() => {
+        if (!event) return null;
+        const format = resolveFallbackImageFormat(computeEventFormat(event), eventTypeLabel);
+        return buildEventFallbackImageDataUri({
+            title: event.title,
+            date: event.startDate,
+            venue: selectedVenue?.label || event.venue,
+            format,
+            cpdHours: event.cpdCredits,
+            accreditationBody: event.accreditationBody,
+        });
+    }, [event, eventTypeLabel, selectedVenue]);
+    const displayImageUrl = event?.imageUrl || fallbackImageDataUri;
+
     return (
         <div className="event-details-page hide-scroll-webkit">
             <div
@@ -379,6 +446,24 @@ const EventDetails = () => {
                 <div className="event-details-container" style={{ padding: '0 34px' }}>
                     <div className="event-details-title-row" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0 0 16px' }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 12, minWidth: 0 }}>
+                            {displayImageUrl && (
+                                <Popover
+                                    content={
+                                        <img
+                                            src={displayImageUrl}
+                                            alt={event?.title || 'Event'}
+                                            style={{ display: 'block', width: 320, maxWidth: '60vw', borderRadius: 6 }}
+                                        />
+                                    }
+                                    placement="bottomLeft"
+                                >
+                                    <img
+                                        src={displayImageUrl}
+                                        alt={event?.title || 'Event'}
+                                        className="event-details-thumbnail"
+                                    />
+                                </Popover>
+                            )}
                             <Title level={4} style={{ margin: 0 }} ellipsis={{ tooltip: event?.title }}>
                                 {event?.title || (loadingEvent ? 'Loading…' : 'Event')}
                             </Title>
@@ -395,7 +480,7 @@ const EventDetails = () => {
                                 {event?.isActive !== false ? 'Active' : 'Inactive'}
                             </Tag>
                         </div>
-                        <div style={{ display: 'flex', gap: 8 }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                             <Button
                                 className="butn"
                                 icon={<CopyOutlined />}
@@ -409,6 +494,26 @@ const EventDetails = () => {
                                 onClick={() => setIsEditEventDrawerVisible(true)}
                             >
                                 Edit Event
+                            </Button>
+                            <Button
+                                disabled={!eventNavList.length || navigationIndex < 0 || navigationIndex <= 0}
+                                onClick={() => goToEventIndex(navigationIndex - 1)}
+                                className="me-1 gray-btn butn"
+                            >
+                                <FaAngleLeft className="deatil-header-icon" />
+                            </Button>
+                            <p style={{ fontWeight: 500, fontSize: 14, marginLeft: 4, marginBottom: 0 }}>
+                                {eventNavList.length && navigationIndex >= 0
+                                    ? `${navigationIndex + 1} of ${eventNavList.length}`
+                                    : '—'}
+                            </p>
+                            <Button
+                                disabled={!eventNavList.length || navigationIndex < 0 || navigationIndex >= eventNavList.length - 1}
+                                onClick={() => goToEventIndex(navigationIndex + 1)}
+                                className="me-1 gray-btn butn"
+                                style={{ marginLeft: 8 }}
+                            >
+                                <FaAngleRight className="deatil-header-icon" />
                             </Button>
                         </div>
                     </div>
@@ -442,11 +547,24 @@ const EventDetails = () => {
                                     </Descriptions.Item>
                                 </Descriptions>
 
-                                {/* Description (scrolls internally instead of spilling out) */}
+                                {/* Description: fixed height with internal scroll, expandable via See more */}
                                 <div style={{ marginTop: 16 }}>
-                                    <Text type="secondary" style={{ fontSize: '13px', fontWeight: 500, display: 'block', marginBottom: 8 }}>Description</Text>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+                                        <Text type="secondary" style={{ fontSize: '13px', fontWeight: 500 }}>Description</Text>
+                                        {descriptionOverflows && (
+                                            <Button
+                                                type="link"
+                                                size="small"
+                                                style={{ padding: 0, height: 'auto' }}
+                                                onClick={() => setIsDescriptionExpanded((prev) => !prev)}
+                                            >
+                                                {isDescriptionExpanded ? 'See less' : 'See more'}
+                                            </Button>
+                                        )}
+                                    </div>
                                     <div
-                                        className="event-description-display"
+                                        ref={descriptionContentRef}
+                                        className={`event-description-display ${isDescriptionExpanded ? 'is-expanded' : 'is-collapsed'}`}
                                         dangerouslySetInnerHTML={{ __html: event?.description || '<p>-</p>' }}
                                     />
                                 </div>

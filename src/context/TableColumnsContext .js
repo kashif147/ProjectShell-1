@@ -28,7 +28,7 @@ import {
   getSubscriptionById,
   profileDetailActiveSubscriptionArgs,
 } from "../features/subscription/profileSubscriptionSlice";
-import { buildDetailsSearch } from "../utils/detailsRoute";
+import { buildDetailsSearch, buildEventDetailsSearch } from "../utils/detailsRoute";
 import reconciliationWorkspace from "../utils/reconciliationWorkspace";
 import { financeLedgerActionIcon } from "../component/finanace/financeActionIcons";
 import { callJournalAdjustmentApprove } from "../utils/journalAdjustmentsWorkspace";
@@ -3391,8 +3391,8 @@ const staticColumns = {
         if (!eventId) return name || "-";
         return (
           <Link
-            to="/EventDetails"
-            state={{ eventId, recordName: name }}
+            to={{ pathname: "/EventDetails", search: buildEventDetailsSearch(eventId) }}
+            state={{ recordName: name }}
             onClick={(e) => e.stopPropagation()}
             style={{
               color: "blue",

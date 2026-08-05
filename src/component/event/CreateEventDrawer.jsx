@@ -37,6 +37,8 @@ import {
   deleteEventSession,
   uploadEventImage,
 } from "../../services/eventsApi";
+import { computeEventFormat, resolveFallbackImageFormat } from "../../utils/eventFormat";
+import { buildEventFallbackImageDataUri } from "../../utils/eventFallbackImageDataUri";
 
 const DRAFT_STATUS_OPTIONS = [
   { label: "Draft", value: "Draft" },
@@ -184,17 +186,9 @@ const CreateEventDrawer = ({ open, onClose, eventId, onDeleted, cloneFromEventId
   const [status, setStatus] = useState("Draft");
   const [initialStatus, setInitialStatus] = useState("Draft");
   const [isActive, setIsActive] = useState(true);
-  // eventCategoryProductTypeId is the real user-service ProductType _id the
-  // admin picked (the authoritative reference); eventCategoryCode is that
-  // ProductType's own `code`. Legacy pair, kept alongside the new
-  // Lookup-based pair below during migration so the old backend path (GL
-  // mapping via a synced Product record) keeps working until it's retired.
-  const [eventCategoryProductTypeId, setEventCategoryProductTypeId] = useState("");
-  const [eventCategoryCode, setEventCategoryCode] = useState("");
-  // Decoupled Event Category: a user-service Lookup under LookupType "Event
-  // Category" (CPD | EVENT), sourced from Redux (state.lookups.eventCategoryOptions)
-  // rather than a live ProductType fetch. This is the target-state pair used
-  // for the Event Type cascading filter and for account-service's GL mapping.
+  // Event Category: a user-service Lookup under LookupType "Event Category"
+  // (CPD | EVENT), sourced from Redux (state.lookups.eventCategoryOptions).
+  // Used for the Event Type cascading filter and account-service's GL mapping.
   const [eventCategoryLookupId, setEventCategoryLookupId] = useState("");
   const [eventCategoryLookupCode, setEventCategoryLookupCode] = useState("");
   const [memberPrice, setMemberPrice] = useState("");
@@ -260,6 +254,44 @@ const CreateEventDrawer = ({ open, onClose, eventId, onDeleted, cloneFromEventId
     );
   }, [selectedVenue]);
 
+  // Fallback-image format key, kept in sync with the same isVirtual signals
+  // the save payload uses below (event-level allowVirtualHosting for a
+  // single day, per-day isOnline for a multi-day schedule) so the preview
+  // matches what computeEventFormat() would derive from the saved event.
+  const eventTypeLabel = useMemo(
+    () => eventTypeOptions.find((opt) => String(opt.value) === String(eventType))?.label || "",
+    [eventTypeOptions, eventType],
+  );
+  const computedEventFormat = useMemo(
+    () =>
+      computeEventFormat({
+        isVirtual: allowVirtualHosting,
+        sessions: bookingOnMultipleDays ? scheduleData.map((d) => ({ isVirtual: !!d.isOnline })) : [],
+      }),
+    [allowVirtualHosting, bookingOnMultipleDays, scheduleData],
+  );
+  const previewImageFormat = useMemo(
+    () => resolveFallbackImageFormat(computedEventFormat, eventTypeLabel),
+    [computedEventFormat, eventTypeLabel],
+  );
+  const fallbackImageDataUri = useMemo(
+    () =>
+      buildEventFallbackImageDataUri({
+        title: eventName,
+        date: eventDate ? eventDate.toISOString() : null,
+        venue: venueName,
+        format: previewImageFormat,
+        // Independent of the badge label above - an Event Type match
+        // (Course/Webinar/Conference) narrows previewImageFormat away from
+        // "in-person"/"hybrid" even when the event genuinely is, which used
+        // to silently hide the venue line on those cards.
+        deliveryFormat: computedEventFormat,
+        cpdHours: cpdCredits || null,
+        accreditationBody: accreditationBody || null,
+      }),
+    [eventName, eventDate, venueName, previewImageFormat, computedEventFormat, cpdCredits, accreditationBody],
+  );
+
   // Event Type options filtered to the selected Event Category, via each
   // option's eventCategoryLookupId (that Event Type lookup's own
   // Parentlookupid, retained in LookupsSlice.js). Show every Event Type
@@ -292,8 +324,6 @@ const CreateEventDrawer = ({ open, onClose, eventId, onDeleted, cloneFromEventId
         setStatus(ev.status || "Draft");
         setInitialStatus(ev.status || "Draft");
         setIsActive(ev.isActive !== false);
-        setEventCategoryProductTypeId(ev.eventCategoryProductTypeId || "");
-        setEventCategoryCode(ev.eventCategoryCode || "");
         setEventCategoryLookupId(ev.eventCategoryLookupId || "");
         setEventCategoryLookupCode(ev.eventCategoryLookupCode || "");
         setEventType(ev.eventTypeId || "");
@@ -386,8 +416,6 @@ const CreateEventDrawer = ({ open, onClose, eventId, onDeleted, cloneFromEventId
         setStatus("Draft");
         setInitialStatus("Draft");
         setIsActive(true);
-        setEventCategoryProductTypeId(ev.eventCategoryProductTypeId || "");
-        setEventCategoryCode(ev.eventCategoryCode || "");
         setEventCategoryLookupId(ev.eventCategoryLookupId || "");
         setEventCategoryLookupCode(ev.eventCategoryLookupCode || "");
         setEventType(ev.eventTypeId || "");
@@ -819,14 +847,15 @@ const CreateEventDrawer = ({ open, onClose, eventId, onDeleted, cloneFromEventId
           ? `${venueName}${venueAddressDisplay ? `, ${venueAddressDisplay}` : ""}`
           : undefined,
         isVirtual: allowVirtualHosting,
-        imageUrl: imageUrl || null,
+        // No manual upload - persist the generated fallback rather than
+        // null, so any consumer reading Event.imageUrl (portal, e-mail
+        // templates, this drawer's own preview above) gets a real image.
+        imageUrl: imageUrl || fallbackImageDataUri,
         startDate,
         endDate,
         capacity: seatLimit ? Number(seatLimit) : undefined,
         status,
         isActive,
-        eventCategoryProductTypeId: eventCategoryProductTypeId || undefined,
-        eventCategoryCode: eventCategoryCode || undefined,
         eventCategoryLookupId: eventCategoryLookupId || undefined,
         eventCategoryLookupCode: eventCategoryLookupCode || undefined,
         eventTypeId: eventType || undefined,
@@ -847,11 +876,15 @@ const CreateEventDrawer = ({ open, onClose, eventId, onDeleted, cloneFromEventId
         ? await updateEventApi(eventId, payload)
         : await createEvent(payload);
 
-      // Persist the multi-day schedule as sessions - create/update/delete to
-      // match scheduleData. A day with multiple time-slots (added via "Add
-      // session") becomes one EventSession record per slot, all sharing the
-      // day's date.
-      if (bookingOnMultipleDays && event?._id) {
+      // Persist the schedule as sessions - create/update/delete to match
+      // scheduleData - for every event, single-day included (a single-day
+      // event still has exactly one EventSession, day 1). A day with
+      // multiple time-slots (added via "Add session") becomes one
+      // EventSession record per slot, all sharing the day's date. This is
+      // what computeEventFormat()/deriveEventFormat() read to show Online/
+      // In-Person/Hybrid - without a persisted session, a single-day event
+      // had no way to report its own delivery mode.
+      if (event?._id) {
         for (const day of scheduleData) {
           if (!day.date) continue;
           const daySessions = day.sessions || [];
@@ -1399,15 +1432,9 @@ const CreateEventDrawer = ({ open, onClose, eventId, onDeleted, cloneFromEventId
             <Card className="event-sidebar-card">
               <div className="sidebar-card-icon">🖼️</div>
               <h5 className="sidebar-card-title">Event Image</h5>
-              {imageUrl ? (
-                <div className="event-image-preview">
-                  <img src={imageUrl} alt="Event" />
-                </div>
-              ) : (
-                <p className="text-sm text-slate-500">
-                  No image uploaded yet.
-                </p>
-              )}
+              <div className="event-image-preview">
+                <img src={imageUrl || fallbackImageDataUri} alt="Event" />
+              </div>
               <div className="event-image-actions">
                 <ImgCrop rotationSlider aspect={16 / 9} quality={0.9}>
                   <Upload

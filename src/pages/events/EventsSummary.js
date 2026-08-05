@@ -15,6 +15,7 @@ import { useFilters } from "../../context/FilterContext";
 import { useTableColumns } from "../../context/TableColumnsContext ";
 import { applyClientSideRowFilters } from "../../utils/filterUtils";
 import { useRegisterGridFilterRows } from "../../hooks/useRegisterGridFilterRows";
+import { resolveEventCategoryLabel } from "../../utils/eventCategory";
 
 function EventsSummary() {
   const location = useLocation();
@@ -45,22 +46,11 @@ function EventsSummary() {
           const eventType = (eventTypeOptions || []).find(
             (opt) => String(opt.value) === String(ev.eventTypeId),
           );
-          // Category moved from a ProductType-code snapshot (eventCategoryCode)
-          // to a decoupled Lookup reference (eventCategoryLookupId/Code) -
-          // resolve via the lookup first (same as the Edit form) and fall back
-          // to the legacy fields for events created before that migration.
-          const eventCategory = (eventCategoryOptions || []).find(
-            (opt) => String(opt.value) === String(ev.eventCategoryLookupId),
-          );
           return {
             key: ev._id,
             eventId: ev._id,
             eventName: ev.title,
-            eventCategory:
-              eventCategory?.label ||
-              ev.eventCategoryLookupCode ||
-              ev.eventCategoryCode ||
-              "-",
+            eventCategory: resolveEventCategoryLabel(ev, eventCategoryOptions),
             eventType: eventType?.label || "-",
             venue: ev.isVirtual ? "Virtual" : ev.venue || "-",
             startDate: ev.startDate,
