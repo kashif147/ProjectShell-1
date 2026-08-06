@@ -258,11 +258,6 @@
   text-decoration: none;
 }
 
-/* Ensure Drawer Title is Black */
-.create-case-drawer .ant-drawer-title {
-  color: #000000 !important;
-}
-
 /* Set drawer body background to grey */
 .create-case-drawer .ant-drawer-body {
   background-color: var(--theme-page-bg) !important;
@@ -381,10 +376,6 @@
 .edit-cases-drawer.ant-drawer .ant-drawer-body {
   background-color: var(--theme-page-bg) !important;
   padding: 24px 24px 24px 32px !important;
-}
-
-.edit-cases-drawer .ant-drawer-title {
-  color: #000000 !important;
 }
 
 .edit-cases-drawer .edit-cases-drawer-content {

@@ -194,6 +194,28 @@ function HeaderDetails({
   const currentURL = `${location?.pathname}`;
   const nav = location?.pathname || "";
   const hideGridToolbar = isNonGridToolbarRoute(nav);
+  // Every route that renders CasesSummary.js (Entry.js) - the plain grid (relabeled
+  // "Open Issues" in the side nav), the Closed view, and the dedicated Complaints/Fitness
+  // to Practice/Industrial Relations/Data Protection side-nav sections - so this header's
+  // icon/title chrome treats them the same way it already treats "/CasesSummary".
+  const isIssuesGridRoute =
+    nav === "/CasesSummary" ||
+    nav === "/CasesSummary/Closed" ||
+    nav === "/Complaints" ||
+    nav === "/FitnessToPractice" ||
+    nav === "/IndustrialRelations" ||
+    nav === "/DataProtection";
+  // The 4 dedicated type-specific side-nav pages (not Open/Closed - creating a
+  // already-closed issue doesn't make sense, and "/CasesSummary" itself covers the
+  // general/Open-Issues case) additionally allow creating an issue with Issue Type
+  // pre-set to match the page, via the "+ Create" button below.
+  const ISSUE_TYPE_BY_ROUTE = {
+    "/Complaints": "COMPLAINT",
+    "/FitnessToPractice": "FTP",
+    "/IndustrialRelations": "IR",
+    "/DataProtection": "DP",
+  };
+  const isIssuesCreateRoute = nav === "/CasesSummary" || Boolean(ISSUE_TYPE_BY_ROUTE[nav]);
   const headerDashboardRange = useMemo(() => {
     const r = searchParams.get("range");
     return HEADER_DASHBOARD_RANGE_KEYS.includes(r) ? r : "YTD";
@@ -292,6 +314,7 @@ function HeaderDetails({
   }, [reconciliationImportText]);
 
   const [casesDrawerOpen, setCasesDrawerOpen] = useState(false);
+  const [casesDrawerDefaultIssueType, setCasesDrawerDefaultIssueType] = useState(null);
   const [eventDrawerOpen, setEventDrawerOpen] = useState(false);
   const [attendeeDrawerOpen, setAttendeeDrawerOpen] = useState(false);
   const [campaignDrawerOpen, setCampaignDrawerOpen] = useState(false);
@@ -1386,7 +1409,7 @@ function HeaderDetails({
           location?.pathname === "/MembershipDashboard" ||
           location?.pathname === "/EventsSummary" ||
           location?.pathname === "/Attendees" ||
-          location?.pathname === "/CasesSummary") && (
+          isIssuesGridRoute) && (
           <FaClipboardList
             style={{
               fontSize: "15px",
@@ -1450,6 +1473,7 @@ function HeaderDetails({
         className={`details-header d-flex w-100 overflow-hidden ${
           location?.pathname == "/Details" ||
           location?.pathname == "/CasesById" ||
+          location?.pathname == "/CasesDetails" ||
           location?.pathname == "/AddNewProfile" ||
           location?.pathname == "/ClaimsById" ||
           location?.pathname == "/AddClaims" ||
@@ -1462,6 +1486,7 @@ function HeaderDetails({
           {/* Action buttons for detail pages */}
           {(location?.pathname == "/Details" ||
             location?.pathname == "/CasesById" ||
+            location?.pathname == "/CasesDetails" ||
             location?.pathname == "/AddNewProfile" ||
             location?.pathname == "/ClaimsById" ||
             location?.pathname == "/AddClaims" ||
@@ -1539,6 +1564,7 @@ function HeaderDetails({
                         "/ClaimsById",
                         "/AddClaims",
                         "/CasesById",
+                        "/CasesDetails",
                         "/AddNewProfile",
                         "/AproveMembersip",
                         "/ChangeCatById",
@@ -1571,7 +1597,7 @@ function HeaderDetails({
             location?.pathname == "/" ||
             location?.pathname == "/Summary" ||
             location?.pathname == "/Members" ||
-            location?.pathname == "/CasesSummary" ||
+            isIssuesGridRoute ||
             location?.pathname == "/Transfers" ||
             location?.pathname == "/CorrespondencesSummary" ||
             location?.pathname == "/RosterSummary" ||
@@ -1770,10 +1796,7 @@ function HeaderDetails({
                           !hasPermission("events:create")) ||
                         (nav === "/ChangCateSumm" &&
                           !hasPermission("changeOfCategory:create")) ||
-                        (nav === "/CasesSummary" &&
-                          (screenName === "All Issues" ||
-                            screenName === "Assigned to me") &&
-                          !hasPermission("queries:create")) ||
+                        (isIssuesCreateRoute && !hasPermission("issues:write")) ||
                         (nav === "/InAppNotifications" &&
                           !hasPermission("notifications:create")) ||
                         nav === "/UserNotifications" ||
@@ -1867,7 +1890,10 @@ function HeaderDetails({
                               setCreditNoteDrawerOpen(true);
                             } else if (nav === "/JournalAdjustments") {
                               setJournalAdjustmentDrawerOpen(true);
-                            } else if (nav === "/CasesSummary") {
+                            } else if (isIssuesCreateRoute) {
+                              setCasesDrawerDefaultIssueType(
+                                ISSUE_TYPE_BY_ROUTE[nav] || null,
+                              );
                               setCasesDrawerOpen(true);
                             } else if (
                               nav === "/EventsDashboard" ||
@@ -2802,7 +2828,11 @@ function HeaderDetails({
       />
       <CreateCasesDrawer
         open={casesDrawerOpen}
-        onClose={() => setCasesDrawerOpen(false)}
+        onClose={() => {
+          setCasesDrawerOpen(false);
+          setCasesDrawerDefaultIssueType(null);
+        }}
+        defaultIssueType={casesDrawerDefaultIssueType}
       />
       <CreateEventDrawer
         open={eventDrawerOpen}

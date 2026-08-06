@@ -103,7 +103,7 @@ const Breadcrumb = () => {
     // Cases Pages
     "/CasesSummary": {
       module: "Issues Management",
-      page: "Issues Summary",
+      page: "Open Issues",
       icon: "📋",
     },
     "/IssuesManagementDashboard": {
@@ -122,6 +122,31 @@ const Breadcrumb = () => {
       page: "Case Details",
       icon: "📋",
       recordIdField: "caseId",
+    },
+    "/CasesSummary/Closed": {
+      module: "Issues Management",
+      page: "Closed Issues",
+      icon: "📋",
+    },
+    "/Complaints": {
+      module: "Issues Management",
+      page: "Complaints",
+      icon: "📋",
+    },
+    "/FitnessToPractice": {
+      module: "Issues Management",
+      page: "Fitness to Practice",
+      icon: "📋",
+    },
+    "/IndustrialRelations": {
+      module: "Issues Management",
+      page: "Industrial Relations",
+      icon: "📋",
+    },
+    "/DataProtection": {
+      module: "Issues Management",
+      page: "Data Protection",
+      icon: "📋",
     },
 
     // Claims Pages

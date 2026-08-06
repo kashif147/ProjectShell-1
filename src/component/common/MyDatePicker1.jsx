@@ -212,7 +212,7 @@ const MyDatePicker1 = ({
     >
       <div className="d-flex justify-content-between align-items-center">
         <label
-          className='my-input-label'
+          className='my-input-label mb-0'
           htmlFor={name}
           style={getLabelStyles()}
         >

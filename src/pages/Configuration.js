@@ -981,7 +981,9 @@ const Configuration = () => {
   const [studyLocationAddressSearchValue, setStudyLocationAddressSearchValue] =
     useState("");
   const [venueAddressSearchValue, setVenueAddressSearchValue] = useState("");
+  const [contactAddressSearchValue, setContactAddressSearchValue] = useState("");
   const addressInputRef = useRef(null);
+  const contactAddressInputRef = useRef(null);
   const studyLocationAddressInputRef = useRef(null);
   const venueAddressInputRef = useRef(null);
   const mapsLibraries = ["places", "maps"];
@@ -1093,6 +1095,62 @@ const Configuration = () => {
       setVenueAddressSearchValue,
       "venueAddress",
     );
+
+  // Contact.contactAddress uses `cityCountyOrPostCode` (unlike worklocationAddress/
+  // venueAddress's `countyCityOrPostCode`) and has no country/fullAddress fields, so it
+  // can't go through handleLocationPlacesChanged's hardcoded key names - same Places
+  // lookup, written into the Contact schema's actual field names instead.
+  const handleContactPlacesChanged = () => {
+    const places = contactAddressInputRef.current?.getPlaces();
+    if (!places || places.length === 0) return;
+
+    const place = places[0];
+    if (place.formatted_address) setContactAddressSearchValue(place.formatted_address);
+
+    const service = new window.google.maps.places.PlacesService(
+      document.createElement("div"),
+    );
+    service.getDetails(
+      {
+        placeId: place.place_id,
+        fields: ["address_components", "formatted_address"],
+      },
+      (details, status) => {
+        if (
+          status !== window.google.maps.places.PlacesServiceStatus.OK ||
+          !details
+        )
+          return;
+
+        const components = details.address_components;
+        const getComp = (type) =>
+          components.find((c) => c.types.includes(type))?.long_name || "";
+
+        const streetNumber = getComp("street_number");
+        const route = getComp("route");
+        const neighborhood =
+          getComp("neighborhood") || getComp("sublocality") || "";
+        const town = getComp("locality") || getComp("postal_town") || "";
+        const county = getComp("administrative_area_level_1") || "";
+        const postalCode = getComp("postal_code");
+
+        setdrawerIpnuts((prev) => ({
+          ...prev,
+          Solicitors: {
+            ...prev.Solicitors,
+            contactAddress: {
+              ...prev.Solicitors?.contactAddress,
+              buildingOrHouse: `${streetNumber} ${route}`.trim(),
+              streetOrRoad: neighborhood,
+              areaOrTown: town,
+              cityCountyOrPostCode: county,
+              eircode: postalCode,
+            },
+          },
+        }));
+      },
+    );
+  };
   // ---- End Work Location Eircode Search ----
   const [membershipModal, setMembershipModal] = useState(false);
   const [isSubscriptionsModal, setIsSubscriptionsModal] = useState(false);
@@ -1296,16 +1354,20 @@ const Configuration = () => {
     setselectLokups((prevState) => ({ ...prevState, ...updatedLookups }));
   }, [data]);
 
+  const [activeContactType, setActiveContactType] = useState(null);
+
   useMemo(() => {
     if (contacts && Array.isArray(contacts)) {
       setdata((prevState) => ({
         ...prevState,
-        Solicitors: contacts.filter(
-          (item) => item?.contactTypeId?.contactType === "Solicitors",
-        ),
+        Solicitors: activeContactType
+          ? contacts.filter(
+              (item) => item?.contactTypeId?._id === activeContactType._id,
+            )
+          : [],
       }));
     }
-  }, [contacts]);
+  }, [contacts, activeContactType]);
 
   const [lookupTypSlct, setlookupTypSlct] = useState([]);
   useEffect(() => {
@@ -1318,8 +1380,8 @@ const Configuration = () => {
   }, [lookupsTypes]);
 
   const configurationCards = useMemo(
-    () => buildConfigurationCards(lookupsTypes),
-    [lookupsTypes],
+    () => buildConfigurationCards(lookupsTypes, contactTypes),
+    [lookupsTypes, contactTypes],
   );
 
   const [activeStandardLookupType, setActiveStandardLookupType] =
@@ -1503,7 +1565,7 @@ const Configuration = () => {
         cityCountyOrPostCode: "",
         eircode: "",
       },
-      contactTypeId: "68e94242aa4ff1e89eefa827",
+      contactTypeId: "",
       isactive: true, // ✅ added based on API field
       isDeleted: false, // keep this if your app uses soft-delete flag
     },
@@ -2380,6 +2442,25 @@ const Configuration = () => {
     }
   };
 
+  // Like resetCounteries("Solicitors", ...) but re-locks Contact Type to the tile that was
+  // clicked, so a second contact can be added for the same type without reopening the drawer.
+  const resetContactsFormForActiveType = (callback) => {
+    resetCounteries("Solicitors", () => {
+      if (activeContactType?._id) {
+        setdrawerIpnuts((prev) => ({
+          ...prev,
+          Solicitors: {
+            ...prev.Solicitors,
+            contactTypeId: activeContactType._id,
+          },
+        }));
+      }
+      if (callback && typeof callback === "function") {
+        callback();
+      }
+    });
+  };
+
   const resetLookupDrawerForNextEntry = (callback) => {
     setdrawerIpnuts((prevState) => {
       const lookuptypeId = prevState?.Lookup?.lookuptypeId ?? "";
@@ -2406,6 +2487,19 @@ const Configuration = () => {
 
   const openConfigurationCard = (card) => {
     if (!card) return;
+    if (card.isContactTypeCard) {
+      setActiveContactType(card.contactType);
+      setdrawerIpnuts((prev) => ({
+        ...prev,
+        Solicitors: {
+          ...(prev.Solicitors || getDrawerInputsTemplate("Solicitors") || {}),
+          contactTypeId: card.contactType?._id || "",
+        },
+      }));
+      setErrors({});
+      setDrawerOpen((prev) => ({ ...prev, Solicitors: true }));
+      return;
+    }
     if (card.isSystem) {
       openCloseDrawerFtn(card.key);
       return;
@@ -5167,6 +5261,7 @@ const Configuration = () => {
                   handleOfficerChange("Districts", branchOfficerOptions, e)
                 }
                 isIDs={true}
+                showSearch
               />
             </Col>
           </Row>
@@ -5372,6 +5467,7 @@ const Configuration = () => {
                     handleOfficerChange("Divisions", regionOfficerOptions, e)
                   }
                   isIDs={true}
+                  showSearch
                 />
               </Col>
             </Row>
@@ -5558,6 +5654,7 @@ const Configuration = () => {
                   handleOfficerChange("Divisions", regionOfficerOptions, e)
                 }
                 isIDs={true}
+                showSearch
               />
             </Col>
           </Row>
@@ -5736,6 +5833,7 @@ const Configuration = () => {
                     handleOfficerChange("Station", stationOfficerOptions, e)
                   }
                   isIDs={true}
+                  showSearch
                 />
               </Col>
             </Row>
@@ -5971,6 +6069,7 @@ const Configuration = () => {
                     )
                   }
                   disabled={isDisable}
+                  showSearch
                 />
               </Col>
             </Row>
@@ -6100,6 +6199,7 @@ const Configuration = () => {
                     )
                   }
                   isIDs={true}
+                  showSearch
                 />
               </Col>
             </Row>
@@ -6348,6 +6448,7 @@ const Configuration = () => {
                     )
                   }
                   disabled={isDisable}
+                  showSearch
                 />
               </Col>
             </Row>
@@ -6622,6 +6723,7 @@ const Configuration = () => {
                     )
                   }
                   disabled={isDisable}
+                  showSearch
                 />
               </Col>
             </Row>
@@ -6752,8 +6854,8 @@ const Configuration = () => {
                     )
                   }
                   disabled={isDisable}
-                  hasError={!!errors?.contactType?.displayName}
-                  errorMessage={errors?.contactType?.displayName}
+                  hasError={!!errors?.ContactType?.displayName}
+                  errorMessage={errors?.ContactType?.displayName}
                 />
               </Col>
 
@@ -7150,6 +7252,7 @@ const Configuration = () => {
                 value={drawerIpnuts?.Lookup?.lookuptypeId || ""}
                 options={lookupsTypesSelect}
                 isSimple={true}
+                showSearch
                 required
                 onChange={(value) => {
                   const nextTypeId = String(value.target.value);
@@ -7480,6 +7583,7 @@ const Configuration = () => {
                   { label: "Date", value: "date" },
                 ]}
                 placeholder="Select data type"
+                showSearch
                 disabled={isDisable}
                 required
                 hasError={!!errors?.Bookmarks?.dataType}
@@ -7550,10 +7654,17 @@ const Configuration = () => {
 
 
       <MyDrawer
-        title="Solicitors"
+        title={
+          activeContactType?.contactType
+            ? `${activeContactType.contactType} Contacts`
+            : "Contacts"
+        }
         open={drawerOpen?.Solicitors}
         isPagination={false}
-        onClose={() => openCloseDrawerFtn("Solicitors")}
+        onClose={() => {
+          openCloseDrawerFtn("Solicitors");
+          setActiveContactType(null);
+        }}
         add={() => {
           if (!validateSolicitors("Solicitors")) return;
           insertDataFtn(
@@ -7562,8 +7673,10 @@ const Configuration = () => {
             "Data inserted successfully",
             "Data did not insert",
             () => {
-              resetCounteries("Solicitors", () => dispatch(getContacts()));
-              dispatch(getContacts());
+              resetContactsFormForActiveType(() => {
+                dispatch(resetContacts());
+                dispatch(getContacts());
+              });
             },
           );
         }}
@@ -7573,7 +7686,11 @@ const Configuration = () => {
           await updateFtn(
             `/contacts/${drawerIpnuts?.Solicitors?.id}`,
             simplified,
-            () => resetCounteries("Solicitors", () => dispatch(getContacts())),
+            () =>
+              resetContactsFormForActiveType(() => {
+                dispatch(resetContacts());
+                dispatch(getContacts());
+              }),
           );
           // dispatch(getAllLookups());
           // IsUpdateFtn("Solicitors", false);
@@ -7594,6 +7711,8 @@ const Configuration = () => {
                   drawrInptChng("Solicitors", "contactTypeId", e.target.value)
                 }
                 disabled={true}
+                showSearch
+                isIDs
                 required
                 hasError={!!errors?.Solicitors?.contactTypeId}
                 errorMessage={errors?.Solicitors?.contactTypeId}
@@ -7606,6 +7725,7 @@ const Configuration = () => {
                 placeholder="Select Title"
                 options={lookupsForSelect?.Titles}
                 disabled={true}
+                showSearch
                 value={drawerIpnuts?.Solicitors?.title}
                 onChange={(e) =>
                   drawrInptChng("Solicitors", "title", e.target.value)
@@ -7669,6 +7789,24 @@ const Configuration = () => {
                 hasError={!!errors?.Solicitors?.contactPhone}
                 errorMessage={errors?.Solicitors?.contactPhone}
               />
+            </Col>
+
+            <Col span={24}>
+              {isMapsLoaded && (
+                <StandaloneSearchBox
+                  onLoad={(ref) => (contactAddressInputRef.current = ref)}
+                  onPlacesChanged={handleContactPlacesChanged}
+                >
+                  <MyInput
+                    label="Search by Address or Eircode"
+                    name="contactAddressSearch"
+                    placeholder="Enter Eircode (e.g., D01X4X0) or address"
+                    disabled={isDisable}
+                    value={contactAddressSearchValue}
+                    onChange={(e) => setContactAddressSearchValue(e.target.value)}
+                  />
+                </StandaloneSearchBox>
+              )}
             </Col>
 
             <Col xs={24} md={12}>

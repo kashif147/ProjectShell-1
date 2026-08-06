@@ -680,14 +680,16 @@
 }
 
 .summary-field-single .ant-input,
-.summary-field-single .ant-picker {
+.summary-field-single .ant-picker,
+.summary-field-single .ant-select {
   flex: 1;
   min-width: 0;
   font-size: 14px;
   font-weight: 500;
 }
 
-.summary-field-single .ant-picker {
+.summary-field-single .ant-picker,
+.summary-field-single .ant-select {
   max-width: 180px;
 }
 

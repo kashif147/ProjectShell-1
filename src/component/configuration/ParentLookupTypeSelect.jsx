@@ -101,6 +101,7 @@ function ParentLookupTypeSelect({
         options={optionsWithCurrent}
         isSimple={true}
         isIDs={true}
+        showSearch
         disabled={disabled}
         required={false}
         hasError={hasError}

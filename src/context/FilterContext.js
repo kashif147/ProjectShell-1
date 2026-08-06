@@ -185,7 +185,27 @@ export const FilterProvider = ({ children }) => {
       visibleFilters: [],
       filtersState: {},
     },
+    // Legacy bucket, now unreferenced - /IssuesManagementDashboard moved to its
+    // own `IssuesDashboard` key below. Left in place rather than deleted (low
+    // risk either way; matches how EventsDashboard's fix left `Events` alone).
     Cases: {
+      visibleFilters: [],
+      filtersState: {},
+    },
+    // Issue Management grid (/CasesSummary). Deliberately its own key, separate
+    // from both the legacy `Cases` bucket and the dashboard's own `IssuesDashboard`
+    // key below - Events made the mistake of reusing one screen key for both a
+    // grid and its dashboard and had to fix it in a follow-up commit (see
+    // TEMPLATE_IMPLEMENTATION_PLAYBOOK.md's 2026-07-21 entries); not repeating
+    // that here.
+    Issues: {
+      visibleFilters: [],
+      filtersState: {},
+    },
+    // Issue Management dashboard (/IssuesManagementDashboard). Separate from
+    // `Issues` (the grid) for the same reason `Issues` is separate from `Cases`
+    // above - see the comment on `Issues` just above.
+    IssuesDashboard: {
       visibleFilters: [],
       filtersState: {},
     },
@@ -672,11 +692,21 @@ export const FilterProvider = ({ children }) => {
       "/members": "Members",
       "/onlinepayment": "OnlinePayment",
       "/communicationbatchdetail": "Communication",
-      "/casessummary": "Cases",
+      // /CasesSummary(/Closed) plus the dedicated Complaints/FTP/IR/Data Protection
+      // side-nav routes (Entry.js) all reuse the same CasesSummary.js component,
+      // pre-filtered client-side by a `defaultView` prop - see that file's own comment for
+      // why. All of them share this one "Issues" FilterContext screen key (same toolbar
+      // filters / Save-View template as the plain "All" view), not a key per route.
+      "/casessummary": "Issues",
+      "/casessummary/closed": "Issues",
+      "/complaints": "Issues",
+      "/fitnesstopractice": "Issues",
+      "/industrialrelations": "Issues",
+      "/dataprotection": "Issues",
       "/eventssummary": "Events",
       "/eventsdashboard": "EventsDashboard",
       "/correspondencedashboard": "Communication",
-      "/issuesmanagementdashboard": "Cases",
+      "/issuesmanagementdashboard": "IssuesDashboard",
       "/attendees": "Attendees",
       "/membershipdashboard": "MembershipDashboard",
       "/membershiplistingreport": "MembershipListingReport",
@@ -838,6 +868,8 @@ export const FilterProvider = ({ children }) => {
         "Stakeholder",
         "Priority",
       ],
+      Issues: ["Priority", "Issue Type", "Case Status", "Owner"],
+      IssuesDashboard: ["Priority", "Issue Type", "Case Status", "Owner"],
       Events: [
         "Event",
         "Event Type",
@@ -995,6 +1027,8 @@ export const FilterProvider = ({ children }) => {
     OnlinePayment: ["Membership Status", "Payment Status"],
     Communication: ["Grade", "Work Location"],
     Cases: ["Incident Date", "Case Type", "Stakeholder", "Priority"],
+    Issues: ["Priority", "Case Status"],
+    IssuesDashboard: ["Priority", "Case Status"],
     Events: [
       "Event",
       "Event Type",
@@ -1142,6 +1176,8 @@ export const FilterProvider = ({ children }) => {
       OnlinePayment: getDefaultVisibleFilters("OnlinePayment"),
       Communication: getDefaultVisibleFilters("Communication"),
       Cases: getDefaultVisibleFilters("Cases"),
+      Issues: getDefaultVisibleFilters("Issues"),
+      IssuesDashboard: getDefaultVisibleFilters("IssuesDashboard"),
       Events: getDefaultVisibleFilters("Events"),
       EventsDashboard: getDefaultVisibleFilters("EventsDashboard"),
       Attendees: getDefaultVisibleFilters("Attendees"),
@@ -1405,6 +1441,42 @@ export const FilterProvider = ({ children }) => {
           selectedValues: [],
         },
         Priority: {
+          operator: "==",
+          selectedValues: [],
+        },
+      },
+      Issues: {
+        Priority: {
+          operator: "==",
+          selectedValues: [],
+        },
+        "Issue Type": {
+          operator: "==",
+          selectedValues: [],
+        },
+        "Case Status": {
+          operator: "==",
+          selectedValues: [],
+        },
+        Owner: {
+          operator: "==",
+          selectedValues: [],
+        },
+      },
+      IssuesDashboard: {
+        Priority: {
+          operator: "==",
+          selectedValues: [],
+        },
+        "Issue Type": {
+          operator: "==",
+          selectedValues: [],
+        },
+        "Case Status": {
+          operator: "==",
+          selectedValues: [],
+        },
+        Owner: {
           operator: "==",
           selectedValues: [],
         },
