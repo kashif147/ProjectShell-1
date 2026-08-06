@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { fetchIssueDropdownLookups, fetchIssueStatuses } from "../services/issuesApi";
+import { fetchIssueDropdownLookups, fetchIssueStatuses, fetchResolutions } from "../services/issuesApi";
 
 function toSelectOptions(lookups) {
   return (lookups || [])
@@ -36,19 +36,24 @@ const EMPTY_DROPDOWN_LOOKUPS = {
   issueSourceOptions: [],
   priorityOptions: [],
   complaintTypeOptions: [],
+  criteriaLetterStatusOptions: [],
+  legislationOptions: [],
+  caseTypeOptions: [],
+  allIssueStatusOptions: [],
 };
 
 /**
- * Issue Type + Origin + Issue Source + Priority + Complaint Type dropdown options, sourced
- * from user-service's Lookup system via issue-service's single GET /issue-dropdown-lookups
- * proxy - replaces the formerly-hardcoded ISSUE_TYPES/ORIGINS/ISSUE_SOURCES/PRIORITIES/
- * COMPLAINT_TYPES constants in issueOptions.js. All 5 are flat from the frontend's
+ * Issue Type + Origin + Issue Source + Priority + Complaint Type + Criteria Letter Status +
+ * Legislation + Case Type dropdown options, sourced from user-service's Lookup system via
+ * issue-service's single GET /issue-dropdown-lookups proxy - replaces the formerly-hardcoded
+ * ISSUE_TYPES/ORIGINS/ISSUE_SOURCES/PRIORITIES/COMPLAINT_TYPES/CRITERIA_LETTER_STATUSES/
+ * LEGISLATIONS/IR_CASE_TYPES constants in issueOptions.js. All 8 are flat from the frontend's
  * perspective (Complaint Type is scoped server-side to the fixed COMPLAINT Issue Type, not
  * caller-supplied), fetched together in one request - calling these as separate endpoints on
  * the same mount was enough concurrent traffic from one client to trip the gateway's
- * per-client rate limit on an ordinary page load. Use useIssueStatusOptions() separately for
- * Issue Status, which genuinely depends on the selected Issue Type and can't be prefetched
- * up front.
+ * per-client rate limit on an ordinary page load. Use useIssueStatusOptions()/
+ * useResolutionOptions() separately for Issue Status/Resolution, which genuinely depend on
+ * the selected Issue Type and can't be prefetched up front.
  */
 export function useIssueDropdownLookups() {
   const [lookups, setLookups] = useState(EMPTY_DROPDOWN_LOOKUPS);
@@ -66,6 +71,10 @@ export function useIssueDropdownLookups() {
           issueSourceOptions: toSelectOptions(data?.issueSources),
           priorityOptions: toSelectOptions(data?.priorities),
           complaintTypeOptions: toSelectOptions(data?.complaintTypes),
+          criteriaLetterStatusOptions: toSelectOptions(data?.criteriaLetterStatuses),
+          legislationOptions: toSelectOptions(data?.legislations),
+          caseTypeOptions: toSelectOptions(data?.caseTypes),
+          allIssueStatusOptions: toSelectOptions(data?.allIssueStatuses),
         });
       })
       .catch(() => {
@@ -104,6 +113,44 @@ export function useIssueStatusOptions(issueTypeCode) {
     fetchIssueStatuses(issueTypeCode)
       .then((data) => {
         if (!cancelled) setOptions(sortStatusOptions(toSelectOptions(data), issueTypeCode));
+      })
+      .catch(() => {
+        if (!cancelled) setOptions([]);
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [issueTypeCode]);
+
+  return { options, loading };
+}
+
+/**
+ * Resolution dropdown options for a given Issue Type code, sourced from user-service's
+ * Lookup system (LookupType code "RESOLUTON", scoped to the Issue Type via the Lookup
+ * hierarchy - currently only seeded under FTP/IR, see
+ * issue-service/services/lookup.service.client.js's fetchResolutions). Type-dependent, same
+ * shape as useIssueStatusOptions() above; returns an empty list (not an error) for an issue
+ * type with no resolutions configured, or when no issue type is selected yet.
+ */
+export function useResolutionOptions(issueTypeCode) {
+  const [options, setOptions] = useState([]);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (!issueTypeCode) {
+      setOptions([]);
+      setLoading(false);
+      return undefined;
+    }
+    let cancelled = false;
+    setLoading(true);
+    fetchResolutions(issueTypeCode)
+      .then((data) => {
+        if (!cancelled) setOptions(toSelectOptions(data));
       })
       .catch(() => {
         if (!cancelled) setOptions([]);

@@ -69,8 +69,16 @@ const CreateCasesDrawer = ({ open, onClose, presetMember, defaultIssueType }) =>
   const [memberLabels, setMemberLabels] = useState({});
   const [saving, setSaving] = useState(false);
 
-  const { issueTypeOptions, originOptions, issueSourceOptions, priorityOptions, complaintTypeOptions } =
-    useIssueDropdownLookups();
+  const {
+    issueTypeOptions,
+    originOptions,
+    issueSourceOptions,
+    priorityOptions,
+    complaintTypeOptions,
+    criteriaLetterStatusOptions,
+    legislationOptions,
+    caseTypeOptions,
+  } = useIssueDropdownLookups();
   const { options: issueStatusOptions } = useIssueStatusOptions(formValues.issueType);
 
   // Default Issue Status to "Active" for whichever Issue Type is currently selected, then
@@ -456,6 +464,9 @@ const CreateCasesDrawer = ({ open, onClose, presetMember, defaultIssueType }) =>
               values={formValues}
               onChange={handleChange}
               complaintTypeOptions={complaintTypeOptions}
+              criteriaLetterStatusOptions={criteriaLetterStatusOptions}
+              legislationOptions={legislationOptions}
+              caseTypeOptions={caseTypeOptions}
             />
           )}
           {renderOwnership()}

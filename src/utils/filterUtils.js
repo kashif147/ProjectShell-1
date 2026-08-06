@@ -296,6 +296,33 @@ export const rowMatchesStringFilter = (
     }
 };
 
+/**
+ * Translates a filter's checked display labels into their raw row codes before running
+ * applyClientSideRowFilters, for filters whose dropdown shows a friendly name (e.g. "Fitness
+ * to Practice") but whose row value is a short lookup code (e.g. "FTP") - the substring match
+ * below would otherwise never match, since the code isn't a substring of the label. `codeMaps`
+ * is `{ [label]: Map(lowercasedDisplayLabel -> code[]) }` (see FilterContext.js's
+ * issueFilterCodeMaps) - one label can map to multiple codes (e.g. Issue Status "Active" is
+ * shared across issue types with different codes). Labels not present in `codeMaps` pass
+ * through unchanged, so this is a no-op for every other screen's filters.
+ */
+export const translateIssueFilterLabelsToCodes = (filtersState = {}, codeMaps = {}) => {
+    const translated = {};
+    for (const [label, config] of Object.entries(filtersState || {})) {
+        const map = codeMaps[label];
+        if (!map || !config?.selectedValues?.length) {
+            translated[label] = config;
+            continue;
+        }
+        const codes = config.selectedValues.flatMap((value) => {
+            const found = map.get(String(value || "").trim().toLowerCase());
+            return found && found.length ? found : [value];
+        });
+        translated[label] = { ...config, selectedValues: codes };
+    }
+    return translated;
+};
+
 export const applyClientSideRowFilters = (
     rows,
     filtersState = {},

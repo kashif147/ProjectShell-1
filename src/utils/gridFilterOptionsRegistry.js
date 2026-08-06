@@ -177,6 +177,13 @@ const CLOSED_ENUM_FILTER_LABELS = new Set([
   "Event Status",
   "Event Category",
   "Registration Status",
+  // Issue Management (Issues/IssuesDashboard) - fixed sets sourced from issue-service's
+  // Lookup-backed dropdowns (see FilterContext.js's issueFilterDisplayLabels). Without this,
+  // grid-derived values would add the raw row codes (e.g. "FTP", "ACTIVE-FTP") alongside the
+  // friendly labels shown here, since they're different strings from their display names.
+  "Issue Type",
+  "Case Status",
+  "Priority",
 ]);
 
 function filterDerivedToStaticAllowlist(derivedOpts = [], staticOpts = []) {

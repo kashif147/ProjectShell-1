@@ -7,7 +7,7 @@ import { fetchIssues } from "../../services/issuesApi";
 import { fetchProfilesBatchLookup } from "../../services/profileSearchApi";
 import { useFilters } from "../../context/FilterContext";
 import { useTableColumns } from "../../context/TableColumnsContext ";
-import { applyClientSideRowFilters } from "../../utils/filterUtils";
+import { applyClientSideRowFilters, translateIssueFilterLabelsToCodes } from "../../utils/filterUtils";
 import { useRegisterGridFilterRows } from "../../hooks/useRegisterGridFilterRows";
 
 // Real, issue-service-backed rewrite of the Issues ("Cases") grid, off
@@ -98,7 +98,7 @@ function mergeProfileEnrichment(rows, profileById) {
 
 function CasesSummary({ defaultView = "all" }) {
   const location = useLocation();
-  const { filtersState } = useFilters();
+  const { filtersState, issueFilterCodeMaps } = useFilters();
   const { columns } = useTableColumns();
   const issuesColumns = columns.Issues || [];
   const { isInitialized } = useSelector((state) => state.applicationWithFilter);
@@ -139,7 +139,8 @@ function CasesSummary({ defaultView = "all" }) {
         }));
         const scoped = applyDefaultViewFilter(mapped, defaultView);
         setIssuesSourceRows(scoped);
-        setIssues(applyClientSideRowFilters(scoped, filtersState, issuesColumns));
+        const codedFiltersState = translateIssueFilterLabelsToCodes(filtersState, issueFilterCodeMaps);
+        setIssues(applyClientSideRowFilters(scoped, codedFiltersState, issuesColumns));
 
         // Best-effort member-name/membership-no/location hydration via profile-service's
         // batch-lookup endpoint (see profileSearchApi.js's fetchProfilesBatchLookup) - fires
@@ -174,7 +175,7 @@ function CasesSummary({ defaultView = "all" }) {
       cancelled = true;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [filtersState, issuesColumns, defaultView]);
+  }, [filtersState, issuesColumns, defaultView, issueFilterCodeMaps]);
 
   // Re-fetch every time this route is navigated to (not just first mount),
   // gated on template init - Save View filters/columns must resolve before

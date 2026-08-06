@@ -4208,6 +4208,17 @@ staticColumns.EventsDashboard = staticColumns.Events;
 // the Issues grid's column/dataIndex shape rather than duplicating column defs.
 staticColumns.IssuesDashboard = staticColumns.Issues;
 
+// Each of the other 5 CasesSummary.js routes (Closed, Complaints, Fitness to Practice,
+// Industrial Relations, Data Protection) now has its own independent Save-View template/
+// FilterContext screen key too (see FilterContext.js / gridTemplateRoutes.js), but they all
+// render the same underlying Issue document shape, so they reuse this same column/dataIndex
+// set rather than duplicating it 5 more times.
+staticColumns.IssuesClosed = staticColumns.Issues;
+staticColumns.Complaints = staticColumns.Issues;
+staticColumns.FitnessToPractice = staticColumns.Issues;
+staticColumns.IndustrialRelations = staticColumns.Issues;
+staticColumns.DataProtection = staticColumns.Issues;
+
 const staticSearchFilters = {
   Reconciliation: [
     {

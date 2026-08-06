@@ -3,12 +3,7 @@ import { Row, Col, Checkbox } from "antd";
 import MyInput from "../common/MyInput";
 import CustomSelect from "../common/CustomSelect";
 import MyDatePicker1 from "../common/MyDatePicker1";
-import {
-  CRITERIA_LETTER_STATUSES,
-  SOLICITORS,
-  LEGISLATIONS,
-  toOptions,
-} from "./issueOptions";
+import { SOLICITORS, toOptions } from "./issueOptions";
 
 /**
  * FTP (Fitness to Practice) discriminator field set -
@@ -16,7 +11,13 @@ import {
  * value)` contract as the other 3 field-set components - see ComplaintFields.jsx's header
  * comment.
  */
-function FtpFields({ values = {}, onChange, disabled = false }) {
+function FtpFields({
+  values = {},
+  onChange,
+  disabled = false,
+  criteriaLetterStatusOptions = [],
+  legislationOptions = [],
+}) {
   return (
     <div className="form-section issue-type-fields-section">
       <h3 className="section-title">Fitness to Practice Details</h3>
@@ -37,8 +38,9 @@ function FtpFields({ values = {}, onChange, disabled = false }) {
             name="criteriaLetterStatus"
             value={values.criteriaLetterStatus || "PENDING"}
             onChange={(e) => onChange("criteriaLetterStatus", e.target.value)}
-            options={toOptions(CRITERIA_LETTER_STATUSES)}
+            options={criteriaLetterStatusOptions}
             disabled={disabled}
+            isIDs
           />
         </Col>
       </Row>
@@ -132,9 +134,10 @@ function FtpFields({ values = {}, onChange, disabled = false }) {
             name="legislation"
             value={values.legislation || ""}
             onChange={(e) => onChange("legislation", e.target.value)}
-            options={toOptions(LEGISLATIONS)}
+            options={legislationOptions}
             placeholder="Select legislation"
             disabled={disabled}
+            isIDs
           />
         </Col>
         <Col span={12}>
