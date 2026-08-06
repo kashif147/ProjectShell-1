@@ -165,7 +165,7 @@ export const RewardsScreen = () => {
             <div>
               <h1 className="h2 font-weight-bold mb-0" style={{ color: '#1e3a8a' }}>INMO</h1>
               <p className="h5 mb-0" style={{ color: '#374151' }}>REWARDS</p> {/* gray-700 */}
-              <p className="small mb-0" style={{ color: '#6b7280' }}>Supported by Cornmarket</p> {/* gray-600 */}
+              <p className="small mb-0" style={{ color: 'var(--theme-text-muted)' }}>Supported by Cornmarket</p> {/* gray-600 */}
             </div>
             <div className="ml-auto">
               <div style={{ backgroundColor: '#1e3a8a' }} className="text-white px-3 py-2 rounded">
@@ -178,7 +178,7 @@ export const RewardsScreen = () => {
             <p className="text-center font-weight-medium mb-2" style={{ color: '#1e3a8a' }}>
               Rewards offers new INMO members exclusive access to MyDoc, an online GP service, for 12 months and other discounts, offers, competitions and more (benefits).
             </p>
-            <p className="small text-center mb-0" style={{ color: '#6b7280' }}>
+            <p className="small text-center mb-0" style={{ color: 'var(--theme-text-muted)' }}>
               Rewards is run by Cornmarket Group Financial Services Ltd. (Cornmarket).
             </p>
           </div>

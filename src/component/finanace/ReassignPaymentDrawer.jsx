@@ -532,7 +532,7 @@ export default function ReassignPaymentDrawer({
               }}
             />
             {memberSearchLoading ? (
-              <p style={{ fontSize: 12, color: "#8c8c8c" }}>Searching…</p>
+              <p style={{ fontSize: 12, color: "var(--theme-text-muted)" }}>Searching…</p>
             ) : null}
             {Array.isArray(memberResults) && memberResults.length > 0 ? (
               <div
@@ -588,7 +588,7 @@ export default function ReassignPaymentDrawer({
               onBlur={handleTotalMoveBlur}
               placeholder={`Max €${formatEuro(selectedTotalEuro)}`}
             />
-            <p style={{ margin: "4px 0 0", fontSize: 12, color: "#8c8c8c" }}>
+            <p style={{ margin: "4px 0 0", fontSize: 12, color: "var(--theme-text-muted)" }}>
               {rowMeta.length} payment(s) selected · €
               {formatEuro(selectedTotalEuro)} combined. Clear to type a new
               amount (shows 0.00 when you leave the field empty).
@@ -621,7 +621,7 @@ export default function ReassignPaymentDrawer({
                     style={{
                       margin: "8px 0 0",
                       fontSize: 12,
-                      color: "#8c8c8c",
+                      color: "var(--theme-text-muted)",
                     }}
                   >
                     Enter an amount above 0.00 to allocate payments.
@@ -631,7 +631,7 @@ export default function ReassignPaymentDrawer({
                     style={{
                       margin: "8px 0 0",
                       fontSize: 12,
-                      color: "#8c8c8c",
+                      color: "var(--theme-text-muted)",
                     }}
                   >
                     {allocation.untouchedCount} payment(s) will not be changed

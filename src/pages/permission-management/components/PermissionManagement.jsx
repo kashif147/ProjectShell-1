@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from "react";
 import {
   Input,
-  Table,
   Space,
   Button,
   Tag,
@@ -23,7 +22,7 @@ import { FaRegCircleQuestion } from "react-icons/fa6";
 import { AiFillDelete } from "react-icons/ai";
 import { FaEdit } from "react-icons/fa";
 import { useDispatch, useSelector } from "react-redux";
-import { getUnifiedPaginationConfig } from "../../../component/common/UnifiedPagination";
+import MyTable from "../../../component/common/MyTable";
 import {
   getAllPermissions,
   deletePermission,
@@ -272,21 +271,21 @@ const PermissionManagement = ({ onClose }) => {
       title: "Permission Name",
       dataIndex: "name",
       key: "name",
-      sorter: (a, b) => a.name.localeCompare(b.name),
+      sorter: { compare: (a, b) => a.name.localeCompare(b.name) },
       render: (text) => <span className="fw-medium">{text}</span>,
     },
     {
       title: "Code",
       dataIndex: "code",
       key: "code",
-      sorter: (a, b) => a.code.localeCompare(b.code),
+      sorter: { compare: (a, b) => a.code.localeCompare(b.code) },
       render: (text) => <code className="permission-string">{text}</code>,
     },
     {
       title: "Category",
       dataIndex: "category",
       key: "category",
-      sorter: (a, b) => a.category.localeCompare(b.category),
+      sorter: { compare: (a, b) => a.category.localeCompare(b.category) },
       render: (category) => (
         <Tag color={getCategoryColor(category)} className="category-tag">
           {category}
@@ -297,14 +296,14 @@ const PermissionManagement = ({ onClose }) => {
       title: "Resource",
       dataIndex: "resource",
       key: "resource",
-      sorter: (a, b) => a.resource.localeCompare(b.resource),
+      sorter: { compare: (a, b) => a.resource.localeCompare(b.resource) },
       render: (text) => <span className="fw-medium">{text}</span>,
     },
     {
       title: "Action",
       dataIndex: "action",
       key: "action",
-      sorter: (a, b) => a.action.localeCompare(b.action),
+      sorter: { compare: (a, b) => a.action.localeCompare(b.action) },
       render: (action) => (
         <Tag color={getActionColor(action)} className="action-tag">
           {action.toUpperCase()}
@@ -315,7 +314,7 @@ const PermissionManagement = ({ onClose }) => {
       title: "Level",
       dataIndex: "level",
       key: "level",
-      sorter: (a, b) => a.level - b.level,
+      sorter: { compare: (a, b) => a.level - b.level },
       render: (level) => (
         <Tag color={level >= 50 ? "red" : level >= 25 ? "orange" : "green"}>
           {level}
@@ -366,7 +365,7 @@ const PermissionManagement = ({ onClose }) => {
           <Tooltip title="Edit Permission">
             <FaEdit
               size={16}
-              style={{ cursor: "pointer", color: "#1890ff" }}
+              style={{ cursor: "pointer", color: "var(--app-brand-accent)" }}
               onClick={() => handleEdit(record)}
             />
           </Tooltip>
@@ -488,27 +487,13 @@ const PermissionManagement = ({ onClose }) => {
       </Card>
 
       {/* Table */}
-      <div className="bg-white rounded shadow-sm">
-        <Table
-          columns={columns}
-          dataSource={filteredPermissions || []}
-          loading={permissionsLoading}
-          rowKey="id"
-          pagination={getUnifiedPaginationConfig({
-            total: filteredPermissions.length,
-            itemName: "permissions",
-          })}
-          className="drawer-tbl"
-          size="small"
-          rowClassName={(record, index) =>
-            index % 2 !== 0 ? "odd-row" : "even-row"
-          }
-          scroll={{ x: 1000, y: '48vh' }}
-          locale={{
-            emptyText: "No Data",
-          }}
-        />
-      </div>
+      <MyTable
+        columns={columns}
+        dataSource={filteredPermissions || []}
+        loading={permissionsLoading}
+        selection={false}
+        scroll={{ x: 1000, y: "48vh" }}
+      />
 
       {/* Permission Form Drawer */}
       {isFormOpen && (

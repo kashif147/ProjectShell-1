@@ -10,26 +10,42 @@ const LOOKUP_TYPE_GROUP_KEYS = {
 const KNOWN_PARENT_LOOKUP_TYPES = {
   branch: "Region",
   worklocation: "Branch",
-  county: "Provinces",
-  counties: "Provinces",
-  divisions: "County",
-  districts: "Divisions",
-  station: "Districts",
-  stations: "Districts",
-  cities: "County",
-  city: "County",
+  // County / City / Divisions / Project Types / Station do not support parent per API validation
+  // Branch drawer (key Districts) parents under Region
+  // Station type is parentless; Work Location (Station drawer) still uses Branch
+  studylocation: "Branch",
   templatecategory: "Template Type",
 };
 
 /** Fallback when API type name does not match hierarchy keys (drawer vs API naming). */
 const DRAWER_PARENT_TYPE_NAMES = {
+  // Work Location drawer (key Station) parents under Branch — not the Station lookup type
   Station: "Branch",
   StudyLocation: "Branch",
-  Districts: "Divisions",
-  Divisions: "County",
-  DivisionsForDistrict: "County",
-  counties: "Provinces",
-  Cities: "County",
+  Districts: "Region",
+  // Divisions drawer = Region UI; API type "Divisions" is parentless (see below)
+};
+
+/** Lookup types whose API rejects any parent payload. */
+const TYPES_WITHOUT_PARENT_LOOKUP = new Set([
+  "city",
+  "cities",
+  "county",
+  "counties",
+  "division",
+  "divisions",
+  "projecttype",
+  "projecttypes",
+  "station",
+  "stations",
+]);
+
+/** Legacy API/type labels that should resolve to the UI parent type name. */
+const PARENT_TYPE_NAME_ALIASES = {
+  divisions: "Region",
+  division: "Region",
+  districts: "Branch",
+  district: "Branch",
 };
 
 const normalizeTypeKey = (name) =>
@@ -37,6 +53,49 @@ const normalizeTypeKey = (name) =>
     .trim()
     .toLowerCase()
     .replace(/\s+/g, "");
+
+export const isParentlessLookupType = (
+  lookuptypeIdOrRecord,
+  lookupsTypes = [],
+  drawerKey = "",
+) => {
+  // Resolve from the lookup type first. Drawer key "Station" is the Work Location
+  // UI (needs Branch parent); API type "Station" is parentless (StandardLookup).
+  const record =
+    typeof lookuptypeIdOrRecord === "object" && lookuptypeIdOrRecord !== null
+      ? lookuptypeIdOrRecord
+      : findLookupTypeById(lookupsTypes, lookuptypeIdOrRecord);
+
+  const nameKey = normalizeTypeKey(
+    record?.lookuptype || record?.name || record?.code || "",
+  );
+  if (nameKey && TYPES_WITHOUT_PARENT_LOOKUP.has(nameKey)) return true;
+
+  // Fallback for drawers that open before type id is known — skip legacy
+  // drawer keys that collide with a different product type name.
+  if (!nameKey && drawerKey && drawerKey !== "Station") {
+    const fromDrawer = normalizeTypeKey(drawerKey);
+    if (TYPES_WITHOUT_PARENT_LOOKUP.has(fromDrawer)) return true;
+  }
+
+  return false;
+};
+
+/** Fixed parent field labels in drawers (table / UX naming). */
+const DRAWER_PARENT_FIELD_LABELS = {
+  Districts: "Region",
+  Station: "Branch",
+  StudyLocation: "Branch",
+};
+
+export const canonicalParentTypeName = (typeName) => {
+  if (!typeName) return typeName;
+  const alias = PARENT_TYPE_NAME_ALIASES[normalizeTypeKey(typeName)];
+  return alias || typeName;
+};
+
+export const getDrawerParentFieldLabel = (drawerKey, fallback = "Parent Lookup") =>
+  DRAWER_PARENT_FIELD_LABELS[drawerKey] || fallback;
 
 // --- Simple / nested API shape helpers (incoming branch) ---
 
@@ -284,17 +343,52 @@ export const normalizeWorklocationAddressForApi = (address) => {
   };
 };
 
+export const resolveLookuptypeIdFromRecord = (record) => {
+  const val = record?.lookuptypeId;
+  if (val == null || val === "") return "";
+  if (typeof val === "object" && val._id) return String(val._id);
+  return String(val);
+};
+
+/** True for work-location (and study location) records that use address fields. */
+export const isWorkLocationAddressRecord = (record, lookupsTypes = []) => {
+  const typeId = resolveLookuptypeIdFromRecord(record);
+  const typeRecord =
+    (Array.isArray(lookupsTypes) &&
+      lookupsTypes.find((lt) => String(lt._id) === String(typeId))) ||
+    null;
+  const typeName = String(
+    record?.lookuptypeName ||
+      typeRecord?.lookuptype ||
+      typeRecord?.code ||
+      (typeof record?.lookuptypeId === "object"
+        ? record.lookuptypeId?.lookuptype || record.lookuptypeId?.code
+        : "") ||
+      "",
+  )
+    .toLowerCase()
+    .replace(/\s+/g, "");
+
+  return (
+    typeName === "worklocation" ||
+    typeName === "workloc" ||
+    typeName === "studylocation" ||
+    typeName.includes("worklocation")
+  );
+};
+
 /** Build PUT/POST payload for /lookup including normalized officer id. */
-export const buildLookupApiPayload = (formValues = {}) => {
+export const buildLookupApiPayload = (
+  formValues = {},
+  lookupsTypes = [],
+  drawerKey = "",
+) => {
   const recordId = formValues._id || formValues.id;
+  const lookuptypeId = resolveLookuptypeIdFromRecord(formValues);
 
   const payload = {
     ...formValues,
-    lookuptypeId: resolveLookuptypeIdFromRecord(formValues),
-    Parentlookupid: formValues.Parentlookupid ?? null,
-    Parentlookup: formValues.Parentlookup ?? null,
-    ParentlookuptypeId: formValues.ParentlookuptypeId ?? null,
-    Parentlookuptype: formValues.Parentlookuptype ?? null,
+    lookuptypeId,
     officer: resolveOfficerIdFromRecord(formValues),
     isactive: formValues.isactive !== false,
     isDeleted: formValues.isDeleted ?? formValues.isdeleted ?? false,
@@ -304,9 +398,53 @@ export const buildLookupApiPayload = (formValues = {}) => {
     payload.id = String(recordId);
   }
 
-  if (Object.prototype.hasOwnProperty.call(formValues, "worklocationAddress")) {
+  // Only send parent fields when this lookup type actually supports a parent.
+  // City / County / Divisions reject any parent payload with BAD_REQUEST.
+  if (isParentlessLookupType(lookuptypeId, lookupsTypes, drawerKey)) {
+    delete payload.Parentlookupid;
+    delete payload.Parentlookup;
+    delete payload.ParentlookuptypeId;
+    delete payload.Parentlookuptype;
+  } else {
+    const parentType = getParentLookupType(
+      lookupsTypes,
+      lookuptypeId,
+      drawerKey,
+    );
+    if (parentType && formValues.Parentlookupid) {
+      payload.Parentlookupid = formValues.Parentlookupid;
+      payload.Parentlookup = formValues.Parentlookup ?? null;
+      payload.ParentlookuptypeId =
+        formValues.ParentlookuptypeId ||
+        parentType._id ||
+        parentType.id ||
+        null;
+      payload.Parentlookuptype =
+        formValues.Parentlookuptype ||
+        parentType.lookuptype ||
+        parentType.DisplayName ||
+        null;
+    } else {
+      delete payload.Parentlookupid;
+      delete payload.Parentlookup;
+      delete payload.ParentlookuptypeId;
+      delete payload.Parentlookuptype;
+    }
+  }
+
+  // Never send empty worklocationAddress for Bank/other types (API validates nested paths).
+  // Work locations: send full address or null when address is incomplete.
+  if (isWorkLocationAddressRecord(formValues, lookupsTypes)) {
     payload.worklocationAddress = normalizeWorklocationAddressForApi(
       formValues.worklocationAddress,
+    );
+  } else {
+    delete payload.worklocationAddress;
+  }
+
+  if (Object.prototype.hasOwnProperty.call(formValues, "venueAddress")) {
+    payload.venueAddress = normalizeWorklocationAddressForApi(
+      formValues.venueAddress,
     );
   }
 
@@ -315,13 +453,6 @@ export const buildLookupApiPayload = (formValues = {}) => {
   delete payload._id;
 
   return payload;
-};
-
-export const resolveLookuptypeIdFromRecord = (record) => {
-  const val = record?.lookuptypeId;
-  if (val == null || val === "") return "";
-  if (typeof val === "object" && val._id) return String(val._id);
-  return String(val);
 };
 
 /** Map GET /lookup/:id (or list row) into Lookup drawer form state. */
@@ -358,9 +489,21 @@ export const mapLookupToFormValues = (record, lookupsTypes = []) => {
     processSalaryDeduction: !!normalized.processSalaryDeduction,
   };
 
-  if (Object.prototype.hasOwnProperty.call(normalized, "worklocationAddress")) {
+  // Only hydrate address form fields for work/study location types.
+  // Other types (e.g. Bank) may return worklocationAddress:null from API —
+  // mapping that to {} would break update validation.
+  if (
+    isWorkLocationAddressRecord(mapped, lookupsTypes) ||
+    isWorkLocationAddressRecord(normalized, lookupsTypes)
+  ) {
     mapped.worklocationAddress = getWorklocationAddressFormValues(
       normalized.worklocationAddress,
+    );
+  }
+
+  if (Object.prototype.hasOwnProperty.call(normalized, "venueAddress")) {
+    mapped.venueAddress = getWorklocationAddressFormValues(
+      normalized.venueAddress,
     );
   }
 
@@ -428,8 +571,18 @@ export const mapLookupTypeToFormValues = (record, lookupsTypes = []) => {
   };
 };
 
-export const normalizeLookups = (items) =>
-  (items || []).map((item) => normalizeLookup(item));
+export const normalizeLookups = (items) => {
+  const list = Array.isArray(items)
+    ? items
+    : Array.isArray(items?.data)
+      ? items.data
+      : Array.isArray(items?.lookups)
+        ? items.lookups
+        : Array.isArray(items?.items)
+          ? items.items
+          : [];
+  return list.map((item) => normalizeLookup(item));
+};
 
 /** Unwrap lookup type list from API (array or wrapped payload). */
 export const extractLookupTypesArray = (payload) => {
@@ -586,41 +739,35 @@ export const resolveParentLookupTypeLabelFromRecord = (record, lookupTypes = [])
   const id = resolveParentLookupTypeIdFromRecord(record);
   if (id) {
     const match = findLookupTypeById(lookupTypes, id);
-    if (match) return match.lookuptype || match.DisplayName || match.name || "";
+    if (match) {
+      const raw = match.lookuptype || match.DisplayName || match.name || "";
+      return canonicalParentTypeName(raw) || raw;
+    }
   }
-  if (typeof record.Parentlookuptype === "string") return record.Parentlookuptype;
-  if (record.parent?.name) return record.parent.name;
+  if (typeof record.Parentlookuptype === "string") {
+    return canonicalParentTypeName(record.Parentlookuptype) || record.Parentlookuptype;
+  }
+  if (record.parent?.name) {
+    return canonicalParentTypeName(record.parent.name) || record.parent.name;
+  }
   return getKnownParentTypeName(record.lookuptype) || "";
 };
 
 export const getParentLookupType = (lookupTypes, lookuptypeId, drawerKey = "") => {
   if (!lookuptypeId && !drawerKey) return null;
 
+  if (isParentlessLookupType(lookuptypeId, lookupTypes, drawerKey)) {
+    return null;
+  }
+
   const lookupType =
     typeof lookuptypeId === "object" && lookuptypeId !== null && (lookuptypeId.lookuptype || lookuptypeId.name)
       ? lookuptypeId
       : findLookupTypeById(lookupTypes, lookuptypeId);
 
+  // Prefer product / drawer hierarchy so Branch always parents under Region
+  // (API sometimes still labels the parent type as "Divisions").
   if (lookupType) {
-    const parentId =
-      lookupType.parent?.id ||
-      lookupType.ParentlookuptypeId?._id ||
-      lookupType.ParentlookuptypeId;
-    if (parentId) {
-      const fromId = findLookupTypeById(lookupTypes, parentId);
-      if (fromId) return fromId;
-    }
-
-    const parentName =
-      lookupType.Parentlookuptype ||
-      lookupType.ParentlookuptypeName ||
-      lookupType.parentlookuptype ||
-      lookupType.parent?.name;
-    if (parentName) {
-      const fromName = findLookupTypeByName(lookupTypes, parentName);
-      if (fromName) return fromName;
-    }
-
     const knownParentName = getKnownParentTypeName(
       lookupType.lookuptype || lookupType.name,
     );
@@ -632,7 +779,42 @@ export const getParentLookupType = (lookupTypes, lookuptypeId, drawerKey = "") =
 
   const drawerParentName = DRAWER_PARENT_TYPE_NAMES[drawerKey];
   if (drawerParentName) {
-    return findLookupTypeByName(lookupTypes, drawerParentName);
+    const fromDrawer = findLookupTypeByName(lookupTypes, drawerParentName);
+    if (fromDrawer) return fromDrawer;
+  }
+
+  if (lookupType) {
+    const parentId =
+      lookupType.parent?.id ||
+      lookupType.ParentlookuptypeId?._id ||
+      lookupType.ParentlookuptypeId;
+    if (parentId) {
+      const fromId = findLookupTypeById(lookupTypes, parentId);
+      if (fromId) {
+        const fromIdName = fromId.lookuptype || fromId.DisplayName || fromId.name;
+        const canonical = canonicalParentTypeName(fromIdName);
+        if (normalizeTypeKey(canonical) !== normalizeTypeKey(fromIdName)) {
+          const aliased = findLookupTypeByName(lookupTypes, canonical);
+          if (aliased) return aliased;
+        }
+        return fromId;
+      }
+    }
+
+    const parentName =
+      lookupType.Parentlookuptype ||
+      lookupType.ParentlookuptypeName ||
+      lookupType.parentlookuptype ||
+      lookupType.parent?.name;
+    if (parentName) {
+      const fromName = findLookupTypeByName(
+        lookupTypes,
+        canonicalParentTypeName(parentName),
+      );
+      if (fromName) return fromName;
+      const fromRaw = findLookupTypeByName(lookupTypes, parentName);
+      if (fromRaw) return fromRaw;
+    }
   }
 
   return null;

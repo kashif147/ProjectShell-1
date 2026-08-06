@@ -68,7 +68,7 @@ function extractNotificationTokenRows(tokensPayload) {
   return [];
 }
 
-const PLATFORM_ICON_STYLE = { fontSize: 18, color: "#215e97" };
+const PLATFORM_ICON_STYLE = { fontSize: 18, color: "var(--app-brand-primary)" };
 
 function platformIconAndLabel(platform) {
   const raw = String(platform ?? "").trim();
@@ -76,7 +76,7 @@ function platformIconAndLabel(platform) {
   if (!p || p === "unknown") {
     return {
       label: raw || "Unknown",
-      icon: <MobileOutlined style={{ ...PLATFORM_ICON_STYLE, color: "#8c8c8c" }} />,
+      icon: <MobileOutlined style={{ ...PLATFORM_ICON_STYLE, color: "var(--theme-text-muted)" }} />,
     };
   }
   if (p === "web" || p === "browser" || p.includes("web")) {
@@ -105,7 +105,7 @@ function platformIconAndLabel(platform) {
   }
   return {
     label: raw,
-    icon: <MobileOutlined style={{ ...PLATFORM_ICON_STYLE, color: "#8c8c8c" }} />,
+    icon: <MobileOutlined style={{ ...PLATFORM_ICON_STYLE, color: "var(--theme-text-muted)" }} />,
   };
 }
 
@@ -268,7 +268,7 @@ const CommunicationBatchDetail = () => {
   //     memberName: i % 2 === 0 ? "Alex Smith" : "Bonnie Johnson",
   //     memberId: i % 2 === 0 ? "#MEM-00124" : "#MEM-00982",
   //     initials: i % 2 === 0 ? "AS" : "BJ",
-  //     avatarColor: i % 2 === 0 ? "#1890ff" : "#fa8c16",
+  //     avatarColor: i % 2 === 0 ? "var(--app-brand-accent)" : "#fa8c16",
   //     channel: "Email",
   //     recipientDetail: i % 2 === 0 ? "alex.smith@example.com" : "bonnie.j@invalid-domain",
   //     timestamp: "Aug 15, 11:02 AM",
@@ -316,7 +316,7 @@ const CommunicationBatchDetail = () => {
   };
 
   const outlineButtonStyle = {
-    color: "#595959",
+    color: "var(--theme-text-muted)",
     borderColor: "#d9d9d9",
     borderRadius: "4px",
     height: "38px",
@@ -330,9 +330,9 @@ const CommunicationBatchDetail = () => {
   };
 
   const retryButtonStyle = {
-    backgroundColor: "#1677ff",
-    borderColor: "#1677ff",
-    color: "white",
+    backgroundColor: "var(--primary-color)",
+    borderColor: "var(--primary-color)",
+    color: "var(--brand-on-primary, #ffffff)",
     borderRadius: "4px",
     height: "38px",
     padding: "0 16px",
@@ -378,7 +378,7 @@ const CommunicationBatchDetail = () => {
             gap: "8px",
             marginBottom: "24px",
             fontSize: "12px",
-            color: "#8c8c8c",
+            color: "var(--theme-text-muted)",
           }}
         >
           <span style={{ display: "flex", alignItems: "center", gap: "4px" }}>
@@ -439,7 +439,7 @@ const CommunicationBatchDetail = () => {
               </Tag>
             </div>
             <div
-              style={{ color: "#8c8c8c", marginTop: "4px", fontSize: "13px" }}
+              style={{ color: "var(--theme-text-muted)", marginTop: "4px", fontSize: "13px" }}
             >
               Batch ID: {batchId} • Created on Aug 15, 2023 at 10:45 AM
             </div>
@@ -505,7 +505,7 @@ const CommunicationBatchDetail = () => {
                 style={{
                   fontSize: "11px",
                   fontWeight: "600",
-                  color: "#8c8c8c",
+                  color: "var(--theme-text-muted)",
                   textTransform: "uppercase",
                   marginRight: "8px",
                 }}
@@ -527,7 +527,7 @@ const CommunicationBatchDetail = () => {
                 style={{
                   fontSize: "11px",
                   fontWeight: "600",
-                  color: "#8c8c8c",
+                  color: "var(--theme-text-muted)",
                   textTransform: "uppercase",
                   marginRight: "8px",
                   verticalAlign: "top",
@@ -537,7 +537,7 @@ const CommunicationBatchDetail = () => {
               </span>
               <span
                 style={{
-                  color: "#595959",
+                  color: "var(--theme-text-muted)",
                   fontSize: "13px",
                   lineHeight: "1.45",
                 }}
@@ -565,7 +565,7 @@ const CommunicationBatchDetail = () => {
                 subColor: "#52c41a",
                 icon: (
                   <UserOutlined
-                    style={{ color: "#1890ff", fontSize: "13px" }}
+                    style={{ color: "var(--app-brand-accent)", fontSize: "13px" }}
                   />
                 ),
               },
@@ -573,7 +573,7 @@ const CommunicationBatchDetail = () => {
                 label: "Delivered",
                 value: stats.delivered,
                 sub: `${stats.deliveredRate}% Success`,
-                subColor: "#8c8c8c",
+                subColor: "var(--theme-text-muted)",
                 icon: (
                   <CheckCircleOutlined
                     style={{ color: "#52c41a", fontSize: "13px" }}
@@ -584,9 +584,9 @@ const CommunicationBatchDetail = () => {
                 label: "Read",
                 value: stats.read,
                 sub: `${stats.openRate}% Open`,
-                subColor: "#8c8c8c",
+                subColor: "var(--theme-text-muted)",
                 icon: (
-                  <EyeOutlined style={{ color: "#1890ff", fontSize: "13px" }} />
+                  <EyeOutlined style={{ color: "var(--app-brand-accent)", fontSize: "13px" }} />
                 ),
               },
               {
@@ -626,7 +626,7 @@ const CommunicationBatchDetail = () => {
                     style={{
                       fontSize: "9px",
                       fontWeight: "600",
-                      color: "#8c8c8c",
+                      color: "var(--theme-text-muted)",
                       textTransform: "uppercase",
                       lineHeight: 1.2,
                     }}

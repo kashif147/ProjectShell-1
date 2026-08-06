@@ -1,0 +1,163 @@
+import axios from "axios";
+import { getIssueServiceBaseUrl } from "../config/serviceUrls";
+
+function authHeaders() {
+  const token = localStorage.getItem("token");
+  return token ? { Authorization: `Bearer ${token}` } : {};
+}
+
+function unwrap(response) {
+  return response?.data?.data ?? response?.data;
+}
+
+// Issues
+export async function fetchIssues(params = {}) {
+  const { data } = await axios.get(`${getIssueServiceBaseUrl()}/issues`, {
+    params,
+    headers: authHeaders(),
+  });
+  return unwrap({ data });
+}
+
+// Not consumed by the Issues grid yet - needed by the CasesDetails.js rewrite
+// (a separate, later task), building it now since it's trivial and belongs
+// alongside fetchIssues in the same client module.
+export async function fetchIssueById(id) {
+  const { data } = await axios.get(`${getIssueServiceBaseUrl()}/issues/${id}`, {
+    headers: authHeaders(),
+  });
+  return unwrap({ data });
+}
+
+// Used by CreateCasesDrawer.jsx's Save button. `payload.issueType` selects the
+// discriminator on the backend (issue.controller.js's createIssue) - issue-service rejects
+// anything else with a 400.
+export async function createIssue(payload) {
+  const { data } = await axios.post(`${getIssueServiceBaseUrl()}/issues`, payload, {
+    headers: authHeaders(),
+  });
+  return unwrap({ data });
+}
+
+// Generic field update (PUT /issues/:id) - base + discriminator fields, member/group
+// linking. NOT for issueStatus/resolution/dateResolved-only changes - use
+// updateIssueStatus for those (issue-service's dedicated endpoint, matches its own
+// audit/notification side effects on referredToThirdParty/outcomeReceivedFromThirdParty).
+export async function updateIssue(id, payload) {
+  const { data } = await axios.put(`${getIssueServiceBaseUrl()}/issues/${id}`, payload, {
+    headers: authHeaders(),
+  });
+  return unwrap({ data });
+}
+
+// PUT /issues/:id/status - accepts only issueStatus, issueStatusOther, resolution,
+// resolutionOther, dateResolved (see issue.controller.js's updateIssueStatus).
+export async function updateIssueStatus(id, payload) {
+  const { data } = await axios.put(
+    `${getIssueServiceBaseUrl()}/issues/${id}/status`,
+    payload,
+    { headers: authHeaders() },
+  );
+  return unwrap({ data });
+}
+
+export async function fetchActivities(issueId, params = {}) {
+  const { data } = await axios.get(
+    `${getIssueServiceBaseUrl()}/issues/${issueId}/activities`,
+    { params, headers: authHeaders() },
+  );
+  return unwrap({ data });
+}
+
+// sendNotification defaults true server-side (Activity model) unless explicitly false - the
+// log-activity form's checkbox should be checked by default to match.
+export async function createActivity(issueId, payload) {
+  const { data } = await axios.post(
+    `${getIssueServiceBaseUrl()}/issues/${issueId}/activities`,
+    payload,
+    { headers: authHeaders() },
+  );
+  return unwrap({ data });
+}
+
+// GET /issues/search?q= - "Find Issues" (see issue.controller.js's searchIssues). One
+// unified query string matched against internalReferenceNumber/caseFileNumber/wrcCaseNumber
+// locally, issueType on exact match, and membership no/email/surname/forename/mobile via
+// profile-service's member search - NOT dob/NMBI/address/workplace, a documented backend
+// gap, not something to work around here. Same Issue document shape as fetchIssues.
+export async function searchIssues(q) {
+  const { data } = await axios.get(`${getIssueServiceBaseUrl()}/issues/search`, {
+    params: { q },
+    headers: authHeaders(),
+  });
+  return unwrap({ data });
+}
+
+// IR-only. GET /issue-designations?search= - a thin read-through proxy over user-service's
+// Lookup system, no "fetch all" - always pass a query (see
+// issue-service/services/lookup.service.client.js's searchIssueDesignations).
+export async function searchIssueDesignations(query) {
+  const { data } = await axios.get(`${getIssueServiceBaseUrl()}/issue-designations`, {
+    params: { search: query },
+    headers: authHeaders(),
+  });
+  return unwrap({ data });
+}
+
+// GET /issue-dropdown-lookups - Issue Type + Origin + Issue Source + Priority + Complaint
+// Type in one round trip. Prefer this over calling the individual endpoints separately:
+// firing several as independent requests on every Create/Edit Cases mount was enough
+// concurrent traffic from one client to trip the gateway's per-client rate limit (nginx
+// api_rate zone, see frontend default.conf) on an ordinary page load. Returns
+// {issueTypes, origins, issueSources, priorities, complaintTypes}, each [{id, code, displayName}].
+export async function fetchIssueDropdownLookups() {
+  const { data } = await axios.get(`${getIssueServiceBaseUrl()}/issue-dropdown-lookups`, {
+    headers: authHeaders(),
+  });
+  return unwrap({ data });
+}
+
+// GET /issue-types - a thin read-through proxy over user-service's Lookup system (LookupType
+// code "ISST"), replacing the formerly-hardcoded ISSUE_TYPES constant. Returns
+// [{id, code, displayName}]; `code` is the value to submit as `issueType`. Prefer
+// fetchIssueDropdownLookups() when also fetching origins/issue sources on the same mount.
+export async function fetchIssueTypes() {
+  const { data } = await axios.get(`${getIssueServiceBaseUrl()}/issue-types`, {
+    headers: authHeaders(),
+  });
+  return unwrap({ data });
+}
+
+// GET /issue-statuses?issueType=<code> - Issue Status options are scoped to a given Issue
+// Type (Lookup hierarchy: each status is a child of its Issue Type's Lookup value, see
+// issue-service/services/lookup.service.client.js's fetchIssueStatuses). Returns
+// [{id, code, displayName}]; `code` is the value to submit as `issueStatus`.
+export async function fetchIssueStatuses(issueType) {
+  if (!issueType) return [];
+  const { data } = await axios.get(`${getIssueServiceBaseUrl()}/issue-statuses`, {
+    params: { issueType },
+    headers: authHeaders(),
+  });
+  return unwrap({ data });
+}
+
+// GET /origins - a thin read-through proxy over user-service's Lookup system (LookupType code
+// "ORIGIN"), replacing the formerly-hardcoded ORIGINS constant. Flat list, no issue-type
+// dependency. Returns [{id, code, displayName}]; `code` is the value to submit as `origin`.
+export async function fetchOrigins() {
+  const { data } = await axios.get(`${getIssueServiceBaseUrl()}/origins`, {
+    headers: authHeaders(),
+  });
+  return unwrap({ data });
+}
+
+// GET /issue-sources - a thin read-through proxy over user-service's Lookup system
+// (LookupType code "ISSUESRC"), replacing the formerly-hardcoded ISSUE_SOURCES constant.
+// Flat list, no issue-type dependency. Returns [{id, code, displayName}]; `code` is the
+// value to submit as `issueSource`.
+export async function fetchIssueSources() {
+  const { data } = await axios.get(`${getIssueServiceBaseUrl()}/issue-sources`, {
+    headers: authHeaders(),
+  });
+  return unwrap({ data });
+}

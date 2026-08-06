@@ -54,7 +54,7 @@
     content: '';
     width: 4px;
     height: 16px;
-    background-color: #215E97;
+    background-color: var(--app-brand-primary);
     border-radius: 2px;
 }
 
@@ -75,7 +75,7 @@
 }
 
 .status-label.active {
-    color: #215E97;
+    color: var(--app-brand-primary);
 }
 
 .status-label.inactive {
@@ -95,7 +95,7 @@
     margin-bottom: 8px;
     font-size: 13px;
     font-weight: 600;
-    color: #595959;
+    color: var(--theme-text-muted);
 }
 
 .location-input-container {
@@ -107,7 +107,7 @@
     margin-bottom: 8px;
     font-size: 13px;
     font-weight: 600;
-    color: #595959;
+    color: var(--theme-text-muted);
 }
 
 /* Customizing Ant Design elements within the card */
@@ -128,5 +128,5 @@
 }
 
 .day-card .ant-switch-checked {
-    background-color: #215E97;
+    background-color: var(--app-brand-primary);
 }

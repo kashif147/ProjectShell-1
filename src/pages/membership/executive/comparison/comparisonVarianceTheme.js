@@ -27,5 +27,5 @@ export function varianceChartColor(tone) {
 export function varianceTextColor(tone) {
   if (tone === "down") return VARIANCE_COLORS.downText;
   if (tone === "up") return VARIANCE_COLORS.upText;
-  return "#64748b";
+  return "var(--theme-text-muted)";
 }

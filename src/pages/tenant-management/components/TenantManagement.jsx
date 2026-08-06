@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Input, Table, Space, Button, Tag, Tooltip } from "antd";
+import { Input, Space, Button, Tag, Tooltip } from "antd";
 import {
   SearchOutlined,
   EditOutlined,
@@ -20,7 +20,7 @@ import { insertDataFtn, deleteFtn, baseURL } from "../../../utils/Utilities";
 import MyConfirm from "../../../component/common/MyConfirm";
 // import TenantForm from "./TenantForm";
 import TenantForm from "../../../component/tenant/TenantForm";
-import { getUnifiedPaginationConfig } from "../../../component/common/UnifiedPagination";
+import MyTable from "../../../component/common/MyTable";
 import { useAuthorization } from "../../../context/AuthorizationContext";
 import { Card } from "antd";
 import "../../../styles/TenantManagement.css";
@@ -99,28 +99,28 @@ const TenantManagement = ({ onClose }) => {
       title: "Name",
       dataIndex: "name",
       key: "name",
-      sorter: (a, b) => a.name.localeCompare(b.name),
+      sorter: { compare: (a, b) => a.name.localeCompare(b.name) },
       render: (text) => <span className="fw-medium">{text}</span>,
     },
     {
       title: "Code",
       dataIndex: "code",
       key: "code",
-      sorter: (a, b) => a.code.localeCompare(b.code),
+      sorter: { compare: (a, b) => a.code.localeCompare(b.code) },
       render: (text) => <Tag color="blue">{text}</Tag>,
     },
     {
       title: "Domain",
       dataIndex: "domain",
       key: "domain",
-      sorter: (a, b) => a.domain.localeCompare(b.domain),
+      sorter: { compare: (a, b) => a.domain.localeCompare(b.domain) },
       render: (text) => <span className="text-muted">{text}</span>,
     },
     {
       title: "Status",
       dataIndex: "status",
       key: "status",
-      sorter: (a, b) => a.status.localeCompare(b.status),
+      sorter: { compare: (a, b) => a.status.localeCompare(b.status) },
       render: (status) => {
         const colorMap = {
           ACTIVE: "green",
@@ -135,8 +135,10 @@ const TenantManagement = ({ onClose }) => {
       title: "Plan",
       dataIndex: ["subscription", "plan"],
       key: "plan",
-      sorter: (a, b) =>
-        a.subscription?.plan?.localeCompare(b.subscription?.plan),
+      sorter: {
+        compare: (a, b) =>
+          (a.subscription?.plan || "").localeCompare(b.subscription?.plan || ""),
+      },
       render: (plan) => {
         const colorMap = {
           FREE: "default",
@@ -151,8 +153,10 @@ const TenantManagement = ({ onClose }) => {
       title: "Max Users",
       dataIndex: ["settings", "maxUsers"],
       key: "maxUsers",
-      sorter: (a, b) =>
-        (a.settings?.maxUsers || 0) - (b.settings?.maxUsers || 0),
+      sorter: {
+        compare: (a, b) =>
+          (a.settings?.maxUsers || 0) - (b.settings?.maxUsers || 0),
+      },
       render: (maxUsers) => <span>{maxUsers || 100}</span>,
     },
     {
@@ -188,7 +192,9 @@ const TenantManagement = ({ onClose }) => {
       dataIndex: "createdAt",
       key: "createdAt",
       render: (date) => new Date(date).toLocaleDateString(),
-      sorter: (a, b) => new Date(a.createdAt) - new Date(b.createdAt),
+      sorter: {
+        compare: (a, b) => new Date(a.createdAt) - new Date(b.createdAt),
+      },
     },
     {
       title: (
@@ -211,7 +217,7 @@ const TenantManagement = ({ onClose }) => {
             <Tooltip title="Edit Tenant">
               <FaEdit
                 size={16}
-                style={{ cursor: "pointer", color: "#1890ff" }}
+                style={{ cursor: "pointer", color: "var(--app-brand-accent)" }}
                 onClick={() => handleEdit(record)}
               />
             </Tooltip>
@@ -273,27 +279,13 @@ const TenantManagement = ({ onClose }) => {
           <div className="text-muted">You do not have permission to view tenants.</div>
         </Card>
       ) : (
-        <div className="bg-white rounded shadow-sm">
-          <Table
-            columns={columns}
-            dataSource={filteredTenants || []}
-            loading={tenantsLoading}
-            rowKey="_id"
-            pagination={getUnifiedPaginationConfig({
-              total: filteredTenants.length,
-              itemName: "tenants",
-            })}
-            className="drawer-tbl"
-            size="small"
-            rowClassName={(record, index) =>
-              index % 2 !== 0 ? "odd-row" : "even-row"
-            }
-            scroll={{ x: 1400, y: 600 }}
-            locale={{
-              emptyText: "No Data"
-            }}
-          />
-        </div>
+        <MyTable
+          columns={columns}
+          dataSource={filteredTenants || []}
+          loading={tenantsLoading}
+          selection={false}
+          scroll={{ x: 1400, y: 600 }}
+        />
       )}
 
       {/* Tenant Form Drawer */}

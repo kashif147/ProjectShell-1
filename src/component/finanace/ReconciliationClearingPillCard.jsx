@@ -63,8 +63,8 @@ function getTheme(code) {
     CLEARING_CHIP_THEMES[String(code)] || {
       label: code,
       icon: <AppstoreOutlined />,
-      iconColor: "#64748b",
-      iconBg: "#f1f5f9",
+      iconColor: "var(--theme-text-muted)",
+      iconBg: "var(--theme-section-bg)",
     }
   );
 }
@@ -76,7 +76,7 @@ function chipCardStyle(isActive) {
     padding: "10px 12px",
     textAlign: "left",
     cursor: "pointer",
-    border: isActive ? "1.5px solid #215e97" : "1px solid #e2e8f0",
+    border: isActive ? "1.5px solid var(--app-brand-primary)" : "1px solid #e2e8f0",
     borderRadius: 12,
     background: isActive ? "#f8fbff" : "#ffffff",
     boxShadow: isActive
@@ -212,7 +212,7 @@ function ReconciliationClearingChip({
               display: "block",
               fontSize: 11,
               fontWeight: 500,
-              color: "#64748b",
+              color: "var(--theme-text-muted)",
               lineHeight: 1.2,
               marginBottom: 2,
               overflow: "hidden",

@@ -105,6 +105,8 @@ export const FilterProvider = ({ children }) => {
     paymentTypeOptions,
     genderOptions,
     sectionOptions,
+    eventTypeOptions,
+    eventCategoryOptions,
     lookups: lookupsRaw,
     lookupsloading,
   } = useSelector((state) => state.lookups);
@@ -183,11 +185,35 @@ export const FilterProvider = ({ children }) => {
       visibleFilters: [],
       filtersState: {},
     },
+    // Legacy bucket, now unreferenced - /IssuesManagementDashboard moved to its
+    // own `IssuesDashboard` key below. Left in place rather than deleted (low
+    // risk either way; matches how EventsDashboard's fix left `Events` alone).
     Cases: {
       visibleFilters: [],
       filtersState: {},
     },
+    // Issue Management grid (/CasesSummary). Deliberately its own key, separate
+    // from both the legacy `Cases` bucket and the dashboard's own `IssuesDashboard`
+    // key below - Events made the mistake of reusing one screen key for both a
+    // grid and its dashboard and had to fix it in a follow-up commit (see
+    // TEMPLATE_IMPLEMENTATION_PLAYBOOK.md's 2026-07-21 entries); not repeating
+    // that here.
+    Issues: {
+      visibleFilters: [],
+      filtersState: {},
+    },
+    // Issue Management dashboard (/IssuesManagementDashboard). Separate from
+    // `Issues` (the grid) for the same reason `Issues` is separate from `Cases`
+    // above - see the comment on `Issues` just above.
+    IssuesDashboard: {
+      visibleFilters: [],
+      filtersState: {},
+    },
     Events: {
+      visibleFilters: [],
+      filtersState: {},
+    },
+    EventsDashboard: {
       visibleFilters: [],
       filtersState: {},
     },
@@ -666,11 +692,21 @@ export const FilterProvider = ({ children }) => {
       "/members": "Members",
       "/onlinepayment": "OnlinePayment",
       "/communicationbatchdetail": "Communication",
-      "/casessummary": "Cases",
+      // /CasesSummary(/Closed) plus the dedicated Complaints/FTP/IR/Data Protection
+      // side-nav routes (Entry.js) all reuse the same CasesSummary.js component,
+      // pre-filtered client-side by a `defaultView` prop - see that file's own comment for
+      // why. All of them share this one "Issues" FilterContext screen key (same toolbar
+      // filters / Save-View template as the plain "All" view), not a key per route.
+      "/casessummary": "Issues",
+      "/casessummary/closed": "Issues",
+      "/complaints": "Issues",
+      "/fitnesstopractice": "Issues",
+      "/industrialrelations": "Issues",
+      "/dataprotection": "Issues",
       "/eventssummary": "Events",
-      "/eventsdashboard": "Events",
+      "/eventsdashboard": "EventsDashboard",
       "/correspondencedashboard": "Communication",
-      "/issuesmanagementdashboard": "Cases",
+      "/issuesmanagementdashboard": "IssuesDashboard",
       "/attendees": "Attendees",
       "/membershipdashboard": "MembershipDashboard",
       "/membershiplistingreport": "MembershipListingReport",
@@ -832,7 +868,24 @@ export const FilterProvider = ({ children }) => {
         "Stakeholder",
         "Priority",
       ],
-      Events: ["Event", "Event Type", "Event Date"],
+      Issues: ["Priority", "Issue Type", "Case Status", "Owner"],
+      IssuesDashboard: ["Priority", "Issue Type", "Case Status", "Owner"],
+      Events: [
+        "Event",
+        "Event Type",
+        "Event Date",
+        "Event Status",
+        "Event Category",
+        "Venue",
+      ],
+      EventsDashboard: [
+        "Event",
+        "Event Type",
+        "Event Date",
+        "Event Status",
+        "Event Category",
+        "Venue",
+      ],
       MembershipDashboard: [
         "Membership Category",
         "Grade",
@@ -883,6 +936,7 @@ export const FilterProvider = ({ children }) => {
       Attendees: [
         "Event",
         "Event Type",
+        "Event Category",
         "Registration Status",
         "Event Date",
         "Payment Status",
@@ -973,10 +1027,28 @@ export const FilterProvider = ({ children }) => {
     OnlinePayment: ["Membership Status", "Payment Status"],
     Communication: ["Grade", "Work Location"],
     Cases: ["Incident Date", "Case Type", "Stakeholder", "Priority"],
-    Events: ["Event", "Event Type", "Event Date"],
+    Issues: ["Priority", "Case Status"],
+    IssuesDashboard: ["Priority", "Case Status"],
+    Events: [
+      "Event",
+      "Event Type",
+      "Event Date",
+      "Event Status",
+      "Event Category",
+      "Venue",
+    ],
+    EventsDashboard: [
+      "Event",
+      "Event Type",
+      "Event Date",
+      "Event Status",
+      "Event Category",
+      "Venue",
+    ],
     Attendees: [
       "Event",
       "Event Type",
+      "Event Category",
       "Registration Status",
       "Event Date",
       "Payment Status",
@@ -1104,7 +1176,10 @@ export const FilterProvider = ({ children }) => {
       OnlinePayment: getDefaultVisibleFilters("OnlinePayment"),
       Communication: getDefaultVisibleFilters("Communication"),
       Cases: getDefaultVisibleFilters("Cases"),
+      Issues: getDefaultVisibleFilters("Issues"),
+      IssuesDashboard: getDefaultVisibleFilters("IssuesDashboard"),
       Events: getDefaultVisibleFilters("Events"),
+      EventsDashboard: getDefaultVisibleFilters("EventsDashboard"),
       Attendees: getDefaultVisibleFilters("Attendees"),
       MembershipDashboard: getDefaultVisibleFilters("MembershipDashboard"),
       MembershipListingReport: getDefaultVisibleFilters("MembershipListingReport"),
@@ -1370,6 +1445,42 @@ export const FilterProvider = ({ children }) => {
           selectedValues: [],
         },
       },
+      Issues: {
+        Priority: {
+          operator: "==",
+          selectedValues: [],
+        },
+        "Issue Type": {
+          operator: "==",
+          selectedValues: [],
+        },
+        "Case Status": {
+          operator: "==",
+          selectedValues: [],
+        },
+        Owner: {
+          operator: "==",
+          selectedValues: [],
+        },
+      },
+      IssuesDashboard: {
+        Priority: {
+          operator: "==",
+          selectedValues: [],
+        },
+        "Issue Type": {
+          operator: "==",
+          selectedValues: [],
+        },
+        "Case Status": {
+          operator: "==",
+          selectedValues: [],
+        },
+        Owner: {
+          operator: "==",
+          selectedValues: [],
+        },
+      },
       Events: {
         Event: {
           operator: "==",
@@ -1381,6 +1492,18 @@ export const FilterProvider = ({ children }) => {
         },
         "Event Date": {
           operator: "between",
+          selectedValues: [],
+        },
+        "Event Status": {
+          operator: "==",
+          selectedValues: [],
+        },
+        "Event Category": {
+          operator: "==",
+          selectedValues: [],
+        },
+        Venue: {
+          operator: "==",
           selectedValues: [],
         },
       },
@@ -1642,6 +1765,10 @@ export const FilterProvider = ({ children }) => {
           selectedValues: [],
         },
         "Event Type": {
+          operator: "==",
+          selectedValues: [],
+        },
+        "Event Category": {
           operator: "==",
           selectedValues: [],
         },
@@ -2251,6 +2378,7 @@ export const FilterProvider = ({ children }) => {
       "Membership Status": [
         "",
         "Active",
+        "Renewed",
         "Cancelled",
         "Resigned",
         "Lapsed",
@@ -2300,12 +2428,28 @@ export const FilterProvider = ({ children }) => {
         lookupsloading && !paymentTypeOptions?.length
           ? ["Loading..."]
           : ["", ...getLookupOptions(paymentTypeOptions || [])],
-      "Payment Status": ["", "Paid", "Pending", "Failed", "Refunded"],
+      // Shared label across screens with different underlying enums -
+      // Attendees (Registration.paymentStatus: pending/succeeded/failed/
+      // waived/manual) vs Online Payment (Stripe-flavoured Paid/Pending/
+      // Failed/Refunded). Resolve per current screen so each sees its own
+      // real values instead of a generic label collision.
+      "Payment Status":
+        activePage === "Attendees"
+          ? ["", "Pending", "Succeeded", "Failed", "Waived", "Manual"]
+          : ["", "Paid", "Pending", "Failed", "Refunded"],
       "Billing Cycle": ["", "Annual", "Monthly"],
       "Case Type": ["", "General", "Legal", "Financial", "Other"],
       Priority: ["", "Low", "Medium", "High", "Critical"],
       Stakeholder: ["", "Internal", "External", "Partner"],
-      "Event Type": ["", "Internal", "Workshop", "External"],
+      "Event Type":
+        lookupsloading && !eventTypeOptions?.length
+          ? ["Loading..."]
+          : ["", ...getLookupOptions(eventTypeOptions || [])],
+      "Event Category":
+        lookupsloading && !eventCategoryOptions?.length
+          ? ["Loading..."]
+          : ["", ...getLookupOptions(eventCategoryOptions || [])],
+      "Event Status": ["", "Draft", "Published", "Cancelled", "Completed"],
       Status: ["", "Active", "Planning", "Review", "Canceled"],
       "CN Status": ["", "Draft", "Approved", "Cancelled", "Posted"],
       "JA Status": ["", "Draft", "Approved", "Cancelled"],
@@ -2330,21 +2474,18 @@ export const FilterProvider = ({ children }) => {
       "Member / Application No": [],
       "Full Name": [],
       Phone: [],
-      Event: [
-        "",
-        "Annual Nursing Conference",
-        "Advanced Clinical Skills",
-        "Infection Control Essentials",
-        "Leadership Forum",
-      ],
+      Event: [],
+      // Matches Registration.status in events-service exactly (pending,
+      // confirmed, cancelled, attended, no-show) - not the earlier
+      // placeholder values ("Registered"/"Waitlisted") which never existed.
       "Registration Status": [
         "",
-        "Registered",
-        "Cancelled",
         "Pending",
-        "Waitlisted",
+        "Confirmed",
+        "Cancelled",
+        "Attended",
+        "No-show",
       ],
-
       // 🔹 Text input filters
       Email: [],
       "Membership No": [],
@@ -2438,6 +2579,8 @@ export const FilterProvider = ({ children }) => {
     gradeOptions,
     categoryData,
     paymentTypeOptions,
+    eventTypeOptions,
+    eventCategoryOptions,
     genderOptions,
     sectionOptions,
     filteredWLOptions,

@@ -206,7 +206,7 @@ const ManualPaymentEntry = ({ open, onClose, batchSummryData, batchId, onSuccess
 
           {/* Member Details Card */}
           <div style={{
-            backgroundColor: '#f8fafc',
+            backgroundColor: 'var(--theme-muted-bg)',
             border: '1px solid #e2e8f0',
             borderRadius: '12px',
             padding: '20px',
@@ -264,7 +264,7 @@ const ManualPaymentEntry = ({ open, onClose, batchSummryData, batchId, onSuccess
             </Col>
           </Row>
 
-          <div style={{ borderBottom: '1px solid #f1f5f9', marginBottom: '24px' }} />
+          <div style={{ borderBottom: '1px solid var(--theme-section-bg)', marginBottom: '24px' }} />
 
           {/* Amounts Section */}
           <Row gutter={24} style={{ marginBottom: '24px' }}>
@@ -301,7 +301,7 @@ const ManualPaymentEntry = ({ open, onClose, batchSummryData, batchId, onSuccess
             marginBottom: '32px'
           }}>
             <div style={{
-              backgroundColor: '#f1f5f9',
+              backgroundColor: 'var(--theme-section-bg)',
               borderRadius: '12px',
               padding: '20px 60px',
               textAlign: 'center',
@@ -324,7 +324,7 @@ const ManualPaymentEntry = ({ open, onClose, batchSummryData, batchId, onSuccess
             />
           </div>
 
-          <div style={{ borderBottom: '1px solid #f1f5f9', marginBottom: '24px' }} />
+          <div style={{ borderBottom: '1px solid var(--theme-section-bg)', marginBottom: '24px' }} />
 
           {/* Bottom KPIs */}
           <div style={{

@@ -2,7 +2,8 @@ import { useEffect, useState, useMemo } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { getLookupTypes } from "../../features/LookupTypeSlice";
 import { buildAllTemplateCategoryFilterOptions } from "../../utils/templateLookupHelpers";
-import { Table, Tag } from "antd";
+import { Tag } from "antd";
+import MyTable from "../../component/common/MyTable";
 import { EditOutlined, EyeOutlined, DeleteOutlined } from "@ant-design/icons";
 import CustomSelect from "../../component/common/CustomSelect";
 import MyInput from "../../component/common/MyInput";
@@ -14,7 +15,6 @@ import MyConfirm from "../../component/common/MyConfirm";
 import MyAlert from "../../component/common/MyAlert";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
-import { getUnifiedPaginationConfig } from "../../component/common/UnifiedPagination";
 import { communicationServicePath } from "../../utils/communicationServiceUrl";
 
 dayjs.extend(utc);
@@ -147,7 +147,9 @@ const TemplatesSummary = () => {
       title: "TEMPLATE NAME",
       dataIndex: "templateName",
       key: "templateName",
-      sorter: (a, b) => a.templateName.localeCompare(b.templateName),
+      sorter: {
+        compare: (a, b) => a.templateName.localeCompare(b.templateName),
+      },
       onCell: () => ({
         style: {
           verticalAlign: "top",
@@ -160,7 +162,7 @@ const TemplatesSummary = () => {
           <div style={{ fontWeight: 600, marginBottom: 2 }}>
             {record.templateName}
           </div>
-          <div style={{ color: "#6b7280" }}>{record.description}</div>
+          <div style={{ color: "var(--theme-text-muted)" }}>{record.description}</div>
         </div>
       ),
     },
@@ -168,7 +170,7 @@ const TemplatesSummary = () => {
       title: "CATEGORY",
       dataIndex: "category",
       key: "category",
-      sorter: (a, b) => a.category.localeCompare(b.category),
+      sorter: { compare: (a, b) => a.category.localeCompare(b.category) },
       onCell: () => ({
         style: {
           verticalAlign: "top",
@@ -196,7 +198,7 @@ const TemplatesSummary = () => {
       title: "UPDATED BY",
       dataIndex: "updatedBy",
       key: "updatedBy",
-      sorter: (a, b) => a.updatedBy.localeCompare(b.updatedBy),
+      sorter: { compare: (a, b) => a.updatedBy.localeCompare(b.updatedBy) },
       onCell: () => ({
         style: {
           verticalAlign: "top",
@@ -209,7 +211,7 @@ const TemplatesSummary = () => {
           <div style={{ fontWeight: 600, marginBottom: 2 }}>
             {record.updatedBy}
           </div>
-          <div style={{ color: "#6b7280" }}>{record.lastUpdated}</div>
+          <div style={{ color: "var(--theme-text-muted)" }}>{record.lastUpdated}</div>
         </div>
       ),
     },
@@ -296,21 +298,12 @@ const TemplatesSummary = () => {
         </div>
       </div>
 
-      <Table
+      <MyTable
         columns={columns}
         dataSource={filteredData || []}
         loading={loading}
+        selection={false}
         scroll={{ x: "max-content", y: 590 }}
-        bordered
-        className="drawer-tbl mt-3"
-        pagination={getUnifiedPaginationConfig({
-          total: filteredData.length,
-          itemName: "templates",
-        })}
-        size="middle"
-        locale={{
-          emptyText: "No Data",
-        }}
       />
 
       {error && <p className="text-danger mt-2">Error: {error}</p>}

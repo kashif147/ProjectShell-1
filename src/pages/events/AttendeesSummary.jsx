@@ -1,23 +1,212 @@
-import React from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
+import { useLocation } from "react-router-dom";
+import { useSelector } from "react-redux";
+import { Spin } from "antd";
 import TableComponent from "../../component/common/TableComponent";
+import CreateAttendeeDrawer from "../../component/event/CreateAttendeeDrawer";
+import { fetchRegistrations } from "../../services/eventsApi";
+import { useFilters } from "../../context/FilterContext";
+import { useTableColumns } from "../../context/TableColumnsContext ";
+import { applyClientSideRowFilters } from "../../utils/filterUtils";
+import { resolveEventCategoryLabel } from "../../utils/eventCategory";
+import { useRegisterGridFilterRows } from "../../hooks/useRegisterGridFilterRows";
+import {
+  subscribeAttendeesReload,
+  registerAttendeesRowActions,
+  clearAttendeesRowActions,
+} from "../../utils/eventsWorkspace";
+import {
+  PROFILE_INVALIDATE_EVENT,
+  scopesInclude,
+} from "../../utils/profileRealtimeEvents";
+
+function buildAttendeeAddress(snapshot) {
+  if (!snapshot) return "";
+  return [
+    snapshot.addressLine1,
+    snapshot.addressLine2,
+    snapshot.townCity,
+    snapshot.countyState,
+    snapshot.eircode,
+    snapshot.country,
+  ]
+    .map((part) => (part != null ? String(part).trim() : ""))
+    .filter(Boolean)
+    .join(", ");
+}
 
 function AttendeesSummary() {
-  const attendees = [
-    { key: "1", attendeeId: "ATD-001", attendeeName: "John Doe", email: "john.doe@example.com", mobileNumber: "+353 87 900 0538", fullAddress: "12 Green Park, Dublin 2, Dublin, D02 XY76, Ireland", workLocation: "Dublin North", grade: "Staff Nurse", attendeeType: "Member", eventId: "EVT-101", eventName: "Annual Nursing Conference", eventType: "Event", eventDate: "2026-07-20", totalFee: 270, paymentStatus: "Paid", status: "Registered" },
-    { key: "2", attendeeId: "ATD-002", attendeeName: "Mary Smith", email: "mary.smith@example.com", mobileNumber: "+353 86 221 4580", fullAddress: "44 River Street, Cork City, Cork, T12 PK88, Ireland", workLocation: "Cork University Hospital", grade: "Clinical Nurse Manager", attendeeType: "Previous attendee", eventId: "CRS-211", eventName: "Advanced Clinical Skills", eventType: "Course", eventDate: "2026-08-04", totalFee: 150, paymentStatus: "Pending", status: "Registered" },
-    { key: "3", attendeeId: "ATD-003", attendeeName: "Liam Murphy", email: "liam.murphy@example.com", mobileNumber: "+353 85 199 7342", fullAddress: "9 Harbour View, Galway, Galway, H91 LL09, Ireland", workLocation: "Galway Clinic", grade: "Nurse Specialist", attendeeType: "Member", eventId: "CRS-150", eventName: "Infection Control Essentials", eventType: "Course", eventDate: "2026-06-10", totalFee: 120, paymentStatus: "Refunded", status: "Cancelled" },
-    { key: "4", attendeeId: "ATD-004", attendeeName: "Sarah Kelly", email: "sarah.kelly@example.com", mobileNumber: "+353 89 650 1119", fullAddress: "6 Meadow Court, Limerick, Limerick, V94 KD10, Ireland", workLocation: "UL Hospital Group", grade: "Midwife", attendeeType: "Member", eventId: "EVT-101", eventName: "Annual Nursing Conference", eventType: "Event", eventDate: "2026-07-20", totalFee: 270, paymentStatus: "Paid", status: "Registered" },
-    { key: "5", attendeeId: "ATD-005", attendeeName: "Noah Byrne", email: "noah.byrne@example.com", mobileNumber: "+353 87 312 0044", fullAddress: "18 Hill Road, Kilkenny Town, Kilkenny, R95 MX11, Ireland", workLocation: "St Luke's General Hospital", grade: "Senior Nurse", attendeeType: "Previous attendee", eventId: "EVT-099", eventName: "Leadership Forum", eventType: "Event", eventDate: "2026-05-02", totalFee: 180, paymentStatus: "Unpaid", status: "Cancelled" },
-  ];
+  const location = useLocation();
+  const { eventTypeOptions, eventCategoryOptions } = useSelector((state) => state.lookups);
+  const { filtersState } = useFilters();
+  const { columns } = useTableColumns();
+  const attendeesColumns = columns.Attendees || [];
+  const { isInitialized } = useSelector((state) => state.applicationWithFilter);
+  const { activeTemplateId } = useSelector((state) => state.activeTemplate);
+  const { templatesFetching: templatesLoading } = useSelector(
+    (state) => state.templateFiltersColumnApi,
+  );
+  const [attendeesSourceRows, setAttendeesSourceRows] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [selectedRegistration, setSelectedRegistration] = useState(null);
+  const [registrationDrawerOpen, setRegistrationDrawerOpen] = useState(false);
+
+  // Network fetch only - deliberately has no dependency on filtersState/
+  // attendeesColumns/eventTypeOptions/eventCategoryOptions. Those all feed
+  // client-side derivations below instead of retriggering a fetch, so a
+  // reference change in any of them (e.g. eventTypeOptions getting rebuilt by
+  // an unrelated getAllLookups() re-dispatch elsewhere in the app - see
+  // LookupsSlice.js, which always returns new arrays) can never cascade into
+  // a refetch loop the way it did when eventTypeOptions/eventCategoryOptions
+  // were previously included here directly.
+  const loadAttendees = useCallback(() => {
+    let cancelled = false;
+    setLoading(true);
+    fetchRegistrations()
+      .then((data) => {
+        if (cancelled) return;
+        const rows = Array.isArray(data) ? data : [];
+        const mapped = rows.map((reg) => ({
+          key: reg._id,
+          attendeeId: reg._id,
+          attendeeName: `${reg.attendeeSnapshot?.firstName || ""} ${reg.attendeeSnapshot?.lastName || ""}`.trim(),
+          email: reg.attendeeSnapshot?.email,
+          mobileNumber: reg.attendeeSnapshot?.phone,
+          fullAddress: buildAttendeeAddress(reg.attendeeSnapshot),
+          workLocation: reg.attendeeSnapshot?.workLocation,
+          grade: reg.attendeeSnapshot?.grade,
+          membershipNo: reg.membershipNumber || "-",
+          profileId: reg.profileId,
+          __registration: reg,
+          eventId: reg.eventId || reg.courseId,
+          eventName: reg.eventTitle || "-",
+          eventTypeId: reg.eventTypeId,
+          eventCategoryLookupId: reg.eventCategoryLookupId,
+          eventCategoryLookupCode: reg.eventCategoryLookupCode,
+          eventDate: reg.eventStartDate,
+          registrationType: reg.registrationType,
+          totalFee: reg.amount,
+          currency: reg.currency,
+          paymentStatus: reg.paymentStatus,
+          paymentMethod: reg.paymentMethod,
+          status: reg.status,
+          approvalStatus: reg.approvalStatus || "pending_review",
+          duplicateReviewStatus: reg.duplicateReview?.status || null,
+        }));
+        setAttendeesSourceRows(mapped);
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setAttendeesSourceRows([]);
+        }
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  // Resolves eventTypeId/eventCategoryLookupId (raw lookup ids from the
+  // fetch above) into display labels purely client-side, so Event
+  // Type/Event Category populate reactively once app-wide lookups finish
+  // loading without needing another network round-trip.
+  const resolvedSourceRows = useMemo(
+    () =>
+      attendeesSourceRows.map((row) => {
+        const eventType = (eventTypeOptions || []).find(
+          (opt) => String(opt.value) === String(row.eventTypeId),
+        );
+        return {
+          ...row,
+          eventType: eventType?.label || "-",
+          eventCategory: resolveEventCategoryLabel(row, eventCategoryOptions),
+        };
+      }),
+    [attendeesSourceRows, eventTypeOptions, eventCategoryOptions],
+  );
+
+  const attendees = useMemo(
+    () => applyClientSideRowFilters(resolvedSourceRows, filtersState, attendeesColumns),
+    [resolvedSourceRows, filtersState, attendeesColumns],
+  );
+
+  // Re-fetch every time this route is navigated to, and once template
+  // init completes - matches the pattern used by EventsSummary.
+  useEffect(() => {
+    if (!isInitialized || templatesLoading) return;
+    loadAttendees();
+  }, [loadAttendees, location.key, activeTemplateId, isInitialized, templatesLoading]);
+
+  // The header's global "Add Attendee" button (HeaderDetails.jsx) owns the
+  // CreateAttendeeDrawer instance for this route - refresh the grid when a
+  // registration completes, via the same profile-invalidate event the drawer
+  // already dispatches on success.
+  useEffect(() => {
+    const handleProfileInvalidate = (event) => {
+      const detail = event?.detail || {};
+      if (scopesInclude(detail.scopes, "events")) {
+        loadAttendees();
+      }
+    };
+    window.addEventListener(PROFILE_INVALIDATE_EVENT, handleProfileInvalidate);
+    return () => {
+      window.removeEventListener(PROFILE_INVALIDATE_EVENT, handleProfileInvalidate);
+    };
+  }, [loadAttendees]);
+
+  // SaveViewMenu's fetchListingByTemplate signals a reload here (view
+  // switch/save) via the same reload-pubsub pattern EventsSummary uses.
+  useEffect(() => subscribeAttendeesReload(() => loadAttendees()), [loadAttendees]);
+
+  // The "Registration" action column (TableColumnsContext) has no React
+  // state of its own - it calls back through this module-level handler to
+  // open the drawer here.
+  useEffect(() => {
+    registerAttendeesRowActions({
+      onOpenRegistration: (record) => {
+        setSelectedRegistration(record.__registration || record);
+        setRegistrationDrawerOpen(true);
+      },
+    });
+    return () => clearAttendeesRowActions();
+  }, []);
+
+  useRegisterGridFilterRows("Attendees", resolvedSourceRows, attendeesColumns);
+
+  if (!isInitialized || templatesLoading) {
+    return (
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          height: "100%",
+          padding: "50px",
+        }}
+      >
+        <Spin tip="Initializing Template...">
+          <div style={{ minHeight: 200, width: "100%" }} />
+        </Spin>
+      </div>
+    );
+  }
 
   return (
     <div style={{ padding: "20px 0" }}>
       <TableComponent
         data={attendees}
         screenName="Attendees"
-        isGrideLoading={false}
+        isGrideLoading={loading}
         selectionType="checkbox"
         enableRowSelection={true}
+      />
+      <CreateAttendeeDrawer
+        open={registrationDrawerOpen}
+        onClose={() => setRegistrationDrawerOpen(false)}
+        registration={selectedRegistration}
+        onApproved={loadAttendees}
       />
     </div>
   );

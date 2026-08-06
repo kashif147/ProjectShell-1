@@ -1236,7 +1236,7 @@ export default function PaymentFormDetailDrawer({
                   <p
                     style={{
                       fontSize: 12,
-                      color: "#6b7280",
+                      color: "var(--theme-text-muted)",
                       marginTop: -6,
                       marginBottom: 8,
                     }}

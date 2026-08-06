@@ -167,7 +167,7 @@ export default function DebtorsListReport() {
       {periodSummary ? (
         <p
           className="no-print"
-          style={{ margin: "0 0 8px 0", color: "#595959", fontSize: 13 }}
+          style={{ margin: "0 0 8px 0", color: "var(--theme-text-muted)", fontSize: 13 }}
         >
           Balances as at: {periodSummary}
         </p>

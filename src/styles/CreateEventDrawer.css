@@ -27,12 +27,12 @@
 }
 
 .header-discard-btn:hover {
-  border-color: #40a9ff;
-  color: #40a9ff;
+  border-color: var(--app-brand-accent);
+  color: var(--app-brand-accent);
 }
 
 .header-save-btn {
-  background-color: #1890ff;
+  background-color: var(--app-brand-accent);
   border: none;
   color: #ffffff;
   font-weight: 500;
@@ -42,7 +42,7 @@
 }
 
 .header-save-btn:hover {
-  background-color: #40a9ff;
+  background-color: var(--app-brand-accent);
 }
 
 /* Form Sections */
@@ -56,7 +56,7 @@
 .section-title {
   font-size: 12px;
   font-weight: 600;
-  color: #8c8c8c;
+  color: var(--theme-text-muted);
   letter-spacing: 0.5px;
   margin: 0 0 8px 0;
   text-transform: uppercase;
@@ -116,7 +116,7 @@
 
 .cancel-event-description {
   font-size: 13px;
-  color: #8c8c8c;
+  color: var(--theme-text-muted);
   margin: 0;
   line-height: 1.5;
 }
@@ -152,12 +152,12 @@
 
 .sidebar-card-link {
   font-size: 13px;
-  color: #1890ff;
+  color: var(--app-brand-accent);
   text-decoration: none;
 }
 
 .sidebar-card-link:hover {
-  color: #40a9ff;
+  color: var(--app-brand-accent);
   text-decoration: underline;
 }
 
@@ -172,18 +172,18 @@
 .cost-currency {
   font-size: 20px;
   font-weight: 600;
-  color: #1890ff;
+  color: var(--app-brand-accent);
 }
 
 .cost-amount {
   font-size: 32px;
   font-weight: 700;
-  color: #1890ff;
+  color: var(--app-brand-accent);
 }
 
 .cost-period {
   font-size: 14px;
-  color: #8c8c8c;
+  color: var(--theme-text-muted);
   margin-left: 4px;
 }
 
@@ -199,44 +199,34 @@
 .cost-progress-bar {
   width: 70%;
   height: 100%;
-  background: linear-gradient(90deg, #1890ff 0%, #52c41a 100%);
+  background: linear-gradient(90deg, var(--app-brand-accent) 0%, #52c41a 100%);
   border-radius: 4px;
 }
 
-/* Tip Card */
-.tip-card {
-  background-color: #001529 !important;
-  color: #ffffff;
-}
-
-.tip-card-icon {
-  font-size: 24px;
+/* Event Image */
+.event-image-preview {
   margin-bottom: 12px;
+  border-radius: 6px;
+  overflow: hidden;
+  border: 1px solid #f0f0f0;
 }
 
-.tip-card-title {
-  font-size: 14px;
-  font-weight: 600;
-  color: #ffffff;
-  margin: 0 0 8px 0;
+.event-image-preview img {
+  display: block;
+  width: 100%;
+  max-height: 140px;
+  object-fit: cover;
 }
 
-.tip-card-text {
-  font-size: 13px;
-  color: #d9d9d9;
-  line-height: 1.6;
-  margin: 0 0 12px 0;
+.event-image-actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
 }
 
-.tip-card-link {
-  font-size: 13px;
-  color: #40a9ff;
-  text-decoration: none;
-}
-
-.tip-card-link:hover {
-  color: #69c0ff;
-  text-decoration: underline;
+.event-image-remove-btn {
+  padding: 0;
 }
 
 /* CPD & Accreditations Section Refinement */
@@ -266,4 +256,25 @@
   .cancel-event-btn {
     width: 100%;
   }
+}
+
+/* Description rich text editor - defaults to ~4 visible lines, grows with content */
+.event-description-editor {
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.event-description-editor .ql-toolbar.ql-snow {
+  border-color: #ced4da;
+  border-radius: 6px 6px 0 0;
+}
+
+.event-description-editor .ql-container.ql-snow {
+  border-color: #ced4da;
+  border-radius: 0 0 6px 6px;
+  font-size: 14px;
+}
+
+.event-description-editor .ql-editor {
+  min-height: 96px;
 }

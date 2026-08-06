@@ -92,7 +92,7 @@ function CategoryChangeRequest({
                   className="d-flex align-items-center justify-content-center"
                   style={{
                     height: '35px',
-                    backgroundColor: '#215E97',
+                    backgroundColor: 'var(--app-brand-primary)',
                     color: 'white',
                   }}
                 >
@@ -128,7 +128,7 @@ function CategoryChangeRequest({
                   className="d-flex align-items-center justify-content-center"
                   style={{
                     height: '35px',
-                    backgroundColor: '#215E97',
+                    backgroundColor: 'var(--app-brand-primary)',
                     color: 'white',
                   }}
                 >

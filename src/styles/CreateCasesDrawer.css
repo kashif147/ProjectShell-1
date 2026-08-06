@@ -2,7 +2,7 @@
   padding: 0.5rem 0.75rem;
   font-family: var(--font-family);
   color: var(--font-color);
-  background-color: #f6f9fc;
+  background-color: var(--theme-page-bg);
 }
 
 .completion-progress-container {
@@ -70,7 +70,7 @@
 .section-title {
   font-size: 12px;
   font-weight: 600;
-  color: #8c8c8c;
+  color: var(--theme-text-muted);
   letter-spacing: 0.5px;
   /* margin: 0 0 12px 0; */
   text-transform: uppercase;
@@ -116,7 +116,7 @@
 
 .disabled-input-bg {
   background-color: #f5f5f5 !important;
-  color: #8c8c8c !important;
+  color: var(--theme-text-muted) !important;
   cursor: not-allowed;
 }
 
@@ -134,7 +134,7 @@
 
 .toolbar-icon {
   font-size: 14px;
-  color: #595959;
+  color: var(--theme-text-muted);
   cursor: pointer;
 }
 
@@ -231,7 +231,7 @@
 .header-discard-btn {
   border: 1px solid #d9d9d9 !important;
   background: #ffffff !important;
-  color: #595959 !important;
+  color: var(--theme-text-muted) !important;
   font-weight: 600 !important;
 }
 
@@ -258,14 +258,9 @@
   text-decoration: none;
 }
 
-/* Ensure Drawer Title is Black */
-.create-case-drawer .ant-drawer-title {
-  color: #000000 !important;
-}
-
 /* Set drawer body background to grey */
 .create-case-drawer .ant-drawer-body {
-  background-color: #f6f9fc !important;
+  background-color: var(--theme-page-bg) !important;
   padding: 0 !important;
 }
 
@@ -379,12 +374,8 @@
 
 /* Edit cases drawer – same styling as create case with extra left padding */
 .edit-cases-drawer.ant-drawer .ant-drawer-body {
-  background-color: #f6f9fc !important;
+  background-color: var(--theme-page-bg) !important;
   padding: 24px 24px 24px 32px !important;
-}
-
-.edit-cases-drawer .ant-drawer-title {
-  color: #000000 !important;
 }
 
 .edit-cases-drawer .edit-cases-drawer-content {

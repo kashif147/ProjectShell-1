@@ -1,14 +1,14 @@
 .sid-nav-main {
   height: 80vh;
-  background-color: #001529;
+  background: var(--app-sidebar-gradient, var(--app-brand-primary));
   /* Dark theme look */
 }
 
 /* Sidebar Container */
 .sidebar-container {
   position: relative;
-  background: linear-gradient(180deg, #1a1a2e 0%, #16213e 100%);
-  border-right: 1px solid #2d3748;
+  background: var(--app-sidebar-gradient, linear-gradient(180deg, var(--app-brand-primary) 0%, #123c63 100%));
+  border-right: 1px solid color-mix(in srgb, var(--app-brand-primary) 34%, #ffffff);
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   box-shadow: 2px 0 8px rgba(0, 0, 0, 0.1);
 }
@@ -31,9 +31,9 @@
 }
 
 .sidebar-toggle-btn {
-  background: rgba(255, 255, 255, 0.1) !important;
-  border: none !important;
-  color: white !important;
+  background: color-mix(in srgb, var(--app-brand-accent, #0d9488) 88%, #ffffff) !important;
+  border: 1px solid rgba(255, 255, 255, 0.55) !important;
+  color: var(--brand-on-accent, #ffffff) !important;
   border-radius: 6px !important;
   width: 32px !important;
   height: 32px !important;
@@ -41,12 +41,21 @@
   align-items: center !important;
   justify-content: center !important;
   transition: all 0.3s ease !important;
-  box-shadow: none !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.24) !important;
 }
 
-.sidebar-toggle-btn:hover {
-  background: rgba(255, 255, 255, 0.2) !important;
+.sidebar-toggle-btn:hover,
+.sidebar-toggle-btn:focus-visible {
+  background: color-mix(in srgb, var(--app-brand-accent, #0d9488) 74%, #ffffff) !important;
+  border-color: rgba(255, 255, 255, 0.78) !important;
+  color: var(--brand-on-accent, #ffffff) !important;
   transform: scale(1.05) !important;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.3) !important;
+}
+
+.sidebar-toggle-btn .anticon {
+  color: inherit !important;
+  font-size: 15px;
 }
 
 .sidebar-menu {
@@ -95,7 +104,7 @@
   height: 24px;
   background: var(--primary-color);
   border-radius: 0 2px 2px 0;
-  box-shadow: 0 0 8px rgba(33, 94, 151, 0.5);
+  box-shadow: 0 0 8px color-mix(in srgb, var(--app-brand-primary) 50%, transparent);
   animation: selectedIndicator 0.3s ease-out;
 }
 
@@ -110,7 +119,7 @@
   height: 32px;
   background: var(--primary-color);
   border-radius: 0 3px 3px 0;
-  box-shadow: 0 0 10px rgba(33, 94, 151, 0.6);
+  box-shadow: 0 0 10px color-mix(in srgb, var(--app-brand-primary) 58%, transparent);
   animation: selectedIndicator 0.3s ease-out;
 }
 
@@ -136,38 +145,38 @@
 
 /* Active (selected) item - Base styling for both states */
 .sidebar-menu .ant-menu-item-selected {
-  background: var(--secoundry-bg-color) !important;
+  background: var(--app-selected-bg, var(--theme-color-surface)) !important;
   /* Light blue secondary color */
-  color: var(--primary-color) !important;
+  color: var(--theme-color-primary) !important;
   /* Primary color text */
-  box-shadow: 0 4px 12px rgba(201, 122, 47, 0.3);
+  box-shadow: 0 4px 12px color-mix(in srgb, var(--theme-color-secondary) 30%, transparent);
   transform: translateX(2px);
   position: relative;
-  border: 1px solid rgba(201, 122, 47, 0.2);
+  border: 1px solid var(--app-selected-border, color-mix(in srgb, var(--theme-color-secondary) 20%, transparent));
 }
 
 /* Enhanced selected state for collapsed (pinned) view */
 .sidebar-menu.collapsed .ant-menu-item-selected {
-  background: var(--secoundry-bg-color) !important;
+  background: var(--app-selected-bg, var(--theme-color-surface)) !important;
   /* Light blue secondary color */
-  color: var(--primary-color) !important;
+  color: var(--theme-color-primary) !important;
   /* Primary color text */
-  box-shadow: 0 4px 12px rgba(201, 122, 47, 0.3);
+  box-shadow: 0 4px 12px color-mix(in srgb, var(--theme-color-secondary) 30%, transparent);
   transform: translateX(2px);
   border-radius: 12px;
-  border: 1px solid rgba(201, 122, 47, 0.2);
+  border: 1px solid var(--app-selected-border, color-mix(in srgb, var(--theme-color-secondary) 20%, transparent));
 }
 
 /* Enhanced selected state for expanded (unpinned) view */
 .sidebar-menu.expanded .ant-menu-item-selected {
-  background: var(--secoundry-bg-color) !important;
+  background: var(--app-selected-bg, var(--theme-color-surface)) !important;
   /* Light blue secondary color */
-  color: var(--primary-color) !important;
+  color: var(--theme-color-primary) !important;
   /* Primary color text */
-  box-shadow: 0 4px 12px rgba(201, 122, 47, 0.3);
+  box-shadow: 0 4px 12px color-mix(in srgb, var(--theme-color-secondary) 30%, transparent);
   transform: translateX(2px);
   border-radius: 8px;
-  border: 1px solid rgba(201, 122, 47, 0.2);
+  border: 1px solid var(--app-selected-border, color-mix(in srgb, var(--theme-color-secondary) 20%, transparent));
 }
 
 /* Ensure all selected item elements are primary color in expanded state */
@@ -496,4 +505,75 @@
 /* Selected items keep primary color for links too */
 .sidebar-menu .ant-menu-item-selected .sidebar-link-wrapper {
   color: var(--primary-color) !important;
+}
+
+/* Colorful sidebar icons: keep icon palette independent from tenant brand colours. */
+.sidebar-menu .ant-menu-item .sidebar-nav-icon,
+.sidebar-menu .ant-menu-item .sidebar-nav-icon svg,
+.sidebar-menu .ant-menu-item-selected .sidebar-nav-icon,
+.sidebar-menu .ant-menu-item-selected .sidebar-nav-icon svg,
+.sidebar-menu .ant-menu-item:not(.ant-menu-item-selected) .sidebar-nav-icon,
+.sidebar-menu .ant-menu-item:not(.ant-menu-item-selected) .sidebar-nav-icon svg,
+.sidebar-menu.collapsed .ant-menu-item .icon-only-item .sidebar-nav-icon,
+.sidebar-menu.collapsed .ant-menu-item .icon-only-item .sidebar-nav-icon svg,
+.sidebar-menu.expanded .ant-menu-item .sidebar-link-wrapper .sidebar-nav-icon,
+.sidebar-menu.expanded .ant-menu-item .sidebar-link-wrapper .sidebar-nav-icon svg,
+.sidebar-menu.collapsed .ant-menu-item-selected .icon-only-item .sidebar-nav-icon,
+.sidebar-menu.collapsed .ant-menu-item-selected .icon-only-item .sidebar-nav-icon svg,
+.sidebar-menu.expanded .ant-menu-item-selected .sidebar-link-wrapper .sidebar-nav-icon,
+.sidebar-menu.expanded .ant-menu-item-selected .sidebar-link-wrapper .sidebar-nav-icon svg {
+  color: var(--sidebar-icon-color, #3b82f6) !important;
+}
+
+.sidebar-menu .ant-menu-item .sidebar-nav-icon {
+  align-items: center;
+  background: color-mix(in srgb, var(--sidebar-icon-color, #3b82f6) 16%, transparent);
+  border: 1px solid color-mix(in srgb, var(--sidebar-icon-color, #3b82f6) 24%, transparent);
+  border-radius: 9px;
+  display: inline-flex;
+  height: 32px;
+  justify-content: center;
+  width: 32px;
+}
+
+.sidebar-menu .ant-menu-item-selected .sidebar-nav-icon {
+  background: color-mix(in srgb, var(--sidebar-icon-color, #3b82f6) 18%, #ffffff);
+  border-color: color-mix(in srgb, var(--sidebar-icon-color, #3b82f6) 35%, #ffffff);
+}
+
+.sidebar-menu .ant-menu-item:hover .sidebar-nav-icon {
+  background: color-mix(in srgb, var(--sidebar-icon-color, #3b82f6) 26%, #ffffff);
+  transform: scale(1.06);
+}
+
+.sidebar-nav-icon--blue {
+  --sidebar-icon-color: #3b82f6;
+}
+
+.sidebar-nav-icon--green {
+  --sidebar-icon-color: #10b981;
+}
+
+.sidebar-nav-icon--amber {
+  --sidebar-icon-color: #f59e0b;
+}
+
+.sidebar-nav-icon--coral {
+  --sidebar-icon-color: #ef4444;
+}
+
+.sidebar-nav-icon--violet {
+  --sidebar-icon-color: #8b5cf6;
+}
+
+.sidebar-nav-icon--cyan {
+  --sidebar-icon-color: #06b6d4;
+}
+
+.sidebar-nav-icon--rose {
+  --sidebar-icon-color: #f43f5e;
+}
+
+.sidebar-nav-icon--indigo {
+  --sidebar-icon-color: #6366f1;
 }

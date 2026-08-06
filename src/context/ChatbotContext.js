@@ -660,7 +660,7 @@ const GlobalChatbot = () => {
           {/* Chat Header */}
           <div
             style={{
-              background: "linear-gradient(135deg, #215e97 0%, #1a4d7a 100%)",
+              background: "linear-gradient(135deg, var(--app-brand-primary) 0%, #1a4d7a 100%)",
               color: "white",
               padding: "16px 20px",
               display: "flex",
@@ -745,7 +745,7 @@ const GlobalChatbot = () => {
                           style={{
                             background:
                               message.type === "user"
-                                ? "linear-gradient(135deg, #215e97 0%, #1a4d7a 100%)"
+                                ? "linear-gradient(135deg, var(--app-brand-primary) 0%, #1a4d7a 100%)"
                                 : "linear-gradient(135deg, #e2e8f0 0%, #cbd5e1 100%)",
                             color:
                               message.type === "user" ? "white" : "#374151",
@@ -759,7 +759,7 @@ const GlobalChatbot = () => {
                             maxWidth: "80%",
                             background:
                               message.type === "user"
-                                ? "linear-gradient(135deg, #215e97 0%, #1a4d7a 100%)"
+                                ? "linear-gradient(135deg, var(--app-brand-primary) 0%, #1a4d7a 100%)"
                                 : "white",
                             color:
                               message.type === "user" ? "white" : "#374151",
@@ -850,7 +850,7 @@ const GlobalChatbot = () => {
                     disabled={!chatInput.trim() || chatLoading}
                     style={{
                       background:
-                        "linear-gradient(135deg, #215e97 0%, #1a4d7a 100%)",
+                        "linear-gradient(135deg, var(--app-brand-primary) 0%, #1a4d7a 100%)",
                       border: "none",
                       alignSelf: "flex-end",
                       borderRadius: "50%",

@@ -277,8 +277,9 @@ const MemberSearch = ({
                         e.stopPropagation();
                         if (onAddMember) {
                           onAddMember(debouncedSearchValue);
-                          // Clear the search after clicking
-                          clearSearch();
+                          // Clear the search box only - the parent just got a
+                          // fresh new-attendee callback, not a "cleared" event.
+                          clearSearch(false);
                         }
                       }}
                       style={{
@@ -539,7 +540,12 @@ const MemberSearch = ({
     }
   };
 
-  const handleClear = () => {
+  // notifyExternal=false is used right after onAddMember fires - the search
+  // box itself still needs resetting for the next search, but the parent
+  // hasn't had anything "cleared" (it just got a brand-new-attendee
+  // callback), so externalOnClear must NOT fire in that case, only when the
+  // user actually clicks the × / presses Escape / a selection errors out.
+  const handleClear = (notifyExternal = true) => {
     selectionLockRef.current = false;
     // Clear value based on control mode
     if (isControlled && externalOnChange) {
@@ -557,14 +563,14 @@ const MemberSearch = ({
     setIsSearchTriggered(false);
 
     // Call external clear callback if provided
-    if (externalOnClear) {
+    if (notifyExternal && externalOnClear) {
       externalOnClear();
     }
   };
 
   // Clear search function (for internal use)
-  const clearSearch = () => {
-    handleClear();
+  const clearSearch = (notifyExternal = true) => {
+    handleClear(notifyExternal);
   };
 
   // Handle keyboard events
@@ -698,7 +704,7 @@ const MemberSearch = ({
           left: 0,
           right: 0,
           fontSize: "12px",
-          color: loading ? "#1890ff" : options.length > 0 ? "#52c41a" : "#ff4d4f",
+          color: loading ? "var(--app-brand-accent)" : options.length > 0 ? "#52c41a" : "#ff4d4f",
           padding: "4px 8px",
           backgroundColor: "transparent",
           marginTop: "4px",
@@ -742,7 +748,9 @@ const MemberSearch = ({
               icon={<UserAddOutlined />}
               onClick={() => {
                 onAddMember(searchValue);
-                handleClear();
+                // Clear the search box only - see the other Add Member
+                // button above for why notifyExternal is false here.
+                handleClear(false);
               }}
               style={{
                 backgroundColor: "#52c41a",

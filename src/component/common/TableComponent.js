@@ -9,7 +9,6 @@ import React, {
 import { Table, Pagination, Space, Form, Input, Checkbox } from "antd";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useTableColumns } from "../../context/TableColumnsContext ";
-import { LuRefreshCw } from "react-icons/lu";
 import { BsSliders, BsThreeDotsVertical } from "react-icons/bs";
 import { CgAttachment } from "react-icons/cg";
 import { useDispatch, useSelector } from "react-redux";
@@ -542,10 +541,10 @@ const TableComponent = ({
         console.log("Select all triggered:", selectedRows);
         // Optional: handle select all logic
       },
-      columnWidth: 60,
+      columnWidth: 40,
       fixed: true,
       // Optional: align checkbox properly
-      columnStyle: { padding: "0 10px", verticalAlign: "middle" },
+      columnStyle: { padding: "0 8px", verticalAlign: "middle" },
       getCheckboxProps: (record) => ({
         disabled: disableRowFn ? disableRowFn(record) : false,
       }),
@@ -585,7 +584,11 @@ const TableComponent = ({
         <Gridmenu
           title={
             <BsSliders
-              style={{ fontSize: "20px", color: "white", fontWeight: 600 }}
+              style={{
+                fontSize: "20px",
+                color: "var(--app-table-header-text)",
+                fontWeight: 600,
+              }}
             />
           }
           columnsForFilter={columnsForFilter}
@@ -647,7 +650,7 @@ const TableComponent = ({
           />
           {location?.pathname === "/BatchMemberSummary" && (
             <MdKeyboard
-              style={{ fontSize: "15px", color: "#595959" }}
+              style={{ fontSize: "15px", color: "var(--theme-text-muted)" }}
               onClick={() => {
                 setmanualPayment(!isBatchmemberOpen);
                 handleRowClick(record, index);
@@ -1379,7 +1382,6 @@ const TableComponent = ({
             rowSelection={rowSelectionConfig}
             pagination={false}
             style={{}}
-            bordered
             tableLayout="fixed"
             sticky
             scroll={{ x: "max-content", y: 590 }}
@@ -1395,9 +1397,9 @@ const TableComponent = ({
           <div
             className="d-flex justify-content-center align-items-center tbl-footer"
             style={{
-              marginTop: "10px",
-              padding: "8px 0",
-              backgroundColor: "#fafafa",
+            marginTop: "10px",
+            padding: "8px 0",
+              backgroundColor: "var(--app-table-surface-bg, #ffffff)",
               borderTop: "none",
               position: "relative",
               zIndex: 10
@@ -1426,19 +1428,6 @@ const TableComponent = ({
                 return (
                   <span style={{ fontSize: "14px", display: "flex", alignItems: "center", gap: "8px" }}>
                     {`${start}-${end} of ${totalCount} items`}
-                    <LuRefreshCw
-                      style={{
-                        cursor: "pointer",
-                        fontSize: "14px",
-                        color: "#215e97",
-                        transition: "color 0.3s ease",
-                        marginLeft: "4px"
-                      }}
-                      onClick={() => window.location.reload()}
-                      title="Refresh"
-                      onMouseEnter={(e) => e.currentTarget.style.color = "#1890ff"}
-                      onMouseLeave={(e) => e.currentTarget.style.color = "#215e97"}
-                    />
                   </span>
                 );
               }}

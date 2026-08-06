@@ -12,7 +12,7 @@ export const LIFECYCLE_PAYMENT_METHOD_ROWS = [
   {
     label: "Deductions",
     dataKey: "deductions",
-    color: "#215e97",
+    color: "var(--app-brand-primary)",
     icon: AccountBookOutlined,
   },
   {

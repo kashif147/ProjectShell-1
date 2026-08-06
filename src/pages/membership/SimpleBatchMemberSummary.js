@@ -56,7 +56,7 @@ const SummaryCard = ({ title, value, icon, color, iconBg }) => (
       <div>
         <div
           style={{
-            color: "#64748b",
+            color: "var(--theme-text-muted)",
             fontSize: "13px",
             fontWeight: "600",
             textTransform: "uppercase",
@@ -425,7 +425,7 @@ function SimpleBatchMemberSummary() {
   return (
     <div
       style={{
-        backgroundColor: "#f8fafc",
+        backgroundColor: "var(--theme-muted-bg)",
         minHeight: "100vh",
         padding: "15px",
         paddingBottom: "12px",
@@ -478,14 +478,14 @@ function SimpleBatchMemberSummary() {
       >
         {/* Batch Name & Source */}
         <div style={{ display: "flex", alignItems: "center", gap: "8px", minWidth: "300px" }}>
-          <div style={{ fontSize: "11px", color: "#64748b", fontWeight: "500", whiteSpace: "nowrap" }}>
+          <div style={{ fontSize: "11px", color: "var(--theme-text-muted)", fontWeight: "500", whiteSpace: "nowrap" }}>
             Batch Name
           </div>
           <div style={{ fontSize: "13px", fontWeight: "600", color: "#0f172a", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", maxWidth: "140px" }}>
             {data?.name || "-"}
           </div>
           <div style={{ width: "1px", height: "16px", backgroundColor: "#e2e8f0", margin: "0 4px" }} />
-          <div style={{ fontSize: "11px", color: "#64748b", fontWeight: "500", whiteSpace: "nowrap" }}>
+          <div style={{ fontSize: "11px", color: "var(--theme-text-muted)", fontWeight: "500", whiteSpace: "nowrap" }}>
             Type
           </div>
           <div style={{ fontSize: "13px", fontWeight: "600", color: "#2563eb", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", maxWidth: "140px" }}>
@@ -496,7 +496,7 @@ function SimpleBatchMemberSummary() {
 
         {/* Batch Date */}
         <div style={{ display: "flex", alignItems: "center", gap: "8px", minWidth: "140px" }}>
-          <div style={{ fontSize: "11px", color: "#64748b", fontWeight: "500", whiteSpace: "nowrap" }}>
+          <div style={{ fontSize: "11px", color: "var(--theme-text-muted)", fontWeight: "500", whiteSpace: "nowrap" }}>
             Batch Date
           </div>
           <div style={{ fontSize: "13px", fontWeight: "600", color: "#0f172a" }}>
@@ -507,7 +507,7 @@ function SimpleBatchMemberSummary() {
 
         {/* Status */}
         <div style={{ display: "flex", alignItems: "center", gap: "8px", minWidth: "120px" }}>
-          <div style={{ fontSize: "11px", color: "#64748b", fontWeight: "500", whiteSpace: "nowrap" }}>
+          <div style={{ fontSize: "11px", color: "var(--theme-text-muted)", fontWeight: "500", whiteSpace: "nowrap" }}>
             Status
           </div>
           <div style={{ fontSize: "13px", fontWeight: "600", color: "#0f172a" }}>
@@ -518,7 +518,7 @@ function SimpleBatchMemberSummary() {
 
         {/* Created By */}
         <div style={{ display: "flex", alignItems: "center", gap: "8px", minWidth: "160px" }}>
-          <div style={{ fontSize: "11px", color: "#64748b", fontWeight: "500", whiteSpace: "nowrap" }}>
+          <div style={{ fontSize: "11px", color: "var(--theme-text-muted)", fontWeight: "500", whiteSpace: "nowrap" }}>
             Created By
           </div>
           <div style={{ fontSize: "13px", fontWeight: "600", color: "#0f172a" }}>
@@ -553,7 +553,7 @@ function SimpleBatchMemberSummary() {
             value={metrics.totalExceptions}
             icon={<MinusCircleOutlined />}
             color={metrics.totalExceptions > 0 ? "#ef4444" : "#94a3b8"}
-            iconBg={metrics.totalExceptions > 0 ? "#fee2e2" : "#f1f5f9"}
+            iconBg={metrics.totalExceptions > 0 ? "#fee2e2" : "var(--theme-section-bg)"}
           />
         </Col>
       </Row>
@@ -583,7 +583,7 @@ function SimpleBatchMemberSummary() {
             display: "flex",
             justifyContent: "space-between",
             alignItems: "center",
-            borderBottom: "1px solid #f1f5f9",
+            borderBottom: "1px solid var(--theme-section-bg)",
             gap: "20px",
             backgroundColor: "rgba(9, 30, 66, 0.04)",
             flexShrink: 0,
@@ -623,7 +623,7 @@ function SimpleBatchMemberSummary() {
               style={{
                 maxWidth: "400px",
                 borderRadius: "8px",
-                backgroundColor: "#f8fafc",
+                backgroundColor: "var(--theme-muted-bg)",
                 border: "1px solid #e2e8f0",
                 height: "36px",
               }}

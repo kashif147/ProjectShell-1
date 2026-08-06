@@ -33,6 +33,7 @@ import {
   isStringFilterLabel,
 } from "../../utils/filterUtils";
 import { bumpCreditNotesReload } from "../../utils/creditNotesWorkspace";
+import { bumpEventsReload } from "../../utils/eventsWorkspace";
 import { bumpJournalAdjustmentsReload } from "../../utils/journalAdjustmentsWorkspace";
 import { bumpOnlinePaymentsReload } from "../../utils/onlinePaymentsWorkspace";
 import { bumpRefundsReload } from "../../utils/refundsWorkspace";
@@ -282,9 +283,18 @@ const Toolbar = () => {
       "/members": "Members",
       "/communicationbatchdetail": "Communication",
       "/eventssummary": "Events",
-      "/eventsdashboard": "Events",
+      "/eventsdashboard": "EventsDashboard",
       "/correspondencedashboard": "Communication",
-      "/issuesmanagementdashboard": "Cases",
+      "/issuesmanagementdashboard": "IssuesDashboard",
+      // Keep in sync with FilterContext.js's own copy of this path map - all of
+      // CasesSummary.js's routes (see its own top-of-file comment) share the "Issues"
+      // screen key.
+      "/casessummary": "Issues",
+      "/casessummary/closed": "Issues",
+      "/complaints": "Issues",
+      "/fitnesstopractice": "Issues",
+      "/industrialrelations": "Issues",
+      "/dataprotection": "Issues",
       "/attendees": "Attendees",
       "/membershipdashboard": "MembershipDashboard",
       "/creditnotes": "CreditNotes",
@@ -307,6 +317,15 @@ const Toolbar = () => {
     .replace(/\/$/, "")
     .toLowerCase();
   const isCreditNotesScreen = normalizedPath === "/creditnotes";
+  const isEventsScreen = normalizedPath === "/eventssummary";
+  const isIssuesScreen =
+    normalizedPath === "/casessummary" ||
+    normalizedPath === "/casessummary/closed" ||
+    normalizedPath === "/complaints" ||
+    normalizedPath === "/fitnesstopractice" ||
+    normalizedPath === "/industrialrelations" ||
+    normalizedPath === "/dataprotection";
+  const isAttendeesScreen = normalizedPath === "/attendees";
   const isJournalAdjustmentsScreen = normalizedPath === "/journaladjustments";
   const isOnlinePaymentScreen = normalizedPath === "/onlinepayment";
   const isRefundsScreen = normalizedPath === "/refunds";
@@ -361,7 +380,13 @@ const Toolbar = () => {
 
   const gridTemplateType = isMembersScreen
     ? "members"
-    : isCreditNotesScreen
+    : isEventsScreen
+      ? "eventssummary"
+      : isIssuesScreen
+        ? "issuessummary"
+        : isAttendeesScreen
+        ? "attendees"
+        : isCreditNotesScreen
       ? "creditnotes"
       : isJournalAdjustmentsScreen
         ? "journaladjustments"
@@ -581,6 +606,13 @@ const Toolbar = () => {
           columns: visibleColumns,
         }),
       );
+    } else if (isEventsScreen) {
+      bumpEventsReload();
+    } else if (isIssuesScreen) {
+      // Issues grid filters client-side from already-loaded rows
+      // (CLIENT_SIDE_GRID_FILTER_SCREENS), same as CreditNotes/OnlinePayment/etc -
+      // CasesSummary.js's data-loading effect already depends on `filtersState`
+      // and re-applies reactively, so no reload trigger is needed here.
     } else if (isCreditNotesScreen) {
       bumpCreditNotesReload();
     } else if (isJournalAdjustmentsScreen) {
@@ -646,6 +678,7 @@ const Toolbar = () => {
       isApplicationLikePage ||
       isProfileScreen ||
       isMembersScreen ||
+      isEventsScreen ||
       isCreditNotesScreen ||
       isJournalAdjustmentsScreen ||
       isOnlinePaymentScreen ||
@@ -727,6 +760,11 @@ const Toolbar = () => {
           limit: 500,
         }),
       );
+    } else if (isEventsScreen) {
+      bumpEventsReload();
+    } else if (isIssuesScreen) {
+      // See handleSearch's isIssuesScreen branch - client-side filtered, no
+      // reload trigger needed on reset either.
     } else if (isCreditNotesScreen) {
       bumpCreditNotesReload();
     } else if (isJournalAdjustmentsScreen) {
@@ -887,6 +925,11 @@ const Toolbar = () => {
           limit: 500,
         }),
       );
+    } else if (isEventsScreen) {
+      bumpEventsReload();
+    } else if (isIssuesScreen) {
+      // See handleSearch's isIssuesScreen branch - client-side filtered, no
+      // reload trigger needed here either.
     } else if (isCreditNotesScreen) {
       bumpCreditNotesReload();
     } else if (isJournalAdjustmentsScreen) {
@@ -1122,12 +1165,12 @@ const Toolbar = () => {
           <Button
             onClick={handleBatchSearch}
             style={{
-              backgroundColor: "#45669d",
+              backgroundColor: "var(--app-brand-primary)",
               borderRadius: "4px",
-              border: "none",
+              border: "1px solid var(--app-brand-primary)",
               height: "32px",
               fontWeight: "500",
-              color: "white",
+              color: "var(--brand-on-primary, #ffffff)",
             }}
           >
             Search
@@ -1169,8 +1212,8 @@ const Toolbar = () => {
                 placeholder={
                   isMembershipListingStyleReportScreen
                     ? "Membership No or Name"
-                    : location.pathname === "/CasesSummary"
-                      ? "Search Case ID, team, or stakeholder"
+                    : isIssuesScreen
+                      ? "Search Issue or Reference No"
                       : location.pathname === "/EventsSummary"
                         ? "Search Event ID or Name"
                         : location.pathname === "/Attendees"
@@ -1292,9 +1335,10 @@ const Toolbar = () => {
             aria-label="AI filter"
             title="AI filter"
             style={{
-              backgroundColor: "#f0f2f5",
+              backgroundColor: "transparent",
               borderRadius: "4px",
-              border: "1px solid #d9d9d9",
+              border:
+                "1px solid var(--app-control-border, color-mix(in srgb, var(--app-brand-primary) 14%, #d9d9d9))",
               height: "32px",
               width: "32px",
               minWidth: "32px",
@@ -1303,7 +1347,7 @@ const Toolbar = () => {
               alignItems: "center",
               justifyContent: "center",
               fontWeight: "500",
-              color: "#45669d",
+              color: "var(--app-brand-primary)",
             }}
           />
         )}
@@ -1317,12 +1361,12 @@ const Toolbar = () => {
               onClick={handleSave}
               loading={isSaving}
               style={{
-                backgroundColor: "#E6F7FF",
-                borderRadius: "#4px",
-                border: "1px solid #91D5FF",
+                backgroundColor: "var(--app-brand-primary)",
+                borderRadius: "4px",
+                border: "1px solid var(--app-brand-primary)",
                 height: "32px",
                 fontWeight: "500",
-                color: "#1890FF",
+                color: "var(--brand-on-primary, #ffffff)",
               }}
             >
               Save
@@ -1374,7 +1418,7 @@ const Toolbar = () => {
                       type="text"
                       size="small"
                       onClick={() => setAiQuery("")}
-                      style={{ paddingInline: 6, color: "#8c8c8c" }}
+                      style={{ paddingInline: 6, color: "var(--theme-text-muted)" }}
                     >
                       X
                     </Button>
@@ -1386,7 +1430,7 @@ const Toolbar = () => {
                     loading={aiLoading}
                     style={{
                       paddingInline: 6,
-                      color: "#45669d",
+                      color: "var(--app-brand-primary)",
                       fontWeight: 500,
                     }}
                   >
@@ -1395,11 +1439,11 @@ const Toolbar = () => {
                         display: "inline-flex",
                         alignItems: "center",
                         gap: 4,
-                        color: "#45669d",
+                        color: "var(--app-brand-primary)",
                       }}
                     >
                       Generate
-                      <EnterOutlined style={{ color: "#45669d" }} />
+                      <EnterOutlined style={{ color: "var(--app-brand-primary)" }} />
                     </span>
                   </Button>
                 </div>

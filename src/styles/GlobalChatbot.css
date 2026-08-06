@@ -8,13 +8,13 @@
   width: 56px !important;
   height: 56px !important;
   border-radius: 50% !important;
-  box-shadow: 0 8px 32px rgba(33, 94, 151, 0.3) !important;
+  box-shadow: 0 8px 32px color-mix(in srgb, var(--app-brand-primary) 30%, transparent) !important;
   transition: all 0.3s ease !important;
   display: flex !important;
   align-items: center !important;
   justify-content: center !important;
   font-size: 20px !important;
-  background: linear-gradient(135deg, #215e97 0%, #1a4d7a 100%) !important;
+  background: var(--app-shell-gradient, linear-gradient(135deg, var(--app-brand-primary) 0%, #1a4d7a 100%)) !important;
   border: none !important;
 }
 
@@ -48,7 +48,7 @@
 }
 
 .floating-chat-header {
-  background: linear-gradient(135deg, #215e97 0%, #1a4d7a 100%);
+  background: var(--app-shell-gradient, linear-gradient(135deg, var(--app-brand-primary) 0%, #1a4d7a 100%));
   color: white;
   padding: 16px 20px;
   display: flex;
@@ -91,13 +91,13 @@
 
 .ai-chatbot-button:hover {
   transform: scale(1.1) !important;
-  box-shadow: 0 12px 40px rgba(33, 94, 151, 0.4) !important;
-  background: linear-gradient(135deg, #1a4d7a 0%, #154a6b 100%) !important;
+  box-shadow: 0 12px 40px color-mix(in srgb, var(--app-brand-primary) 40%, transparent) !important;
+  background: color-mix(in srgb, var(--app-brand-primary) 84%, #000000) !important;
 }
 
 /* Chat Drawer Styles */
 .global-chatbot-drawer .ant-drawer-header {
-  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+  background: linear-gradient(135deg, var(--theme-muted-bg) 0%, #e2e8f0 100%);
   border-bottom: 1px solid #e2e8f0;
 }
 
@@ -138,7 +138,7 @@
 }
 
 .chat-message-avatar.user {
-  background: linear-gradient(135deg, #215e97 0%, #1a4d7a 100%);
+  background: var(--app-shell-gradient, linear-gradient(135deg, var(--app-brand-primary) 0%, #1a4d7a 100%));
   color: white;
 }
 
@@ -158,12 +158,12 @@
 }
 
 .chat-message-content.user {
-  background: linear-gradient(135deg, #215e97 0%, #1a4d7a 100%);
+  background: var(--app-shell-gradient, linear-gradient(135deg, var(--app-brand-primary) 0%, #1a4d7a 100%));
   color: white;
 }
 
 .chat-message-content.bot {
-  background: #f8fafc;
+  background: var(--theme-muted-bg);
   color: #374151;
   border: 1px solid #e2e8f0;
 }
@@ -192,7 +192,7 @@
 }
 
 .chat-loading-content {
-  background: #f8fafc;
+  background: var(--theme-muted-bg);
   padding: 12px 16px;
   border-radius: 16px;
   border: 1px solid #e2e8f0;
@@ -209,8 +209,8 @@
   border-radius: 8px;
   margin-bottom: 16px;
   font-size: 12px;
-  color: #1976d2;
-  border-left: 3px solid #1976d2;
+  color: var(--app-brand-accent);
+  border-left: 3px solid var(--app-brand-accent);
 }
 
 /* Responsive Design */
@@ -329,8 +329,8 @@
 }
 
 .chat-context-management {
-  border-left-color: #1890ff;
-  background: linear-gradient(135deg, #e6f7ff 0%, #bae7ff 100%);
+  border-left-color: var(--app-brand-accent);
+  background: linear-gradient(135deg, var(--app-brand-bg) 0%, #bae7ff 100%);
   color: #0958d9;
 }
 

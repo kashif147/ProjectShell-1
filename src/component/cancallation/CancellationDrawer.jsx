@@ -224,7 +224,7 @@ const CancellationDrawer = ({ open, onClose }) => {
                                         icon: <BsFiletypeXls style={{
                                             fontSize: "12px",
                                             marginRight: "10px",
-                                            color: "#45669d",
+                                            color: "var(--app-brand-primary)",
                                         }} />,
                                         onClick: () => {
                                             // downloadCSV()
@@ -236,7 +236,7 @@ const CancellationDrawer = ({ open, onClose }) => {
                                         icon: <BsFiletypeXls style={{
                                             fontSize: "12px",
                                             marginRight: "10px",
-                                            color: "#45669d",
+                                            color: "var(--app-brand-primary)",
                                         }} />,
                                     }
                                 ]} />

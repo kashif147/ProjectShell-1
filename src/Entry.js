@@ -4,7 +4,6 @@ import Header from "./component/common/Header";
 import HeaderDetails from "./component/common/HeaderDetails";
 import Sidebar from "./component/common/Sidebar";
 import ResizableComp from "./component/common/ResizableComp";
-import MyFooter from "./component/common/MyFooter";
 import CornGrideSummary from "./pages/cornmarket/CornGrideSummary";
 import ProtectedRoute from "./Navigation/ProtectedRoute";
 import { AuthorizationProvider } from "./context/AuthorizationContext";
@@ -478,7 +477,7 @@ function Entry() {
                             element={
                               <ProtectedRoute
                                 requiredPermission={
-                                  RoutePermissions["/CasesDetails"]
+                                  RoutePermissions["CasesDetails"]
                                 }
                               >
                                 <CasesDetails />
@@ -491,7 +490,7 @@ function Entry() {
                             element={
                               <ProtectedRoute
                                 requiredPermission={
-                                  RoutePermissions["/CasesById"]
+                                  RoutePermissions["CasesById"]
                                 }
                               >
                                 <CasesById />
@@ -504,10 +503,92 @@ function Entry() {
                             element={
                               <ProtectedRoute
                                 requiredPermission={
-                                  RoutePermissions["/CasesSummary"]
+                                  RoutePermissions["CasesSummary"]
                                 }
                               >
                                 <CasesSummary />
+                              </ProtectedRoute>
+                            }
+                          />
+
+                          {/*
+                            Dedicated Issue Management side-nav sections (requirements doc:
+                            "I should have a dedicated sections for complaints, fitness to
+                            practice, Data Protection, and Industrial relations issues as a
+                            separate side navigation tab and only authorised users have
+                            access to each section based on their roles") plus a Closed
+                            view ("We can create a separate view for open issues, closed
+                            issues, complaints, fitness to practice, and industrial
+                            relations issues" - "open issues" is "/CasesSummary" itself,
+                            relabeled "Open Issues" in the side nav, rather than a separate
+                            route). All reuse CasesSummary.js - one shared grid component,
+                            pre-filtered client-side by its `defaultView` prop - not separate
+                            pages; see that file's own comment for why. RoutePermissions.js
+                            keys are looked up WITHOUT a leading slash here (unlike
+                            "/CasesSummary" above) - see the comment on those keys for why
+                            that distinction matters.
+                          */}
+                          <Route
+                            path="CasesSummary/Closed"
+                            element={
+                              <ProtectedRoute
+                                requiredPermission={
+                                  RoutePermissions["CasesSummaryClosed"]
+                                }
+                              >
+                                <CasesSummary defaultView="closed" />
+                              </ProtectedRoute>
+                            }
+                          />
+
+                          <Route
+                            path="Complaints"
+                            element={
+                              <ProtectedRoute
+                                requiredPermission={
+                                  RoutePermissions["Complaints"]
+                                }
+                              >
+                                <CasesSummary defaultView="complaints" />
+                              </ProtectedRoute>
+                            }
+                          />
+
+                          <Route
+                            path="FitnessToPractice"
+                            element={
+                              <ProtectedRoute
+                                requiredPermission={
+                                  RoutePermissions["FitnessToPractice"]
+                                }
+                              >
+                                <CasesSummary defaultView="ftp" />
+                              </ProtectedRoute>
+                            }
+                          />
+
+                          <Route
+                            path="IndustrialRelations"
+                            element={
+                              <ProtectedRoute
+                                requiredPermission={
+                                  RoutePermissions["IndustrialRelations"]
+                                }
+                              >
+                                <CasesSummary defaultView="ir" />
+                              </ProtectedRoute>
+                            }
+                          />
+
+                          <Route
+                            path="DataProtection"
+                            element={
+                              <ProtectedRoute
+                                requiredPermission={
+                                  RoutePermissions["DataProtection"]
+                                }
+                              >
+                                <CasesSummary defaultView="dataprotection" />
                               </ProtectedRoute>
                             }
                           />
@@ -1662,9 +1743,6 @@ function Entry() {
                 </CasesEditProvider>
               </div>
             </div>
-
-            {/* Footer - also hide for noSidebarRoutes */}
-            {showSidebar && <MyFooter />}
           </div>
         </CancellationBatchesFilterProvider>
       </ReminderBatchesFilterProvider>

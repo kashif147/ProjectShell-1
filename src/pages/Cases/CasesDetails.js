@@ -1,49 +1,151 @@
-import React, { useState, useRef } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
+import { useDispatch, useSelector } from "react-redux";
 import {
   Avatar,
   Button,
+  Empty,
   Row,
   Col,
   Tooltip,
   Dropdown,
   Input,
   DatePicker,
-  Switch,
   Select,
+  Checkbox,
+  Tag,
+  Spin,
+  message,
 } from "antd";
 import dayjs from "dayjs";
 import {
-  ArrowLeftOutlined,
-  ShareAltOutlined,
   EllipsisOutlined,
   PlusOutlined,
   FileTextOutlined,
   DownloadOutlined,
-  MessageOutlined,
   UserAddOutlined,
-  CloseOutlined,
-  FolderOpenOutlined,
   DownOutlined,
   UpOutlined,
   PrinterOutlined,
   EyeOutlined,
+  SaveOutlined,
+  CloseOutlined,
 } from "@ant-design/icons";
 import "../../styles/CasesDetails.css";
 import ReactQuill from "react-quill-new";
 import "react-quill-new/dist/quill.snow.css";
 
 import MySearchInput from "../../component/common/MySearchInput";
+import MemberSearch from "../../component/profile/MemberSearch";
+import { useTableColumns } from "../../context/TableColumnsContext ";
+import {
+  fetchActivities,
+  createActivity,
+  updateIssue,
+  updateIssueStatus,
+} from "../../services/issuesApi";
+import {
+  getIssueById,
+  clearActiveIssue,
+  setActivities,
+} from "../../features/issues/issuesSlice";
+import ComplaintFields from "../../component/cases/ComplaintFields";
+import FtpFields from "../../component/cases/FtpFields";
+import IrFields from "../../component/cases/IrFields";
+import DataProtectionFields from "../../component/cases/DataProtectionFields";
+import GroupPicker from "../../component/cases/GroupPicker";
+import LinkedCasesPicker from "../../component/cases/LinkedCasesPicker";
+import { useIssueStatusOptions, useIssueDropdownLookups } from "../../hooks/useIssueLookups";
+import {
+  RESOLUTIONS,
+  ISSUE_TYPE_LABELS,
+  toFormValues,
+  buildIssueUpdatePayload,
+  buildIssueStatusPayload,
+  enumLabel,
+} from "../../component/cases/issueOptions";
+
+const TYPE_FIELDS_COMPONENT = {
+  COMPLAINT: ComplaintFields,
+  FTP: FtpFields,
+  IR: IrFields,
+  DP: DataProtectionFields,
+};
+
+const ACTIVITY_TYPE_OPTIONS = [
+  "EMAIL",
+  "CALL",
+  "LETTER",
+  "TASK",
+  "NOTE",
+  "APPOINTMENT",
+  "SMS",
+  "SOCIAL_MEDIA_QUERY",
+  "FAX",
+  "ADVICE_GIVEN",
+];
+
+function formatDate(value, withTime = false) {
+  if (!value) return "-";
+  const d = dayjs(value);
+  if (!d.isValid()) return "-";
+  return d.format(withTime ? "DD/MM/YYYY HH:mm" : "DD/MM/YYYY");
+}
+
+function stripHtml(html) {
+  if (!html) return "";
+  const tmp = document.createElement("div");
+  tmp.innerHTML = html;
+  return (tmp.textContent || tmp.innerText || "").replace(/\s+/g, " ").trim();
+}
+
+// Function, not a static object - interactionDate must be "now" each time the form is
+// reset (after posting), not frozen at module-load time.
+function emptyActivityForm() {
+  return {
+    activityType: "NOTE",
+    subject: "",
+    body: "",
+    interactionDate: dayjs(),
+    pertinentToFileReview: false,
+    // Default checked per the plan/backend model default (Activity.sendNotification
+    // defaults true unless explicitly opted out).
+    sendNotification: true,
+  };
+}
 
 function CasesDetails() {
   const location = useLocation();
   const navigate = useNavigate();
-  const caseId = location.state?.caseId || "#8821";
+  const dispatch = useDispatch();
+  const tableColumnsCtx = useTableColumns();
 
-  const [activeStep, setActiveStep] = useState("Intake");
-  const [activeNav, setActiveNav] = useState("Summary");
+  // The Issues grid's "Issue" column link passes {issueId, recordName} via route state (see
+  // context/TableColumnsContext .js's staticColumns.Issues render()), and the prev/next
+  // arrows (same context file's profilNextBtnFtn/profilPrevBtnFtn, Issues-specific branch)
+  // navigate the same way while also updating a ?issueId= query param so a refresh/direct
+  // link still works - read state first, query param as the fallback, matching how
+  // EventDetails.jsx / EventsSummary.js do it for /EventDetails.
+  const searchParams = useMemo(() => new URLSearchParams(location.search), [location.search]);
+  const issueId = location.state?.issueId || searchParams.get("issueId") || null;
 
-  // Section collapse state
+  const { activeIssue, activities, loading } = useSelector((state) => state.issues);
+
+  // Issue Status options are scoped to the case's (fixed, non-editable-post-create) Issue
+  // Type - see hooks/useIssueLookups.js.
+  const { options: issueStatusOptions } = useIssueStatusOptions(activeIssue?.issueType);
+  const { originOptions, issueSourceOptions, priorityOptions, complaintTypeOptions } = useIssueDropdownLookups();
+
+  const [formValues, setFormValues] = useState({});
+  const [savingGeneral, setSavingGeneral] = useState(false);
+  const [savingStatus, setSavingStatus] = useState(false);
+  const [memberLabels, setMemberLabels] = useState({});
+  const [memberBusy, setMemberBusy] = useState(false);
+
+  const [activitiesLoading, setActivitiesLoading] = useState(false);
+  const [activityForm, setActivityForm] = useState(emptyActivityForm);
+  const [postingActivity, setPostingActivity] = useState(false);
+
   const [collapsedSections, setCollapsedSections] = useState({
     Attachments: false,
     Activities: false,
@@ -51,203 +153,280 @@ function CasesDetails() {
   });
   const [descriptionCollapsed, setDescriptionCollapsed] = useState(false);
 
-  // Section Refs
   const summaryRef = useRef(null);
+  const typeFieldsRef = useRef(null);
   const notesRef = useRef(null);
   const attachmentsRef = useRef(null);
   const historyRef = useRef(null);
 
-  const [assignee, setAssignee] = useState({
-    name: "Alex Rivera",
-    avatar: "https://i.pravatar.cc/150?u=alex",
-  });
-  const [teamMembers, setTeamMembers] = useState([
-    {
-      name: "Sarah C.",
-      avatar: "https://i.pravatar.cc/150?u=sarah",
-      active: true,
+  const loadActivities = useCallback(
+    (id) => {
+      if (!id) return;
+      setActivitiesLoading(true);
+      fetchActivities(id)
+        .then((data) => {
+          dispatch(setActivities(Array.isArray(data) ? data : []));
+        })
+        .catch(() => {
+          dispatch(setActivities([]));
+        })
+        .finally(() => setActivitiesLoading(false));
     },
-    {
-      name: "Michael S.",
-      avatar: "https://i.pravatar.cc/150?u=michael",
-      active: false,
-    },
-    {
-      name: "David W.",
-      avatar: "https://i.pravatar.cc/150?u=david",
-      active: false,
-    },
-  ]);
+    [dispatch],
+  );
 
-  const [caseType, setCaseType] = useState("Compliance");
-  const [caseStatus, setCaseStatus] = useState("In Progress");
+  // Re-load whenever issueId changes (direct nav, prev/next, or a fresh mount) - clear the
+  // previous issue's data first so a stale record never flashes while the new one loads.
+  useEffect(() => {
+    if (!issueId) return;
+    dispatch(clearActiveIssue());
+    dispatch(getIssueById(issueId));
+    loadActivities(issueId);
+  }, [issueId, dispatch, loadActivities]);
 
-  const steps = ["Intake", "Investigation", "Review", "Closed"];
+  // Sync local editable form state whenever a (new) issue finishes loading.
+  useEffect(() => {
+    if (activeIssue && activeIssue._id === issueId) {
+      setFormValues(toFormValues(activeIssue));
+    }
+  }, [activeIssue, issueId]);
 
-  // Mock data for dropdowns
-  // Mock current user - replace with actual user from auth context
-  const currentUser = {
-    name: "Alex Rivera",
-    avatar: "https://i.pravatar.cc/150?u=alex",
-  };
+  // Self-heal the breadcrumb (Breadcrumb.jsx reads location.state.caseId for /CasesDetails,
+  // falling back to recordName) in case the referring page didn't already pass it, mirroring
+  // EventDetails.jsx's identical self-heal effect for /EventDetails.
+  useEffect(() => {
+    if (!activeIssue || activeIssue._id !== issueId) return;
+    const recordName = activeIssue.caseTitle || activeIssue.internalReferenceNumber;
+    if (location.state?.recordName === recordName && location.state?.caseId === activeIssue.internalReferenceNumber) {
+      return;
+    }
+    navigate(
+      { pathname: location.pathname, search: location.search },
+      {
+        replace: true,
+        state: {
+          ...location.state,
+          issueId,
+          recordName,
+          caseId: activeIssue.internalReferenceNumber,
+        },
+      },
+    );
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeIssue, issueId]);
 
-  const availableAssignees = [
-    { name: "Alex Rivera", avatar: "https://i.pravatar.cc/150?u=alex" },
-    { name: "Sarah Johnson", avatar: "https://i.pravatar.cc/150?u=sarah" },
-    { name: "Mike Chen", avatar: "https://i.pravatar.cc/150?u=number" },
-  ];
+  // Keep the shared grid-navigation context (prev/next arrows in HeaderDetails.jsx) in sync
+  // with whichever issue is currently open, so resolveGridNavigationIndex can find this row
+  // inside whatever `gridData` the Issues grid last registered (see
+  // TableColumnsContext .js's Issues-specific branch in profilNextBtnFtn/profilPrevBtnFtn).
+  useEffect(() => {
+    if (!activeIssue?._id || typeof tableColumnsCtx?.getProfile !== "function") return;
+    tableColumnsCtx.getProfile(
+      {
+        issueId: activeIssue._id,
+        key: activeIssue._id,
+        caseTitle: activeIssue.caseTitle,
+        internalReferenceNumber: activeIssue.internalReferenceNumber,
+      },
+      0,
+    );
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeIssue?._id]);
 
-  const availableTeamMembers = [
-    { name: "Emma W.", avatar: "https://i.pravatar.cc/150?u=emma" },
-    { name: "James B.", avatar: "https://i.pravatar.cc/150?u=james" },
-    { name: "Linda K.", avatar: "https://i.pravatar.cc/150?u=linda" },
-  ];
+  const handleFieldChange = useCallback((field, value) => {
+    setFormValues((prev) => ({ ...prev, [field]: value }));
+  }, []);
 
-  const caseTypes = ["Compliance", "Risk", "Legal", "General"];
-  const caseStatuses = ["In Progress", "Pending", "Review", "Closed"];
-  const categories = ["Compliance", "Risk", "Legal", "General"];
-  const priorities = ["Critical", "High", "Medium", "Low"];
+  const handleOwnerUserIdChange = useCallback((value) => {
+    setFormValues((prev) => ({ ...prev, owner: { ...(prev.owner || {}), userId: value } }));
+  }, []);
 
-  const handleAssigneeChange = ({ key }) => {
-    const selected = availableAssignees.find((a) => a.name === key);
-    if (selected) setAssignee(selected);
-  };
+  const refreshIssue = useCallback(() => {
+    if (issueId) dispatch(getIssueById(issueId));
+  }, [issueId, dispatch]);
 
-  const handleAddTeamMember = ({ key }) => {
-    const selected = availableTeamMembers.find((m) => m.name === key);
-    if (selected && !teamMembers.find((m) => m.name === selected.name)) {
-      setTeamMembers([...teamMembers, { ...selected, active: false }]);
+  const handleSaveGeneral = async () => {
+    if (!issueId || !activeIssue) return;
+    setSavingGeneral(true);
+    try {
+      const payload = buildIssueUpdatePayload(formValues, activeIssue.issueType);
+      await updateIssue(issueId, payload);
+      message.success("Issue updated");
+      refreshIssue();
+    } catch (error) {
+      message.error(
+        error?.response?.data?.error?.message ||
+          error?.response?.data?.message ||
+          error?.message ||
+          "Failed to save issue",
+      );
+    } finally {
+      setSavingGeneral(false);
     }
   };
 
-  const handleCaseTypeChange = ({ key }) => setCaseType(key);
-  const handleCaseStatusChange = ({ key }) => setCaseStatus(key);
-
-  const scrollToSection = (sectionName) => {
-    setActiveNav(sectionName);
-    let ref = null;
-    switch (sectionName) {
-      case "Summary":
-        ref = summaryRef;
-        break;
-      case "Activities":
-        ref = notesRef;
-        break;
-      case "Communications":
-        ref = attachmentsRef;
-        break;
-      case "History":
-        ref = historyRef;
-        break;
-      default:
-        return;
-    }
-    if (ref && ref.current) {
-      ref.current.scrollIntoView({ behavior: "smooth", block: "start" });
+  const handleUpdateStatus = async () => {
+    if (!issueId) return;
+    setSavingStatus(true);
+    try {
+      const payload = buildIssueStatusPayload(formValues);
+      await updateIssueStatus(issueId, payload);
+      message.success("Status updated");
+      refreshIssue();
+    } catch (error) {
+      message.error(
+        error?.response?.data?.error?.message ||
+          error?.response?.data?.message ||
+          error?.message ||
+          "Failed to update status",
+      );
+    } finally {
+      setSavingStatus(false);
     }
   };
 
-  const toggleSection = (sectionName) => {
-    setCollapsedSections((prev) => ({
+  // Member linking - replaces the old fake hardcoded multi-select with the generic,
+  // reusable MemberSearch component. Persists immediately (rather than waiting for the
+  // general Save button) so the link survives even if the user navigates away without
+  // clicking Save, per the task's "must actually persist" requirement.
+  const memberIds = Array.isArray(formValues.memberIds) ? formValues.memberIds : [];
+
+  const persistMemberIds = async (nextIds) => {
+    if (!issueId) return;
+    setMemberBusy(true);
+    try {
+      await updateIssue(issueId, { memberIds: nextIds });
+      setFormValues((prev) => ({ ...prev, memberIds: nextIds }));
+      message.success("Member linked members updated");
+    } catch (error) {
+      message.error(
+        error?.response?.data?.error?.message ||
+          error?.response?.data?.message ||
+          error?.message ||
+          "Failed to update linked members",
+      );
+    } finally {
+      setMemberBusy(false);
+    }
+  };
+
+  const handleAddMember = async (memberData) => {
+    const id = memberData?._id;
+    if (!id || memberIds.includes(id)) return;
+    setMemberLabels((prev) => ({
       ...prev,
-      [sectionName]: !prev[sectionName],
+      [id]: `${memberData?.personalInfo?.forename || ""} ${memberData?.personalInfo?.surname || ""}`.trim() ||
+        memberData?.membershipNumber ||
+        id,
     }));
+    await persistMemberIds([...memberIds, id]);
   };
 
-  const assigneeMenu = {
-    items: availableAssignees.map((a) => ({
-      key: a.name,
-      label: (
-        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-          <Avatar size="small" src={a.avatar} />
-          <span>{a.name}</span>
-        </div>
-      ),
-    })),
-    onClick: handleAssigneeChange,
-    style: { width: 160 },
+  const handleRemoveMember = (id) => {
+    persistMemberIds(memberIds.filter((m) => m !== id));
   };
 
-  const teamMemberMenu = {
-    items: availableTeamMembers.map((m) => ({
-      key: m.name,
-      label: (
-        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-          <Avatar size="small" src={m.avatar} />
-          <span>{m.name}</span>
-        </div>
-      ),
-    })),
-    onClick: handleAddTeamMember,
-    style: { minWidth: 220 },
+  // Group linking (profile-service's Group feature, GroupPicker.jsx) - persists immediately
+  // on select/create/clear, same "must survive navigating away without Save" reasoning as
+  // persistMemberIds above. Suppressed in the sidebar for IR Group/National cases, where
+  // IrFields.jsx already renders this same control prominently (Case Type-driven "Members:
+  // Grid of contacts" requirement) bound to the same formValues.groupId - see IrFields.jsx's
+  // header comment.
+  const [groupBusy, setGroupBusy] = useState(false);
+  const isIrGroupCase =
+    activeIssue?.issueType === "IR" &&
+    (formValues.caseType === "GROUP" || formValues.caseType === "NATIONAL");
+
+  const persistGroupId = async (nextGroupId) => {
+    if (!issueId) return;
+    setGroupBusy(true);
+    try {
+      await updateIssue(issueId, { groupId: nextGroupId });
+      setFormValues((prev) => ({ ...prev, groupId: nextGroupId }));
+      message.success(nextGroupId ? "Group linked" : "Group unlinked");
+    } catch (error) {
+      message.error(
+        error?.response?.data?.error?.message ||
+          error?.response?.data?.message ||
+          error?.message ||
+          "Failed to update linked group",
+      );
+    } finally {
+      setGroupBusy(false);
+    }
   };
 
-  const caseTypeMenu = {
-    items: caseTypes.map((t) => ({ key: t, label: t })),
-    onClick: handleCaseTypeChange,
+  // Linked Cases (common field across all 4 issue types) - persists immediately via
+  // updateIssue, same pattern as member/group linking above.
+  const [linkedCasesBusy, setLinkedCasesBusy] = useState(false);
+  const linkedIssueIds = Array.isArray(formValues.linkedIssueIds) ? formValues.linkedIssueIds : [];
+
+  const persistLinkedIssueIds = async (nextIds) => {
+    if (!issueId) return;
+    setLinkedCasesBusy(true);
+    try {
+      await updateIssue(issueId, { linkedIssueIds: nextIds });
+      setFormValues((prev) => ({ ...prev, linkedIssueIds: nextIds }));
+      message.success("Linked cases updated");
+    } catch (error) {
+      message.error(
+        error?.response?.data?.error?.message ||
+          error?.response?.data?.message ||
+          error?.message ||
+          "Failed to update linked cases",
+      );
+    } finally {
+      setLinkedCasesBusy(false);
+    }
   };
 
-  const caseStatusMenu = {
-    items: caseStatuses.map((s) => ({ key: s, label: s })),
-    onClick: handleCaseStatusChange,
+  const handleAddLinkedIssue = (id) => {
+    if (!id || linkedIssueIds.includes(id)) return;
+    persistLinkedIssueIds([...linkedIssueIds, id]);
   };
 
-  const activities = [
-    {
-      title: "Issue Updated: In Progress",
-      time: "2 hours ago - Alex Rivera",
-      icon: <FileTextOutlined />,
-      color: "var(--info-bg)",
-      iconColor: "var(--primary-blue)",
-    },
-    {
-      title: "New Internal Note Added",
-      time: "4 hours ago - Sarah Chen",
-      icon: <MessageOutlined />,
-      color: "var(--warning-bg)",
-      iconColor: "var(--warning-color)",
-    },
-    {
-      title: "David Wu Assigned",
-      time: "Yesterday - System",
-      icon: <UserAddOutlined />,
-      color: "var(--success-bg)",
-      iconColor: "var(--success-color)",
-    },
-  ];
-
-  const [caseTitle, setCaseTitle] = useState("Critical AML Indicator Flag");
-  const [caseDate, setCaseDate] = useState(dayjs("2023-10-24"));
-  const [caseLocation, setCaseLocation] = useState("Region 4");
-  const [caseCategory, setCaseCategory] = useState("Compliance");
-  const [casePriority, setCasePriority] = useState("High");
-  const [caseDeadline, setCaseDeadline] = useState(dayjs("2023-11-15"));
-  const [fileNumber, setFileNumber] = useState("CFN-88210");
-  const [pertinentToFileReview, setPertinentToFileReview] = useState(true);
-  const [stakeholders, setStakeholders] = useState(["Emma W.", "James B."]);
-
-  const issueDescription =
-    "Initial flagged transaction originating from region 4. Potential anti-money laundering (AML) indicators detected. Requires manual cross-verification with external vendor logs.";
-
-  const getFirstNWords = (text, n) => {
-    if (!text || !n) return "";
-    const stripped = String(text)
-      .replace(/<[^>]+>/g, " ")
-      .replace(/\s+/g, " ")
-      .trim();
-    const words = stripped.split(/\s+/).filter(Boolean);
-    const slice = words.slice(0, n).join(" ");
-    return words.length > n ? `${slice}...` : slice;
+  const handleRemoveLinkedIssue = (id) => {
+    persistLinkedIssueIds(linkedIssueIds.filter((x) => x !== id));
   };
 
-  const stripHtml = (html) => {
-    if (!html) return "";
-    const tmp = document.createElement("div");
-    tmp.innerHTML = html;
-    return (tmp.textContent || tmp.innerText || "").replace(/\s+/g, " ").trim();
+  // Activities
+  const handleActivityFieldChange = (field, value) => {
+    setActivityForm((prev) => ({ ...prev, [field]: value }));
   };
 
-  const handlePrint = () => window.print();
+  const handlePostActivity = async () => {
+    if (!issueId) return;
+    if (!activityForm.activityType) {
+      message.error("Activity type is required");
+      return;
+    }
+    setPostingActivity(true);
+    try {
+      await createActivity(issueId, {
+        activityType: activityForm.activityType,
+        subject: activityForm.subject || null,
+        body: activityForm.body || null,
+        interactionDate: activityForm.interactionDate
+          ? activityForm.interactionDate.toISOString()
+          : new Date().toISOString(),
+        pertinentToFileReview: !!activityForm.pertinentToFileReview,
+        sendNotification: activityForm.sendNotification !== false,
+      });
+      message.success("Activity logged");
+      setActivityForm(emptyActivityForm());
+      loadActivities(issueId);
+      refreshIssue();
+    } catch (error) {
+      message.error(
+        error?.response?.data?.error?.message ||
+          error?.response?.data?.message ||
+          error?.message ||
+          "Failed to log activity",
+      );
+    } finally {
+      setPostingActivity(false);
+    }
+  };
 
   const allSectionsCollapsed =
     descriptionCollapsed &&
@@ -258,27 +437,294 @@ function CasesDetails() {
   const handleCollapseExpandToggle = () => {
     if (allSectionsCollapsed) {
       setDescriptionCollapsed(false);
-      setCollapsedSections({
-        Attachments: false,
-        Activities: false,
-        History: false,
-      });
+      setCollapsedSections({ Attachments: false, Activities: false, History: false });
     } else {
       setDescriptionCollapsed(true);
-      setCollapsedSections({
-        Attachments: true,
-        Activities: true,
-        History: true,
-      });
+      setCollapsedSections({ Attachments: true, Activities: true, History: true });
     }
   };
+
+  const toggleSection = (sectionName) => {
+    setCollapsedSections((prev) => ({ ...prev, [sectionName]: !prev[sectionName] }));
+  };
+
+  const handlePrint = () => window.print();
+
+  // ---- Attachments: purely presentational mock, no issue-service backend counterpart
+  // (issue-service has no attachments endpoints) - left as-is per the task's scope, not
+  // wired to any real data and not removed.
+  const attachmentsData = [
+    {
+      name: "Case_Summary_V2.pdf",
+      date: "Oct 24, 2023",
+      time: "10:30 AM",
+      modifiedBy: "J. DOE",
+      type: "pdf",
+      icon: <FileTextOutlined style={{ color: "#ff4d4f" }} />,
+    },
+    {
+      name: "Internal_Review_Notes.docx",
+      date: "Oct 19, 2023",
+      time: "04:20 PM",
+      modifiedBy: "M. LEGAL",
+      type: "doc",
+      icon: <FileTextOutlined style={{ color: "var(--app-brand-accent)" }} />,
+    },
+  ];
+
+  const handleUploadFile = () => {
+    const input = document.createElement("input");
+    input.type = "file";
+    input.multiple = true;
+    input.onchange = () => {};
+    input.click();
+  };
+  const handleDownloadFile = (file) => {
+    const blob = new Blob([`Placeholder content for ${file.name}`], {
+      type: "application/octet-stream",
+    });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = file.name;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+  const handleViewFile = (file) => {
+    const w = window.open("", "_blank");
+    if (w) {
+      w.document.write(
+        `<html><body style="font-family:sans-serif;padding:24px"><h2>${file.name}</h2><p>Preview not available for this file type.</p></body></html>`,
+      );
+    }
+  };
+  const handleDownloadAll = () => {
+    attachmentsData.forEach((file, i) => setTimeout(() => handleDownloadFile(file), i * 200));
+  };
+
+  const renderAttachments = () => (
+    <div className="attachments-tab-content">
+      <div className="attachments-icons-grid">
+        {attachmentsData.map((file, index) => (
+          <div key={index} className="attachment-icon-item" title={file.name}>
+            <div className={`file-type-icon ${file.type}`}>{file.icon}</div>
+            <div className="file-name-tooltip">{file.name}</div>
+            <div className="file-upload-date">
+              {file.date} {file.time}
+            </div>
+            <div className="attachment-item-actions">
+              <Tooltip title="View">
+                <span
+                  className="attachment-action-btn"
+                  onClick={() => handleViewFile(file)}
+                  role="button"
+                  tabIndex={0}
+                  onKeyDown={(e) => e.key === "Enter" && handleViewFile(file)}
+                >
+                  <EyeOutlined />
+                </span>
+              </Tooltip>
+              <Tooltip title="Download">
+                <span
+                  className="attachment-action-btn"
+                  onClick={() => handleDownloadFile(file)}
+                  role="button"
+                  tabIndex={0}
+                  onKeyDown={(e) => e.key === "Enter" && handleDownloadFile(file)}
+                >
+                  <DownloadOutlined />
+                </span>
+              </Tooltip>
+            </div>
+          </div>
+        ))}
+        <div className="attachment-icon-item upload-icon-item" onClick={handleUploadFile}>
+          <Avatar
+            className="upload-new-avatar"
+            icon={<PlusOutlined />}
+            style={{ backgroundColor: "var(--primary-blue)", cursor: "pointer" }}
+          />
+          <div className="file-name-tooltip">Upload New</div>
+        </div>
+      </div>
+    </div>
+  );
+
+  // ---- History timeline: purely presentational mock, no issue-service backend counterpart
+  // either (no audit/history-timeline endpoint on this service) - left as-is per the task's
+  // scope. audit-service does receive issues.issue.audit.v1 events, but exposing a grid over
+  // that is out of scope here (see TEMPLATE_IMPLEMENTATION_PLAYBOOK.md's note that
+  // audit-service has no Template/grid support yet for any service).
+  const historyData = [
+    {
+      actor: { name: "System", title: "STATUS CHANGE" },
+      time: "-",
+      label: "Issue created",
+    },
+  ];
+
+  const renderHistory = () => (
+    <div className="history-tab-content">
+      <div className="history-header">
+        <div className="history-search-wrapper">
+          <MySearchInput placeholder="Search by actor or field..." />
+        </div>
+      </div>
+      <div className="history-timeline">
+        {historyData.map((item, index) => (
+          <div key={index} className="history-card">
+            <div className="history-card-header">
+              <div className="actor-info">
+                <Avatar icon={<UserAddOutlined />} />
+                <div className="actor-text">
+                  <h4>{item.actor.name}</h4>
+                  <span className="actor-title">{item.actor.title}</span>
+                </div>
+              </div>
+              <span className="time-stamp">{item.time}</span>
+            </div>
+            <div className="history-card-body">
+              <p className="change-label">{item.label}</p>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+
+  const renderActivities = () => (
+    <div className="issue-notes-container" style={{ padding: 0 }}>
+      <div
+        className="add-note-section"
+        style={{ display: "flex", gap: 16, alignItems: "flex-start", marginBottom: 24 }}
+      >
+        <Avatar icon={<UserAddOutlined />} />
+        <div style={{ flex: 1 }}>
+          <Row gutter={12} style={{ marginBottom: 12 }}>
+            <Col span={8}>
+              <Select
+                value={activityForm.activityType}
+                onChange={(v) => handleActivityFieldChange("activityType", v)}
+                style={{ width: "100%" }}
+                options={ACTIVITY_TYPE_OPTIONS.map((v) => ({ value: v, label: enumLabel(v) }))}
+              />
+            </Col>
+            <Col span={8}>
+              <DatePicker
+                value={activityForm.interactionDate}
+                onChange={(d) => handleActivityFieldChange("interactionDate", d)}
+                style={{ width: "100%" }}
+                format="DD/MM/YYYY HH:mm"
+                showTime
+              />
+            </Col>
+            <Col span={8}>
+              <Input
+                placeholder="Subject"
+                value={activityForm.subject}
+                onChange={(e) => handleActivityFieldChange("subject", e.target.value)}
+              />
+            </Col>
+          </Row>
+          <div className="rich-text-editor-wrapper" style={{ marginBottom: 12 }}>
+            <ReactQuill
+              theme="snow"
+              value={activityForm.body}
+              onChange={(v) => handleActivityFieldChange("body", v)}
+              placeholder="Add activity details..."
+              modules={{
+                toolbar: [
+                  ["bold", "italic", "underline"],
+                  [{ list: "ordered" }, { list: "bullet" }],
+                  ["clean"],
+                ],
+              }}
+            />
+          </div>
+          <Row style={{ marginBottom: 12 }} align="middle">
+            <Col span={12}>
+              <Checkbox
+                checked={activityForm.pertinentToFileReview}
+                onChange={(e) =>
+                  handleActivityFieldChange("pertinentToFileReview", e.target.checked)
+                }
+              >
+                Pertinent to File Review
+              </Checkbox>
+            </Col>
+            <Col span={12}>
+              <Checkbox
+                checked={activityForm.sendNotification}
+                onChange={(e) => handleActivityFieldChange("sendNotification", e.target.checked)}
+              >
+                Notify owner
+              </Checkbox>
+            </Col>
+          </Row>
+          <button
+            className="custom-action-btn custom-primary-btn"
+            onClick={handlePostActivity}
+            disabled={postingActivity}
+          >
+            {postingActivity ? "Logging..." : "Log Activity"}
+          </button>
+        </div>
+      </div>
+
+      <div className="notes-list" style={{ display: "flex", flexDirection: "column", gap: 24 }}>
+        {activitiesLoading && <Spin size="small" />}
+        {!activitiesLoading && activities.length === 0 && (
+          <div style={{ color: "var(--theme-text-muted)" }}>No activities logged yet.</div>
+        )}
+        {activities.map((activity) => (
+          <div key={activity._id} className="note-item" style={{ display: "flex", gap: 16 }}>
+            <Avatar icon={<UserAddOutlined />} />
+            <div className="note-content" style={{ flex: 1 }}>
+              <div
+                className="note-header"
+                style={{ display: "flex", justifyContent: "space-between", marginBottom: 4 }}
+              >
+                <span style={{ fontWeight: 600, fontSize: 14 }}>
+                  {enumLabel(activity.activityType)}
+                  {activity.subject ? ` — ${activity.subject}` : ""}
+                  {activity.pertinentToFileReview && (
+                    <Tag color="gold" style={{ marginLeft: 8 }}>
+                      File Review
+                    </Tag>
+                  )}
+                </span>
+                <span style={{ color: "#bfbfbf", fontSize: 12 }}>
+                  {formatDate(activity.interactionDate, true)}
+                </span>
+              </div>
+              {activity.body && (
+                <div
+                  className="note-text"
+                  style={{
+                    background: "#f8faff",
+                    padding: 12,
+                    borderRadius: 8,
+                    color: "var(--theme-text-muted)",
+                    fontSize: 14,
+                  }}
+                  dangerouslySetInnerHTML={{ __html: activity.body }}
+                />
+              )}
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
 
   const renderSummary = () => (
     <div className="summary-content">
       <div className="summary-title-description-full">
         <div className="summary-title-row">
           <div className="summary-title-wrapper">
-            <h2 className="summary-title">{caseTitle}</h2>
+            <h2 className="summary-title">
+              {activeIssue?.caseTitle || activeIssue?.internalReferenceNumber || "-"}
+            </h2>
           </div>
           <div className="summary-title-actions">
             <Button
@@ -298,556 +744,55 @@ function CasesDetails() {
               {descriptionCollapsed && (
                 <span className="section-preview-inline">
                   {" "}
-                  — {getFirstNWords(issueDescription, 20)}
+                  — {stripHtml(formValues.description).slice(0, 120)}
                 </span>
               )}
             </h3>
             <div className="section-header-actions">
               <span
                 className="section-toggle-btn"
-                onClick={() => setDescriptionCollapsed(!descriptionCollapsed)}
+                onClick={() => setDescriptionCollapsed((c) => !c)}
                 role="button"
                 tabIndex={0}
-                onKeyDown={(e) =>
-                  e.key === "Enter" && setDescriptionCollapsed((c) => !c)
-                }
-                aria-expanded={!descriptionCollapsed}
+                onKeyDown={(e) => e.key === "Enter" && setDescriptionCollapsed((c) => !c)}
               >
                 {descriptionCollapsed ? <DownOutlined /> : <UpOutlined />}
               </span>
             </div>
           </div>
           {!descriptionCollapsed && (
-            <div className="description-box">{issueDescription}</div>
+            <Input.TextArea
+              value={formValues.description || ""}
+              onChange={(e) => handleFieldChange("description", e.target.value)}
+              autoSize={{ minRows: 3, maxRows: 8 }}
+              placeholder="Description of the issue..."
+            />
           )}
         </div>
       </div>
     </div>
   );
 
-  const historyData = [
-    {
-      actor: {
-        name: "Sarah Johnson",
-        avatar: "https://i.pravatar.cc/150?u=sarah",
-        title: "STATUS CHANGE",
-      },
-      time: "2m ago",
-      type: "status",
-      label: "Modified Issue Status",
-      from: "Draft",
-      to: "Review",
-      fromColor: "var(--error-bg)",
-      fromTxt: "var(--error-color)",
-      toColor: "var(--success-bg)",
-      toTxt: "var(--success-color)",
-    },
-    {
-      actor: {
-        name: "Admin System",
-        avatar: "",
-        icon: <UserAddOutlined />,
-        title: "METADATA EDIT",
-      },
-      time: "18m ago",
-      type: "meta",
-      label: "Updated Priority Level",
-      old: "Medium Priority",
-      new: "Critical Priority",
-      oldTxt: "#8c8c8c",
-      newTxt: "var(--primary-blue)",
-    },
-    {
-      actor: {
-        name: "Michael Chen",
-        avatar: "https://i.pravatar.cc/150?u=michael",
-        title: "FILE UPLOAD",
-      },
-      time: "1h ago",
-      type: "file",
-      label: "Added Supporting Doc",
-      fileName: "case_evidence_v2.pdf",
-      fileSize: "1.2 MB - PDF Document",
-    },
-    {
-      actor: {
-        name: "John Doe",
-        avatar: "",
-        icon: <UserAddOutlined />,
-        title: "CONTENT EDIT",
-      },
-      time: "3h ago",
-      type: "diff",
-      label: "Modified Issue Summary",
-      oldText: "Initial assessment complete, pending further files...",
-      newText:
-        "Comprehensive review finished, evidence cross-referenced with regional guidelines...",
-    },
-  ];
-
-  const attachmentsData = [
-    {
-      name: "Case_Summary_V2.pdf",
-      date: "Oct 24, 2023",
-      time: "10:30 AM",
-      version: "v2.1",
-      modifiedBy: "J. DOE",
-      type: "pdf",
-      icon: <FileTextOutlined style={{ color: "#ff4d4f" }} />,
-      printContent:
-        "Case Summary – Region 4 AML Indicator\n\nInitial assessment dated Oct 24, 2023. This document summarizes the flagged transaction and recommended actions. Key findings: potential AML indicators detected; cross-verification with external vendor logs required. Status: Under review. Prepared by J. DOE.",
-    },
-    {
-      name: "Witness_Testimony_Correspondence.msg",
-      date: "Oct 22, 2023",
-      time: "02:15 PM",
-      version: "v1.0",
-      modifiedBy: "R. SMITH",
-      type: "msg",
-      icon: <FileTextOutlined style={{ color: "#1890ff" }} />,
-      printContent:
-        "Subject: Witness Testimony – Case Reference\nFrom: R. SMITH\nDate: Oct 22, 2023\n\nSummary of correspondence regarding witness testimony. Key points documented for case file. Follow-up required with legal team.",
-    },
-    {
-      name: "Evidence_Photo_001.jpg",
-      date: "Oct 21, 2023",
-      time: "09:45 AM",
-      version: "v3.4",
-      modifiedBy: "S. AGENT",
-      type: "image",
-      icon: <FileTextOutlined style={{ color: "var(--success-color)" }} />,
-      thumb: "https://i.pravatar.cc/150?u=evidence",
-    },
-    {
-      name: "Internal_Review_Notes.docx",
-      date: "Oct 19, 2023",
-      time: "04:20 PM",
-      version: "v1.2",
-      modifiedBy: "M. LEGAL",
-      type: "doc",
-      icon: <FileTextOutlined style={{ color: "#1890ff" }} />,
-      printContent:
-        "Internal Review Notes\n\nReview completed by M. LEGAL. Recommendations: proceed with cross-verification; escalate if further indicators found. Next steps documented in case workflow.",
-    },
-  ];
-
-  const renderAttachments = () => (
-    <div className="attachments-tab-content">
-      <div className="attachments-icons-grid">
-        {attachmentsData.map((file, index) => (
-          <div key={index} className="attachment-icon-item" title={file.name}>
-            <div className={`file-type-icon ${file.type}`}>
-              {file.thumb ? (
-                <img
-                  src={file.thumb}
-                  alt="thumb"
-                  style={{
-                    width: "100%",
-                    height: "100%",
-                    borderRadius: 4,
-                    objectFit: "cover",
-                  }}
-                />
-              ) : (
-                file.icon
-              )}
-            </div>
-            <div className="file-name-tooltip">{file.name}</div>
-            <div className="file-upload-date">
-              {file.date} {file.time}
-            </div>
-            <div className="attachment-item-actions">
-              <Tooltip title="View">
-                <span
-                  className="attachment-action-btn"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleViewFile(file);
-                  }}
-                  role="button"
-                  tabIndex={0}
-                  onKeyDown={(e) => e.key === "Enter" && handleViewFile(file)}
-                >
-                  <EyeOutlined />
-                </span>
-              </Tooltip>
-              <Tooltip title="Download">
-                <span
-                  className="attachment-action-btn"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleDownloadFile(file);
-                  }}
-                  role="button"
-                  tabIndex={0}
-                  onKeyDown={(e) =>
-                    e.key === "Enter" && handleDownloadFile(file)
-                  }
-                >
-                  <DownloadOutlined />
-                </span>
-              </Tooltip>
-            </div>
-          </div>
-        ))}
-        <div
-          className="attachment-icon-item upload-icon-item"
-          onClick={handleUploadFile}
-        >
-          <Avatar
-            className="upload-new-avatar"
-            icon={<PlusOutlined />}
-            style={{
-              backgroundColor: "var(--primary-blue)",
-              cursor: "pointer",
-            }}
-          />
-          <div className="file-name-tooltip">Upload New</div>
-        </div>
+  if (!issueId) {
+    return (
+      <div className="cases-details-container">
+        <Empty description="No issue selected" style={{ marginTop: 80 }} />
       </div>
-    </div>
-  );
+    );
+  }
 
-  const renderHistory = () => (
-    <div className="history-tab-content">
-      <div className="history-header">
-        <div className="history-search-wrapper">
-          <MySearchInput placeholder="Search by actor or field..." />
-        </div>
-        <div className="history-filters">
-          <div className="filter-badge active">All</div>
-          <div className="filter-badge">
-            Edits{" "}
-            <ArrowLeftOutlined
-              rotate={-90}
-              style={{ fontSize: 10, marginLeft: 4 }}
-            />
-          </div>
-          <div className="filter-badge">
-            Status{" "}
-            <ArrowLeftOutlined
-              rotate={-90}
-              style={{ fontSize: 10, marginLeft: 4 }}
-            />
-          </div>
-          <div className="filter-badge">
-            Uploads{" "}
-            <ArrowLeftOutlined
-              rotate={-90}
-              style={{ fontSize: 10, marginLeft: 4 }}
-            />
-          </div>
-        </div>
+  if ((loading || !activeIssue) && activeIssue?._id !== issueId) {
+    return (
+      <div className="cases-details-container" style={{ padding: 60, textAlign: "center" }}>
+        <Spin tip="Loading issue..." />
       </div>
+    );
+  }
 
-      <div className="history-count-row">
-        <span>SHOWING 124 RECORDS</span>
-        <EllipsisOutlined style={{ color: "#bfbfbf", cursor: "pointer" }} />
-      </div>
-
-      <div className="history-timeline">
-        {historyData.map((item, index) => (
-          <div key={index} className="history-card">
-            <div className="history-card-header">
-              <div className="actor-info">
-                {item.actor.avatar ? (
-                  <Avatar src={item.actor.avatar} />
-                ) : (
-                  <Avatar
-                    icon={item.actor.icon}
-                    style={{
-                      backgroundColor: "var(--info-bg)",
-                      color: "var(--primary-blue)",
-                    }}
-                  />
-                )}
-                <div className="actor-text">
-                  <h4>{item.actor.name}</h4>
-                  <span className="actor-title">{item.actor.title}</span>
-                </div>
-              </div>
-              <span className="time-stamp">{item.time}</span>
-            </div>
-
-            <div className="history-card-body">
-              <p className="change-label">{item.label}</p>
-
-              {item.type === "status" && (
-                <div className="status-change-wrapper">
-                  <div
-                    className="status-pill"
-                    style={{
-                      backgroundColor: item.fromColor,
-                      color: item.fromTxt,
-                    }}
-                  >
-                    {item.from}
-                  </div>
-                  <ArrowLeftOutlined
-                    rotate={180}
-                    style={{ color: "#bfbfbf" }}
-                  />
-                  <div
-                    className="status-pill"
-                    style={{ backgroundColor: item.toColor, color: item.toTxt }}
-                  >
-                    {item.to}
-                  </div>
-                </div>
-              )}
-
-              {item.type === "meta" && (
-                <div className="meta-change-wrapper">
-                  <div className="meta-row">
-                    <span className="meta-label">Old:</span>
-                    <span className="meta-val" style={{ color: item.oldTxt }}>
-                      {item.old}
-                    </span>
-                  </div>
-                  <div className="meta-row">
-                    <span className="meta-label">New:</span>
-                    <span className="meta-val" style={{ color: item.newTxt }}>
-                      {item.new}
-                    </span>
-                  </div>
-                </div>
-              )}
-
-              {item.type === "file" && (
-                <div className="file-box">
-                  <div className="file-info-main">
-                    <div className="file-icon-wrapper">
-                      <FileTextOutlined
-                        style={{ color: "#1890ff", fontSize: 20 }}
-                      />
-                    </div>
-                    <div className="file-details">
-                      <h4>{item.fileName}</h4>
-                      <span>{item.fileSize}</span>
-                    </div>
-                  </div>
-                  <ShareAltOutlined
-                    style={{ color: "#bfbfbf", cursor: "pointer" }}
-                  />
-                </div>
-              )}
-
-              {item.type === "diff" && (
-                <div className="diff-wrapper">
-                  <div className="diff-box old">{item.oldText}</div>
-                  <div className="diff-box new">{item.newText}</div>
-                </div>
-              )}
-            </div>
-          </div>
-        ))}
-      </div>
-
-      <div className="history-footer">
-        <Button type="link" className="load-more-btn">
-          Load more records
-        </Button>
-        <p className="footer-range">Oct 24, 2023 - 10:30 AM to Current</p>
-      </div>
-    </div>
-  );
-
-  const [notes, setNotes] = useState([
-    {
-      id: 1,
-      user: "Sarah C.",
-      avatar: "https://i.pravatar.cc/150?u=sarah",
-      text: "Initial review of the transaction logs shows some inconsistencies with the reported timeline.",
-      time: "Oct 24, 10:30 AM",
-    },
-    {
-      id: 2,
-      user: "Michael S.",
-      avatar: "https://i.pravatar.cc/150?u=michael",
-      text: "I have requested the external vendor logs to cross-verify. Should have them by EOD.",
-      time: "Oct 24, 11:15 AM",
-    },
-  ]);
-  const [newNote, setNewNote] = useState("");
-
-  const handleAddNote = () => {
-    if (!newNote.trim()) return;
-    const note = {
-      id: Date.now(),
-      user: "Alex Rivera", // Current user
-      avatar: "https://i.pravatar.cc/150?u=alex",
-      text: newNote,
-      time: "Just now",
-    };
-    setNotes([...notes, note]);
-    setNewNote("");
-  };
-
-  const loadPreviousNotes = () => {
-    const olderNotes = [
-      {
-        id: 99,
-        user: "System",
-        avatar: "",
-        text: "Case created automatically by Risk Engine Rule #442.",
-        time: "Oct 23, 09:00 PM",
-      },
-    ];
-    setNotes([...olderNotes, ...notes]);
-  };
-
-  const handleUploadFile = () => {
-    const input = document.createElement("input");
-    input.type = "file";
-    input.multiple = true;
-    input.onchange = (e) => {
-      const files = Array.from(e.target.files);
-      console.log("Files selected:", files);
-    };
-    input.click();
-  };
-
-  const handleDownloadFile = (file) => {
-    const blob = new Blob([`Placeholder content for ${file.name}`], {
-      type: "application/octet-stream",
-    });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = file.name;
-    a.click();
-    URL.revokeObjectURL(url);
-  };
-
-  const handleViewFile = (file) => {
-    if (
-      file.thumb &&
-      (file.type === "image" || /\.(jpg|jpeg|png|gif|webp)$/i.test(file.name))
-    ) {
-      window.open(file.thumb, "_blank");
-    } else {
-      const w = window.open("", "_blank");
-      if (w)
-        w.document.write(
-          `<html><body style="font-family:sans-serif;padding:24px"><h2>${file.name}</h2><p>Preview not available for this file type. Use Download to save.</p></body></html>`,
-        );
-    }
-  };
-
-  const handleDownloadAll = () => {
-    attachmentsData.forEach((file, i) => {
-      setTimeout(() => handleDownloadFile(file), i * 200);
-    });
-  };
-
-  const renderIssueNotes = () => (
-    <div className="issue-notes-container" style={{ padding: "0" }}>
-      <div
-        className="add-note-section"
-        style={{
-          display: "flex",
-          gap: "16px",
-          alignItems: "flex-start",
-          marginBottom: "24px",
-        }}
-      >
-        <Avatar src="https://i.pravatar.cc/150?u=alex" />
-        <div style={{ flex: 1 }}>
-          <div
-            className="rich-text-editor-wrapper"
-            style={{ marginBottom: "12px" }}
-          >
-            <ReactQuill
-              theme="snow"
-              value={newNote}
-              onChange={setNewNote}
-              placeholder="Add a comment..."
-              modules={{
-                toolbar: [
-                  ["bold", "italic", "underline"],
-                  [{ list: "ordered" }, { list: "bullet" }],
-                  ["clean"],
-                ],
-              }}
-            
-            />
-          </div>
-          <button
-            className="custom-action-btn custom-primary-btn"
-            onClick={handleAddNote}
-          >
-            Add Comment
-          </button>
-        </div>
-      </div>
-
-      <div
-        className="notes-list"
-        style={{
-          display: "flex",
-          flexDirection: "column",
-          gap: "24px",
-        }}
-      >
-        {notes.map((note) => (
-          <div
-            key={note.id}
-            className="note-item"
-            style={{ display: "flex", gap: "16px" }}
-          >
-            <Avatar src={note.avatar} icon={<UserAddOutlined />} />
-            <div className="note-content" style={{ flex: 1 }}>
-              <div
-                className="note-header"
-                style={{
-                  display: "flex",
-                  justifyContent: "space-between",
-                  marginBottom: "4px",
-                }}
-              >
-                <span
-                  style={{
-                    fontWeight: 600,
-                    color: "#212529",
-                    fontSize: "14px",
-                  }}
-                >
-                  {note.user}
-                </span>
-                <span style={{ color: "#bfbfbf", fontSize: "12px" }}>
-                  {note.time}
-                </span>
-              </div>
-              <div
-                className="note-text"
-                style={{
-                  background: "#f8faff",
-                  padding: "12px",
-                  borderRadius: "8px",
-                  color: "#595959",
-                  fontSize: "14px",
-                }}
-                dangerouslySetInnerHTML={{ __html: note.text }}
-              />
-            </div>
-          </div>
-        ))}
-      </div>
-
-      <div style={{ textAlign: "center", marginTop: "24px" }}>
-        <button
-          className="custom-action-btn custom-secondary-btn"
-          onClick={loadPreviousNotes}
-        >
-          Load previous comments
-        </button>
-      </div>
-    </div>
-  );
+  const TypeFieldsComponent = TYPE_FIELDS_COMPONENT[activeIssue.issueType];
 
   return (
     <div className="cases-details-container">
-      {/* Scrollable Content Body */}
       <div className="cases-content-body">
         <div className="sections-wrapper">
           <div className="main-content-layout">
@@ -856,18 +801,23 @@ function CasesDetails() {
                 <div className="summary-wrapper">{renderSummary()}</div>
               </div>
 
+              {TypeFieldsComponent && (
+                <div className="section-container" ref={typeFieldsRef}>
+                  <TypeFieldsComponent
+                    values={formValues}
+                    onChange={handleFieldChange}
+                    complaintTypeOptions={complaintTypeOptions}
+                  />
+                </div>
+              )}
+
               <div className="section-container" ref={attachmentsRef}>
                 <div className="section-header-collapsible">
                   <h3>
                     Attachments
-                    {collapsedSections.Attachments &&
-                      attachmentsData.length > 0 && (
-                        <span className="section-count">
-                          {" "}
-                          ({attachmentsData.length} document
-                          {attachmentsData.length !== 1 ? "s" : ""})
-                        </span>
-                      )}
+                    {collapsedSections.Attachments && attachmentsData.length > 0 && (
+                      <span className="section-count"> ({attachmentsData.length} documents)</span>
+                    )}
                   </h3>
                   <div className="section-header-actions">
                     <Tooltip title="Download all">
@@ -876,8 +826,6 @@ function CasesDetails() {
                         icon={<DownloadOutlined />}
                         onClick={handleDownloadAll}
                         size="small"
-                        disabled={attachmentsData.length === 0}
-                        className="attachments-download-all-btn"
                       />
                     </Tooltip>
                     <span
@@ -885,16 +833,9 @@ function CasesDetails() {
                       onClick={() => toggleSection("Attachments")}
                       role="button"
                       tabIndex={0}
-                      onKeyDown={(e) =>
-                        e.key === "Enter" && toggleSection("Attachments")
-                      }
-                      aria-expanded={!collapsedSections.Attachments}
+                      onKeyDown={(e) => e.key === "Enter" && toggleSection("Attachments")}
                     >
-                      {collapsedSections.Attachments ? (
-                        <DownOutlined />
-                      ) : (
-                        <UpOutlined />
-                      )}
+                      {collapsedSections.Attachments ? <DownOutlined /> : <UpOutlined />}
                     </span>
                   </div>
                 </div>
@@ -905,22 +846,9 @@ function CasesDetails() {
                 <div className="section-header-collapsible">
                   <h3>
                     Activities
-                    {collapsedSections.Activities &&
-                      notes.length > 0 &&
-                      (() => {
-                        const latest = notes[notes.length - 1];
-                        const previewText = stripHtml(latest.text);
-                        const short =
-                          previewText.length > 60
-                            ? `${previewText.slice(0, 60)}...`
-                            : previewText;
-                        return (
-                          <span className="section-preview-inline">
-                            {" "}
-                            — {latest.user} · {latest.time}: {short}
-                          </span>
-                        );
-                      })()}
+                    {collapsedSections.Activities && activities.length > 0 && (
+                      <span className="section-count"> ({activities.length})</span>
+                    )}
                   </h3>
                   <div className="section-header-actions">
                     <span
@@ -928,67 +856,27 @@ function CasesDetails() {
                       onClick={() => toggleSection("Activities")}
                       role="button"
                       tabIndex={0}
-                      onKeyDown={(e) =>
-                        e.key === "Enter" && toggleSection("Activities")
-                      }
-                      aria-expanded={!collapsedSections.Activities}
+                      onKeyDown={(e) => e.key === "Enter" && toggleSection("Activities")}
                     >
-                      {collapsedSections.Activities ? (
-                        <DownOutlined />
-                      ) : (
-                        <UpOutlined />
-                      )}
+                      {collapsedSections.Activities ? <DownOutlined /> : <UpOutlined />}
                     </span>
                   </div>
                 </div>
-                {!collapsedSections.Activities && renderIssueNotes()}
+                {!collapsedSections.Activities && renderActivities()}
               </div>
 
               <div className="section-container" ref={historyRef}>
                 <div className="section-header-collapsible">
-                  <h3>
-                    History
-                    {collapsedSections.History && historyData.length > 0 && (
-                      <>
-                        <span className="section-count">
-                          {" "}
-                          ({historyData.length} record
-                          {historyData.length !== 1 ? "s" : ""})
-                        </span>
-                        {historyData[0] &&
-                          (() => {
-                            const recent = historyData[0];
-                            const labelShort =
-                              recent.label.length > 50
-                                ? `${recent.label.slice(0, 50)}...`
-                                : recent.label;
-                            return (
-                              <span className="section-preview-inline">
-                                {" "}
-                                — {recent.actor.name} · {recent.time}:{" "}
-                                {labelShort}
-                              </span>
-                            );
-                          })()}
-                      </>
-                    )}
-                  </h3>
+                  <h3>History</h3>
                   <div className="section-header-actions">
                     <span
                       className="section-toggle-btn"
                       onClick={() => toggleSection("History")}
                       role="button"
                       tabIndex={0}
-                      onKeyDown={(e) =>
-                        e.key === "Enter" && toggleSection("History")
-                      }
-                      aria-expanded={!collapsedSections.History}
+                      onKeyDown={(e) => e.key === "Enter" && toggleSection("History")}
                     >
-                      {collapsedSections.History ? (
-                        <DownOutlined />
-                      ) : (
-                        <UpOutlined />
-                      )}
+                      {collapsedSections.History ? <DownOutlined /> : <UpOutlined />}
                     </span>
                   </div>
                 </div>
@@ -1009,229 +897,260 @@ function CasesDetails() {
                   <h3 className="section-title-static" style={{ margin: 0 }}>
                     Issue Details
                   </h3>
-                  <Dropdown
-                    menu={{
-                      items: [
-                        {
-                          key: "print",
-                          icon: <PrinterOutlined />,
-                          label: "Print",
-                          onClick: handlePrint,
-                        },
-                      ],
-                    }}
-                    trigger={["click"]}
-                    placement="bottomRight"
-                  >
-                    <span className="issue-details-actions-trigger">
-                      <EllipsisOutlined />
-                    </span>
-                  </Dropdown>
+                  <div style={{ display: "flex", gap: 8 }}>
+                    <Button
+                      type="primary"
+                      size="small"
+                      icon={<SaveOutlined />}
+                      loading={savingGeneral}
+                      onClick={handleSaveGeneral}
+                    >
+                      Save
+                    </Button>
+                    <Dropdown
+                      menu={{
+                        items: [{ key: "print", icon: <PrinterOutlined />, label: "Print", onClick: handlePrint }],
+                      }}
+                      trigger={["click"]}
+                      placement="bottomRight"
+                    >
+                      <span className="issue-details-actions-trigger">
+                        <EllipsisOutlined />
+                      </span>
+                    </Dropdown>
+                  </div>
                 </div>
+
                 <div className="summary-right-column-sticky">
                   <div className="summary-field-single">
-                    <span className="summary-label">Incident Date</span>
-                    <DatePicker
-                      value={caseDate}
-                      onChange={(date) => setCaseDate(date)}
-                      format="MMM DD, YYYY"
-                      bordered={false}
-                      allowClear={false}
-                    />
+                    <span className="summary-label">Internal Reference No</span>
+                    <Input value={activeIssue.internalReferenceNumber || "-"} bordered={false} disabled />
                   </div>
 
                   <div className="summary-field-single">
-                    <span className="summary-label">Location</span>
+                    <span className="summary-label">Created By / On</span>
                     <Input
-                      value={caseLocation}
-                      onChange={(e) => setCaseLocation(e.target.value)}
-                      className="summary-input"
+                      value={`${activeIssue.createdBy || "-"} · ${formatDate(activeIssue.createdOn, true)}`}
                       bordered={false}
+                      disabled
                     />
                   </div>
 
                   <div className="summary-field-single">
-                    <span className="summary-label">Category</span>
-                    <Select
-                      value={caseCategory}
-                      onChange={setCaseCategory}
-                      className="summary-input"
+                    <span className="summary-label">Date Received</span>
+                    <DatePicker
+                      value={formValues.dateReceived}
+                      onChange={(d) => handleFieldChange("dateReceived", d)}
+                      format="DD/MM/YYYY"
                       bordered={false}
-                      showSearch
-                      optionFilterProp="children"
-                      filterOption={(input, option) =>
-                        (option?.label ?? "")
-                          .toLowerCase()
-                          .includes(input.toLowerCase())
-                      }
-                      options={categories.map((cat) => ({
-                        value: cat,
-                        label: cat,
-                      }))}
+                      allowClear
                     />
                   </div>
 
                   <div className="summary-field-single">
-                    <span className="summary-label summary-label-case-type">
-                      Case Type
-                    </span>
+                    <span className="summary-label">Issue Source</span>
                     <Select
-                      value={caseType}
-                      onChange={setCaseType}
+                      value={formValues.issueSource || undefined}
+                      onChange={(v) => handleFieldChange("issueSource", v)}
                       className="summary-input"
                       bordered={false}
-                      showSearch
-                      optionFilterProp="children"
-                      filterOption={(input, option) =>
-                        (option?.label ?? "")
-                          .toLowerCase()
-                          .includes(input.toLowerCase())
-                      }
-                      options={caseTypes.map((type) => ({
-                        value: type,
-                        label: type,
-                      }))}
+                      placeholder="Select source"
+                      allowClear
+                      options={issueSourceOptions}
                     />
                   </div>
+                  {formValues.issueSource === "OTHR-IS" && (
+                    <div className="summary-field-single">
+                      <span className="summary-label">Issue Source (Other)</span>
+                      <Input
+                        value={formValues.issueSourceOther || ""}
+                        onChange={(e) => handleFieldChange("issueSourceOther", e.target.value)}
+                        className="summary-input"
+                        bordered={false}
+                      />
+                    </div>
+                  )}
 
                   <div className="summary-field-single">
-                    <span className="summary-label">Status</span>
+                    <span className="summary-label">Origin</span>
                     <Select
-                      value={caseStatus}
-                      onChange={setCaseStatus}
+                      value={formValues.origin || undefined}
+                      onChange={(v) => handleFieldChange("origin", v)}
                       className="summary-input"
                       bordered={false}
-                      showSearch
-                      optionFilterProp="children"
-                      filterOption={(input, option) =>
-                        (option?.label ?? "")
-                          .toLowerCase()
-                          .includes(input.toLowerCase())
-                      }
-                      options={caseStatuses.map((status) => ({
-                        value: status,
-                        label: status,
-                      }))}
+                      placeholder="Select origin"
+                      allowClear
+                      options={originOptions}
                     />
                   </div>
 
                   <div className="summary-field-single">
                     <span className="summary-label">Priority</span>
                     <Select
-                      value={casePriority}
-                      onChange={setCasePriority}
+                      value={formValues.priority || "MEDIUM"}
+                      onChange={(v) => handleFieldChange("priority", v)}
                       className="summary-input"
                       bordered={false}
-                      showSearch
-                      optionFilterProp="children"
-                      filterOption={(input, option) =>
-                        (option?.label ?? "")
-                          .toLowerCase()
-                          .includes(input.toLowerCase())
-                      }
-                      options={priorities.map((priority) => ({
-                        value: priority,
-                        label: priority,
-                      }))}
+                      options={priorityOptions}
                     />
                   </div>
 
                   <div className="summary-field-single">
-                    <span className="summary-label">Due Date</span>
-                    <DatePicker
-                      value={caseDeadline}
-                      onChange={(date) => setCaseDeadline(date)}
-                      format="MMM DD, YYYY"
-                      bordered={false}
-                      allowClear={false}
-                    />
+                    <span className="summary-label">Owner Team</span>
+                    <Input value={enumLabel(activeIssue.owner?.team) || "-"} bordered={false} disabled />
                   </div>
-
                   <div className="summary-field-single">
-                    <span className="summary-label summary-label-pertinent">
-                      Pertinent to File Review
-                    </span>
-                    <Switch
-                      checked={pertinentToFileReview}
-                      onChange={setPertinentToFileReview}
-                    />
-                  </div>
-
-                  <div className="summary-field-single">
-                    <span className="summary-label">File Number</span>
+                    <span className="summary-label">Owner (User Id)</span>
                     <Input
-                      value={fileNumber}
-                      onChange={(e) => setFileNumber(e.target.value)}
+                      value={formValues.owner?.userId || ""}
+                      onChange={(e) => handleOwnerUserIdChange(e.target.value)}
                       className="summary-input"
                       bordered={false}
-                      disabled={pertinentToFileReview}
-                      placeholder="e.g. CFN-88210"
+                      placeholder="userId"
                     />
                   </div>
 
+                  <div
+                    className="summary-field-single"
+                    style={{ flexDirection: "column", alignItems: "stretch" }}
+                  >
+                    <span className="summary-label">Linked Cases</span>
+                    <LinkedCasesPicker
+                      issueId={issueId}
+                      linkedIssueIds={linkedIssueIds}
+                      onAdd={handleAddLinkedIssue}
+                      onRemove={handleRemoveLinkedIssue}
+                      disabled={linkedCasesBusy}
+                    />
+                  </div>
+
+                  <div
+                    className="summary-field-single"
+                    style={{ flexDirection: "column", alignItems: "stretch" }}
+                  >
+                    <span className="summary-label">Linked Group</span>
+                    {isIrGroupCase ? (
+                      <span style={{ color: "var(--theme-text-muted)", fontSize: 12 }}>
+                        Managed in the Industrial Relations Details section (Case Type ={" "}
+                        {formValues.caseType === "NATIONAL" ? "National" : "Group"}).
+                      </span>
+                    ) : (
+                      <GroupPicker
+                        value={formValues.groupId || null}
+                        onChange={(groupId) => persistGroupId(groupId)}
+                        disabled={groupBusy}
+                      />
+                    )}
+                  </div>
+
+                  <div
+                    className="summary-field-single"
+                    style={{ borderTop: "1px solid var(--theme-border-color, #eee)", paddingTop: 12, marginTop: 8 }}
+                  >
+                    <span className="summary-label" style={{ fontWeight: 600 }}>
+                      Status &amp; Resolution
+                    </span>
+                  </div>
+
                   <div className="summary-field-single">
-                    <span className="summary-label">Assignee</span>
+                    <span className="summary-label">Issue Status</span>
                     <Select
-                      value={assignee.name}
-                      onChange={(value) => {
-                        const selected = availableAssignees.find(
-                          (a) => a.name === value,
-                        );
-                        if (selected) setAssignee(selected);
-                      }}
+                      value={formValues.issueStatus || "ACTIVE"}
+                      onChange={(v) => handleFieldChange("issueStatus", v)}
                       className="summary-input"
                       bordered={false}
-                      showSearch
-                      optionFilterProp="children"
-                      filterOption={(input, option) =>
-                        (option?.label ?? "")
-                          .toLowerCase()
-                          .includes(input.toLowerCase())
-                      }
-                      options={availableAssignees.map((assignee) => ({
-                        value: assignee.name,
-                        label: assignee.name,
-                      }))}
+                      options={issueStatusOptions}
                     />
                   </div>
-                  <div style={{ marginLeft: "240px" }}>
-                    <a
-                      onClick={() => setAssignee(currentUser)}
-                      style={{
-                        cursor: "pointer",
-                        color: "var(--primary-blue)",
-                        fontSize: "14px",
-                        whiteSpace: "nowrap",
-                      }}
-                    >
-                      Assign to me
-                    </a>
-                  </div>
+                  {formValues.issueStatus === "OTHER" && (
+                    <div className="summary-field-single">
+                      <span className="summary-label">
+                        Issue Status (Other){" "}
+                        <span style={{ color: "var(--theme-text-muted)", fontSize: 12 }}>
+                          (Max 45 characters)
+                        </span>
+                      </span>
+                      <Input
+                        value={formValues.issueStatusOther || ""}
+                        onChange={(e) => handleFieldChange("issueStatusOther", e.target.value)}
+                        className="summary-input"
+                        bordered={false}
+                        maxLength={45}
+                      />
+                    </div>
+                  )}
 
                   <div className="summary-field-single">
+                    <span className="summary-label">Resolution</span>
+                    <Select
+                      value={formValues.resolution || undefined}
+                      onChange={(v) => handleFieldChange("resolution", v)}
+                      className="summary-input"
+                      bordered={false}
+                      placeholder="Select resolution"
+                      allowClear
+                      options={RESOLUTIONS.map((v) => ({ value: v, label: enumLabel(v) }))}
+                    />
+                  </div>
+                  {formValues.resolution === "OTHER" && (
+                    <div className="summary-field-single">
+                      <span className="summary-label">Resolution (Other)</span>
+                      <Input
+                        value={formValues.resolutionOther || ""}
+                        onChange={(e) => handleFieldChange("resolutionOther", e.target.value)}
+                        className="summary-input"
+                        bordered={false}
+                      />
+                    </div>
+                  )}
+
+                  <div className="summary-field-single">
+                    <span className="summary-label">Date Resolved</span>
+                    <DatePicker
+                      value={formValues.dateResolved}
+                      onChange={(d) => handleFieldChange("dateResolved", d)}
+                      format="DD/MM/YYYY"
+                      bordered={false}
+                      allowClear
+                    />
+                  </div>
+
+                  <div style={{ marginLeft: "auto", marginTop: 4 }}>
+                    <Button size="small" loading={savingStatus} onClick={handleUpdateStatus}>
+                      Update Status
+                    </Button>
+                  </div>
+
+                  <div
+                    className="summary-field-single"
+                    style={{ borderTop: "1px solid var(--theme-border-color, #eee)", paddingTop: 12, marginTop: 8, flexDirection: "column", alignItems: "stretch" }}
+                  >
                     <span className="summary-label">Related Member(s)</span>
-                    <Select
-                      mode="multiple"
-                      value={stakeholders}
-                      onChange={setStakeholders}
-                      className="summary-input"
-                      bordered={false}
-                      showSearch
-                      optionFilterProp="children"
-                      filterOption={(input, option) =>
-                        (option?.label ?? "")
-                          .toLowerCase()
-                          .includes(input.toLowerCase())
-                      }
-                      options={availableTeamMembers.map((member) => ({
-                        value: member.name,
-                        label: member.name,
-                      }))}
-                      maxTagCount={1}
-                      maxTagPlaceholder={(omittedValues) =>
-                        `+${omittedValues.length}`
-                      }
+                    <MemberSearch
+                      onSelectBehavior="callback"
+                      onSelectCallback={handleAddMember}
+                      fullWidth
+                      compact
+                      showStatus={false}
+                      disable={memberBusy}
                     />
+                    <div style={{ marginTop: 8, display: "flex", flexWrap: "wrap", gap: 6 }}>
+                      {memberIds.length === 0 && (
+                        <span style={{ color: "var(--theme-text-muted)", fontSize: 12 }}>
+                          No members linked.
+                        </span>
+                      )}
+                      {memberIds.map((id) => (
+                        <Tag
+                          key={id}
+                          closable
+                          onClose={() => handleRemoveMember(id)}
+                          closeIcon={<CloseOutlined style={{ fontSize: 10 }} />}
+                        >
+                          {memberLabels[id] || id}
+                        </Tag>
+                      ))}
+                    </div>
                   </div>
                 </div>
               </div>
@@ -1240,126 +1159,56 @@ function CasesDetails() {
         </div>
       </div>
 
-      {/* Print-only content: Issue ID + Title, Issue details, Description, Attachments, Comments */}
+      {/* Print-only content */}
       <div className="issue-print-area" aria-hidden="true">
         <div className="issue-print-header">
-          <div className="issue-print-id">Issue ID: {caseId}</div>
-          <h1 className="issue-print-title">{caseTitle}</h1>
+          <div className="issue-print-id">
+            {ISSUE_TYPE_LABELS[activeIssue.issueType] || activeIssue.issueType}: {activeIssue.internalReferenceNumber}
+          </div>
+          <h1 className="issue-print-title">{activeIssue.caseTitle}</h1>
         </div>
-
         <section className="issue-print-section">
           <h2 className="issue-print-section-title">Issue Details</h2>
           <div className="issue-print-details-grid">
             <div className="issue-print-detail-item">
-              <span className="issue-print-label">Incident Date</span>
-              <span className="issue-print-value">
-                {caseDate ? dayjs(caseDate).format("MMM DD, YYYY") : "—"}
-              </span>
-            </div>
-            <div className="issue-print-detail-item">
-              <span className="issue-print-label">Location</span>
-              <span className="issue-print-value">{caseLocation || "—"}</span>
-            </div>
-            <div className="issue-print-detail-item">
-              <span className="issue-print-label">Category</span>
-              <span className="issue-print-value">{caseCategory || "—"}</span>
-            </div>
-            <div className="issue-print-detail-item">
-              <span className="issue-print-label">Case Type</span>
-              <span className="issue-print-value">{caseType || "—"}</span>
-            </div>
-            <div className="issue-print-detail-item">
               <span className="issue-print-label">Status</span>
-              <span className="issue-print-value">{caseStatus || "—"}</span>
+              <span className="issue-print-value">{enumLabel(activeIssue.issueStatus)}</span>
             </div>
             <div className="issue-print-detail-item">
               <span className="issue-print-label">Priority</span>
-              <span className="issue-print-value">{casePriority || "—"}</span>
+              <span className="issue-print-value">{enumLabel(activeIssue.priority)}</span>
             </div>
             <div className="issue-print-detail-item">
-              <span className="issue-print-label">Due Date</span>
-              <span className="issue-print-value">
-                {caseDeadline
-                  ? dayjs(caseDeadline).format("MMM DD, YYYY")
-                  : "—"}
-              </span>
+              <span className="issue-print-label">Date Received</span>
+              <span className="issue-print-value">{formatDate(activeIssue.dateReceived)}</span>
             </div>
             <div className="issue-print-detail-item">
-              <span className="issue-print-label">
-                Pertinent to File Review
-              </span>
-              <span className="issue-print-value">
-                {pertinentToFileReview ? "Yes" : "No"}
-              </span>
-            </div>
-            <div className="issue-print-detail-item">
-              <span className="issue-print-label">File Number</span>
-              <span className="issue-print-value">{fileNumber || "—"}</span>
-            </div>
-            <div className="issue-print-detail-item">
-              <span className="issue-print-label">Assignee</span>
-              <span className="issue-print-value">{assignee?.name || "—"}</span>
-            </div>
-            <div className="issue-print-detail-item">
-              <span className="issue-print-label">Related Member(s)</span>
-              <span className="issue-print-value">
-                {Array.isArray(stakeholders) ? stakeholders.join(", ") : "—"}
-              </span>
+              <span className="issue-print-label">Date Resolved</span>
+              <span className="issue-print-value">{formatDate(activeIssue.dateResolved)}</span>
             </div>
           </div>
         </section>
-
         <section className="issue-print-section">
           <h2 className="issue-print-section-title">Description</h2>
-          <div className="issue-print-description">{issueDescription}</div>
+          <div className="issue-print-description">{activeIssue.description}</div>
         </section>
-
         <section className="issue-print-section">
-          <h2 className="issue-print-section-title">Attachments</h2>
-          {attachmentsData.map((file, index) => (
-            <div key={index} className="issue-print-attachment-doc">
-              <div className="issue-print-attachment-header">
-                <strong>{file.name}</strong>
-                {file.date && file.time && (
-                  <span className="issue-print-meta">
-                    {" "}
-                    — {file.date} {file.time}
-                  </span>
-                )}
-                {file.modifiedBy && (
-                  <span className="issue-print-meta"> · {file.modifiedBy}</span>
-                )}
-              </div>
-              {file.thumb &&
-              (file.type === "image" ||
-                /\.(jpg|jpeg|png|gif|webp)$/i.test(file.name)) ? (
-                <div className="issue-print-attachment-image">
-                  <img src={file.thumb} alt={file.name} />
-                </div>
-              ) : file.printContent ? (
-                <div className="issue-print-attachment-content">
-                  {file.printContent.split("\n").map((line, i) => (
-                    <p key={i}>{line || " "}</p>
-                  ))}
-                </div>
-              ) : null}
-            </div>
-          ))}
-        </section>
-
-        <section className="issue-print-section">
-          <h2 className="issue-print-section-title">Comments</h2>
+          <h2 className="issue-print-section-title">Activity Log</h2>
           <div className="issue-print-comments">
-            {notes.map((note) => (
-              <div key={note.id} className="issue-print-comment">
+            {activities.map((activity) => (
+              <div key={activity._id} className="issue-print-comment">
                 <div className="issue-print-comment-header">
-                  <strong>{note.user}</strong>
-                  <span className="issue-print-comment-time">{note.time}</span>
+                  <strong>{enumLabel(activity.activityType)}</strong>
+                  <span className="issue-print-comment-time">
+                    {formatDate(activity.interactionDate, true)}
+                  </span>
                 </div>
-                <div
-                  className="issue-print-comment-text"
-                  dangerouslySetInnerHTML={{ __html: note.text }}
-                />
+                {activity.body && (
+                  <div
+                    className="issue-print-comment-text"
+                    dangerouslySetInnerHTML={{ __html: activity.body }}
+                  />
+                )}
               </div>
             ))}
           </div>

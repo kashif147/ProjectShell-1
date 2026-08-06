@@ -1,6 +1,6 @@
 .create-batch-container {
   padding: 20px;
-  background-color: #f4faf8;
+  background-color: var(--app-page-bg, #f8f9f9);
 }
 
 .ant-input[disabled],
@@ -96,7 +96,7 @@
 
 .header-icon {
   margin-right: 10px;
-  color: #1890ff;
+  color: var(--app-brand-accent);
 }
 
 .section-container {
@@ -104,7 +104,7 @@
   padding: 20px;
   border-radius: 8px;
   margin-bottom: 20px;
-  /* border-left: 4px solid #1890ff; */
+  /* border-left: 4px solid var(--app-brand-accent); */
 }
 
 .section-title {
@@ -117,7 +117,7 @@
 
 .section-icon {
   margin-right: 8px;
-  color: #1890ff;
+  color: var(--app-brand-accent);
 }
 
 .member-nav {
@@ -169,7 +169,7 @@
 }
 
 .amount-input .ant-input-prefix {
-  color: #1890ff;
+  color: var(--app-brand-accent);
 }
 
 .summary-container {
@@ -203,17 +203,17 @@
 
 .submit-btn {
   width: 160px;
-  background: #1890ff;
-  border-color: #1890ff;
+  background: var(--app-brand-accent);
+  border-color: var(--app-brand-accent);
 }
 
 /* Hover effects */
 .nav-btn:hover {
-  color: #1890ff;
-  border-color: #1890ff;
+  color: var(--app-brand-accent);
+  border-color: var(--app-brand-accent);
 }
 
 .submit-btn:hover {
-  background: #40a9ff;
-  border-color: #40a9ff;
+  background: var(--app-brand-accent);
+  border-color: var(--app-brand-accent);
 }

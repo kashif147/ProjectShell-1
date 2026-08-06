@@ -1,6 +1,8 @@
 import {
   getAccountServiceBaseUrl,
   getAuditFilterTemplatesBaseUrl,
+  getEventsServiceBaseUrl,
+  getIssueServiceBaseUrl,
   getNotificationFilterTemplatesBaseUrl,
   getProfileServiceBaseUrl,
   getReportingServiceBaseUrl,
@@ -17,6 +19,8 @@ export const GRID_TEMPLATE_SERVICE_OWNERS = {
   "notification-service":
     "Correspondence grids (comms history, notification admin lists, etc.)",
   "audit-service": "Audit history grids",
+  "events-service": "Events grids (events summary, etc.)",
+  "issue-service": "Issue Management grids (issues summary, etc.)",
   "communication-service":
     "Not used for grid Save View — letter/email/SMS content templates only (see contentTemplateRouting.js)",
 };
@@ -52,6 +56,11 @@ const LEGACY_TEMPLATE_TYPE_SERVICE = {
   auditlog: "audit-service",
   auditlogs: "audit-service",
   historybyid: "audit-service",
+  /** Events grids */
+  eventssummary: "events-service",
+  attendees: "events-service",
+  /** Issue Management grids */
+  issuessummary: "issue-service",
 };
 
 /**
@@ -87,6 +96,10 @@ export function resolveTemplatesApiUrl(templateType) {
       return getNotificationFilterTemplatesBaseUrl();
     case "audit-service":
       return getAuditFilterTemplatesBaseUrl();
+    case "events-service":
+      return `${getEventsServiceBaseUrl()}/templates`;
+    case "issue-service":
+      return `${getIssueServiceBaseUrl()}/templates`;
     case "profile-service":
     default:
       return `${getProfileServiceBaseUrl()}/templates`;

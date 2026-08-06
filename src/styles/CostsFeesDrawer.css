@@ -25,7 +25,7 @@
     border-radius: 12px;
     padding: 12px 16px;
     margin-bottom: 12px;
-    border: 1px solid #f1f5f9;
+    border: 1px solid var(--theme-section-bg);
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
     transition: all 0.3s ease;
 }
@@ -48,7 +48,7 @@
 
 /* Rely on standard MyInput styles for cleaner look and feel */
 .cost-card .my-input-container {
-    background: #f8fafc;
+    background: var(--theme-muted-bg);
 }
 
 .input-group {
@@ -76,14 +76,14 @@
 .currency-symbol {
     font-size: 18px;
     font-weight: 700;
-    color: #215E97;
+    color: var(--app-brand-primary);
     margin-right: 1px;
 }
 
 .cost-amount-input {
     font-size: 18px;
     font-weight: 700;
-    color: #215E97;
+    color: var(--app-brand-primary);
     text-align: right;
     padding: 0;
     width: auto;
@@ -111,7 +111,7 @@
 
 .euro-label {
     font-weight: 700;
-    color: #215E97;
+    color: var(--app-brand-primary);
     margin-left: 8px;
     font-size: 16px;
 }
@@ -131,7 +131,7 @@
     padding: 12px 16px;
     /* Match cost-card padding */
     margin-top: auto;
-    border-top: 1px solid #f1f5f9;
+    border-top: 1px solid var(--theme-section-bg);
 }
 
 .total-cost-column {

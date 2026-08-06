@@ -42,6 +42,7 @@ import {
   FaCalendarAlt,
   FaBalanceScale,
   FaFileAlt,
+  FaExclamationCircle,
 } from "react-icons/fa";
 import { useTableColumns } from "../../context/TableColumnsContext ";
 import { getTransferRequestHistoryById } from "../../constants/TransferRequestHistory";
@@ -62,6 +63,7 @@ import {
   hasMembershipProfileWritePermission,
 } from "../../utils/profileRoleAccess";
 import ProfileDuplicateReview from "../profile/ProfileDuplicateReview";
+import CreateCasesDrawer from "../cases/CreateCasesDrawer";
 
 const { TabPane } = Tabs;
 
@@ -81,6 +83,7 @@ const DuplicateMembers = lazy(() => import("../profile/DuplicateMembers"));
 const SubscriptionHistoryDetail = lazy(
   () => import("../common/SubscriptionHistoryDetail"),
 );
+const ProfileEventsTab = lazy(() => import("../event/ProfileEventsTab"));
 
 /** Events ("16") and Claims ("7") are overflow-only, not shown on first load. */
 const staticTabKeys = ["1", "2", "4", "5", "6", "3"];
@@ -225,12 +228,13 @@ function buildPaymentReminderBanner(subscription) {
 }
 
 const MEMBERSHIP_MORE_ICON = {
-  edit: "#1890ff",
+  edit: "var(--app-brand-accent)",
   duplicate: "#722ed1",
   activate: "#52c41a",
   activateMuted: "rgba(82, 196, 26, 0.45)",
   cancel: "#ff4d4f",
   deceased: "#fa8c16",
+  logIssue: "#fa541c",
 };
 
 function membershipMoreIcon(Icon, color) {
@@ -238,8 +242,8 @@ function membershipMoreIcon(Icon, color) {
 }
 
 const profileMoreActionsButtonStyle = {
-  backgroundColor: "#45669d",
-  borderColor: "#45669d",
+  backgroundColor: "var(--app-brand-primary)",
+  borderColor: "var(--app-brand-primary)",
   color: "#fff",
 };
 
@@ -294,8 +298,11 @@ function AppTabs({
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const confirmLeaveUnsavedChanges = useConfirmUnsavedLeave();
-  const { roles: userRoles = [], permissions: userPermissions = [] } =
-    useAuthorization();
+  const {
+    roles: userRoles = [],
+    permissions: userPermissions = [],
+    hasPermission,
+  } = useAuthorization();
   const location = useLocation();
   const [searchParams] = useSearchParams();
   const profileIdParam = normalizeRouteId(
@@ -307,6 +314,7 @@ function AppTabs({
   const activeTabParam = String(searchParams.get("activeTab") || "")
     .trim()
     .toLowerCase();
+  const profileHeaderRef = useRef(null);
 
   const refreshDetailsData = useCallback(() => {
     if (!profileIdParam) return;
@@ -328,7 +336,10 @@ function AppTabs({
   }, [refreshDetailsData]);
 
   useEffect(() => {
-    const handler = () => refreshDetailsData();
+    const handler = () => {
+      refreshDetailsData();
+      profileHeaderRef.current?.refreshAccountSummary?.();
+    };
     window.addEventListener("projectshell:details-refresh", handler);
     return () =>
       window.removeEventListener("projectshell:details-refresh", handler);
@@ -356,6 +367,18 @@ function AppTabs({
     () => pickPrimarySubscription(ProfileSubData?.data || []),
     [ProfileSubData],
   );
+
+  const hasSubscription = useMemo(() => {
+    if (!ProfileSubData) return false;
+    if (Array.isArray(ProfileSubData.data)) return ProfileSubData.data.length > 0;
+    if (
+      ProfileSubData.data &&
+      typeof ProfileSubData.data === "object" &&
+      Array.isArray(ProfileSubData.data.data)
+    )
+      return ProfileSubData.data.data.length > 0;
+    return false;
+  }, [ProfileSubData]);
 
   const paymentReminderBanner = useMemo(
     () => buildPaymentReminderBanner(primarySubscriptionRow),
@@ -398,6 +421,7 @@ function AppTabs({
   ]);
 
   const [isDuplicateDrawerOpen, setIsDuplicateDrawerOpen] = useState(false);
+  const [isLogIssueDrawerOpen, setIsLogIssueDrawerOpen] = useState(false);
   const [isApplicationDrawerOpen, setIsApplicationDrawerOpen] = useState(false);
   const [selectedHistorySubscription, setSelectedHistorySubscription] =
     useState(null);
@@ -412,8 +436,6 @@ function AppTabs({
   const closeHistorySubscriptionDetail = useCallback(() => {
     setIsHistoryDetailOpen(false);
   }, []);
-
-  const profileHeaderRef = useRef(null);
   const documentsActionsRef = useRef(null);
   const registerDocumentsActions = useCallback((actions) => {
     documentsActionsRef.current = actions;
@@ -430,6 +452,28 @@ function AppTabs({
     hasMembershipProfileWritePermission(userPermissions);
   const canEditMembership = canFullEditMembership || canLimitedEditMembership;
   const membershipEditScope = canFullEditMembership ? "full" : "personal";
+  const canLogIssue = hasPermission("issues:write");
+
+  /** Reuses the already-loaded profile - no extra fetch - as the CreateCasesDrawer's
+   * `presetMember`, so "Log an Issue" from a member's Profile opens the drawer pre-linked
+   * to that member (see requirements doc: "An issue can also be created directly from the
+   * member record"). */
+  const logIssuePresetMember = useMemo(() => {
+    const id = profileDetails?._id || profileDetails?.id;
+    if (!id) return null;
+    const pi = profileDetails?.personalInfo || {};
+    const displayName =
+      `${pi.forename || ""} ${pi.surname || ""}`.trim() ||
+      (profileDetails?.membershipNumber != null
+        ? String(profileDetails.membershipNumber)
+        : String(id));
+    return { _id: id, displayName };
+  }, [
+    profileDetails?._id,
+    profileDetails?.id,
+    profileDetails?.personalInfo,
+    profileDetails?.membershipNumber,
+  ]);
 
   const [financeTabBarExtra, setFinanceTabBarExtra] = useState(null);
   useEffect(() => {
@@ -539,7 +583,7 @@ function AppTabs({
           ...col,
           render: (text, record) => (
             <a
-              style={{ color: "#1890ff", fontWeight: "500" }}
+              style={{ color: "var(--app-brand-accent)", fontWeight: "500" }}
               onClick={() => {
                 const appId = record._id || record.id;
                 dispatch(getApplicationById({ id: appId }));
@@ -568,7 +612,7 @@ function AppTabs({
       key: "membershipCategory",
       render: (text, record) => (
         <a
-          style={{ color: "#1890ff", fontWeight: 500 }}
+          style={{ color: "var(--app-brand-accent)", fontWeight: 500 }}
           onClick={(e) => {
             e.stopPropagation();
             openHistorySubscriptionDetail(record);
@@ -633,7 +677,7 @@ function AppTabs({
       key: "membershipCategory",
       render: (text, record) => (
         <a
-          style={{ color: "#1890ff", fontWeight: "500" }}
+          style={{ color: "var(--app-brand-accent)", fontWeight: "500" }}
           onClick={() => {
             dispatch(getApplicationById({ id: record.applicationId }));
             navigate({
@@ -869,7 +913,7 @@ function AppTabs({
   const allItems = [
     {
       key: "1",
-      label: "Membership",
+      label: hasSubscription ? "Membership" : "Profile",
       children: (
         <MyDeatails
           isEditMode={isEditMode}
@@ -915,7 +959,9 @@ function AppTabs({
     {
       key: "16",
       label: "Events",
-      children: <div>Events</div>,
+      children: (
+        <ProfileEventsTab profileId={profileDetails?._id || profileDetails?.id} />
+      ),
     },
     { key: "7", label: "Claims", children: <ClaimsById /> },
     { key: "8", label: "Roster", children: <Roster /> },
@@ -1058,7 +1104,7 @@ function AppTabs({
       key: "9",
       label: "Projects",
       icon: <FaProjectDiagram />,
-      iconColor: "#1890ff",
+      iconColor: "var(--app-brand-accent)",
       onClick: () => handleMenuClick("9"),
     },
     {
@@ -1125,6 +1171,17 @@ function AppTabs({
             onClick: () => setIsDuplicateDrawerOpen(true),
           },
         ];
+        if (canLogIssue && logIssuePresetMember) {
+          items.push({
+            key: "membership-log-issue",
+            label: "Log an Issue",
+            icon: membershipMoreIcon(
+              FaExclamationCircle,
+              MEMBERSHIP_MORE_ICON.logIssue,
+            ),
+            onClick: () => setIsLogIssueDrawerOpen(true),
+          });
+        }
         if (canEditMembership) {
           items.unshift({
             key: "membership-edit",
@@ -1193,7 +1250,7 @@ function AppTabs({
           {
             key: "documents-create-payment-form",
             label: "Create payment form",
-            icon: membershipMoreIcon(FaFileAlt, "#45669d"),
+            icon: membershipMoreIcon(FaFileAlt, "var(--app-brand-primary)"),
             onClick: () =>
               documentsActionsRef.current?.openCreatePaymentForm?.(),
           },
@@ -1226,6 +1283,8 @@ function AppTabs({
     activeKey,
     canEditMembership,
     canFullEditMembership,
+    canLogIssue,
+    logIssuePresetMember,
     isEditMode,
     isDeceased,
     membershipHeaderActionsMeta,
@@ -1409,6 +1468,12 @@ function AppTabs({
         ProfileDetails={profileDetails}
         columnHistory={columnHistory}
         historyData={historyData}
+      />
+
+      <CreateCasesDrawer
+        open={isLogIssueDrawerOpen}
+        onClose={() => setIsLogIssueDrawerOpen(false)}
+        presetMember={logIssuePresetMember}
       />
 
       <Drawer

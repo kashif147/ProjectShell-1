@@ -70,7 +70,7 @@ export function ActiveTrendChart({ expanded, trend, lastYearLabel, thisYearLabel
             type="monotone"
             dataKey="lastYear"
             name={lastYearLabel}
-            stroke="#64748b"
+            stroke="var(--theme-text-muted)"
             strokeDasharray="4 4"
             dot={expanded}
             strokeWidth={expanded ? 2.5 : 2}
@@ -81,7 +81,7 @@ export function ActiveTrendChart({ expanded, trend, lastYearLabel, thisYearLabel
                 compact: !expanded,
                 position: "bottom",
                 offset: 4,
-                fill: "#64748b",
+                fill: "var(--theme-text-muted)",
               })}
             />
           </Line>

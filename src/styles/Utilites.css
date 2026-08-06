@@ -1,9 +1,32 @@
 :root {
   --primary-color: #215e97;
-  --secoundry-color: #c97a2f;
-  --accent-color: #0ea5e9;
-  --secoundry-bg-color: #e6f7ff;
-  --gray: rgba(9, 30, 66, 0.04);
+  --secoundry-color: #475569;
+  --accent-color: #0d9488;
+  --secoundry-bg-color: #eef2f6;
+  --app-page-bg: var(--theme-page-bg, color-mix(in srgb, var(--secoundry-bg-color, #eef2f6) 18%, #ffffff));
+  --mainBlue: var(--theme-color-primary, var(--primary-color, #215e97));
+  --second: var(--theme-color-secondary, var(--secoundry-color, #475569));
+  --app-brand-primary: var(--theme-color-primary, var(--primary-color, #215e97));
+  --app-brand-secondary: var(--theme-color-secondary, var(--secoundry-color, #475569));
+  --app-brand-accent: var(--theme-color-accent, var(--accent-color, #0d9488));
+  --app-brand-bg: var(--theme-color-surface, var(--secoundry-bg-color, #eef2f6));
+  --app-shell-gradient: linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--app-brand-primary) 92%, #061824) 0%,
+    color-mix(in srgb, var(--app-brand-accent) 24%, var(--app-brand-primary)) 58%,
+    color-mix(in srgb, var(--app-brand-secondary) 28%, var(--app-brand-primary)) 100%
+  );
+  --app-sidebar-gradient: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--app-brand-primary) 88%, #071827) 0%,
+    color-mix(in srgb, var(--app-brand-accent) 18%, var(--app-brand-primary)) 52%,
+    color-mix(in srgb, var(--app-brand-primary) 72%, #061824) 100%
+  );
+  --app-table-header-bg: color-mix(in srgb, var(--app-brand-primary) 86%, #0f172a);
+  --app-selected-bg: color-mix(in srgb, var(--app-brand-bg) 78%, #ffffff);
+  --app-selected-border: color-mix(in srgb, var(--app-brand-secondary) 35%, transparent);
+  --app-brand-shadow: 0 10px 28px color-mix(in srgb, var(--app-brand-primary) 18%, transparent);
+  --gray: color-mix(in srgb, var(--app-brand-bg) 20%, transparent);
 }
 
 /* Full header section */
@@ -16,7 +39,7 @@
 .ant-modal .ant-modal-header {
   margin: 0 !important;
   padding: 0 !important;
-  background: rgb(18, 60, 99) !important;
+  background: var(--app-shell-gradient) !important;
   border-bottom: none !important;
   border-radius: 8px 8px 0 0 !important;
 }
@@ -31,6 +54,8 @@
   padding-left: 16px !important;
   padding-right: 16px !important;
   padding-bottom: 16px !important;
+  background: color-mix(in srgb, var(--app-brand-bg) 22%, #ffffff) !important;
+  border-top: 1px solid color-mix(in srgb, var(--app-brand-primary) 10%, #e5e7eb) !important;
 }
 
 /* Title with padding */
@@ -51,6 +76,11 @@
 
 .ant-drawer-body {
   padding: 0px !important;
+}
+
+.ant-drawer-footer {
+  background: color-mix(in srgb, var(--app-brand-bg) 22%, #ffffff) !important;
+  border-top: 1px solid color-mix(in srgb, var(--app-brand-primary) 10%, #e5e7eb) !important;
 }
 
 .ant-tabs-nav {
@@ -118,8 +148,8 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  width: 100%;
-  height: 100%;
+  width: auto;
+  height: auto;
 }
 
 .ant-table-selection-column .ant-checkbox {
@@ -135,9 +165,21 @@
 }
 
 .common-table .ant-table-thead .ant-table-selection-column {
-  background-color: var(--mainBlue) !important;
-  color: white !important;
+  background-color: var(--app-table-header-light-bg) !important;
+  color: var(--app-table-header-text) !important;
   z-index: 16 !important;
+}
+
+.common-table .ant-table-thead .ant-table-selection-column .ant-checkbox-wrapper,
+.common-table .ant-table-thead .ant-table-selection-column .ant-checkbox {
+  background: transparent !important;
+  height: auto !important;
+  width: auto !important;
+}
+
+.common-table .ant-table-thead .ant-table-selection-column .ant-checkbox-inner {
+  background-color: #ffffff !important;
+  border-color: color-mix(in srgb, var(--app-brand-primary) 36%, #cbd5e1) !important;
 }
 
 /* Ensure checkbox column aligns properly in drawer-tbl tables */
@@ -176,11 +218,11 @@
 
 .common-table .ant-table-thead .ant-table-cell-fix-left {
   z-index: 15 !important;
-  background-color: var(--mainBlue) !important;
+  background-color: var(--app-table-header-light-bg) !important;
+  color: var(--app-table-header-text) !important;
 }
 
 .common-table .ant-table-tbody .ant-table-cell-fix-left {
-  z-index: 10 !important;
   /* Background color will be set by even/odd row rules below */
 }
 
@@ -289,7 +331,31 @@
   border-inline-end: none !important;
 }
 
+/* Zebra striping — alternate row colours (themed by tenant branding) */
+.common-table .ant-table-tbody > tr.even-row > td {
+  background-color: var(--app-table-surface-bg) !important;
+}
+.common-table .ant-table-tbody > tr.odd-row > td {
+  background-color: var(--app-table-row-alt-bg) !important;
+}
+/* Keep fixed columns striped in step with the rest of the row */
+.common-table .ant-table-tbody > tr.even-row > td.ant-table-cell-fix-left,
+.common-table .ant-table-tbody > tr.even-row > td.ant-table-cell-fix-right {
+  background-color: var(--app-table-surface-bg) !important;
+}
+.common-table .ant-table-tbody > tr.odd-row > td.ant-table-cell-fix-left,
+.common-table .ant-table-tbody > tr.odd-row > td.ant-table-cell-fix-right {
+  background-color: var(--app-table-row-alt-bg) !important;
+}
+/* Preserve hover feedback on top of the stripes */
+.common-table .ant-table-tbody > tr.even-row:hover > td,
+.common-table .ant-table-tbody > tr.odd-row:hover > td {
+  background-color: var(--btn-hover) !important;
+}
+
 .common-table .ant-table-thead>tr>th {
+  background-color: var(--app-table-header-light-bg) !important;
+  color: var(--app-table-header-text) !important;
   height: 40px !important;
   /* line-height: 40px breaks flex layout of filter + sort controls vs body text */
   line-height: normal !important;
@@ -303,11 +369,15 @@
 /* Filter / sorter “buttons” vertically centered in the fixed header row */
 .common-table .ant-table-thead > tr > th .ant-table-filter-column {
   align-items: center !important;
+  background-color: var(--app-table-header-light-bg) !important;
+  color: var(--app-table-header-text) !important;
   min-height: 100%;
 }
 .common-table .ant-table-thead > tr > th .ant-table-column-sorters {
   display: flex !important;
   align-items: center !important;
+  background-color: var(--app-table-header-light-bg) !important;
+  color: var(--app-table-header-text) !important;
   gap: 4px;
 }
 .common-table .ant-table-thead > tr > th .ant-table-column-sorter {
@@ -447,12 +517,12 @@
   background-color: var(--primary-color);
   /* Blue background for active */
   color: white;
-  border-color: #1677ff;
+  border-color: var(--primary-color);
 }
 
 .ant-tabs-nav {
-  background-color: rgba(9, 30, 66, 0.04) !important;
-  border-left: 1px solid #e0e0e0;
+  background-color: color-mix(in srgb, var(--app-brand-bg) 45%, #ffffff) !important;
+  border-left: 1px solid color-mix(in srgb, var(--app-brand-primary) 12%, #e0e0e0);
   padding-left: 10px !important;
   color: var(--primary-color) !important;
   margin: 0 !important;
@@ -503,6 +573,160 @@
   overflow-y: auto;
 }
 
+/* Details tab nav redesign, scoped so Ant tabs elsewhere keep their existing chrome */
+.profile-details-tabs.ant-tabs > .ant-tabs-nav {
+  background: #ffffff !important;
+  border: 1px solid color-mix(in srgb, var(--primary-color) 12%, #edf2f2);
+  border-radius: 14px;
+  box-shadow: 0 1px 2px rgba(15, 46, 51, 0.06);
+  margin: 0 8px 8px !important;
+  min-height: 42px;
+  padding: 5px 6px !important;
+}
+
+.profile-details-tabs.ant-tabs > .ant-tabs-nav::before {
+  border-bottom: 0 !important;
+}
+
+.profile-details-tabs.ant-tabs
+  > .ant-tabs-nav
+  .ant-tabs-nav-wrap {
+  min-height: 30px;
+}
+
+.profile-details-tabs.ant-tabs
+  > .ant-tabs-nav
+  .ant-tabs-nav-list {
+  align-items: center;
+  gap: 4px;
+}
+
+.profile-details-tabs.ant-tabs > .ant-tabs-nav .ant-tabs-tab {
+  border-radius: 10px;
+  color: color-mix(in srgb, var(--primary-color) 42%, #3d5257) !important;
+  font-size: 13.5px !important;
+  font-weight: 600;
+  line-height: 1.2;
+  margin: 0 !important;
+  min-height: 30px;
+  padding: 8px 14px !important;
+  transition:
+    background-color 0.15s ease,
+    color 0.15s ease;
+}
+
+.profile-details-tabs.ant-tabs > .ant-tabs-nav .ant-tabs-tab:hover {
+  background: color-mix(in srgb, var(--primary-color) 12%, #ffffff);
+  color: color-mix(in srgb, var(--primary-color) 82%, #000000) !important;
+}
+
+.profile-details-tabs.ant-tabs
+  > .ant-tabs-nav
+  .ant-tabs-tab.ant-tabs-tab-active {
+  background: var(--primary-color);
+  box-shadow: 0 5px 14px color-mix(in srgb, var(--app-brand-primary) 22%, transparent);
+}
+
+.ant-drawer .ant-drawer-header,
+.ant-modal .ant-modal-header,
+.configuration-main .ant-drawer-header,
+.tenant-form-drawer .ant-drawer-header,
+.tenant-office-drawer .ant-drawer-header,
+.tenant-office-schedule-drawer .ant-drawer-header,
+.tenant-department-contacts-list-drawer .ant-drawer-header,
+.role-form-drawer .ant-drawer-header,
+.role-permissions-drawer .ant-drawer-header,
+.permission-form-drawer .ant-drawer-header,
+.user-role-assignment-drawer .ant-drawer-header,
+.user-details-drawer .ant-drawer-header {
+  background: var(--app-shell-gradient) !important;
+  border-bottom: 0 !important;
+}
+
+.ant-drawer .ant-drawer-title,
+.ant-drawer .ant-drawer-close,
+.configuration-main .ant-drawer-title,
+.tenant-form-drawer .ant-drawer-title,
+.tenant-office-drawer .ant-drawer-title,
+.tenant-office-schedule-drawer .ant-drawer-title,
+.tenant-department-contacts-list-drawer .ant-drawer-title,
+.role-form-drawer .ant-drawer-title,
+.role-permissions-drawer .ant-drawer-title,
+.permission-form-drawer .ant-drawer-title,
+.user-role-assignment-drawer .ant-drawer-title,
+.user-details-drawer .ant-drawer-title {
+  color: #ffffff !important;
+}
+
+.ant-card.stat-card,
+.stat-card,
+.filter-card,
+.dashboard-card,
+.kpi-card,
+.theme-kpi-card,
+.exec-kpi-card,
+.membership-kpi-pill {
+  border-color: color-mix(in srgb, var(--app-brand-primary) 10%, #e5e7eb) !important;
+  box-shadow: 0 8px 22px color-mix(in srgb, var(--app-brand-primary) 8%, transparent) !important;
+}
+
+.stat-card::before,
+.kpi-card::before,
+.theme-kpi-card::before {
+  background: var(--app-shell-gradient) !important;
+}
+
+.profile-details-tabs.ant-tabs
+  > .ant-tabs-nav
+  .ant-tabs-tab.ant-tabs-tab-active
+  .ant-tabs-tab-btn {
+  color: #ffffff !important;
+  font-weight: 700;
+  text-shadow: none;
+}
+
+.profile-details-tabs.ant-tabs > .ant-tabs-nav .ant-tabs-ink-bar {
+  display: none;
+}
+
+.profile-details-tabs.ant-tabs
+  > .ant-tabs-nav
+  .ant-tabs-extra-content {
+  align-items: center;
+  display: flex;
+  min-height: 30px;
+}
+
+.profile-details-tabs.ant-tabs
+  > .ant-tabs-nav
+  .ant-tabs-extra-content
+  .ant-btn {
+  border-color: color-mix(in srgb, var(--primary-color) 14%, #e1e9e9);
+  border-radius: 10px;
+  height: 30px;
+}
+
+.profile-details-tabs.ant-tabs
+  > .ant-tabs-nav
+  .ant-tabs-extra-content
+  .ant-btn-primary {
+  background: var(--primary-color);
+  border-color: var(--primary-color);
+  box-shadow: 0 1px 2px rgba(15, 46, 51, 0.06);
+}
+
+.profile-details-tabs.ant-tabs
+  > .ant-tabs-nav
+  .ant-tabs-extra-content
+  .ant-btn-primary:hover {
+  background: color-mix(in srgb, var(--primary-color) 82%, #000000) !important;
+  border-color: color-mix(
+    in srgb,
+    var(--primary-color) 82%,
+    #000000
+  ) !important;
+}
+
 /* Membership Form Scrolling Styles */
 .membership-form-container {
   scrollbar-width: thin;
@@ -534,14 +758,14 @@
 }
 
 .bulk-approval-modal .ant-modal-confirm-btns .ant-btn-primary {
-  background-color: #45669d !important;
-  border-color: #45669d !important;
+  background-color: var(--app-brand-primary) !important;
+  border-color: var(--app-brand-primary) !important;
   color: white !important;
 }
 
 .bulk-approval-modal .ant-modal-confirm-btns .ant-btn-primary:hover {
-  background-color: #3a5785 !important;
-  border-color: #3a5785 !important;
+  background-color: color-mix(in srgb, var(--app-brand-primary) 84%, #000000) !important;
+  border-color: color-mix(in srgb, var(--app-brand-primary) 84%, #000000) !important;
 }
 
 .bulk-approval-modal .ant-modal-confirm-btns .ant-btn-primary:disabled {

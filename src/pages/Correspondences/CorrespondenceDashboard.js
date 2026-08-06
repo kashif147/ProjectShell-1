@@ -27,7 +27,7 @@ import "../../styles/EventsDashboard.css";
 import "../../styles/CorrespondenceDashboard.css";
 
 const CHANNEL_MIX = [
-  { name: "Email", value: 52, color: "#215e97" },
+  { name: "Email", value: 52, color: "var(--app-brand-primary)" },
   { name: "SMS", value: 24, color: "#7c3aed" },
   { name: "Letter", value: 16, color: "#14b8a6" },
   { name: "Push", value: 8, color: "#ea580c" },
@@ -94,7 +94,7 @@ function formatVolumeShort(n) {
 function channelIcon(channel) {
   switch (channel) {
     case "Email":
-      return <MailOutlined style={{ color: "#215e97", fontSize: 14 }} />;
+      return <MailOutlined style={{ color: "var(--app-brand-primary)", fontSize: 14 }} />;
     case "SMS":
       return <MessageOutlined style={{ color: "#7c3aed", fontSize: 14 }} />;
     case "Letter":
@@ -125,7 +125,7 @@ const CorrespondenceDashboard = () => {
         value: "128k",
         trend: "↗ 5.2%",
         trendMuted: false,
-        barColor: "#215e97",
+        barColor: "var(--app-brand-primary)",
         barPercent: 72,
       },
       {
@@ -169,8 +169,8 @@ const CorrespondenceDashboard = () => {
                 width: "40px",
                 height: "40px",
                 borderRadius: "8px",
-                backgroundColor: "#e6f7ff",
-                color: "#1890ff",
+                backgroundColor: "var(--app-brand-bg)",
+                color: "var(--app-brand-accent)",
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
@@ -181,11 +181,11 @@ const CorrespondenceDashboard = () => {
             </div>
             <div>
               <div
-                style={{ fontWeight: 600, color: "#1890ff", cursor: "pointer" }}
+                style={{ fontWeight: 600, color: "var(--app-brand-accent)", cursor: "pointer" }}
               >
                 {text}
               </div>
-              <div style={{ fontSize: "12px", color: "#8c8c8c" }}>
+              <div style={{ fontSize: "12px", color: "var(--theme-text-muted)" }}>
                 {record.campaignId} · {record.channel}
               </div>
             </div>
@@ -197,7 +197,7 @@ const CorrespondenceDashboard = () => {
         title: "Sent",
         width: 200,
         render: (text) => (
-          <span style={{ color: "#64748b", fontSize: 13 }}>{text}</span>
+          <span style={{ color: "var(--theme-text-muted)", fontSize: 13 }}>{text}</span>
         ),
       },
       {
@@ -309,16 +309,16 @@ const CorrespondenceDashboard = () => {
                 <AreaChart data={VOLUME_TREND} margin={{ top: 4, right: 8, left: 0, bottom: 4 }}>
                   <defs>
                     <linearGradient id="corrSentFill" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stopColor="#215e97" stopOpacity={0.35} />
-                      <stop offset="100%" stopColor="#215e97" stopOpacity={0.02} />
+                      <stop offset="0%" stopColor="var(--app-brand-primary)" stopOpacity={0.35} />
+                      <stop offset="100%" stopColor="var(--app-brand-primary)" stopOpacity={0.02} />
                     </linearGradient>
                   </defs>
                   <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" vertical={false} />
-                  <XAxis dataKey="month" tick={{ fill: "#64748b", fontSize: 11 }} axisLine={false} tickLine={false} />
+                  <XAxis dataKey="month" tick={{ fill: "var(--theme-text-muted)", fontSize: 11 }} axisLine={false} tickLine={false} />
                   <YAxis
                     tickFormatter={(v) => formatVolumeShort(v)}
                     domain={[0, 60000]}
-                    tick={{ fill: "#64748b", fontSize: 11 }}
+                    tick={{ fill: "var(--theme-text-muted)", fontSize: 11 }}
                     axisLine={false}
                     tickLine={false}
                   />
@@ -336,7 +336,7 @@ const CorrespondenceDashboard = () => {
                     type="monotone"
                     dataKey="sent"
                     name="Sent"
-                    stroke="#215e97"
+                    stroke="var(--app-brand-primary)"
                     strokeWidth={2}
                     fill="url(#corrSentFill)"
                   />
@@ -353,7 +353,7 @@ const CorrespondenceDashboard = () => {
                     type="monotone"
                     dataKey="bounced"
                     name="Bounced"
-                    stroke="#64748b"
+                    stroke="var(--theme-text-muted)"
                     strokeWidth={2}
                     dot={{ r: 3, strokeWidth: 1, fill: "#fff" }}
                     activeDot={{ r: 4 }}
@@ -388,7 +388,7 @@ const CorrespondenceDashboard = () => {
                     verticalAlign="middle"
                     align="right"
                     formatter={(value, entry) => (
-                      <span style={{ color: "#475569", fontSize: 12 }}>
+                      <span style={{ color: "var(--theme-text-muted)", fontSize: 12 }}>
                         {value}{" "}
                         <span style={{ fontWeight: 700, color: "#0f172a" }}>
                           {entry.payload.value}%
@@ -463,7 +463,7 @@ const CorrespondenceDashboard = () => {
             </p>
             <div className="events-dashboard__ticket-label">DIGITAL VS PHYSICAL</div>
             <div className="events-dashboard__ticket-bars" title="Email, SMS & push vs letter">
-              <span aria-label="Digital channels" style={{ flex: 78, background: "#215e97" }} />
+              <span aria-label="Digital channels" style={{ flex: 78, background: "var(--app-brand-primary)" }} />
               <span aria-label="Physical mail" style={{ flex: 22, background: "#94a3b8" }} />
             </div>
             <div className="events-dashboard__ticket-legend">

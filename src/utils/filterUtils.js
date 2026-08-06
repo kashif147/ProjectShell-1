@@ -467,6 +467,15 @@ export const getLabelToKeyMap = (screenCols) => {
         'Processed At Date': 'processedDateRange',
         'Last Payment Date': 'paymentDate',
         'Payment Method': 'paymentType',
+        'Event': 'eventName',
+        'Event Date': 'startDate',
+        'Event Status': 'status',
+        'Event Category': 'eventCategory',
+        'Registration Status': 'registrationStatus',
+        'Priority': 'priority',
+        'Issue Type': 'issueType',
+        'Case Status': 'issueStatus',
+        'Owner': 'ownerTeam',
     };
 
     if (screenCols && Array.isArray(screenCols)) {
@@ -476,7 +485,15 @@ export const getLabelToKeyMap = (screenCols) => {
         });
     }
 
-    return { ...mapping, ...overrides };
+    const merged = { ...mapping, ...overrides };
+    // 'Event Date' is ambiguous across screens - Events Summary needs
+    // 'startDate' (the override above) but Attendees' own eventDate column
+    // needs its own dataIndex. When the current screen actually has a column
+    // titled 'Event Date', trust that over the shared override.
+    if (mapping['Event Date']) {
+        merged['Event Date'] = mapping['Event Date'];
+    }
+    return merged;
 };
 
 /** API stores camelCase keys; use when column list is empty or does not list a key (avoids `filtersState['applicationStatus']` vs "Application Status"). */
@@ -570,6 +587,31 @@ const APPLICATION_API_FILTER_KEY_TO_LABEL = {
     regions: "Region",
     branches: "Branch",
     workLocations: "Work Location",
+    registrationStatus: "Registration Status",
+    eventDate: "Event Date",
+    eventCategory: "Event Category",
+    eventType: "Event Type",
+    eventName: "Event",
+    priority: "Priority",
+    issueType: "Issue Type",
+    issueStatus: "Case Status",
+    ownerTeam: "Owner",
+};
+
+/**
+ * Several screens reuse the same generic API filter key ("status") for
+ * different, screen-specific toolbar labels (CN Status, WO Status, Event
+ * Status, ...). APPLICATION_API_FILTER_KEY_TO_LABEL is a single flat map and
+ * can only remember one label per key, so it previously always resolved
+ * "status" to "CN Status" regardless of screen. Disambiguate by templateType
+ * before falling back to that global map.
+ */
+const AMBIGUOUS_API_KEY_LABEL_BY_TEMPLATE_TYPE = {
+    status: {
+        creditnotes: "CN Status",
+        writeoffs: "WO Status",
+        eventssummary: "Event Status",
+    },
 };
 
 /** UI row field names that differ from template API filter keys. */
@@ -754,8 +796,14 @@ export const transformFiltersFromApi = (apiFilters, screenCols, options = {}) =>
         }
 
         const filter = apiFilters[key];
+        const normalizedTemplateType = String(options.templateType || "").trim().toLowerCase();
+        const ambiguousLabel =
+            AMBIGUOUS_API_KEY_LABEL_BY_TEMPLATE_TYPE[key]?.[normalizedTemplateType];
         let label =
-            APPLICATION_API_FILTER_KEY_TO_LABEL[key] || keyToLabel[key] || key;
+            ambiguousLabel ||
+            APPLICATION_API_FILTER_KEY_TO_LABEL[key] ||
+            keyToLabel[key] ||
+            key;
         if (listingTemplate && (key === "dateRange" || label === "Date Range")) {
             label = "Membership Start Date";
         }

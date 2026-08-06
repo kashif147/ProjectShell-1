@@ -379,6 +379,93 @@
         { "dataIndex": "sourceType", "title": "Source", "isGride": true, "isVisible": true, "ellipsis": true, "width": 70 },
         { "dataIndex": "_actions", "title": "Actions", "key": "actions", "isGride": true, "isVisible": true, "width": 72, "fixed": "right" }
       ]
+    },
+    "eventssummary": {
+      "screenKey": "Events",
+      "templateType": "eventssummary",
+      "service": "events-service",
+      "filters": {
+        "eventName": { "operator": "equal_to", "values": [] },
+        "status": { "operator": "equal_to", "values": [] },
+        "eventCategory": { "operator": "equal_to", "values": [] },
+        "eventType": { "operator": "equal_to", "values": [] },
+        "venue": { "operator": "equal_to", "values": [] },
+        "startDate": { "operator": "between", "values": [] },
+        "endDate": { "operator": "between", "values": [] }
+      },
+      "columns": [
+        { "dataIndex": "eventName", "title": "Event Name", "isGride": true, "isVisible": true, "ellipsis": true, "width": 220 },
+        { "dataIndex": "status", "title": "Status", "isGride": true, "isVisible": true, "ellipsis": true, "width": 140 },
+        { "dataIndex": "eventCategory", "title": "Category", "isGride": true, "isVisible": true, "ellipsis": true, "width": 150 },
+        { "dataIndex": "eventType", "title": "Event Type", "isGride": true, "isVisible": true, "ellipsis": true, "width": 150 },
+        { "dataIndex": "venue", "title": "Venue", "isGride": true, "isVisible": true, "ellipsis": true, "width": 180 },
+        { "dataIndex": "startDate", "title": "Start Date", "filterValueType": "date", "isGride": true, "isVisible": true, "ellipsis": true, "width": 130 },
+        { "dataIndex": "endDate", "title": "End Date", "filterValueType": "date", "isGride": true, "isVisible": true, "ellipsis": true, "width": 130 },
+        { "dataIndex": "memberPrice", "title": "Member Price", "isGride": true, "isVisible": true, "ellipsis": true, "width": 130 },
+        { "dataIndex": "nonMemberPrice", "title": "Non-Member Price", "isGride": true, "isVisible": true, "ellipsis": true, "width": 150 },
+        { "dataIndex": "createdBy", "title": "Created By", "isGride": true, "isVisible": true, "ellipsis": true, "width": 190 },
+        { "dataIndex": "createdAt", "title": "Created At", "filterValueType": "date", "isGride": true, "isVisible": true, "ellipsis": true, "width": 140 },
+        { "dataIndex": "updatedBy", "title": "Updated By", "isGride": true, "isVisible": true, "ellipsis": true, "width": 190 },
+        { "dataIndex": "_actions", "title": "Actions", "key": "actions", "isGride": true, "isVisible": true, "width": 90, "fixed": "right" }
+      ]
+    },
+    "issuessummary": {
+      "screenKey": "Issues",
+      "templateType": "issuessummary",
+      "service": "issue-service",
+      "filters": {
+        "priority": { "operator": "equal_to", "values": [] },
+        "issueType": { "operator": "equal_to", "values": [] },
+        "issueStatus": { "operator": "not_equal_to", "values": ["CLOSED"] },
+        "ownerTeam": { "operator": "equal_to", "values": [] },
+        "dateReceived": { "operator": "between", "values": [] }
+      },
+      "columns": [
+        { "dataIndex": "caseTitle", "title": "Issue", "isGride": true, "isVisible": true, "ellipsis": true, "width": 260 },
+        { "dataIndex": "memberIds", "title": "Member Name", "isGride": true, "isVisible": true, "ellipsis": true, "width": 200 },
+        { "dataIndex": "membershipNo", "title": "Membership No", "isGride": true, "isVisible": true, "ellipsis": true, "width": 150 },
+        { "dataIndex": "caseFileNumber", "title": "Case File Number", "isGride": true, "isVisible": true, "ellipsis": true, "width": 170 },
+        { "dataIndex": "nmbiReference", "title": "NMBI Reference No", "isGride": true, "isVisible": true, "ellipsis": true, "width": 170 },
+        { "dataIndex": "location", "title": "Location", "isGride": true, "isVisible": true, "ellipsis": true, "width": 150 },
+        { "dataIndex": "dateReceived", "title": "Date Received", "filterValueType": "date", "isGride": true, "isVisible": true, "ellipsis": true, "width": 150 },
+        { "dataIndex": "criteriaLetterStatus", "title": "Criteria Letter", "isGride": true, "isVisible": true, "ellipsis": true, "width": 140 },
+        { "dataIndex": "legislation", "title": "Legislation", "isGride": true, "isVisible": true, "ellipsis": true, "width": 140 },
+        { "dataIndex": "issueStatus", "title": "Case Status", "isGride": true, "isVisible": true, "ellipsis": true, "width": 190 },
+        { "dataIndex": "priority", "title": "Priority", "isGride": true, "isVisible": true, "ellipsis": true, "width": 110 },
+        { "dataIndex": "ownerTeam", "title": "Owner", "isGride": true, "isVisible": true, "ellipsis": true, "width": 150 }
+      ]
+    },
+    "attendees": {
+      "screenKey": "Attendees",
+      "templateType": "attendees",
+      "service": "events-service",
+      "filters": {
+        "eventName": { "operator": "equal_to", "values": [] },
+        "eventType": { "operator": "equal_to", "values": [] },
+        "eventCategory": { "operator": "equal_to", "values": [] },
+        "registrationStatus": { "operator": "equal_to", "values": [] },
+        "paymentStatus": { "operator": "equal_to", "values": [] },
+        "grade": { "operator": "equal_to", "values": [] },
+        "workLocation": { "operator": "equal_to", "values": [] },
+        "eventDate": { "operator": "between", "values": [] }
+      },
+      "columns": [
+        { "dataIndex": "eventType", "title": "Event Type", "isGride": true, "isVisible": true, "ellipsis": true, "width": 150 },
+        { "dataIndex": "eventCategory", "title": "Event Category", "isGride": true, "isVisible": true, "ellipsis": true, "width": 150 },
+        { "dataIndex": "eventName", "title": "Event", "isGride": true, "isVisible": true, "ellipsis": true, "width": 210 },
+        { "dataIndex": "eventDate", "title": "Event Date", "filterValueType": "date", "isGride": true, "isVisible": true, "ellipsis": true, "width": 140 },
+        { "dataIndex": "status", "title": "Registration Status", "isGride": true, "isVisible": true, "ellipsis": true, "width": 170 },
+        { "dataIndex": "totalFee", "title": "Total Fee", "isGride": true, "isVisible": true, "ellipsis": true, "width": 130 },
+        { "dataIndex": "paymentStatus", "title": "Payment Status", "isGride": true, "isVisible": true, "ellipsis": true, "width": 150 },
+        { "dataIndex": "attendeeName", "title": "Attendee Name", "isGride": true, "isVisible": true, "ellipsis": true, "width": 180 },
+        { "dataIndex": "email", "title": "Email", "isGride": true, "isVisible": true, "ellipsis": true, "width": 210 },
+        { "dataIndex": "mobileNumber", "title": "Mobile Number", "isGride": true, "isVisible": true, "ellipsis": true, "width": 160 },
+        { "dataIndex": "fullAddress", "title": "Full Address", "isGride": true, "isVisible": true, "ellipsis": true, "width": 260 },
+        { "dataIndex": "workLocation", "title": "Work Location", "isGride": true, "isVisible": true, "ellipsis": true, "width": 180 },
+        { "dataIndex": "grade", "title": "Grade", "isGride": true, "isVisible": true, "ellipsis": true, "width": 160 },
+        { "dataIndex": "membershipNo", "title": "Membership No", "isGride": true, "isVisible": true, "ellipsis": true, "width": 150 },
+        { "dataIndex": "_actions", "title": "Actions", "isGride": true, "isVisible": true, "ellipsis": false, "width": 160 }
+      ]
     }
   }
 }

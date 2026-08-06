@@ -617,7 +617,7 @@ const Reconciliation = () => {
             padding: "0 34px 6px",
             fontSize: 12,
             fontWeight: 600,
-            color: "#215E97",
+            color: "var(--app-brand-primary)",
           }}
         >
           Bank ref filter: {bankRefFilter}

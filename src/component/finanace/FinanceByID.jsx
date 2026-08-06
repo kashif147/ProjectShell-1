@@ -74,8 +74,8 @@ import { useFinanceTabToolbar } from "../../context/FinanceTabToolbarContext";
 import { hasFinanceActionRole } from "../../utils/profileRoleAccess";
 
 const financeMoreActionsButtonStyle = {
-  backgroundColor: "#45669d",
-  borderColor: "#45669d",
+  backgroundColor: "var(--app-brand-primary)",
+  borderColor: "var(--app-brand-primary)",
   color: "#fff",
 };
 
@@ -87,7 +87,7 @@ const ledgerRowActionsButtonStyle = {
   display: "inline-flex",
   alignItems: "center",
   justifyContent: "center",
-  color: "#45669d",
+  color: "var(--app-brand-primary)",
 };
 
 function accountServiceErrorMessage(error, fallback) {
@@ -428,9 +428,17 @@ function resolveClaimDocumentMemberId(item) {
 
 const CLAIM_LEDGER_DOC = "claim";
 
+/** True if this entry belongs to the target member/profile identity. */
+function entryMatchesLedgerIdentity(e, tid, pid) {
+  if (normalizeLedgerMemberKey(e.memberId) === tid) return true;
+  if (pid && normalizeLedgerMemberKey(e.profileId) === pid) return true;
+  return false;
+}
+
 /** Include row on this member’s ledger: claims match document member; others match entry lines. */
-function ledgerItemIncludedForMember(item, gl, targetId) {
+function ledgerItemIncludedForMember(item, gl, targetId, profileId) {
   const tid = normalizeLedgerMemberKey(targetId);
+  const pid = normalizeLedgerMemberKey(profileId);
   const dt = ledgerItemDocTypeNormForMember(item, gl);
   const claimMember = resolveClaimDocumentMemberId(item);
 
@@ -443,14 +451,20 @@ function ledgerItemIncludedForMember(item, gl, targetId) {
   }
 
   return (
-    item.entries?.some((e) => normalizeLedgerMemberKey(e.memberId) === tid) ??
-    false
+    item.entries?.some((e) => entryMatchesLedgerIdentity(e, tid, pid)) ?? false
   );
 }
 
-/** Debit/credit lines to aggregate: for claims, only lines tied to the claim’s member. */
-function entriesForMemberLedgerAggregation(item, gl, targetId) {
+/**
+ * Debit/credit lines to aggregate: for claims, only lines tied to the claim’s member.
+ * `profileId` (the raw profile-service id) is matched against entries.profileId too, since
+ * event/course GL entries for a member-attendee often carry only profileId, not memberId - see
+ * account-service's buildMemberFacingGlQuery, which already returns these rows; without this,
+ * the frontend's own re-aggregation silently zeroed them back out.
+ */
+function entriesForMemberLedgerAggregation(item, gl, targetId, profileId) {
   const tid = normalizeLedgerMemberKey(targetId);
+  const pid = normalizeLedgerMemberKey(profileId);
   const dt = ledgerItemDocTypeNormForMember(item, gl);
   const claimMember = resolveClaimDocumentMemberId(item);
   const list = item.entries || [];
@@ -466,10 +480,10 @@ function entriesForMemberLedgerAggregation(item, gl, targetId) {
       (e) => normalizeLedgerMemberKey(e.memberId) === cid,
     );
     if (byClaim.length > 0) return byClaim;
-    return list.filter((e) => normalizeLedgerMemberKey(e.memberId) === tid);
+    return list.filter((e) => entryMatchesLedgerIdentity(e, tid, pid));
   }
 
-  return list.filter((e) => normalizeLedgerMemberKey(e.memberId) === tid);
+  return list.filter((e) => entryMatchesLedgerIdentity(e, tid, pid));
 }
 
 /** Draft credit notes are not in GL until approved; show them on the member ledger for review. */
@@ -654,7 +668,7 @@ function formatLedgerBalanceCents(balanceCents, record, pendingCreditNotes = [])
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
   });
-  let color = "#595959";
+  let color = "var(--theme-text-muted)";
   if (n > 0) color = "#cf1322";
   else if (n < 0) color = "#389e0d";
 
@@ -710,12 +724,12 @@ function formatLedgerAmountCents(record) {
     if (rowHasOffsettingDebitCredit(record)) {
       return {
         text: "€0.00",
-        color: "#8c8c8c",
+        color: "var(--theme-text-muted)",
         tooltip:
           "Offsetting lines on this document — no net change to member balance.",
       };
     }
-    return { text: "", color: "#595959", tooltip: null };
+    return { text: "", color: "var(--theme-text-muted)", tooltip: null };
   }
   if (n > 0) {
     return {
@@ -834,6 +848,12 @@ const TransactionHistory = () => {
   const location = useLocation();
   const [searchParams] = useSearchParams();
   const { profileDetails } = useSelector((state) => state.profileDetails || {});
+  // Same subscription slice ProfileHeader.js already fetches (mounted above the tab strip, so
+  // this is normally already populated by the time a user reaches the Finance tab) - used here
+  // only to tell whether the profile has any membership history at all.
+  const { ProfileSubData } = useSelector(
+    (state) => state.profileSubscription || {},
+  );
   const { permissions: userPermissions = [], roles: userRoles = [] } =
     useAuthorization();
   const canPerformFinanceActions = hasFinanceActionRole(userRoles);
@@ -842,16 +862,32 @@ const TransactionHistory = () => {
     return userPermissions.join(",");
   }, [canPerformFinanceActions, userPermissions]);
 
-  // Try to get memberId from location state first, then fallback to Redux profileDetails
+  // Raw profile-service id (from the /Details?profileId=... URL) - used as a last-resort
+  // identifier for profiles with no membershipNumber/regNo, and to match entries.profileId on
+  // event/course GL lines that carry no entries.memberId.
+  const profileIdParam =
+    searchParams.get("profileId") || profileDetails?._id || profileDetails?.id;
+
+  // Try to get memberId from location state first, then Redux profileDetails, then fall back to
+  // the raw profileId - without this fallback, a profile with no membership history (no
+  // membershipNumber/regNo) sends memberId=undefined to the account-service API and the Finance
+  // tab shows nothing at all, even when it has paid event/course registrations.
   const memberId =
     location.state?.memberId ||
     searchParams.get("memberId") ||
     profileDetails?.membershipNumber ||
-    profileDetails?.regNo;
+    profileDetails?.regNo ||
+    profileIdParam;
 
-  console.log("FinanceByID - location.state:", location.state);
-  console.log("FinanceByID - profileDetails:", profileDetails);
-  console.log("FinanceByID - decided memberId:", memberId);
+  const hasMembershipHistory = useMemo(() => {
+    if (profileDetails?.membershipNumber) return true;
+    const rows = Array.isArray(ProfileSubData?.data)
+      ? ProfileSubData.data
+      : Array.isArray(ProfileSubData?.data?.data)
+        ? ProfileSubData.data.data
+        : null;
+    return Array.isArray(rows) ? rows.length > 0 : null; // null = not known yet
+  }, [profileDetails?.membershipNumber, ProfileSubData]);
 
   const [loading, setLoading] = useState(false);
   const [data, setData] = useState([]);
@@ -869,6 +905,16 @@ const TransactionHistory = () => {
   const [reassignDrawerOpen, setReassignDrawerOpen] = useState(false);
   const [reassignSourceRows, setReassignSourceRows] = useState([]);
   const [ledgerView, setLedgerView] = useState("simple");
+  const [ledgerDomain, setLedgerDomain] = useState("membership"); // "membership" | "events"
+  const ledgerDomainUserSetRef = useRef(false);
+
+  // Default the filter to "Events & Courses" once we know the profile has no membership history
+  // at all (Member/Cancelled/Resigned/Archived/Suspended all count as "has history" and keep the
+  // "membership" default) - but never override a selection the user already made.
+  useEffect(() => {
+    if (ledgerDomainUserSetRef.current) return;
+    if (hasMembershipHistory === false) setLedgerDomain("events");
+  }, [hasMembershipHistory]);
   const [memoColWidth, setMemoColWidth] = useState(MEMO_COL_DEFAULT_WIDTH);
   const [memoColExpanded, setMemoColExpanded] = useState(false);
   const [financeSummary, setFinanceSummary] = useState(null);
@@ -974,7 +1020,10 @@ const TransactionHistory = () => {
       const response = await axios.get(
         `${getAccountServiceBaseUrl()}/reports/member/${memberId}/ledger`,
         {
-          params: { view: ledgerView },
+          params: {
+            view: ledgerView,
+            ledgerDomain,
+          },
           headers: {
             Authorization: `Bearer ${token}`,
           },
@@ -1008,7 +1057,7 @@ const TransactionHistory = () => {
       // Claims: row belongs to the member on the claim document, not any incidental entry line.
       const filteredRawData = rawData.filter((item) => {
         const gl = glFromLedgerItem(item);
-        return ledgerItemIncludedForMember(item, gl, targetId);
+        return ledgerItemIncludedForMember(item, gl, targetId, profileIdParam);
       });
 
       // Oldest-first by createdAt/updatedAt only — running balance does not use Tx Date
@@ -1028,6 +1077,7 @@ const TransactionHistory = () => {
             item,
             gl,
             targetId,
+            profileIdParam,
           );
 
           // Aggregate amounts (handles split entries in a single transaction)
@@ -1115,7 +1165,7 @@ const TransactionHistory = () => {
     } finally {
       setLoading(false);
     }
-  }, [memberId, ledgerView, fetchPendingCreditNotes]);
+  }, [memberId, ledgerView, ledgerDomain, fetchPendingCreditNotes, profileIdParam]);
 
   const fetchFinanceSummary = useCallback(async () => {
     if (!memberId) return;
@@ -1127,8 +1177,14 @@ const TransactionHistory = () => {
     const summaryUrl = `${getAccountServiceBaseUrl()}/reports/member/${encodeURIComponent(memberKey)}/summary`;
 
     try {
-      // Single request — same as ProfileHeader (avoids duplicate calls / 429).
-      const summaryRes = await axios.get(summaryUrl, { headers });
+      // Single request — same as ProfileHeader (avoids duplicate calls / 429). ledgerDomain
+      // keeps this in sync with the selected filter chip - without it the backend defaults to
+      // "membership", so the Events & Courses tab would show membership-only figures instead of
+      // its own.
+      const summaryRes = await axios.get(summaryUrl, {
+        headers,
+        params: { ledgerDomain },
+      });
       const raw = summaryRes.data?.data ?? summaryRes.data;
       setFinanceSummary(normalizeFinanceSummary(raw, memberKey, year));
     } catch (error) {
@@ -1145,7 +1201,7 @@ const TransactionHistory = () => {
     } finally {
       setSummaryLoading(false);
     }
-  }, [memberId]);
+  }, [memberId, ledgerDomain]);
 
   const refreshFinanceViews = useCallback(async () => {
     await Promise.all([fetchLedgerData(), fetchFinanceSummary()]);
@@ -2425,7 +2481,7 @@ const TransactionHistory = () => {
               {detailTip && !linkTip ? (
                 <Tooltip title={detailTip}>
                   <InfoCircleOutlined
-                    style={{ color: "#8c8c8c", flexShrink: 0, cursor: "help" }}
+                    style={{ color: "var(--theme-text-muted)", flexShrink: 0, cursor: "help" }}
                     aria-label="Document type description"
                   />
                 </Tooltip>
@@ -2647,7 +2703,7 @@ const TransactionHistory = () => {
                 }
               >
                 <InfoCircleOutlined
-                  style={{ color: "#8c8c8c", flexShrink: 0, cursor: "help" }}
+                  style={{ color: "var(--theme-text-muted)", flexShrink: 0, cursor: "help" }}
                   aria-label="Show reference"
                 />
               </Tooltip>
@@ -2973,6 +3029,18 @@ const TransactionHistory = () => {
           value={ledgerView}
           onChange={(v) => setLedgerView(v)}
         />
+        <Segmented
+          aria-label="Membership vs events/courses ledger"
+          options={[
+            { label: "Membership", value: "membership" },
+            { label: "Events & Courses", value: "events" },
+          ]}
+          value={ledgerDomain}
+          onChange={(v) => {
+            ledgerDomainUserSetRef.current = true;
+            setLedgerDomain(v);
+          }}
+        />
         <Dropdown
           menu={{
             items: withFinanceActionIcons([
@@ -3058,6 +3126,7 @@ const TransactionHistory = () => {
     canPerformFinanceActions,
     memberId,
     ledgerView,
+    ledgerDomain,
     refundMenuEnabled,
     writeOffMenuEnabled,
     reassignMenuEnabled,

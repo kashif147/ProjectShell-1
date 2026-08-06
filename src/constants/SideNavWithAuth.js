@@ -54,9 +54,30 @@ import {
 } from "react-icons/fa";
 
 // Helper function to create menu item with permissions
+const getSidebarIconTone = (key = "") => {
+  const tones = [
+    "blue",
+    "green",
+    "amber",
+    "coral",
+    "violet",
+    "cyan",
+    "rose",
+    "indigo",
+  ];
+  const index = String(key)
+    .split("")
+    .reduce((sum, char) => sum + char.charCodeAt(0), 0);
+  return tones[index % tones.length];
+};
+
 const createMenuItem = (key, icon, label, permissions = [], roles = []) => ({
   key,
-  icon: <div className="icon">{icon}</div>,
+  icon: (
+    <div className={`icon sidebar-nav-icon sidebar-nav-icon--${getSidebarIconTone(key)}`}>
+      {icon}
+    </div>
+  ),
   label: <div className="sidebar-label">{label}</div>,
   permissions,
   roles,
@@ -409,59 +430,71 @@ export const reportItems = [
   ),
 ];
 
-export const casesItems = [
-  createMenuItem(
-    "Dashboard",
-    <FaChartPie />,
-    "Dashboard",
-    []
-  ),
-  createMenuItem(
-    "All cases",
-    <FaFolderOpen />,
-    "All cases",
-    []
-  ),
-  createMenuItem(
-    "Assigned to me",
-    <FaUserShield />,
-    "Assigned to me",
-    []
-  ),
-  createMenuItem(
-    "Reports setting",
-    <FaWrench />,
-    "Reports setting",
-    []
-  ),
-];
-
+// Single source of truth for the Issue Management side nav - "Cases" and "Issues
+// Management" previously rendered two independently-maintained, un-permission-gated
+// (permissions: []) item lists that happened to route to the same pages
+// (Sidebar.js's getNavLinkData resolves "Cases"/"All Issues"/"All cases" to the same
+// /CasesSummary etc.). `casesItems` is kept as an alias, not a duplicate, so any other
+// file still importing it (Sidebar.js's itemsMap.Cases) renders the identical,
+// permission-gated list rather than a second, divergent one.
+//
+// Every item's `permissions` is the actual reachability gate for that nav entry
+// (Sidebar.js filters menuItems by `hasPermission`) - the dedicated Complaints/Fitness to
+// Practice/Industrial Relations/Data Protection entries below are gated on their own
+// team resource (`issues-<team>:read`, matching `services/issue.service.js`'s
+// `ISSUE_TYPE_PERMISSION_MAP` in issue-service) rather than the base "issues:read" every
+// other entry uses - this is the nav-level half of "only authorised users have access to
+// each section based on their roles" from the requirements doc; the real enforcement is
+// still server-side (issue-service's `GET /issues` already scopes results to the caller's
+// granted `issues-<team>:read` resources), this only stops a Complaints-only user from
+// even seeing a working link to, say, Industrial Relations. See
+// RoutePermissions.js/Entry.js for the matching route-level gate.
 export const issuesItems = [
   createMenuItem(
     "Dashboard",
     <FaChartPie />,
     "Dashboard",
-    []
+    ["issues:read"]
   ),
   createMenuItem(
-    "All Issues",
+    "Open Issues",
     <FaFolderOpen />,
-    "All Issues",
-    []
+    "Open Issues",
+    ["issues:read"]
   ),
   createMenuItem(
-    "Assigned to me",
-    <FaUserShield />,
-    "Assigned to me",
-    []
+    "Closed",
+    <FaClipboardCheck />,
+    "Closed",
+    ["issues:read"]
   ),
   createMenuItem(
-    "Reports setting",
-    <FaWrench />,
-    "Reports setting",
-    []
+    "Complaints",
+    <FaExclamationTriangle />,
+    "Complaints",
+    ["issues-complaints:read"]
+  ),
+  createMenuItem(
+    "Fitness to Practice",
+    <FaGraduationCap />,
+    "Fitness to Practice",
+    ["issues-ftp:read"]
+  ),
+  createMenuItem(
+    "Industrial Relations",
+    <FaBalanceScale />,
+    "Industrial Relations",
+    ["issues-ir:read"]
+  ),
+  createMenuItem(
+    "Data Protection",
+    <FaShieldAlt />,
+    "Data Protection",
+    ["issues-dataprotection:read"]
   ),
 ];
+
+export const casesItems = issuesItems;
 
 export const eventsItems = [
   createMenuItem(

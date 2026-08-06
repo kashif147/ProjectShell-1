@@ -56,8 +56,9 @@ import { useTenantBranding } from "../../context/TenantBrandingContext";
 
 const DEFAULT_BRAND = {
   primary: "#215e97",
-  secondary: "#1a4a7a",
-  accent: "#0ea5e9",
+  secondary: "#475569",
+  accent: "#0d9488",
+  secondaryBackground: "#eef2f6",
 };
 
 const ACTIVATE_MEMBERSHIP_DISABLED_TITLE =
@@ -192,8 +193,15 @@ const ProfileHeader = forwardRef(function ProfileHeader(
       "--ph-primary": branding?.primaryColor || DEFAULT_BRAND.primary,
       "--ph-secondary": branding?.secondaryColor || DEFAULT_BRAND.secondary,
       "--ph-accent": branding?.accentColor || DEFAULT_BRAND.accent,
+      "--ph-secondary-bg":
+        branding?.secondaryBackgroundColor || DEFAULT_BRAND.secondaryBackground,
     }),
-    [branding?.primaryColor, branding?.secondaryColor, branding?.accentColor],
+    [
+      branding?.primaryColor,
+      branding?.secondaryColor,
+      branding?.accentColor,
+      branding?.secondaryBackgroundColor,
+    ],
   );
 
   // Function to calculate age from date of birth using dayjs
@@ -476,7 +484,11 @@ const ProfileHeader = forwardRef(function ProfileHeader(
     return false;
   }, [ProfileSubData]);
 
-  // Helper function to safely get nested properties
+  // Helper function to safely get nested properties - a Profile field left
+  // unset (e.g. gender on an attendee-only profile created via the events
+  // registration flow) is stored as an explicit null, not undefined, so both
+  // must fall back to defaultValue or callers doing .charAt()/.toUpperCase()
+  // on the result crash.
   const getSafe = (obj, path, defaultValue = "") => {
     const keys = path.split(".");
     let result = obj;
@@ -486,7 +498,7 @@ const ProfileHeader = forwardRef(function ProfileHeader(
       result = result[key];
     }
 
-    return result !== undefined ? result : defaultValue;
+    return result !== undefined && result !== null ? result : defaultValue;
   };
 
   // FIXED: Derive member data from source - now properly reactive
@@ -560,7 +572,7 @@ const ProfileHeader = forwardRef(function ProfileHeader(
     // const category = getSafe(source, 'membershipCategory', ' ');
     const category = subscriptionData?.membershipCategory || "";
     // Subscription Info
-    const paymentType = subscriptionData?.paymentType || "Salary Deduction";
+    const paymentType = subscriptionData?.paymentType || "";
     const subscriptionYear = subscriptionData?.subscriptionYear || "";
 
     // Financial Info - Now using fetched summary data
@@ -578,12 +590,6 @@ const ProfileHeader = forwardRef(function ProfileHeader(
     })}`;
     const balanceIndicator =
       numericLedgerBalance > 0 ? "Dr" : numericLedgerBalance < 0 ? "Cr" : "";
-    const balanceColor =
-      balanceIndicator === "Dr"
-        ? "#cf1322"
-        : balanceIndicator === "Cr"
-          ? "#389e0d"
-          : "#faad14";
     const lastPayment = `€${centsToEuro(lastPaymentAmount || 0).toLocaleString("en-IE", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 
     // Payment date only from account summary (cash receipt crediting 2020); not subscription start.
@@ -630,13 +636,7 @@ const ProfileHeader = forwardRef(function ProfileHeader(
       // Financial Info
       balance: balanceAmount,
       balanceIndicator,
-      balanceColor,
-      balanceValueClassName: [
-        "member-balance-value",
-        balanceIndicator === "Dr" ? "member-balance-value-dr" : "",
-      ]
-        .filter(Boolean)
-        .join(" "),
+      balanceValueClassName: "member-balance-value",
       lastPayment,
       paymentDate,
       paymentCode: paymentCodeToUse,
@@ -1011,7 +1011,12 @@ const ProfileHeader = forwardRef(function ProfileHeader(
             className="member-meta-tile member-meta-tile-category"
             title={memberData.category}
           >
-            {renderCompactLine(<FaUsers />, "", memberData.category)}
+            {renderCompactLine(
+              <FaUsers />,
+              "",
+              memberData.category,
+              "member-profile-badge-value",
+            )}
           </div>
         ) : null}
         {memberData.grade ? (
@@ -1019,12 +1024,27 @@ const ProfileHeader = forwardRef(function ProfileHeader(
             className="member-meta-tile member-meta-tile-grade"
             title={memberData.grade}
           >
-            {renderCompactLine(<FaStar />, "", memberData.grade)}
+            {renderCompactLine(
+              <FaStar />,
+              "",
+              memberData.grade,
+              "member-profile-badge-value",
+            )}
           </div>
         ) : null}
-        <div className="member-meta-tile" title={memberData.paymentType}>
-          {renderCompactLine(<FaCreditCard />, "", memberData.paymentType)}
-        </div>
+        {memberData.paymentType ? (
+          <div
+            className="member-meta-tile member-meta-tile-payment"
+            title={memberData.paymentType}
+          >
+            {renderCompactLine(
+              <FaCreditCard />,
+              "",
+              memberData.paymentType,
+              "member-profile-badge-value member-profile-badge-payment",
+            )}
+          </div>
+        ) : null}
       </>
     ) : null;
 
@@ -1039,8 +1059,16 @@ const ProfileHeader = forwardRef(function ProfileHeader(
         ) : (
           <>
             {memberData?.category ? (
-              <div className="member-meta-tile" title={memberData.category}>
-                {renderCompactLine(<FaUsers />, "", memberData.category)}
+              <div
+                className="member-meta-tile member-meta-tile-category"
+                title={memberData.category}
+              >
+                {renderCompactLine(
+                  <FaUsers />,
+                  "",
+                  memberData.category,
+                  "member-profile-badge-value",
+                )}
               </div>
             ) : null}
             {memberData.grade ? (
@@ -1048,12 +1076,27 @@ const ProfileHeader = forwardRef(function ProfileHeader(
                 className="member-meta-tile member-meta-tile-grade"
                 title={memberData.grade}
               >
-                {renderCompactLine(<FaStar />, "", memberData.grade)}
+                {renderCompactLine(
+                  <FaStar />,
+                  "",
+                  memberData.grade,
+                  "member-profile-badge-value",
+                )}
               </div>
             ) : null}
-            <div className="member-meta-tile" title={memberData.paymentType}>
-              {renderCompactLine(<FaCreditCard />, "", memberData.paymentType)}
-            </div>
+            {memberData.paymentType ? (
+              <div
+                className="member-meta-tile member-meta-tile-payment"
+                title={memberData.paymentType}
+              >
+                {renderCompactLine(
+                  <FaCreditCard />,
+                  "",
+                  memberData.paymentType,
+                  "member-profile-badge-value member-profile-badge-payment",
+                )}
+              </div>
+            ) : null}
             <div className="member-meta-tile" title={memberData.paymentCode}>
               {renderCompactLine(
                 <FaBarcode />,
@@ -1101,6 +1144,10 @@ const ProfileHeader = forwardRef(function ProfileHeader(
   const showStatusDotOnName = statusDotTone === "muted";
 
   const membershipNo = memberIdForLedger || memberData.memberId;
+  // Authoritative "is this profile a member" signal - independent of the
+  // display-value fallback chain above (which can resolve via regNo/subscription
+  // data), since an attendee-only profile has no membershipNumber at all.
+  const isNonMember = !getSafe(source, "membershipNumber");
 
   const renderMemberName = () => (
     <div className="member-name-row">
@@ -1119,36 +1166,63 @@ const ProfileHeader = forwardRef(function ProfileHeader(
 
   const renderMemberDetailsLine = () => (
     <p className="member-details">
-      {memberData.dob} ({memberData.gender}) • {memberData.age}
+      <span className="member-details-strong">{memberData.dob}</span> (
+      <span className="member-details-strong">{memberData.gender}</span>) •{" "}
+      <span className="member-details-strong">{memberData.age}</span>
     </p>
   );
 
-  const renderStatusBadge = () => (
-    <Tooltip
-      title={statusBadgeTooltip || undefined}
-      trigger={["hover", "focus"]}
-      mouseEnterDelay={0.05}
-      mouseLeaveDelay={0.05}
-    >
-      <span
-        className={statusBadgeClass}
-        style={{ cursor: statusBadgeTooltip ? "help" : undefined }}
+  const renderStatusBadge = () => {
+    if (isNonMember) {
+      return (
+        <Tooltip title="This profile has no membership number">
+          <span className="member-status-badge member-status-badge-non-member">
+            Non-Member
+          </span>
+        </Tooltip>
+      );
+    }
+    return (
+      <Tooltip
+        title={statusBadgeTooltip || undefined}
+        trigger={["hover", "focus"]}
+        mouseEnterDelay={0.05}
+        mouseLeaveDelay={0.05}
       >
-        {statusDotTone === "active" || statusDotTone === "danger" ? (
-          <span
-            className={`member-status-dot member-status-dot-${statusDotTone}`}
-            aria-hidden="true"
-          />
-        ) : null}
-        {memberData.status}
-        {subscriptionData?.isCurrent && " (Current)"}
-        {subscriptionData?.reinstated && " (Reinstated)"}
-      </span>
-    </Tooltip>
-  );
+        <span
+          className={statusBadgeClass}
+          style={{ cursor: statusBadgeTooltip ? "help" : undefined }}
+        >
+          {statusDotTone === "active" || statusDotTone === "danger" ? (
+            <span
+              className={`member-status-dot member-status-dot-${statusDotTone}`}
+              aria-hidden="true"
+            />
+          ) : null}
+          {memberData.status}
+          {subscriptionData?.isCurrent && " (Current)"}
+          {subscriptionData?.reinstated && " (Reinstated)"}
+        </span>
+      </Tooltip>
+    );
+  };
 
   const renderMembershipStatusRow = ({ stacked = false } = {}) => {
     const statusBadge = renderStatusBadge();
+    if (isNonMember) {
+      return (
+        <div
+          className={[
+            "member-membership-status-row",
+            stacked ? "member-membership-status-row-stacked" : "",
+          ]
+            .filter(Boolean)
+            .join(" ")}
+        >
+          {statusBadge}
+        </div>
+      );
+    }
     if (!membershipNo && !memberData.status) return null;
 
     return (
@@ -1233,14 +1307,23 @@ const ProfileHeader = forwardRef(function ProfileHeader(
             )
           : null}
         {memberData.category
-          ? renderSideDetailRow(<FaUsers />, "", memberData.category)
+          ? renderSideDetailRow(<FaUsers />, "", memberData.category, {
+              valueClassName: "member-profile-detail-badge",
+            })
           : null}
         {renderSideDetailRow(<FaCalendarAlt />, "Joined:", memberData.joined)}
         {renderSideDetailRow(<FaShieldAlt />, "Expires:", memberData.expires)}
         {memberData.grade
-          ? renderSideDetailRow(<FaStar />, "", memberData.grade)
+          ? renderSideDetailRow(<FaStar />, "", memberData.grade, {
+              valueClassName: "member-profile-detail-badge",
+            })
           : null}
-        {renderSideDetailRow(<FaCreditCard />, "", memberData.paymentType)}
+        {memberData.paymentType
+          ? renderSideDetailRow(<FaCreditCard />, "", memberData.paymentType, {
+              valueClassName:
+                "member-profile-detail-badge member-profile-detail-badge-payment",
+            })
+          : null}
         {renderSideDetailRow(
           <FaExclamationTriangle />,
           "Balance:",
@@ -1255,10 +1338,6 @@ const ProfileHeader = forwardRef(function ProfileHeader(
           {
             valueClassName: memberData.balanceValueClassName,
             valueStyle: {
-              color:
-                memberData.balanceIndicator === "Dr"
-                  ? undefined
-                  : memberData.balanceColor || "#faad14",
               fontWeight: 600,
             },
           },
@@ -1357,10 +1436,6 @@ const ProfileHeader = forwardRef(function ProfileHeader(
             memberData.balanceValueClassName,
             "member-financial-col-right",
             {
-              color:
-                memberData.balanceIndicator === "Dr"
-                  ? undefined
-                  : memberData.balanceColor || "#faad14",
               fontWeight: 500,
             },
           )}

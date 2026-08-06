@@ -8,7 +8,7 @@ export const CHART_PALETTE = [
   "#8b5cf6",
   "#ef4444",
   "#06b6d4",
-  "#64748b",
+  "var(--theme-text-muted)",
 ];
 
 export function formatCount(value) {

@@ -124,7 +124,7 @@ function PopOut() {
                   padding: "4px 8px",
                   cursor: "pointer",
                   backgroundColor: selectedKeys?.includes(option.value)
-                    ? "#e6f7ff"
+                    ? "var(--app-brand-bg)"
                     : "transparent",
                 }}
               >
@@ -220,7 +220,7 @@ function PopOut() {
         ),
         onFilter: (value, record) => (record.lookupname || "").toString() === value,
         filterIcon: (filtered) => (
-          <SearchOutlined style={{ color: filtered ? "#1890ff" : undefined }} />
+          <SearchOutlined style={{ color: filtered ? "var(--app-brand-accent)" : undefined }} />
         ),
       },
       {
@@ -273,7 +273,7 @@ function PopOut() {
       filterDropdown: createFilterDropdown(dataSource, (record) => record.officer?.userEmail),
       onFilter: (value, record) => (record.officer?.userEmail || "").toString() === value,
       filterIcon: (filtered) => (
-        <SearchOutlined style={{ color: filtered ? "#1890ff" : undefined }} />
+        <SearchOutlined style={{ color: filtered ? "var(--app-brand-accent)" : undefined }} />
       ),
     });
 
@@ -322,7 +322,7 @@ function PopOut() {
   };
 
   return (
-    <div className="" style={{ backgroundColor: "#f0f2f5", minHeight: "100vh" }}>
+    <div className="" style={{ backgroundColor: "var(--theme-page-bg)", minHeight: "100vh" }}>
 
 
       <div className="bg-white p-4 rounded shadow-sm mt-1">

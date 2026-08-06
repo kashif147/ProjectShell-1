@@ -227,7 +227,7 @@ function TrigerReminderDrawer({ isOpen, onClose, isCancallation }) {
                                       icon: <BsFiletypeXls style={{
                                           fontSize: "12px",
                                           marginRight: "10px",
-                                          color: "#45669d",
+                                          color: "var(--app-brand-primary)",
                                         }} />,
                                         onClick: () => {
                                           downloadCSV()
@@ -239,7 +239,7 @@ function TrigerReminderDrawer({ isOpen, onClose, isCancallation }) {
                                       icon: <BsFiletypeXls style={{
                                           fontSize: "12px",
                                           marginRight: "10px",
-                                          color: "#45669d",
+                                          color: "var(--app-brand-primary)",
                                         }} />,
                                   }
                               ]} />

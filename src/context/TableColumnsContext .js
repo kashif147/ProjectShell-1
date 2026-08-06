@@ -7,7 +7,7 @@ import React, {
   useCallback,
 } from "react";
 import { Tag, Button, Space, Dropdown } from "antd";
-import { MoreOutlined } from "@ant-design/icons";
+import { MoreOutlined, WarningOutlined, TeamOutlined } from "@ant-design/icons";
 import { tableData } from "../Data";
 import { useLocation, useNavigate, Link } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
@@ -28,10 +28,15 @@ import {
   getSubscriptionById,
   profileDetailActiveSubscriptionArgs,
 } from "../features/subscription/profileSubscriptionSlice";
-import { buildDetailsSearch } from "../utils/detailsRoute";
+import {
+  buildDetailsSearch,
+  buildEventDetailsSearch,
+  buildIssueDetailsSearch,
+} from "../utils/detailsRoute";
 import reconciliationWorkspace from "../utils/reconciliationWorkspace";
 import { financeLedgerActionIcon } from "../component/finanace/financeActionIcons";
 import { callJournalAdjustmentApprove } from "../utils/journalAdjustmentsWorkspace";
+import { callAttendeesOpenRegistration } from "../utils/eventsWorkspace";
 import {
   callCreditNoteApprove,
   callCreditNoteCancel,
@@ -46,6 +51,12 @@ import {
   isOnlinePaymentRefundableUnapproved,
 } from "../utils/onlinePaymentsWorkspace";
 import { resolvePaidAmountEuro } from "../utils/onlinePaymentAmount";
+import {
+  callEventsEdit,
+  callEventsClone,
+  callEventsDelete,
+  isEventsDeletable,
+} from "../utils/eventsWorkspace";
 import { callWriteOffReverse } from "../utils/writeOffsWorkspace";
 import { callRefundsAssociate } from "../utils/refundsWorkspace";
 import {
@@ -73,6 +84,36 @@ const EXECUTIVE_COUNCIL_STATUS_LABELS = {
 function formatStatusLabel(value, labels) {
   if (!value) return "-";
   return labels[String(value).toLowerCase()] || value;
+}
+
+/** issue-service enums are SCREAMING_SNAKE_CASE (e.g. "ACTIVE_BEFORE_BOARD") - render as Title Case. */
+function formatIssueEnumLabel(value) {
+  if (!value) return "-";
+  return String(value)
+    .split("_")
+    .filter(Boolean)
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+    .join(" ");
+}
+
+const ISSUE_PRIORITY_TAG_COLORS = {
+  HIGH: "red",
+  MEDIUM: "gold",
+  LOW: "green",
+};
+
+function getIssuePriorityTagColor(priority) {
+  return ISSUE_PRIORITY_TAG_COLORS[String(priority || "").toUpperCase()] || "default";
+}
+
+function getIssueStatusTagColor(status) {
+  const normalized = String(status || "").toUpperCase();
+  if (normalized === "CLOSED") return "default";
+  if (normalized.startsWith("PENDING") || normalized === "AWAITING_OUTCOME_THIRD_PARTY")
+    return "gold";
+  if (normalized.startsWith("ACTIVE")) return "green";
+  if (normalized === "FOR_REVIEW_BY_OFFICIAL") return "blue";
+  return "default";
 }
 
 function buildCreditNotesColumns() {
@@ -144,7 +185,7 @@ function buildCreditNotesColumns() {
             <Button
               type="link"
               size="small"
-              style={{ color: "#215E97", fontWeight: 500, padding: 0 }}
+              style={{ color: "var(--app-brand-primary)", fontWeight: 500, padding: 0 }}
               onClick={() => callCreditNoteApprove(r.docNo)}
             >
               Approve
@@ -230,7 +271,7 @@ function buildJournalAdjustmentsColumns() {
                 pathname: "/Details",
                 search: buildDetailsSearch(pid),
               }}
-              style={{ color: "#215E97", fontWeight: 500 }}
+              style={{ color: "var(--app-brand-primary)", fontWeight: 500 }}
               title={`${name} (${mid})`}
             >
               {name}
@@ -256,7 +297,7 @@ function buildJournalAdjustmentsColumns() {
           <Button
             type="link"
             size="small"
-            style={{ color: "#215E97", fontWeight: 500, padding: 0 }}
+            style={{ color: "var(--app-brand-primary)", fontWeight: 500, padding: 0 }}
             onClick={() => callJournalAdjustmentApprove(r.docNo)}
           >
             Approve
@@ -286,7 +327,7 @@ function buildOnlinePaymentColumns() {
               callOnlinePaymentOpenFinance(record);
             }}
             style={{
-              color: "#1677ff",
+              color: "var(--primary-color)",
               textDecoration: "underline",
               cursor: "pointer",
             }}
@@ -408,6 +449,7 @@ function rowIdentifierCandidates(record) {
     record.membershipNo,
     record.membershipNumber,
     record.personalDetails?.membershipNo,
+    record.issueId,
     record.key,
   ].filter((v) => v != null && v !== "");
   return [...new Set(raw.map((v) => String(v)))];
@@ -904,7 +946,7 @@ function buildReconciliationColumns() {
                 pathname: "/Details",
                 search: buildDetailsSearch(pid),
               }}
-              style={{ color: "#215E97", fontWeight: 500 }}
+              style={{ color: "var(--app-brand-primary)", fontWeight: 500 }}
               title={`${name} (${mid})`}
             >
               {name}
@@ -2164,127 +2206,178 @@ const staticColumns = {
       editable: false,
     },
   ],
-  Cases: [
+  // Issue Management grid (/CasesSummary) - real issue-service-backed columns.
+  // Replaces the previously stale/dead `Cases` array (leftover regNo/fullName/
+  // rank/station/district/division/duty fields from an unrelated old page that
+  // CasesSummary.js never actually rendered - see TEMPLATE_IMPLEMENTATION_PLAYBOOK.md).
+  Issues: [
     {
-      dataIndex: "regNo",
+      dataIndex: "caseTitle",
+      title: "Issue",
+      ellipsis: true,
+      isGride: true,
+      isVisible: true,
+      width: 260,
+      render: (text, record) => {
+        const label = text || record?.internalReferenceNumber || "-";
+        const issueId = record?.issueId;
+        // "Group issues should be visually visible on the issue list" (requirements doc,
+        // Issue summary section) - small badge next to the title when this issue is linked
+        // to a group (CasesSummary.js maps the base Issue schema's `groupId` onto the row).
+        const groupBadge = record?.groupId ? (
+          <Tag
+            icon={<TeamOutlined />}
+            color="purple"
+            title="Linked to a group issue"
+            style={{ marginLeft: 6 }}
+          >
+            Group
+          </Tag>
+        ) : null;
+        if (!issueId) {
+          return (
+            <>
+              {label}
+              {groupBadge}
+            </>
+          );
+        }
+        return (
+          <>
+            <Link
+              to="/CasesDetails"
+              state={{ issueId, recordName: label }}
+              onClick={(e) => e.stopPropagation()}
+              style={{ color: "blue", textDecoration: "underline", cursor: "pointer" }}
+            >
+              {label}
+            </Link>
+            {groupBadge}
+          </>
+        );
+      },
+    },
+    {
+      // `record.memberName` is populated post-render by CasesSummary.js's best-effort
+      // profile-service batch-lookup enrichment (fetchProfilesBatchLookup, keyed off
+      // memberIds[0]) once it resolves; until then (or if it can't resolve - no linked
+      // member, lookup failure, etc.) this falls back to the raw linked profileId(s), same
+      // placeholder behavior as before that enrichment existed.
+      dataIndex: "memberIds",
+      title: "Member Name",
+      ellipsis: true,
+      isGride: true,
+      isVisible: true,
+      width: 200,
+      render: (value, record) => {
+        if (record?.memberName) return record.memberName;
+        return Array.isArray(value) && value.length ? value.join(", ") : "-";
+      },
+    },
+    {
+      // Populated by the same profile-service batch-lookup enrichment as Member Name above
+      // (membershipNumber) once it resolves; "-" placeholder until then/if unresolved.
+      dataIndex: "membershipNo",
       title: "Membership No",
       ellipsis: true,
       isGride: true,
       isVisible: true,
       width: 150,
-      editable: true,
+      render: (value) => value || "-",
     },
     {
-      dataIndex: "fullName",
-      title: "Full Name",
+      dataIndex: "caseFileNumber",
+      title: "Case File Number",
       ellipsis: true,
       isGride: true,
       isVisible: true,
-      width: 200,
+      width: 170,
+      render: (value) => value || "-",
     },
     {
-      dataIndex: "rank",
-      title: "Grade",
+      dataIndex: "nmbiReference",
+      title: "NMBI Reference No",
       ellipsis: true,
       isGride: true,
       isVisible: true,
-      width: 150,
+      width: 170,
+      render: (value) => value || "-",
     },
     {
-      dataIndex: "station",
-      title: "Station",
-      ellipsis: true,
-      isGride: true,
-      isVisible: true,
-      width: 150,
-    },
-    {
-      dataIndex: "distric",
-      title: "District",
-      ellipsis: true,
-      isGride: true,
-      isVisible: true,
-      width: 150,
-    },
-    {
-      dataIndex: "division",
-      title: "Division",
+      // Populated by the same profile-service batch-lookup enrichment as Member Name
+      // above (professionalDetails.workLocation) once it resolves; "-" placeholder
+      // until then/if unresolved (not on the Issue payload directly).
+      dataIndex: "location",
+      title: "Location",
       ellipsis: true,
       isGride: true,
       isVisible: true,
       width: 150,
+      render: (value) => value || "-",
     },
     {
-      dataIndex: "duty",
-      title: "Duty",
+      dataIndex: "dateReceived",
+      title: "Date Received",
       ellipsis: true,
       isGride: true,
       isVisible: true,
       width: 150,
+      render: (value) => (value ? formatDateOnly(value) : "-"),
     },
     {
-      dataIndex: "Case Type",
-      title: "Case Type",
+      dataIndex: "criteriaLetterStatus",
+      title: "Criteria Letter",
+      ellipsis: true,
+      isGride: true,
+      isVisible: true,
+      width: 140,
+      render: (value) => formatIssueEnumLabel(value),
+    },
+    {
+      dataIndex: "legislation",
+      title: "Legislation",
+      ellipsis: true,
+      isGride: true,
+      isVisible: true,
+      width: 140,
+      render: (value) => formatIssueEnumLabel(value),
+    },
+    {
+      dataIndex: "issueStatus",
+      title: "Case Status",
+      ellipsis: true,
+      isGride: true,
+      isVisible: true,
+      width: 190,
+      render: (status) => {
+        if (!status) return "-";
+        return (
+          <Tag color={getIssueStatusTagColor(status)}>{formatIssueEnumLabel(status)}</Tag>
+        );
+      },
+    },
+    {
+      dataIndex: "priority",
+      title: "Priority",
+      ellipsis: true,
+      isGride: true,
+      isVisible: true,
+      width: 110,
+      render: (priority) => {
+        if (!priority) return "-";
+        return (
+          <Tag color={getIssuePriorityTagColor(priority)}>{formatIssueEnumLabel(priority)}</Tag>
+        );
+      },
+    },
+    {
+      dataIndex: "ownerTeam",
+      title: "Owner",
       ellipsis: true,
       isGride: true,
       isVisible: true,
       width: 150,
-    },
-    {
-      dataIndex: "Case ID",
-      title: "Case ID",
-      ellipsis: true,
-      isGride: true,
-      isVisible: true,
-      width: 150,
-    },
-    {
-      dataIndex: "Case Title",
-      title: "Case Title",
-      ellipsis: true,
-      isGride: true,
-      isVisible: true,
-      width: 150,
-    },
-    {
-      dataIndex: "Incident detail",
-      title: "Incident detail",
-      ellipsis: true,
-      isGride: true,
-      isVisible: true,
-      width: 300,
-    },
-    {
-      dataIndex: "Incident Date",
-      title: "Incident Date",
-      ellipsis: true,
-      isGride: true,
-      isVisible: true,
-      width: 150,
-    },
-    {
-      dataIndex: "case Status",
-      title: "case Status",
-      ellipsis: true,
-      isGride: true,
-      isVisible: true,
-      width: 150,
-    },
-    {
-      dataIndex: "Assignee",
-      title: "Assignee",
-      ellipsis: true,
-      isGride: true,
-      isVisible: true,
-      width: 150,
-    },
-    {
-      dataIndex: "Assignee",
-      title: "Assignee",
-      ellipsis: true,
-      isGride: true,
-      isVisible: true,
-      width: 150,
+      render: (value) => (value ? formatIssueEnumLabel(value) : "Unassigned"),
     },
   ],
   Claims: [
@@ -3372,14 +3465,6 @@ const staticColumns = {
   ],
   Events: [
     {
-      dataIndex: "eventId",
-      title: "Event ID",
-      ellipsis: true,
-      isGride: true,
-      isVisible: true,
-      width: 140,
-    },
-    {
       dataIndex: "eventName",
       title: "Event Name",
       ellipsis: true,
@@ -3392,43 +3477,19 @@ const staticColumns = {
         if (!eventId) return name || "-";
         return (
           <Link
-            to="/EventDetails"
-            state={{ eventId }}
+            to={{ pathname: "/EventDetails", search: buildEventDetailsSearch(eventId) }}
+            state={{ recordName: name }}
             onClick={(e) => e.stopPropagation()}
             style={{
-              color: "#0000FF",
+              color: "blue",
               textDecoration: "underline",
+              cursor: "pointer",
             }}
           >
             {name}
           </Link>
         );
       },
-    },
-    {
-      dataIndex: "eventType",
-      title: "Event Type",
-      ellipsis: true,
-      isGride: true,
-      isVisible: true,
-      width: 150,
-    },
-    {
-      dataIndex: "createdBy",
-      title: "Created By",
-      ellipsis: true,
-      isGride: true,
-      isVisible: true,
-      width: 160,
-    },
-    {
-      dataIndex: "createdAt",
-      title: "Created At",
-      ellipsis: true,
-      isGride: true,
-      isVisible: true,
-      width: 140,
-      render: (value) => formatDateOnly(value),
     },
     {
       dataIndex: "status",
@@ -3441,13 +3502,139 @@ const staticColumns = {
         if (!status) return "-";
         const statusLower = String(status).toLowerCase();
         let color = "default";
-        if (statusLower === "active") color = "green";
-        else if (statusLower === "planning") color = "blue";
-        else if (statusLower === "review") color = "gold";
-        else if (statusLower === "canceled" || statusLower === "cancelled")
-          color = "default";
+        if (statusLower === "draft") color = "gold";
+        else if (statusLower === "published") color = "green";
+        else if (statusLower === "completed") color = "blue";
+        else if (statusLower === "cancelled" || statusLower === "canceled")
+          color = "red";
         return <Tag color={color}>{status}</Tag>;
       },
+    },
+    {
+      dataIndex: "eventCategory",
+      title: "Category",
+      ellipsis: true,
+      isGride: true,
+      isVisible: true,
+      width: 150,
+    },
+    {
+      dataIndex: "eventType",
+      title: "Event Type",
+      ellipsis: true,
+      isGride: true,
+      isVisible: true,
+      width: 150,
+    },
+    {
+      dataIndex: "venue",
+      title: "Venue",
+      ellipsis: true,
+      isGride: true,
+      isVisible: true,
+      width: 180,
+    },
+    {
+      dataIndex: "startDate",
+      title: "Start Date",
+      ellipsis: true,
+      isGride: true,
+      isVisible: true,
+      width: 130,
+      render: (value) => (value ? formatDateOnly(value) : "-"),
+    },
+    {
+      dataIndex: "endDate",
+      title: "End Date",
+      ellipsis: true,
+      isGride: true,
+      isVisible: true,
+      width: 130,
+      render: (value) => (value ? formatDateOnly(value) : "-"),
+    },
+    {
+      dataIndex: "memberPrice",
+      title: "Member Price",
+      ellipsis: true,
+      isGride: true,
+      isVisible: true,
+      width: 130,
+      render: (value) => (value != null ? formatCurrency(value) : "-"),
+    },
+    {
+      dataIndex: "nonMemberPrice",
+      title: "Non-Member Price",
+      ellipsis: true,
+      isGride: true,
+      isVisible: true,
+      width: 150,
+      render: (value) => (value != null ? formatCurrency(value) : "-"),
+    },
+    {
+      dataIndex: "createdBy",
+      title: "Created By",
+      ellipsis: true,
+      isGride: true,
+      isVisible: true,
+      width: 190,
+    },
+    {
+      dataIndex: "createdAt",
+      title: "Created At",
+      ellipsis: true,
+      isGride: true,
+      isVisible: true,
+      width: 140,
+      render: (value) => formatDateOnly(value),
+    },
+    {
+      dataIndex: "updatedBy",
+      title: "Updated By",
+      ellipsis: true,
+      isGride: true,
+      isVisible: true,
+      width: 190,
+    },
+    {
+      dataIndex: "_actions",
+      title: "Actions",
+      key: "actions",
+      isGride: true,
+      isVisible: true,
+      width: 90,
+      render: (_, record) => (
+        <Dropdown
+          menu={{
+            items: [
+              {
+                key: "Edit",
+                label: "Edit",
+                onClick: () => callEventsEdit(record),
+              },
+              {
+                key: "Clone",
+                label: "Clone",
+                onClick: () => callEventsClone(record),
+              },
+              {
+                key: "Delete",
+                label: "Delete",
+                danger: true,
+                disabled: !isEventsDeletable(record),
+                onClick: () => callEventsDelete(record),
+              },
+            ],
+          }}
+          trigger={["click"]}
+          placement="bottomRight"
+        >
+          <Button
+            type="text"
+            icon={<MoreOutlined style={{ fontSize: "20px" }} />}
+            onClick={(e) => e.stopPropagation()}
+          />
+        </Dropdown>
+      ),
     },
   ],
   Batches: [
@@ -3510,6 +3697,14 @@ const staticColumns = {
       width: 150,
     },
     {
+      dataIndex: "eventCategory",
+      title: "Event Category",
+      ellipsis: true,
+      isGride: true,
+      isVisible: true,
+      width: 150,
+    },
+    {
       dataIndex: "eventName",
       title: "Event",
       ellipsis: true,
@@ -3524,43 +3719,71 @@ const staticColumns = {
       isGride: true,
       isVisible: true,
       width: 140,
+      filterValueType: "date",
       render: (value) => formatDateOnly(value),
     },
     {
-      dataIndex: "attendeeId",
-      title: "Attendee ID",
-      ellipsis: true,
-      isGride: true,
-      isVisible: true,
-      width: 140,
-    },
-    {
+      // Matches Registration.status in events-service: pending, confirmed,
+      // cancelled, attended, no-show.
       dataIndex: "status",
       title: "Registration Status",
       ellipsis: true,
       isGride: true,
       isVisible: true,
       width: 170,
-      render: (status) => {
+      render: (status, record) => {
         if (!status) return "-";
         const statusLower = String(status).toLowerCase();
+        let color = "default";
+        if (statusLower === "confirmed" || statusLower === "attended") color = "green";
+        else if (statusLower === "pending") color = "orange";
+        else if (statusLower === "cancelled" || statusLower === "no-show") color = "red";
         return (
-          <Tag color={statusLower === "registered" ? "green" : "default"}>
-            {status}
-          </Tag>
+          <Space size={4}>
+            <Tag
+              color={color}
+              style={{ cursor: "pointer" }}
+              onClick={() => callAttendeesOpenRegistration(record)}
+            >
+              {status}
+            </Tag>
+            {record.approvalStatus === "pending_review" &&
+              (record.duplicateReviewStatus === "POTENTIAL_MATCH" ? (
+                <Tag
+                  icon={<WarningOutlined />}
+                  color="red"
+                  style={{ cursor: "pointer" }}
+                  onClick={() => callAttendeesOpenRegistration(record)}
+                >
+                  Possible Duplicate
+                </Tag>
+              ) : (
+                <Tag
+                  color="orange"
+                  style={{ cursor: "pointer" }}
+                  onClick={() => callAttendeesOpenRegistration(record)}
+                >
+                  Needs Review
+                </Tag>
+              ))}
+          </Space>
         );
       },
     },
     {
+      // Registration.amount is stored in cents (events-service) - convert to
+      // euros for display, matching every other cent-stored money column.
       dataIndex: "totalFee",
       title: "Total Fee",
       ellipsis: true,
       isGride: true,
       isVisible: true,
       width: 130,
-      render: (value) => formatCurrency(value),
+      render: (value) => formatCurrency(Number(value || 0) / 100),
     },
     {
+      // Matches Registration.paymentStatus in events-service: pending,
+      // succeeded, failed, waived, manual.
       dataIndex: "paymentStatus",
       title: "Payment Status",
       ellipsis: true,
@@ -3571,18 +3794,10 @@ const staticColumns = {
         if (!status) return "-";
         const statusLower = String(status).toLowerCase();
         let color = "default";
-        if (statusLower === "paid" || statusLower === "captured") color = "green";
-        else if (statusLower === "authorised" || statusLower === "requires capture")
-          color = "blue";
-        else if (statusLower === "pending" || statusLower === "payment required")
-          color = "orange";
-        else if (statusLower === "unpaid") color = "red";
-        else if (statusLower === "cancelled" || statusLower === "canceled")
-          color = "default";
-        else if (statusLower === "refund required" || statusLower === "manual review")
-          color = "purple";
-        else if (statusLower === "authorisation expired") color = "volcano";
-        else if (statusLower === "refunded") color = "purple";
+        if (statusLower === "succeeded" || statusLower === "waived" || statusLower === "manual")
+          color = "green";
+        else if (statusLower === "pending") color = "orange";
+        else if (statusLower === "failed") color = "red";
         return <Tag color={color}>{status}</Tag>;
       },
     },
@@ -3593,6 +3808,17 @@ const staticColumns = {
       isGride: true,
       isVisible: true,
       width: 180,
+      render: (name, record) =>
+        record.profileId ? (
+          <Link
+            to={{ pathname: "/Details", search: buildDetailsSearch(record.profileId) }}
+            style={{ color: "blue", textDecoration: "underline", cursor: "pointer" }}
+          >
+            {name}
+          </Link>
+        ) : (
+          name
+        ),
     },
     {
       dataIndex: "email",
@@ -3635,8 +3861,8 @@ const staticColumns = {
       width: 160,
     },
     {
-      dataIndex: "attendeeType",
-      title: "Type",
+      dataIndex: "membershipNo",
+      title: "Membership No",
       ellipsis: true,
       isGride: true,
       isVisible: true,
@@ -3971,6 +4197,16 @@ const staticColumns = {
     },
   ],
 };
+
+// EventsDashboard (KPI/chart page) filters independently from EventsSummary's
+// grid but uses the identical column/dataIndex shape so date/numeric/string
+// filter-type detection and label-to-key mapping stay consistent.
+staticColumns.EventsDashboard = staticColumns.Events;
+
+// Same pattern for the Issues dashboard (/IssuesManagementDashboard) - its own
+// FilterContext screen key ("IssuesDashboard", see FilterContext.js), but reuses
+// the Issues grid's column/dataIndex shape rather than duplicating column defs.
+staticColumns.IssuesDashboard = staticColumns.Issues;
 
 const staticSearchFilters = {
   Reconciliation: [
@@ -4420,145 +4656,37 @@ const staticSearchFilters = {
       lookups: { "Partner Consent": false },
     },
   ],
-  Cases: [
+  // Search-filter definitions for the Issues grid (/CasesSummary). Replaces the
+  // previously stale/dead `Cases` array (Grade/Duty/Region/District/Station/...
+  // leftovers from an unrelated old page - see TEMPLATE_IMPLEMENTATION_PLAYBOOK.md).
+  Issues: [
     {
-      titleColumn: "Grade",
+      titleColumn: "Priority",
       isSearch: true,
       isCheck: false,
-      lookups: { "All Ranks": false, "0001": false, "0021": false },
-      comp: "!=",
+      lookups: {},
+      comp: "==",
     },
     {
-      titleColumn: "Duty",
-      isSearch: true,
-      comp: "!=",
-      isCheck: false,
-      lookups: { "All Duties": false, Sargent: false, Garda: false },
-    },
-    {
-      titleColumn: "Region",
+      titleColumn: "Issue Type",
       isSearch: true,
       isCheck: false,
-      lookups: {
-        "All Divisions": false,
-        Northland: false,
-        Southland: false,
-        Eastland: false,
-      },
+      lookups: {},
+      comp: "==",
     },
     {
-      titleColumn: "District",
+      titleColumn: "Case Status",
       isSearch: true,
       isCheck: false,
-      lookups: { "All District": false },
+      lookups: {},
+      comp: "==",
     },
     {
-      titleColumn: "Station",
+      titleColumn: "Owner",
       isSearch: true,
       isCheck: false,
-      lookups: { Male: false, Female: false, Other: false },
-    },
-    {
-      titleColumn: "Station ID",
-      isSearch: false,
-      isCheck: false,
-      lookups: { Male: false, Female: false, Other: false },
-    },
-    {
-      titleColumn: "Pensioner",
-      isSearch: false,
-      isCheck: false,
-      lookups: { Pensioner: false },
-    },
-    {
-      titleColumn: "Date Of Birth",
-      isSearch: false,
-      isCheck: false,
-      lookups: { Male: false, Female: false, Other: false },
-    },
-    {
-      titleColumn: "Date Retired",
-      isSearch: false,
-      isCheck: false,
-      lookups: { Male: false, Female: false, Other: false },
-    },
-    {
-      titleColumn: "Date Aged 65",
-      isSearch: false,
-      isCheck: false,
-      lookups: { Male: false, Female: false, Other: false },
-    },
-    {
-      titleColumn: "Date Of Death",
-      isSearch: false,
-      isCheck: false,
-      lookups: { Male: false, Female: false, Other: false },
-    },
-    {
-      titleColumn: "Station Phone",
-      isSearch: false,
-      isCheck: false,
-      lookups: { Male: false, Female: false, Other: false },
-    },
-    {
-      titleColumn: "Distric Rep",
-      isSearch: false,
-      isCheck: false,
-      lookups: { "Distric Rep": false },
-    },
-    {
-      titleColumn: "Division Rep",
-      isSearch: false,
-      isCheck: false,
-      lookups: { "Division Rep": false },
-    },
-    {
-      titleColumn: "Pension No",
-      isSearch: false,
-      isCheck: false,
-      lookups: { Male: false, Female: false, Other: false },
-    },
-    // {
-    //   titleColumn: "GRA Member",
-    //   isSearch: false,
-    //   isCheck: false,
-    //   lookups: { Male: false, Female: false, Other: false },
-    // },
-    {
-      titleColumn: "Date Joined",
-      isSearch: false,
-      isCheck: false,
-      lookups: { Male: false, Female: false, Other: false },
-    },
-    {
-      titleColumn: "Date Left",
-      isSearch: false,
-      isCheck: false,
-      lookups: { Male: false, Female: false, Other: false },
-    },
-    {
-      titleColumn: "Associate Member",
-      isSearch: false,
-      isCheck: false,
-      lookups: { Male: false, Female: false, Other: false },
-    },
-    {
-      titleColumn: "Address",
-      isSearch: false,
-      isCheck: false,
-      lookups: { Male: false, Female: false, Other: false },
-    },
-    {
-      titleColumn: "Status",
-      isSearch: false,
-      isCheck: false,
-      lookups: { Male: false, Female: false, Other: false },
-    },
-    {
-      titleColumn: "Updated",
-      isSearch: false,
-      isCheck: false,
-      lookups: { Male: false, Female: false, Other: false },
+      lookups: {},
+      comp: "==",
     },
   ],
   Claims: [
@@ -5741,7 +5869,7 @@ const staticSearchFilters = {
       comp: "==",
     },
     {
-      titleColumn: "Type",
+      titleColumn: "Membership No",
       isSearch: true,
       isCheck: false,
       lookups: {},
@@ -6131,7 +6259,7 @@ export const TableColumnsProvider = ({ children }) => {
     "/Summary": "Profile",
     "/members": "Members",
     "/Members": "Members",
-    "/CasesSummary": "Cases",
+    "/CasesSummary": "Issues",
     "/EventsSummary": "Events",
     "/Attendees": "Attendees",
   };
@@ -6483,6 +6611,34 @@ export const TableColumnsProvider = ({ children }) => {
     [gridData, ProfileDetails],
   );
 
+  // Issue Management (/CasesDetails) prev/next - a plain issueId-keyed navigation, not the
+  // Profile/Subscription-oriented flow the rest of this function does for every other detail
+  // screen (buildDetailsSearch is hardcoded to profileId/subscriptionId query params, and
+  // dispatching getProfileDetailsById/getSubscriptionByProfileId here makes no sense for an
+  // Issue row). CasesDetails.js reads `location.state.issueId` (matching how the Issues
+  // grid's row link navigates - see TableColumnsContext's own `staticColumns.Issues` "Issue"
+  // column render()) with a `?issueId=` fallback for direct links/refresh.
+  const navigateToIssueRecord = useCallback(
+    (record, newIndex) => {
+      const issueId = record?.issueId || record?._id || record?.key;
+      if (!issueId) return;
+      setProfileDetails([record]);
+      setRowIndex(newIndex);
+      navigate(
+        { pathname: location.pathname, search: buildIssueDetailsSearch(issueId) },
+        {
+          replace: true,
+          state: {
+            ...location.state,
+            issueId,
+            recordName: record?.caseTitle || record?.internalReferenceNumber,
+          },
+        },
+      );
+    },
+    [location.pathname, location.state, navigate],
+  );
+
   const profilNextBtnFtn = useCallback(() => {
     if (!gridData?.length) return;
     const currentIndex = resolveGridNavigationIndex(gridData, ProfileDetails);
@@ -6490,6 +6646,10 @@ export const TableColumnsProvider = ({ children }) => {
     const newIndex = currentIndex + 1;
     if (newIndex < gridData.length) {
       const record = gridData[newIndex];
+      if (location.pathname === "/CasesDetails") {
+        navigateToIssueRecord(record, newIndex);
+        return;
+      }
       const profileId = record?.profileId;
       const subscriptionRowId = record?._id;
       const idToUse =
@@ -6541,6 +6701,7 @@ export const TableColumnsProvider = ({ children }) => {
     location.pathname,
     location.state,
     navigate,
+    navigateToIssueRecord,
   ]);
 
   const profilPrevBtnFtn = useCallback(() => {
@@ -6550,6 +6711,10 @@ export const TableColumnsProvider = ({ children }) => {
     const newIndex = currentIndex - 1;
     if (newIndex >= 0) {
       const record = gridData[newIndex];
+      if (location.pathname === "/CasesDetails") {
+        navigateToIssueRecord(record, newIndex);
+        return;
+      }
       const profileId = record?.profileId;
       const subscriptionRowId = record?._id;
       const idToUse =
@@ -6601,6 +6766,7 @@ export const TableColumnsProvider = ({ children }) => {
     location.pathname,
     location.state,
     navigate,
+    navigateToIssueRecord,
   ]);
 
   const filterByRegNo = useCallback(

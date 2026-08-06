@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useMemo } from "react";
+import React, { useState, useRef, useEffect, useMemo } from "react";
 import {
   Checkbox,
   Radio,
@@ -15,6 +15,7 @@ import {
   MailOutlined,
   EnvironmentOutlined,
   SearchOutlined,
+  UserOutlined,
 } from "@ant-design/icons";
 import { Link } from "react-router-dom";
 
@@ -60,7 +61,6 @@ import { generatePatch } from "../../utils/Utilities";
 import { FaAngleLeft } from "react-icons/fa6";
 import { FaAngleRight, FaClone } from "react-icons/fa";
 import { fetchCountries } from "../../features/CountriesSlice";
-import MyFooter from "../common/MyFooter";
 import MyDatePicker1 from "../common/MyDatePicker1";
 import { getCategoryLookup } from "../../features/CategoryLookupSlice";
 import { useFilters } from "../../context/FilterContext";
@@ -269,11 +269,21 @@ function AppFormGrid({ children, cols = 3, className = "" }) {
 function AppFormCell({ children, span = 1, className = "" }) {
   const spanClass =
     span === "full" ? "form-col-full" : span === 2 ? "form-col-2" : "";
+  const normalizedChildren = React.Children.map(children, (child) => {
+    if (
+      !React.isValidElement(child) ||
+      typeof child.type === "string" ||
+      child.type === React.Fragment
+    ) {
+      return child;
+    }
+    return React.cloneElement(child, { isMarginBtm: false });
+  });
   return (
     <div
       className={`form-grid-cell form-item ${spanClass} ${className}`.trim()}
     >
-      <div className="form-grid-cell-inner">{children}</div>
+      <div className="form-grid-cell-inner">{normalizedChildren}</div>
     </div>
   );
 }
@@ -700,6 +710,115 @@ function isHonoraryMembershipCategory(selected, categoryOptions) {
   return combined === "honorary" || /\bhonorary\b/.test(combined);
 }
 
+const GAP_RETURNING_PREVIOUS_STATUSES = new Set([
+  "cancelled",
+  "resigned",
+  "suspended",
+  "archived",
+]);
+
+const GAP_ELIGIBLE_CATEGORY_KEYS = new Set([
+  "full",
+  "full membership",
+  "full time",
+  "full-time",
+  "general",
+  "general all grades",
+  "general (all grades)",
+]);
+
+function normalizeGapLetterKey(value) {
+  return String(value ?? "")
+    .trim()
+    .toLowerCase()
+    .replace(/[_-]+/g, " ")
+    .replace(/[()]/g, " ")
+    .replace(/\s+/g, " ");
+}
+
+function normalizeMembershipStatusValue(value) {
+  const raw = String(value ?? "").trim();
+  const key = normalizeGapLetterKey(raw);
+  if (!key) return "";
+  if (key === "new" || key === "new member" || key === "newmember") {
+    return "new";
+  }
+  if (
+    key === "graduate" ||
+    key === "newly graduated" ||
+    key === "newlygraduated"
+  ) {
+    return "graduate";
+  }
+  if (key === "rejoin" || key.startsWith("rejoining")) return "rejoin";
+  if (
+    key === "careerbreak" ||
+    key === "returning from a career break" ||
+    key.includes("career break")
+  ) {
+    return "careerBreak";
+  }
+  if (
+    key === "nursingabroad" ||
+    key === "returning from nursing abroad" ||
+    key.includes("nursing abroad")
+  ) {
+    return "nursingAbroad";
+  }
+  return raw;
+}
+
+function isUndergraduateStudentMembershipCategory(value) {
+  const key = normalizeGapLetterKey(value);
+  return (
+    key.includes("undergraduate") &&
+    key.includes("student") &&
+    !key.includes("postgraduate")
+  );
+}
+
+function isGapLetterEligibleCategory(value) {
+  const key = normalizeGapLetterKey(value);
+  if (!key) return false;
+  if (isUndergraduateStudentMembershipCategory(key)) return false;
+  if (key === "honorary" || /\bhonorary\b/.test(key)) return false;
+  return GAP_ELIGIBLE_CATEGORY_KEYS.has(key);
+}
+
+function extractPreviousSubscriptionStatus(record) {
+  const candidates = [
+    record?.subscriptionStatus,
+    record?.previousMembershipStatus,
+    record?._subscriptionService?.subscriptionStatus,
+    record?.subscription?.subscriptionStatus,
+    record?.currentSubscription?.subscriptionStatus,
+    record?.subscriptionDetails?.subscriptionStatus,
+    Array.isArray(record?.subscriptions)
+      ? record.subscriptions.find((s) => s?.isCurrent)?.subscriptionStatus ||
+        record.subscriptions[0]?.subscriptionStatus
+      : null,
+  ];
+  return candidates.find((value) => String(value ?? "").trim()) || "";
+}
+
+function resolveSendGapLetterDefault({ data, selectedMember, categoryData }) {
+  const categoryLabel = normalizeMembershipCategoryToLabel(
+    data?.subscriptionDetails?.membershipCategory,
+    categoryData,
+  );
+  if (!isGapLetterEligibleCategory(categoryLabel)) return false;
+
+  const previousStatusKey = normalizeGapLetterKey(
+    extractPreviousSubscriptionStatus(selectedMember),
+  );
+  if (GAP_RETURNING_PREVIOUS_STATUSES.has(previousStatusKey)) return true;
+
+  return (
+    normalizeGapLetterKey(data?.subscriptionDetails?.membershipStatus) ===
+    "rejoin"
+  );
+}
+
 function confirmReducedRateMembershipCategoryModal() {
   return new Promise((resolve) => {
     Modal.confirm({
@@ -917,6 +1036,7 @@ function ApplicationMgtDrawer({
 
     // Clear selected member
     setSelectedMember(null);
+    sendGapLetterTouchedRef.current = false;
     setAddressSearchValue("");
     setRecruiterSearchValue("");
 
@@ -1045,7 +1165,9 @@ function ApplicationMgtDrawer({
           "Monthly",
         payrollNo: searchResult?.professionalDetails?.payrollNo || "",
         membershipStatus:
-          searchResult?.additionalInformation?.membershipStatus || "",
+          normalizeMembershipStatusValue(
+            searchResult?.additionalInformation?.membershipStatus,
+          ) || "",
         otherIrishTradeUnion:
           searchResult?.additionalInformation?.otherIrishTradeUnion || false,
         otherIrishTradeUnionName:
@@ -1069,6 +1191,7 @@ function ApplicationMgtDrawer({
         termsAndConditions:
           searchResult?.preferences?.termsAndConditions || false,
         membershipCategory: extractMembershipCategoryFromProfile(searchResult),
+        sendGapLetter: false,
         confirmedRecruiterProfileId:
           searchResult?.recruitmentDetails?.confirmedRecruiterProfileId || null,
         dateJoined: toDayJS(searchResult?.firstJoinedDate || new Date()),
@@ -1099,6 +1222,7 @@ function ApplicationMgtDrawer({
       const formData = mapSearchResultToFormData(firstResult);
 
       if (formData) {
+        sendGapLetterTouchedRef.current = false;
         // Update the form data
         setInfData(formData);
 
@@ -1339,7 +1463,9 @@ function ApplicationMgtDrawer({
         paymentFrequency:
           apiData?.subscriptionDetails?.paymentFrequency || "Monthly",
         payrollNo: apiData?.subscriptionDetails?.payrollNo || "",
-        membershipStatus: apiData?.subscriptionDetails?.membershipStatus || "",
+        membershipStatus: normalizeMembershipStatusValue(
+          apiData?.subscriptionDetails?.membershipStatus,
+        ),
         otherIrishTradeUnion:
           apiData?.subscriptionDetails?.otherIrishTradeUnion || false,
         otherIrishTradeUnionName:
@@ -1362,6 +1488,7 @@ function ApplicationMgtDrawer({
         termsAndConditions:
           apiData?.subscriptionDetails?.termsAndConditions || false,
         membershipCategory: extractMembershipCategoryFromApplication(apiData),
+        sendGapLetter: apiData?.subscriptionDetails?.sendGapLetter === true,
         confirmedRecruiterProfileId:
           apiData?.subscriptionDetails?.confirmedRecruiterProfileId || null,
         dateJoined: toDayJS(
@@ -1432,6 +1559,10 @@ function ApplicationMgtDrawer({
 
     loadedApplicationKeyRef.current = aid;
     const mappedData = mapApiToState(application);
+    sendGapLetterTouchedRef.current = Object.prototype.hasOwnProperty.call(
+      application?.subscriptionDetails || {},
+      "sendGapLetter",
+    );
     setInfData(mappedData);
     setOriginalData(mappedData);
   }, [application, isEdit, appIdFromUrl, draftIdFromUrl]);
@@ -1496,11 +1627,15 @@ function ApplicationMgtDrawer({
     backgroundColor,
     iconBackground,
     subTitle,
+    tone = "teal",
   }) => (
-    <div className="section-header" style={{ backgroundColor }}>
+    <div
+      className={`section-header section-header--${tone}`}
+      style={backgroundColor ? { backgroundColor } : undefined}
+    >
       <div
         className="section-header-icon"
-        style={{ backgroundColor: iconBackground }}
+        style={iconBackground ? { backgroundColor: iconBackground } : undefined}
       >
         {icon}
       </div>
@@ -1658,6 +1793,7 @@ function ApplicationMgtDrawer({
       inmoRewards: false,
       valueAddedServices: false,
       termsAndConditions: false,
+      sendGapLetter: false,
       dateJoined: dayjs(),
       submissionDate: dayjs(),
       startDate: null,
@@ -1667,6 +1803,32 @@ function ApplicationMgtDrawer({
   };
 
   const [InfData, setInfData] = useState(inputValue);
+  const sendGapLetterTouchedRef = useRef(false);
+
+  useEffect(() => {
+    if (sendGapLetterTouchedRef.current) return;
+    setInfData((prev) => {
+      if (!prev?.subscriptionDetails) return prev;
+      const nextValue = resolveSendGapLetterDefault({
+        data: prev,
+        selectedMember,
+        categoryData,
+      });
+      if (prev.subscriptionDetails.sendGapLetter === nextValue) return prev;
+      return {
+        ...prev,
+        subscriptionDetails: {
+          ...prev.subscriptionDetails,
+          sendGapLetter: nextValue,
+        },
+      };
+    });
+  }, [
+    selectedMember,
+    categoryData,
+    InfData?.subscriptionDetails?.membershipStatus,
+    InfData?.subscriptionDetails?.membershipCategory,
+  ]);
 
   const workLocationAllowsSalaryDeduction = useMemo(
     () =>
@@ -2850,6 +3012,7 @@ function ApplicationMgtDrawer({
       "inmoRewards",
       "valueAddedServices",
       "termsAndConditions",
+      "sendGapLetter",
       "membershipCategory",
       "exclusiveDiscountsAndOffers",
       "dateJoined",
@@ -3070,6 +3233,18 @@ function ApplicationMgtDrawer({
   console.log(hierarchicalData, "hierarchicalData");
 
   const handleInputChange = (section, field, value) => {
+    if (section === "subscriptionDetails" && field === "sendGapLetter") {
+      sendGapLetterTouchedRef.current = true;
+      setInfData((prev) => ({
+        ...prev,
+        subscriptionDetails: {
+          ...prev.subscriptionDetails,
+          sendGapLetter: value === true,
+        },
+      }));
+      return;
+    }
+
     if (section === "subscriptionDetails" && field === "membershipStatus") {
       setInfData((prev) => {
         const updated = {
@@ -3949,6 +4124,7 @@ function ApplicationMgtDrawer({
 
   const handleAddMember = (searchTerm) => {
     disableFtn(false);
+    sendGapLetterTouchedRef.current = false;
     setInfData(inputValue);
     setSelectedMember(null);
 
@@ -4008,41 +4184,56 @@ function ApplicationMgtDrawer({
     handleInputChange("subscriptionDetails", "membershipCategory", nextValue);
   };
 
+  const formSections = [
+    { id: "application-form-personal", label: "Personal Info" },
+    { id: "application-form-correspondence", label: "Correspondence" },
+    { id: "application-form-contact", label: "Contact" },
+    { id: "application-form-professional", label: "Professional" },
+    { id: "application-form-subscription", label: "Subscription" },
+  ];
+
+  const scrollToFormSection = (sectionId) => {
+    document.getElementById(sectionId)?.scrollIntoView({
+      behavior: "smooth",
+      block: "start",
+    });
+  };
+
   return (
-    <div
-      style={{
-        height: "100%",
-        display: "flex",
-        flexDirection: "column",
-        overflow: "hidden",
-      }}
-    >
-      <div
-        style={{
-          backgroundColor: "#f6f7f8",
-          display: "flex",
-          flexDirection: "column",
-          flex: 1,
-          minHeight: 0,
-          overflow: "hidden",
-        }}
-      >
-        <div
-          style={{ marginRight: "2.25rem", flexShrink: 0 }}
-          className="d-flex justify-content-end align-items-center py-2"
-        >
-          <div className="d-flex align-items-center gap-3">
+    <div className="application-mgt-shell">
+      <div className="application-mgt-surface">
+        <div className="application-form-topbar">
+          <div className="application-form-stepper">
+            {formSections.map((section, sectionIndex) => (
+              <button
+                key={section.id}
+                type="button"
+                className={`application-form-step ${
+                  sectionIndex === 0 ? "application-form-step--active" : ""
+                }`}
+                onClick={() => scrollToFormSection(section.id)}
+              >
+                <span className="application-form-step-number">
+                  {sectionIndex + 1}
+                </span>
+                {section.label}
+              </button>
+            ))}
+          </div>
+          <div className="application-form-topbar-actions">
             {!isEdit && (
               <>
                 <MemberSearch
                   // fullWidth={true}/
+                  compact
                   onSelectBehavior="callback"
                   onSelectCallback={handleMemberSelect}
                   onAddMember={handleAddMember}
                   addMemberLabel="Add New Member"
-                  style={{ width: "400px" }}
+                  style={{ width: "280px" }}
                 />
                 <Checkbox
+                  className="application-form-toggle-chip"
                   name="Bulk"
                   checked={selected.Bulk}
                   onChange={handleChange}
@@ -4052,6 +4243,7 @@ function ApplicationMgtDrawer({
               </>
             )}
             <Checkbox
+              className="application-form-toggle-chip application-form-action--process"
               name="Approve"
               checked={selected.Approve}
               disabled={
@@ -4062,6 +4254,7 @@ function ApplicationMgtDrawer({
               Process
             </Checkbox>
             <Checkbox
+              className="application-form-toggle-chip application-form-action--reject"
               name="Reject"
               disabled={
                 isDisable ||
@@ -4084,22 +4277,6 @@ function ApplicationMgtDrawer({
                 Save
               </Button>
             )}
-            {application?.applicationId &&
-              !["processed", "rejected"].includes(
-                (
-                  application?.applicationStatus ||
-                  application?.personalDetails?.applicationStatus ||
-                  ""
-                ).toLowerCase(),
-              ) && (
-              <Button
-                className="butn"
-                disabled={!application?.applicationId}
-                onClick={() => openDuplicateReviewDrawer(true)}
-              >
-                Detect Duplicate
-              </Button>
-            )}
             {!isEdit && (
               <>
                 <Button
@@ -4113,6 +4290,7 @@ function ApplicationMgtDrawer({
                   <Button
                     onClick={() => {
                       setSelectedMember(null);
+                      sendGapLetterTouchedRef.current = false;
                       setInfData(inputValue);
                       setInfData(inputValue);
                       dispatch(clearResults());
@@ -4206,34 +4384,26 @@ function ApplicationMgtDrawer({
           </div>
         )}
         <div
-          className="hide-scroll-webkit application-form compact"
+          className="hide-scroll-webkit application-form"
           style={{
-            borderRadius: "15px",
-            boxShadow: "0 2px 6px rgba(0,0,0,0.04)",
-            margin: "0 1.5rem 1.5rem",
-            flex: 1,
-            minHeight: 0,
-            overflowY: "auto",
-            backgroundColor: "white",
-            padding: "12px 16px",
             filter: showLoader ? "blur(3px)" : "none",
             pointerEvents: showLoader ? "none" : "auto",
-            transition: "0.3s ease",
           }}
         >
           {/* Personal Information Section */}
-          <div className="section-card">
+          <div className="section-card" id="application-form-personal">
             <SectionHeader
               icon={
-                <MailOutlined style={{ color: "#2f6bff", fontSize: "16px" }} />
+                <UserOutlined
+                  style={{ color: "var(--app-form-icon-blue)", fontSize: "16px" }}
+                />
               }
               title="Personal Information"
               subTitle="Please provide your details as they appear on your official documents."
-              backgroundColor="#eef4ff"
-              iconBackground="#e5edff"
+              tone="blue"
             />
 
-            <AppFormGrid>
+            <AppFormGrid className="form-grid--personal-info">
               <AppFormCell>
                 <ApplicationMgtSelect
                   label="Title"
@@ -4329,114 +4499,75 @@ function ApplicationMgtDrawer({
           </div>
 
           {/* Correspondence Details Section */}
-          <div className="section-card">
+          <div className="section-card" id="application-form-correspondence">
             <SectionHeader
               icon={
                 <EnvironmentOutlined
-                  style={{ color: "green", fontSize: "16px" }}
+                  style={{ color: "var(--app-form-icon-green)", fontSize: "16px" }}
                 />
               }
               title="Correspondence Details"
-              backgroundColor="#edfdf5"
-              iconBackground="#e5edff"
               subTitle="Let us know the best way to contact you"
+              tone="green"
             />
 
-            <AppFormGrid>
-              {/* Preferred Address (33%) and Consent (67%) in one row */}
-              <AppFormCell span="full">
-                <AppFormGrid cols="33-67" className="form-grid--address-consent">
-                  <AppFormCell>
-                    <div
-                      className={`info-box info-box--field-aligned ${
-                        errors?.preferredAddress ? "info-box--error" : ""
-                      }`}
-                    >
-                      <label
-                        className={`my-input-label ${
-                          errors?.preferredAddress ? "error-text1" : ""
-                        }`}
-                      >
-                        Preferred Address{" "}
-                        <span className="text-danger">*</span>
-                      </label>
-                      <div className="form-control-band">
-                        <Radio.Group
-                          style={{ color: "#215e97", borderColor: "#215e97" }}
-                          onChange={(e) =>
-                            handleInputChange(
-                              "contactInfo",
-                              "preferredAddress",
-                              e.target.value,
-                            )
-                          }
-                          value={InfData?.contactInfo?.preferredAddress}
-                          disabled={isDisable}
-                          options={[
-                            { value: "home", label: "Home" },
-                            { value: "work", label: "Work" },
-                          ]}
-                        />
-                      </div>
-                    </div>
-                  </AppFormCell>
-                  <AppFormCell>
-                    <div className="consent-box consent-box--compact">
-                      <Checkbox
-                        value={true}
-                        checked={InfData?.contactInfo?.consent}
-                        onChange={(e) =>
-                          handleInputChange(
-                            "contactInfo",
-                            "consent",
-                            e.target.checked,
-                          )
-                        }
-                      >
-                        <span className="consent-box-text">
-                          <span className="consent-box-label">
-                            Consent to receive Correspondence from{" "}
-                            {tenantTradeName || "the organisation"}
-                          </span>
-                          <span className="consent-box-note">
-                            (Please un-tick this box if you would{" "}
-                            <strong>NOT like</strong> to receive correspondence via
-                            email or phone.)
-                          </span>
-                        </span>
-                      </Checkbox>
-                    </div>
-                  </AppFormCell>
-                </AppFormGrid>
+            <AppFormGrid className="form-grid--correspondence">
+              <AppFormCell span="full" className="correspondence-preferred-row">
+                <div
+                  className={`info-box info-box--field-aligned correspondence-preferred-field ${
+                    errors?.preferredAddress ? "info-box--error" : ""
+                  }`}
+                >
+                  <label
+                    className={`my-input-label ${
+                      errors?.preferredAddress ? "error-text1" : ""
+                    }`}
+                  >
+                    Preferred Address <span className="text-danger">*</span>
+                  </label>
+                  <div className="form-control-band form-control-band--segmented-wide">
+                    <Radio.Group
+                      onChange={(e) =>
+                        handleInputChange(
+                          "contactInfo",
+                          "preferredAddress",
+                          e.target.value,
+                        )
+                      }
+                      value={InfData?.contactInfo?.preferredAddress}
+                      disabled={isDisable}
+                      options={[
+                        { value: "home", label: "Home" },
+                        { value: "work", label: "Work" },
+                      ]}
+                    />
+                  </div>
+                </div>
               </AppFormCell>
 
-              {/* Search by address or Eircode — own row, 33% width */}
               <AppFormCell span="full" className="form-search-eircode-row">
-                <AppFormGrid cols="33-67" className="form-grid--search-eircode">
-                  <AppFormCell>
-                    {isLoaded && (
-                      <div className="address-search-field">
-                        <StandaloneSearchBox
-                          onLoad={(ref) => (inputRef.current = ref)}
-                          onPlacesChanged={handlePlacesChanged}
-                          placeholder="Enter Eircode (e.g., D01X4X0)"
+                {isLoaded && (
+                  <div className="address-search-field">
+                    <StandaloneSearchBox
+                      onLoad={(ref) => (inputRef.current = ref)}
+                      onPlacesChanged={handlePlacesChanged}
+                      placeholder="Enter Eircode (e.g. D01 X4K0)"
+                      disabled={isDisable}
+                    >
+                      <div className="address-search-control">
+                        <MyInput
+                          label="Search by address or Eircode"
+                          name="addressSearch"
+                          placeholder="Enter Eircode (e.g. D01 X4K0)"
                           disabled={isDisable}
-                        >
-                          <MyInput
-                            label="Search by address or Eircode"
-                            name="addressSearch"
-                            placeholder="Enter Eircode (e.g., D01X4X0)"
-                            disabled={isDisable}
-                            value={addressSearchValue}
-                            onChange={(e) =>
-                              setAddressSearchValue(e.target.value)
-                            }
-                          />
-                        </StandaloneSearchBox>
+                          value={addressSearchValue}
+                          onChange={(e) => setAddressSearchValue(e.target.value)}
+                        />
+                        <SearchOutlined className="address-search-icon" />
                       </div>
-                    )}
-                  </AppFormCell>
-                </AppFormGrid>
+                    </StandaloneSearchBox>
+                  </div>
+                )}
               </AppFormCell>
 
               <AppFormCell>
@@ -4534,14 +4665,50 @@ function ApplicationMgtDrawer({
                   hasError={!!errors?.country}
                 />
               </AppFormCell>
+
               <AppFormCell span="full">
-                <div className="contact-subsection">
-                  <h4 className="contact-subsection-title">Contact Details</h4>
-                  <p className="contact-subsection-subtitle">
-                    Provide your email and contact number
-                  </p>
+                <div className="consent-box consent-box--correspondence">
+                  <Checkbox
+                    value={true}
+                    checked={InfData?.contactInfo?.consent}
+                    onChange={(e) =>
+                      handleInputChange(
+                        "contactInfo",
+                        "consent",
+                        e.target.checked,
+                      )
+                    }
+                  >
+                    <span className="consent-box-text">
+                      <span className="consent-box-label">
+                        Consent to receive correspondence from{" "}
+                        {tenantTradeName || "the organisation"}.
+                      </span>
+                      <span className="consent-box-note">
+                        Please un-tick this box if you would{" "}
+                        <strong>not</strong> like to receive correspondence via
+                        email or phone.
+                      </span>
+                    </span>
+                  </Checkbox>
                 </div>
               </AppFormCell>
+            </AppFormGrid>
+          </div>
+
+          <div className="section-card" id="application-form-contact">
+            <SectionHeader
+              icon={
+                <MailOutlined
+                  style={{ color: "var(--app-form-icon-amber)", fontSize: "16px" }}
+                />
+              }
+              title="Contact Details"
+              subTitle="Provide your email and contact number"
+              tone="amber"
+            />
+
+            <AppFormGrid>
               <AppFormCell span="full">
                 <AppFormGrid cols={2} className="form-grid--contact-phones">
                   <AppFormCell>
@@ -4601,7 +4768,7 @@ function ApplicationMgtDrawer({
                       </label>
                       <div className="form-control-band">
                         <Radio.Group
-                          style={{ color: "#215e97", borderColor: "#215e97" }}
+                          style={{ color: "var(--app-brand-primary)", borderColor: "var(--app-brand-primary)" }}
                           onChange={(e) =>
                             handleInputChange(
                               "contactInfo",
@@ -4665,16 +4832,16 @@ function ApplicationMgtDrawer({
           </div>
 
           {/* Professional Details Section */}
-          <div className="section-card">
+          <div className="section-card" id="application-form-professional">
             <SectionHeader
               icon={
                 <IoBagRemoveOutline
-                  style={{ color: "#bf86f3", fontSize: "16px" }}
+                  style={{ color: "var(--app-form-icon-coral)", fontSize: "16px" }}
                 />
               }
               title="Professional Details"
-              backgroundColor="#f7f4ff"
-              iconBackground="#ede6fa"
+              subTitle="Tell us about your role, grade and section."
+              tone="coral"
             />
 
             <AppFormGrid>
@@ -5057,7 +5224,7 @@ function ApplicationMgtDrawer({
                         style={{
                           color: errors?.nursingAdaptationProgramme
                             ? "#ff4d4f"
-                            : "#215e97",
+                            : "var(--app-brand-primary)",
                         }}
                       >
                         Are you currently undertaking a nursing adaptation
@@ -5087,8 +5254,8 @@ function ApplicationMgtDrawer({
                           }
                           disabled={isDisable}
                           style={{
-                            color: "#215e97",
-                            borderColor: "#215e97",
+                            color: "var(--app-brand-primary)",
+                            borderColor: "var(--app-brand-primary)",
                           }}
                           className={
                             errors?.nursingAdaptationProgramme
@@ -5127,7 +5294,7 @@ function ApplicationMgtDrawer({
               {showNurseTypeField && (
               <AppFormCell span="full">
                 <div
-                  className={`question-box nurse-type-box ${
+                  className={`notice-box nurse-type-field membership-status-field ${
                     errors?.nurseType ? "info-box--error" : ""
                   }`}
                 >
@@ -5136,7 +5303,7 @@ function ApplicationMgtDrawer({
                       errors?.nurseType ? "error-text1" : ""
                     }`}
                     style={{
-                      color: errors?.nurseType ? "#ff4d4f" : "#215e97",
+                      color: errors?.nurseType ? "#ff4d4f" : "var(--app-brand-primary)",
                       display: "flex",
                       alignItems: "center",
                       gap: "4px",
@@ -5162,57 +5329,49 @@ function ApplicationMgtDrawer({
                         ?.nursingAdaptationProgramme !== true || isDisable
                     }
                     style={{
-                      color: "#215e97",
+                      color: "var(--app-brand-primary)",
                       width: "100%",
                     }}
                   >
-                    <div
-                      className="d-flex justify-content-between align-items-baseline flex-wrap"
-                      style={{ gap: "8px" }}
-                    >
+                    <div className="membership-status-options">
                       <Radio
                         value="generalNursing"
-                        style={{ color: "#215e97", width: "14%" }}
+                        className="membership-status-option"
                       >
                         General Nursing
                       </Radio>
 
                       <Radio
                         value="publicHealthNurse"
-                        style={{ color: "#215e97", width: "14%" }}
+                        className="membership-status-option"
                       >
                         Public Health Nurse
                       </Radio>
 
                       <Radio
                         value="mentalHealth"
-                        style={{ color: "#215e97", width: "14%" }}
+                        className="membership-status-option"
                       >
                         Mental Health Nurse
                       </Radio>
 
                       <Radio
                         value="midwife"
-                        style={{ color: "#215e97", width: "16%" }}
+                        className="membership-status-option"
                       >
                         Midwife
                       </Radio>
 
                       <Radio
                         value="sickChildrenNurse"
-                        style={{ color: "#215e97", width: "14%" }}
+                        className="membership-status-option"
                       >
                         Sick Children's Nurse
                       </Radio>
 
                       <Radio
                         value="intellectualDisability"
-                        style={{
-                          color: "#215e97",
-                          width: "20%",
-                          whiteSpace: "normal",
-                          lineHeight: "1.2",
-                        }}
+                        className="membership-status-option"
                       >
                         Registered Nurse for Intellectual Disability
                       </Radio>
@@ -5229,7 +5388,7 @@ function ApplicationMgtDrawer({
               <AppFormGrid>
                 <AppFormCell span={showYouthForumSelect ? 2 : "full"}>
                   <div
-                    className={`info-box question-box ${
+                    className={`info-box info-box--field-aligned info-box--field-aligned--wrap ${
                       errors?.joinYouthForum ? "info-box--error" : ""
                     }`}
                   >
@@ -5238,7 +5397,7 @@ function ApplicationMgtDrawer({
                         errors?.joinYouthForum ? "error-text1" : ""
                       }`}
                       style={{
-                        color: errors?.joinYouthForum ? "#ff4d4f" : "#215e97",
+                        color: errors?.joinYouthForum ? "#ff4d4f" : "var(--app-brand-primary)",
                         display: "flex",
                         alignItems: "center",
                         gap: "4px",
@@ -5247,30 +5406,35 @@ function ApplicationMgtDrawer({
                       Would you like to join Youth Forum?
                       <span className="text-danger">*</span>
                     </label>
-                    <Radio.Group
-                      name="joinYouthForum"
-                      value={
-                        InfData.professionalDetails?.joinYouthForum !== null
-                          ? InfData.professionalDetails?.joinYouthForum
-                          : null
-                      }
-                      onChange={(e) =>
-                        handleInputChange(
-                          "professionalDetails",
-                          "joinYouthForum",
-                          e.target?.value,
-                        )
-                      }
-                      style={{ color: "#215e97" }}
-                      disabled={isDisable}
-                    >
-                      <Radio style={{ color: "#215e97" }} value={true}>
-                        Yes
-                      </Radio>
-                      <Radio style={{ color: "#215e97" }} value={false}>
-                        No
-                      </Radio>
-                    </Radio.Group>
+                    <div className="form-control-band">
+                      <Radio.Group
+                        name="joinYouthForum"
+                        value={
+                          InfData.professionalDetails?.joinYouthForum !== null
+                            ? InfData.professionalDetails?.joinYouthForum
+                            : null
+                        }
+                        onChange={(e) =>
+                          handleInputChange(
+                            "professionalDetails",
+                            "joinYouthForum",
+                            e.target?.value,
+                          )
+                        }
+                        style={{
+                          color: "var(--app-brand-primary)",
+                          borderColor: "var(--app-brand-primary)",
+                        }}
+                        className={
+                          errors?.joinYouthForum ? "radio-error" : ""
+                        }
+                        disabled={isDisable}
+                        options={[
+                          { value: true, label: "Yes" },
+                          { value: false, label: "No" },
+                        ]}
+                      />
+                    </div>
                   </div>
                 </AppFormCell>
                 {showYouthForumSelect && (
@@ -5299,14 +5463,16 @@ function ApplicationMgtDrawer({
           )}
 
           {/* Subscription Details Section */}
-          <div className="section-card">
+          <div className="section-card" id="application-form-subscription">
             <SectionHeader
               icon={
-                <CiCreditCard1 style={{ color: "#ec6d28", fontSize: "16px" }} />
+                <CiCreditCard1
+                  style={{ color: "var(--app-form-icon-green)", fontSize: "16px" }}
+                />
               }
               title="Subscription Details"
-              backgroundColor="#fff9eb"
-              iconBackground="#fad1b8ff"
+              subTitle="Choose how and when your membership begins."
+              tone="green"
             />
 
             <AppFormGrid>
@@ -5404,23 +5570,52 @@ function ApplicationMgtDrawer({
                   hasError={!!errors?.paymentFrequency}
                 />
               </AppFormCell>
+              <AppFormCell>
+                <div className="info-box info-box--field-aligned info-box--field-aligned--wrap">
+                  <label
+                    className="my-input-label"
+                    style={{
+                      color: "var(--app-brand-primary)",
+                    }}
+                  >
+                    Send GAP Letter
+                  </label>
+                  <div className="form-control-band">
+                    <Radio.Group
+                      name="sendGapLetter"
+                      value={!!InfData?.subscriptionDetails?.sendGapLetter}
+                      onChange={(e) =>
+                        handleInputChange(
+                          "subscriptionDetails",
+                          "sendGapLetter",
+                          e.target.value,
+                        )
+                      }
+                      disabled={isDisable}
+                      style={{
+                        color: "var(--app-brand-primary)",
+                        borderColor: "var(--app-brand-primary)",
+                      }}
+                      options={[
+                        { value: true, label: "Yes" },
+                        { value: false, label: "No" },
+                      ]}
+                    />
+                  </div>
+                </div>
+              </AppFormCell>
 
               {/* Membership Status - Full Width */}
               <AppFormCell span="full">
                 <div
-                  className="notice-box"
-                  style={{
-                    backgroundColor: "#f0fdf4",
-                    border: errors?.membershipStatus
-                      ? "1px solid #ff4d4f"
-                      : "1px solid #a4e3ba",
-                  }}
+                  className={`notice-box membership-status-field ${
+                    errors?.membershipStatus ? "info-box--error" : ""
+                  }`}
                 >
                   <label
-                    className="my-input-label"
-                    style={{
-                      color: errors?.membershipStatus ? "#ff4d4f" : "#14532d",
-                    }}
+                    className={`my-input-label ${
+                      errors?.membershipStatus ? "error-text1" : ""
+                    }`}
                   >
                     Please select the most appropriate option below{" "}
                     <span className="text-danger">*</span>
@@ -5428,7 +5623,7 @@ function ApplicationMgtDrawer({
 
                   <Radio.Group
                     name="memberStatus"
-                    value={InfData?.subscriptionDetails?.membershipStatus || ""}
+                    value={membershipStatusValue}
                     onChange={(e) =>
                       handleInputChange(
                         "subscriptionDetails",
@@ -5437,37 +5632,39 @@ function ApplicationMgtDrawer({
                       )
                     }
                     disabled={isDisable}
-                    style={{
-                      color: "#14532d",
-                      width: "100%",
-                    }}
+                    style={{ width: "100%" }}
+                    className={errors?.membershipStatus ? "radio-error" : ""}
                   >
-                    <div
-                      className="d-flex justify-content-between align-items-baseline flex-wrap"
-                      style={{ gap: "8px" }}
-                    >
+                    <div className="membership-status-options">
                       <Radio
                         value="new"
-                        style={{ color: "#14532d", width: "14%" }}
+                        className={`membership-status-option ${
+                          membershipStatusValue === "new"
+                            ? "membership-status-option--selected"
+                            : ""
+                        }`}
                       >
                         New member
                       </Radio>
 
                       <Radio
                         value="graduate"
-                        style={{ color: "#14532d", width: "14%" }}
+                        className={`membership-status-option ${
+                          membershipStatusValue === "graduate"
+                            ? "membership-status-option--selected"
+                            : ""
+                        }`}
                       >
                         Newly graduated
                       </Radio>
 
                       <Radio
                         value="rejoin"
-                        style={{
-                          color: "#14532d",
-                          width: "28%",
-                          whiteSpace: "normal",
-                          lineHeight: "1.2",
-                        }}
+                        className={`membership-status-option ${
+                          membershipStatusValue === "rejoin"
+                            ? "membership-status-option--selected"
+                            : ""
+                        }`}
                       >
                         Rejoining - Previous{"  "}
                         {tenantTradeName || "the organisation"} Member"
@@ -5475,24 +5672,22 @@ function ApplicationMgtDrawer({
 
                       <Radio
                         value="careerBreak"
-                        style={{
-                          color: "#14532d",
-                          width: "18%",
-                          whiteSpace: "normal",
-                          lineHeight: "1.2",
-                        }}
+                        className={`membership-status-option ${
+                          membershipStatusValue === "careerBreak"
+                            ? "membership-status-option--selected"
+                            : ""
+                        }`}
                       >
                         Returning from a career break
                       </Radio>
 
                       <Radio
                         value="nursingAbroad"
-                        style={{
-                          color: "#14532d",
-                          width: "18%",
-                          whiteSpace: "normal",
-                          lineHeight: "1.2",
-                        }}
+                        className={`membership-status-option ${
+                          membershipStatusValue === "nursingAbroad"
+                            ? "membership-status-option--selected"
+                            : ""
+                        }`}
                       >
                         Returning from nursing abroad
                       </Radio>
@@ -5533,7 +5728,7 @@ function ApplicationMgtDrawer({
                             style={{
                               color: errors?.otherIrishTradeUnion
                                 ? "#ff4d4f"
-                                : "#215e97",
+                                : "var(--app-brand-primary)",
                             }}
                           >
                             If you are a member of another Trade Union. If yes,
@@ -5544,8 +5739,8 @@ function ApplicationMgtDrawer({
                             <Radio.Group
                               name="otherIrishTradeUnion"
                               style={{
-                                color: "#215e97",
-                                borderColor: "#215e97",
+                                color: "var(--app-brand-primary)",
+                                borderColor: "var(--app-brand-primary)",
                               }}
                               className={
                                 errors?.otherIrishTradeUnion
@@ -5612,7 +5807,7 @@ function ApplicationMgtDrawer({
                             style={{
                               color: errors?.otherScheme
                                 ? "#ff4d4f"
-                                : "#215e97",
+                                : "var(--app-brand-primary)",
                             }}
                           >
                             Are you or were you a member of another Irish trade
@@ -5623,8 +5818,8 @@ function ApplicationMgtDrawer({
                             <Radio.Group
                               name="otherScheme"
                               style={{
-                                color: "#215e97",
-                                borderColor: "#215e97",
+                                color: "var(--app-brand-primary)",
+                                borderColor: "var(--app-brand-primary)",
                               }}
                               className={
                                 errors?.otherScheme ? "radio-error" : ""
@@ -5700,7 +5895,7 @@ function ApplicationMgtDrawer({
                           target="_blank"
                           rel="noopener noreferrer"
                           style={{
-                            color: "#78350f",
+                            color: "var(--app-form-amber-deep)",
                             textDecoration: "underline",
                           }}
                           onClick={(e) => e.stopPropagation()}
@@ -5775,7 +5970,7 @@ function ApplicationMgtDrawer({
                           target="_blank"
                           rel="noopener noreferrer"
                           style={{
-                            color: "#78350f",
+                            color: "var(--app-form-amber-deep)",
                             textDecoration: "underline",
                           }}
                           onClick={(e) => e.stopPropagation()}
@@ -5885,8 +6080,8 @@ function ApplicationMgtDrawer({
                     onClick={() => handleSearch(query)}
                     loading={loading}
                     style={{
-                      backgroundColor: '#215e97',
-                      borderColor: '#215e97',
+                      backgroundColor: 'var(--app-brand-primary)',
+                      borderColor: 'var(--app-brand-primary)',
                       borderRadius: '0 4px 4px 0',
                       height: '40px',
                       width: '90px',
@@ -5905,7 +6100,7 @@ function ApplicationMgtDrawer({
                   <label className="my-input-label">
                     Validate Recruited By Information
                   </label>
-                  <div className="form-control-band form-control-band--plain">
+                  <div className="form-control-band form-control-band--plain recruited-by-search-control">
                     <MemberSearch
                       compact
                       showStatus={false}
@@ -5959,14 +6154,14 @@ function ApplicationMgtDrawer({
                             e.target.checked,
                           )
                         }
-                        style={{ color: "#78350f" }}
+                        style={{ color: "var(--app-form-amber-deep)" }}
                         disabled={isDisable}
                       >
                         I have read and agree to the{" "}
                         <a
                           href="#"
                           style={{
-                            color: "#78350f",
+                            color: "var(--app-form-amber-deep)",
                             textDecoration: "underline",
                           }}
                         >
@@ -5977,7 +6172,7 @@ function ApplicationMgtDrawer({
                         <a
                           href="#"
                           style={{
-                            color: "#78350f",
+                            color: "var(--app-form-amber-deep)",
                             textDecoration: "underline",
                           }}
                         >
@@ -5987,7 +6182,7 @@ function ApplicationMgtDrawer({
                         <a
                           href="#"
                           style={{
-                            color: "#78350f",
+                            color: "var(--app-form-amber-deep)",
                             textDecoration: "underline",
                           }}
                         >

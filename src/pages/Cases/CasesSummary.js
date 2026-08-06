@@ -1,323 +1,223 @@
-import React, { useState, useEffect } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { useLocation } from "react-router-dom";
-import { Row, Col, Card, Statistic, Tag, Switch } from "antd";
-import { useNavigate } from "react-router-dom";
-import dayjs from "dayjs";
-import MyTable from "../../component/common/MyTable";
-import { useCasesEdit } from "../../context/CasesEditContext";
-import { useSelectedIds } from "../../context/SelectedIdsContext";
+import { useSelector } from "react-redux";
+import { Spin } from "antd";
+import TableComponent from "../../component/common/TableComponent";
+import { fetchIssues } from "../../services/issuesApi";
+import { fetchProfilesBatchLookup } from "../../services/profileSearchApi";
+import { useFilters } from "../../context/FilterContext";
+import { useTableColumns } from "../../context/TableColumnsContext ";
+import { applyClientSideRowFilters } from "../../utils/filterUtils";
+import { useRegisterGridFilterRows } from "../../hooks/useRegisterGridFilterRows";
 
-const initialGridData = [
-    {
-      key: "1",
-      "Issue ID": "C-001",
-      Title: "Critical AML Indicator Flag",
-      "Incident Date": "2024-03-05",
-      Location: "Region 4",
-      Category: "Compliance",
-      "Case Type": "Compliance",
-      Status: "Open",
-      Priority: "High",
-      "Due Date": "2024-03-20",
-      "Pertinent to File Review": true,
-      "File Number": "CFN-88210",
-      Assignee: "Legal Team",
-      "Related Member(s)": "Sarah C., Michael S., David W.",
-    },
-    {
-      key: "2",
-      "Issue ID": "C-002",
-      Title: "Suspicious Transaction Pattern Detected",
-      "Incident Date": "2024-03-04",
-      Location: "Region 2",
-      Category: "Risk",
-      "Case Type": "Risk",
-      Status: "Pending",
-      Priority: "Medium",
-      "Due Date": "2024-03-18",
-      "Pertinent to File Review": false,
-      "File Number": "CFN-88211",
-      Assignee: "Support Team",
-      "Related Member(s)": "Emma W., James B.",
-    },
-    {
-      key: "3",
-      "Issue ID": "C-003",
-      Title: "Compliance Review Required",
-      "Incident Date": "2024-03-02",
-      Location: "Region 1",
-      Category: "Legal",
-      "Case Type": "Legal",
-      Status: "Closed",
-      Priority: "Low",
-      "Due Date": "2024-03-15",
-      "Pertinent to File Review": true,
-      "File Number": "CFN-88212",
-      Assignee: "HR Team",
-      "Related Member(s)": "Linda K., Sarah C.",
-    },
-    {
-      key: "4",
-      "Issue ID": "C-004",
-      Title: "Security Breach Investigation",
-      "Incident Date": "2024-03-01",
-      Location: "Region 3",
-      Category: "General",
-      "Case Type": "General",
-      Status: "Open",
-      Priority: "Critical",
-      "Due Date": "2024-03-10",
-      "Pertinent to File Review": false,
-      "File Number": "CFN-88213",
-      Assignee: "IT Team",
-      "Related Member(s)": "Michael S., David W., Emma W.",
-    },
-  ];
+// Real, issue-service-backed rewrite of the Issues ("Cases") grid, off
+// src/pages/events/EventsSummary.js's compliant TableComponent + Save-View
+// pattern - replaces the previous 100%-mocked version that used MyTable and
+// bypassed the shared toolbar/Save-View/export machinery entirely.
+//
+// One shared grid component reused across every /CasesSummary(/Open|/Closed),
+// /Complaints, /FitnessToPractice, /IndustrialRelations, /DataProtection route
+// (Entry.js), pre-filtered by the `defaultView` prop each route passes - not five/six
+// near-duplicate pages. All of those routes share the same FilterContext screen key
+// ("Issues") / SaveViewMenu templateType ("issuessummary"/"issuessummary" grid
+// template), so the toolbar's Priority/Issue Type/Case Status/Owner filters, Save View
+// templates, and column picker all behave identically no matter which route got you
+// here - only the `defaultView` preset differs.
+//
+// DEFAULT_VIEW_FILTERS below is intentionally NOT layered into FilterContext's
+// `filtersState` (e.g. via `updateFilter("Case Status", ...)` on mount). Two reasons:
+// 1) `updateFilter` unconditionally flips FilterContext's
+//    `userOverrodeTemplateFiltersRef` to true, which is the exact guard SaveViewMenu.jsx
+//    uses to decide whether a late `getViewById` response is allowed to apply the
+//    system-default/user-default template's filters (see its "Apply template settings
+//    when view details are fetched" effect) - seeding a route preset that way on mount
+//    would race with and can permanently block the very first template load.
+// 2) The `issuessummary` system-default template's own `issueStatus` filter (see
+//    grid-column-defaults.json - task: default view = outstanding/non-closed issues)
+//    uses the *same* "Case Status" filter label as this page's Open/Closed presets. Once
+//    that template loads, `filtersState["Case Status"]` is non-empty for every route, so
+//    an "only inject the preset if this label is still empty" merge could never tell a
+//    Closed-view visit apart from the shared template already having set the Open-view's
+//    own default value - it would silently show the wrong rows on /CasesSummary/Closed.
+// Applying the preset as its own always-on row filter - independent of, and layered on
+// top of, `applyClientSideRowFilters(rows, filtersState, issuesColumns)` - sidesteps both
+// problems entirely and needs no FilterContext changes. Every other filter (Priority,
+// Owner, and even Case Status/Issue Type themselves, for narrowing further within a
+// route's scope) stays fully toolbar-controlled, same as the plain "All" view always
+// worked; only the one dimension that defines a given route's own identity is fixed for
+// that route - switching scope is a side-nav click away (the "dedicated sections ... as a
+// separate side navigation tab" requirement), not a toolbar chip to clear.
+const DEFAULT_VIEW_FILTERS = {
+  // "all" backs "/CasesSummary", relabeled "Open Issues" in the side nav - no separate
+  // "/CasesSummary/Open" route/hard filter exists; the page's own default-filter template
+  // (grid-column-defaults.json's issuessummary entry) already excludes CLOSED by default,
+  // and it's still toolbar-clearable like every other filter on this page.
+  all: () => true,
+  closed: (row) => row.issueStatus === "CLOSED",
+  complaints: (row) => row.issueType === "COMPLAINT",
+  ftp: (row) => row.issueType === "FTP",
+  ir: (row) => row.issueType === "IR",
+  dataprotection: (row) => row.issueType === "DP",
+};
 
-function CasesSummary() {
-  const navigate = useNavigate();
-  const [gridData, setGridData] = useState(initialGridData);
-  const [selectedRowKeys, setSelectedRowKeys] = useState([]);
-  const { setSelectedCaseRows, applyCasesUpdateRef } = useCasesEdit();
-  const { setSelectedIds } = useSelectedIds();
+function applyDefaultViewFilter(rows, defaultView) {
+  const predicate = DEFAULT_VIEW_FILTERS[defaultView] || DEFAULT_VIEW_FILTERS.all;
+  return rows.filter(predicate);
+}
 
+/** First linked member id (memberIds[0]) per row, deduped, for the batch-lookup call below. */
+function collectMemberIdsToResolve(rows) {
+  const ids = new Set();
+  rows.forEach((row) => {
+    const id = Array.isArray(row.memberIds) && row.memberIds.length ? row.memberIds[0] : null;
+    if (id) ids.add(String(id));
+  });
+  return Array.from(ids);
+}
+
+/**
+ * Merges profile-service batch-lookup results (member name / membership no / work location)
+ * onto already-mapped issue rows, keyed by each row's first linked memberId. Best-effort: rows
+ * with no match (or no linked member at all) keep their existing raw-id/"-" placeholders, same
+ * as before this enrichment existed.
+ */
+function mergeProfileEnrichment(rows, profileById) {
+  if (!profileById || !profileById.size) return rows;
+  return rows.map((row) => {
+    const id = Array.isArray(row.memberIds) && row.memberIds.length ? String(row.memberIds[0]) : null;
+    const profile = id ? profileById.get(id) : null;
+    if (!profile) return row;
+    return {
+      ...row,
+      memberName: profile.personalInfo?.fullName || row.memberName || null,
+      membershipNo: profile.membershipNumber || row.membershipNo,
+      location: profile.professionalDetails?.workLocation || row.location,
+    };
+  });
+}
+
+function CasesSummary({ defaultView = "all" }) {
+  const location = useLocation();
+  const { filtersState } = useFilters();
+  const { columns } = useTableColumns();
+  const issuesColumns = columns.Issues || [];
+  const { isInitialized } = useSelector((state) => state.applicationWithFilter);
+  const { activeTemplateId } = useSelector((state) => state.activeTemplate);
+  const { templatesFetching: templatesLoading } = useSelector(
+    (state) => state.templateFiltersColumnApi,
+  );
+  const [issues, setIssues] = useState([]);
+  const [issuesSourceRows, setIssuesSourceRows] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  const loadIssues = useCallback(() => {
+    let cancelled = false;
+    setLoading(true);
+    fetchIssues()
+      .then((data) => {
+        if (cancelled) return;
+        const rows = Array.isArray(data) ? data : [];
+        const mapped = rows.map((iss) => ({
+          key: iss._id,
+          issueId: iss._id,
+          internalReferenceNumber: iss.internalReferenceNumber || "-",
+          caseTitle: iss.caseTitle || iss.internalReferenceNumber || "-",
+          issueType: iss.issueType,
+          memberIds: Array.isArray(iss.memberIds) ? iss.memberIds : [],
+          memberName: null,
+          membershipNo: null,
+          caseFileNumber: iss.caseFileNumber || null,
+          nmbiReference: iss.nmbiReference || null,
+          location: null,
+          groupId: iss.groupId || null,
+          dateReceived: iss.dateReceived,
+          criteriaLetterStatus: iss.criteriaLetterStatus || null,
+          legislation: iss.legislation || null,
+          issueStatus: iss.issueStatus,
+          priority: iss.priority,
+          ownerTeam: iss.owner?.team || null,
+        }));
+        const scoped = applyDefaultViewFilter(mapped, defaultView);
+        setIssuesSourceRows(scoped);
+        setIssues(applyClientSideRowFilters(scoped, filtersState, issuesColumns));
+
+        // Best-effort member-name/membership-no/location hydration via profile-service's
+        // batch-lookup endpoint (see profileSearchApi.js's fetchProfilesBatchLookup) - fires
+        // after the initial render so the grid isn't blocked on it; failures/empty results
+        // just leave the raw-id/"-" placeholders in place.
+        const memberIdsToResolve = collectMemberIdsToResolve(scoped);
+        if (memberIdsToResolve.length) {
+          fetchProfilesBatchLookup(memberIdsToResolve)
+            .then((profiles) => {
+              if (cancelled || !Array.isArray(profiles) || !profiles.length) return;
+              const profileById = new Map(
+                profiles.map((profile) => [String(profile._id), profile]),
+              );
+              setIssuesSourceRows((prev) => mergeProfileEnrichment(prev, profileById));
+              setIssues((prev) => mergeProfileEnrichment(prev, profileById));
+            })
+            .catch(() => {
+              /* best-effort - raw id / "-" placeholders remain */
+            });
+        }
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setIssuesSourceRows([]);
+          setIssues([]);
+        }
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [filtersState, issuesColumns, defaultView]);
+
+  // Re-fetch every time this route is navigated to (not just first mount),
+  // gated on template init - Save View filters/columns must resolve before
+  // the first fetch. Mirrors EventsSummary.js's data-loading effect exactly.
   useEffect(() => {
-    applyCasesUpdateRef.current = (keys, payload) => {
-      setGridData((prev) =>
-        prev.map((row) => (keys.includes(row.key) ? { ...row, ...payload } : row))
-      );
-    };
-  }, [applyCasesUpdateRef]);
+    if (!isInitialized || templatesLoading) return;
+    loadIssues();
+  }, [
+    loadIssues,
+    location.key,
+    activeTemplateId,
+    isInitialized,
+    templatesLoading,
+  ]);
 
-  const handleSelectionChange = (keys, rows) => {
-    setSelectedRowKeys(keys);
-    setSelectedCaseRows(rows);
-    setSelectedIds(keys);
-  };
+  useRegisterGridFilterRows("Issues", issuesSourceRows, issuesColumns);
 
-  // Status tag colors matching existing application style
-  const getStatusTag = (status) => {
-    const statusConfig = {
-      Open: { color: "#52c41a", bg: "#f6ffed", border: "#b7eb8f" },
-      Pending: { color: "#faad14", bg: "#fffbe6", border: "#ffe58f" },
-      Closed: { color: "#8c8c8c", bg: "#fafafa", border: "#d9d9d9" },
-    };
-    const config = statusConfig[status] || statusConfig["Pending"];
+  if (!isInitialized || templatesLoading) {
     return (
-      <Tag
+      <div
         style={{
-          color: config.color,
-          backgroundColor: config.bg,
-          border: `1px solid ${config.border}`,
-          borderRadius: "4px",
-          fontWeight: 500,
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          height: "100%",
+          padding: "50px",
         }}
       >
-        {status}
-      </Tag>
+        <Spin tip="Initializing Template...">
+          <div style={{ minHeight: 200, width: "100%" }} />
+        </Spin>
+      </div>
     );
-  };
-
-  // Priority tag colors
-  const getPriorityTag = (priority) => {
-    const priorityConfig = {
-      Critical: { color: "#ff4d4f", bg: "#fff2f0", border: "#ffccc7" },
-      High: { color: "#fa8c16", bg: "#fff7e6", border: "#ffd591" },
-      Medium: { color: "#1890ff", bg: "#e6f7ff", border: "#91d5ff" },
-      Low: { color: "#52c41a", bg: "#f6ffed", border: "#b7eb8f" },
-    };
-    const config = priorityConfig[priority] || priorityConfig["Medium"];
-    return (
-      <Tag
-        style={{
-          color: config.color,
-          backgroundColor: config.bg,
-          border: `1px solid ${config.border}`,
-          borderRadius: "4px",
-          fontWeight: 500,
-        }}
-      >
-        {priority}
-      </Tag>
-    );
-  };
-
-  const columns = [
-    {
-      title: "ISSUE ID",
-      dataIndex: "Issue ID",
-      key: "Issue ID",
-      render: (text, record) => (
-        <a
-          style={{
-            color: "#0000FF",
-            cursor: "pointer",
-            textDecoration: "underline",
-          }}
-          onClick={(e) => {
-            e.stopPropagation();
-            navigate("/CasesDetails", { state: { caseId: text } });
-          }}
-        >
-          {text}
-        </a>
-      ),
-    },
-    {
-      title: "TITLE",
-      dataIndex: "Title",
-      key: "Title",
-    },
-    {
-      title: "RELATED MEMBER(S)",
-      dataIndex: "Related Member(s)",
-      key: "Related Member(s)",
-    },
-    {
-      title: "INCIDENT DATE",
-      dataIndex: "Incident Date",
-      key: "Incident Date",
-    },
-    {
-      title: "LOCATION",
-      dataIndex: "Location",
-      key: "Location",
-    },
-    {
-      title: "CATEGORY",
-      dataIndex: "Category",
-      key: "Category",
-    },
-    {
-      title: "CASE TYPE",
-      dataIndex: "Case Type",
-      key: "Case Type",
-    },
-    {
-      title: "STATUS",
-      dataIndex: "Status",
-      key: "Status",
-      render: (status) => getStatusTag(status),
-    },
-    {
-      title: "PRIORITY",
-      dataIndex: "Priority",
-      key: "Priority",
-      render: (priority) => getPriorityTag(priority),
-    },
-    {
-      title: "DUE DATE",
-      dataIndex: "Due Date",
-      key: "Due Date",
-    },
-    {
-      title: "REVIEW",
-      dataIndex: "Pertinent to File Review",
-      key: "Pertinent to File Review",
-      width: 120,
-      render: (value) => <Switch checked={value} disabled size="small" />,
-    },
-    {
-      title: "FILE NUMBER",
-      dataIndex: "File Number",
-      key: "File Number",
-    },
-    {
-      title: "ASSIGNEE",
-      dataIndex: "Assignee",
-      key: "Assignee",
-    },
-  ];
+  }
 
   return (
     <div style={{ padding: "20px 0" }}>
-      {/* Statistics Cards */}
-      <Row gutter={[16, 16]} style={{ marginBottom: 24, padding: "0 34px" }}>
-        <Col xs={24} sm={8}>
-          <Card bordered={false} className="stats-card">
-            <Statistic
-              title={
-                <span style={{ fontSize: "14px", color: "#8c8c8c" }}>
-                  Open Issues
-                </span>
-              }
-              value={124}
-              valueStyle={{ fontSize: "24px", fontWeight: "bold" }}
-              suffix={
-                <span
-                  style={{
-                    color: "#52c41a",
-                    fontSize: "14px",
-                    fontWeight: "normal",
-                  }}
-                >
-                  (+5%)
-                </span>
-              }
-            />
-          </Card>
-        </Col>
-        <Col xs={24} sm={8}>
-          <Card bordered={false} className="stats-card">
-            <Statistic
-              title={
-                <span style={{ fontSize: "14px", color: "#8c8c8c" }}>
-                  Critical Issues
-                </span>
-              }
-              value={12}
-              valueStyle={{ fontSize: "24px", fontWeight: "bold" }}
-              suffix={
-                <span
-                  style={{
-                    color: "#52c41a",
-                    fontSize: "14px",
-                    fontWeight: "normal",
-                  }}
-                >
-                  (+2%)
-                </span>
-              }
-            />
-          </Card>
-        </Col>
-        <Col xs={24} sm={8}>
-          <Card bordered={false} className="stats-card">
-            <Statistic
-              title={
-                <span style={{ fontSize: "14px", color: "#8c8c8c" }}>
-                  Pending Review
-                </span>
-              }
-              value={45}
-              valueStyle={{ fontSize: "24px", fontWeight: "bold" }}
-              suffix={
-                <span
-                  style={{
-                    color: "#ff4d4f",
-                    fontSize: "14px",
-                    fontWeight: "normal",
-                  }}
-                >
-                  (-1%)
-                </span>
-              }
-            />
-          </Card>
-        </Col>
-      </Row>
-
-      <MyTable
-        dataSource={gridData}
-        columns={columns}
-        selection={true}
-        rowSelection={{
-          selectedRowKeys,
-          onChange: handleSelectionChange,
-        }}
-        onRowClick={(record) =>
-          navigate("/CasesDetails", { state: { caseId: record["Issue ID"] } })
-        }
+      <TableComponent
+        data={issues}
+        screenName="Issues"
+        isGrideLoading={loading}
+        hideLegacyRowChrome
+        rowActionsInGridmenu
       />
     </div>
   );

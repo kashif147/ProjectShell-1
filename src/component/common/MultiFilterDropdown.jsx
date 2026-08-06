@@ -97,7 +97,7 @@ const MultiFilterDropdown = ({
                 <div style={{ marginBottom: "8px" }}>
                   {warningMessage.replace("⚠️ ", "")}
                 </div>
-                <div style={{ fontSize: "12px", color: "#8c8c8c", fontStyle: "italic" }}>
+                <div style={{ fontSize: "12px", color: "var(--theme-text-muted)", fontStyle: "italic" }}>
                   {isGeoFilter
                     ? "Try adjusting or clearing other Region, Branch, or Work Location filters."
                     : "No data available for the selected criteria."}
@@ -106,7 +106,7 @@ const MultiFilterDropdown = ({
             }
             type="info"
             showIcon
-            style={{ border: "1px solid #91d5ff", backgroundColor: "#e6f7ff" }}
+            style={{ border: "1px solid #91d5ff", backgroundColor: "var(--app-brand-bg)" }}
           />
         </div>
       );
@@ -123,7 +123,7 @@ const MultiFilterDropdown = ({
             description="Please wait while we fetch the data."
             type="info"
             showIcon
-            style={{ border: "1px solid #91d5ff", backgroundColor: "#e6f7ff" }}
+            style={{ border: "1px solid #91d5ff", backgroundColor: "var(--app-brand-bg)" }}
           />
         </div>
       );
@@ -146,7 +146,7 @@ const MultiFilterDropdown = ({
                 <div style={{ marginBottom: "8px" }}>
                   No options returned for {label} with the current filter combination.
                 </div>
-                <div style={{ fontSize: "12px", color: "#8c8c8c", fontStyle: "italic" }}>
+                <div style={{ fontSize: "12px", color: "var(--theme-text-muted)", fontStyle: "italic" }}>
                   Try adjusting Region, Branch, or Work Location selections.
                 </div>
               </div>
@@ -254,16 +254,16 @@ export default MultiFilterDropdown;
 const style = document.createElement("style");
 style.innerHTML = `
   .filter-button1 {
-    border: 1px solid #e2e8f0;
+    border: 1px solid var(--app-control-border, color-mix(in srgb, var(--app-brand-primary) 14%, #d9d9d9));
     border-radius: 3px;
     padding: 0 12px !important;
     cursor: pointer;
     display: inline-flex;
     align-items: center;
-    background-color: #fff;
+    background-color: transparent;
     font-size: 13px !important;
     font-weight: 500 !important;
-    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+    box-shadow: none;
     margin-left: 0;
     overflow: visible;
     flex-shrink: 0;
@@ -290,13 +290,13 @@ style.innerHTML = `
   }
 
   .filter-button1:hover {
-    background-color: #f8fafc;
-    border-color: #cbd5e1;
+    background-color: color-mix(in srgb, var(--app-brand-primary) 6%, transparent);
+    border-color: var(--app-brand-primary);
   }
 
   .filter-button1.active {
-    background-color: #eff6ff;
-    border-color: #93c5fd;
+    background-color: color-mix(in srgb, var(--app-brand-primary) 8%, transparent);
+    border-color: var(--app-brand-primary);
   }
 
   .filter-button1.disabled-state {
@@ -308,7 +308,7 @@ style.innerHTML = `
     display: inline-flex;
     align-items: center;
     font-weight: 600;
-    color: #475569;
+    color: var(--app-brand-primary);
     white-space: nowrap;
     padding-right: 4px;
     font-size: 13px;
@@ -316,7 +316,7 @@ style.innerHTML = `
   }
 
   .filter-button1.disabled-state .filter-label {
-    color: #595959;
+    color: var(--theme-text-muted);
   }
 
   .filter-button1 .red-badge.ant-badge {
@@ -343,7 +343,7 @@ style.innerHTML = `
     align-items: center;
     justify-content: center;
     font-size: 10px;
-    color: #475569;
+    color: var(--app-brand-primary);
     line-height: 1;
   }
 
@@ -352,14 +352,15 @@ style.innerHTML = `
   }
 
   .filter-button1.disabled-state .dropdown-icon {
-    color: #8c8c8c;
+    color: var(--theme-text-muted);
   }
 
   .filter-dropdown-menu {
     padding: 10px;
-    background-color: #fff;
+    background-color: var(--background-primary, #fff);
     border-radius: 6px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    border: 1px solid var(--app-control-border, color-mix(in srgb, var(--app-brand-primary) 14%, #d9d9d9));
+    box-shadow: none;
     min-width: 250px;
     max-height: 300px;
     overflow-y: auto;

@@ -4,7 +4,7 @@
 
 .campaign-drawer-root .ant-drawer-body {
   padding: 0;
-  background: #f6f9fc;
+  background: var(--theme-page-bg);
 }
 
 .campaign-drawer-body {

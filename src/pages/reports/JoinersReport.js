@@ -41,7 +41,7 @@ const JoinersReport = () => {
         // { headerName: "Source", field: "source", width: 150, sortable: true, filter: true },
         {
             headerName: "Status", field: "status", width: 120, sortable: true, filter: true,
-            cellRenderer: (params) => <span style={{ color: "#1890ff", fontWeight: "bold" }}>{params.value}</span>
+            cellRenderer: (params) => <span style={{ color: "var(--app-brand-accent)", fontWeight: "bold" }}>{params.value}</span>
         },
     ];
 

@@ -14,7 +14,7 @@ const STATUS_PILL = {
   Active: { bg: "#E8F8EE", color: "#0C8043" },
   Lapsed: { bg: "#FFF4E5", color: "#B45309" },
   Suspended: { bg: "#FFF7E6", color: "#AD6800" },
-  Archived: { bg: "#F1F5F9", color: "#475569" },
+  Archived: { bg: "#F1F5F9", color: "var(--theme-text-muted)" },
   Cancelled: { bg: "#FEE2E2", color: "#B91C1C" },
   Resigned: { bg: "#FCE7E7", color: "#C0392B" },
 };

@@ -30,44 +30,27 @@ import {
   Heart,
   Crown,
 } from "lucide-react";
+import { lookupTypeRequiresParent } from "./lookupHierarchy";
 
-/** Drawer keys that have a dedicated MyDrawer UI in Configuration.js */
+/**
+ * Drawer keys with a dedicated MyDrawer UI in Configuration.js.
+ * Simple /lookup types route to StandardLookup (LookupRecordDrawer).
+ * Specialized location/hierarchy drawers remain dedicated until Phase 2.
+ */
 export const CONFIGURATION_DRAWER_KEYS = new Set([
-  "counties",
   "Countries",
-  "Provinces",
-  "Cities",
-  "PostCode",
   "Districts",
   "Divisions",
   "DivisionsForDistrict",
-  "DivisionsForStation",
   "Station",
   "StudyLocation",
+  "Venue",
   "ContactType",
   "LookupType",
   "Lookup",
   "RegionType",
   "Bookmarks",
   "Solicitors",
-  "Gender",
-  "Title",
-  "ProjectTypes",
-  "Trainings",
-  "Ranks",
-  "Duties",
-  "Boards",
-  "ClaimType",
-  "Schemes",
-  "Reasons",
-  "RosterType",
-  "Sections",
-  "Councils",
-  "CorrespondenceType",
-  "DocumentType",
-  "SpokenLanguages",
-  "MaritalStatus",
-  "Committees",
   "StandardLookup",
 ]);
 
@@ -89,79 +72,98 @@ export function isLookupDrawerKey(drawerKey) {
   );
 }
 
+/**
+ * Maps API lookup type names → Configuration drawer keys.
+ * Simple /lookup types use StandardLookup (shared LookupRecordDrawer).
+ * Keep Branch / Region / Work Location / Study Location specialized until Phase 2.
+ */
 const LOOKUP_TYPE_NAME_TO_DRAWER_KEY = {
-  boards: "Boards",
+  "accreditation body": "StandardLookup",
+  accreditationbody: "StandardLookup",
   bookmarks: "Bookmarks",
   branch: "Districts",
-  cities: "Cities",
-  city: "Cities",
-  "claim type": "ClaimType",
-  claimtype: "ClaimType",
-  committees: "Committees",
-  committee: "Committees",
   "contact types": "ContactType",
   "contact type": "ContactType",
   contacttypes: "ContactType",
   contacttype: "ContactType",
-  "correspondence type": "CorrespondenceType",
-  correspondencetype: "CorrespondenceType",
-  councils: "Councils",
-  council: "Councils",
   countries: "Countries",
   country: "Countries",
-  counties: "counties",
-  county: "counties",
-  "document type": "DocumentType",
-  documenttype: "DocumentType",
-  duties: "Duties",
-  gender: "Gender",
-  grade: "Ranks",
-  ranks: "Ranks",
   lookup: "Lookup",
   "lookup type": "LookupType",
   lookuptype: "LookupType",
-  "marital status": "MaritalStatus",
-  maritalstatus: "MaritalStatus",
-  "post codes": "PostCode",
-  "post code": "PostCode",
-  postcode: "PostCode",
-  postcodes: "PostCode",
-  "project types": "ProjectTypes",
-  projecttypes: "ProjectTypes",
-  projecttype: "ProjectTypes",
-  provinces: "Provinces",
-  province: "Provinces",
-  reasons: "Reasons",
+  // Branch and Region keep dedicated drawers (keys Districts / Divisions).
   region: "Divisions",
   regions: "Divisions",
   regiontype: "RegionType",
-  divisions: "Divisions",
-  division: "Divisions",
-  "roster type": "RosterType",
-  rostertype: "RosterType",
-  schemes: "Schemes",
-  scheme: "Schemes",
-  sections: "Sections",
-  section: "Sections",
   solicitors: "Solicitors",
   solicitor: "Solicitors",
-  "spoken languages": "SpokenLanguages",
-  spokenlanguages: "SpokenLanguages",
   "study location": "StudyLocation",
   studylocation: "StudyLocation",
-  titles: "Title",
-  title: "Title",
-  trainings: "Trainings",
-  training: "Trainings",
+  venue: "Venue",
+  venues: "Venue",
   "work location": "Station",
   "work locations": "Station",
   worklocation: "Station",
   worklocations: "Station",
-  station: "Station",
-  stations: "Station",
-  districts: "Districts",
-  district: "Districts",
+  // Everything else that uses /lookup → shared StandardLookup drawer
+  boards: "StandardLookup",
+  board: "StandardLookup",
+  cities: "StandardLookup",
+  city: "StandardLookup",
+  "claim type": "StandardLookup",
+  claimtype: "StandardLookup",
+  committees: "StandardLookup",
+  committee: "StandardLookup",
+  "correspondence type": "StandardLookup",
+  correspondencetype: "StandardLookup",
+  councils: "StandardLookup",
+  council: "StandardLookup",
+  counties: "StandardLookup",
+  county: "StandardLookup",
+  "document type": "StandardLookup",
+  documenttype: "StandardLookup",
+  duties: "StandardLookup",
+  duty: "StandardLookup",
+  gender: "StandardLookup",
+  grade: "StandardLookup",
+  grades: "StandardLookup",
+  ranks: "StandardLookup",
+  rank: "StandardLookup",
+  "marital status": "StandardLookup",
+  maritalstatus: "StandardLookup",
+  "post codes": "StandardLookup",
+  "post code": "StandardLookup",
+  postcode: "StandardLookup",
+  postcodes: "StandardLookup",
+  "project types": "StandardLookup",
+  projecttypes: "StandardLookup",
+  projecttype: "StandardLookup",
+  provinces: "StandardLookup",
+  province: "StandardLookup",
+  reasons: "StandardLookup",
+  reason: "StandardLookup",
+  divisions: "StandardLookup",
+  division: "StandardLookup",
+  "roster type": "StandardLookup",
+  rostertype: "StandardLookup",
+  schemes: "StandardLookup",
+  scheme: "StandardLookup",
+  sections: "StandardLookup",
+  section: "StandardLookup",
+  "spoken languages": "StandardLookup",
+  spokenlanguages: "StandardLookup",
+  titles: "StandardLookup",
+  title: "StandardLookup",
+  trainings: "StandardLookup",
+  training: "StandardLookup",
+  // Dedicated Work Location drawer (legacy key "Station"). Station type uses StandardLookup.
+  station: "StandardLookup",
+  stations: "StandardLookup",
+  districts: "StandardLookup",
+  district: "StandardLookup",
   discipline: "StandardLookup",
+  "event type": "StandardLookup",
+  eventtype: "StandardLookup",
   bank: "StandardLookup",
   "template type": "StandardLookup",
   templatetype: "StandardLookup",
@@ -287,14 +289,35 @@ export function resolveConfigurationDrawerKey(lookupType, fallbackKey = "") {
 
 export function getLookupsForLookupType(lookupType, lookups = []) {
   if (!lookupType || !Array.isArray(lookups)) return [];
-  const typeId = lookupType._id;
-  const typeName = lookupType.lookuptype;
-  return lookups.filter(
-    (item) =>
-      String(item?.lookuptypeId?._id) === String(typeId) ||
-      item?.lookuptypeId?.lookuptype === typeName ||
-      item?.lookuptypeName === typeName,
-  );
+  const typeId = String(lookupType._id || lookupType.id || "");
+  const typeName = lookupType.lookuptype || lookupType.DisplayName || lookupType.name || "";
+  const typeNameKey = normalizeLookupTypeName(typeName).replace(/\s+/g, "");
+
+  return lookups.filter((item) => {
+    const itemTypeId = String(
+      item?.lookuptypeId?._id ||
+        item?.typeId ||
+        (typeof item?.lookuptypeId === "string" ||
+        typeof item?.lookuptypeId === "number"
+          ? item.lookuptypeId
+          : "") ||
+        "",
+    );
+    if (typeId && itemTypeId && itemTypeId === typeId) return true;
+
+    const itemTypeName =
+      item?.lookuptypeName ||
+      item?.lookuptypeId?.lookuptype ||
+      item?.type ||
+      "";
+    if (typeName && itemTypeName === typeName) return true;
+
+    const itemTypeKey = normalizeLookupTypeName(itemTypeName).replace(
+      /\s+/g,
+      "",
+    );
+    return Boolean(typeNameKey && itemTypeKey && itemTypeKey === typeNameKey);
+  });
 }
 
 export function getLookupTypeFieldPropsForRecord(lookupType, selectedId) {
@@ -310,8 +333,30 @@ export function getLookupTypeFieldPropsForRecord(lookupType, selectedId) {
 
 export function getLookupTypeRecordForDrawer(drawerKey, lookupsTypes = []) {
   if (!drawerKey || !Array.isArray(lookupsTypes)) return null;
+
+  // Some drawers keep a legacy key that no longer matches the API type name
+  // (e.g. drawer "Ranks" is Grade). Prefer the real product type name.
+  const preferredTypeNames = {
+    Ranks: ["grade", "grades"],
+    Districts: ["branch", "branches"],
+    Divisions: ["region", "regions"],
+    StudyLocation: ["study location", "studylocation"],
+    Station: ["work location", "worklocation", "work locations"],
+  };
+  const preferred = preferredTypeNames[drawerKey];
+  if (preferred?.length) {
+    const preferredMatch = lookupsTypes.find((lt) => {
+      const name = normalizeLookupTypeName(
+        lt.lookuptype || lt.DisplayName || lt.name || "",
+      );
+      return preferred.includes(name);
+    });
+    if (preferredMatch) return preferredMatch;
+  }
+
   return (
-    lookupsTypes.find((lt) => getDrawerKeyForLookupType(lt) === drawerKey) || null
+    lookupsTypes.find((lt) => getDrawerKeyForLookupType(lt) === drawerKey) ||
+    null
   );
 }
 
@@ -356,7 +401,35 @@ export const SYSTEM_CONFIGURATION_CARDS = [
     lookupType: null,
     isSystem: true,
   },
+  {
+    key: "ContactType",
+    lookupTypeId: "system-card-contact-type",
+    label: "Contact Type",
+    icon: <Briefcase size={LOOKUP_CARD_ICON_SIZE} color="#f59e0b" />,
+    lookupType: null,
+    isSystem: true,
+  },
 ];
+
+/**
+ * One dynamic tile per active ContactType (e.g. "Solicitor", "Doctor") - mirrors how
+ * apiCards below generates one tile per LookupType. Clicking a tile opens the Contacts
+ * drawer scoped to that contact type (Configuration.js's openConfigurationCard).
+ */
+export function buildContactTypeCards(contactTypes = []) {
+  return Array.isArray(contactTypes)
+    ? contactTypes
+        .filter((ct) => ct && ct.isactive !== false)
+        .map((ct) => ({
+          key: `ContactType:${ct._id}`,
+          lookupTypeId: `contact-type-${ct._id}`,
+          label: ct.contactType || ct.displayName || "Contact",
+          icon: <User size={LOOKUP_CARD_ICON_SIZE} color="#0ea5e9" />,
+          isContactTypeCard: true,
+          contactType: ct,
+        }))
+    : [];
+}
 
 const SYSTEM_DRAWER_KEYS = new Set(
   SYSTEM_CONFIGURATION_CARDS.map((card) => card.key),
@@ -369,7 +442,8 @@ const sortConfigurationCardsByLabel = (cards) =>
     }),
   );
 
-export function buildConfigurationCards(lookupsTypes = []) {
+export function buildConfigurationCards(lookupsTypes = [], contactTypes = []) {
+  const contactTypeCards = buildContactTypeCards(contactTypes);
   const apiCards = Array.isArray(lookupsTypes)
     ? lookupsTypes
         .map((lookupType, index) => {
@@ -392,6 +466,7 @@ export function buildConfigurationCards(lookupsTypes = []) {
 
   return sortConfigurationCardsByLabel([
     ...apiCards,
+    ...contactTypeCards,
     ...SYSTEM_CONFIGURATION_CARDS,
   ]);
 }
@@ -410,6 +485,9 @@ export function getLookupsForDrawer(drawerKey, { lookupsTypes = [], groupedLooku
 
 export function withDynamicLookupTypeId(template, drawerKey, lookupsTypes = []) {
   if (!template || typeof template !== "object") return template;
+  // Shared drawer for many types (Bank, Secondary Section, …) — never
+  // auto-pick the first matching type or creates land under the wrong type.
+  if (drawerKey === "StandardLookup") return { ...template };
   const next = { ...template };
   const lookupType = getLookupTypeRecordForDrawer(drawerKey, lookupsTypes);
   if (lookupType?._id && Object.prototype.hasOwnProperty.call(next, "lookuptypeId")) {
@@ -430,5 +508,22 @@ export function getLookupTypeFieldProps(
     options: lookupType
       ? [{ label: lookupType.lookuptype, value: lookupType._id }]
       : [],
+  };
+}
+
+export function getLookupDrawerFeatures(lookupType, lookupsTypes = []) {
+  const typeName =
+    lookupType?.lookuptype || lookupType?.DisplayName || lookupType?.name || "Lookup";
+  const typeId = lookupType?._id || lookupType?.id || null;
+  return {
+    nameLabel: `${typeName} Name:`,
+    showParent: !!lookupTypeRequiresParent(
+      lookupsTypes,
+      typeId || lookupType,
+      "StandardLookup",
+    ),
+    showProcessSalaryDeduction: isWorkLocationLookupType(lookupType, lookupsTypes),
+    officerRole: null,
+    showAddress: false,
   };
 }

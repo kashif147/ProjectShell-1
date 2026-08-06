@@ -11,6 +11,7 @@ import {
   Divider,
 } from "antd";
 import MyAlert from "../../component/common/MyAlert";
+import MyTable from "../../component/common/MyTable";
 import ProductDrawer from "./components/PricingForm";
 
 import axios from "axios";
@@ -48,7 +49,24 @@ import {
   convertSandToEuro,
 } from "../../utils/Utilities";
 import PricingDrawer from "./components/PricingForm";
-import { getUnifiedPaginationConfig } from "../../component/common/UnifiedPagination";
+
+const DESCRIPTION_PREVIEW_LENGTH = 500;
+
+const truncateDescription = (text) => {
+  const value = String(text || "");
+  if (value.length <= DESCRIPTION_PREVIEW_LENGTH) return value;
+  return `${value.slice(0, DESCRIPTION_PREVIEW_LENGTH)}...`;
+};
+
+const DescriptionPreview = ({ text }) => {
+  if (!text) return null;
+  const truncated = truncateDescription(text);
+  return (
+    <Tooltip title={truncated.length < text.length ? text : undefined}>
+      <div className="text-muted small product-description-preview">{truncated}</div>
+    </Tooltip>
+  );
+};
 
 const ProductTypesManagement = () => {
   const dispatch = useDispatch();
@@ -184,14 +202,14 @@ const ProductTypesManagement = () => {
       title: "Product Type",
       dataIndex: "name",
       key: "name",
+      width: 280,
       render: (text, record) => (
         <div>
           <div className="font-weight-bold">{text}</div>
-          <div className="text-muted small">{record.description}</div>
+          <DescriptionPreview text={record.description} />
         </div>
       ),
-      sorter: (a, b) => (a.name || "").localeCompare(b.name || ""),
-      defaultSortOrder: "ascend",
+      sorter: { compare: (a, b) => (a.name || "").localeCompare(b.name || "") },
     },
     {
       title: "Status",
@@ -230,7 +248,9 @@ const ProductTypesManagement = () => {
           </div>
         </div>
       ),
-      sorter: (a, b) => new Date(a.createdAt) - new Date(b.createdAt),
+      sorter: {
+        compare: (a, b) => new Date(a.createdAt) - new Date(b.createdAt),
+      },
     },
     {
       title: "Last Updated",
@@ -249,7 +269,9 @@ const ProductTypesManagement = () => {
           </div>
         </div>
       ),
-      sorter: (a, b) => new Date(a.updatedAt) - new Date(b.updatedAt),
+      sorter: {
+        compare: (a, b) => new Date(a.updatedAt) - new Date(b.updatedAt),
+      },
     },
     {
       title: "Actions",
@@ -258,7 +280,7 @@ const ProductTypesManagement = () => {
         <Space>
           <Tooltip title="Add Product">
             <Button
-              style={{ backgroundColor: "#215e97", color: "white" }}
+              style={{ backgroundColor: "var(--app-brand-primary)", color: "white" }}
               type="primary"
               size="small"
               icon={<PlusOutlined />}
@@ -409,10 +431,11 @@ const ProductTypesManagement = () => {
         title: "Product Name",
         dataIndex: "name",
         key: "name",
+        width: 520,
         render: (text, record) => (
           <div>
             <div className="font-weight-bold">{text}</div>
-            <div className="text-muted small">{record?.description}</div>
+            <DescriptionPreview text={record?.description} />
           </div>
         ),
         sorter: (a, b) => (a.name || "").localeCompare(b.name || ""),
@@ -421,12 +444,14 @@ const ProductTypesManagement = () => {
         title: "Code",
         dataIndex: "code",
         key: "code",
+        width: 90,
         sorter: (a, b) => (a.code || "").localeCompare(b.code || ""),
       },
       {
         title: "Status",
         dataIndex: "status",
         key: "status",
+        width: 90,
         render: (status) => (
           <Tag color={status ? "green" : "red"}>
             {status ? "Active" : "Inactive"}
@@ -446,6 +471,7 @@ const ProductTypesManagement = () => {
         title: "Price",
         dataIndex: "price",
         key: "price",
+        width: 110,
         render: (_, record) => {
           const currency = record?.currentPricing?.currency;
           let price = record?.currentPricing?.price;
@@ -467,6 +493,7 @@ const ProductTypesManagement = () => {
           title: "Member Price",
           dataIndex: "memberPrice",
           key: "memberPrice",
+          width: 110,
           render: (_, record) => {
             const currency = record?.currentPricing?.currency;
             let price = record?.currentPricing?.memberPrice;
@@ -488,6 +515,7 @@ const ProductTypesManagement = () => {
           title: "Non-Member Price",
           dataIndex: "nonMemberPrice",
           key: "nonMemberPrice",
+          width: 120,
           render: (_, record) => {
             const currency = record?.currentPricing?.currency;
             let price = record?.currentPricing?.nonMemberPrice;
@@ -512,6 +540,7 @@ const ProductTypesManagement = () => {
     baseColumns.push({
       title: "Actions",
       key: "actions",
+      width: 110,
       render: (_, record, index, productType) => (
         <Space>
           <Tooltip title="Manage Pricing">
@@ -550,44 +579,20 @@ const ProductTypesManagement = () => {
           type="primary"
           icon={<PlusOutlined />}
           onClick={handleCreateProductType}
-          style={{ backgroundColor: "#215e97", color: "white" }}
+          style={{ backgroundColor: "var(--app-brand-primary)", color: "white" }}
         >
           Add Product Type
         </Button>
       </div>
       <div className="main-table-scroll-container">
-        <Table
+        <MyTable
           columns={productTypeColumns}
           dataSource={data || []}
-          rowKey="_id"
           loading={loading}
-          pagination={getUnifiedPaginationConfig({
-            total: data?.length || 0,
-            itemName: "product types",
-          })}
+          selection={false}
+          defaultSortField="name"
+          defaultSortOrder="ascend"
           scroll={{ x: "max-content", y: 590 }}
-          locale={{
-            emptyText: "No Data",
-          }}
-          // Add this components prop to customize the header
-          components={{
-            header: {
-              cell: (props) => {
-                const { children, ...restProps } = props;
-                return (
-                  <th
-                    {...restProps}
-                    style={{
-                      backgroundColor: "#215e97",
-                      ...restProps.style,
-                    }}
-                  >
-                    <div style={{ color: "#fff" }}>{children}</div>
-                  </th>
-                );
-              },
-            },
-          }}
           expandable={{
             expandedRowRender: (record) => (
               <div className="expanded-content-container">
@@ -618,7 +623,7 @@ const ProductTypesManagement = () => {
                         <th
                           {...props}
                           style={{
-                            backgroundColor: "#215e97",
+                            backgroundColor: "var(--app-brand-primary)",
                             color: "white",
                             ...props.style,
                           }}

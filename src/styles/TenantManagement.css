@@ -1,8 +1,17 @@
 /* Tenant Management Styles */
 .tenant-management {
   padding: 20px 45px;
-  background-color: #fafafa;
+  background-color: var(--app-page-bg, #f8f9f9);
   min-height: 100vh;
+}
+
+/* Table spacing on the Tenant Management page.
+   MyTable sets these paddings inline (34px sides, 80px bottom),
+   so !important is required to override them. */
+.tenant-management .common-table {
+  padding-left: 2px !important;
+  padding-right: 2px !important;
+  padding-bottom: 20px !important;
 }
 
 .tenant-management h4 {
@@ -75,6 +84,12 @@
   gap: 8px;
 }
 
+.tenant-form-drawer .color-field-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
 .tenant-form-drawer .color-field .my-input-container {
   flex: 1;
 }
@@ -98,7 +113,7 @@
 
 .tenant-branding-preview {
   padding: 8px;
-  background: #f8fafc;
+  background: var(--theme-muted-bg);
   border: 1px solid #e2e8f0;
   border-radius: 4px;
   min-height: 48px;
@@ -114,6 +129,55 @@
 
 .tenant-branding-hint {
   font-size: 13px;
+}
+
+.tenant-branding-recommendation-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+  padding: 8px 10px;
+  background: color-mix(in srgb, var(--theme-color-accent, var(--accent-color, #0d9488)) 10%, #ffffff);
+  border: 1px solid color-mix(in srgb, var(--theme-color-accent, var(--accent-color, #0d9488)) 22%, var(--theme-border, #e2e8f0));
+  border-radius: 6px;
+}
+
+.tenant-branding-recommendation-title {
+  color: var(--theme-text);
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.2;
+  margin-bottom: 4px;
+}
+
+.tenant-branding-recommendation-swatches,
+.tenant-color-recommendation {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--theme-text-muted);
+  font-size: 12px;
+  line-height: 1.2;
+}
+
+.tenant-color-swatch {
+  width: 16px;
+  height: 16px;
+  flex: 0 0 16px;
+  border: 1px solid rgba(15, 23, 42, 0.2);
+  border-radius: 4px;
+}
+
+.tenant-color-recommendation-value {
+  min-width: 0;
+}
+
+.tenant-color-apply.ant-btn-link {
+  height: auto;
+  padding: 0;
+  font-size: 12px;
+  line-height: 1.2;
 }
 
 .tenant-form-drawer .ant-drawer-header {
@@ -138,7 +202,7 @@
 
 .tenant-form-drawer .ant-drawer-body {
   padding: 0px;
-  background-color: #f6f9fc;
+  background-color: var(--theme-page-bg);
 }
 
 .tenant-form-drawer .drawer-main-cntainer {
@@ -252,7 +316,7 @@
 .tenant-office-schedule-drawer .tenant-office-schedule-drawer-eyebrow {
   font-size: 12px;
   font-weight: 500;
-  color: #64748b;
+  color: var(--theme-text-muted);
   text-transform: uppercase;
   letter-spacing: 0.02em;
 }
@@ -289,7 +353,7 @@
 .tenant-offices-panel .drawer-tbl .ant-table-thead > tr > th,
 .tenant-departments-panel .drawer-tbl .ant-table-thead > tr > th,
 .tenant-department-contacts-panel .drawer-tbl .ant-table-thead > tr > th {
-  background-color: #45669d !important;
+  background-color: var(--app-brand-primary) !important;
   color: #fff !important;
 }
 
@@ -336,7 +400,7 @@
 .tenant-offices-panel .drawer-tbl .ant-table-thead .ant-table-cell-fix-right,
 .tenant-departments-panel .drawer-tbl .ant-table-thead .ant-table-cell-fix-right,
 .tenant-department-contacts-panel .drawer-tbl .ant-table-thead .ant-table-cell-fix-right {
-  background: #45669d !important;
+  background: var(--app-brand-primary) !important;
   z-index: 3;
 }
 
@@ -392,7 +456,7 @@
 .tenant-department-contacts-list-drawer .tenant-department-contacts-drawer-eyebrow {
   font-size: 12px;
   font-weight: 500;
-  color: #64748b;
+  color: var(--theme-text-muted);
   text-transform: uppercase;
   letter-spacing: 0.02em;
 }
@@ -412,7 +476,7 @@
   padding: 14px 16px 12px;
   border: 1px solid #dbe4f0;
   border-radius: 8px;
-  background: #f8fafc;
+  background: var(--theme-muted-bg);
 }
 
 .tenant-inline-form-header {
@@ -558,7 +622,7 @@
 }
 
 .tenant-office-drawer .office-hours-row-closed {
-  background-color: #f8fafc;
+  background-color: var(--theme-muted-bg);
 }
 
 .tenant-office-drawer .office-hours-row-closed .office-hours-day {
@@ -568,7 +632,7 @@
 .tenant-office-drawer
   .office-hours-row-closed
   .office-hours-time-picker.ant-picker-disabled {
-  background: #f1f5f9;
+  background: var(--theme-section-bg);
 }
 
 .tenant-office-drawer .office-holidays-table {
@@ -612,7 +676,7 @@
 .tenant-form-drawer .ant-tabs-tab {
   padding: 12px 0;
   font-weight: 500;
-  color: #475569;
+  color: var(--theme-text-muted);
 }
 
 .tenant-form-drawer .ant-tabs-tab-active {
@@ -683,7 +747,7 @@
   padding: 14px;
   margin-top: 12px;
   border-radius: 8px;
-  background: #f8fafc;
+  background: var(--theme-muted-bg);
 }
 
 .tenant-form-drawer .auth-connection-actions {
@@ -746,12 +810,12 @@
   position: sticky;
   top: 0;
   z-index: 10;
-  background-color: #45669d !important;
+  background-color: var(--app-brand-primary) !important;
   color: white !important;
 }
 
 .drawer-tbl .ant-table-thead .ant-table-selection-column {
-  background-color: #45669d !important;
+  background-color: var(--app-brand-primary) !important;
   color: white !important;
 }
 
@@ -766,8 +830,8 @@
 }
 
 .ant-pagination .ant-pagination-item-active {
-  background-color: #215e97 !important;
-  border-color: #215e97 !important;
+  background-color: var(--app-brand-primary) !important;
+  border-color: var(--app-brand-primary) !important;
 }
 
 .ant-pagination .ant-pagination-item-active a {
@@ -775,27 +839,27 @@
 }
 
 .ant-pagination .ant-pagination-item:hover {
-  border-color: #215e97 !important;
+  border-color: var(--app-brand-primary) !important;
 }
 
 .ant-pagination .ant-pagination-item:hover a {
-  color: #215e97 !important;
+  color: var(--app-brand-primary) !important;
 }
 
 .ant-pagination .ant-pagination-prev:hover .ant-pagination-item-link,
 .ant-pagination .ant-pagination-next:hover .ant-pagination-item-link {
-  border-color: #215e97 !important;
-  color: #215e97 !important;
+  border-color: var(--app-brand-primary) !important;
+  color: var(--app-brand-primary) !important;
 }
 
 .ant-pagination
   .ant-select:not(.ant-select-disabled):hover
   .ant-select-selector {
-  border-color: #215e97 !important;
+  border-color: var(--app-brand-primary) !important;
 }
 
 .ant-pagination .ant-select-focused .ant-select-selector {
-  border-color: #215e97 !important;
+  border-color: var(--app-brand-primary) !important;
   box-shadow: 0 0 0 2px rgba(33, 94, 151, 0.2) !important;
 }
 

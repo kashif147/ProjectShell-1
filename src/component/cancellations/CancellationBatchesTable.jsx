@@ -94,7 +94,7 @@ function CancellationBatchesTable({
                 {record.title}
               </div>
             </div>
-            <div style={{ ...stackRow2, color: "#8c8c8c" }}>
+            <div style={{ ...stackRow2, color: "var(--theme-text-muted)" }}>
               ID: {record.batchCode}
             </div>
           </>
@@ -165,7 +165,7 @@ function CancellationBatchesTable({
                 {record.user}
               </div>
             </div>
-            <div style={{ ...stackRow2, color: "#8c8c8c" }}>
+            <div style={{ ...stackRow2, color: "var(--theme-text-muted)" }}>
               {formatDateDdMmYyyy(record.date)}
             </div>
           </div>
@@ -210,7 +210,7 @@ function CancellationBatchesTable({
               <div
                 style={{
                   ...stackRow2,
-                  color: batchExceedsR3 ? alertColor : "#8c8c8c",
+                  color: batchExceedsR3 ? alertColor : "var(--theme-text-muted)",
                 }}
               >
                 {batchExceedsR3
@@ -247,7 +247,7 @@ function CancellationBatchesTable({
                 {formatCount(record.r3Count ?? 0)}
               </div>
             </div>
-            <div style={{ ...stackRow2, color: "#8c8c8c" }}>
+            <div style={{ ...stackRow2, color: "var(--theme-text-muted)" }}>
               Reminder 3 members
             </div>
           </div>
@@ -388,17 +388,17 @@ function CancellationBatchesTable({
                   style={{
                     cursor: "pointer",
                     fontSize: "14px",
-                    color: "#215e97",
+                    color: "var(--app-brand-primary)",
                     transition: "color 0.3s ease",
                     marginLeft: "4px",
                   }}
                   onClick={() => window.location.reload()}
                   title="Refresh"
                   onMouseEnter={(e) => {
-                    e.currentTarget.style.color = "#1890ff";
+                    e.currentTarget.style.color = "var(--app-brand-accent)";
                   }}
                   onMouseLeave={(e) => {
-                    e.currentTarget.style.color = "#215e97";
+                    e.currentTarget.style.color = "var(--app-brand-primary)";
                   }}
                 />
               </span>

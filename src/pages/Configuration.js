@@ -110,6 +110,8 @@ import {
   withDynamicLookupTypeId,
   isLookupDrawerKey,
 } from "../utils/configurationLookupHelpers";
+import ParentLookupSelect from "../component/configuration/ParentLookupSelect";
+import LookupRecordDrawer from "../component/configuration/LookupRecordDrawer";
 import {
   lookupTypeRequiresParent,
   resolveParentLookupIdFromRecord,
@@ -119,8 +121,9 @@ import {
   mapLookupTypeToFormValues,
   mapLookupToFormValues,
   buildLookupApiPayload,
+  getParentLookupType,
+  getDrawerParentFieldLabel,
 } from "../utils/lookupHierarchy";
-import ParentLookupSelect from "../component/configuration/ParentLookupSelect";
 import ParentLookupTypeSelect from "../component/configuration/ParentLookupTypeSelect";
 import { set } from "react-hook-form";
 import MyInput from "../component/common/MyInput";
@@ -214,7 +217,7 @@ const FilterDropdown = ({
                 padding: "8px 12px",
                 cursor: "pointer",
                 backgroundColor: selectedKeys?.includes(option.value)
-                  ? "#e6f7ff"
+                  ? "var(--app-brand-bg)"
                   : "transparent",
                 borderBottom: "1px solid #f0f0f0",
                 display: "flex",
@@ -300,6 +303,7 @@ const Configuration = () => {
   const [branchesWithRegionData, setBranchesWithRegionData] = useState([]);
   const [searchTermStation, setSearchTermStation] = useState("");
   const [searchTermStudyLocation, setSearchTermStudyLocation] = useState("");
+  const [searchTermVenue, setSearchTermVenue] = useState("");
   const [searchTermRegion, setSearchTermRegion] = useState("");
 
   const groupedLookups = useMemo(() => {
@@ -419,8 +423,14 @@ const Configuration = () => {
       "StudyLocation",
       lookupsTypes,
     );
-    return getLookupsForLookupType(lookupType, lookups);
-  }, [lookupsTypes, lookups]);
+    const byType = getLookupsForLookupType(lookupType, lookups);
+    if (byType.length) return byType;
+    return (
+      groupedLookups["Study Location"] ||
+      groupedLookups.StudyLocation ||
+      []
+    );
+  }, [lookupsTypes, lookups, groupedLookups]);
 
   const filteredStudyLocations = useMemo(() => {
     if (!searchTermStudyLocation.trim()) return studyLocationRecords;
@@ -434,6 +444,23 @@ const Configuration = () => {
         (item.officer?.userEmail || "").toLowerCase().includes(term),
     );
   }, [studyLocationRecords, searchTermStudyLocation]);
+
+  const venueRecords = useMemo(() => {
+    const lookupType = getLookupTypeRecordForDrawer("Venue", lookupsTypes);
+    return getLookupsForLookupType(lookupType, lookups);
+  }, [lookupsTypes, lookups]);
+
+  const filteredVenues = useMemo(() => {
+    if (!searchTermVenue.trim()) return venueRecords;
+    const term = searchTermVenue.toLowerCase().trim();
+    return venueRecords.filter(
+      (item) =>
+        (item.lookupname || "").toLowerCase().includes(term) ||
+        (item.code || "").toLowerCase().includes(term) ||
+        (item.DisplayName || "").toLowerCase().includes(term) ||
+        (item.venueAddress?.fullAddress || "").toLowerCase().includes(term),
+    );
+  }, [venueRecords, searchTermVenue]);
 
   const filteredRegions = useMemo(() => {
     const regionData = groupedLookups?.Region || [];
@@ -457,6 +484,8 @@ const Configuration = () => {
   const handleStudyLocationSearchChange = (e) =>
     setSearchTermStudyLocation(e.target.value);
   const clearStudyLocationSearch = () => setSearchTermStudyLocation("");
+  const handleVenueSearchChange = (e) => setSearchTermVenue(e.target.value);
+  const clearVenueSearch = () => setSearchTermVenue("");
 
   const handleRegionSearchChange = (e) => setSearchTermRegion(e.target.value);
   const clearRegionSearch = () => setSearchTermRegion("");
@@ -763,7 +792,16 @@ const Configuration = () => {
         error?.response?.data?.error?.message ||
         error?.message ||
         "Delete failed";
-      MyAlert("error", "Delete failed", errMsg);
+
+      const isParentBlocked = /parent of other lookups/i.test(errMsg);
+
+      MyAlert(
+        "error",
+        isParentBlocked ? "Cannot delete this record" : "Delete failed",
+        isParentBlocked
+          ? "This lookup is used as a parent by other records. Reassign or delete those child lookups first, then try again."
+          : errMsg,
+      );
 
       // ✅ Also close modals on error
       Modal.destroyAll();
@@ -942,8 +980,12 @@ const Configuration = () => {
   const [addressSearchValue, setAddressSearchValue] = useState("");
   const [studyLocationAddressSearchValue, setStudyLocationAddressSearchValue] =
     useState("");
+  const [venueAddressSearchValue, setVenueAddressSearchValue] = useState("");
+  const [contactAddressSearchValue, setContactAddressSearchValue] = useState("");
   const addressInputRef = useRef(null);
+  const contactAddressInputRef = useRef(null);
   const studyLocationAddressInputRef = useRef(null);
+  const venueAddressInputRef = useRef(null);
   const mapsLibraries = ["places", "maps"];
   const { isLoaded: isMapsLoaded } = useJsApiLoader({
     id: "google-map-script",
@@ -955,6 +997,7 @@ const Configuration = () => {
     drawerKey,
     searchBoxRef,
     setSearchValue,
+    addressFieldName = "worklocationAddress",
   ) => {
     const places = searchBoxRef.current?.getPlaces();
     if (!places || places.length === 0) return;
@@ -1013,8 +1056,8 @@ const Configuration = () => {
           ...prev,
           [drawerKey]: {
             ...prev[drawerKey],
-            worklocationAddress: {
-              ...prev[drawerKey]?.worklocationAddress,
+            [addressFieldName]: {
+              ...prev[drawerKey]?.[addressFieldName],
               buildingOrHouse: `${streetNumber} ${route}`.trim(),
               streetOrRoad: neighborhood,
               areaOrTown: town,
@@ -1034,6 +1077,7 @@ const Configuration = () => {
       "Station",
       addressInputRef,
       setAddressSearchValue,
+      "worklocationAddress",
     );
 
   const handleStudyLocationPlacesChanged = () =>
@@ -1041,7 +1085,72 @@ const Configuration = () => {
       "StudyLocation",
       studyLocationAddressInputRef,
       setStudyLocationAddressSearchValue,
+      "worklocationAddress",
     );
+
+  const handleVenuePlacesChanged = () =>
+    handleLocationPlacesChanged(
+      "Venue",
+      venueAddressInputRef,
+      setVenueAddressSearchValue,
+      "venueAddress",
+    );
+
+  // Contact.contactAddress uses `cityCountyOrPostCode` (unlike worklocationAddress/
+  // venueAddress's `countyCityOrPostCode`) and has no country/fullAddress fields, so it
+  // can't go through handleLocationPlacesChanged's hardcoded key names - same Places
+  // lookup, written into the Contact schema's actual field names instead.
+  const handleContactPlacesChanged = () => {
+    const places = contactAddressInputRef.current?.getPlaces();
+    if (!places || places.length === 0) return;
+
+    const place = places[0];
+    if (place.formatted_address) setContactAddressSearchValue(place.formatted_address);
+
+    const service = new window.google.maps.places.PlacesService(
+      document.createElement("div"),
+    );
+    service.getDetails(
+      {
+        placeId: place.place_id,
+        fields: ["address_components", "formatted_address"],
+      },
+      (details, status) => {
+        if (
+          status !== window.google.maps.places.PlacesServiceStatus.OK ||
+          !details
+        )
+          return;
+
+        const components = details.address_components;
+        const getComp = (type) =>
+          components.find((c) => c.types.includes(type))?.long_name || "";
+
+        const streetNumber = getComp("street_number");
+        const route = getComp("route");
+        const neighborhood =
+          getComp("neighborhood") || getComp("sublocality") || "";
+        const town = getComp("locality") || getComp("postal_town") || "";
+        const county = getComp("administrative_area_level_1") || "";
+        const postalCode = getComp("postal_code");
+
+        setdrawerIpnuts((prev) => ({
+          ...prev,
+          Solicitors: {
+            ...prev.Solicitors,
+            contactAddress: {
+              ...prev.Solicitors?.contactAddress,
+              buildingOrHouse: `${streetNumber} ${route}`.trim(),
+              streetOrRoad: neighborhood,
+              areaOrTown: town,
+              cityCountyOrPostCode: county,
+              eircode: postalCode,
+            },
+          },
+        }));
+      },
+    );
+  };
   // ---- End Work Location Eircode Search ----
   const [membershipModal, setMembershipModal] = useState(false);
   const [isSubscriptionsModal, setIsSubscriptionsModal] = useState(false);
@@ -1111,6 +1220,7 @@ const Configuration = () => {
     counties: false,
     Countries: false,
     StudyLocation: false,
+    Venue: false,
     Provinces: false,
     Cities: false,
     PostCode: false,
@@ -1161,6 +1271,7 @@ const Configuration = () => {
     Districts: false,
     Divisions: false,
     StudyLocation: false,
+    Venue: false,
     Station: false,
     ContactType: false,
     LookupType: false,
@@ -1243,16 +1354,20 @@ const Configuration = () => {
     setselectLokups((prevState) => ({ ...prevState, ...updatedLookups }));
   }, [data]);
 
+  const [activeContactType, setActiveContactType] = useState(null);
+
   useMemo(() => {
     if (contacts && Array.isArray(contacts)) {
       setdata((prevState) => ({
         ...prevState,
-        Solicitors: contacts.filter(
-          (item) => item?.contactTypeId?.contactType === "Solicitors",
-        ),
+        Solicitors: activeContactType
+          ? contacts.filter(
+              (item) => item?.contactTypeId?._id === activeContactType._id,
+            )
+          : [],
       }));
     }
-  }, [contacts]);
+  }, [contacts, activeContactType]);
 
   const [lookupTypSlct, setlookupTypSlct] = useState([]);
   useEffect(() => {
@@ -1265,8 +1380,8 @@ const Configuration = () => {
   }, [lookupsTypes]);
 
   const configurationCards = useMemo(
-    () => buildConfigurationCards(lookupsTypes),
-    [lookupsTypes],
+    () => buildConfigurationCards(lookupsTypes, contactTypes),
+    [lookupsTypes, contactTypes],
   );
 
   const [activeStandardLookupType, setActiveStandardLookupType] =
@@ -1450,7 +1565,7 @@ const Configuration = () => {
         cityCountyOrPostCode: "",
         eircode: "",
       },
-      contactTypeId: "68e94242aa4ff1e89eefa827",
+      contactTypeId: "",
       isactive: true, // ✅ added based on API field
       isDeleted: false, // keep this if your app uses soft-delete flag
     },
@@ -1728,7 +1843,7 @@ const Configuration = () => {
       DisplayName: "",
       lookupname: "",
       code: "",
-      Parentlookupid: "674a195dcc0986f64ca36fc2",
+      Parentlookupid: null,
       Parentlookup: "",
       ParentlookuptypeId: null,
       Parentlookuptype: "",
@@ -1870,6 +1985,24 @@ const Configuration = () => {
         fullAddress: "",
       },
     },
+    Venue: {
+      lookuptypeId: "",
+      DisplayName: "",
+      lookupname: "",
+      code: "",
+      userid: "67f3f9d812b014a0a7a94081",
+      isactive: true,
+      isDeleted: false,
+      venueAddress: {
+        eircode: "",
+        buildingOrHouse: "",
+        streetOrRoad: "",
+        areaOrTown: "",
+        countyCityOrPostCode: "",
+        country: "",
+        fullAddress: "",
+      },
+    },
     counties: {
       lookuptypeId: "68c85f21302e5600dc8477e4",
       DisplayName: "",
@@ -1917,6 +2050,16 @@ const Configuration = () => {
   }, [lookupsTypes]);
 
   const drawrInptChng = (drawer, field, value) => {
+    // MyInput passes a synthetic event; some handlers also pass the raw string.
+    const nextValue =
+      value != null &&
+      typeof value === "object" &&
+      Object.prototype.hasOwnProperty.call(value, "target")
+        ? value.target?.type === "checkbox"
+          ? value.target.checked
+          : value.target?.value
+        : value;
+
     setdrawerIpnuts((prevState) => {
       // Check if the field is nested inside ContactAddress
       if (field.includes(".")) {
@@ -1927,7 +2070,7 @@ const Configuration = () => {
             ...prevState[drawer],
             [parent]: {
               ...prevState[drawer][parent], // Preserve existing values
-              [child]: value, // Update only the specific nested field
+              [child]: nextValue, // Update only the specific nested field
             },
           },
         };
@@ -1936,7 +2079,7 @@ const Configuration = () => {
           ...prevState,
           [drawer]: {
             ...prevState[drawer],
-            [field]: value, // Update top-level field
+            [field]: nextValue, // Update top-level field
           },
         };
       }
@@ -1944,18 +2087,45 @@ const Configuration = () => {
   };
 
   const handleParentLookupChange = (drawer, { parentId, parentLabel }) => {
+    const parentType = getParentLookupType(
+      lookupsTypes,
+      drawerIpnuts?.[drawer]?.lookuptypeId,
+      drawer,
+    );
+    const parentTypeLabel =
+      getDrawerParentFieldLabel(drawer, "") ||
+      parentType?.lookuptype ||
+      parentType?.DisplayName ||
+      "";
+
     setdrawerIpnuts((prev) => ({
       ...prev,
       [drawer]: {
         ...prev[drawer],
         Parentlookupid: parentId,
         Parentlookup: parentLabel ?? "",
+        ...(parentType
+          ? {
+              ParentlookuptypeId: parentType._id || parentType.id || null,
+              Parentlookuptype: parentTypeLabel || parentType.lookuptype || "",
+            }
+          : {}),
       },
     }));
   };
 
-  const getLookupDrawerPayload = (drawerKey) =>
-    buildLookupApiPayload(drawerIpnuts?.[drawerKey] || {});
+  const getLookupDrawerPayload = (drawerKey) => {
+    const form = drawerIpnuts?.[drawerKey] || {};
+    const forcedTypeId =
+      drawerKey === "StandardLookup" && activeStandardLookupType?._id
+        ? String(activeStandardLookupType._id)
+        : null;
+    return buildLookupApiPayload(
+      forcedTypeId ? { ...form, lookuptypeId: forcedTypeId } : form,
+      lookupsTypes,
+      drawerKey,
+    );
+  };
 
   const handleOfficerChange = (drawer, options, e) => {
     const selectedId = e.target.value === "" ? null : e.target.value;
@@ -2254,13 +2424,41 @@ const Configuration = () => {
     );
 
   const resetCounteries = (drawer, callback) => {
-    setdrawerIpnuts((prevState) => ({
-      ...prevState,
-      [drawer]: getDrawerInputsTemplate(drawer),
-    }));
+    setdrawerIpnuts((prevState) => {
+      let nextForm = getDrawerInputsTemplate(drawer);
+      if (drawer === "StandardLookup" && activeStandardLookupType?._id) {
+        nextForm = {
+          ...nextForm,
+          lookuptypeId: String(activeStandardLookupType._id),
+        };
+      }
+      return {
+        ...prevState,
+        [drawer]: nextForm,
+      };
+    });
     if (callback && typeof callback === "function") {
       callback();
     }
+  };
+
+  // Like resetCounteries("Solicitors", ...) but re-locks Contact Type to the tile that was
+  // clicked, so a second contact can be added for the same type without reopening the drawer.
+  const resetContactsFormForActiveType = (callback) => {
+    resetCounteries("Solicitors", () => {
+      if (activeContactType?._id) {
+        setdrawerIpnuts((prev) => ({
+          ...prev,
+          Solicitors: {
+            ...prev.Solicitors,
+            contactTypeId: activeContactType._id,
+          },
+        }));
+      }
+      if (callback && typeof callback === "function") {
+        callback();
+      }
+    });
   };
 
   const resetLookupDrawerForNextEntry = (callback) => {
@@ -2289,6 +2487,19 @@ const Configuration = () => {
 
   const openConfigurationCard = (card) => {
     if (!card) return;
+    if (card.isContactTypeCard) {
+      setActiveContactType(card.contactType);
+      setdrawerIpnuts((prev) => ({
+        ...prev,
+        Solicitors: {
+          ...(prev.Solicitors || getDrawerInputsTemplate("Solicitors") || {}),
+          contactTypeId: card.contactType?._id || "",
+        },
+      }));
+      setErrors({});
+      setDrawerOpen((prev) => ({ ...prev, Solicitors: true }));
+      return;
+    }
     if (card.isSystem) {
       openCloseDrawerFtn(card.key);
       return;
@@ -2318,8 +2529,12 @@ const Configuration = () => {
           setdrawerIpnuts((prev) => ({
             ...prev,
             [name]: {
-              ...(prev[name] || getDrawerInputsTemplate(name) || {}),
-              lookuptypeId: lookupType._id,
+              // StandardLookup: start a clean form with the selected card type
+              // (Bank, Secondary Section, …), not leftover state from another card.
+              ...(name === "StandardLookup"
+                ? getDrawerInputsTemplate(name)
+                : prev[name] || getDrawerInputsTemplate(name) || {}),
+              lookuptypeId: String(lookupType._id),
             },
           }));
         }
@@ -2370,69 +2585,6 @@ const Configuration = () => {
     });
   };
   console.log(drawerIpnuts, "drawerinpt");
-  const columnProvince = [
-    {
-      title: "Code",
-      dataIndex: "code",
-      key: "code",
-    },
-    {
-      title: "Province",
-      dataIndex: "lookupname",
-      key: "lookupname",
-    },
-    {
-      title: "Display Name",
-      dataIndex: "DisplayName",
-      key: "DisplayName",
-    },
-    {
-      title: "Active",
-      dataIndex: "Active",
-      key: "DisplayName",
-
-      render: (index, record) => (
-        <Checkbox disabled={isDisable} checked={record?.isactive}></Checkbox>
-      ),
-    },
-    {
-      title: (
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-          }}
-        >
-          <FaRegCircleQuestion size={16} style={{ marginRight: "8px" }} />
-          Action
-        </div>
-      ),
-      key: "action",
-      align: "center",
-      render: (_, record) => (
-        <Space size="middle">
-          <FaEdit
-            size={16}
-            style={{ marginRight: "10px" }}
-            onClick={() => loadLookupForEdit("Provinces", record)}
-          />
-          <AiFillDelete
-            size={16}
-            onClick={() =>
-              MyConfirm({
-                title: "Confirm Deletion",
-                message: "Do You Want To Delete This Item?",
-                onConfirm: async () => {
-                  await deleteFtn("/lookup/", { id: record?._id });
-                },
-              })
-            }
-          />
-        </Space>
-      ),
-    },
-  ];
   const countiesColumn = [
     {
       title: "Code",
@@ -2512,256 +2664,6 @@ const Configuration = () => {
       ),
     },
   ];
-  const columnCountry = [
-    {
-      title: "Code",
-      dataIndex: "code",
-      key: "code",
-    },
-    {
-      title: "County",
-      dataIndex: "lookupname",
-      key: "lookupname",
-    },
-    {
-      title: "Display Name",
-      dataIndex: "DisplayName",
-      key: "DisplayName",
-    },
-
-    // {
-    //   title: "Calling Codes",
-    //   render: (record) => record?.callingCodes,
-    // },
-    {
-      title: "Active",
-      dataIndex: "isactive",
-      key: "isactive",
-      render: (index, record) => (
-        <Checkbox disabled={isDisable} checked={record?.isactive}></Checkbox>
-      ),
-    },
-    {
-      title: (
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-          }}
-        >
-          <FaRegCircleQuestion size={16} style={{ marginRight: "8px" }} />
-          Action
-        </div>
-      ),
-      key: "action",
-      align: "center",
-      render: (_, record) => (
-        <Space size="middle">
-          <FaEdit
-            size={16}
-            style={{ marginRight: "10px" }}
-            onClick={() => loadLookupForEdit("counties", record)}
-          />
-          <AiFillDelete
-            size={16}
-            onClick={() => {
-              MyConfirm({
-                title: "Confirm Deletion",
-                message: "Do You Want To Delete This Item?",
-                onConfirm: async () => {
-                  await deleteFtn(`countries/${record?._id}`, () =>
-                    dispatch(fetchCountries()),
-                  );
-                },
-              });
-            }}
-          />
-        </Space>
-      ),
-    },
-  ];
-  const columnPostCode = [
-    {
-      title: "Code",
-      dataIndex: "code",
-      key: "code",
-    },
-    {
-      title: "Post Code",
-      dataIndex: "lookupname",
-      key: "lookupname",
-    },
-    {
-      title: "Display Name",
-      dataIndex: "DisplayName",
-      key: "DisplayName",
-    },
-    {
-      title: "City",
-      dataIndex: "DisplayName",
-      key: "DisplayName",
-    },
-    {
-      title: "Active",
-      dataIndex: "isactive",
-      key: "isactive",
-      render: (index, record) => (
-        <Checkbox disabled={isDisable} checked={record?.isactive}></Checkbox>
-      ),
-    },
-    {
-      title: (
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-          }}
-        >
-          <FaRegCircleQuestion size={16} style={{ marginRight: "8px" }} />
-          Action
-        </div>
-      ),
-      key: "action",
-      align: "center",
-      render: (_, record) => (
-        <Space size="middle">
-          <FaEdit
-            size={16}
-            style={{ marginRight: "10px" }}
-            onClick={() => loadLookupForEdit("PostCode", record)}
-          />
-          <AiFillDelete size={16} />
-        </Space>
-      ),
-    },
-  ];
-  const columnDistricts = [
-    {
-      title: "Code",
-      dataIndex: "code",
-      key: "code",
-      sorter: (a, b) => (a.code || "").localeCompare(b.code || ""),
-      filterDropdown: createFilterDropdown(
-        groupedLookups?.Branch,
-        (record) => record.code,
-      ),
-      onFilter: (value, record) => (record.code || "").toString() === value,
-      filterIcon: (filtered) => (
-        <SearchOutlined style={{ color: filtered ? "#1890ff" : undefined }} />
-      ),
-    },
-    {
-      title: "Branch",
-      dataIndex: "lookupname",
-      key: "lookupname",
-      sorter: (a, b) => (a.lookupname || "").localeCompare(b.lookupname || ""),
-      filterDropdown: createFilterDropdown(
-        groupedLookups?.Branch,
-        (record) => record.lookupname,
-      ),
-      onFilter: (value, record) =>
-        (record.lookupname || "").toString() === value,
-      filterIcon: (filtered) => (
-        <SearchOutlined style={{ color: filtered ? "#1890ff" : undefined }} />
-      ),
-    },
-    {
-      title: "Display Name",
-      dataIndex: "DisplayName",
-      key: "DisplayName",
-    },
-    // {
-    //   title: "Region",
-    //   dataIndex: "Parentlookup",
-    //   key: "Parentlookup",
-    // },
-    {
-      title: "Branch Manager",
-      key: "officer",
-      sorter: (a, b) => {
-        const emailA =
-          a.officer?.userEmail ||
-          (typeof a.officer === "string" ? a.officer : "");
-        const emailB =
-          b.officer?.userEmail ||
-          (typeof b.officer === "string" ? b.officer : "");
-        return emailA.localeCompare(emailB);
-      },
-      filterDropdown: createFilterDropdown(groupedLookups?.Branch, (record) => {
-        const o = record?.officer;
-        if (!o) return "";
-        return o.userEmail || (typeof o === "string" ? o : "");
-      }),
-      onFilter: (value, record) => {
-        const o = record?.officer;
-        const email = o?.userEmail || (typeof o === "string" ? o : "");
-        return (email || "").toString() === value;
-      },
-      filterIcon: (filtered) => (
-        <SearchOutlined style={{ color: filtered ? "#1890ff" : undefined }} />
-      ),
-      render: (_, record) => {
-        const o = record?.officer;
-        if (!o) return "-";
-        if (typeof o === "object")
-          return (
-            o.userEmail ||
-            `${o.userFirstName || ""} ${o.userLastName || ""}`.trim() ||
-            "-"
-          );
-        return String(o);
-      },
-    },
-    {
-      title: "Active",
-
-      render: (index, record) => (
-        <Checkbox disabled={isDisable} checked={record?.isactive}></Checkbox>
-      ),
-    },
-    {
-      title: (
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-          }}
-        >
-          <FaRegCircleQuestion size={16} style={{ marginRight: "8px" }} />
-          Action
-        </div>
-      ),
-      key: "action",
-      align: "center",
-      render: (_, record) => (
-        <Space size="middle">
-          <FaEdit
-            size={16}
-            style={{ marginRight: "10px" }}
-            onClick={() => loadLookupForEdit("Districts", record)}
-          />
-          <AiFillDelete
-            size={16}
-            onClick={() => {
-              MyConfirm({
-                title: "Confirm Deletion",
-                message: "Do You Want To Delete This Item?",
-                onConfirm: async () => {
-                  await deleteFtn("/lookup/", { id: record?._id }, () => {
-                    dispatch(resetLookups());
-                    dispatch(getAllLookups());
-                  });
-                },
-              });
-            }}
-          />
-        </Space>
-      ),
-    },
-  ];
   const columnStations = [
     {
       title: "Code",
@@ -2774,7 +2676,7 @@ const Configuration = () => {
       ),
       onFilter: (value, record) => (record.code || "").toString() === value,
       filterIcon: (filtered) => (
-        <SearchOutlined style={{ color: filtered ? "#1890ff" : undefined }} />
+        <SearchOutlined style={{ color: filtered ? "var(--app-brand-accent)" : undefined }} />
       ),
     },
     {
@@ -2789,7 +2691,7 @@ const Configuration = () => {
       onFilter: (value, record) =>
         (record.lookupname || "").toString() === value,
       filterIcon: (filtered) => (
-        <SearchOutlined style={{ color: filtered ? "#1890ff" : undefined }} />
+        <SearchOutlined style={{ color: filtered ? "var(--app-brand-accent)" : undefined }} />
       ),
     },
     {
@@ -2805,7 +2707,7 @@ const Configuration = () => {
       onFilter: (value, record) =>
         (record.DisplayName || "").toString() === value,
       filterIcon: (filtered) => (
-        <SearchOutlined style={{ color: filtered ? "#1890ff" : undefined }} />
+        <SearchOutlined style={{ color: filtered ? "var(--app-brand-accent)" : undefined }} />
       ),
     },
     {
@@ -2821,7 +2723,7 @@ const Configuration = () => {
       onFilter: (value, record) =>
         (record.Parentlookup || "").toString() === value,
       filterIcon: (filtered) => (
-        <SearchOutlined style={{ color: filtered ? "#1890ff" : undefined }} />
+        <SearchOutlined style={{ color: filtered ? "var(--app-brand-accent)" : undefined }} />
       ),
     },
     {
@@ -2850,7 +2752,7 @@ const Configuration = () => {
         return (email || "").toString() === value;
       },
       filterIcon: (filtered) => (
-        <SearchOutlined style={{ color: filtered ? "#1890ff" : undefined }} />
+        <SearchOutlined style={{ color: filtered ? "var(--app-brand-accent)" : undefined }} />
       ),
       render: (_, record) => {
         const o = record?.officer;
@@ -2952,7 +2854,7 @@ const Configuration = () => {
       ),
       onFilter: (value, record) => (record.code || "").toString() === value,
       filterIcon: (filtered) => (
-        <SearchOutlined style={{ color: filtered ? "#1890ff" : undefined }} />
+        <SearchOutlined style={{ color: filtered ? "var(--app-brand-accent)" : undefined }} />
       ),
     },
     {
@@ -2967,7 +2869,7 @@ const Configuration = () => {
       onFilter: (value, record) =>
         (record.lookupname || "").toString() === value,
       filterIcon: (filtered) => (
-        <SearchOutlined style={{ color: filtered ? "#1890ff" : undefined }} />
+        <SearchOutlined style={{ color: filtered ? "var(--app-brand-accent)" : undefined }} />
       ),
     },
     {
@@ -2983,7 +2885,7 @@ const Configuration = () => {
       onFilter: (value, record) =>
         (record.DisplayName || "").toString() === value,
       filterIcon: (filtered) => (
-        <SearchOutlined style={{ color: filtered ? "#1890ff" : undefined }} />
+        <SearchOutlined style={{ color: filtered ? "var(--app-brand-accent)" : undefined }} />
       ),
     },
     {
@@ -2999,7 +2901,7 @@ const Configuration = () => {
       onFilter: (value, record) =>
         (record.Parentlookup || "").toString() === value,
       filterIcon: (filtered) => (
-        <SearchOutlined style={{ color: filtered ? "#1890ff" : undefined }} />
+        <SearchOutlined style={{ color: filtered ? "var(--app-brand-accent)" : undefined }} />
       ),
     },
     {
@@ -3025,7 +2927,7 @@ const Configuration = () => {
         return (email || "").toString() === value;
       },
       filterIcon: (filtered) => (
-        <SearchOutlined style={{ color: filtered ? "#1890ff" : undefined }} />
+        <SearchOutlined style={{ color: filtered ? "var(--app-brand-accent)" : undefined }} />
       ),
       render: (_, record) => {
         const o = record?.officer;
@@ -3109,6 +3011,122 @@ const Configuration = () => {
       ),
     },
   ];
+
+  const columnVenues = [
+    {
+      title: "Code",
+      dataIndex: "code",
+      key: "code",
+      sorter: (a, b) => (a.code || "").localeCompare(b.code || ""),
+      filterDropdown: createFilterDropdown(
+        venueRecords,
+        (record) => record.code,
+      ),
+      onFilter: (value, record) => (record.code || "").toString() === value,
+      filterIcon: (filtered) => (
+        <SearchOutlined style={{ color: filtered ? "var(--app-brand-accent)" : undefined }} />
+      ),
+    },
+    {
+      title: "Venue Name",
+      dataIndex: "lookupname",
+      key: "lookupname",
+      sorter: (a, b) => (a.lookupname || "").localeCompare(b.lookupname || ""),
+      filterDropdown: createFilterDropdown(
+        venueRecords,
+        (record) => record.lookupname,
+      ),
+      onFilter: (value, record) =>
+        (record.lookupname || "").toString() === value,
+      filterIcon: (filtered) => (
+        <SearchOutlined style={{ color: filtered ? "var(--app-brand-accent)" : undefined }} />
+      ),
+    },
+    {
+      title: "Display Name",
+      dataIndex: "DisplayName",
+      key: "DisplayName",
+      sorter: (a, b) =>
+        (a.DisplayName || "").localeCompare(b.DisplayName || ""),
+      filterDropdown: createFilterDropdown(
+        venueRecords,
+        (record) => record.DisplayName,
+      ),
+      onFilter: (value, record) =>
+        (record.DisplayName || "").toString() === value,
+      filterIcon: (filtered) => (
+        <SearchOutlined style={{ color: filtered ? "var(--app-brand-accent)" : undefined }} />
+      ),
+    },
+    {
+      title: "Address",
+      key: "venueAddress",
+      render: (_, record) => {
+        const addr = record?.venueAddress;
+        if (!addr) return "-";
+        return (
+          [
+            addr.buildingOrHouse,
+            addr.streetOrRoad,
+            addr.areaOrTown,
+            addr.countyCityOrPostCode,
+            addr.country,
+            addr.eircode,
+          ]
+            .filter(Boolean)
+            .join(", ") || "-"
+        );
+      },
+    },
+    {
+      title: "Active",
+      render: (_, record) => (
+        <Checkbox disabled={isDisable} checked={record?.isactive}></Checkbox>
+      ),
+    },
+    {
+      title: (
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
+          <FaRegCircleQuestion size={16} style={{ marginRight: "8px" }} />
+          Action
+        </div>
+      ),
+      key: "action",
+      align: "center",
+      render: (_, record) => (
+        <Space size="middle">
+          <FaEdit
+            size={16}
+            style={{ marginRight: "10px", cursor: "pointer" }}
+            onClick={() => loadLookupForEdit("Venue", record)}
+          />
+          <AiFillDelete
+            size={16}
+            style={{ cursor: "pointer" }}
+            onClick={() => {
+              MyConfirm({
+                title: "Confirm Deletion",
+                message: "Do You Want To Delete This Item?",
+                onConfirm: async () => {
+                  await deleteFtn("/lookup/", { id: record?._id }, () => {
+                    dispatch(resetLookups());
+                    dispatch(getAllLookups());
+                  });
+                },
+              });
+            }}
+          />
+        </Space>
+      ),
+    },
+  ];
+
   const columnDivisions = [
     {
       title: "Code",
@@ -3121,7 +3139,7 @@ const Configuration = () => {
       ),
       onFilter: (value, record) => (record.code || "").toString() === value,
       filterIcon: (filtered) => (
-        <SearchOutlined style={{ color: filtered ? "#1890ff" : undefined }} />
+        <SearchOutlined style={{ color: filtered ? "var(--app-brand-accent)" : undefined }} />
       ),
     },
     {
@@ -3136,7 +3154,7 @@ const Configuration = () => {
       onFilter: (value, record) =>
         (record.lookupname || "").toString() === value,
       filterIcon: (filtered) => (
-        <SearchOutlined style={{ color: filtered ? "#1890ff" : undefined }} />
+        <SearchOutlined style={{ color: filtered ? "var(--app-brand-accent)" : undefined }} />
       ),
     },
     {
@@ -3172,7 +3190,7 @@ const Configuration = () => {
         return (email || "").toString() === value;
       },
       filterIcon: (filtered) => (
-        <SearchOutlined style={{ color: filtered ? "#1890ff" : undefined }} />
+        <SearchOutlined style={{ color: filtered ? "var(--app-brand-accent)" : undefined }} />
       ),
       render: (_, record) => {
         const o = record?.officer;
@@ -3225,68 +3243,6 @@ const Configuration = () => {
                   await deleteFtn("/lookup/", { id: record?._id }, () => {
                     refreshLookups();
                   });
-                },
-              });
-            }}
-          />
-        </Space>
-      ),
-    },
-  ];
-  const columnCity = [
-    {
-      title: "Code",
-      dataIndex: "code",
-      key: "code",
-    },
-    {
-      title: "City",
-      dataIndex: "lookupname",
-      key: "lookupname",
-    },
-    {
-      title: "Display Name",
-      dataIndex: "DisplayName",
-      key: "DisplayName",
-    },
-    {
-      title: "Active",
-      render: (record) => (
-        <Checkbox disabled={isDisable} checked={record?.isactive}></Checkbox>
-      ),
-    },
-
-    {
-      title: (
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-          }}
-        >
-          <FaRegCircleQuestion size={16} style={{ marginRight: "8px" }} />
-          Action
-        </div>
-      ),
-      key: "action",
-      align: "center",
-      render: (_, record) => (
-        <Space size="middle">
-          <FaEdit
-            size={16}
-            style={{ marginRight: "10px" }}
-            onClick={() => loadLookupForEdit("Cities", record)}
-          />
-          <AiFillDelete
-            size={16}
-            onClick={() => {
-              MyConfirm({
-                title: "Confirm Deletion",
-                message: "Do You Want To Delete This Item?",
-                onConfirm: async () => {
-                  await deleteFtn("/lookup/", { id: record?._id });
-                  dispatch(getAllLookups());
                 },
               });
             }}
@@ -3599,1128 +3555,7 @@ const Configuration = () => {
   // Usage
   // const groupedLookups = groupByLookupType(lookups);
 
-  const columnGender = [
-    {
-      title: "code",
-      dataIndex: "code",
-      key: "code",
-      sorter: (a, b) => a.code.localeCompare(b.code), // Assumes RegionCode is a string
-      sortDirections: ["ascend", "descend"], // Optional: Sets the sort order directions
-    },
-    {
-      title: " Lookup Type ",
-      dataIndex: "lookuptype",
-      key: "lookuptype",
-      render: (index, record) => <>{record?.lookuptypeId?.lookuptype}</>,
-    },
-    {
-      title: " Display Name",
-      dataIndex: "DisplayName",
-      key: "DisplayName",
-    },
-    {
-      title: "Name",
-      dataIndex: "lookupname",
-      key: "lookupname",
-    },
-    {
-      title: "Active",
-      dataIndex: "isactive",
-      key: "isactive",
-      render: (index, record) => (
-        <Checkbox checked={record?.isactive}></Checkbox>
-      ),
-    },
-    {
-      title: (
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-          }}
-        >
-          <FaRegCircleQuestion size={16} style={{ marginRight: "8px" }} />
-          Action
-        </div>
-      ),
-      key: "action",
-      align: "center",
-      render: (_, record) => (
-        <Space size="middle">
-          <FaEdit
-            size={16}
-            style={{ marginRight: "10px" }}
-            onClick={() => loadLookupForEdit("Gender", record)}
-          />
-          <AiFillDelete
-            size={16}
-            onClick={() =>
-              MyConfirm({
-                title: "Confirm Deletion",
-                message: "Do You Want To Delete This Item?",
-                onConfirm: async () => {
-                  await deleteFtn("/lookup/", { id: record?._id });
-                },
-              })
-            }
-          />
-        </Space>
-      ),
-    },
-  ];
-  const columnRanks = [
-    {
-      title: "code",
-      dataIndex: "code",
-      key: "code",
-      sorter: (a, b) => a.code.localeCompare(b.code), // Assumes RegionCode is a string
-      sortDirections: ["ascend", "descend"], // Optional: Sets the sort order directions
-    },
-    {
-      title: " Lookup Type ",
-      dataIndex: "lookuptype",
-      key: "lookuptype",
-      render: (index, record) => <>{record?.lookuptypeId?.lookuptype}</>,
-    },
-    {
-      title: " Display Name",
-      dataIndex: "DisplayName",
-      key: "DisplayName",
-    },
-    {
-      title: "Name",
-      dataIndex: "lookupname",
-      key: "lookupname",
-    },
-    {
-      title: "Active",
-      dataIndex: "isactive",
-      key: "isactive",
-      render: (index, record) => (
-        <Checkbox checked={record?.isactive}></Checkbox>
-      ),
-    },
-    {
-      title: (
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-          }}
-        >
-          <FaRegCircleQuestion size={16} style={{ marginRight: "8px" }} />
-          Action
-        </div>
-      ),
-      key: "action",
-      align: "center",
-      render: (_, record) => (
-        <Space size="middle">
-          <FaEdit
-            size={16}
-            style={{ marginRight: "10px" }}
-            onClick={() => loadLookupForEdit("Ranks", record)}
-          />
-          <AiFillDelete
-            size={16}
-            onClick={() =>
-              MyConfirm({
-                title: "Confirm Deletion",
-                message: "Do You Want To Delete This Item?",
-                onConfirm: async () => {
-                  await deleteFtn("/lookup/", { id: record?._id });
-                },
-              })
-            }
-          />
-        </Space>
-      ),
-    },
-  ];
-  const columnSections = [
-    {
-      title: "code",
-      dataIndex: "code",
-      key: "code",
-      sorter: (a, b) => a.code.localeCompare(b.code),
-      sortDirections: ["ascend", "descend"],
-    },
-    {
-      title: " Lookup Type ",
-      dataIndex: "lookuptype",
-      key: "lookuptype",
-      render: (index, record) => <>{record?.lookuptypeId?.lookuptype}</>,
-    },
-    {
-      title: " Display Name",
-      dataIndex: "DisplayName",
-      key: "DisplayName",
-    },
-    {
-      title: "Section Name",
-      dataIndex: "lookupname",
-      key: "lookupname",
-    },
-    {
-      title: "Active",
-      dataIndex: "isactive",
-      key: "isactive",
-      render: (index, record) => (
-        <Checkbox checked={record?.isactive}></Checkbox>
-      ),
-    },
-    {
-      title: "Action",
-      dataIndex: "action",
-      key: "action",
-      align: "center",
-      render: (_, record) => (
-        <Space size="middle">
-          <FaEdit
-            size={16}
-            style={{ marginRight: "10px" }}
-            onClick={() => loadLookupForEdit("Sections", record)}
-          />
-          <AiFillDelete
-            size={16}
-            onClick={() =>
-              MyConfirm({
-                title: "Confirm Deletion",
-                message: "Do You Want To Delete This Item?",
-                onConfirm: async () => {
-                  await deleteFtn("/lookup/", { id: record?._id });
-                },
-              })
-            }
-          />
-        </Space>
-      ),
-    },
-  ];
-  const SLColumns = [
-    {
-      title: "code",
-      dataIndex: "code",
-      key: "code",
-      sorter: (a, b) => a.code.localeCompare(b.code), // Assumes RegionCode is a string
-      sortDirections: ["ascend", "descend"], // Optional: Sets the sort order directions
-    },
-    {
-      title: " Lookup Type ",
-      dataIndex: "lookuptype",
-      key: "lookuptype",
-      render: (index, record) => <>{record?.lookuptypeId?.lookuptype}</>,
-    },
-    {
-      title: " Display Name",
-      dataIndex: "DisplayName",
-      key: "DisplayName",
-    },
-    {
-      title: "Name",
-      dataIndex: "lookupname",
-      key: "lookupname",
-    },
-    {
-      title: "Active",
-      dataIndex: "isactive",
-      key: "isactive",
-      render: (index, record) => (
-        <Checkbox checked={record?.isactive}></Checkbox>
-      ),
-    },
-    {
-      title: (
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-          }}
-        >
-          <FaRegCircleQuestion size={16} style={{ marginRight: "8px" }} />
-          Action
-        </div>
-      ),
-      key: "action",
-      align: "center",
-      render: (_, record) => (
-        <Space size="middle">
-          <FaEdit
-            size={16}
-            style={{ marginRight: "10px" }}
-            onClick={() => loadLookupForEdit("SpokenLanguages", record)}
-          />
-          <AiFillDelete
-            size={16}
-            onClick={() =>
-              MyConfirm({
-                title: "Confirm Deletion",
-                message: "Do You Want To Delete This Item?",
-                onConfirm: async () => {
-                  await deleteFtn("/lookup/", { id: record?._id });
-                },
-              })
-            }
-          />
-        </Space>
-      ),
-    },
-  ];
-  const ProjectTypesColumns = [
-    {
-      title: "code",
-      dataIndex: "code",
-      key: "code",
-      sorter: (a, b) => a.code.localeCompare(b.code), // Assumes RegionCode is a string
-      sortDirections: ["ascend", "descend"], // Optional: Sets the sort order directions
-    },
-    {
-      title: " Lookup Type ",
-      dataIndex: "lookuptype",
-      key: "lookuptype",
-      render: (index, record) => <>{record?.lookuptypeId?.lookuptype}</>,
-    },
-    {
-      title: " Display Name",
-      dataIndex: "DisplayName",
-      key: "DisplayName",
-    },
-    {
-      title: "Name",
-      dataIndex: "lookupname",
-      key: "lookupname",
-    },
-    {
-      title: "Active",
-      dataIndex: "isactive",
-      key: "isactive",
-      render: (index, record) => (
-        <Checkbox checked={record?.isactive}></Checkbox>
-      ),
-    },
-    {
-      title: (
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-          }}
-        >
-          <FaRegCircleQuestion size={16} style={{ marginRight: "8px" }} />
-          Action
-        </div>
-      ),
-      key: "action",
-      align: "center",
-      render: (_, record) => (
-        <Space size="middle">
-          <FaEdit
-            size={16}
-            style={{ marginRight: "10px" }}
-            onClick={() => loadLookupForEdit("ProjectTypes", record)}
-          />
-          <AiFillDelete
-            size={16}
-            onClick={() =>
-              MyConfirm({
-                title: "Confirm Deletion",
-                message: "Do You Want To Delete This Item?",
-                onConfirm: async () => {
-                  await deleteFtn("/lookup/", { id: record?._id });
-                },
-              })
-            }
-          />
-        </Space>
-      ),
-    },
-  ];
-  const columnTrainings = [
-    {
-      title: "code",
-      dataIndex: "code",
-      key: "code",
-      sorter: (a, b) => a.code.localeCompare(b.code), // Assumes RegionCode is a string
-      sortDirections: ["ascend", "descend"], // Optional: Sets the sort order directions
-    },
-    {
-      title: " Lookup Type ",
-      dataIndex: "lookuptype",
-      key: "lookuptype",
-      render: (index, record) => <>{record?.lookuptypeId?.lookuptype}</>,
-    },
-    {
-      title: " Display Name",
-      dataIndex: "DisplayName",
-      key: "DisplayName",
-    },
-    {
-      title: "Name",
-      dataIndex: "lookupname",
-      key: "lookupname",
-    },
-    {
-      title: "Active",
-      dataIndex: "isactive",
-      key: "isactive",
-      render: (index, record) => (
-        <Checkbox checked={record?.isactive}></Checkbox>
-      ),
-    },
-    {
-      title: (
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-          }}
-        >
-          <FaRegCircleQuestion size={16} style={{ marginRight: "8px" }} />
-          Action
-        </div>
-      ),
-      key: "action",
-      align: "center",
-      render: (_, record) => (
-        <Space size="middle">
-          <FaEdit
-            size={16}
-            style={{ marginRight: "10px" }}
-            onClick={() => loadLookupForEdit("Trainings", record)}
-          />
-          <AiFillDelete
-            size={16}
-            onClick={() =>
-              MyConfirm({
-                title: "Confirm Deletion",
-                message: "Do You Want To Delete This Item?",
-                onConfirm: async () => {
-                  await deleteFtn("/lookup/", { id: record?._id });
-                },
-              })
-            }
-          />
-        </Space>
-      ),
-    },
-  ];
-  const columnBoards = [
-    {
-      title: "Code",
-      dataIndex: "code",
-      key: "code",
-      sorter: (a, b) => a.code.localeCompare(b.code), // Assumes RegionCode is a string
-      sortDirections: ["ascend", "descend"], // Optional: Sets the sort order directions
-    },
-    {
-      title: " Lookup Type ",
-      dataIndex: "lookuptype",
-      key: "lookuptype",
-      render: (index, record) => <>{record?.lookuptypeId?.lookuptype}</>,
-    },
-    {
-      title: " Display Name",
-      dataIndex: "DisplayName",
-      key: "DisplayName",
-    },
-    {
-      title: "Name",
-      dataIndex: "lookupname",
-      key: "lookupname",
-    },
-    {
-      title: "Active",
-      dataIndex: "isactive",
-      key: "isactive",
-      render: (index, record) => (
-        <Checkbox checked={record?.isactive}></Checkbox>
-      ),
-    },
-    {
-      title: (
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-          }}
-        >
-          <FaRegCircleQuestion size={16} style={{ marginRight: "8px" }} />
-          Action
-        </div>
-      ),
-      key: "action",
-      align: "center",
-      render: (_, record) => (
-        <Space size="middle">
-          <FaEdit
-            size={16}
-            style={{ marginRight: "10px" }}
-            onClick={() => loadLookupForEdit("Boards", record)}
-          />
-          <AiFillDelete
-            size={16}
-            onClick={() =>
-              MyConfirm({
-                title: "Confirm Deletion",
-                message: "Do You Want To Delete This Item?",
-                onConfirm: async () => {
-                  await deleteFtn("/lookup/", { id: record?._id });
-                },
-              })
-            }
-          />
-        </Space>
-      ),
-    },
-  ];
-  const columnStandardLookup = [
-    {
-      title: "Code",
-      dataIndex: "code",
-      key: "code",
-      sorter: (a, b) => (a.code || "").localeCompare(b.code || ""),
-      sortDirections: ["ascend", "descend"],
-    },
-    {
-      title: " Lookup Type ",
-      dataIndex: "lookuptype",
-      key: "lookuptype",
-      render: (_, record) => <>{record?.lookuptypeId?.lookuptype}</>,
-    },
-    {
-      title: " Display Name",
-      dataIndex: "DisplayName",
-      key: "DisplayName",
-    },
-    {
-      title: "Name",
-      dataIndex: "lookupname",
-      key: "lookupname",
-    },
-    {
-      title: "Active",
-      dataIndex: "isactive",
-      key: "isactive",
-      render: (_, record) => <Checkbox checked={record?.isactive}></Checkbox>,
-    },
-    {
-      title: (
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-          }}
-        >
-          <FaRegCircleQuestion size={16} style={{ marginRight: "8px" }} />
-          Action
-        </div>
-      ),
-      key: "action",
-      align: "center",
-      render: (_, record) => (
-        <Space size="middle">
-          <FaEdit
-            size={16}
-            style={{ marginRight: "10px" }}
-            onClick={() => loadLookupForEdit("StandardLookup", record)}
-          />
-          <AiFillDelete
-            size={16}
-            onClick={() =>
-              MyConfirm({
-                title: "Confirm Deletion",
-                message: "Do You Want To Delete This Item?",
-                onConfirm: async () => {
-                  await deleteFtn("/lookup/", { id: record?._id });
-                },
-              })
-            }
-          />
-        </Space>
-      ),
-    },
-  ];
-  const columnCouncils = [
-    {
-      title: "Code",
-      dataIndex: "code",
-      key: "code",
-      sorter: (a, b) => a.code.localeCompare(b.code),
-      sortDirections: ["ascend", "descend"],
-    },
-    {
-      title: " Lookup Type ",
-      dataIndex: "lookuptype",
-      key: "lookuptype",
-      render: (_, record) => record?.lookuptypeId?.lookuptype,
-    },
-    {
-      title: " Display Name",
-      dataIndex: "DisplayName",
-      key: "DisplayName",
-    },
-    {
-      title: "Councils",
-      dataIndex: "lookupname",
-      key: "lookupname",
-    },
-    {
-      title: "Active",
-      dataIndex: "isactive",
-      key: "isactive",
-      render: (_, record) => <Checkbox checked={record?.isactive} />,
-    },
-    {
-      title: (
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-          }}
-        >
-          <FaRegCircleQuestion size={16} style={{ marginRight: "8px" }} />
-          Action
-        </div>
-      ),
-      key: "action",
-      align: "center",
-      render: (_, record) => (
-        <Space size="middle">
-          <FaEdit
-            size={16}
-            style={{ marginRight: "10px" }}
-            onClick={() => loadLookupForEdit("Councils", record)}
-          />
-          <AiFillDelete
-            size={16}
-            onClick={() =>
-              MyConfirm({
-                title: "Confirm Deletion",
-                message: "Do You Want To Delete This Item?",
-                onConfirm: async () => {
-                  await deleteFtn("/lookup/", { id: record?._id });
-                },
-              })
-            }
-          />
-        </Space>
-      ),
-    },
-  ];
-  const columnCorrespondenceType = [
-    {
-      title: "Code",
-      dataIndex: "code",
-      key: "code",
-      sorter: (a, b) => a.code.localeCompare(b.code),
-      sortDirections: ["ascend", "descend"],
-    },
-    {
-      title: "Lookup Type",
-      dataIndex: "lookuptype",
-      key: "lookuptype",
-      render: (_, record) => record?.lookuptypeId?.lookuptype,
-    },
-    {
-      title: "Display Name",
-      dataIndex: "DisplayName",
-      key: "DisplayName",
-    },
-    {
-      title: "Name",
-      dataIndex: "lookupname",
-      key: "lookupname",
-    },
-    {
-      title: "Active",
-      dataIndex: "isactive",
-      key: "isactive",
-      render: (_, record) => <Checkbox checked={record?.isactive} />,
-    },
-    {
-      title: (
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-          }}
-        >
-          <FaRegCircleQuestion size={16} style={{ marginRight: "8px" }} />
-          Action
-        </div>
-      ),
-      key: "action",
-      align: "center",
-      render: (_, record) => (
-        <Space size="middle">
-          <FaEdit
-            size={16}
-            style={{ marginRight: "10px" }}
-            onClick={() => loadLookupForEdit("CorrespondenceType", record)}
-          />
-          <AiFillDelete
-            size={16}
-            onClick={() =>
-              MyConfirm({
-                title: "Confirm Deletion",
-                message: "Do You Want To Delete This Item?",
-                onConfirm: async () =>
-                  deleteFtn("/lookup/", { id: record?._id }),
-              })
-            }
-          />
-        </Space>
-      ),
-    },
-  ];
-  const columntTitles = [
-    {
-      title: "code",
-      dataIndex: "code",
-      key: "code",
-      sorter: (a, b) => a.code.localeCompare(b.code), // Assumes RegionCode is a string
-      sortDirections: ["ascend", "descend"], // Optional: Sets the sort order directions
-    },
-    {
-      title: " Lookup Type ",
-      // dataIndex: 'lookuptypeId',
-      // key: 'lookuptypeId',
-      filters: [
-        { text: "A01", value: "A01" },
-        { text: "B02", value: "B02" },
-        { text: "C03", value: "C03" },
-        // Add more filter options as needed
-      ],
-      // onFilter: (value, record) => record.RegionCode === value,
-      render: (index, record) => <>{record?.lookuptypeId?.lookuptype}</>,
-    },
-    {
-      title: " Display Name",
-      dataIndex: "DisplayName",
-      key: "DisplayName",
-    },
-    {
-      title: "Name",
-      dataIndex: "lookupname",
-      key: "lookupname",
-    },
-    {
-      title: "Active",
-      dataIndex: "isactive",
-      key: "isactive",
-      render: (index, record) => (
-        <Checkbox checked={record?.isactive}></Checkbox>
-      ),
-    },
-    {
-      title: (
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-          }}
-        >
-          <FaRegCircleQuestion size={16} style={{ marginRight: "8px" }} />
-          Action
-        </div>
-      ),
-      key: "action",
-      align: "center",
-      render: (_, record) => (
-        <Space size="middle">
-          <FaEdit
-            size={16}
-            style={{ marginRight: "10px" }}
-            onClick={() => loadLookupForEdit("Title", record)}
-          />
-          <AiFillDelete
-            size={16}
-            onClick={() =>
-              MyConfirm({
-                title: "Confirm Deletion",
-                message: "Do You Want To Delete This Item?",
-                onConfirm: async () => {
-                  deleteFtn("/lookup/", { id: record?._id });
-                },
-              })
-            }
-          />
-        </Space>
-      ),
-    },
-  ];
-  const columnDuties = [
-    {
-      title: "code",
-      dataIndex: "code",
-      key: "code",
-      sorter: (a, b) => a.code.localeCompare(b.code), // Assumes RegionCode is a string
-      sortDirections: ["ascend", "descend"], // Optional: Sets the sort order directions
-    },
-    {
-      title: " Lookup Type ",
-      // dataIndex: 'lookuptypeId',
-      // key: 'lookuptypeId',
-      // filters: [
-      //   { text: 'A01', value: 'A01' },
-      //   { text: 'B02', value: 'B02' },
-      //   { text: 'C03', value: 'C03' },
-      //   // Add more filter options as needed
-      // ],
-      // onFilter: (value, record) => record.RegionCode === value,
-      render: (index, record) => <>{record?.lookuptypeId?.lookuptype}</>,
-    },
-    {
-      title: " Display Name",
-      dataIndex: "DisplayName",
-      key: "DisplayName",
-    },
-    {
-      title: "Name",
-      dataIndex: "lookupname",
-      key: "lookupname",
-    },
-    {
-      title: "Active",
-      dataIndex: "isactive",
-      key: "isactive",
-      render: (index, record) => (
-        <Checkbox checked={record?.isactive}></Checkbox>
-      ),
-    },
-    {
-      title: (
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-          }}
-        >
-          <FaRegCircleQuestion size={16} style={{ marginRight: "8px" }} />
-          Action
-        </div>
-      ),
-      key: "action",
-      align: "center",
-      render: (_, record) => (
-        <Space size="middle">
-          <FaEdit
-            size={16}
-            style={{ marginRight: "10px" }}
-            onClick={() => loadLookupForEdit("Duties", record)}
-          />
-          <AiFillDelete
-            size={16}
-            onClick={() =>
-              MyConfirm({
-                title: "Confirm Deletion",
-                message: "Do You Want To Delete This Item?",
-                onConfirm: async () => {
-                  await deleteFtn("/lookup/", { id: record?._id });
-                },
-              })
-            }
-          />
-        </Space>
-      ),
-    },
-  ];
-  const columnMaritalStatus = [
-    {
-      title: "code",
-      dataIndex: "code",
-      key: "code",
-      sorter: (a, b) => a.code.localeCompare(b.code), // Assumes RegionCode is a string
-      sortDirections: ["ascend", "descend"], // Optional: Sets the sort order directions
-    },
-    {
-      title: " Lookup Type ",
-      filters: [
-        { text: "A01", value: "A01" },
-        { text: "B02", value: "B02" },
-        { text: "C03", value: "C03" },
-      ],
-      render: (index, record) => <>{record?.lookuptypeId?.lookuptype}</>,
-    },
-    {
-      title: " Display Name",
-      dataIndex: "DisplayName",
-      key: "DisplayName",
-    },
-    {
-      title: "Name",
-      dataIndex: "lookupname",
-      key: "lookupname",
-    },
-    {
-      title: "Active",
-      dataIndex: "isactive",
-      key: "isactive",
-      render: (index, record) => (
-        <Checkbox checked={record?.isactive}></Checkbox>
-      ),
-    },
-    {
-      title: (
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-          }}
-        >
-          <FaRegCircleQuestion size={16} style={{ marginRight: "8px" }} />
-          Action
-        </div>
-      ),
-      key: "action",
-      align: "center",
-      render: (_, record) => (
-        <Space size="middle">
-          <FaEdit
-            size={16}
-            style={{ marginRight: "10px" }}
-            onClick={() => loadLookupForEdit("MaritalStatus", record)}
-          />
-          <AiFillDelete
-            size={16}
-            onClick={() =>
-              MyConfirm({
-                title: "Confirm Deletion",
-                message: "Do You Want To Delete This Item?",
-                onConfirm: async () => {
-                  await deleteFtn("/lookup/", { id: record?._id });
-                },
-              })
-            }
-          />
-        </Space>
-      ),
-    },
-  ];
 
-  const Committeescolumns = [
-    {
-      title: "Type",
-      dataIndex: "type",
-      key: "type",
-      render: (text) => <span>{text}</span>,
-    },
-    {
-      title: "Code",
-      dataIndex: "code",
-      key: "code",
-      render: (text) => <span>{text}</span>,
-    },
-    {
-      title: "Committee Name",
-      dataIndex: "committeeName",
-      key: "committeeName",
-      render: (text) => <span>{text}</span>,
-    },
-    {
-      title: "Display Name",
-      dataIndex: "displayName",
-      key: "displayName",
-      render: (text) => <span>{text}</span>,
-    },
-    {
-      title: "Parent",
-      dataIndex: "parent",
-      key: "parent",
-      render: (text) => <span>{text}</span>,
-    },
-    {
-      title: "Active",
-      dataIndex: "isactive",
-      key: "isactive",
-      render: (isactive) => <Checkbox checked={isactive}>Active</Checkbox>,
-    },
-    {
-      title: (
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-          }}
-        >
-          <FaRegCircleQuestion size={16} style={{ marginRight: "8px" }} />
-          Action
-        </div>
-      ),
-      key: "action",
-      align: "center",
-      render: (_, record) => (
-        <Space size="middle">
-          <FaEdit
-            size={16}
-            style={{ marginRight: "10px" }}
-            onClick={() => loadLookupForEdit("Committees", record)}
-          />
-          <AiFillDelete
-            size={16}
-            onClick={() =>
-              MyConfirm({
-                title: "Confirm Deletion",
-                message: "Do You Want To Delete This Item?",
-                onConfirm: async () => {
-                  await deleteFtn("/lookup/", { id: record?._id });
-                },
-              })
-            }
-          />
-        </Space>
-      ),
-    },
-  ];
-  const columnDocumentType = [
-    {
-      title: "Code",
-      dataIndex: "code",
-      key: "code",
-      sorter: (a, b) => a.code.localeCompare(b.code),
-      sortDirections: ["ascend", "descend"],
-    },
-    {
-      title: " Lookup Type ",
-      dataIndex: "lookuptype",
-      key: "lookuptype",
-      render: (_, record) => record?.lookuptypeId?.lookuptype,
-    },
-    {
-      title: " Display Name",
-      dataIndex: "DisplayName",
-      key: "DisplayName",
-    },
-    {
-      title: "Name",
-      dataIndex: "lookupname",
-      key: "lookupname",
-    },
-    {
-      title: "Active",
-      dataIndex: "isactive",
-      key: "isactive",
-      render: (_, record) => <Checkbox checked={record?.isactive} />,
-    },
-    {
-      title: (
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-          }}
-        >
-          <FaRegCircleQuestion size={16} style={{ marginRight: "8px" }} />
-          Action
-        </div>
-      ),
-      key: "action",
-      align: "center",
-      render: (_, record) => (
-        <Space size="middle">
-          <FaEdit
-            size={16}
-            style={{ marginRight: "10px" }}
-            onClick={() => loadLookupForEdit("DocumentType", record)}
-          />
-          <AiFillDelete
-            size={16}
-            onClick={() =>
-              MyConfirm({
-                title: "Confirm Deletion",
-                message: "Do You Want To Delete This Item?",
-                onConfirm: async () => {
-                  await deleteFtn("/lookup/", { id: record?._id });
-                },
-              })
-            }
-          />
-        </Space>
-      ),
-    },
-  ];
-  const columnReasons = [
-    {
-      title: "Code",
-      dataIndex: "code",
-      key: "code",
-      sorter: (a, b) => a.code.localeCompare(b.code),
-      sortDirections: ["ascend", "descend"],
-    },
-    {
-      title: " Lookup Type ",
-      dataIndex: "lookuptype",
-      key: "lookuptype",
-      render: (_, record) => record?.lookuptypeId?.lookuptype,
-    },
-    {
-      title: " Display Name",
-      dataIndex: "DisplayName",
-      key: "DisplayName",
-    },
-    {
-      title: "Lookup Name",
-      dataIndex: "lookupname",
-      key: "lookupname",
-    },
-    {
-      title: "Active",
-      dataIndex: "isactive",
-      key: "isactive",
-      render: (_, record) => <Checkbox checked={record?.isactive} />,
-    },
-    {
-      title: (
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-          }}
-        >
-          <FaRegCircleQuestion size={16} style={{ marginRight: "8px" }} />
-          Action
-        </div>
-      ),
-      key: "action",
-      align: "center",
-      render: (_, record) => (
-        <Space size="middle">
-          <FaEdit
-            size={16}
-            style={{ marginRight: "10px" }}
-            onClick={() => loadLookupForEdit("Reasons", record)}
-          />
-          <AiFillDelete
-            size={16}
-            onClick={() =>
-              MyConfirm({
-                title: "Confirm Deletion",
-                message: "Do You Want To Delete This Item?",
-                onConfirm: async () => {
-                  await deleteFtn("/lookup/", { id: record?._id });
-                },
-              })
-            }
-          />
-        </Space>
-      ),
-    },
-  ];
   const SubscriptionsColumn = [
     {
       title: "Short Name",
@@ -4898,75 +3733,6 @@ const Configuration = () => {
         >
           <FaEdit size={16} style={{ marginRight: "10px" }} />
           <AiFillDelete size={16} />
-        </Space>
-      ),
-    },
-  ];
-  const columnRosterTypes = [
-    {
-      title: "Code",
-      dataIndex: "code",
-      key: "code",
-      sorter: (a, b) => a.code.localeCompare(b.code),
-      sortDirections: ["ascend", "descend"],
-    },
-    {
-      title: "Lookup Type",
-      dataIndex: "lookuptype",
-      key: "lookuptype",
-      render: (_, record) => record?.lookuptypeId?.lookuptype,
-    },
-    {
-      title: "Display Name",
-      dataIndex: "DisplayName",
-      key: "DisplayName",
-    },
-    {
-      title: "Roster Type Name",
-      dataIndex: "lookupname",
-      key: "lookupname",
-    },
-    {
-      title: "Active",
-      dataIndex: "isactive",
-      key: "isactive",
-      render: (_, record) => <Checkbox checked={record?.isactive} />,
-    },
-    {
-      title: (
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-          }}
-        >
-          <FaRegCircleQuestion size={16} style={{ marginRight: "8px" }} />
-          Action
-        </div>
-      ),
-      key: "action",
-      align: "center",
-      render: (_, record) => (
-        <Space size="middle">
-          <FaEdit
-            size={16}
-            style={{ marginRight: "10px", cursor: "pointer" }}
-            onClick={() => loadLookupForEdit("RosterType", record)}
-          />
-          <AiFillDelete
-            size={16}
-            style={{ cursor: "pointer" }}
-            onClick={() =>
-              MyConfirm({
-                title: "Confirm Deletion",
-                message: "Do you want to delete this item?",
-                onConfirm: async () => {
-                  await deleteFtn("/lookup/", { id: record?._id });
-                },
-              })
-            }
-          />
         </Space>
       ),
     },
@@ -5203,59 +3969,6 @@ const Configuration = () => {
     },
   ];
 
-  const columnSchemes = [
-    { title: "Scheme Name", dataIndex: "lookupname", key: "lookupname" },
-    {
-      title: "Code",
-      dataIndex: "code",
-      key: "code",
-      sorter: (a, b) => a.code.localeCompare(b.code),
-      sortDirections: ["ascend", "descend"],
-    },
-    {
-      title: "Active",
-      dataIndex: "isactive",
-      key: "isactive",
-      render: (_, record) => <Checkbox checked={record?.isactive} />,
-    },
-    {
-      title: (
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-          }}
-        >
-          <FaRegCircleQuestion size={16} style={{ marginRight: "8px" }} />{" "}
-          Action
-        </div>
-      ),
-      key: "action",
-      align: "center",
-      render: (_, record) => (
-        <Space size="middle">
-          <FaEdit
-            size={16}
-            style={{ marginRight: "10px" }}
-            onClick={() => loadLookupForEdit("Schemes", record)}
-          />
-          <AiFillDelete
-            size={16}
-            onClick={() =>
-              MyConfirm({
-                title: "Confirm Deletion",
-                message: "Do You Want To Delete This Item?",
-                onConfirm: async () => {
-                  await deleteFtn("/lookup/", { id: record?._id });
-                },
-              })
-            }
-          />
-        </Space>
-      ),
-    },
-  ];
 
   const [selectionType, setSelectionType] = useState("checkbox");
   const [errors, setErrors] = useState({});
@@ -5396,66 +4109,6 @@ const Configuration = () => {
 
   const AddSubscriptionsFtn = () => {};
 
-  const columnClaimType = [
-    {
-      title: "Code",
-      dataIndex: "code",
-      key: "code",
-      sorter: (a, b) => a.code.localeCompare(b.code),
-      sortDirections: ["ascend", "descend"],
-    },
-    {
-      title: "Lookup Type",
-      dataIndex: "lookuptype",
-      key: "lookuptype",
-      render: (_, record) => record?.lookuptypeId?.lookuptype,
-    },
-    { title: "Display Name", dataIndex: "DisplayName", key: "DisplayName" },
-    { title: "Name", dataIndex: "lookupname", key: "lookupname" },
-    {
-      title: "Active",
-      dataIndex: "isactive",
-      key: "isactive",
-      render: (_, record) => <Checkbox checked={record?.isactive} />,
-    },
-    {
-      title: (
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-          }}
-        >
-          <FaRegCircleQuestion size={16} style={{ marginRight: "8px" }} />{" "}
-          Action
-        </div>
-      ),
-      key: "action",
-      align: "center",
-      render: (_, record) => (
-        <Space size="middle">
-          <FaEdit
-            size={16}
-            style={{ marginRight: "10px" }}
-            onClick={() => loadLookupForEdit("ClaimType", record)}
-          />
-          <AiFillDelete
-            size={16}
-            onClick={() =>
-              MyConfirm({
-                title: "Confirm Deletion",
-                message: "Do You Want To Delete This Item?",
-                onConfirm: async () => {
-                  await deleteFtn("/lookup/", { id: record?._id });
-                },
-              })
-            }
-          />
-        </Space>
-      ),
-    },
-  ];
   const [current, setCurrent] = useState(1);
   const [pageSize, setPageSize] = useState(7);
   const handlePageChange = (page, size) => {
@@ -5477,6 +4130,132 @@ const Configuration = () => {
   }, [branchesWithRegionData]);
 
   // Create columns array with Region as second last
+  const columnDistricts = [
+    {
+      title: "Code",
+      dataIndex: "code",
+      key: "code",
+      sorter: (a, b) => (a.code || "").localeCompare(b.code || ""),
+      filterDropdown: createFilterDropdown(
+        groupedLookups?.Branch,
+        (record) => record.code,
+      ),
+      onFilter: (value, record) => (record.code || "").toString() === value,
+      filterIcon: (filtered) => (
+        <SearchOutlined style={{ color: filtered ? "var(--app-brand-accent)" : undefined }} />
+      ),
+    },
+    {
+      title: "Branch",
+      dataIndex: "lookupname",
+      key: "lookupname",
+      sorter: (a, b) => (a.lookupname || "").localeCompare(b.lookupname || ""),
+      filterDropdown: createFilterDropdown(
+        groupedLookups?.Branch,
+        (record) => record.lookupname,
+      ),
+      onFilter: (value, record) =>
+        (record.lookupname || "").toString() === value,
+      filterIcon: (filtered) => (
+        <SearchOutlined style={{ color: filtered ? "var(--app-brand-accent)" : undefined }} />
+      ),
+    },
+    {
+      title: "Display Name",
+      dataIndex: "DisplayName",
+      key: "DisplayName",
+    },
+    // {
+    //   title: "Region",
+    //   dataIndex: "Parentlookup",
+    //   key: "Parentlookup",
+    // },
+    {
+      title: "Branch Manager",
+      key: "officer",
+      sorter: (a, b) => {
+        const emailA =
+          a.officer?.userEmail ||
+          (typeof a.officer === "string" ? a.officer : "");
+        const emailB =
+          b.officer?.userEmail ||
+          (typeof b.officer === "string" ? b.officer : "");
+        return emailA.localeCompare(emailB);
+      },
+      filterDropdown: createFilterDropdown(groupedLookups?.Branch, (record) => {
+        const o = record?.officer;
+        if (!o) return "";
+        return o.userEmail || (typeof o === "string" ? o : "");
+      }),
+      onFilter: (value, record) => {
+        const o = record?.officer;
+        const email = o?.userEmail || (typeof o === "string" ? o : "");
+        return (email || "").toString() === value;
+      },
+      filterIcon: (filtered) => (
+        <SearchOutlined style={{ color: filtered ? "var(--app-brand-accent)" : undefined }} />
+      ),
+      render: (_, record) => {
+        const o = record?.officer;
+        if (!o) return "-";
+        if (typeof o === "object")
+          return (
+            o.userEmail ||
+            `${o.userFirstName || ""} ${o.userLastName || ""}`.trim() ||
+            "-"
+          );
+        return String(o);
+      },
+    },
+    {
+      title: "Active",
+
+      render: (index, record) => (
+        <Checkbox disabled={isDisable} checked={record?.isactive}></Checkbox>
+      ),
+    },
+    {
+      title: (
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
+          <FaRegCircleQuestion size={16} style={{ marginRight: "8px" }} />
+          Action
+        </div>
+      ),
+      key: "action",
+      align: "center",
+      render: (_, record) => (
+        <Space size="middle">
+          <FaEdit
+            size={16}
+            style={{ marginRight: "10px" }}
+            onClick={() => loadLookupForEdit("Districts", record)}
+          />
+          <AiFillDelete
+            size={16}
+            onClick={() => {
+              MyConfirm({
+                title: "Confirm Deletion",
+                message: "Do You Want To Delete This Item?",
+                onConfirm: async () => {
+                  await deleteFtn("/lookup/", { id: record?._id }, () => {
+                    dispatch(resetLookups());
+                    dispatch(getAllLookups());
+                  });
+                },
+              });
+            }}
+          />
+        </Space>
+      ),
+    },
+  ];
+
   const columnsWithRegion = useMemo(() => {
     // Assuming the last column is Action (as per your screenshot)
     const allColumnsExceptLast = columnDistricts.slice(0, -1);
@@ -5495,7 +4274,7 @@ const Configuration = () => {
       onFilter: (value, record) =>
         (record.regionName || "").toString() === value,
       filterIcon: (filtered) => (
-        <SearchOutlined style={{ color: filtered ? "#1890ff" : undefined }} />
+        <SearchOutlined style={{ color: filtered ? "var(--app-brand-accent)" : undefined }} />
       ),
     };
 
@@ -5536,7 +4315,7 @@ const Configuration = () => {
           </div>
         </div>
         <div
-          className="bg-white rounded shadow-sm p-3 flex-grow-1 hide-scroll-webkit configuration-cards-panel"
+          className="flex-grow-1 hide-scroll-webkit configuration-cards-panel"
           style={{
             overflowY: "auto",
             maxHeight: "calc(100vh - 160px)",
@@ -6293,270 +5072,6 @@ const Configuration = () => {
           )}
         />
       </MyDrawer>
-      <MyDrawer
-        isPagination={true}
-        total={data?.county?.length}
-        title="counties"
-        open={drawerOpen?.counties}
-        isLoading={lookupDetailLoading && editingLookupDrawer === "counties"}
-        onClose={() => openCloseDrawerFtn("counties")}
-        isEdit={isUpdateRec?.counties}
-        add={async () => {
-          if (!validateForm("counties")) return;
-          insertDataFtn(
-            `/lookup`,
-            drawerIpnuts?.counties,
-            "Data inserted successfully:",
-            "Data did not insert:",
-            () => resetCounteries("counties", dispatch(getAllLookups())),
-          );
-        }}
-        update={async () => {
-          if (!validateForm("counties")) return;
-          await updateFtn("/lookup", drawerIpnuts?.counties, () =>
-            resetCounteries("counties", () => dispatch(getAllLookups())),
-          );
-          dispatch(getAllLookups());
-          IsUpdateFtn("counties", false);
-        }}
-        addLoading={buttonLoading.insert}
-        updateLoading={buttonLoading.update}
-      >
-        <div className="drawer-main-cntainer p-4 me-2 ms-2">
-          <Row gutter={12}>
-            <Col span={12}>
-              <MyInput
-                label="Code:"
-                name="code"
-                placeholder="Enter code"
-                value={drawerIpnuts?.counties?.code}
-                onChange={(e) =>
-                  drawrInptChng("counties", "code", e.target.value)
-                }
-                required
-                hasError={!!errors?.counties?.code}
-                disabled={isDisable}
-              />
-            </Col>
-
-            <Col span={12}>
-              <MyInput
-                label="County Name:"
-                name="lookupname"
-                placeholder="Enter county name"
-                value={drawerIpnuts?.counties?.lookupname}
-                onChange={(e) =>
-                  drawrInptChng("counties", "lookupname", e.target.value)
-                }
-                required
-                hasError={!!errors?.counties?.lookupname}
-                disabled={isDisable}
-              />
-            </Col>
-          </Row>
-          <Row gutter={12}>
-            <Col span={12}>
-              <MyInput
-                label="Display Name:"
-                name="DisplayName"
-                placeholder="Enter display name"
-                value={drawerIpnuts?.counties?.DisplayName}
-                onChange={(e) =>
-                  drawrInptChng("counties", "DisplayName", e.target.value)
-                }
-                disabled={isDisable}
-                hasError={!!errors?.Counteries?.DisplayName}
-              />
-            </Col>
-            <ParentLookupSelect
-              drawerKey="counties"
-              lookuptypeId={drawerIpnuts?.counties?.lookuptypeId}
-              lookups={lookups}
-              lookupsTypes={lookupsTypes}
-              value={drawerIpnuts?.counties?.Parentlookupid}
-              parentLabel={drawerIpnuts?.counties?.Parentlookup}
-              parentLookupTypeId={drawerIpnuts?.counties?.ParentlookuptypeId}
-              parentLookupTypeName={drawerIpnuts?.counties?.Parentlookuptype}
-              disabled={isDisable}
-              required={lookupTypeRequiresParent(
-                lookupsTypes,
-                drawerIpnuts?.counties?.lookuptypeId,
-              )}
-              hasError={!!errors?.counties?.Parentlookupid}
-              onChange={(payload) =>
-                handleParentLookupChange("counties", payload)
-              }
-            />
-          </Row>
-
-          <Checkbox
-            checked={drawerIpnuts?.counties?.isactive}
-            onChange={(e) =>
-              drawrInptChng("counties", "isactive", e.target.checked)
-            }
-            disabled={isDisable}
-          >
-            Active
-          </Checkbox>
-
-          <div className="mt-4 config-tbl-container">
-            <p>History</p>
-            <Table
-              pagination={{ pageSize: 500 }}
-              columns={columnCountry}
-              loading={lookupsloading}
-              dataSource={groupedLookups?.County}
-              className="drawer-tbl"
-              size="small"
-              rowKey={(record, index) =>
-                record._id || record.id || record.key || index
-              }
-              rowClassName={(record, index) =>
-                index % 2 !== 0 ? "odd-row" : "even-row"
-              }
-              rowSelection={{
-                type: selectionType,
-                ...rowSelection,
-              }}
-              bordered
-            />
-          </div>
-        </div>
-      </MyDrawer>
-      <MyDrawer
-        title="Provinces"
-        open={drawerOpen?.Provinces}
-        isLoading={lookupDetailLoading && editingLookupDrawer === "Provinces"}
-        isPagination={true}
-        onClose={() => openCloseDrawerFtn("Provinces")}
-        add={async () => {
-          if (!validateForm("Provinces")) return;
-          try {
-            await insertDataFtn(
-              `/lookup`,
-              drawerIpnuts?.Provinces,
-              "Province added successfully!",
-              "Failed to add province",
-              null,
-            );
-            resetCounteries("Provinces", () => dispatch(getAllLookups()));
-          } catch (error) {
-            console.error("Error adding province:", error);
-          }
-        }}
-        width="1100px"
-        isEdit={isUpdateRec?.Provinces}
-        update={async () => {
-          if (!validateForm("Provinces")) return;
-          await updateFtn("/lookup", drawerIpnuts?.Provinces, () =>
-            resetCounteries("Provinces", () => dispatch(getAllLookups())),
-          );
-          dispatch(getAllLookups());
-          IsUpdateFtn("Provinces", false);
-        }}
-      >
-        <div className="drawer-main-cntainer p-4 me-2 ms-2">
-          <Row gutter={24}>
-            <Col span={12}>
-              <MyInput
-                label="Code:"
-                name="code"
-                value={drawerIpnuts?.Provinces?.code}
-                onChange={(e) =>
-                  drawrInptChng("Provinces", "code", e.target.value)
-                }
-                placeholder="Enter code"
-                disabled={isDisable}
-                required
-                hasError={!!errors?.Provinces?.code}
-              />
-            </Col>
-            <Col span={12}>
-              <MyInput
-                label="Province:"
-                name="lookupname"
-                value={drawerIpnuts?.Provinces?.lookupname}
-                onChange={(e) =>
-                  drawrInptChng("Provinces", "lookupname", e.target.value)
-                }
-                placeholder="Enter province"
-                disabled={isDisable}
-                required
-                hasError={!!errors?.Provinces?.lookupname}
-              />
-            </Col>
-          </Row>
-          <Row gutter={24}>
-            <Col span={12}>
-              <MyInput
-                label="Display Name:"
-                name="DisplayName"
-                value={drawerIpnuts?.Provinces?.DisplayName}
-                onChange={(e) =>
-                  drawrInptChng("Provinces", "DisplayName", e.target.value)
-                }
-                placeholder="Enter display name"
-                disabled={isDisable}
-              />
-            </Col>
-            <ParentLookupSelect
-              drawerKey="Provinces"
-              lookuptypeId={drawerIpnuts?.Provinces?.lookuptypeId}
-              lookups={lookups}
-              lookupsTypes={lookupsTypes}
-              value={drawerIpnuts?.Provinces?.Parentlookupid}
-              parentLabel={drawerIpnuts?.Provinces?.Parentlookup}
-              parentLookupTypeId={drawerIpnuts?.Provinces?.ParentlookuptypeId}
-              parentLookupTypeName={drawerIpnuts?.Provinces?.Parentlookuptype}
-              disabled={isDisable}
-              required={lookupTypeRequiresParent(
-                lookupsTypes,
-                drawerIpnuts?.Provinces?.lookuptypeId,
-              )}
-              hasError={!!errors?.Provinces?.Parentlookupid}
-              onChange={(payload) =>
-                handleParentLookupChange("Provinces", payload)
-              }
-            />
-          </Row>
-          <Row gutter={24}>
-            <Col span={12}>
-              <Checkbox
-                disabled={isDisable}
-                onChange={(e) =>
-                  drawrInptChng("Provinces", "isactive", e.target.checked)
-                }
-                checked={drawerIpnuts?.Provinces?.isactive}
-                style={{ marginTop: "26px" }}
-              >
-                Active
-              </Checkbox>
-            </Col>
-          </Row>
-          <div className="mt-4 config-tbl-container">
-            <h6 className=" mb-3 text-primary">Existing Provinces</h6>
-            <Table
-              pagination={false}
-              columns={columnProvince}
-              loading={lookupsloading}
-              dataSource={groupedLookups?.Provinces}
-              className="drawer-tbl"
-              size="small"
-              rowKey={(record, index) =>
-                record._id || record.id || record.key || index
-              }
-              rowClassName={(record, index) =>
-                index % 2 !== 0 ? "odd-row" : "even-row"
-              }
-              rowSelection={{
-                type: selectionType,
-                ...rowSelection,
-              }}
-              bordered
-            />
-          </div>
-        </div>
-      </MyDrawer>
 
       <MyDrawer
         title="Countries"
@@ -6685,315 +5200,6 @@ const Configuration = () => {
         </div>
       </MyDrawer>
       <MyDrawer
-        title="City"
-        open={drawerOpen?.Cities}
-        isLoading={lookupDetailLoading && editingLookupDrawer === "Cities"}
-        isPagination={true}
-        isEdit={isUpdateRec?.Cities}
-        onClose={() => openCloseDrawerFtn("Cities")}
-        add={() => {
-          if (!validateForm("Cities")) return;
-          insertDataFtn(
-            `/lookup`,
-            drawerIpnuts?.Cities,
-            "Data inserted successfully:",
-            "Data did not insert:",
-            () => {
-              resetCounteries("Cities");
-              dispatch(getAllLookups());
-            },
-          );
-          dispatch(getAllLookups());
-        }}
-        update={async () => {
-          if (!validateForm("Cities")) return;
-          await updateFtn("/lookup", drawerIpnuts?.Cities, () =>
-            resetCounteries("Cities", () => dispatch(getAllLookups())),
-          );
-          dispatch(getAllLookups());
-          IsUpdateFtn("Cities", false);
-        }}
-        addLoading={buttonLoading.insert}
-        updateLoading={buttonLoading.update}
-      >
-        <div className="drawer-main-cntainer">
-          <div className="mb-4 pb-4">
-            <div className="drawer-inpts-container">
-              <div className="drawer-lbl-container">
-                <p>Type :</p>
-              </div>
-              <div className="inpt-con">
-                <p className="star">*</p>
-                <div className="inpt-sub-con">
-                  <MySelect
-                    placeholder="City"
-                    isSimple={true}
-                    disabled={true}
-                  />
-                  <p className="error text-white"></p>
-                </div>
-              </div>
-            </div>
-
-            <div className="drawer-inpts-container">
-              <div className="drawer-lbl-container">
-                <p>Code :</p>
-              </div>
-              <div className="inpt-con">
-                <p className="star">*</p>
-                <div className="inpt-sub-con">
-                  <Input
-                    disabled={isDisable}
-                    className="inp"
-                    onChange={(e) =>
-                      drawrInptChng("Cities", "code", e.target.value)
-                    }
-                    value={drawerIpnuts?.Cities?.code}
-                  />
-                  <h1 className="error-text">{errors?.Cities?.code}</h1>
-                </div>
-                {/* <p className="error"></p> */}
-              </div>
-            </div>
-            <div className="drawer-inpts-container">
-              <div className="drawer-lbl-container">
-                <p>City Name :</p>
-              </div>
-              <div className="inpt-con">
-                <p className="star">*</p>
-                <div className="inpt-sub-con">
-                  <Input
-                    disabled={isDisable}
-                    className="inp"
-                    onChange={(e) => {
-                      drawrInptChng("Cities", "lookupname", e.target.value);
-                    }}
-                    value={drawerIpnuts?.Cities?.lookupname}
-                  />
-                  <p className="error">{errors?.Cities?.lookupname}</p>
-                </div>
-              </div>
-            </div>
-            <div className="drawer-inpts-container">
-              <div className="drawer-lbl-container">
-                <p>Display Name :</p>
-              </div>
-              <div className="inpt-con">
-                <p className="star-white">*</p>
-                <div className="inpt-sub-con">
-                  <Input
-                    disabled={isDisable}
-                    className="inp"
-                    onChange={(e) =>
-                      drawrInptChng("Cities", "DisplayName", e.target.value)
-                    }
-                    value={drawerIpnuts?.Cities?.DisplayName}
-                  />
-                </div>
-                {/* <p className="error">{errors?.Cities?.}</p> */}
-              </div>
-            </div>
-            <Row gutter={24} style={{ marginTop: 8 }}>
-              <ParentLookupSelect
-                drawerKey="Cities"
-                lookuptypeId={drawerIpnuts?.Cities?.lookuptypeId}
-                lookups={lookups}
-                lookupsTypes={lookupsTypes}
-                value={drawerIpnuts?.Cities?.Parentlookupid}
-                parentLabel={drawerIpnuts?.Cities?.Parentlookup}
-                parentLookupTypeId={drawerIpnuts?.Cities?.ParentlookuptypeId}
-                parentLookupTypeName={drawerIpnuts?.Cities?.Parentlookuptype}
-                disabled={isDisable}
-                required={lookupTypeRequiresParent(
-                  lookupsTypes,
-                  drawerIpnuts?.Cities?.lookuptypeId,
-                )}
-                hasError={!!errors?.Cities?.Parentlookupid}
-                span={24}
-                onChange={(payload) =>
-                  handleParentLookupChange("Cities", payload)
-                }
-              />
-            </Row>
-            <div className="drawer-inpts-container">
-              <div className="drawer-lbl-container">
-                <p></p>
-              </div>
-              <div className="inpt-con">
-                <p className="star-white">*</p>
-                <div className="inpt-sub-con">
-                  <Checkbox
-                    disabled={isDisable}
-                    checked={drawerIpnuts?.Cities?.isactive}
-                    onChange={(e) =>
-                      drawrInptChng("Cities", "isactive", e.target.checked)
-                    }
-                  >
-                    Active
-                  </Checkbox>
-                </div>
-                <p className="error"></p>
-              </div>
-            </div>
-          </div>
-          <div className="mt-4 config-tbl-container">
-            <Table
-              pagination={false}
-              columns={columnCity}
-              loading={lookupsloading}
-              dataSource={data?.Cities}
-              className="drawer-tbl"
-              size="small"
-              rowKey={(record, index) =>
-                record._id || record.id || record.key || index
-              }
-              rowClassName={(record, index) =>
-                index % 2 !== 0 ? "odd-row" : "even-row"
-              }
-              rowSelection={{
-                type: selectionType,
-                ...rowSelection,
-              }}
-              bordered
-            />
-          </div>
-        </div>
-      </MyDrawer>
-      <MyDrawer
-        title="Post Code"
-        open={drawerOpen?.PostCode}
-        isLoading={lookupDetailLoading && editingLookupDrawer === "PostCode"}
-        isPagination={true}
-        isEdit={isUpdateRec?.PostCode}
-        onClose={() => {
-          openCloseDrawerFtn("PostCode");
-          IsUpdateFtn("PostCode", false);
-        }}
-        add={() => {
-          if (!validateForm("PostCode")) return;
-          insertDataFtn(
-            `/lookup`,
-            drawerIpnuts?.PostCode,
-            "Data inserted successfully:",
-            "Data did not insert:",
-            () => resetCounteries("PostCode", () => dispatch(getAllLookups())),
-          );
-          dispatch(getAllLookups());
-        }}
-        update={async () => {
-          if (!validateForm("PostCode")) return;
-          await updateFtn("/lookup", drawerIpnuts?.PostCode, () =>
-            resetCounteries("PostCode", () => dispatch(getAllLookups())),
-          );
-          dispatch(getAllLookups());
-          IsUpdateFtn("PostCode", false);
-        }}
-      >
-        <div className="drawer-main-cntainer p-4 me-2 ms-2">
-          {/* Code + Post Code */}
-          <Row gutter={24}>
-            <Col span={12}>
-              <MyInput
-                label="Code:"
-                name="code"
-                value={drawerIpnuts?.PostCode?.code || ""}
-                onChange={(e) =>
-                  drawrInptChng("PostCode", "code", e.target.value)
-                }
-                placeholder="Enter code"
-                disabled={isDisable}
-                required
-                hasError={!!errors?.PostCode?.code}
-              />
-            </Col>
-            <Col span={12}>
-              <MyInput
-                label="Post Code:"
-                name="postcode"
-                value={drawerIpnuts?.PostCode?.postcode || ""}
-                onChange={(e) =>
-                  drawrInptChng("PostCode", "postcode", e.target.value)
-                }
-                placeholder="Enter post code"
-                disabled={isDisable}
-                required
-                hasError={!!errors?.PostCode?.postcode}
-              />
-            </Col>
-          </Row>
-
-          {/* Display Name + City */}
-          <Row gutter={24}>
-            <Col span={12}>
-              <MyInput
-                label="Display Name:"
-                name="DisplayName"
-                value={drawerIpnuts?.PostCode?.DisplayName || ""}
-                onChange={(e) =>
-                  drawrInptChng("PostCode", "DisplayName", e.target.value)
-                }
-                placeholder="Enter display name"
-                disabled={isDisable}
-                hasError={!!errors?.PostCode?.DisplayName}
-              />
-            </Col>
-            <Col span={12}>
-              <CustomSelect
-                label="City:"
-                name="cityId"
-                value={drawerIpnuts?.PostCode?.cityId || ""}
-                options={selectLokups?.Cities || []}
-                onChange={(val) => drawrInptChng("PostCode", "cityId", val)}
-                isSimple={true}
-                disabled={isDisable}
-                required
-                hasError={!!errors?.PostCode?.cityId}
-              />
-            </Col>
-          </Row>
-
-          {/* Active */}
-          <Row>
-            <Col span={24}>
-              <Checkbox
-                disabled={isDisable}
-                onChange={(e) =>
-                  drawrInptChng("PostCode", "isactive", e.target.checked)
-                }
-                checked={drawerIpnuts?.PostCode?.isactive}
-                style={{ marginTop: "26px" }}
-              >
-                Active
-              </Checkbox>
-            </Col>
-          </Row>
-
-          {/* Existing Post Codes Table */}
-          <div className="mt-4 config-tbl-container">
-            <h6 className="mb-3 text-primary">Existing Post Codes</h6>
-            <Table
-              pagination={false}
-              columns={columnPostCode}
-              dataSource={groupedLookups["Post Code"]}
-              loading={lookupsloading}
-              className="drawer-tbl"
-              size="small"
-              rowKey={(record, index) =>
-                record._id || record.id || record.key || index
-              }
-              rowClassName={(record, index) =>
-                index % 2 !== 0 ? "odd-row" : "even-row"
-              }
-              rowSelection={{
-                type: selectionType,
-                ...rowSelection,
-              }}
-              bordered
-            />
-          </div>
-        </div>
-      </MyDrawer>
-      <MyDrawer
         title="Branch"
         open={drawerOpen?.Districts}
         isLoading={lookupDetailLoading && editingLookupDrawer === "Districts"}
@@ -7055,6 +5261,7 @@ const Configuration = () => {
                   handleOfficerChange("Districts", branchOfficerOptions, e)
                 }
                 isIDs={true}
+                showSearch
               />
             </Col>
           </Row>
@@ -7260,6 +5467,7 @@ const Configuration = () => {
                     handleOfficerChange("Divisions", regionOfficerOptions, e)
                   }
                   isIDs={true}
+                  showSearch
                 />
               </Col>
             </Row>
@@ -7446,6 +5654,7 @@ const Configuration = () => {
                   handleOfficerChange("Divisions", regionOfficerOptions, e)
                 }
                 isIDs={true}
+                showSearch
               />
             </Col>
           </Row>
@@ -7624,6 +5833,7 @@ const Configuration = () => {
                     handleOfficerChange("Station", stationOfficerOptions, e)
                   }
                   isIDs={true}
+                  showSearch
                 />
               </Col>
             </Row>
@@ -7859,6 +6069,7 @@ const Configuration = () => {
                     )
                   }
                   disabled={isDisable}
+                  showSearch
                 />
               </Col>
             </Row>
@@ -7932,18 +6143,16 @@ const Configuration = () => {
         }
         isPagination={true}
         onClose={() => openCloseDrawerFtn("StudyLocation")}
-        add={() => {
+        add={async () => {
           if (!validateForm("StudyLocation")) return;
-          insertDataFtn(
+          await insertDataFtn(
             `/lookup`,
             getLookupDrawerPayload("StudyLocation"),
             "Data inserted successfully:",
             "Data did not insert:",
-            () => {
-              resetCounteries("StudyLocation", () => dispatch(getAllLookups()));
-            },
+            () => resetCounteries("StudyLocation"),
           );
-          dispatch(getAllLookups());
+          await dispatch(getAllLookups());
         }}
         isEdit={isUpdateRec?.StudyLocation}
         update={async () => {
@@ -7951,10 +6160,9 @@ const Configuration = () => {
           await updateFtn(
             "/lookup",
             getLookupDrawerPayload("StudyLocation"),
-            () =>
-              resetCounteries("StudyLocation", () => dispatch(getAllLookups())),
+            () => resetCounteries("StudyLocation"),
           );
-          dispatch(getAllLookups());
+          await dispatch(getAllLookups());
           IsUpdateFtn("StudyLocation", false);
         }}
       >
@@ -7991,6 +6199,7 @@ const Configuration = () => {
                     )
                   }
                   isIDs={true}
+                  showSearch
                 />
               </Col>
             </Row>
@@ -8239,6 +6448,7 @@ const Configuration = () => {
                     )
                   }
                   disabled={isDisable}
+                  showSearch
                 />
               </Col>
             </Row>
@@ -8268,6 +6478,281 @@ const Configuration = () => {
               pagination={true}
               columns={columnStudyLocations}
               dataSource={filteredStudyLocations}
+              className="drawer-tbl"
+              size="small"
+              scroll={{ x: "max-content" }}
+              loading={lookupsloading}
+              rowKey={(record, index) =>
+                record._id || record.id || record.key || index
+              }
+              rowClassName={(record, index) =>
+                index % 2 !== 0 ? "odd-row" : "even-row"
+              }
+              rowSelection={{
+                type: selectionType,
+                ...rowSelection,
+              }}
+              bordered
+            />
+          </div>
+        </div>
+      </MyDrawer>
+      <MyDrawer
+        title="Venue"
+        open={drawerOpen?.Venue}
+        isLoading={lookupDetailLoading && editingLookupDrawer === "Venue"}
+        isPagination={true}
+        onClose={() => openCloseDrawerFtn("Venue")}
+        add={() => {
+          if (!validateForm("Venue")) return;
+          insertDataFtn(
+            `/lookup`,
+            getLookupDrawerPayload("Venue"),
+            "Data inserted successfully:",
+            "Data did not insert:",
+            () => {
+              resetCounteries("Venue", () => dispatch(getAllLookups()));
+            },
+          );
+          dispatch(getAllLookups());
+        }}
+        isEdit={isUpdateRec?.Venue}
+        update={async () => {
+          if (!validateForm("Venue")) return;
+          await updateFtn(
+            "/lookup",
+            getLookupDrawerPayload("Venue"),
+            () => resetCounteries("Venue", () => dispatch(getAllLookups())),
+          );
+          dispatch(getAllLookups());
+          IsUpdateFtn("Venue", false);
+        }}
+      >
+        <div className="drawer-main-cntainer p-4 me-2 ms-2">
+          <div className="mb-4 pb-4">
+            <Row gutter={24}>
+              <Col span={12}>
+                <MyInput
+                  label="Code"
+                  name="code"
+                  value={drawerIpnuts?.Venue?.code}
+                  onChange={(val) =>
+                    drawrInptChng("Venue", "code", val.target.value)
+                  }
+                  disabled={isDisable}
+                  hasError={!!errors?.Venue?.code}
+                  errorMessage={errors?.Venue?.code}
+                  required
+                />
+              </Col>
+              <Col span={12}>
+                <MyInput
+                  label="Venue Name"
+                  name="lookupname"
+                  value={drawerIpnuts?.Venue?.lookupname}
+                  onChange={(val) =>
+                    drawrInptChng("Venue", "lookupname", val.target.value)
+                  }
+                  disabled={isDisable}
+                  hasError={!!errors?.Venue?.lookupname}
+                  errorMessage={errors?.Venue?.lookupname}
+                  required
+                />
+              </Col>
+            </Row>
+
+            <Row gutter={24}>
+              <Col span={12}>
+                <MyInput
+                  label="Display Name"
+                  name="DisplayName"
+                  value={drawerIpnuts?.Venue?.DisplayName}
+                  onChange={(val) =>
+                    drawrInptChng("Venue", "DisplayName", val.target.value)
+                  }
+                  disabled={isDisable}
+                />
+              </Col>
+              <Col span={12}>
+                <Checkbox
+                  disabled={isDisable}
+                  checked={drawerIpnuts?.Venue?.isactive}
+                  onChange={(e) =>
+                    drawrInptChng("Venue", "isactive", e.target.checked)
+                  }
+                >
+                  Active
+                </Checkbox>
+              </Col>
+            </Row>
+
+            <Row gutter={24} style={{ marginTop: 16 }}>
+              <Col span={24}>
+                <div className="mt-1 mb-2">
+                  <h4
+                    style={{
+                      fontSize: "15px",
+                      fontWeight: 600,
+                      color: "#1a1a1a",
+                      margin: 0,
+                      paddingBottom: "4px",
+                      borderBottom: "1px solid #f0f0f0",
+                    }}
+                  >
+                    Address
+                  </h4>
+                </div>
+              </Col>
+
+              <Col span={24}>
+                {isMapsLoaded && (
+                  <StandaloneSearchBox
+                    onLoad={(ref) => (venueAddressInputRef.current = ref)}
+                    onPlacesChanged={handleVenuePlacesChanged}
+                  >
+                    <MyInput
+                      label="Search by Address or Eircode"
+                      name="venueAddressSearch"
+                      placeholder="Enter Eircode (e.g., D01X4X0) or address"
+                      disabled={isDisable}
+                      value={venueAddressSearchValue}
+                      onChange={(e) =>
+                        setVenueAddressSearchValue(e.target.value)
+                      }
+                    />
+                  </StandaloneSearchBox>
+                )}
+              </Col>
+
+              <Col xs={24} md={12}>
+                <MyInput
+                  label="Address Line 1 (Building or House)"
+                  name="buildingOrHouse"
+                  value={
+                    drawerIpnuts?.Venue?.venueAddress?.buildingOrHouse
+                  }
+                  onChange={(val) =>
+                    drawrInptChng(
+                      "Venue",
+                      "venueAddress.buildingOrHouse",
+                      val.target.value,
+                    )
+                  }
+                  disabled={isDisable}
+                />
+              </Col>
+
+              <Col xs={24} md={12}>
+                <MyInput
+                  label="Address Line 2 (Street or Road)"
+                  name="streetOrRoad"
+                  value={drawerIpnuts?.Venue?.venueAddress?.streetOrRoad}
+                  onChange={(val) =>
+                    drawrInptChng(
+                      "Venue",
+                      "venueAddress.streetOrRoad",
+                      val.target.value,
+                    )
+                  }
+                  disabled={isDisable}
+                />
+              </Col>
+
+              <Col xs={24} md={12}>
+                <MyInput
+                  label="Address Line 3 (Area or Town)"
+                  name="areaOrTown"
+                  value={drawerIpnuts?.Venue?.venueAddress?.areaOrTown}
+                  onChange={(val) =>
+                    drawrInptChng(
+                      "Venue",
+                      "venueAddress.areaOrTown",
+                      val.target.value,
+                    )
+                  }
+                  disabled={isDisable}
+                />
+              </Col>
+
+              <Col xs={24} md={12}>
+                <MyInput
+                  label="Address Line 4 (County, City or Postcode)"
+                  name="countyCityOrPostCode"
+                  value={
+                    drawerIpnuts?.Venue?.venueAddress?.countyCityOrPostCode
+                  }
+                  onChange={(val) =>
+                    drawrInptChng(
+                      "Venue",
+                      "venueAddress.countyCityOrPostCode",
+                      val.target.value,
+                    )
+                  }
+                  disabled={isDisable}
+                />
+              </Col>
+
+              <Col xs={24} md={12}>
+                <MyInput
+                  label="Eircode"
+                  name="eircode"
+                  placeholder="Enter Eircode (e.g., D01X4X0)"
+                  value={drawerIpnuts?.Venue?.venueAddress?.eircode}
+                  onChange={(val) =>
+                    drawrInptChng(
+                      "Venue",
+                      "venueAddress.eircode",
+                      val.target.value,
+                    )
+                  }
+                  disabled={isDisable}
+                />
+              </Col>
+
+              <Col xs={24} md={12}>
+                <CustomSelect
+                  label="Country"
+                  name="country"
+                  value={drawerIpnuts?.Venue?.venueAddress?.country}
+                  options={countriesOptions}
+                  onChange={(val) =>
+                    drawrInptChng(
+                      "Venue",
+                      "venueAddress.country",
+                      val.target.value,
+                    )
+                  }
+                  disabled={isDisable}
+                  showSearch
+                />
+              </Col>
+            </Row>
+          </div>
+
+          <div className="mt-4 config-tbl-container">
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                marginBottom: "12px",
+              }}
+            >
+              <h6 className="m-0 text-primary">Existing Venues</h6>
+              <MyInput
+                placeholder="Search venues..."
+                style={{ width: 250 }}
+                prefix={<SearchOutlined />}
+                value={searchTermVenue}
+                onChange={handleVenueSearchChange}
+                onClear={clearVenueSearch}
+                allowClear
+              />
+            </div>
+            <Table
+              pagination={true}
+              columns={columnVenues}
+              dataSource={filteredVenues}
               className="drawer-tbl"
               size="small"
               scroll={{ x: "max-content" }}
@@ -8369,8 +6854,8 @@ const Configuration = () => {
                     )
                   }
                   disabled={isDisable}
-                  hasError={!!errors?.contactType?.displayName}
-                  errorMessage={errors?.contactType?.displayName}
+                  hasError={!!errors?.ContactType?.displayName}
+                  errorMessage={errors?.ContactType?.displayName}
                 />
               </Col>
 
@@ -8593,7 +7078,7 @@ const Configuration = () => {
         }}
         add={async () => {
           await insertDataFtn(
-            `${baseURL}/regiontype`,
+            `/regiontype`,
             {
               ...drawerIpnuts?.RegionType,
               userid: "67f3f9d812b014a0a7a94081",
@@ -8739,7 +7224,7 @@ const Configuration = () => {
         add={async () => {
           await insertDataFtn(
             `/lookup`,
-            drawerIpnuts?.Lookup,
+            getLookupDrawerPayload("Lookup"),
             "Data inserted successfully",
             "Data did not insert",
             () =>
@@ -8749,7 +7234,7 @@ const Configuration = () => {
         }}
         isEdit={isUpdateRec?.Lookup}
         update={async () => {
-          await updateFtn("/lookup", drawerIpnuts?.Lookup, () =>
+          await updateFtn("/lookup", getLookupDrawerPayload("Lookup"), () =>
             resetCounteries("Lookup", () => dispatch(getAllLookups())),
           );
           dispatch(getAllLookups());
@@ -8767,6 +7252,7 @@ const Configuration = () => {
                 value={drawerIpnuts?.Lookup?.lookuptypeId || ""}
                 options={lookupsTypesSelect}
                 isSimple={true}
+                showSearch
                 required
                 onChange={(value) => {
                   const nextTypeId = String(value.target.value);
@@ -8923,178 +7409,62 @@ const Configuration = () => {
           />
         </div>
       </MyDrawer>
-      <MyDrawer
-        title={activeStandardLookupType?.lookuptype || "Lookup"}
+      <LookupRecordDrawer
         open={drawerOpen?.StandardLookup}
+        lookupType={activeStandardLookupType}
+        formValues={drawerIpnuts?.StandardLookup}
+        lookups={lookups}
+        lookupsTypes={lookupsTypes}
+        tableData={standardLookupTableData}
+        tableLoading={lookupsloading}
         isLoading={
           lookupDetailLoading && editingLookupDrawer === "StandardLookup"
         }
-        isPagination={true}
         isEdit={isUpdateRec?.StandardLookup}
+        disabled={isDisable}
+        errors={errors?.StandardLookup || {}}
+        selectionType={selectionType}
+        rowSelection={rowSelection}
         onClose={() => {
           setActiveStandardLookupType(null);
           openCloseDrawerFtn("StandardLookup");
           IsUpdateFtn("StandardLookup", false);
         }}
-        add={async () => {
+        onAdd={async () => {
           if (!validateForm("StandardLookup")) return;
           await insertDataFtn(
             `/lookup`,
-            drawerIpnuts?.StandardLookup,
+            getLookupDrawerPayload("StandardLookup"),
             "Data inserted successfully",
             "Data did not insert",
-            () =>
-              resetCounteries("StandardLookup", () =>
-                dispatch(getAllLookups()),
-              ),
+            () => resetCounteries("StandardLookup"),
           );
-          dispatch(getAllLookups());
+          await dispatch(getAllLookups());
         }}
-        update={async () => {
+        onUpdate={async () => {
           if (!validateForm("StandardLookup")) return;
-          await updateFtn("/lookup", drawerIpnuts?.StandardLookup, () =>
-            resetCounteries("StandardLookup", () => dispatch(getAllLookups())),
+          await updateFtn(
+            "/lookup",
+            getLookupDrawerPayload("StandardLookup"),
+            () => resetCounteries("StandardLookup"),
           );
-          dispatch(getAllLookups());
+          await dispatch(getAllLookups());
           IsUpdateFtn("StandardLookup", false);
         }}
-      >
-        <div className="drawer-main-cntainer p-4 me-2 ms-2">
-          <Row gutter={24}>
-            <Col span={12}>
-              <MyInput
-                label="Code:"
-                name="code"
-                value={drawerIpnuts?.StandardLookup?.code || ""}
-                onChange={(e) =>
-                  drawrInptChng("StandardLookup", "code", e.target.value)
-                }
-                placeholder="Enter code"
-                disabled={isDisable}
-                required
-                hasError={!!errors?.StandardLookup?.code}
-              />
-            </Col>
-            <Col span={12}>
-              <MyInput
-                label={`${activeStandardLookupType?.lookuptype || "Lookup"} Name:`}
-                name="lookupname"
-                value={drawerIpnuts?.StandardLookup?.lookupname || ""}
-                onChange={(e) =>
-                  drawrInptChng("StandardLookup", "lookupname", e.target.value)
-                }
-                placeholder={`Enter ${activeStandardLookupType?.lookuptype || "lookup"} name`}
-                disabled={isDisable}
-                required
-                hasError={!!errors?.StandardLookup?.lookupname}
-              />
-            </Col>
-          </Row>
-
-          <Row gutter={24}>
-            <Col span={12}>
-              <MyInput
-                label="Display Name:"
-                name="DisplayName"
-                value={drawerIpnuts?.StandardLookup?.DisplayName || ""}
-                onChange={(e) =>
-                  drawrInptChng("StandardLookup", "DisplayName", e.target.value)
-                }
-                placeholder="Enter display name"
-                disabled={isDisable}
-                hasError={!!errors?.StandardLookup?.DisplayName}
-              />
-            </Col>
-            <ParentLookupSelect
-              drawerKey="StandardLookup"
-              lookuptypeId={
-                activeStandardLookupType?._id ||
-                drawerIpnuts?.StandardLookup?.lookuptypeId
-              }
-              lookups={lookups}
-              lookupsTypes={lookupsTypes}
-              value={drawerIpnuts?.StandardLookup?.Parentlookupid}
-              parentLabel={drawerIpnuts?.StandardLookup?.Parentlookup}
-              parentLookupTypeId={
-                drawerIpnuts?.StandardLookup?.ParentlookuptypeId
-              }
-              parentLookupTypeName={
-                drawerIpnuts?.StandardLookup?.Parentlookuptype
-              }
-              disabled={isDisable}
-              required={lookupTypeRequiresParent(
-                lookupsTypes,
-                activeStandardLookupType?._id ||
-                  drawerIpnuts?.StandardLookup?.lookuptypeId,
-              )}
-              hasError={!!errors?.StandardLookup?.Parentlookupid}
-              onChange={(payload) =>
-                handleParentLookupChange("StandardLookup", payload)
-              }
-            />
-          </Row>
-
-          <Row gutter={24}>
-            <Col span={12}>
-              <Checkbox
-                disabled={isDisable}
-                onChange={(e) =>
-                  drawrInptChng("StandardLookup", "isactive", e.target.checked)
-                }
-                checked={drawerIpnuts?.StandardLookup?.isactive}
-                style={{ marginTop: "26px" }}
-              >
-                Active
-              </Checkbox>
-            </Col>
-            {isWorkLocationLookupType(activeStandardLookupType) ? (
-              <Col span={12}>
-                <Checkbox
-                  disabled={isDisable}
-                  checked={
-                    !!drawerIpnuts?.StandardLookup?.processSalaryDeduction
-                  }
-                  onChange={(e) =>
-                    drawrInptChng(
-                      "StandardLookup",
-                      "processSalaryDeduction",
-                      e.target.checked,
-                    )
-                  }
-                  style={{ marginTop: "26px" }}
-                >
-                  Process Salary Deduction
-                </Checkbox>
-              </Col>
-            ) : null}
-          </Row>
-
-          <div className="mt-4 config-tbl-container">
-            <h6 className="mb-3 text-primary">
-              Existing {activeStandardLookupType?.lookuptype || "Lookups"}
-            </h6>
-            <Table
-              pagination={false}
-              columns={columnStandardLookup}
-              dataSource={standardLookupTableData}
-              loading={lookupsloading}
-              className="drawer-tbl"
-              size="small"
-              rowKey={(record, index) =>
-                record._id || record.id || record.key || index
-              }
-              rowClassName={(record, index) =>
-                index % 2 !== 0 ? "odd-row" : "even-row"
-              }
-              rowSelection={{
-                type: selectionType,
-                ...rowSelection,
-              }}
-              bordered
-            />
-          </div>
-        </div>
-      </MyDrawer>
+        onFieldChange={(field, value) =>
+          drawrInptChng("StandardLookup", field, value)
+        }
+        onParentChange={(payload) =>
+          handleParentLookupChange("StandardLookup", payload)
+        }
+        onEditRecord={(record) =>
+          loadLookupForEdit("StandardLookup", record)
+        }
+        onDeleteRecord={async (record) => {
+          await deleteFtn("/lookup/", { id: record?._id });
+          await dispatch(getAllLookups());
+        }}
+      />
       <MyDrawer
         title="Bookmarks"
         open={drawerOpen?.Bookmarks}
@@ -9213,6 +7583,7 @@ const Configuration = () => {
                   { label: "Date", value: "date" },
                 ]}
                 placeholder="Select data type"
+                showSearch
                 disabled={isDisable}
                 required
                 hasError={!!errors?.Bookmarks?.dataType}
@@ -9262,2459 +7633,38 @@ const Configuration = () => {
           </div>
         </div>
       </MyDrawer>
-      <MyDrawer
-        title="Gender"
-        open={drawerOpen?.Gender}
-        isLoading={lookupDetailLoading && editingLookupDrawer === "Gender"}
-        isPagination={true}
-        onClose={() => {
-          openCloseDrawerFtn("Gender");
-          IsUpdateFtn("Gender", false);
-        }}
-        add={async () => {
-          if (!validateForm("Gender")) return;
-          await insertDataFtn(
-            `/lookup`,
-            drawerIpnuts?.Gender,
-            "Data inserted successfully",
-            "Data did not insert",
-            () => resetCounteries("Gender", () => dispatch(getAllLookups())),
-          );
-          dispatch(getAllLookups());
-        }}
-        isEdit={isUpdateRec?.Gender}
-        update={async () => {
-          if (!validateForm("Gender")) return;
-          await updateFtn("/lookup", drawerIpnuts?.Gender, () =>
-            resetCounteries("Gender", () => dispatch(getAllLookups())),
-          );
-          dispatch(getAllLookups());
-          IsUpdateFtn("Gender", false);
-        }}
-      >
-        <div className="drawer-main-cntainer p-4 me-2 ms-2">
-          {/* Code + Gender Name */}
-          <Row gutter={24}>
-            <Col span={12}>
-              <MyInput
-                label="Code:"
-                name="code"
-                value={drawerIpnuts?.Gender?.code}
-                onChange={(e) =>
-                  drawrInptChng("Gender", "code", e.target.value)
-                }
-                placeholder="Enter code"
-                disabled={isDisable}
-                required
-                hasError={!!errors?.Gender?.code}
-              />
-            </Col>
-            <Col span={12}>
-              <MyInput
-                label="Gender Name:"
-                name="lookupname"
-                value={drawerIpnuts?.Gender?.lookupname}
-                onChange={(e) =>
-                  drawrInptChng("Gender", "lookupname", e.target.value)
-                }
-                placeholder="Enter gender name"
-                disabled={isDisable}
-                required
-                hasError={!!errors?.Gender?.lookupname}
-              />
-            </Col>
-          </Row>
 
-          {/* Display Name + Active */}
-          <Row gutter={24}>
-            <Col span={12}>
-              <MyInput
-                label="Display Name:"
-                name="DisplayName"
-                value={drawerIpnuts?.Gender?.DisplayName}
-                onChange={(e) =>
-                  drawrInptChng("Gender", "DisplayName", e.target.value)
-                }
-                placeholder="Enter display name"
-                disabled={isDisable}
-                hasError={!!errors?.Gender?.DisplayName}
-              />
-            </Col>
-            <ParentLookupSelect
-              drawerKey="Gender"
-              lookuptypeId={drawerIpnuts?.Gender?.lookuptypeId}
-              lookups={lookups}
-              lookupsTypes={lookupsTypes}
-              value={drawerIpnuts?.Gender?.Parentlookupid}
-              parentLabel={drawerIpnuts?.Gender?.Parentlookup}
-              parentLookupTypeId={drawerIpnuts?.Gender?.ParentlookuptypeId}
-              parentLookupTypeName={drawerIpnuts?.Gender?.Parentlookuptype}
-              disabled={isDisable}
-              required={lookupTypeRequiresParent(
-                lookupsTypes,
-                drawerIpnuts?.Gender?.lookuptypeId,
-              )}
-              hasError={!!errors?.Gender?.Parentlookupid}
-              onChange={(payload) =>
-                handleParentLookupChange("Gender", payload)
-              }
-            />
-          </Row>
 
-          <Row gutter={24}>
-            <Col span={12}>
-              <Checkbox
-                disabled={isDisable}
-                onChange={(e) =>
-                  drawrInptChng("Gender", "isactive", e.target.checked)
-                }
-                checked={drawerIpnuts?.Gender?.isactive}
-                style={{ marginTop: "26px" }}
-              >
-                Active
-              </Checkbox>
-            </Col>
-          </Row>
 
-          {/* Existing Gender Table */}
-          <div className="mt-4 config-tbl-container">
-            <h6 className="mb-3 text-primary">Existing Gender</h6>
-            <Table
-              pagination={false}
-              columns={columnGender}
-              dataSource={groupedLookups?.Gender}
-              loading={lookupsloading}
-              className="drawer-tbl"
-              size="small"
-              rowKey={(record, index) =>
-                record._id || record.id || record.key || index
-              }
-              rowClassName={(record, index) =>
-                index % 2 !== 0 ? "odd-row" : "even-row"
-              }
-              rowSelection={{
-                type: selectionType,
-                ...rowSelection,
-              }}
-              bordered
-            />
-          </div>
-        </div>
-      </MyDrawer>
 
-      <MyDrawer
-        title="City"
-        open={drawerOpen?.Cities}
-        isLoading={lookupDetailLoading && editingLookupDrawer === "Cities"}
-        isPagination={true}
-        isEdit={isUpdateRec?.Cities}
-        onClose={() => {
-          openCloseDrawerFtn("Cities");
-          IsUpdateFtn("Cities", false);
-        }}
-        add={() => {
-          if (!validateForm("Cities")) return;
-          insertDataFtn(
-            `/lookup`,
-            drawerIpnuts?.Cities,
-            "Data inserted successfully:",
-            "Data did not insert:",
-            () => resetCounteries("Cities", () => dispatch(getAllLookups())),
-          );
-          dispatch(getAllLookups());
-        }}
-        update={async () => {
-          if (!validateForm("Cities")) return;
-          await updateFtn("/lookup", drawerIpnuts?.Cities, () =>
-            resetCounteries("Cities", () => dispatch(getAllLookups())),
-          );
-          dispatch(getAllLookups());
-          IsUpdateFtn("Cities", false);
-        }}
-      >
-        <div className="drawer-main-cntainer p-4 me-2 ms-2">
-          {/* Code + City Name */}
-          <Row gutter={24}>
-            <Col span={12}>
-              <MyInput
-                label="Code:"
-                name="code"
-                value={drawerIpnuts?.Cities?.code || ""}
-                onChange={(e) =>
-                  drawrInptChng("Cities", "code", e.target.value)
-                }
-                placeholder="Enter code"
-                disabled={isDisable}
-                required
-                hasError={!!errors?.Cities?.code}
-              />
-            </Col>
-            <Col span={12}>
-              <MyInput
-                label="City Name:"
-                name="lookupname"
-                value={drawerIpnuts?.Cities?.lookupname || ""}
-                onChange={(e) =>
-                  drawrInptChng("Cities", "lookupname", e.target.value)
-                }
-                placeholder="Enter city name"
-                disabled={isDisable}
-                required
-                hasError={!!errors?.Cities?.lookupname}
-              />
-            </Col>
-          </Row>
 
-          {/* Display Name + County */}
-          <Row gutter={24}>
-            <Col span={12}>
-              <MyInput
-                label="Display Name:"
-                name="DisplayName"
-                value={drawerIpnuts?.Cities?.DisplayName || ""}
-                onChange={(e) =>
-                  drawrInptChng("Cities", "DisplayName", e.target.value)
-                }
-                placeholder="Enter display name"
-                disabled={isDisable}
-                hasError={!!errors?.Cities?.DisplayName}
-              />
-            </Col>
-            <ParentLookupSelect
-              drawerKey="Cities"
-              lookuptypeId={drawerIpnuts?.Cities?.lookuptypeId}
-              lookups={lookups}
-              lookupsTypes={lookupsTypes}
-              value={drawerIpnuts?.Cities?.Parentlookupid}
-              parentLabel={drawerIpnuts?.Cities?.Parentlookup}
-              parentLookupTypeId={drawerIpnuts?.Cities?.ParentlookuptypeId}
-              parentLookupTypeName={drawerIpnuts?.Cities?.Parentlookuptype}
-              disabled={isDisable}
-              required={lookupTypeRequiresParent(
-                lookupsTypes,
-                drawerIpnuts?.Cities?.lookuptypeId,
-              )}
-              hasError={!!errors?.Cities?.Parentlookupid}
-              onChange={(payload) =>
-                handleParentLookupChange("Cities", payload)
-              }
-            />
-          </Row>
 
-          {/* Active */}
-          <Row>
-            <Col span={24}>
-              <Checkbox
-                disabled={isDisable}
-                onChange={(e) =>
-                  drawrInptChng("Cities", "isactive", e.target.checked)
-                }
-                checked={drawerIpnuts?.Cities?.isactive}
-                style={{ marginTop: "26px" }}
-              >
-                Active
-              </Checkbox>
-            </Col>
-          </Row>
-
-          {/* Existing Cities Table */}
-          <div className="mt-4 config-tbl-container">
-            <h6 className="mb-3 text-primary">Existing Cities</h6>
-            <Table
-              pagination={false}
-              columns={columnCity}
-              dataSource={groupedLookups["City"]}
-              loading={lookupsloading}
-              className="drawer-tbl"
-              size="small"
-              rowKey={(record, index) =>
-                record._id || record.id || record.key || index
-              }
-              rowClassName={(record, index) =>
-                index % 2 !== 0 ? "odd-row" : "even-row"
-              }
-              rowSelection={{
-                type: selectionType,
-                ...rowSelection,
-              }}
-              bordered
-            />
-          </div>
-        </div>
-      </MyDrawer>
-
-      <MyDrawer
-        title="Title"
-        open={drawerOpen?.Title}
-        isLoading={lookupDetailLoading && editingLookupDrawer === "Title"}
-        isPagination={true}
-        onClose={() => {
-          openCloseDrawerFtn("Title");
-          IsUpdateFtn("Title", false);
-        }}
-        add={() => {
-          if (!validateForm("Title")) return;
-          insertDataFtn(
-            `/lookup`,
-            drawerIpnuts?.Title,
-            "Data inserted successfully",
-            "Data did not insert",
-            () => resetCounteries("Title", () => dispatch(getAllLookups())),
-          );
-          dispatch(getAllLookups());
-        }}
-        isEdit={isUpdateRec?.Title}
-        update={async () => {
-          if (!validateForm("Title")) return;
-          await updateFtn("/lookup", drawerIpnuts?.Title, () =>
-            resetCounteries("Title", () => dispatch(getAllLookups())),
-          );
-          dispatch(getAllLookups());
-          IsUpdateFtn("Title", false);
-        }}
-      >
-        <div className="drawer-main-cntainer p-4 me-2 ms-2">
-          <Row gutter={24}>
-            <Col span={12}>
-              <MyInput
-                label="Code:"
-                name="code"
-                value={drawerIpnuts?.Title?.code || ""}
-                onChange={(e) => drawrInptChng("Title", "code", e.target.value)}
-                placeholder="Enter code"
-                disabled={isDisable}
-                required
-                hasError={!!errors?.Title?.code}
-              />
-            </Col>
-            <Col span={12}>
-              <MyInput
-                label="Title Name:"
-                name="lookupname"
-                value={drawerIpnuts?.Title?.lookupname || ""}
-                onChange={(e) =>
-                  drawrInptChng("Title", "lookupname", e.target.value)
-                }
-                placeholder="Enter title name"
-                disabled={isDisable}
-                required
-                hasError={!!errors?.Title?.lookupname}
-              />
-            </Col>
-          </Row>
-
-          {/* Display Name + Active */}
-          <Row gutter={24}>
-            <Col span={12}>
-              <MyInput
-                label="Display Name:"
-                name="DisplayName"
-                value={drawerIpnuts?.Title?.DisplayName || ""}
-                onChange={(e) =>
-                  drawrInptChng("Title", "DisplayName", e.target.value)
-                }
-                placeholder="Enter display name"
-                disabled={isDisable}
-                hasError={!!errors?.Title?.DisplayName}
-              />
-            </Col>
-            <ParentLookupSelect
-              drawerKey="Title"
-              lookuptypeId={drawerIpnuts?.Title?.lookuptypeId}
-              lookups={lookups}
-              lookupsTypes={lookupsTypes}
-              value={drawerIpnuts?.Title?.Parentlookupid}
-              parentLabel={drawerIpnuts?.Title?.Parentlookup}
-              parentLookupTypeId={drawerIpnuts?.Title?.ParentlookuptypeId}
-              parentLookupTypeName={drawerIpnuts?.Title?.Parentlookuptype}
-              disabled={isDisable}
-              required={lookupTypeRequiresParent(
-                lookupsTypes,
-                drawerIpnuts?.Title?.lookuptypeId,
-              )}
-              hasError={!!errors?.Title?.Parentlookupid}
-              onChange={(payload) => handleParentLookupChange("Title", payload)}
-            />
-          </Row>
-
-          <Row gutter={24}>
-            <Col span={12}>
-              <Checkbox
-                disabled={isDisable}
-                onChange={(e) =>
-                  drawrInptChng("Title", "isactive", e.target.checked)
-                }
-                checked={drawerIpnuts?.Title?.isactive}
-                style={{ marginTop: "26px" }}
-              >
-                Active
-              </Checkbox>
-            </Col>
-          </Row>
-
-          {/* Existing Titles Table */}
-          <div className="mt-4 config-tbl-container">
-            <h6 className="mb-3 text-primary">Existing Titles</h6>
-            <Table
-              pagination={false}
-              columns={columntTitles}
-              dataSource={groupedLookups?.Title}
-              loading={lookupsloading}
-              className="drawer-tbl"
-              size="small"
-              rowKey={(record, index) =>
-                record._id || record.id || record.key || index
-              }
-              rowClassName={(record, index) =>
-                index % 2 !== 0 ? "odd-row" : "even-row"
-              }
-              rowSelection={{
-                type: selectionType,
-                ...rowSelection,
-              }}
-              bordered
-            />
-          </div>
-        </div>
-      </MyDrawer>
-      <MyDrawer
-        title="Roster Type"
-        open={drawerOpen?.RosterType}
-        isLoading={lookupDetailLoading && editingLookupDrawer === "RosterType"}
-        isPagination={true}
-        onClose={() => {
-          openCloseDrawerFtn("RosterType");
-          IsUpdateFtn("RosterType", false);
-        }}
-        add={() => {
-          if (!validateForm("RosterType")) return;
-          insertDataFtn(
-            `/lookup`,
-            drawerIpnuts?.RosterType,
-            "Data inserted successfully",
-            "Data did not insert",
-            () =>
-              resetCounteries("RosterType", () => dispatch(getAllLookups())),
-          );
-          dispatch(getAllLookups());
-        }}
-        isEdit={isUpdateRec?.RosterType}
-        update={async () => {
-          if (!validateForm("RosterType")) return;
-          await updateFtn("/lookup", drawerIpnuts?.RosterType, () =>
-            resetCounteries("RosterType", () => dispatch(getAllLookups())),
-          );
-          dispatch(getAllLookups());
-          IsUpdateFtn("RosterType", false);
-        }}
-      >
-        <div className="drawer-main-cntainer p-4 me-2 ms-2">
-          <div className="mb-4 pb-4">
-            {/* Row 2: Code + Roster Type Name */}
-            <Row gutter={24}>
-              <Col span={12}>
-                <MyInput
-                  label="Code"
-                  required
-                  disabled={isDisable}
-                  value={drawerIpnuts?.RosterType?.code}
-                  onChange={(val) => drawrInptChng("RosterType", "code", val)}
-                  error={errors?.RosterType?.code}
-                />
-              </Col>
-              <Col span={12}>
-                <MyInput
-                  label="Roster Type Name"
-                  required
-                  disabled={isDisable}
-                  value={drawerIpnuts?.RosterType?.lookupname}
-                  onChange={(val) =>
-                    drawrInptChng("RosterType", "lookupname", val)
-                  }
-                  error={errors?.RosterType?.lookupname}
-                />
-              </Col>
-            </Row>
-
-            <Row gutter={24}>
-              <Col span={12}>
-                <MyInput
-                  label="Display Name"
-                  disabled={isDisable}
-                  value={drawerIpnuts?.RosterType?.DisplayName}
-                  onChange={(val) =>
-                    drawrInptChng("RosterType", "DisplayName", val)
-                  }
-                />
-              </Col>
-              <ParentLookupSelect
-                drawerKey="RosterType"
-                lookuptypeId={drawerIpnuts?.RosterType?.lookuptypeId}
-                lookups={lookups}
-                lookupsTypes={lookupsTypes}
-                value={drawerIpnuts?.RosterType?.Parentlookupid}
-                parentLabel={drawerIpnuts?.RosterType?.Parentlookup}
-                parentLookupTypeId={
-                  drawerIpnuts?.RosterType?.ParentlookuptypeId
-                }
-                parentLookupTypeName={
-                  drawerIpnuts?.RosterType?.Parentlookuptype
-                }
-                disabled={isDisable}
-                required={lookupTypeRequiresParent(
-                  lookupsTypes,
-                  drawerIpnuts?.RosterType?.lookuptypeId,
-                )}
-                hasError={!!errors?.RosterType?.Parentlookupid}
-                onChange={(payload) =>
-                  handleParentLookupChange("RosterType", payload)
-                }
-              />
-            </Row>
-            <Row gutter={24}>
-              <Col span={12}>
-                <Checkbox
-                  disabled={isDisable}
-                  checked={drawerIpnuts?.RosterType?.isactive}
-                  onChange={(e) =>
-                    drawrInptChng("RosterType", "isactive", e.target.checked)
-                  }
-                >
-                  Active
-                </Checkbox>
-              </Col>
-            </Row>
-          </div>
-
-          {/* History Table */}
-          <div className="mt-4 config-tbl-container">
-            <h6 className=" mb-3 text-primary">Existing Roster Types</h6>
-            <Table
-              pagination={false}
-              columns={columnRosterTypes}
-              dataSource={groupedLookups["Roster Type"]}
-              loading={lookupsloading}
-              className="drawer-tbl"
-              size="small"
-              rowKey={(record, index) =>
-                record._id || record.id || record.key || index
-              }
-              rowClassName={(record, index) =>
-                index % 2 !== 0 ? "odd-row" : "even-row"
-              }
-              rowSelection={{
-                type: selectionType,
-                ...rowSelection,
-              }}
-              bordered
-            />
-          </div>
-        </div>
-      </MyDrawer>
-
-      <MyDrawer
-        title="Marital Status"
-        open={drawerOpen?.MaritalStatus}
-        isLoading={
-          lookupDetailLoading && editingLookupDrawer === "MaritalStatus"
-        }
-        isPagination={true}
-        onClose={() => {
-          openCloseDrawerFtn("MaritalStatus");
-          IsUpdateFtn("MaritalStatus", false);
-        }}
-        add={async () => {
-          if (!validateForm("MaritalStatus")) return;
-          await insertDataFtn(
-            `${baseURL}/lookup`,
-            drawerIpnuts?.MaritalStatus,
-            "Data inserted successfully",
-            "Data did not insert",
-            () =>
-              resetCounteries("MaritalStatus", () => dispatch(getAllLookups())),
-          );
-        }}
-        isEdit={isUpdateRec?.MaritalStatus}
-        update={async () => {
-          if (!validateForm("MaritalStatus")) return;
-          await updateFtn(
-            `${baseURL}/lookup`,
-            drawerIpnuts?.MaritalStatus,
-            () =>
-              resetCounteries("MaritalStatus", () => dispatch(getAllLookups())),
-          );
-          IsUpdateFtn("MaritalStatus", false);
-        }}
-      >
-        <div className="drawer-main-cntainer p-4 me-2 ms-2">
-          <Row gutter={24}>
-            <Col span={12}>
-              <MyInput
-                label="Code"
-                name="code"
-                value={drawerIpnuts?.MaritalStatus?.code || ""}
-                onChange={(e) =>
-                  drawrInptChng("MaritalStatus", "code", e.target.value)
-                }
-                disabled={isDisable}
-                hasError={!!errors?.MaritalStatus?.code}
-                required
-              />
-            </Col>
-            <Col span={12}>
-              <MyInput
-                label="Marital Status"
-                name="lookupname"
-                value={drawerIpnuts?.MaritalStatus?.lookupname || ""}
-                onChange={(e) =>
-                  drawrInptChng("MaritalStatus", "lookupname", e.target.value)
-                }
-                disabled={isDisable}
-                hasError={!!errors?.MaritalStatus?.lookupname}
-                required
-              />
-            </Col>
-          </Row>
-          <Row gutter={24}>
-            <Col span={12}>
-              <MyInput
-                label="Display Name"
-                name="DisplayName"
-                value={drawerIpnuts?.MaritalStatus?.DisplayName || ""}
-                onChange={(e) =>
-                  drawrInptChng("MaritalStatus", "DisplayName", e.target.value)
-                }
-                disabled={isDisable}
-              />
-            </Col>
-            <ParentLookupSelect
-              drawerKey="MaritalStatus"
-              lookuptypeId={drawerIpnuts?.MaritalStatus?.lookuptypeId}
-              lookups={lookups}
-              lookupsTypes={lookupsTypes}
-              value={drawerIpnuts?.MaritalStatus?.Parentlookupid}
-              parentLabel={drawerIpnuts?.MaritalStatus?.Parentlookup}
-              parentLookupTypeId={
-                drawerIpnuts?.MaritalStatus?.ParentlookuptypeId
-              }
-              parentLookupTypeName={
-                drawerIpnuts?.MaritalStatus?.Parentlookuptype
-              }
-              disabled={isDisable}
-              required={lookupTypeRequiresParent(
-                lookupsTypes,
-                drawerIpnuts?.MaritalStatus?.lookuptypeId,
-              )}
-              hasError={!!errors?.MaritalStatus?.Parentlookupid}
-              onChange={(payload) =>
-                handleParentLookupChange("MaritalStatus", payload)
-              }
-            />
-          </Row>
-
-          <Row gutter={24}>
-            <Col span={12}>
-              <Checkbox
-                disabled={isDisable}
-                onChange={(e) =>
-                  drawrInptChng("MaritalStatus", "isactive", e.target.checked)
-                }
-                checked={drawerIpnuts?.MaritalStatus?.isactive}
-                style={{ marginTop: "26px" }}
-              >
-                Active
-              </Checkbox>
-            </Col>
-          </Row>
-
-          <div className="mt-4 config-tbl-container">
-            <h6 className="mb-3 text-primary">Existing Marital Status</h6>
-            <Table
-              pagination={false}
-              columns={columnGender}
-              dataSource={groupedLookups["Marital Status"]}
-              loading={lookupsloading}
-              className="drawer-tbl"
-              size="small"
-              rowKey={(record, index) =>
-                record._id || record.id || record.key || index
-              }
-              rowClassName={(record, index) =>
-                index % 2 !== 0 ? "odd-row" : "even-row"
-              }
-              rowSelection={{
-                type: selectionType,
-                ...rowSelection,
-              }}
-              bordered
-            />
-          </div>
-        </div>
-      </MyDrawer>
-
-      <MyDrawer
-        title="Project Types"
-        open={drawerOpen?.ProjectTypes}
-        isLoading={
-          lookupDetailLoading && editingLookupDrawer === "ProjectTypes"
-        }
-        isPagination={true}
-        onClose={() => {
-          openCloseDrawerFtn("ProjectTypes");
-          IsUpdateFtn("ProjectTypes", false);
-        }}
-        add={async () => {
-          if (!validateForm("ProjectTypes")) return;
-          await insertDataFtn(
-            `/lookup`,
-            drawerIpnuts?.ProjectTypes,
-            "Data inserted successfully",
-            "Data did not insert",
-            () =>
-              resetCounteries("ProjectTypes", () => dispatch(getAllLookups())),
-          );
-          dispatch(getAllLookups());
-        }}
-        isEdit={isUpdateRec?.ProjectTypes}
-        update={async () => {
-          if (!validateForm("ProjectTypes")) return;
-          await updateFtn("/lookup", drawerIpnuts?.ProjectTypes, () =>
-            resetCounteries("ProjectTypes", () => dispatch(getAllLookups())),
-          );
-          dispatch(getAllLookups());
-          IsUpdateFtn("ProjectTypes", false);
-        }}
-      >
-        <div className="drawer-main-cntainer p-4 me-2 ms-2">
-          {/* Code + Project Type */}
-          <Row gutter={24}>
-            <Col span={12}>
-              <MyInput
-                label="Code:"
-                name="code"
-                value={drawerIpnuts?.ProjectTypes?.code || ""}
-                onChange={(e) =>
-                  drawrInptChng("ProjectTypes", "code", e.target.value)
-                }
-                placeholder="Enter code"
-                disabled={isDisable}
-                required
-                hasError={!!errors?.ProjectTypes?.code}
-              />
-            </Col>
-            <Col span={12}>
-              <MyInput
-                label="Project Type:"
-                name="lookupname"
-                value={drawerIpnuts?.ProjectTypes?.lookupname || ""}
-                onChange={(e) =>
-                  drawrInptChng("ProjectTypes", "lookupname", e.target.value)
-                }
-                placeholder="Enter project type"
-                disabled={isDisable}
-                required
-                hasError={!!errors?.ProjectTypes?.lookupname}
-              />
-            </Col>
-          </Row>
-
-          {/* Display Name + Active */}
-          <Row gutter={24}>
-            <Col span={12}>
-              <MyInput
-                label="Display Name:"
-                name="DisplayName"
-                value={drawerIpnuts?.ProjectTypes?.DisplayName || ""}
-                onChange={(e) =>
-                  drawrInptChng("ProjectTypes", "DisplayName", e.target.value)
-                }
-                placeholder="Enter display name"
-                disabled={isDisable}
-                hasError={!!errors?.ProjectTypes?.DisplayName}
-              />
-            </Col>
-            <ParentLookupSelect
-              drawerKey="ProjectTypes"
-              lookuptypeId={drawerIpnuts?.ProjectTypes?.lookuptypeId}
-              lookups={lookups}
-              lookupsTypes={lookupsTypes}
-              value={drawerIpnuts?.ProjectTypes?.Parentlookupid}
-              parentLabel={drawerIpnuts?.ProjectTypes?.Parentlookup}
-              parentLookupTypeId={
-                drawerIpnuts?.ProjectTypes?.ParentlookuptypeId
-              }
-              parentLookupTypeName={
-                drawerIpnuts?.ProjectTypes?.Parentlookuptype
-              }
-              disabled={isDisable}
-              required={lookupTypeRequiresParent(
-                lookupsTypes,
-                drawerIpnuts?.ProjectTypes?.lookuptypeId,
-              )}
-              hasError={!!errors?.ProjectTypes?.Parentlookupid}
-              onChange={(payload) =>
-                handleParentLookupChange("ProjectTypes", payload)
-              }
-            />
-          </Row>
-
-          <Row gutter={24}>
-            <Col span={12}>
-              <Checkbox
-                disabled={isDisable}
-                onChange={(e) =>
-                  drawrInptChng("ProjectTypes", "isactive", e.target.checked)
-                }
-                checked={drawerIpnuts?.ProjectTypes?.isactive}
-                style={{ marginTop: "26px" }}
-              >
-                Active
-              </Checkbox>
-            </Col>
-          </Row>
-
-          {/* Existing Project Types Table */}
-          <div className="mt-4 config-tbl-container">
-            <h6 className="mb-3 text-primary">Existing Project Types</h6>
-            <Table
-              pagination={false}
-              columns={ProjectTypesColumns}
-              dataSource={data?.ProjectTypes}
-              loading={lookupsloading}
-              className="drawer-tbl"
-              size="small"
-              rowKey={(record, index) =>
-                record._id || record.id || record.key || index
-              }
-              rowClassName={(record, index) =>
-                index % 2 !== 0 ? "odd-row" : "even-row"
-              }
-              rowSelection={{
-                type: selectionType,
-                ...rowSelection,
-              }}
-              bordered
-            />
-          </div>
-        </div>
-      </MyDrawer>
-
-      <MyDrawer
-        title="Trainings"
-        open={drawerOpen?.Trainings}
-        isLoading={lookupDetailLoading && editingLookupDrawer === "Trainings"}
-        isPagination={true}
-        onClose={() => {
-          openCloseDrawerFtn("Trainings");
-          IsUpdateFtn("Trainings", false);
-        }}
-        add={async () => {
-          if (!validateForm("Trainings")) return;
-          await insertDataFtn(
-            `/lookup`,
-            drawerIpnuts?.Trainings,
-            "Data inserted successfully",
-            "Data did not insert",
-            () => {
-              resetCounteries("Trainings");
-              refreshLookups();
-            },
-          );
-        }}
-        isEdit={isUpdateRec?.Trainings}
-        update={async () => {
-          if (!validateForm("Trainings")) return;
-          await updateFtn("/lookup", drawerIpnuts?.Trainings, () => {
-            resetCounteries("Trainings");
-            refreshLookups();
-          });
-          IsUpdateFtn("Trainings", false);
-        }}
-      >
-        <div className="drawer-main-container">
-          <Row gutter={24}>
-            {/* Code - half width */}
-            <Col span={12}>
-              <CustomSelect
-                label="Code"
-                placeholder="Enter Code"
-                value={drawerIpnuts?.Trainings?.code}
-                onChange={(e) =>
-                  drawrInptChng("Trainings", "code", e.target.value)
-                }
-                disabled={isDisable}
-                hasError={!!errors?.Trainings?.code}
-              />
-            </Col>
-
-            {/* Trainings - half width */}
-            <Col span={12}>
-              <MyInput
-                label="Training"
-                placeholder="Enter Training"
-                value={drawerIpnuts?.Trainings?.lookupname}
-                onChange={(e) =>
-                  drawrInptChng("Trainings", "lookupname", e.target.value)
-                }
-                disabled={isDisable}
-                hasError={!!errors?.Trainings?.lookupname}
-              />
-            </Col>
-
-            {/* Display Name - half width */}
-            <Col span={12}>
-              <MyInput
-                label="Display Name"
-                placeholder="Enter Display Name"
-                value={drawerIpnuts?.Trainings?.DisplayName}
-                onChange={(e) =>
-                  drawrInptChng("Trainings", "DisplayName", e.target.value)
-                }
-                disabled={isDisable}
-                hasError={!!errors?.Trainings?.DisplayName}
-              />
-            </Col>
-            <ParentLookupSelect
-              drawerKey="Trainings"
-              lookuptypeId={drawerIpnuts?.Trainings?.lookuptypeId}
-              lookups={lookups}
-              lookupsTypes={lookupsTypes}
-              value={drawerIpnuts?.Trainings?.Parentlookupid}
-              parentLabel={drawerIpnuts?.Trainings?.Parentlookup}
-              parentLookupTypeId={drawerIpnuts?.Trainings?.ParentlookuptypeId}
-              parentLookupTypeName={drawerIpnuts?.Trainings?.Parentlookuptype}
-              disabled={isDisable}
-              required={lookupTypeRequiresParent(
-                lookupsTypes,
-                drawerIpnuts?.Trainings?.lookuptypeId,
-              )}
-              hasError={!!errors?.Trainings?.Parentlookupid}
-              onChange={(payload) =>
-                handleParentLookupChange("Trainings", payload)
-              }
-            />
-          </Row>
-
-          <Row gutter={24}>
-            <Col span={12} style={{ marginTop: "30px" }}>
-              <Checkbox
-                disabled={isDisable}
-                onChange={(e) =>
-                  drawrInptChng("Trainings", "isactive", e.target.checked)
-                }
-                checked={drawerIpnuts?.Trainings?.isactive}
-              >
-                Active
-              </Checkbox>
-            </Col>
-          </Row>
-
-          {/* Table */}
-          <div className="mt-4">
-            <Table
-              pagination={false}
-              columns={columnTrainings}
-              dataSource={data?.Trainings}
-              loading={lookupsloading}
-              className="drawer-tbl"
-              size="small"
-              rowKey={(record, index) =>
-                record._id || record.id || record.key || index
-              }
-              rowClassName={(record, index) =>
-                index % 2 !== 0 ? "odd-row" : "even-row"
-              }
-              rowSelection={{
-                type: selectionType,
-                ...rowSelection,
-              }}
-              bordered
-            />
-          </div>
-        </div>
-      </MyDrawer>
-
-      <MyDrawer
-        title="Document Type"
-        open={drawerOpen?.DocumentType}
-        isLoading={
-          lookupDetailLoading && editingLookupDrawer === "DocumentType"
-        }
-        isPagination={true}
-        onClose={() => {
-          openCloseDrawerFtn("DocumentType");
-          IsUpdateFtn("DocumentType", false);
-        }}
-        add={async () => {
-          if (!validateForm("DocumentType")) return;
-          await insertDataFtn(
-            `/lookup`,
-            drawerIpnuts?.DocumentType,
-            "Data inserted successfully",
-            "Data did not insert",
-            () =>
-              resetCounteries("DocumentType", () => dispatch(getAllLookups())),
-          );
-          dispatch(getAllLookups());
-        }}
-        isEdit={isUpdateRec?.DocumentType}
-        update={async () => {
-          if (!validateForm("DocumentType")) return;
-          await updateFtn("/lookup", drawerIpnuts?.DocumentType, () =>
-            resetCounteries("DocumentType", () => dispatch(getAllLookups())),
-          );
-          dispatch(getAllLookups());
-          IsUpdateFtn("DocumentType", false);
-        }}
-      >
-        <div className="drawer-main-cntainer p-4 me-2 ms-2">
-          {/* Code + Document Type */}
-          <Row gutter={24}>
-            <Col span={12}>
-              <MyInput
-                label="Code"
-                name="code"
-                value={drawerIpnuts?.DocumentType?.code || ""}
-                onChange={(e) =>
-                  drawrInptChng("DocumentType", "code", e.target.value)
-                }
-                placeholder="Enter code"
-                disabled={isDisable}
-                required
-                hasError={!!errors?.DocumentType?.code}
-              />
-            </Col>
-            <Col span={12}>
-              <MyInput
-                label="Document Type"
-                name="lookupname"
-                value={drawerIpnuts?.DocumentType?.lookupname || ""}
-                onChange={(e) =>
-                  drawrInptChng("DocumentType", "lookupname", e.target.value)
-                }
-                placeholder="Enter document type"
-                disabled={isDisable}
-                required
-                hasError={!!errors?.DocumentType?.lookupname}
-              />
-            </Col>
-          </Row>
-
-          {/* Display Name + Active */}
-          <Row gutter={24}>
-            <Col span={12}>
-              <MyInput
-                label="Display Name"
-                name="DisplayName"
-                value={drawerIpnuts?.DocumentType?.DisplayName || ""}
-                onChange={(e) =>
-                  drawrInptChng("DocumentType", "DisplayName", e.target.value)
-                }
-                placeholder="Enter display name"
-                disabled={isDisable}
-                hasError={!!errors?.DocumentType?.DisplayName}
-              />
-            </Col>
-            <ParentLookupSelect
-              drawerKey="DocumentType"
-              lookuptypeId={drawerIpnuts?.DocumentType?.lookuptypeId}
-              lookups={lookups}
-              lookupsTypes={lookupsTypes}
-              value={drawerIpnuts?.DocumentType?.Parentlookupid}
-              parentLabel={drawerIpnuts?.DocumentType?.Parentlookup}
-              parentLookupTypeId={
-                drawerIpnuts?.DocumentType?.ParentlookuptypeId
-              }
-              parentLookupTypeName={
-                drawerIpnuts?.DocumentType?.Parentlookuptype
-              }
-              disabled={isDisable}
-              required={lookupTypeRequiresParent(
-                lookupsTypes,
-                drawerIpnuts?.DocumentType?.lookuptypeId,
-              )}
-              hasError={!!errors?.DocumentType?.Parentlookupid}
-              onChange={(payload) =>
-                handleParentLookupChange("DocumentType", payload)
-              }
-            />
-          </Row>
-
-          <Row gutter={24}>
-            <Col span={12}>
-              <Checkbox
-                disabled={isDisable}
-                onChange={(e) =>
-                  drawrInptChng("DocumentType", "isactive", e.target.checked)
-                }
-                checked={drawerIpnuts?.DocumentType?.isactive}
-                style={{ marginTop: "26px" }}
-              >
-                Active
-              </Checkbox>
-            </Col>
-          </Row>
-
-          {/* Existing Document Types Table */}
-          <div className="mt-4 config-tbl-container">
-            <h6 className="mb-3 text-primary">Existing Document Types</h6>
-            <Table
-              pagination={false}
-              columns={columnDocumentType}
-              dataSource={data?.DocumentType}
-              loading={lookupsloading}
-              className="drawer-tbl"
-              size="small"
-              rowKey={(record, index) =>
-                record._id || record.id || record.key || index
-              }
-              rowClassName={(record, index) =>
-                index % 2 !== 0 ? "odd-row" : "even-row"
-              }
-              rowSelection={{
-                type: selectionType,
-                ...rowSelection,
-              }}
-              bordered
-            />
-          </div>
-        </div>
-      </MyDrawer>
 
       {/* Claim Type Drawer */}
-      <MyDrawer
-        title="Claim Type"
-        open={drawerOpen?.ClaimType}
-        isLoading={lookupDetailLoading && editingLookupDrawer === "ClaimType"}
-        isPagination={true}
-        onClose={() => {
-          openCloseDrawerFtn("ClaimType");
-          IsUpdateFtn("ClaimType", false);
-        }}
-        add={async () => {
-          if (!validateForm("ClaimType")) return;
-          await insertDataFtn(
-            `/lookup`,
-            drawerIpnuts?.ClaimType,
-            "Data inserted successfully",
-            "Data did not insert",
-          );
-          resetCounteries("ClaimType", () => dispatch(getAllLookups()));
-        }}
-        isEdit={isUpdateRec?.ClaimType}
-        update={async () => {
-          if (!validateForm("ClaimType")) return;
-          await updateFtn("/lookup", drawerIpnuts?.ClaimType, () =>
-            resetCounteries("ClaimType", () => dispatch(getAllLookups())),
-          );
-          dispatch(getAllLookups());
-          IsUpdateFtn("ClaimType", false);
-        }}
-      >
-        <div className="drawer-main-cntainer p-4 me-2 ms-2">
-          <Row gutter={24}>
-            <Col span={12}>
-              <MyInput
-                label="Code"
-                name="code"
-                value={drawerIpnuts?.ClaimType?.code || ""}
-                onChange={(e) =>
-                  drawrInptChng("ClaimType", "code", e.target.value)
-                }
-                placeholder="Enter code"
-                disabled={isDisable}
-                required
-                hasError={!!errors?.ClaimType?.code}
-              />
-            </Col>
-            <Col span={12}>
-              <MyInput
-                label="Claim Type"
-                name="lookupname"
-                value={drawerIpnuts?.ClaimType?.lookupname || ""}
-                onChange={(e) =>
-                  drawrInptChng("ClaimType", "lookupname", e.target.value)
-                }
-                placeholder="Enter claim type"
-                disabled={isDisable}
-                required
-                hasError={!!errors?.ClaimType?.lookupname}
-              />
-            </Col>
-          </Row>
-
-          <Row gutter={24}>
-            <Col span={12}>
-              <MyInput
-                label="Display Name"
-                name="DisplayName"
-                value={drawerIpnuts?.ClaimType?.DisplayName || ""}
-                onChange={(e) =>
-                  drawrInptChng("ClaimType", "DisplayName", e.target.value)
-                }
-                placeholder="Enter display name"
-                disabled={isDisable}
-                hasError={!!errors?.ClaimType?.DisplayName}
-              />
-            </Col>
-            <ParentLookupSelect
-              drawerKey="ClaimType"
-              lookuptypeId={drawerIpnuts?.ClaimType?.lookuptypeId}
-              lookups={lookups}
-              lookupsTypes={lookupsTypes}
-              value={drawerIpnuts?.ClaimType?.Parentlookupid}
-              parentLabel={drawerIpnuts?.ClaimType?.Parentlookup}
-              parentLookupTypeId={drawerIpnuts?.ClaimType?.ParentlookuptypeId}
-              parentLookupTypeName={drawerIpnuts?.ClaimType?.Parentlookuptype}
-              disabled={isDisable}
-              required={lookupTypeRequiresParent(
-                lookupsTypes,
-                drawerIpnuts?.ClaimType?.lookuptypeId,
-              )}
-              hasError={!!errors?.ClaimType?.Parentlookupid}
-              onChange={(payload) =>
-                handleParentLookupChange("ClaimType", payload)
-              }
-            />
-          </Row>
-
-          <Row gutter={24}>
-            <Col span={12}>
-              <Checkbox
-                disabled={isDisable}
-                onChange={(e) =>
-                  drawrInptChng("ClaimType", "isactive", e.target.checked)
-                }
-                checked={drawerIpnuts?.ClaimType?.isactive}
-                style={{ marginTop: "26px" }}
-              >
-                Active
-              </Checkbox>
-            </Col>
-          </Row>
-
-          <div className="mt-4 config-tbl-container">
-            <h6 className="mb-3 text-primary">Existing Claim Types</h6>
-            <Table
-              pagination={false}
-              columns={columnClaimType}
-              dataSource={data?.ClaimType}
-              loading={lookupsloading}
-              className="drawer-tbl"
-              size="small"
-              rowKey={(record, index) =>
-                record._id || record.id || record.key || index
-              }
-              rowClassName={(record, index) =>
-                index % 2 !== 0 ? "odd-row" : "even-row"
-              }
-              rowSelection={{ type: selectionType, ...rowSelection }}
-              bordered
-            />
-          </div>
-        </div>
-      </MyDrawer>
 
       {/* Schemes Drawer */}
-      <MyDrawer
-        title="Schemes"
-        open={drawerOpen?.Schemes}
-        isLoading={lookupDetailLoading && editingLookupDrawer === "Schemes"}
-        isPagination={true}
-        onClose={() => {
-          openCloseDrawerFtn("Schemes");
-          IsUpdateFtn("Schemes", false);
-        }}
-        add={async () => {
-          if (!validateForm("Schemes")) return;
-          await insertDataFtn(
-            `/lookup`,
-            drawerIpnuts?.Schemes,
-            "Data inserted successfully",
-            "Data did not insert",
-            () => resetCounteries("Schemes", () => dispatch(getAllLookups())),
-          );
-        }}
-        isEdit={isUpdateRec?.Schemes}
-        update={async () => {
-          if (!validateForm("Schemes")) return;
-          await updateFtn("/lookup", drawerIpnuts?.Schemes, () =>
-            resetCounteries("Schemes", () => dispatch(getAllLookups())),
-          );
-          dispatch(getAllLookups());
-          IsUpdateFtn("Schemes", false);
-        }}
-      >
-        <div className="drawer-main-cntainer p-4 me-2 ms-2">
-          <Row gutter={24}>
-            <Col span={12}>
-              <MyInput
-                label="Code"
-                name="code"
-                value={drawerIpnuts?.Schemes?.code || ""}
-                onChange={(e) =>
-                  drawrInptChng("Schemes", "code", e.target.value)
-                }
-                placeholder="Enter code"
-                disabled={isDisable}
-                required
-                hasError={!!errors?.Schemes?.code}
-              />
-            </Col>
-            <Col span={12}>
-              <MyInput
-                label="Schemes"
-                name="lookupname"
-                value={drawerIpnuts?.Schemes?.lookupname || ""}
-                onChange={(e) =>
-                  drawrInptChng("Schemes", "lookupname", e.target.value)
-                }
-                placeholder="Enter scheme name"
-                disabled={isDisable}
-                required
-                hasError={!!errors?.Schemes?.lookupname}
-              />
-            </Col>
-          </Row>
-
-          <Row gutter={24}>
-            <Col span={12}>
-              <MyInput
-                label="Display Name"
-                name="DisplayName"
-                value={drawerIpnuts?.Schemes?.DisplayName || ""}
-                onChange={(e) =>
-                  drawrInptChng("Schemes", "DisplayName", e.target.value)
-                }
-                placeholder="Enter display name"
-                disabled={isDisable}
-                hasError={!!errors?.Schemes?.DisplayName}
-              />
-            </Col>
-            <ParentLookupSelect
-              drawerKey="Schemes"
-              lookuptypeId={drawerIpnuts?.Schemes?.lookuptypeId}
-              lookups={lookups}
-              lookupsTypes={lookupsTypes}
-              value={drawerIpnuts?.Schemes?.Parentlookupid}
-              parentLabel={drawerIpnuts?.Schemes?.Parentlookup}
-              parentLookupTypeId={drawerIpnuts?.Schemes?.ParentlookuptypeId}
-              parentLookupTypeName={drawerIpnuts?.Schemes?.Parentlookuptype}
-              disabled={isDisable}
-              required={lookupTypeRequiresParent(
-                lookupsTypes,
-                drawerIpnuts?.Schemes?.lookuptypeId,
-              )}
-              hasError={!!errors?.Schemes?.Parentlookupid}
-              onChange={(payload) =>
-                handleParentLookupChange("Schemes", payload)
-              }
-            />
-          </Row>
-
-          <Row gutter={24}>
-            <Col span={12}>
-              <Checkbox
-                disabled={isDisable}
-                onChange={(e) =>
-                  drawrInptChng("Schemes", "isactive", e.target.checked)
-                }
-                checked={drawerIpnuts?.Schemes?.isactive}
-                style={{ marginTop: "26px" }}
-              >
-                Active
-              </Checkbox>
-            </Col>
-          </Row>
-
-          <div className="mt-4 config-tbl-container">
-            <h6 className="mb-3 text-primary">Existing Schemes</h6>
-            <Table
-              pagination={false}
-              columns={columnSchemes}
-              dataSource={data?.Schemes}
-              loading={lookupsloading}
-              className="drawer-tbl"
-              size="small"
-              rowKey={(record, index) =>
-                record._id || record.id || record.key || index
-              }
-              rowClassName={(record, index) =>
-                index % 2 !== 0 ? "odd-row" : "even-row"
-              }
-              rowSelection={{ type: selectionType, ...rowSelection }}
-              bordered
-            />
-          </div>
-        </div>
-      </MyDrawer>
 
       {/* Reasons Drawer */}
-      <MyDrawer
-        title="Reasons"
-        open={drawerOpen?.Reasons}
-        isLoading={lookupDetailLoading && editingLookupDrawer === "Reasons"}
-        isPagination={true}
-        onClose={() => {
-          openCloseDrawerFtn("Reasons");
-          IsUpdateFtn("Reasons", false);
-        }}
-        add={async () => {
-          if (!validateForm("Reasons")) return;
-          await insertDataFtn(
-            `/lookup`,
-            drawerIpnuts?.Reasons,
-            "Data inserted successfully",
-            "Data did not insert",
-            () => resetCounteries("Reasons", () => dispatch(getAllLookups())),
-          );
-          dispatch(getAllLookups());
-        }}
-        isEdit={isUpdateRec?.Reasons}
-        update={async () => {
-          if (!validateForm("Reasons")) return;
-          await updateFtn("/lookup", drawerIpnuts?.Reasons, () =>
-            resetCounteries("Reasons", () => dispatch(getAllLookups())),
-          );
-          dispatch(getAllLookups());
-          IsUpdateFtn("Reasons", false);
-        }}
-      >
-        <div className="drawer-main-cntainer p-4 me-2 ms-2">
-          <Row gutter={24}>
-            <Col span={12}>
-              <MyInput
-                label="Code"
-                name="code"
-                value={drawerIpnuts?.Reasons?.code || ""}
-                onChange={(e) =>
-                  drawrInptChng("Reasons", "code", e.target.value)
-                }
-                placeholder="Enter code"
-                disabled={isDisable}
-                required
-                hasError={!!errors?.Reasons?.code}
-              />
-            </Col>
-            <Col span={12}>
-              <MyInput
-                label="Reasons"
-                name="lookupname"
-                value={drawerIpnuts?.Reasons?.lookupname || ""}
-                onChange={(e) =>
-                  drawrInptChng("Reasons", "lookupname", e.target.value)
-                }
-                placeholder="Enter reason"
-                disabled={isDisable}
-                required
-                hasError={!!errors?.Reasons?.lookupname}
-              />
-            </Col>
-          </Row>
 
-          <Row gutter={24}>
-            <Col span={12}>
-              <MyInput
-                label="Display Name"
-                name="DisplayName"
-                value={drawerIpnuts?.Reasons?.DisplayName || ""}
-                onChange={(e) =>
-                  drawrInptChng("Reasons", "DisplayName", e.target.value)
-                }
-                placeholder="Enter display name"
-                disabled={isDisable}
-                hasError={!!errors?.Reasons?.DisplayName}
-              />
-            </Col>
-            <ParentLookupSelect
-              drawerKey="Reasons"
-              lookuptypeId={drawerIpnuts?.Reasons?.lookuptypeId}
-              lookups={lookups}
-              lookupsTypes={lookupsTypes}
-              value={drawerIpnuts?.Reasons?.Parentlookupid}
-              parentLabel={drawerIpnuts?.Reasons?.Parentlookup}
-              parentLookupTypeId={drawerIpnuts?.Reasons?.ParentlookuptypeId}
-              parentLookupTypeName={drawerIpnuts?.Reasons?.Parentlookuptype}
-              disabled={isDisable}
-              required={lookupTypeRequiresParent(
-                lookupsTypes,
-                drawerIpnuts?.Reasons?.lookuptypeId,
-              )}
-              hasError={!!errors?.Reasons?.Parentlookupid}
-              onChange={(payload) =>
-                handleParentLookupChange("Reasons", payload)
-              }
-            />
-          </Row>
+      {/* */}
 
-          <Row gutter={24}>
-            <Col span={12}>
-              <Checkbox
-                disabled={isDisable}
-                onChange={(e) =>
-                  drawrInptChng("Reasons", "isactive", e.target.checked)
-                }
-                checked={drawerIpnuts?.Reasons?.isactive}
-                style={{ marginTop: "26px" }}
-              >
-                Active
-              </Checkbox>
-            </Col>
-          </Row>
 
-          <div className="mt-4 config-tbl-container">
-            <h6 className="mb-3 text-primary">Existing Reasons</h6>
-            <Table
-              pagination={false}
-              columns={columnReasons}
-              dataSource={data?.Reasons}
-              loading={lookupsloading}
-              className="drawer-tbl"
-              size="small"
-              rowKey={(record, index) =>
-                record._id || record.id || record.key || index
-              }
-              rowClassName={(record, index) =>
-                index % 2 !== 0 ? "odd-row" : "even-row"
-              }
-              rowSelection={{ type: selectionType, ...rowSelection }}
-              bordered
-            />
-          </div>
-        </div>
-      </MyDrawer>
 
-      {/* <MyDrawer title='Schemes' open={drawerOpen?.Schemes}
-        onClose={() => openCloseDrawerFtn('Schemes')}
-        add={async () => {
-          if (!validateForm('Schemes')) return;
-          insertDataFtn(`/api/lookup`, drawerIpnuts?.Schemes, 'Data inserted successfully:',
-            'Data did not insert:', () => {
-              resetCounteries('Schemes')
-              dispatch(getAllLookups())
-            })
-        }}
-      >
-        <div className="drawer-main-container">
-          <div className="mb-4 pb-4">
-            <div className="drawer-inputs-container">
-              <div className="drawer-lbl-container">
-                <p>Scheme Name:</p>
-              </div>
-              <div className="input-container">
-                <p className="star">*</p>
-                <div className="input-sub-container">
-                  <Input
-                  disabled={isDisable} className="inp"
-                    onChange={(e) => drawrInptChng('Schemes', 'schemeName', e.target.value)}
-                    value={drawerIpnuts?.Schemes?.schemeName}
-                  />
-                  <p className="error">{errors?.Schemes?.schemeName}</p>
-                </div>
-              </div>
-            </div>
-            <div className="drawer-inputs-container">
-              <div className="drawer-label-container">
-                <p>Code:</p>
-              </div>
-              <div className="input-container">
-                <p className="star">*</p>
-                <div className="input-sub-container">
-                  <Input
-                  disabled={isDisable} className="inp"
-                    onChange={(e) => drawrInptChng('Schemes', 'code', e.target.value)}
-                    value={drawerIpnuts?.Schemes?.code}
-                  />
-                  <p className="error">{errors?.Schemes?.code}</p>
-                </div>
-              </div>
-            </div>
-            <div className="drawer-inputs-container">
-              <div className="drawer-label-container">
-                <p>Status:</p>
-              </div>
-              <div className="input-container">
-                <p className="star-white">*</p>
-                <div className="input-sub-container">
-                  <Checkbox disabled={isDisable}
-                    onChange={(e) => drawrInptChng('Schemes', 'isactive', e.target.checked)}
-                    checked={drawerIpnuts?.Schemes?.isactive}
-                  >Active</Checkbox>
-                </div>
-              </div>
-            </div>
-          </div>
-          <div className="mt-4 config-tbl-container">
-            <Table
-              pagination={false}
-              columns={columnSchemes}
-              dataSource={data?.Schemes}
-              loading={lookupsloading}
-              className="drawer-tbl"
-              size="small"
-              rowKey={(record, index) => record._id || record.id || record.key || index}
-              rowClassName={(record, index) => index % 2 !== 0 ? "odd-row" : "even-row"}
-              rowSelection={{ type: selectionType, ...rowSelection }}
-              bordered
-            />
-          </div>
-        </div>
-      </MyDrawer> */}
-      <MyDrawer
-        title="Duties"
-        open={drawerOpen?.Duties}
-        isLoading={lookupDetailLoading && editingLookupDrawer === "Duties"}
-        isPagination={true}
-        onClose={() => {
-          openCloseDrawerFtn("Duties");
-          IsUpdateFtn("Duties", false);
-        }}
-        add={async () => {
-          if (!validateForm("Duties")) return;
-          await insertDataFtn(
-            `/lookup`,
-            drawerIpnuts?.Duties,
-            "Data inserted successfully",
-            "Data did not insert",
-            () => resetCounteries("Duties", () => dispatch(getAllLookups())),
-          );
-          dispatch(getAllLookups());
-        }}
-        isEdit={isUpdateRec?.Duties}
-        update={async () => {
-          if (!validateForm("Duties")) return;
-          await updateFtn("/lookup", drawerIpnuts?.Duties, () =>
-            resetCounteries("Duties", () => dispatch(getAllLookups())),
-          );
-          dispatch(getAllLookups());
-          IsUpdateFtn("Duties", false);
-        }}
-      >
-        <div className="drawer-main-cntainer p-4 me-2 ms-2">
-          <div className="mb-4 pb-4">
-            {/* Row 2: Code + Duties Name */}
-            <Row gutter={24}>
-              <Col span={12}>
-                <MyInput
-                  label="Code"
-                  required
-                  disabled={isDisable}
-                  value={drawerIpnuts?.Duties?.code}
-                  onChange={(val) => drawrInptChng("Duties", "code", val)}
-                  error={errors?.Duties?.code}
-                />
-              </Col>
-              <Col span={12}>
-                <MyInput
-                  label="Duties Name"
-                  required
-                  disabled={isDisable}
-                  value={drawerIpnuts?.Duties?.lookupname}
-                  onChange={(val) => drawrInptChng("Duties", "lookupname", val)}
-                  error={errors?.Duties?.lookupname}
-                />
-              </Col>
-            </Row>
 
-            <Row gutter={24}>
-              <Col span={12}>
-                <MyInput
-                  label="Display Name"
-                  disabled={isDisable}
-                  value={drawerIpnuts?.Duties?.DisplayName}
-                  onChange={(val) =>
-                    drawrInptChng("Duties", "DisplayName", val)
-                  }
-                />
-              </Col>
-              <ParentLookupSelect
-                drawerKey="Duties"
-                lookuptypeId={drawerIpnuts?.Duties?.lookuptypeId}
-                lookups={lookups}
-                lookupsTypes={lookupsTypes}
-                value={drawerIpnuts?.Duties?.Parentlookupid}
-                parentLabel={drawerIpnuts?.Duties?.Parentlookup}
-                parentLookupTypeId={drawerIpnuts?.Duties?.ParentlookuptypeId}
-                parentLookupTypeName={drawerIpnuts?.Duties?.Parentlookuptype}
-                disabled={isDisable}
-                required={lookupTypeRequiresParent(
-                  lookupsTypes,
-                  drawerIpnuts?.Duties?.lookuptypeId,
-                )}
-                hasError={!!errors?.Duties?.Parentlookupid}
-                onChange={(payload) =>
-                  handleParentLookupChange("Duties", payload)
-                }
-              />
-            </Row>
-            <Row gutter={24}>
-              <Col span={12}>
-                <Checkbox
-                  disabled={isDisable}
-                  checked={drawerIpnuts?.Duties?.isactive}
-                  onChange={(e) =>
-                    drawrInptChng("Duties", "isactive", e.target.checked)
-                  }
-                >
-                  Active
-                </Checkbox>
-              </Col>
-            </Row>
-          </div>
 
-          {/* History Table */}
-          <div className="mt-4 config-tbl-container">
-            <h6 className=" mb-3 text-primary">Existing Duties</h6>
-            <Table
-              pagination={false}
-              columns={columnDuties}
-              dataSource={groupedLookups["Duties"]}
-              loading={lookupsloading}
-              className="drawer-tbl"
-              size="small"
-              rowKey={(record, index) =>
-                record._id || record.id || record.key || index
-              }
-              rowClassName={(record, index) =>
-                index % 2 !== 0 ? "odd-row" : "even-row"
-              }
-              rowSelection={{
-                type: selectionType,
-                ...rowSelection,
-              }}
-              bordered
-            />
-          </div>
-        </div>
-      </MyDrawer>
 
       <MyDrawer
-        title="Grade"
-        open={drawerOpen?.Ranks}
-        isLoading={lookupDetailLoading && editingLookupDrawer === "Ranks"}
-        isPagination={true}
-        onClose={() => {
-          openCloseDrawerFtn("Ranks");
-          IsUpdateFtn("Ranks", false);
-        }}
-        add={async () => {
-          if (!validateForm("Ranks")) return;
-          await insertDataFtn(
-            `/lookup`,
-            drawerIpnuts?.Ranks,
-            "Data inserted successfully",
-            "Data did not insert",
-            () => resetCounteries("Ranks", () => dispatch(getAllLookups())),
-          );
-          dispatch(getAllLookups());
-        }}
-        isEdit={isUpdateRec?.Ranks}
-        update={async () => {
-          if (!validateForm("Ranks")) return;
-          await updateFtn("/lookup", drawerIpnuts?.Ranks, () =>
-            resetCounteries("Ranks", () => dispatch(getAllLookups())),
-          );
-          dispatch(getAllLookups());
-          IsUpdateFtn("Ranks", false);
-        }}
-      >
-        <div className="drawer-main-cntainer p-4 me-2 ms-2">
-          <div className="mb-4 pb-4">
-            {/* Row 2: Code + Rank */}
-            <Row gutter={24}>
-              <Col span={12}>
-                <MyInput
-                  label="Code"
-                  required
-                  disabled={isDisable}
-                  value={drawerIpnuts?.Ranks?.code}
-                  onChange={(val) => drawrInptChng("Ranks", "code", val)}
-                  error={errors?.Ranks?.code}
-                />
-              </Col>
-              <Col span={12}>
-                <MyInput
-                  label="Grade"
-                  required
-                  disabled={isDisable}
-                  value={drawerIpnuts?.Ranks?.lookupname}
-                  onChange={(val) => drawrInptChng("Ranks", "lookupname", val)}
-                  error={errors?.Ranks?.lookupname}
-                />
-              </Col>
-            </Row>
-
-            <Row gutter={24}>
-              <Col span={12}>
-                <MyInput
-                  label="Display Name"
-                  disabled={isDisable}
-                  value={drawerIpnuts?.Ranks?.DisplayName}
-                  onChange={(val) => drawrInptChng("Ranks", "DisplayName", val)}
-                />
-              </Col>
-              <ParentLookupSelect
-                drawerKey="Ranks"
-                lookuptypeId={drawerIpnuts?.Ranks?.lookuptypeId}
-                lookups={lookups}
-                lookupsTypes={lookupsTypes}
-                value={drawerIpnuts?.Ranks?.Parentlookupid}
-                parentLabel={drawerIpnuts?.Ranks?.Parentlookup}
-                parentLookupTypeId={drawerIpnuts?.Ranks?.ParentlookuptypeId}
-                parentLookupTypeName={drawerIpnuts?.Ranks?.Parentlookuptype}
-                disabled={isDisable}
-                required={lookupTypeRequiresParent(
-                  lookupsTypes,
-                  drawerIpnuts?.Ranks?.lookuptypeId,
-                )}
-                hasError={!!errors?.Ranks?.Parentlookupid}
-                onChange={(payload) =>
-                  handleParentLookupChange("Ranks", payload)
-                }
-              />
-            </Row>
-            <Row gutter={24}>
-              <Col span={12}>
-                <Checkbox
-                  disabled={isDisable}
-                  onChange={(e) =>
-                    drawrInptChng("Ranks", "isactive", e.target.checked)
-                  }
-                  checked={drawerIpnuts?.Ranks?.isactive}
-                >
-                  Active
-                </Checkbox>
-              </Col>
-            </Row>
-          </div>
-
-          {/* History Table */}
-          <div className="mt-4 config-tbl-container">
-            <h6 className=" mb-3 text-primary">Existing Grades</h6>
-            <Table
-              pagination={false}
-              columns={columnRanks}
-              dataSource={groupedLookups["Ranks"]}
-              loading={lookupsloading}
-              className="drawer-tbl"
-              size="small"
-              rowKey={(record, index) =>
-                record._id || record.id || record.key || index
-              }
-              rowClassName={(record, index) =>
-                index % 2 !== 0 ? "odd-row" : "even-row"
-              }
-              rowSelection={{
-                type: selectionType,
-                ...rowSelection,
-              }}
-              bordered
-            />
-          </div>
-        </div>
-      </MyDrawer>
-
-      <MyDrawer
-        title="Boards"
-        open={drawerOpen?.Boards}
-        isLoading={lookupDetailLoading && editingLookupDrawer === "Boards"}
-        isPagination={true}
-        isEdit={isUpdateRec?.Boards}
-        onClose={() => {
-          openCloseDrawerFtn("Boards");
-          IsUpdateFtn("Boards", false);
-        }}
-        add={async () => {
-          if (!validateForm("Boards")) return;
-          await insertDataFtn(
-            `/lookup`,
-            drawerIpnuts?.Boards,
-            "Data inserted successfully",
-            "Data did not insert",
-            () => resetCounteries("Boards", () => dispatch(getAllLookups())),
-          );
-          dispatch(getAllLookups());
-        }}
-        update={async () => {
-          if (!validateForm("Boards")) return;
-          await updateFtn("/lookup", drawerIpnuts?.Boards, () =>
-            resetCounteries("Boards", () => dispatch(getAllLookups())),
-          );
-          dispatch(getAllLookups());
-          IsUpdateFtn("Boards", false);
-        }}
-      >
-        <div className="drawer-main-cntainer p-4 me-2 ms-2">
-          {/* Code + Board Name */}
-          <Row gutter={24}>
-            <Col span={12}>
-              <MyInput
-                label="Code:"
-                name="code"
-                value={drawerIpnuts?.Boards?.code || ""}
-                onChange={(e) =>
-                  drawrInptChng("Boards", "code", e.target.value)
-                }
-                placeholder="Enter code"
-                disabled={isDisable}
-                required
-                hasError={!!errors?.Boards?.code}
-              />
-            </Col>
-            <Col span={12}>
-              <MyInput
-                label="Board:"
-                name="lookupname"
-                value={drawerIpnuts?.Boards?.lookupname || ""}
-                onChange={(e) =>
-                  drawrInptChng("Boards", "lookupname", e.target.value)
-                }
-                placeholder="Enter board name"
-                disabled={isDisable}
-                required
-                hasError={!!errors?.Boards?.lookupname}
-              />
-            </Col>
-          </Row>
-
-          {/* Display Name */}
-          <Row gutter={24}>
-            <Col span={12}>
-              <MyInput
-                label="Display Name:"
-                name="DisplayName"
-                value={drawerIpnuts?.Boards?.DisplayName || ""}
-                onChange={(e) =>
-                  drawrInptChng("Boards", "DisplayName", e.target.value)
-                }
-                placeholder="Enter display name"
-                disabled={isDisable}
-                hasError={!!errors?.Boards?.DisplayName}
-              />
-            </Col>
-            <ParentLookupSelect
-              drawerKey="Boards"
-              lookuptypeId={drawerIpnuts?.Boards?.lookuptypeId}
-              lookups={lookups}
-              lookupsTypes={lookupsTypes}
-              value={drawerIpnuts?.Boards?.Parentlookupid}
-              parentLabel={drawerIpnuts?.Boards?.Parentlookup}
-              parentLookupTypeId={drawerIpnuts?.Boards?.ParentlookuptypeId}
-              parentLookupTypeName={drawerIpnuts?.Boards?.Parentlookuptype}
-              disabled={isDisable}
-              required={lookupTypeRequiresParent(
-                lookupsTypes,
-                drawerIpnuts?.Boards?.lookuptypeId,
-              )}
-              hasError={!!errors?.Boards?.Parentlookupid}
-              onChange={(payload) =>
-                handleParentLookupChange("Boards", payload)
-              }
-            />
-          </Row>
-
-          <Row gutter={24}>
-            <Col span={12}>
-              <Checkbox
-                disabled={isDisable}
-                onChange={(e) =>
-                  drawrInptChng("Boards", "isactive", e.target.checked)
-                }
-                checked={drawerIpnuts?.Boards?.isactive}
-                style={{ marginTop: "26px" }}
-              >
-                Active
-              </Checkbox>
-            </Col>
-          </Row>
-
-          {/* Existing Boards Table */}
-          <div className="mt-4 config-tbl-container">
-            <h6 className="mb-3 text-primary">Existing Boards</h6>
-            <Table
-              pagination={false}
-              columns={columnBoards}
-              dataSource={groupedLookups["Boards"]}
-              loading={lookupsloading}
-              className="drawer-tbl"
-              size="small"
-              rowKey={(record, index) =>
-                record._id || record.id || record.key || index
-              }
-              rowClassName={(record, index) =>
-                index % 2 !== 0 ? "odd-row" : "even-row"
-              }
-              rowSelection={{
-                type: selectionType,
-                ...rowSelection,
-              }}
-              bordered
-            />
-          </div>
-        </div>
-      </MyDrawer>
-
-      <MyDrawer
-        title="Councils"
-        open={drawerOpen?.Councils}
-        isLoading={lookupDetailLoading && editingLookupDrawer === "Councils"}
-        isPagination={true}
-        onClose={() => {
-          openCloseDrawerFtn("Councils");
-          IsUpdateFtn("Councils", false);
-        }}
-        add={async () => {
-          if (!validateForm("Councils")) return;
-          await insertDataFtn(
-            `/lookup`,
-            drawerIpnuts?.Councils,
-            "Data inserted successfully",
-            "Data did not insert",
-            () => resetCounteries("Councils", () => dispatch(getAllLookups())),
-          );
-          dispatch(getAllLookups());
-        }}
-        isEdit={isUpdateRec?.Councils}
-        update={async () => {
-          if (!validateForm("Councils")) return;
-          await updateFtn("/lookup", drawerIpnuts?.Councils, () =>
-            resetCounteries("Councils", () => dispatch(getAllLookups())),
-          );
-          dispatch(getAllLookups());
-          IsUpdateFtn("Councils", false);
-        }}
-      >
-        <div className="drawer-main-cntainer p-4 me-2 ms-2">
-          {/* Code + Council Name */}
-          <Row gutter={24}>
-            <Col span={12}>
-              <MyInput
-                label="Code:"
-                name="code"
-                value={drawerIpnuts?.Councils?.code || ""}
-                onChange={(e) =>
-                  drawrInptChng("Councils", "code", e.target.value)
-                }
-                placeholder="Enter code"
-                disabled={isDisable}
-                required
-                hasError={!!errors?.Councils?.code}
-              />
-            </Col>
-            <Col span={12}>
-              <MyInput
-                label="Council Name:"
-                name="lookupname"
-                value={drawerIpnuts?.Councils?.lookupname || ""}
-                onChange={(e) =>
-                  drawrInptChng("Councils", "lookupname", e.target.value)
-                }
-                placeholder="Enter council name"
-                disabled={isDisable}
-                required
-                hasError={!!errors?.Councils?.lookupname}
-              />
-            </Col>
-          </Row>
-
-          {/* Display Name + Active */}
-          <Row gutter={24}>
-            <Col span={12}>
-              <MyInput
-                label="Display Name:"
-                name="DisplayName"
-                value={drawerIpnuts?.Councils?.DisplayName || ""}
-                onChange={(e) =>
-                  drawrInptChng("Councils", "DisplayName", e.target.value)
-                }
-                placeholder="Enter display name"
-                disabled={isDisable}
-                hasError={!!errors?.Councils?.DisplayName}
-              />
-            </Col>
-            <ParentLookupSelect
-              drawerKey="Councils"
-              lookuptypeId={drawerIpnuts?.Councils?.lookuptypeId}
-              lookups={lookups}
-              lookupsTypes={lookupsTypes}
-              value={drawerIpnuts?.Councils?.Parentlookupid}
-              parentLabel={drawerIpnuts?.Councils?.Parentlookup}
-              parentLookupTypeId={drawerIpnuts?.Councils?.ParentlookuptypeId}
-              parentLookupTypeName={drawerIpnuts?.Councils?.Parentlookuptype}
-              disabled={isDisable}
-              required={lookupTypeRequiresParent(
-                lookupsTypes,
-                drawerIpnuts?.Councils?.lookuptypeId,
-              )}
-              hasError={!!errors?.Councils?.Parentlookupid}
-              onChange={(payload) =>
-                handleParentLookupChange("Councils", payload)
-              }
-            />
-          </Row>
-
-          <Row gutter={24}>
-            <Col span={12}>
-              <Checkbox
-                disabled={isDisable}
-                onChange={(e) =>
-                  drawrInptChng("Councils", "isactive", e.target.checked)
-                }
-                checked={drawerIpnuts?.Councils?.isactive}
-                style={{ marginTop: "26px" }}
-              >
-                Active
-              </Checkbox>
-            </Col>
-          </Row>
-
-          {/* Existing Councils Table */}
-          <div className="mt-4 config-tbl-container">
-            <h6 className="mb-3 text-primary">Existing Councils</h6>
-            <Table
-              pagination={false}
-              columns={columnCouncils}
-              dataSource={groupedLookups["Council"]}
-              loading={lookupsloading}
-              className="drawer-tbl"
-              size="small"
-              rowKey={(record, index) =>
-                record._id || record.id || record.key || index
-              }
-              rowClassName={(record, index) =>
-                index % 2 !== 0 ? "odd-row" : "even-row"
-              }
-              rowSelection={{
-                type: selectionType,
-                ...rowSelection,
-              }}
-              bordered
-            />
-          </div>
-        </div>
-      </MyDrawer>
-
-      <MyDrawer
-        title="Correspondence Type"
-        open={drawerOpen?.CorrespondenceType}
-        isLoading={
-          lookupDetailLoading && editingLookupDrawer === "CorrespondenceType"
+        title={
+          activeContactType?.contactType
+            ? `${activeContactType.contactType} Contacts`
+            : "Contacts"
         }
-        isPagination={true}
-        onClose={() => {
-          openCloseDrawerFtn("CorrespondenceType");
-          IsUpdateFtn("CorrespondenceType", false);
-        }}
-        add={async () => {
-          if (!validateForm("CorrespondenceType")) return;
-          await insertDataFtn(
-            `/lookup`,
-            drawerIpnuts?.CorrespondenceType,
-            "Data inserted successfully",
-            "Data did not insert",
-            () =>
-              resetCounteries("CorrespondenceType", () =>
-                dispatch(getAllLookups()),
-              ),
-          );
-          dispatch(getAllLookups());
-        }}
-        isEdit={isUpdateRec?.CorrespondenceType}
-        update={async () => {
-          if (!validateForm("CorrespondenceType")) return;
-          await updateFtn("/lookup", drawerIpnuts?.CorrespondenceType, () =>
-            resetCounteries("CorrespondenceType", () =>
-              dispatch(getAllLookups()),
-            ),
-          );
-          dispatch(getAllLookups());
-          IsUpdateFtn("CorrespondenceType", false);
-        }}
-      >
-        <div className="drawer-main-cntainer p-4 me-2 ms-2">
-          {/* Code + Correspondence Type */}
-          <Row gutter={24}>
-            <Col span={12}>
-              <MyInput
-                label="Code"
-                name="code"
-                value={drawerIpnuts?.CorrespondenceType?.code || ""}
-                onChange={(e) =>
-                  drawrInptChng("CorrespondenceType", "code", e.target.value)
-                }
-                placeholder="Enter code"
-                disabled={isDisable}
-                required
-                hasError={!!errors?.CorrespondenceType?.code}
-              />
-            </Col>
-            <Col span={12}>
-              <MyInput
-                label="Correspondence Type"
-                name="lookupname"
-                value={drawerIpnuts?.CorrespondenceType?.lookupname || ""}
-                onChange={(e) =>
-                  drawrInptChng(
-                    "CorrespondenceType",
-                    "lookupname",
-                    e.target.value,
-                  )
-                }
-                placeholder="Enter correspondence type"
-                disabled={isDisable}
-                required
-                hasError={!!errors?.CorrespondenceType?.lookupname}
-              />
-            </Col>
-          </Row>
-
-          {/* Display Name + Active */}
-          <Row gutter={24}>
-            <Col span={12}>
-              <MyInput
-                label="Display Name"
-                name="DisplayName"
-                value={drawerIpnuts?.CorrespondenceType?.DisplayName || ""}
-                onChange={(e) =>
-                  drawrInptChng(
-                    "CorrespondenceType",
-                    "DisplayName",
-                    e.target.value,
-                  )
-                }
-                placeholder="Enter display name"
-                disabled={isDisable}
-                hasError={!!errors?.CorrespondenceType?.DisplayName}
-              />
-            </Col>
-            <ParentLookupSelect
-              drawerKey="CorrespondenceType"
-              lookuptypeId={drawerIpnuts?.CorrespondenceType?.lookuptypeId}
-              lookups={lookups}
-              lookupsTypes={lookupsTypes}
-              value={drawerIpnuts?.CorrespondenceType?.Parentlookupid}
-              parentLabel={drawerIpnuts?.CorrespondenceType?.Parentlookup}
-              parentLookupTypeId={
-                drawerIpnuts?.CorrespondenceType?.ParentlookuptypeId
-              }
-              parentLookupTypeName={
-                drawerIpnuts?.CorrespondenceType?.Parentlookuptype
-              }
-              disabled={isDisable}
-              required={lookupTypeRequiresParent(
-                lookupsTypes,
-                drawerIpnuts?.CorrespondenceType?.lookuptypeId,
-              )}
-              hasError={!!errors?.CorrespondenceType?.Parentlookupid}
-              onChange={(payload) =>
-                handleParentLookupChange("CorrespondenceType", payload)
-              }
-            />
-          </Row>
-
-          <Row gutter={24}>
-            <Col span={12}>
-              <Checkbox
-                disabled={isDisable}
-                onChange={(e) =>
-                  drawrInptChng(
-                    "CorrespondenceType",
-                    "isactive",
-                    e.target.checked,
-                  )
-                }
-                checked={drawerIpnuts?.CorrespondenceType?.isactive}
-                style={{ marginTop: "26px" }}
-              >
-                Active
-              </Checkbox>
-            </Col>
-          </Row>
-
-          {/* Existing Correspondence Types Table */}
-          <div className="mt-4 config-tbl-container">
-            <h6 className="mb-3 text-primary">Existing Correspondence Types</h6>
-            <Table
-              pagination={false}
-              columns={columnCorrespondenceType}
-              dataSource={data?.CorrespondenceType}
-              loading={lookupsloading}
-              className="drawer-tbl"
-              size="small"
-              rowKey={(record, index) =>
-                record._id || record.id || record.key || index
-              }
-              rowClassName={(record, index) =>
-                index % 2 !== 0 ? "odd-row" : "even-row"
-              }
-              rowSelection={{
-                type: selectionType,
-                ...rowSelection,
-              }}
-              bordered
-            />
-          </div>
-        </div>
-      </MyDrawer>
-
-      <MyDrawer
-        title="Spoken Languages"
-        open={drawerOpen?.SpokenLanguages}
-        isLoading={
-          lookupDetailLoading && editingLookupDrawer === "SpokenLanguages"
-        }
-        isPagination={true}
-        onClose={() => {
-          openCloseDrawerFtn("SpokenLanguages");
-          IsUpdateFtn("SpokenLanguages", false);
-        }}
-        add={async () => {
-          if (!validateForm("SpokenLanguages")) return;
-          await insertDataFtn(
-            `/lookup`,
-            drawerIpnuts?.SpokenLanguages,
-            "Data inserted successfully",
-            "Data did not insert",
-            () =>
-              resetCounteries("SpokenLanguages", () =>
-                dispatch(getAllLookups()),
-              ),
-          );
-          dispatch(getAllLookups());
-        }}
-        isEdit={isUpdateRec?.SpokenLanguages}
-        update={async () => {
-          if (!validateForm("SpokenLanguages")) return;
-          await updateFtn("/lookup", drawerIpnuts?.SpokenLanguages, () =>
-            resetCounteries("SpokenLanguages", () => dispatch(getAllLookups())),
-          );
-          dispatch(getAllLookups());
-          IsUpdateFtn("SpokenLanguages", false);
-        }}
-      >
-        <div className="drawer-main-cntainer p-4 me-2 ms-2">
-          {/* Code + Spoken Language */}
-          <Row gutter={24}>
-            <Col span={12}>
-              <MyInput
-                label="Code:"
-                name="code"
-                value={drawerIpnuts?.SpokenLanguages?.code || ""}
-                onChange={(e) =>
-                  drawrInptChng("SpokenLanguages", "code", e.target.value)
-                }
-                placeholder="Enter code"
-                disabled={isDisable}
-                required
-                hasError={!!errors?.SpokenLanguages?.code}
-              />
-            </Col>
-            <Col span={12}>
-              <MyInput
-                label="Spoken Language:"
-                name="lookupname"
-                value={drawerIpnuts?.SpokenLanguages?.lookupname || ""}
-                onChange={(e) =>
-                  drawrInptChng("SpokenLanguages", "lookupname", e.target.value)
-                }
-                placeholder="Enter spoken language"
-                disabled={isDisable}
-                required
-                hasError={!!errors?.SpokenLanguages?.lookupname}
-              />
-            </Col>
-          </Row>
-
-          {/* Display Name + Active */}
-          <Row gutter={24}>
-            <Col span={12}>
-              <MyInput
-                label="Display Name:"
-                name="DisplayName"
-                value={drawerIpnuts?.SpokenLanguages?.DisplayName || ""}
-                onChange={(e) =>
-                  drawrInptChng(
-                    "SpokenLanguages",
-                    "DisplayName",
-                    e.target.value,
-                  )
-                }
-                placeholder="Enter display name"
-                disabled={isDisable}
-                hasError={!!errors?.SpokenLanguages?.DisplayName}
-              />
-            </Col>
-            <ParentLookupSelect
-              drawerKey="SpokenLanguages"
-              lookuptypeId={drawerIpnuts?.SpokenLanguages?.lookuptypeId}
-              lookups={lookups}
-              lookupsTypes={lookupsTypes}
-              value={drawerIpnuts?.SpokenLanguages?.Parentlookupid}
-              parentLabel={drawerIpnuts?.SpokenLanguages?.Parentlookup}
-              parentLookupTypeId={
-                drawerIpnuts?.SpokenLanguages?.ParentlookuptypeId
-              }
-              parentLookupTypeName={
-                drawerIpnuts?.SpokenLanguages?.Parentlookuptype
-              }
-              disabled={isDisable}
-              required={lookupTypeRequiresParent(
-                lookupsTypes,
-                drawerIpnuts?.SpokenLanguages?.lookuptypeId,
-              )}
-              hasError={!!errors?.SpokenLanguages?.Parentlookupid}
-              onChange={(payload) =>
-                handleParentLookupChange("SpokenLanguages", payload)
-              }
-            />
-          </Row>
-
-          <Row gutter={24}>
-            <Col span={12}>
-              <Checkbox
-                disabled={isDisable}
-                onChange={(e) =>
-                  drawrInptChng("SpokenLanguages", "isactive", e.target.checked)
-                }
-                checked={drawerIpnuts?.SpokenLanguages?.isactive}
-                style={{ marginTop: "26px" }}
-              >
-                Active
-              </Checkbox>
-            </Col>
-          </Row>
-
-          {/* Existing Spoken Languages Table */}
-          <div className="mt-4 config-tbl-container">
-            <h6 className="mb-3 text-primary">Existing Spoken Languages</h6>
-            <Table
-              pagination={false}
-              columns={SLColumns}
-              dataSource={groupedLookups["Spoken Languages"]}
-              loading={lookupsloading}
-              className="drawer-tbl"
-              size="small"
-              rowKey={(record, index) =>
-                record._id || record.id || record.key || index
-              }
-              rowClassName={(record, index) =>
-                index % 2 !== 0 ? "odd-row" : "even-row"
-              }
-              rowSelection={{
-                type: selectionType,
-                ...rowSelection,
-              }}
-              bordered
-            />
-          </div>
-        </div>
-      </MyDrawer>
-
-      <MyDrawer
-        title="Solicitors"
         open={drawerOpen?.Solicitors}
         isPagination={false}
-        onClose={() => openCloseDrawerFtn("Solicitors")}
+        onClose={() => {
+          openCloseDrawerFtn("Solicitors");
+          setActiveContactType(null);
+        }}
         add={() => {
           if (!validateSolicitors("Solicitors")) return;
           insertDataFtn(
@@ -11723,8 +7673,10 @@ const Configuration = () => {
             "Data inserted successfully",
             "Data did not insert",
             () => {
-              resetCounteries("Solicitors", () => dispatch(getContacts()));
-              dispatch(getContacts());
+              resetContactsFormForActiveType(() => {
+                dispatch(resetContacts());
+                dispatch(getContacts());
+              });
             },
           );
         }}
@@ -11734,7 +7686,11 @@ const Configuration = () => {
           await updateFtn(
             `/contacts/${drawerIpnuts?.Solicitors?.id}`,
             simplified,
-            () => resetCounteries("Solicitors", () => dispatch(getContacts())),
+            () =>
+              resetContactsFormForActiveType(() => {
+                dispatch(resetContacts());
+                dispatch(getContacts());
+              }),
           );
           // dispatch(getAllLookups());
           // IsUpdateFtn("Solicitors", false);
@@ -11755,6 +7711,8 @@ const Configuration = () => {
                   drawrInptChng("Solicitors", "contactTypeId", e.target.value)
                 }
                 disabled={true}
+                showSearch
+                isIDs
                 required
                 hasError={!!errors?.Solicitors?.contactTypeId}
                 errorMessage={errors?.Solicitors?.contactTypeId}
@@ -11767,6 +7725,7 @@ const Configuration = () => {
                 placeholder="Select Title"
                 options={lookupsForSelect?.Titles}
                 disabled={true}
+                showSearch
                 value={drawerIpnuts?.Solicitors?.title}
                 onChange={(e) =>
                   drawrInptChng("Solicitors", "title", e.target.value)
@@ -11830,6 +7789,24 @@ const Configuration = () => {
                 hasError={!!errors?.Solicitors?.contactPhone}
                 errorMessage={errors?.Solicitors?.contactPhone}
               />
+            </Col>
+
+            <Col span={24}>
+              {isMapsLoaded && (
+                <StandaloneSearchBox
+                  onLoad={(ref) => (contactAddressInputRef.current = ref)}
+                  onPlacesChanged={handleContactPlacesChanged}
+                >
+                  <MyInput
+                    label="Search by Address or Eircode"
+                    name="contactAddressSearch"
+                    placeholder="Enter Eircode (e.g., D01X4X0) or address"
+                    disabled={isDisable}
+                    value={contactAddressSearchValue}
+                    onChange={(e) => setContactAddressSearchValue(e.target.value)}
+                  />
+                </StandaloneSearchBox>
+              )}
             </Col>
 
             <Col xs={24} md={12}>
@@ -11940,273 +7917,7 @@ const Configuration = () => {
         </div>
       </MyDrawer>
 
-      <MyDrawer
-        title="Committees"
-        open={drawerOpen?.Committees}
-        isLoading={lookupDetailLoading && editingLookupDrawer === "Committees"}
-        isPagination={true}
-        onClose={() => {
-          openCloseDrawerFtn("Committees");
-          IsUpdateFtn("Committees", false);
-        }}
-        isAddMemeber={true}
-        add={async () => {
-          await insertDataFtn(
-            `${baseURL}/lookup`,
-            { region: drawerIpnuts?.Committees },
-            "Data inserted successfully",
-            "Data did not insert",
-            () => resetCounteries("Lookup", () => dispatch(getAllLookups())),
-          );
-          dispatch(getAllLookups());
-        }}
-        isEdit={isUpdateRec?.Committees}
-        update={async () => {
-          await updateFtn("/lookup", drawerIpnuts?.Lookup, () =>
-            resetCounteries("Committees", () => dispatch(getAllLookups())),
-          );
-          dispatch(getAllLookups());
-          IsUpdateFtn("Lookup", false);
-        }}
-        // width="680"
-      >
-        <div className="drawer-main-cntainer p-4">
-          {/* Code + Committee Name */}
-          <Row gutter={24}>
-            {" "}
-            <Col span={12}>
-              {" "}
-              <MyInput
-                label="Code:"
-                name="RegionCode"
-                value={drawerIpnuts?.Committees?.RegionCode || ""}
-                onChange={(e) =>
-                  drawrInptChng("Committees", "RegionCode", e.target.value)
-                }
-                placeholder="Enter code"
-                disabled={isDisable}
-                required
-                hasError={!!errors?.Committees?.RegionCode}
-              />{" "}
-            </Col>
-            <Col span={12}>
-              {" "}
-              <MyInput
-                label="Committee Name:"
-                name="RegionName"
-                value={drawerIpnuts?.Committees?.RegionName || ""}
-                onChange={(e) =>
-                  drawrInptChng("Committees", "RegionName", e.target.value)
-                }
-                placeholder="Enter committee name"
-                disabled={isDisable}
-                required
-                hasError={!!errors?.Committees?.RegionName}
-              />{" "}
-            </Col>
-          </Row>{" "}
-          {/* Display Name + Active */}
-          <Row gutter={24}>
-            {" "}
-            <Col span={12}>
-              <MyInput
-                label="Display Name:"
-                name="DisplayName"
-                value={drawerIpnuts?.Committees?.DisplayName || ""}
-                onChange={(e) =>
-                  drawrInptChng("Committees", "DisplayName", e.target.value)
-                }
-                placeholder="Enter display name"
-                disabled={isDisable}
-                hasError={!!errors?.Committees?.DisplayName}
-              />{" "}
-            </Col>
-            <Col span={10}>
-              <CustomSelect
-                label="Parent:"
-                isSimple={true}
-                placeholder="Select parent"
-                options={lookupsType}
-                value={drawerIpnuts?.Committees?.ParentId}
-                onChange={(value) =>
-                  drawrInptChng("Committees", "ParentId", String(value))
-                }
-                disabled={isDisable}
-              />
-            </Col>
-            <Col span={2}>
-              <Button
-                className="butn primary-btn detail-btn"
-                disabled={isDisable}
-                style={{ marginTop: 25, width: "100%", height: "40px" }}
-              >
-                +
-              </Button>
-            </Col>
-          </Row>
-          <Row>
-            <Col span={12}>
-              <Checkbox
-                disabled={isDisable}
-                onChange={(e) =>
-                  drawrInptChng("Committees", "isactive", e.target.checked)
-                }
-                checked={drawerIpnuts?.Committees?.isactive}
-              >
-                Active
-              </Checkbox>
-            </Col>
-          </Row>
-          {/* Parent */}
-          <div className="mt-4 config-tbl-container">
-            <h6 className="mb-3 text-primary">Existing Committees</h6>
-            <Table
-              pagination={false}
-              columns={Committeescolumns}
-              dataSource={groupedLookups?.Committees || []}
-              loading={lookupsloading}
-              className="drawer-tbl"
-              size="small"
-              rowKey={(record) => record._id || record.id || record.RegionCode}
-              rowClassName={(record, index) =>
-                index % 2 !== 0 ? "odd-row" : "even-row"
-              }
-              rowSelection={{ type: selectionType, ...rowSelection }}
-              bordered
-            />{" "}
-          </div>{" "}
-        </div>
-      </MyDrawer>
 
-      <MyDrawer
-        title="Sections"
-        open={drawerOpen?.Sections}
-        isLoading={lookupDetailLoading && editingLookupDrawer === "Sections"}
-        isPagination={true}
-        onClose={() => {
-          openCloseDrawerFtn("Sections");
-          IsUpdateFtn("Sections", false);
-        }}
-        add={async () => {
-          if (!validateForm("Sections")) return;
-          await insertDataFtn(
-            `/lookup`,
-            drawerIpnuts?.Sections,
-            "Data inserted successfully",
-            "Data did not insert",
-            () => resetCounteries("Sections", () => dispatch(getAllLookups())),
-          );
-          dispatch(getAllLookups());
-        }}
-        isEdit={isUpdateRec?.Sections}
-        update={async () => {
-          if (!validateForm("Sections")) return;
-          await updateFtn("/lookup", drawerIpnuts?.Sections, () =>
-            resetCounteries("Sections", () => dispatch(getAllLookups())),
-          );
-          dispatch(getAllLookups());
-          IsUpdateFtn("Sections", false);
-        }}
-      >
-        <div className="drawer-main-cntainer p-4 me-2 ms-2">
-          <div className="mb-4 pb-4">
-            {/* Row 2: Code + Section Name */}
-            <Row gutter={24}>
-              <Col span={12}>
-                <MyInput
-                  label="Code"
-                  required
-                  disabled={isDisable}
-                  value={drawerIpnuts?.Sections?.code}
-                  onChange={(val) => drawrInptChng("Sections", "code", val)}
-                  error={errors?.Sections?.code}
-                />
-              </Col>
-              <Col span={12}>
-                <MyInput
-                  label="Section Name"
-                  required
-                  disabled={isDisable}
-                  value={drawerIpnuts?.Sections?.lookupname}
-                  onChange={(val) =>
-                    drawrInptChng("Sections", "lookupname", val)
-                  }
-                  error={errors?.Sections?.lookupname}
-                />
-              </Col>
-            </Row>
-
-            <Row gutter={24}>
-              <Col span={12}>
-                <MyInput
-                  label="Display Name"
-                  disabled={isDisable}
-                  value={drawerIpnuts?.Sections?.DisplayName}
-                  onChange={(val) =>
-                    drawrInptChng("Sections", "DisplayName", val)
-                  }
-                />
-              </Col>
-              <ParentLookupSelect
-                drawerKey="Sections"
-                lookuptypeId={drawerIpnuts?.Sections?.lookuptypeId}
-                lookups={lookups}
-                lookupsTypes={lookupsTypes}
-                value={drawerIpnuts?.Sections?.Parentlookupid}
-                parentLabel={drawerIpnuts?.Sections?.Parentlookup}
-                parentLookupTypeId={drawerIpnuts?.Sections?.ParentlookuptypeId}
-                parentLookupTypeName={drawerIpnuts?.Sections?.Parentlookuptype}
-                disabled={isDisable}
-                required={lookupTypeRequiresParent(
-                  lookupsTypes,
-                  drawerIpnuts?.Sections?.lookuptypeId,
-                )}
-                hasError={!!errors?.Sections?.Parentlookupid}
-                onChange={(payload) =>
-                  handleParentLookupChange("Sections", payload)
-                }
-              />
-            </Row>
-            <Row gutter={24}>
-              <Col span={12}>
-                <Checkbox
-                  disabled={isDisable}
-                  onChange={(e) =>
-                    drawrInptChng("Sections", "isactive", e.target.checked)
-                  }
-                  checked={drawerIpnuts?.Sections?.isactive}
-                >
-                  Active
-                </Checkbox>
-              </Col>
-            </Row>
-          </div>
-
-          {/* History Table */}
-          <div className="mt-4 config-tbl-container">
-            <h6 className=" mb-3 text-primary">Existing Sections</h6>
-            <Table
-              pagination={false}
-              columns={columnSections}
-              dataSource={data?.Sections}
-              loading={lookupsloading}
-              className="drawer-tbl"
-              size="small"
-              rowKey={(record, index) =>
-                record._id || record.id || record.key || index
-              }
-              rowClassName={(record, index) =>
-                index % 2 !== 0 ? "odd-row" : "even-row"
-              }
-              rowSelection={{
-                type: selectionType,
-                ...rowSelection,
-              }}
-              bordered
-            />
-          </div>
-        </div>
-      </MyDrawer>
     </div>
     // </div>
   );

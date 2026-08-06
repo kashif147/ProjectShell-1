@@ -708,7 +708,7 @@ function MyDrawer({
               <Button
                 onClick={() => setcontactDrawer(!contactDrawer)}
                 className="butn"
-                style={{ color: "#215E97" }}
+                style={{ color: "var(--app-brand-primary)" }}
               >
                 Add IRO
               </Button>
@@ -719,7 +719,7 @@ function MyDrawer({
               <Button
                 onClick={() => setcontactDrawer(!contactDrawer)}
                 className="butn"
-                style={{ color: "#215E97" }}
+                style={{ color: "var(--app-brand-primary)" }}
               >
                 <FaUserAlt /> Add Member
               </Button>
@@ -730,7 +730,7 @@ function MyDrawer({
               <Button
                 onClick={() => setisPayment(!isPayment)}
                 className="butn secondary"
-                style={{ color: "#215E97" }}
+                style={{ color: "var(--app-brand-primary)" }}
               >
                 Add Payment
               </Button>
@@ -741,7 +741,7 @@ function MyDrawer({
               <Button
                 onClick={() => setisAproved(!isAproved)}
                 className="butn secondary"
-                style={{ color: "#215E97" }}
+                style={{ color: "var(--app-brand-primary)" }}
               >
                 Approvals
               </Button>
@@ -752,7 +752,7 @@ function MyDrawer({
               <Button
                 onClick={() => setisRecursion(!isRecursion)}
                 className="butn secondary"
-                style={{ color: "#215E97" }}
+                style={{ color: "var(--app-brand-primary)" }}
               >
                 Recursion <BiRefresh style={{ fontSize: "18px" }} />
               </Button>
@@ -846,7 +846,7 @@ function MyDrawer({
     >
       <div
         className="drawer-main-cntainer"
-        style={{ backgroundColor: "#f6f9fc" }}
+        style={{ backgroundColor: "var(--theme-page-bg)" }}
       >
         {children}
         {isPagination && (
@@ -1185,7 +1185,7 @@ function MyDrawer({
                           recData?.timeDur === "Day") && (
                           <span
                             onClick={() => setisEndDate(false)}
-                            style={{ cursor: "pointer", color: "#215E97" }}
+                            style={{ cursor: "pointer", color: "var(--app-brand-primary)" }}
                           >
                             {" "}
                             Choose an end date
@@ -1200,7 +1200,7 @@ function MyDrawer({
                             <MyDatePicker />
                           </div>
                           <p
-                            style={{ cursor: "pointer", color: "#215E97" }}
+                            style={{ cursor: "pointer", color: "var(--app-brand-primary)" }}
                             onClick={() => setisEndDate(true)}
                           >
                             Remove end Date
@@ -1223,7 +1223,7 @@ function MyDrawer({
                             recData?.timeDur === "Month") && (
                             <span
                               onClick={() => setisEndDate(false)}
-                              style={{ cursor: "pointer", color: "#215E97" }}
+                              style={{ cursor: "pointer", color: "var(--app-brand-primary)" }}
                             >
                               {" "}
                               Choose an end date
@@ -1236,7 +1236,7 @@ function MyDrawer({
                             <MyDatePicker />
                           </div>
                           <p
-                            style={{ cursor: "pointer", color: "#215E97" }}
+                            style={{ cursor: "pointer", color: "var(--app-brand-primary)" }}
                             onClick={() => setisEndDate(true)}
                           >
                             Remove end Date

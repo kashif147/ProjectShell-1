@@ -38,7 +38,7 @@ export const reminderHistoryColumns = [
     key: "medium",
     render: (medium) => {
       if (medium === "email")
-        return <MailOutlined style={{ color: "#1890ff", fontSize: 18 }} />;
+        return <MailOutlined style={{ color: "var(--app-brand-accent)", fontSize: 18 }} />;
       if (medium === "pdf")
         return <FilePdfOutlined style={{ color: "red", fontSize: 18 }} />;
       if (medium === "letter")

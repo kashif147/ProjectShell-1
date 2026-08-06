@@ -117,7 +117,7 @@ function RosterDetails() {
                         </Button>
                         <Select
                             onChange={handleOptionSelect} // Trigger internal function
-                            style={{ borderLeft: 'none', borderColor: 'red', backgroundColor: "#215E97" }}
+                            style={{ borderLeft: 'none', borderColor: 'red', backgroundColor: "var(--app-brand-primary)" }}
                             value={null}
                             dropdownStyle={{ width: '10%' }}
                         >

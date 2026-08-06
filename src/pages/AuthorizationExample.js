@@ -154,7 +154,7 @@ const AuthorizationExample = () => {
               <div
                 style={{
                   padding: "12px",
-                  background: "#e6f7ff",
+                  background: "var(--app-brand-bg)",
                   borderRadius: "4px",
                   marginTop: "8px",
                 }}

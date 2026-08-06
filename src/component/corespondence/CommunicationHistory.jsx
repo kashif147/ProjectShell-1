@@ -71,7 +71,7 @@ function CommunicationChannelIcon({ kind }) {
   );
   switch (kind) {
     case "email":
-      return wrap(<MailOutlined style={{ ...s, color: "#45669d" }} />, "Email");
+      return wrap(<MailOutlined style={{ ...s, color: "var(--app-brand-primary)" }} />, "Email");
     case "sms":
       return wrap(
         <MessageOutlined style={{ ...s, color: "#389e0d" }} />,

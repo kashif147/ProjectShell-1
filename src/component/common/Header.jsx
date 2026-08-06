@@ -1,28 +1,21 @@
 import { React, useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import {
-  SettingOutlined,
   BellOutlined,
-  QuestionCircleOutlined,
-  PhoneOutlined,
   UserOutlined,
   LogoutOutlined,
 } from "@ant-design/icons";
 import {
   FaRegUserCircle,
   FaRegMoneyBillAlt,
-  FaRegEnvelope,
   FaCalendarAlt,
   FaRegClipboard,
-  FaRegFileAlt,
   FaCogs,
   FaCalendarCheck,
 } from "react-icons/fa";
 import { TbReportAnalytics } from "react-icons/tb";
 import { MdOutlineWork } from "react-icons/md";
-import { useTableColumns } from "../../context/TableColumnsContext ";
-import { Link, useLocation } from "react-router-dom";
-import { message, Popover, Badge, Avatar } from "antd";
+import { Popover, Badge } from "antd";
 import NotificationPopover from "./NotificationPopover";
 import UserProfilePopover from "./UserProfilePopover";
 import { PiDotsNineLight } from "react-icons/pi";
@@ -251,11 +244,11 @@ function Header() {
   const navigate = useNavigate();
   const { clearAuth: clearAuthContext } = useAuthorization();
   const { branding } = useTenantBranding();
-  const headerLogo = branding?.logoDarkUrl || branding?.logoUrl;
+  const headerLogo =
+    String(branding?.onPrimaryColor || "").toLowerCase() === "#ffffff"
+      ? branding?.logoDarkUrl || branding?.logoUrl
+      : branding?.logoUrl || branding?.logoDarkUrl;
   const portalTitle = branding?.portalTitle;
-
-  const { ProfileDetails, ReportsTitle } = useTableColumns();
-  const location = useLocation();
 
   const { badge } = useNotifications();
   const [notificationOpen, setNotificationOpen] = useState(false);
@@ -273,18 +266,6 @@ function Header() {
       "U";
     return name.charAt(0).toUpperCase();
   };
-
-  const reportLink =
-    ReportsTitle?.map((i, index) => {
-      return {
-        key: index,
-        label: (
-          <Link className="link" to="Reports" state={{ search: i, screen: i }}>
-            {i}
-          </Link>
-        ),
-      };
-    }) || [];
 
   const logout = async () => {
     if (isLoggingOutRef.current) return;
@@ -348,46 +329,24 @@ function Header() {
   };
 
   return (
-    <div
-      className="Header-border overflow-y-hidden bg pt-0 pb-0"
-      style={{ borderBottom: "2px solid #dcdfe4", width: "100vw" }}
-    >
-      <div className="d-flex justify-content-between align-items-center ">
-        <div
-          className="d-flex flex-row align-items-center"
-          style={{ paddingLeft: "1%", width: "33%" }}
-        >
+    <div className="Header-border app-top-nav overflow-y-hidden bg pt-0 pb-0">
+      <div className="app-top-nav__inner">
+        <div className="app-top-nav__brand">
           <AppLauncher />
-          {headerLogo ? (
-            <img
-              src={headerLogo}
-              alt={portalTitle || "Organisation logo"}
-              className="tenant-header-logo"
-              style={{
-                height: 36,
-                maxWidth: 160,
-                objectFit: "contain",
-                marginLeft: 8,
-              }}
-            />
-          ) : null}
-          {portalTitle ? (
-            <span
-              className="tenant-header-title"
-              style={{
-                color: "#fff",
-                fontWeight: 600,
-                marginLeft: 10,
-                fontSize: 15,
-                whiteSpace: "nowrap",
-                overflow: "hidden",
-                textOverflow: "ellipsis",
-                maxWidth: 200,
-              }}
-            >
-              {portalTitle}
-            </span>
-          ) : null}
+          <div className="tenant-header-brand-lockup">
+            {headerLogo ? (
+              <span className="tenant-header-logo-frame">
+                <img
+                  src={headerLogo}
+                  alt={portalTitle || "Organisation logo"}
+                  className="tenant-header-logo"
+                />
+              </span>
+            ) : null}
+            {portalTitle ? (
+              <span className="tenant-header-title">{portalTitle}</span>
+            ) : null}
+          </div>
           <nav className="navbar navbar-expand-lg navbar-light">
             <button
               className="navbar-toggler"
@@ -402,7 +361,7 @@ function Header() {
             </button>
           </nav>
         </div>
-        <div style={{ width: "33%" }}>
+        <div className="app-top-nav__search">
           {/* <MemberSearch
             headerStyle={true}
             fullWidth={true}
@@ -414,24 +373,13 @@ function Header() {
           /> */}
           <MemberSearch
             headerStyle={true}
+            showStatus={false}
             // onSelectBehavior="navigate" (default)
             // navigateTo="/Details" (default)
           />
         </div>
 
-        <div
-          style={{ width: "33%", justifyContent: "end" }}
-          className="input-container d-flex align-items-center justify-content-end"
-        >
-          <PhoneOutlined
-            className="top-icon"
-            onClick={() =>
-              navigate("/CorrespondencesSummary", {
-                state: { search: "Correspondence" },
-              })
-            }
-          />
-
+        <div className="app-top-nav__actions input-container">
           <Popover
             content={
               <NotificationPopover
@@ -456,8 +404,6 @@ function Header() {
             </span>
           </Popover>
 
-          <QuestionCircleOutlined className="top-icon" />
-          <SettingOutlined className="top-icon" />
           <Popover
             content={
               <UserProfilePopover
@@ -471,11 +417,16 @@ function Header() {
             placement="bottomRight"
             styles={{ body: { padding: 0 } }}
           >
-            <UserOutlined className="top-icon" />
+            <span
+              className="top-icon top-icon-profile"
+              aria-label="Open user profile"
+            >
+              <UserOutlined />
+            </span>
           </Popover>
           <LogoutOutlined
             className="top-icon"
-            style={{ marginRight: "30px" }}
+            style={{ marginRight: 0 }}
             onClick={logout}
           />
         </div>

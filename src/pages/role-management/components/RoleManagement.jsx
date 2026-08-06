@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from "react";
 import {
   Input,
-  Table,
   Space,
   Button,
   Tag,
@@ -26,7 +25,7 @@ import { FaRegCircleQuestion } from "react-icons/fa6";
 import { AiFillDelete } from "react-icons/ai";
 import { FaEdit } from "react-icons/fa";
 import { useDispatch, useSelector } from "react-redux";
-import { getUnifiedPaginationConfig } from "../../../component/common/UnifiedPagination";
+import MyTable from "../../../component/common/MyTable";
 import {
   getAllRoles,
   deleteRole,
@@ -206,7 +205,7 @@ const RoleManagement = ({ onClose }) => {
       title: "Role Name",
       dataIndex: "name",
       key: "name",
-      sorter: (a, b) => a.name.localeCompare(b.name),
+      sorter: { compare: (a, b) => a.name.localeCompare(b.name) },
       render: (text) => <span className="fw-medium">{text}</span>,
     },
     {
@@ -214,7 +213,7 @@ const RoleManagement = ({ onClose }) => {
       dataIndex: "code",
       key: "code",
       width: 80,
-      sorter: (a, b) => a.code.localeCompare(b.code),
+      sorter: { compare: (a, b) => a.code.localeCompare(b.code) },
       render: (text) => (
         <Tag color="orange" className="code-tag">
           {text}
@@ -226,7 +225,7 @@ const RoleManagement = ({ onClose }) => {
       dataIndex: "level",
       key: "level",
       width: 80,
-      sorter: (a, b) => (a.level || 1) - (b.level || 1),
+      sorter: { compare: (a, b) => (a.level || 1) - (b.level || 1) },
       render: (level) => {
         const levelValue = level || 1;
         let color = "default";
@@ -257,7 +256,7 @@ const RoleManagement = ({ onClose }) => {
       title: "Category",
       dataIndex: "category",
       key: "category",
-      sorter: (a, b) => a.category.localeCompare(b.category),
+      sorter: { compare: (a, b) => a.category.localeCompare(b.category) },
       render: (category) => {
         const categoryConfig = ROLE_CATEGORIES.find(
           (c) => c.value === category
@@ -273,7 +272,7 @@ const RoleManagement = ({ onClose }) => {
       title: "Level",
       dataIndex: "level",
       key: "level",
-      sorter: (a, b) => a.level - b.level,
+      sorter: { compare: (a, b) => a.level - b.level },
       render: (level) => (
         <Tag color={level >= 50 ? "red" : level >= 25 ? "orange" : "green"}>
           {level}
@@ -284,7 +283,7 @@ const RoleManagement = ({ onClose }) => {
       title: "Tenant",
       dataIndex: "tenantName",
       key: "tenantName",
-      sorter: (a, b) => a.tenantName.localeCompare(b.tenantName),
+      sorter: { compare: (a, b) => a.tenantName.localeCompare(b.tenantName) },
       render: (text) => (
         <Tag color="blue" className="tenant-tag">
           {text}
@@ -337,7 +336,9 @@ const RoleManagement = ({ onClose }) => {
       dataIndex: "createdAt",
       key: "createdAt",
       render: (date) => new Date(date).toLocaleDateString(),
-      sorter: (a, b) => new Date(a.createdAt) - new Date(b.createdAt),
+      sorter: {
+        compare: (a, b) => new Date(a.createdAt) - new Date(b.createdAt),
+      },
     },
     {
       title: (
@@ -361,7 +362,7 @@ const RoleManagement = ({ onClose }) => {
             <Tooltip title="Edit Role">
               <FaEdit
                 size={16}
-                style={{ cursor: "pointer", color: "#1890ff" }}
+                style={{ cursor: "pointer", color: "var(--app-brand-accent)" }}
                 onClick={() => handleEdit(record)}
               />
             </Tooltip>
@@ -515,27 +516,13 @@ const RoleManagement = ({ onClose }) => {
           <div className="text-muted">You do not have permission to view roles.</div>
         </Card>
       ) : (
-        <div className="bg-white rounded shadow-sm">
-          <Table
-            columns={columns}
-            dataSource={filteredRoles || []}
-            loading={rolesLoading}
-            rowKey="id"
-            pagination={getUnifiedPaginationConfig({
-              total: filteredRoles.length,
-              itemName: "roles",
-            })}
-            className="drawer-tbl"
-            size="small"
-            rowClassName={(record, index) =>
-              index % 2 !== 0 ? "odd-row" : "even-row"
-            }
-            scroll={{ x: 1000, y: "48vh" }}
-            locale={{
-              emptyText: "No Data",
-            }}
-          />
-        </div>
+        <MyTable
+          columns={columns}
+          dataSource={filteredRoles || []}
+          loading={rolesLoading}
+          selection={false}
+          scroll={{ x: 1000, y: "48vh" }}
+        />
       )}
 
       {/* Role Form Drawer */}

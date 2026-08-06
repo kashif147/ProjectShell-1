@@ -51,7 +51,7 @@
 
 .day-date {
     font-size: 12px;
-    color: #6b7280;
+    color: var(--theme-text-muted);
 }
 
 .day-price {
@@ -61,7 +61,7 @@
 }
 
 .event-summary-box {
-    background-color: #f8fafc;
+    background-color: var(--theme-muted-bg);
     border-radius: 12px;
     padding: 24px;
     margin-top: 16px;
@@ -89,7 +89,7 @@
 .summary-table-label {
     font-size: 12px;
     font-weight: 700;
-    color: #64748b;
+    color: var(--theme-text-muted);
 }
 
 .summary-table-value {
@@ -124,7 +124,7 @@
 .total-amount {
     font-size: 32px;
     font-weight: 800;
-    color: #215e97;
+    color: var(--app-brand-primary);
 }
 
 .payment-details-section {

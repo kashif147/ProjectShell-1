@@ -1,1021 +1,1511 @@
-/* Compact application form density */
-.application-form.compact {
+.application-mgt-shell {
+  /* Brand-driven palette: the shell background follows the tenant surface tint,
+     while control accents still track the saved primary/secondary/accent colors. */
+  --app-form-brand-primary: var(--theme-color-primary, var(--app-brand-primary, #215e97));
+  --app-form-brand-secondary: var(--theme-color-secondary, var(--secoundry-color, #475569));
+  --app-form-brand-accent: var(--theme-color-accent, var(--accent-color, #0d9488));
+  --app-form-brand-surface: var(--theme-color-surface, var(--brand-surface, var(--secoundry-bg-color, #eef2f6)));
+  --app-form-ink: color-mix(in srgb, var(--app-form-brand-primary) 72%, #0f2e33);
+  --app-form-ink-soft: color-mix(
+    in srgb,
+    var(--app-form-brand-primary) 52%,
+    #3d5257
+  );
+  --app-form-bg: color-mix(in srgb, var(--app-form-brand-surface) 18%, #ffffff);
+  --app-form-surface: #ffffff;
+  --app-form-border: color-mix(
+    in srgb,
+    var(--app-form-brand-primary) 16%,
+    #e1e9e9
+  );
+  --app-form-border-soft: color-mix(
+    in srgb,
+    var(--app-form-brand-primary) 8%,
+    #edf2f2
+  );
+  --app-form-teal: var(--app-form-brand-primary);
+  --app-form-teal-deep: color-mix(
+    in srgb,
+    var(--app-form-brand-primary) 82%,
+    #000000
+  );
+  --app-form-teal-tint: color-mix(
+    in srgb,
+    var(--app-form-brand-primary) 13%,
+    #ffffff
+  );
+  --app-form-coral: var(--app-form-brand-secondary);
+  --app-form-coral-deep: color-mix(
+    in srgb,
+    var(--app-form-brand-secondary) 76%,
+    #6d2d0b
+  );
+  --app-form-coral-tint: color-mix(
+    in srgb,
+    var(--app-form-brand-secondary) 14%,
+    #ffffff
+  );
+  --app-form-amber: var(--app-form-brand-accent);
+  --app-form-amber-deep: color-mix(
+    in srgb,
+    var(--app-form-brand-accent) 76%,
+    #123d52
+  );
+  --app-form-amber-tint: color-mix(
+    in srgb,
+    var(--app-form-brand-accent) 14%,
+    #ffffff
+  );
+  --app-form-icon-blue: var(--app-form-brand-primary);
+  --app-form-icon-blue-tint: color-mix(in srgb, var(--app-form-brand-surface) 44%, #ffffff);
+  --app-form-icon-green: var(--app-form-brand-secondary);
+  --app-form-icon-green-tint: color-mix(in srgb, var(--app-form-brand-secondary) 12%, #ffffff);
+  --app-form-icon-amber: var(--app-form-brand-accent);
+  --app-form-icon-amber-tint: color-mix(in srgb, var(--app-form-brand-accent) 12%, #ffffff);
+  --app-form-icon-coral: color-mix(in srgb, var(--app-form-brand-secondary) 58%, var(--app-form-brand-accent));
+  --app-form-icon-coral-tint: color-mix(in srgb, var(--app-form-icon-coral) 12%, #ffffff);
+  --app-form-icon-violet: color-mix(in srgb, var(--app-form-brand-primary) 58%, var(--app-form-brand-accent));
+  --app-form-icon-violet-tint: color-mix(in srgb, var(--app-form-icon-violet) 12%, #ffffff);
+  --app-form-violet-deep: var(--app-form-icon-violet);
+  --app-form-violet-tint: var(--app-form-icon-violet-tint);
+  --app-form-shadow-sm: 0 1px 2px rgba(15, 46, 51, 0.06);
+  --app-form-shadow-md: 0 10px 28px rgba(15, 46, 51, 0.1);
+  --app-form-focus-ring: 0 0 0 3px
+    color-mix(in srgb, var(--app-form-teal) 14%, transparent);
+  --app-form-control-height: 40px;
+  --app-form-control-radius: 10px;
+  color: var(--app-form-ink);
+  font-family: Inter, Roboto, "Helvetica Neue", Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  height: 100%;
+  min-height: 0;
+  overflow: hidden;
 }
 
-.application-form.compact .section-card {
-  padding: 12px 16px;
-  border-radius: 10px;
-  border: 1px solid #f0f0f0;
-  background: #fff;
-}
-
-.application-form.compact .section-header {
+.application-mgt-surface {
+  background: var(--app-form-bg);
   display: flex;
-  align-items: center;
-  min-height: 48px;
-  padding: 10px 16px;
-  margin: -12px -16px 12px;
-  border-radius: 10px 10px 0 0;
+  flex: 1 1 auto;
+  flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
+  position: relative;
 }
 
-.application-form.compact .section-header-icon {
-  padding: 5px 7px;
-  border-radius: 6px;
-  margin-right: 10px;
-  display: flex;
+.application-form-topbar {
   align-items: center;
-  justify-content: center;
+  background: var(--app-form-surface);
+  border-bottom: 1px solid var(--app-form-border-soft);
+  box-shadow: var(--app-form-shadow-sm);
+  display: flex;
   flex-shrink: 0;
+  flex-wrap: wrap;
+  gap: 20px;
+  justify-content: space-between;
+  padding: 14px 32px;
+  position: sticky;
+  top: 0;
+  z-index: 8;
 }
 
-.application-form.compact .section-header-icon .anticon,
-.application-form.compact .section-header-icon svg {
-  font-size: 16px !important;
+.application-form-stepper {
+  align-items: center;
+  display: flex;
+  flex: 1 1 480px;
+  min-width: 0;
+  overflow-x: auto;
 }
 
-.application-form.compact .section-header-text {
+.application-form-step {
+  align-items: center;
+  background: transparent;
+  border: 0;
+  border-bottom: 2.5px solid transparent;
+  color: var(--app-form-ink-soft);
+  cursor: pointer;
+  display: flex;
+  flex: 0 0 auto;
+  font-size: 13px;
+  font-weight: 600;
+  gap: 9px;
+  margin-right: 20px;
+  padding: 14px 0;
+  transition: 0.15s ease;
+  white-space: nowrap;
+}
+
+.application-form-step:hover,
+.application-form-step--active {
+  color: var(--app-form-amber-deep);
+}
+
+.application-form-step--active {
+  border-bottom-color: var(--app-form-amber);
+}
+
+.application-form-step-number {
+  align-items: center;
+  background: var(--app-form-border-soft);
+  border-radius: 50%;
+  color: var(--app-form-ink-soft);
+  display: inline-flex;
+  flex: 0 0 22px;
+  font-size: 11px;
+  font-weight: 700;
+  height: 22px;
+  justify-content: center;
+  width: 22px;
+}
+
+.application-form-step--active .application-form-step-number {
+  background: var(--app-form-amber);
+  color: #fff;
+}
+
+.application-form-topbar-actions {
+  align-items: center;
+  display: flex;
+  flex: 1 1 auto;
+  flex-wrap: nowrap;
+  gap: 10px;
+  justify-content: flex-end;
   min-width: 0;
 }
 
-.application-form.compact .section-header-title {
-  font-size: 16px;
+/*
+ * Topbar toggle chips. The raw Ant checkbox square is hidden so the chip
+ * itself is the on/off control — this avoids the default-blue square clashing
+ * with the brand palette. Unchecked = outlined, checked = solid fill (brand
+ * accent by default, semantic green/red for the process/reject actions).
+ */
+.application-form-toggle-chip.ant-checkbox-wrapper {
+  align-items: center;
+  background: #fff;
+  border: 1.5px solid var(--app-form-border);
+  border-radius: var(--app-form-control-radius);
+  color: var(--app-form-ink-soft) !important;
+  cursor: pointer;
+  display: inline-flex;
+  font-size: 12.5px;
   font-weight: 600;
-  line-height: 1.2;
+  gap: 0;
+  height: var(--app-form-control-height);
+  justify-content: center;
+  line-height: 1;
   margin: 0;
-  color: #1a1a1a;
+  min-height: var(--app-form-control-height);
+  padding: 0 16px;
+  transition: 0.15s ease;
+  user-select: none;
 }
 
-.application-form.compact .section-header-subtitle {
+.application-form-toggle-chip.ant-checkbox-wrapper .ant-checkbox {
+  display: none;
+}
+
+/* The label text inherits the wrapper colour (set with !important so it beats
+   the global `.application-mgt-shell label` colour override). */
+.application-form-toggle-chip.ant-checkbox-wrapper > span:not(.ant-checkbox) {
+  align-items: center;
+  color: inherit !important;
+  display: inline-flex;
+  line-height: 1;
+  padding: 0;
+}
+
+.application-form-toggle-chip.ant-checkbox-wrapper:hover {
+  background: var(--app-form-amber-tint);
+  border-color: var(--app-form-amber);
+  color: var(--app-form-amber-deep) !important;
+}
+
+/* Default (Batch Entry) checked -> brand accent fill */
+.application-form-toggle-chip.ant-checkbox-wrapper:has(.ant-checkbox-checked) {
+  background: var(--app-form-amber);
+  border-color: var(--app-form-amber);
+  color: #fff !important;
+}
+
+.application-form-toggle-chip.application-form-action--process.ant-checkbox-wrapper {
+  border-color: #22c55e;
+  color: #15803d !important;
+}
+
+.application-form-toggle-chip.application-form-action--process.ant-checkbox-wrapper:hover {
+  background: #dcfce7;
+  border-color: #16a34a;
+  color: #166534 !important;
+}
+
+.application-form-toggle-chip.application-form-action--process.ant-checkbox-wrapper:has(.ant-checkbox-checked) {
+  background: #16a34a;
+  border-color: #16a34a;
+  color: #fff !important;
+}
+
+.application-form-toggle-chip.application-form-action--reject.ant-checkbox-wrapper {
+  border-color: #ef4444;
+  color: #b91c1c !important;
+}
+
+.application-form-toggle-chip.application-form-action--reject.ant-checkbox-wrapper:hover {
+  background: #fee2e2;
+  border-color: #dc2626;
+  color: #991b1b !important;
+}
+
+.application-form-toggle-chip.application-form-action--reject.ant-checkbox-wrapper:has(.ant-checkbox-checked) {
+  background: #dc2626;
+  border-color: #dc2626;
+  color: #fff !important;
+}
+
+/* Disabled chips read as muted, non-interactive */
+.application-form-toggle-chip.ant-checkbox-wrapper-disabled,
+.application-form-toggle-chip.ant-checkbox-wrapper-disabled:hover {
+  background: #f3f6f6;
+  border-color: var(--app-form-border);
+  color: var(--app-form-ink-soft) !important;
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.application-form-topbar .butn,
+.application-form-topbar .ant-btn {
+  align-items: center;
+  border-radius: var(--app-form-control-radius);
+  display: inline-flex;
   font-size: 13px;
-  line-height: 1.2;
-  margin-top: 2px;
-  margin-bottom: 0;
-  font-weight: 400;
-  color: #666;
+  font-weight: 700;
+  height: var(--app-form-control-height);
+  justify-content: center;
+  line-height: 1;
+  min-height: var(--app-form-control-height);
+  padding: 0 16px;
 }
 
-/* CSS grid layout — container-based columns, not Ant flex breakpoints */
-.application-form.compact .form-grid {
+.application-form-topbar-actions .member-search-field,
+.application-form-topbar-actions .ant-select,
+.application-form-topbar-actions .ant-input-affix-wrapper {
+  max-width: 360px;
+}
+
+.application-form-topbar-actions .member-search-field--compact {
+  flex: 1 1 160px;
+  max-width: 300px;
+  min-width: 150px;
+  width: 100% !important;
+}
+
+/* Keep the action chips/buttons on one line with Submit — only the search
+   field flexes to absorb tight widths so nothing wraps to a second row. */
+.application-form-topbar-actions .application-form-toggle-chip,
+.application-form-topbar-actions .butn,
+.application-form-topbar-actions .ant-btn {
+  flex: 0 0 auto;
+}
+
+/* Search icon (prefix) sits muted; clear "×" reads as a subtle affordance */
+.application-form-topbar-actions
+  .member-search-field--compact
+  .ant-input-prefix {
+  color: #8fa0a1;
+  margin-inline-end: 8px;
+}
+
+.application-form-topbar-actions
+  .member-search-field--compact
+  .ant-input-prefix
+  .anticon {
+  font-size: 14px;
+}
+
+.application-form-topbar-actions
+  .member-search-field--compact
+  .ant-input-suffix
+  .ant-btn {
+  color: #8fa0a1;
+  height: 18px !important;
+  min-height: 18px !important;
+  padding: 0 !important;
+  width: 18px !important;
+}
+
+.application-form-topbar-actions
+  .member-search-field--compact
+  .ant-input-suffix
+  .ant-btn:hover {
+  color: var(--app-form-teal-deep);
+}
+
+.application-form-topbar-actions .member-search-field--compact .ant-select,
+.application-form-topbar-actions
+  .member-search-field--compact
+  .ant-select-selector {
+  background: transparent !important;
+  border: 0 !important;
+  box-shadow: none !important;
+  height: auto !important;
+  max-width: none;
+  padding: 0 !important;
+  width: 100% !important;
+}
+
+.application-form-topbar-actions
+  .member-search-field--compact
+  .ant-input-affix-wrapper {
+  align-items: center;
+  background: #fbfdfd !important;
+  border: 1.5px solid var(--app-form-border) !important;
+  border-radius: var(--app-form-control-radius) !important;
+  box-shadow: none !important;
+  display: flex;
+  font-size: 13px !important;
+  height: var(--app-form-control-height) !important;
+  max-width: none;
+  padding: 0 12px !important;
+  width: 100% !important;
+}
+
+.application-form-topbar-actions
+  .member-search-field--compact
+  .ant-input-affix-wrapper-focused,
+.application-form-topbar-actions
+  .member-search-field--compact
+  .ant-input-affix-wrapper:focus-within {
+  background: #fff !important;
+  border-color: var(--app-form-teal) !important;
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--app-form-teal) 14%, transparent) !important;
+}
+
+.application-form-topbar-actions .member-search-field--compact .ant-input {
+  background: transparent !important;
+  border: 0 !important;
+  box-shadow: none !important;
+  color: var(--app-form-ink) !important;
+  font-size: 13px !important;
+  height: auto !important;
+  line-height: 20px !important;
+  min-height: 0 !important;
+  padding: 0 !important;
+}
+
+.application-form-topbar-actions
+  .member-search-field--compact
+  .ant-input::placeholder {
+  color: #a6b5b6 !important;
+}
+
+.application-mgt-shell .application-form {
+  background: transparent;
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  gap: 10px;
+  margin: 0;
+  min-height: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  padding: 20px 24px 20px;
+  scroll-behavior: smooth;
+  width: 100%;
+}
+
+.application-mgt-shell .application-form::-webkit-scrollbar {
+  width: 8px;
+}
+
+.application-mgt-shell .application-form::-webkit-scrollbar-thumb {
+  background: #c7d3d3;
+  border-radius: 999px;
+}
+
+.application-mgt-shell .section-card {
+  background: var(--app-form-surface);
+  border: 1px solid var(--app-form-border-soft);
+  border-radius: 14px;
+  box-shadow: var(--app-form-shadow-sm);
+  flex: 0 0 auto;
+  height: auto;
+  margin: 0 auto;
+  max-width: 1400px;
+  min-height: 0;
+  min-width: 0;
+  overflow: hidden;
+  scroll-margin-top: 130px;
+  width: 100%;
+}
+
+.application-mgt-shell .section-header {
+  align-items: flex-start;
+  background: var(--app-form-surface) !important;
+  border-bottom: 1px solid var(--app-form-border-soft);
+  border-radius: 14px 14px 0 0;
+  display: flex;
+  gap: 12px;
+  min-height: 73px;
+  padding: 18px 26px;
+}
+
+.application-mgt-shell .section-header-icon {
+  align-items: center;
+  border-radius: 10px;
+  display: flex;
+  flex: 0 0 36px;
+  height: 36px;
+  justify-content: center;
+  width: 36px;
+}
+
+.application-mgt-shell .section-header--teal .section-header-icon {
+  background: var(--app-form-teal-tint) !important;
+  color: var(--app-form-teal-deep);
+}
+
+.application-mgt-shell .section-header--blue .section-header-icon {
+  background: var(--app-form-icon-blue-tint) !important;
+  color: var(--app-form-icon-blue);
+}
+
+.application-mgt-shell .section-header--green .section-header-icon {
+  background: var(--app-form-icon-green-tint) !important;
+  color: var(--app-form-icon-green);
+}
+
+.application-mgt-shell .section-header--coral .section-header-icon {
+  background: var(--app-form-icon-coral-tint) !important;
+  color: var(--app-form-icon-coral);
+}
+
+.application-mgt-shell .section-header--amber .section-header-icon {
+  background: var(--app-form-icon-amber-tint) !important;
+  color: var(--app-form-icon-amber);
+}
+
+.application-mgt-shell .section-header--violet .section-header-icon {
+  background: var(--app-form-icon-violet-tint) !important;
+  color: var(--app-form-icon-violet);
+}
+
+.application-mgt-shell .section-header-icon .anticon,
+.application-mgt-shell .section-header-icon svg {
+  color: currentColor !important;
+  font-size: 16px !important;
+}
+
+.application-mgt-shell .section-header-title {
+  color: var(--app-form-ink);
+  font-size: 15.5px;
+  font-weight: 700;
+  line-height: 1.25;
+  margin: 0 0 2px;
+}
+
+.application-mgt-shell .section-header-subtitle {
+  color: var(--app-form-ink-soft);
+  font-size: 12.5px;
+  line-height: 1.4;
+  margin: 0;
+}
+
+.application-mgt-shell .form-grid {
+  align-items: start;
+  column-gap: 20px;
   display: grid;
-  column-gap: 16px;
+  grid-auto-rows: auto;
+  row-gap: 16px;
+  width: 100%;
+}
+
+.application-mgt-shell .section-card > .form-grid {
+  padding: 22px 26px 26px;
+}
+
+.application-mgt-shell .form-grid .form-grid {
+  padding: 0;
+}
+
+.application-mgt-shell .form-grid--3 {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.application-mgt-shell .form-grid--2,
+.application-mgt-shell .form-grid--contact-phones {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.application-mgt-shell .form-grid--33-67,
+.application-mgt-shell .form-grid--search-eircode {
+  grid-template-columns: minmax(0, 1fr) minmax(0, 2fr);
+}
+
+.application-mgt-shell .form-grid--40-60 {
+  grid-template-columns: minmax(0, 2fr) minmax(0, 3fr);
+}
+
+.application-mgt-shell .form-grid--nursing-row {
+  grid-template-columns: minmax(0, 1.35fr) minmax(0, 0.65fr);
+}
+
+.application-mgt-shell .form-grid--trade-union-row {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.application-mgt-shell .form-grid--trade-union-row--3 {
+  grid-template-columns: minmax(0, 2fr) minmax(0, 1fr) minmax(0, 2fr);
+}
+
+/*
+ * Trade-union row: one label ("Are you or were you a member…") runs two lines.
+ * Keep these labels block-flow so the asterisk stays inline after the text
+ * (instead of being pushed to the far right by the flex label), and reserve a
+ * consistent two-line label height so every Yes/No control aligns across the
+ * row regardless of label length.
+ */
+.application-mgt-shell .form-grid--trade-union-row .info-box--field-aligned > .my-input-label,
+.application-mgt-shell .form-grid--trade-union-row--3 .info-box--field-aligned > .my-input-label {
+  display: block !important;
+}
+
+.application-mgt-shell .form-grid--trade-union-row .info-box--field-aligned > .my-input-label,
+.application-mgt-shell .form-grid--trade-union-row--3 .info-box--field-aligned > .my-input-label,
+.application-mgt-shell .form-grid--trade-union-row .my-input-wrapper > .d-flex,
+.application-mgt-shell .form-grid--trade-union-row--3 .my-input-wrapper > .d-flex {
+  min-height: 32px !important;
+}
+
+.application-mgt-shell .form-grid-cell {
+  align-self: stretch;
+  display: flex;
+  flex-direction: column;
+  height: auto;
+  min-height: 0;
+  min-width: 0;
+  overflow: visible;
+}
+
+.application-mgt-shell .form-grid-cell-inner {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  gap: 0;
+  height: auto;
+  min-height: 0;
+  min-width: 0;
+  overflow: visible;
+  width: 100%;
+}
+
+.application-mgt-shell .form-col-full {
+  grid-column: 1 / -1;
+}
+
+.application-mgt-shell .form-col-2 {
+  grid-column: span 2;
+}
+
+.application-mgt-shell .form-field-stack,
+.application-mgt-shell .info-box--field-aligned,
+.application-mgt-shell .form-grid-cell-inner > .my-input-wrapper,
+.application-mgt-shell
+  .form-grid-cell-inner
+  > div:not(.form-grid):not(.info-box):not(.question-box):not(.consent-box):not(
+    .notice-box
+  ):not(.checkbox-notice-box) {
+  display: grid;
+  grid-template-rows:
+    minmax(16px, auto)
+    minmax(var(--app-form-control-height), auto);
+  height: auto;
+  margin-bottom: 0 !important;
+  min-height: 0;
+  min-width: 0;
   row-gap: 6px;
   width: 100%;
 }
 
-.application-form.compact .form-grid-cell-inner > .form-grid {
-  display: grid;
+.application-mgt-shell .my-input-wrapper > .d-flex,
+.application-mgt-shell .form-grid-cell-inner > div > .d-flex,
+.application-mgt-shell .form-field-stack > label,
+.application-mgt-shell .form-grid-cell-inner > div > label.my-input-label,
+.application-mgt-shell .info-box--field-aligned > .my-input-label {
+  align-items: flex-start !important;
+  align-self: start;
+  line-height: 1.3 !important;
+  min-height: 16px;
   width: 100%;
 }
 
-.application-form.compact .form-grid--3 {
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-}
-
-.application-form.compact .form-grid--2 {
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-}
-
-.application-form.compact .form-grid--33-67 {
-  grid-template-columns: minmax(0, 1fr) minmax(0, 2fr);
-}
-
-.application-form.compact .form-grid--40-60 {
-  grid-template-columns: minmax(0, 2fr) minmax(0, 3fr);
-}
-
-/* Full-width rows must not inherit field-row track sizing */
-.application-form.compact .form-grid-cell.form-col-full {
-  display: flex;
-  flex-direction: column;
-  grid-row: auto;
-}
-
-/* Each field cell: fixed label row + fixed control row */
-.application-form.compact
-  .form-grid--3
-  > .form-grid-cell:not(.form-col-full):not(:has(.consent-box)):not(
-    :has(.question-box)
-  ):not(:has(.notice-box)):not(:has(.checkbox-notice-box)),
-.application-form.compact
-  .form-grid--2
-  > .form-grid-cell:not(.form-col-full):not(:has(.consent-box)):not(
-    :has(.question-box)
-  ):not(:has(.notice-box)):not(:has(.checkbox-notice-box)),
-.application-form.compact
-  .form-grid--33-67
-  > .form-grid-cell:not(.form-col-full):not(:has(.consent-box)):not(
-    :has(.question-box)
-  ):not(:has(.notice-box)):not(:has(.checkbox-notice-box)),
-.application-form.compact .form-grid--search-eircode > .form-grid-cell,
-.application-form.compact .form-grid--contact-phones > .form-grid-cell,
-.application-form.compact .form-grid--contact-emails > .form-grid-cell,
-.application-form.compact
-  .form-grid--nursing-row
-  > .form-grid-cell:not(.form-col-full):not(:has(.question-box)),
-.application-form.compact .form-grid--trade-union-row > .form-grid-cell {
-  display: grid;
-  grid-template-rows: minmax(20px, auto) 36px;
-  gap: 2px;
-  align-content: start;
-  min-width: 0;
-}
-
-.application-form.compact
-  .form-grid--3
-  > .form-grid-cell:not(.form-col-full):not(:has(.consent-box)):not(
-    :has(.question-box)
-  ):not(:has(.notice-box)):not(:has(.checkbox-notice-box))
-  > .form-grid-cell-inner,
-.application-form.compact
-  .form-grid--2
-  > .form-grid-cell:not(.form-col-full):not(:has(.consent-box)):not(
-    :has(.question-box)
-  ):not(:has(.notice-box)):not(:has(.checkbox-notice-box))
-  > .form-grid-cell-inner,
-.application-form.compact
-  .form-grid--33-67
-  > .form-grid-cell:not(.form-col-full):not(:has(.consent-box)):not(
-    :has(.question-box)
-  ):not(:has(.notice-box)):not(:has(.checkbox-notice-box))
-  > .form-grid-cell-inner,
-.application-form.compact
-  .form-grid--search-eircode
-  > .form-grid-cell
-  > .form-grid-cell-inner,
-.application-form.compact
-  .form-grid--contact-phones
-  > .form-grid-cell
-  > .form-grid-cell-inner,
-.application-form.compact
-  .form-grid--contact-emails
-  > .form-grid-cell
-  > .form-grid-cell-inner,
-.application-form.compact
-  .form-grid--nursing-row
-  > .form-grid-cell:not(.form-col-full)
-  > .form-grid-cell-inner,
-.application-form.compact
-  .form-grid--trade-union-row
-  > .form-grid-cell
-  > .form-grid-cell-inner {
-  display: contents;
-}
-
-/* Flatten wrappers so label + control sit on the cell's two grid rows */
-.application-form.compact
-  .form-grid--3
-  > .form-grid-cell:not(.form-col-full)
-  .form-grid-cell-inner
-  > .my-input-wrapper,
-.application-form.compact
-  .form-grid--2
-  > .form-grid-cell:not(.form-col-full)
-  .form-grid-cell-inner
-  > .my-input-wrapper,
-.application-form.compact
-  .form-grid--33-67
-  > .form-grid-cell:not(.form-col-full)
-  .form-grid-cell-inner
-  > .my-input-wrapper,
-.application-form.compact
-  .form-grid--search-eircode
-  > .form-grid-cell
-  .form-grid-cell-inner
-  > .my-input-wrapper,
-.application-form.compact
-  .form-grid--contact-phones
-  > .form-grid-cell
-  .form-grid-cell-inner
-  > .my-input-wrapper,
-.application-form.compact
-  .form-grid--contact-emails
-  > .form-grid-cell
-  .form-grid-cell-inner
-  > .my-input-wrapper,
-.application-form.compact
-  .form-grid--nursing-row
-  > .form-grid-cell
-  .form-grid-cell-inner
-  > .my-input-wrapper,
-.application-form.compact
-  .form-grid--trade-union-row
-  > .form-grid-cell
-  .form-grid-cell-inner
-  > .my-input-wrapper,
-.application-form.compact
-  .form-grid--3
-  > .form-grid-cell:not(.form-col-full)
-  .form-grid-cell-inner
-  > .info-box--field-aligned,
-.application-form.compact
-  .form-grid--2
-  > .form-grid-cell:not(.form-col-full)
-  .form-grid-cell-inner
-  > .info-box--field-aligned,
-.application-form.compact
-  .form-grid--33-67
-  > .form-grid-cell:not(.form-col-full)
-  .form-grid-cell-inner
-  > .info-box--field-aligned,
-.application-form.compact
-  .form-grid--contact-emails
-  > .form-grid-cell
-  .form-grid-cell-inner
-  > .info-box--field-aligned,
-.application-form.compact
-  .form-grid--nursing-row
-  > .form-grid-cell
-  .form-grid-cell-inner
-  > .info-box--field-aligned,
-.application-form.compact
-  .form-grid--trade-union-row
-  > .form-grid-cell
-  .form-grid-cell-inner
-  > .info-box--field-aligned,
-.application-form.compact
-  .form-grid--3
-  > .form-grid-cell:not(.form-col-full)
-  .form-grid-cell-inner
-  > .form-field-stack,
-.application-form.compact
-  .form-grid--2
-  > .form-grid-cell:not(.form-col-full)
-  .form-grid-cell-inner
-  > .form-field-stack,
-.application-form.compact
-  .form-grid--33-67
-  > .form-grid-cell:not(.form-col-full)
-  .form-grid-cell-inner
-  > .form-field-stack,
-.application-form.compact
-  .form-grid--3
-  > .form-grid-cell:not(.form-col-full)
-  .form-grid-cell-inner
-  > div:not(.form-grid):not(.consent-box):not(.notice-box):not(
-    .checkbox-notice-box
-  ):not(.info-box),
-.application-form.compact
-  .form-grid--2
-  > .form-grid-cell:not(.form-col-full)
-  .form-grid-cell-inner
-  > div:not(.form-grid):not(.consent-box):not(.notice-box):not(
-    .checkbox-notice-box
-  ):not(.info-box),
-.application-form.compact
-  .form-grid--33-67
-  > .form-grid-cell:not(.form-col-full)
-  .form-grid-cell-inner
-  > div:not(.form-grid):not(.consent-box):not(.notice-box):not(
-    .checkbox-notice-box
-  ):not(.info-box),
-.application-form.compact
-  .form-grid--search-eircode
-  > .form-grid-cell
-  .form-grid-cell-inner
-  > div:not(.form-grid):not(.consent-box):not(.notice-box):not(
-    .checkbox-notice-box
-  ):not(.info-box),
-.application-form.compact
-  .form-grid--contact-phones
-  > .form-grid-cell
-  .form-grid-cell-inner
-  > div:not(.form-grid):not(.consent-box):not(.notice-box):not(
-    .checkbox-notice-box
-  ):not(.info-box),
-.application-form.compact
-  .form-grid--contact-emails
-  > .form-grid-cell
-  .form-grid-cell-inner
-  > div:not(.form-grid):not(.consent-box):not(.notice-box):not(
-    .checkbox-notice-box
-  ):not(.info-box),
-.application-form.compact
-  .form-grid--nursing-row
-  > .form-grid-cell
-  .form-grid-cell-inner
-  > div:not(.form-grid):not(.consent-box):not(.notice-box):not(
-    .checkbox-notice-box
-  ):not(.info-box),
-.application-form.compact
-  .form-grid--trade-union-row
-  > .form-grid-cell
-  .form-grid-cell-inner
-  > div:not(.form-grid):not(.consent-box):not(.notice-box):not(
-    .checkbox-notice-box
-  ):not(.info-box) {
-  display: contents;
-}
-
-/* Default cell layout (full-width blocks, consent, notices) */
-.application-form.compact .form-grid-cell {
-  display: flex;
-  flex-direction: column;
-  align-self: stretch;
-  min-width: 0;
-}
-
-.application-form.compact .form-grid-cell-inner {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  min-width: 0;
-  width: 100%;
-}
-
-/* Row 1 — labels (MyInput, CustomSelect, MyDatePicker) */
-.application-form.compact .form-grid-cell > .d-flex,
-.application-form.compact .form-grid-cell > .my-input-label,
-.application-form.compact
-  .form-grid-cell
-  .info-box--field-aligned
-  > .my-input-label {
-  align-self: end;
-  width: 100%;
-  min-width: 0;
-  margin-bottom: 0 !important;
-  display: flex;
-  align-items: flex-end !important;
-  box-sizing: border-box;
-  line-height: 1.2;
-}
-
-.application-form.compact .form-grid-cell > .d-flex > .d-flex {
-  align-items: flex-end !important;
-}
-
-.application-form.compact .form-grid-cell > .d-flex .my-input-label,
-.application-form.compact .form-grid-cell > .my-input-label {
-  margin-bottom: 0;
-}
-
-/* Row 2 — controls */
-.application-form.compact .form-grid-cell > .my-input-container,
-.application-form.compact .form-grid-cell > .form-control-band,
-.application-form.compact .form-grid-cell > div:has(> input[type="text"]) {
-  align-self: stretch;
-  width: 100%;
-  min-width: 0;
-  height: 36px !important;
-  min-height: 36px !important;
-  max-height: 36px !important;
-  box-sizing: border-box;
-}
-
-.application-form.compact .form-grid-cell input[type="text"] {
-  height: 36px !important;
-  min-height: 36px !important;
-  max-height: 36px !important;
-  font-size: 13px !important;
-  box-sizing: border-box;
-}
-
-.application-form.compact .form-control-band {
-  display: flex;
-  align-items: center;
-  padding: 0 12px;
-  border-radius: 8px;
-  box-sizing: border-box;
-  width: 100%;
-}
-
-.application-form.compact .form-control-band--plain {
-  padding: 0;
-  border: none;
-  background: transparent;
-}
-
-.application-form.compact .form-control-band--plain .member-search-field {
-  width: 100%;
-  min-width: 0;
-}
-
-.application-form.compact
-  .form-control-band--plain
-  .member-search-field
-  .ant-select-auto-complete,
-.application-form.compact
-  .form-control-band--plain
-  .member-search-field
-  .ant-input-affix-wrapper,
-.application-form.compact
-  .form-control-band--plain
-  .member-search-field
-  .ant-input-affix-wrapper.my-input-field {
-  width: 100% !important;
-  height: 36px !important;
-  min-height: 36px !important;
-  max-height: 36px !important;
-  display: inline-flex !important;
-  align-items: center !important;
-  box-sizing: border-box;
-  padding: 0 11px !important;
-}
-
-.application-form.compact
-  .form-control-band--plain
-  .member-search-field
-  .ant-input-affix-wrapper
-  .ant-input {
-  height: auto !important;
-  min-height: 0 !important;
-  padding: 0 0 0 8px !important;
-  font-size: 13px !important;
-  line-height: 22px !important;
-  border: none !important;
-  box-shadow: none !important;
-  background: transparent !important;
-}
-
-.application-form.compact
-  .form-control-band--plain
-  .member-search-field
-  .ant-input-affix-wrapper
-  .ant-input-prefix {
-  display: inline-flex;
-  align-items: center;
-  margin-inline-end: 0 !important;
-  line-height: 1;
-}
-
-.application-form.compact
-  .form-control-band--plain
-  .member-search-field
-  .ant-input-affix-wrapper
-  .ant-input-suffix {
-  display: inline-flex;
-  align-items: center;
-  margin-inline-start: 4px;
-}
-
-.application-form.compact .info-box--field-aligned {
-  background: transparent;
-  border: none;
-  padding: 0;
-  min-height: 0;
-  margin: 0;
-}
-
-.application-form.compact .info-box--field-aligned .form-control-band {
-  background-color: #1173d41a;
-  border: 1px solid #97c5efff;
-}
-
-.application-form.compact
-  .info-box--field-aligned.info-box--error
-  .form-control-band {
-  border-color: #ff4d4f;
-}
-
-.application-form.compact .form-grid--address-consent .consent-box--compact {
-  margin-bottom: 0;
-  flex: 1;
-  display: flex;
-  align-items: center;
-  min-height: 36px;
-  padding: 6px 12px;
-}
-
-.application-form.compact .consent-box--compact .ant-checkbox-wrapper {
+.application-mgt-shell label,
+.application-mgt-shell .my-input-label {
   align-items: flex-start;
-  width: 100%;
-  margin-inline-end: 0;
-  gap: 10px;
-}
-
-.application-form.compact .consent-box--compact .ant-checkbox {
-  align-self: flex-start;
-  margin-top: 2px;
-  margin-inline-end: 0;
-}
-
-.application-form.compact .consent-box--compact .ant-checkbox + span {
-  display: block;
-  line-height: 1.35;
-  padding-inline-start: 2px;
-  flex: 1;
-  min-width: 0;
-}
-
-.application-form.compact .consent-box--compact .consent-box-text {
+  color: var(--app-form-ink-soft) !important;
   display: flex;
-  flex-direction: column;
-  gap: 2px;
+  font-size: 12px !important;
+  font-weight: 600 !important;
+  gap: 4px;
+  line-height: 1.3 !important;
+  margin: 0 !important;
+  min-height: 16px !important;
+  white-space: normal;
 }
 
-.application-form.compact .consent-box--compact .consent-box-label {
-  display: block;
-  font-size: 13px;
-  font-weight: 500;
-  line-height: 1.35;
+.application-mgt-shell .form-grid-cell-inner > div > label.my-input-label,
+.application-mgt-shell .info-box--field-aligned > .my-input-label,
+.application-mgt-shell .notice-box .my-input-label {
+  min-height: 16px !important;
 }
 
-.application-form.compact .consent-box--compact .consent-box-note {
-  display: block;
-  font-size: 11px;
-  font-weight: 400;
-  line-height: 1.3;
-  margin: 0;
-  padding-left: 0;
+.application-mgt-shell .form-grid--personal-info .form-grid-cell {
+  align-self: start;
 }
 
-.application-form.compact
-  .form-grid--address-consent
-  > .form-grid-cell:has(.consent-box) {
-  display: flex;
-  flex-direction: column;
+.application-mgt-shell
+  .form-grid--personal-info
+  .form-grid-cell-inner
+  > .my-input-wrapper,
+.application-mgt-shell
+  .form-grid--personal-info
+  .form-grid-cell-inner
+  > div:not(.form-grid):not(.info-box):not(.question-box):not(.consent-box):not(
+    .notice-box
+  ):not(.checkbox-notice-box) {
+  grid-template-rows:
+    16px
+    var(--app-form-control-height);
 }
 
-.application-form.compact .info-box--field-aligned--wrap > .my-input-label {
-  align-items: flex-end;
-}
-
-.application-form.compact .nurse-type-box {
-  background-color: #1173d41a;
-  border: 1px solid #97c5efff;
-  min-height: 0;
-}
-
-.application-form.compact .nurse-type-box.info-box--error {
-  border-color: #ff4d4f;
-}
-
-.application-form.compact .nurse-type-box .my-input-label {
-  margin-bottom: 8px;
-}
-
-.application-form.compact .form-grid--contact-phones,
-.application-form.compact .form-grid--contact-emails,
-.application-form.compact .form-grid--nursing-row,
-.application-form.compact .form-grid--search-eircode {
-  width: 100%;
-}
-
-.application-form.compact .form-grid--trade-union-row {
-  width: 100%;
-  grid-template-rows: minmax(20px, auto) 36px;
-}
-
-.application-form.compact .form-grid--nursing-row {
-  grid-template-columns: minmax(0, 1.35fr) minmax(0, 0.65fr);
-}
-
-.application-form.compact
-  .info-box--field-aligned
-  .form-control-band:has(.ant-radio-group):not(.form-control-band--nurse-type) {
-  width: 100%;
-  min-width: 200px;
-}
-
-.application-form.compact .form-control-band .ant-radio-group {
-  display: inline-flex;
-  align-items: center;
-  gap: 24px;
-  width: 100%;
-}
-
-.application-form.compact .form-control-band .ant-radio-wrapper {
-  margin-inline-end: 0;
-  padding-inline: 4px 8px;
-}
-
-.application-form.compact .form-grid--trade-union-row--3 {
-  grid-template-columns: minmax(0, 2fr) minmax(0, 1fr) minmax(0, 2fr);
-}
-
-.application-form.compact .form-grid--trade-union-row > .form-grid-cell {
-  grid-row: span 2;
-  grid-template-rows: subgrid;
-}
-
-.application-form.compact
-  .form-grid--trade-union-row
-  .info-box--field-aligned--wrap
-  > .my-input-label,
-.application-form.compact
-  .form-grid--trade-union-row
-  > .form-grid-cell
-  .my-input-wrapper
-  > .d-flex {
-  min-height: 40px;
-  align-items: flex-end;
-}
-
-.application-form.compact .form-grid > .form-grid-cell.form-search-eircode-row {
-  margin-bottom: 0;
-}
-
-.application-form.compact .form-grid--search-eircode {
-  grid-template-columns: minmax(0, 1fr) minmax(0, 2fr);
-}
-
-.application-form.compact .address-search-field {
-  display: contents;
-}
-
-.application-form.compact .form-grid--contact-phones,
-.application-form.compact .form-grid--contact-emails {
-  row-gap: 0;
-}
-
-.application-form.compact
-  .form-grid
-  > .form-grid-cell.form-col-full:has(.form-grid--contact-phones)
-  + .form-grid-cell.form-col-full:has(.form-grid--contact-emails) {
-  margin-top: -2px;
-}
-
-.application-form.compact .form-grid-cell,
-.application-form.compact .form-grid > .ant-col {
-  min-width: 0;
-  margin-bottom: 0;
-  max-width: 100% !important;
-}
-
-.application-form.compact .form-grid.ant-row {
-  display: grid !important;
-  margin-left: 0 !important;
-  margin-right: 0 !important;
-  flex-wrap: unset !important;
-}
-
-.application-form.compact .form-grid.ant-row::before,
-.application-form.compact .form-grid.ant-row::after {
-  display: none !important;
-}
-
-.application-form.compact .form-grid > .ant-col {
-  flex: none !important;
-  width: auto !important;
-  padding-left: 0 !important;
-  padding-right: 0 !important;
-}
-
-.application-form.compact .form-grid-cell.form-col-full,
-.application-form.compact .form-grid > .ant-col.form-col-full {
-  grid-column: 1 / -1;
-}
-
-.application-form.compact .form-grid-cell.form-col-2,
-.application-form.compact .form-grid > .ant-col.form-col-2 {
-  grid-column: span 2;
-}
-
-@media (max-width: 991px) {
-  .application-form.compact .form-grid--3 {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-}
-
-@media (max-width: 767px) {
-  .application-form.compact .form-grid--contact-emails,
-  .application-form.compact .form-grid--nursing-row {
-    grid-template-columns: 1fr;
-  }
-
-  .application-form.compact
-    .form-grid--nursing-row
-    > .form-grid-cell.form-col-2 {
-    grid-column: span 1;
-  }
-}
-
-@media (max-width: 575px) {
-  .application-form.compact .form-grid--3,
-  .application-form.compact .form-grid--2,
-  .application-form.compact .form-grid--33-67,
-  .application-form.compact .form-grid--40-60,
-  .application-form.compact .form-grid--contact-phones {
-    grid-template-columns: 1fr;
-  }
-
-  .application-form.compact .form-grid-cell.form-col-2,
-  .application-form.compact .form-grid > .ant-col.form-col-2 {
-    grid-column: span 1;
-  }
-}
-
-.application-form.compact .form-item {
-  margin-bottom: 10px;
-}
-
-.application-form.compact .form-grid > .form-grid-cell.form-item,
-.application-form.compact .form-grid > .ant-col.form-item {
-  margin-bottom: 0;
-}
-
-.application-form.compact .form-grid .info-box,
-.application-form.compact .form-grid .consent-box,
-.application-form.compact .form-grid .question-box,
-.application-form.compact .form-grid .notice-box,
-.application-form.compact .form-grid .checkbox-notice-box {
-  margin-bottom: 0;
-}
-
-.application-form.compact .form-grid .form-grid {
-  width: 100%;
-}
-
-.application-form.compact label,
-.application-form.compact .my-input-label {
-  font-size: 13px;
-  font-weight: 500;
-  line-height: 1.2;
-}
-
-.application-form.compact .form-grid-cell-inner .my-input-label {
-  margin-bottom: 0;
-}
-
-.application-form-worklocation-iro {
-  color: var(--primary-color);
-  display: inline-block;
-  font-size: 12px;
-  font-weight: 600;
-  line-height: 1.2;
-  max-width: 220px;
+.application-mgt-shell .form-grid--personal-info .my-input-wrapper > .d-flex,
+.application-mgt-shell .form-grid--personal-info .form-grid-cell-inner > div > .d-flex,
+.application-mgt-shell .form-grid--personal-info .form-grid-cell-inner > div > label.my-input-label,
+.application-mgt-shell .form-grid--personal-info .my-input-label {
+  min-height: 16px !important;
   overflow: hidden;
-  text-align: right;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.application-form.compact .info-box,
-.application-form.compact .consent-box {
-  min-height: 48px;
-  padding: 10px 16px;
-  margin-bottom: 10px;
-  border-radius: 6px;
+/* Required asterisks and error text are always red (matches the DatePicker's
+   hardcoded #ff4d4f) rather than the tenant secondary colour, which can be any
+   hue and left most asterisks looking green/orange instead of red. */
+.application-mgt-shell .required-star,
+.application-mgt-shell .text-danger,
+.application-mgt-shell .error-text1,
+.application-mgt-shell .my-input-label.error,
+.application-mgt-shell .error-message {
+  color: #ff4d4f !important;
 }
 
-.application-form.compact .info-box {
-  background-color: #1173d41a;
-  border: 1px solid #97c5efff;
-}
-
-.application-form.compact .info-box.info-box--error {
-  border-color: #ff4d4f;
-}
-
-.application-form.compact .info-box .info-box-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 8px;
-  flex-wrap: wrap;
-}
-
-.application-form.compact .consent-box {
-  background-color: #fffbeb;
-  border: 1px solid #fde68a;
-  color: #78350f;
-}
-
-.application-form.compact .consent-box .ant-checkbox-wrapper {
-  color: #78350f;
-  font-size: 13px;
-  line-height: 1.3;
-}
-
-.application-form.compact .consent-box-note {
-  color: #78350f;
-  font-size: 12px;
-  line-height: 1.3;
-}
-
-.application-form.compact p.consent-box-note {
-  margin: 4px 0 0;
-}
-
-.application-form.compact .contact-subsection {
-  margin-bottom: 0;
-}
-
-.application-form.compact .contact-subsection-title {
-  font-size: 15px;
+.application-mgt-shell .label-extra,
+.application-mgt-shell .application-form-worklocation-iro {
+  color: var(--app-form-teal-deep);
+  font-size: 11.5px;
   font-weight: 600;
-  color: #1a1a1a;
-  margin: 0;
-  padding-bottom: 4px;
-  line-height: 1.2;
+  line-height: 1.25;
 }
 
-.application-form.compact .contact-subsection-subtitle {
-  font-size: 13px;
-  color: #666;
-  margin: 2px 0 0;
-  line-height: 1.2;
+.application-mgt-shell .my-input-container,
+.application-mgt-shell .form-control-band,
+.application-mgt-shell .ant-input,
+.application-mgt-shell .ant-input-affix-wrapper,
+.application-mgt-shell .ant-select-selector,
+.application-mgt-shell .ant-picker,
+.application-mgt-shell input[type="text"],
+.application-mgt-shell .country-code-select,
+.application-mgt-shell .mobile-number-input {
+  background: #fbfdfd !important;
+  border: 1.5px solid var(--app-form-border) !important;
+  border-radius: var(--app-form-control-radius) !important;
+  color: var(--app-form-ink) !important;
+  font-size: 13.5px !important;
+  height: var(--app-form-control-height) !important;
+  line-height: 1.3 !important;
+  min-height: var(--app-form-control-height) !important;
+  width: 100% !important;
 }
 
-/* Compact labels and controls */
-.application-form.compact .my-input-wrapper {
+.application-mgt-shell .my-input-container {
+  align-items: center;
   display: flex;
-  flex-direction: column;
-  margin-bottom: 0 !important;
-  min-width: 0;
+  justify-content: center;
+  padding: 0;
 }
 
-.application-form.compact .form-grid-cell-inner .my-input-wrapper {
+/*
+ * The `.my-input-container` is the single bordered surface. Its inner native
+ * input also matches the shared `input[type="text"]` rule above, which would
+ * paint a second border/background inside the container (a double border).
+ * Neutralise the inner field so only the container frame shows.
+ */
+.application-mgt-shell .my-input-container .my-input-field,
+.application-mgt-shell .my-input-container input[type="text"] {
+  background: transparent !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  min-height: 0 !important;
+}
+
+.application-mgt-shell .my-input-container.textarea-container {
+  height: auto !important;
+  min-height: 96px !important;
+}
+
+.application-mgt-shell .my-input-field,
+.application-mgt-shell .my-input-field-select,
+.application-mgt-shell .ant-input,
+.application-mgt-shell input[type="text"] {
+  align-items: center;
+  display: flex;
+  height: var(--app-form-control-height) !important;
+  line-height: 1.3 !important;
+  min-height: var(--app-form-control-height) !important;
+  padding: 0 12px !important;
+}
+
+.application-mgt-shell .my-input-ant-select {
+  height: var(--app-form-control-height) !important;
   width: 100%;
 }
 
-.application-form.compact .my-input-container {
-  height: 36px !important;
-  min-height: 36px !important;
-  max-height: 36px !important;
-  box-sizing: border-box;
+.application-mgt-shell .ant-select {
+  height: var(--app-form-control-height) !important;
+  width: 100% !important;
 }
 
-.application-form.compact .my-input-field,
-.application-form.compact .my-input-field-select {
+.application-mgt-shell .my-input-ant-select .ant-select-selector,
+.application-mgt-shell .ant-select-selector {
+  align-items: center;
+  display: flex;
+  height: var(--app-form-control-height) !important;
+  min-height: var(--app-form-control-height) !important;
+  padding: 0 12px !important;
+}
+
+.application-mgt-shell .ant-select-selection-item,
+.application-mgt-shell .ant-select-selection-placeholder,
+.application-mgt-shell .ant-picker-input > input {
+  align-items: center;
+  color: var(--app-form-ink) !important;
+  display: flex;
+  font-size: 13.5px !important;
+  height: calc(var(--app-form-control-height) - 3px) !important;
+  line-height: calc(var(--app-form-control-height) - 3px) !important;
+  white-space: normal;
+}
+
+.application-mgt-shell .ant-picker {
+  align-items: center;
+  display: flex;
+  padding: 0 12px !important;
+}
+
+/* Unify the typed/selected value colour across text inputs, selects and date
+   pickers. Text inputs resolved to brand ink while select values fell back to
+   near-black (MySelect.css sets .ant-select-selection-item to #212529 at a
+   higher specificity); force everything to brand ink so inputs and dropdowns
+   match. The .my-input-container .my-input-ant-select path is needed to
+   out-specify that MySelect rule. */
+.application-mgt-shell .my-input-container .my-input-field,
+.application-mgt-shell .my-input-field-select,
+.application-mgt-shell .ant-input,
+.application-mgt-shell .ant-select-selection-item,
+.application-mgt-shell .ant-select-selection-item > *,
+.application-mgt-shell .my-input-container .my-input-ant-select .ant-select-selection-item,
+.application-mgt-shell .my-input-container .my-input-ant-select .ant-select-selection-item > *,
+.application-mgt-shell .ant-picker-input > input {
+  color: var(--app-form-ink) !important;
+}
+
+.application-mgt-shell .my-input-container:focus-within,
+.application-mgt-shell .form-control-band:focus-within,
+.application-mgt-shell .ant-input:focus,
+.application-mgt-shell .ant-input-affix-wrapper-focused,
+.application-mgt-shell .ant-input-affix-wrapper:focus-within,
+.application-mgt-shell .ant-picker-focused,
+.application-mgt-shell .ant-select-focused .ant-select-selector,
+.application-mgt-shell input[type="text"]:focus {
+  background: #fff !important;
+  border-color: var(--app-form-teal) !important;
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--app-form-teal) 14%, transparent) !important;
+  outline: none !important;
+}
+
+.application-mgt-shell .my-input-container.error,
+.application-mgt-shell .my-input-field.error,
+.application-mgt-shell .my-input-field-select.error,
+.application-mgt-shell .info-box--error .form-control-band,
+.application-mgt-shell .radio-error {
+  border-color: #ff4d4f !important;
+}
+
+.application-mgt-shell .my-input-field::placeholder,
+.application-mgt-shell .ant-input::placeholder,
+.application-mgt-shell .ant-select-selection-placeholder {
+  color: #a6b5b6 !important;
+}
+
+/* Group border wraps the whole mobile field (country code + number). The
+   !important is required to beat `MyInput.css` `.mobile-input-group { border:
+   none !important }`, which otherwise strips it. */
+.application-mgt-shell .mobile-input-group {
+  align-items: center;
+  background: #fbfdfd;
+  border: 1.5px solid var(--app-form-border) !important;
+  border-radius: var(--app-form-control-radius);
+  display: flex;
+  height: var(--app-form-control-height);
+  overflow: hidden;
+  width: 100%;
+}
+
+.application-mgt-shell .my-input-container:has(.mobile-input-group) {
+  background: transparent !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  padding: 0;
+}
+
+.application-mgt-shell .my-input-container:has(.mobile-input-group):focus-within
+  .mobile-input-group {
+  background: #fff;
+  border-color: var(--app-form-teal) !important;
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--app-form-teal) 14%, transparent);
+}
+
+/*
+ * The country code is a native <select>. Without `appearance: none` the OS
+ * draws its own bezel/arrow, which looked like a separate boxed control inside
+ * the mobile group. Strip the native chrome, add a matching caret, and use a
+ * thin divider so the group reads as one segmented control.
+ */
+.application-mgt-shell .country-code-select {
+  appearance: none !important;
+  -webkit-appearance: none !important;
+  background: transparent
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%238fa0a1' stroke-width='1.5' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E")
+    no-repeat right 12px center !important;
+  background-size: 10px 6px !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  border-right: 1.5px solid var(--app-form-border) !important;
+  box-shadow: none !important;
+  color: var(--app-form-ink) !important;
+  flex: 0 0 132px;
+  height: 100% !important;
+  max-width: 132px;
+  padding: 0 30px 0 12px !important;
+}
+
+.application-mgt-shell .mobile-number-input {
+  background: transparent !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  flex: 1 1 auto;
+  height: 100% !important;
+  margin-left: 0 !important;
+  min-width: 0;
+  padding: 0 14px !important;
+}
+
+/* Never let the inner controls draw their own focus border/ring — the whole
+   group shows the focus state via `:focus-within` above. */
+.application-mgt-shell .country-code-select:focus,
+.application-mgt-shell .country-code-select:focus-visible,
+.application-mgt-shell .mobile-number-input:focus,
+.application-mgt-shell .mobile-number-input:focus-visible {
+  background-color: transparent !important;
+  border-color: var(--app-form-border) !important;
+  box-shadow: none !important;
+  outline: none !important;
+}
+
+.application-mgt-shell
+  .my-input-container:has(.mobile-input-group):focus-within
+  .country-code-select {
+  border-right-color: var(--app-form-teal) !important;
+}
+
+.application-mgt-shell .my-input-container.error .mobile-input-group {
+  border-color: #ff4d4f !important;
+}
+
+.application-mgt-shell .form-control-band {
+  align-items: center;
+  display: flex;
+  height: var(--app-form-control-height);
+  min-height: var(--app-form-control-height);
+  padding: 3px;
+}
+
+.application-mgt-shell .form-control-band--plain {
+  height: var(--app-form-control-height);
+  min-height: var(--app-form-control-height);
+  padding: 0;
+}
+
+.application-mgt-shell .form-grid--correspondence {
+  --app-form-control-height: 40px;
+  row-gap: 16px;
+}
+
+.application-mgt-shell .correspondence-preferred-row {
+  margin-bottom: 0;
+}
+
+.application-mgt-shell .correspondence-preferred-field {
+  row-gap: 6px;
+}
+
+.application-mgt-shell .form-control-band--segmented-wide {
+  align-items: stretch;
+  border-radius: 12px !important;
+  justify-content: flex-start;
+  padding: 4px !important;
+}
+
+.application-mgt-shell .form-control-band--segmented-wide .ant-radio-group {
+  align-items: stretch;
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 4px;
+  height: 100%;
+  width: 100%;
+}
+
+.application-mgt-shell .form-control-band--segmented-wide .ant-radio-wrapper {
+  align-items: center;
+  border-radius: 10px;
+  color: var(--app-form-ink-soft) !important;
+  display: inline-flex;
+  font-size: 14px;
+  font-weight: 700;
+  height: 100%;
+  justify-content: center;
+  line-height: 1;
+  margin: 0;
+  min-height: 0;
+  min-width: 104px;
+  padding: 0 24px;
+}
+
+.application-mgt-shell
+  .form-control-band--segmented-wide
+  .ant-radio-wrapper
+  .ant-radio {
+  display: none;
+}
+
+.application-mgt-shell
+  .form-control-band--segmented-wide
+  .ant-radio-wrapper:has(.ant-radio-checked) {
+  background: var(--app-form-amber-tint);
+  color: var(--app-form-amber-deep) !important;
+}
+
+.application-mgt-shell .address-search-field {
+  display: block !important;
+  width: 100%;
+}
+
+.application-mgt-shell .address-search-control {
+  position: relative;
+  width: 100%;
+}
+
+.application-mgt-shell .address-search-control .my-input-container {
+  padding-left: 40px;
+}
+
+/* Icon sits at the start of the field, consistent with the member search. */
+.application-mgt-shell .address-search-control .my-input-container .my-input-field {
+  padding-left: 0 !important;
+}
+
+/* Anchor the icon to the bottom of the control so it centres on the input row
+   itself, independent of the label height (the previous top-based calc assumed
+   an exact label height and sat a few px low). */
+.application-mgt-shell .address-search-icon {
+  bottom: calc(var(--app-form-control-height) / 2);
+  color: #8fa0a1;
+  font-size: 16px;
+  left: 14px;
+  pointer-events: none;
+  position: absolute;
+  top: auto;
+  transform: translateY(50%);
+  z-index: 2;
+}
+
+.application-mgt-shell .recruited-by-search-control {
+  align-items: center;
+  display: flex;
+}
+
+.application-mgt-shell .recruited-by-search-control .member-search-field,
+.application-mgt-shell .recruited-by-search-control .ant-select,
+.application-mgt-shell .recruited-by-search-control .ant-select-selector,
+.application-mgt-shell .recruited-by-search-control .ant-select-auto-complete {
+  align-items: center;
+  background: transparent !important;
+  border: 0 !important;
+  box-shadow: none !important;
+  display: flex !important;
   height: 100% !important;
   min-height: 0 !important;
-  font-size: 13px;
-  box-sizing: border-box;
+  padding: 0 !important;
 }
 
-.application-form.compact .my-input-container .my-input-field {
-  font-size: 13px;
-}
-
-.application-form.compact .my-input-container .ant-picker {
-  height: 36px !important;
-  min-height: 36px !important;
-  font-size: 13px !important;
-}
-
-.application-form.compact .form-grid-cell > .my-input-container {
-  align-items: stretch !important;
-}
-
-.application-form.compact .my-input-container .my-input-ant-select {
-  height: 100% !important;
-  min-height: 100% !important;
-  align-self: stretch;
-}
-
-.application-form.compact
-  .my-input-container
-  .my-input-ant-select
-  .ant-select-selector {
-  min-height: 100% !important;
-  height: 100% !important;
-  padding: 0 32px 0 12px !important;
+.application-mgt-shell
+  .recruited-by-search-control
+  .ant-input-affix-wrapper {
+  align-items: center;
+  background: transparent !important;
+  border: 0 !important;
+  box-shadow: none !important;
   display: flex !important;
-  align-items: center !important;
-}
-
-.application-form.compact
-  .my-input-container
-  .my-input-ant-select
-  .ant-select-selection-wrap,
-.application-form.compact
-  .my-input-container
-  .my-input-ant-select
-  .ant-select-selection-search {
   height: 100% !important;
+  min-height: 0 !important;
+  padding: 0 12px !important;
 }
 
-.application-form.compact
-  .my-input-container
-  .my-input-ant-select
-  .ant-select-selection-item,
-.application-form.compact
-  .my-input-container
-  .my-input-ant-select
-  .ant-select-selection-placeholder,
-.application-form.compact
-  .my-input-container
-  .my-input-ant-select
-  .ant-select-selection-search-input {
-  line-height: 1.2 !important;
-  font-size: 13px !important;
+.application-mgt-shell .recruited-by-search-control .ant-input,
+.application-mgt-shell .recruited-by-search-control .my-input-field {
+  background: transparent !important;
+  border: 0 !important;
+  box-shadow: none !important;
+  height: auto !important;
+  line-height: 20px !important;
+  min-height: 0 !important;
+  padding: 0 !important;
 }
 
-.application-form.compact .country-code-select,
-.application-form.compact .mobile-number-input {
-  height: 36px;
-  min-height: 36px;
-  font-size: 13px;
-}
-
-.application-form.compact .ant-input,
-.application-form.compact .ant-select-selector,
-.application-form.compact .ant-picker {
-  height: 36px !important;
-  min-height: 36px !important;
-}
-
-.application-form.compact .ant-select-selection-item,
-.application-form.compact .ant-select-selection-placeholder {
-  line-height: 34px !important;
-}
-
-.application-form.compact .ant-radio-wrapper,
-.application-form.compact .ant-checkbox-wrapper {
-  font-size: 13px;
-}
-
-.application-form.compact .question-box {
-  padding: 10px 16px;
-  margin-bottom: 10px;
-  border-radius: 6px;
-  min-height: 48px;
-}
-
-.application-form.compact .question-box .my-input-label {
-  margin-bottom: 6px;
-}
-
-.application-form.compact .notice-box {
-  padding: 8px 12px;
-  border-radius: 6px;
-  margin-bottom: 10px;
-}
-
-.application-form.compact .checkbox-notice-box {
-  min-height: 48px;
-  padding: 10px 16px;
-  border-radius: 6px;
-  background-color: #fffbeb;
-  border: 1px solid #fde68a;
-  display: flex;
+/* Search icon (prefix) and clear button styled to match the topbar member
+   search: muted icon at the start with balanced spacing, both vertically
+   centred within the 40px band. */
+.application-mgt-shell .recruited-by-search-control .ant-input-prefix {
   align-items: center;
-}
-
-.application-form.compact .checkbox-notice-box .ant-checkbox-wrapper {
-  color: #78350f;
-  font-size: 13px;
-  line-height: 1.3;
-}
-
-.application-form.compact .form-grid--final-checkboxes > .form-grid-cell {
+  color: #8fa0a1;
   display: flex;
-  flex-direction: column;
+  height: auto;
+  margin-inline-end: 8px;
 }
 
-.application-form.compact .form-grid--final-checkboxes .checkbox-notice-box {
-  flex: 1;
-  height: 100%;
-  align-items: flex-start;
-}
-
-.duplicate-merge-indicator {
-  margin: 0 1.5rem 0.5rem;
-  padding: 10px 14px;
-  background: linear-gradient(90deg, #e6f4ff 0%, #f0f7ff 100%);
-  border: 1px solid #91caff;
-  border-left: 4px solid #1677ff;
-  border-radius: 6px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  flex-shrink: 0;
-  flex-wrap: wrap;
-}
-
-.duplicate-merge-indicator__main {
-  flex: 1;
-  min-width: 0;
-}
-
-.duplicate-merge-indicator__title-row {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  flex-wrap: wrap;
-  margin-bottom: 4px;
-}
-
-.duplicate-merge-indicator__icon {
-  color: #1677ff;
-  font-size: 16px;
-}
-
-.duplicate-merge-indicator__title {
-  font-weight: 600;
-  color: #0958d9;
+.application-mgt-shell .recruited-by-search-control .ant-input-prefix .anticon {
   font-size: 14px;
 }
 
-.duplicate-merge-indicator__tag {
-  margin: 0;
+.application-mgt-shell .recruited-by-search-control .ant-input-suffix {
+  align-items: center;
+  display: flex;
+  margin-inline-start: 4px;
 }
 
-.duplicate-merge-indicator__message {
-  margin: 0;
-  color: #003a8c;
+.application-mgt-shell .recruited-by-search-control .ant-input-suffix .ant-btn {
+  color: #8fa0a1;
+  height: 18px !important;
+  min-height: 18px !important;
+  padding: 0 !important;
+  width: 18px !important;
+}
+
+.application-mgt-shell .form-control-band .ant-radio-group {
+  align-items: center;
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 2px;
+}
+
+.application-mgt-shell .form-control-band .ant-radio-wrapper {
+  align-items: center;
+  border-radius: 8px;
+  color: var(--app-form-ink-soft) !important;
+  display: inline-flex;
   font-size: 13px;
+  font-weight: 600;
+  height: 32px;
+  justify-content: center;
+  line-height: 1.25;
+  margin-inline-end: 0;
+  min-height: 32px;
+  padding: 0 16px;
+}
+
+.application-mgt-shell
+  .form-control-band
+  .ant-radio-wrapper:has(.ant-radio-checked) {
+  background: var(--app-form-amber-tint);
+  color: var(--app-form-amber-deep) !important;
+}
+
+.application-mgt-shell .info-box,
+.application-mgt-shell .question-box,
+.application-mgt-shell .consent-box,
+.application-mgt-shell .notice-box,
+.application-mgt-shell .checkbox-notice-box {
+  height: auto;
+  max-height: none;
+  min-height: 0;
+  overflow: visible;
+  width: 100%;
+}
+
+.application-mgt-shell .info-box--field-aligned {
+  background: transparent !important;
+  border: 0 !important;
+  color: var(--app-form-ink);
+  padding: 0 !important;
+}
+
+.application-mgt-shell .info-box--field-aligned.info-box--error {
+  background: transparent !important;
+}
+
+.application-mgt-shell .info-box:not(.info-box--field-aligned),
+.application-mgt-shell .question-box {
+  background: var(--app-form-teal-tint) !important;
+  border: 1px solid #bfe7e2 !important;
+  border-radius: 12px;
+  color: var(--app-form-teal-deep);
+  padding: 13px 16px;
+}
+
+.application-mgt-shell .consent-box,
+.application-mgt-shell .checkbox-notice-box {
+  align-items: flex-start;
+  background: var(--app-form-amber-tint) !important;
+  border: 1px solid color-mix(in srgb, var(--app-form-brand-accent) 24%, var(--app-form-border)) !important;
+  border-radius: 12px;
+  color: var(--app-form-ink) !important;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0;
+  padding: 13px 16px;
+}
+
+/* Use the strong brand ink for consent copy — the previous muted amber tone
+   was too low-contrast against the pale box and read as dull/disabled. */
+.application-mgt-shell .consent-box .ant-checkbox-wrapper,
+.application-mgt-shell .checkbox-notice-box .ant-checkbox-wrapper {
+  align-items: flex-start;
+  color: var(--app-form-ink) !important;
+  display: flex;
+  gap: 10px;
+  line-height: 1.45;
+  width: 100%;
+}
+
+.application-mgt-shell .consent-box-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.application-mgt-shell .consent-box-label {
+  color: var(--app-form-ink) !important;
+  font-weight: 700;
+}
+
+.application-mgt-shell .consent-box-note {
+  color: var(--app-form-ink-soft) !important;
+  font-size: 12.5px;
   line-height: 1.45;
 }
 
-.duplicate-merge-indicator__actions {
-  display: flex;
+.application-mgt-shell .checkbox-notice-box a,
+.application-mgt-shell .consent-box a {
+  color: var(--app-form-teal-deep) !important;
+  font-size: 12.5px;
+  font-weight: 600;
+  line-height: 1.45;
+  text-decoration: underline;
+}
+
+.application-mgt-shell .consent-box--correspondence {
   align-items: center;
-  gap: 8px;
-  flex-shrink: 0;
+  border-color: color-mix(in srgb, var(--app-form-brand-accent) 24%, var(--app-form-border)) !important;
+  border-radius: 12px;
+  min-height: 0;
+  padding: 16px 24px;
+}
+
+/* Correspondence consent reads as a single line: the statement and the note
+   sit inline, wrapping only when the row runs out of width. */
+.application-mgt-shell .consent-box--correspondence .consent-box-text {
+  align-items: baseline;
+  column-gap: 6px;
+  flex-direction: row;
   flex-wrap: wrap;
+  row-gap: 2px;
+}
+
+.application-mgt-shell .consent-box--correspondence .ant-checkbox-wrapper {
+  align-items: center;
+  gap: 18px;
+}
+
+.application-mgt-shell .consent-box--correspondence .ant-checkbox {
+  align-self: center;
+}
+
+.application-mgt-shell .consent-box--correspondence .ant-checkbox-inner {
+  background: var(--app-form-teal) !important;
+  border-color: var(--app-form-teal) !important;
+  border-radius: 4px;
+  height: 22px;
+  width: 22px;
+}
+
+.application-mgt-shell .consent-box--correspondence .consent-box-label,
+.application-mgt-shell .consent-box--correspondence .consent-box-note {
+  font-size: 14px;
+  line-height: 1.25;
+}
+
+.application-mgt-shell .notice-box {
+  background: transparent !important;
+  border: 0 !important;
+  padding: 0 !important;
+}
+
+.application-mgt-shell .notice-box .my-input-label {
+  display: block;
+  margin-bottom: 6px !important;
+}
+
+.application-mgt-shell .notice-box .ant-radio-group {
+  width: 100%;
+}
+
+.application-mgt-shell .notice-box .ant-radio-group > div {
+  display: grid !important;
+  gap: 12px !important;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+}
+
+.application-mgt-shell .notice-box .ant-radio-wrapper {
+  align-items: center;
+  background: #fbfdfd;
+  border: 1.5px solid var(--app-form-border);
+  border-radius: 10px;
+  color: var(--app-form-ink) !important;
+  display: flex;
+  font-size: 12.5px;
+  font-weight: 600;
+  justify-content: center;
+  line-height: 1.3;
+  margin: 0;
+  min-height: 68px;
+  padding: 14px 12px;
+  text-align: center;
+  transition: 0.15s ease;
+  width: 100% !important;
+}
+
+.application-mgt-shell .notice-box .ant-radio-wrapper:hover {
+  border-color: var(--app-form-amber);
+}
+
+.application-mgt-shell .notice-box .ant-radio-wrapper-checked,
+.application-mgt-shell .notice-box .ant-radio-wrapper:has(.ant-radio-checked) {
+  background: var(--app-form-amber-tint);
+  border-color: var(--app-form-amber);
+  box-shadow: 0 0 0 1px var(--app-form-amber);
+  color: var(--app-form-amber-deep) !important;
+}
+
+.application-mgt-shell
+  .notice-box
+  .ant-radio-group
+  > .membership-status-options {
+  align-items: stretch !important;
+  display: flex !important;
+  flex-wrap: wrap;
+  gap: 12px !important;
+  width: 100%;
+}
+
+/*
+ * Each pill sizes from its own text (flex-basis: auto = content width) and
+ * then shares the leftover row space equally, so padding around every label
+ * stays balanced regardless of how long the text is.
+ */
+.application-mgt-shell .membership-status-options .ant-radio-wrapper {
+  align-items: center;
+  display: flex;
+  flex: 1 1 auto;
+  height: 100%;
+  justify-content: center;
+  min-height: 52px;
+  min-width: 0;
+  padding: 10px 20px;
+  white-space: nowrap;
+  width: auto !important;
+}
+
+.application-mgt-shell .membership-status-field .ant-radio-inner {
+  border-color: var(--app-form-border);
+}
+
+/*
+ * Selected pill: the base `.notice-box ...:has(.ant-radio-checked)` rule above
+ * already paints the tint/border/ring. This single rule covers the explicit
+ * JSX-toggled `--selected` class so the two stay in lockstep — no third layer.
+ */
+.application-mgt-shell .membership-status-option--selected {
+  background: var(--app-form-amber-tint) !important;
+  border-color: var(--app-form-amber) !important;
+  box-shadow: 0 0 0 1px var(--app-form-amber) !important;
+  color: var(--app-form-amber-deep) !important;
+}
+
+.application-mgt-shell .membership-status-field .ant-radio-checked .ant-radio-inner,
+.application-mgt-shell .membership-status-option--selected .ant-radio-inner {
+  background-color: var(--app-form-amber) !important;
+  border-color: var(--app-form-amber) !important;
+}
+
+.application-mgt-shell .membership-status-field .ant-radio-checked .ant-radio-inner::after,
+.application-mgt-shell .membership-status-option--selected .ant-radio-inner::after {
+  background-color: #ffffff;
+}
+
+.application-mgt-shell .membership-status-options .ant-radio-wrapper > span:last-child {
+  display: block;
+  line-height: 1.2;
+  min-width: 0;
+  text-align: center;
+  white-space: nowrap;
+}
+
+/* Tablet: keep readable pill widths and let them wrap into balanced rows */
+@media (max-width: 1180px) {
+  .application-mgt-shell .membership-status-options .ant-radio-wrapper {
+    flex: 1 1 auto;
+    min-width: 160px;
+  }
+}
+
+/* Narrow / mobile: one full-width pill per row */
+@media (max-width: 640px) {
+  .application-mgt-shell
+    .notice-box
+    .ant-radio-group
+    > .membership-status-options {
+    gap: 10px !important;
+  }
+
+  .application-mgt-shell .membership-status-options .ant-radio-wrapper {
+    flex: 1 1 100%;
+    justify-content: flex-start;
+    min-width: 0;
+  }
+
+  .application-mgt-shell
+    .membership-status-options
+    .ant-radio-wrapper
+    > span:last-child {
+    text-align: left;
+  }
+}
+
+.application-mgt-shell .contact-subsection {
+  border-top: 1px solid var(--app-form-border-soft);
+  padding-top: 8px;
+  scroll-margin-top: 130px;
+}
+
+.application-mgt-shell .contact-subsection-title {
+  color: var(--app-form-ink);
+  font-size: 15.5px;
+  font-weight: 700;
+  margin: 0 0 2px;
+}
+
+.application-mgt-shell .contact-subsection-subtitle {
+  color: var(--app-form-ink-soft);
+  font-size: 12.5px;
+  margin: 0;
+}
+
+.application-mgt-shell .address-search-field {
+  width: 100%;
+}
+
+.application-mgt-shell .form-grid--final-checkboxes {
+  align-items: stretch;
+}
+
+.application-mgt-shell .form-grid--final-checkboxes .checkbox-notice-box {
+  height: 100%;
+}
+
+@media (max-width: 1100px) {
+  .application-form-topbar {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .application-form-stepper,
+  .application-form-topbar-actions {
+    justify-content: flex-start;
+    width: 100%;
+  }
+
+  .application-mgt-shell .form-grid--3,
+  .application-mgt-shell .form-grid--33-67,
+  .application-mgt-shell .form-grid--40-60,
+  .application-mgt-shell .form-grid--nursing-row,
+  .application-mgt-shell .form-grid--trade-union-row,
+  .application-mgt-shell .form-grid--trade-union-row--3 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .application-mgt-shell .notice-box .ant-radio-group > div {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 700px) {
+  .application-form-topbar {
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+
+  /* On narrow screens there isn't room for one row, so let the actions wrap
+     again rather than overflow horizontally. */
+  .application-form-topbar-actions {
+    flex-wrap: wrap;
+  }
+
+  .application-mgt-shell .application-form {
+    padding: 16px 12px 48px;
+  }
+
+  .application-mgt-shell .section-header,
+  .application-mgt-shell .section-card > .form-grid {
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+
+  .application-mgt-shell .form-grid--3,
+  .application-mgt-shell .form-grid--2,
+  .application-mgt-shell .form-grid--33-67,
+  .application-mgt-shell .form-grid--40-60,
+  .application-mgt-shell .form-grid--contact-phones,
+  .application-mgt-shell .form-grid--nursing-row,
+  .application-mgt-shell .form-grid--trade-union-row,
+  .application-mgt-shell .form-grid--trade-union-row--3,
+  .application-mgt-shell .notice-box .ant-radio-group > div {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .application-mgt-shell .form-col-2 {
+    grid-column: 1 / -1;
+  }
 }

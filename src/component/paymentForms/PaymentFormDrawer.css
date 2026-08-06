@@ -34,7 +34,7 @@
 .payment-form-drawer__header-member {
   font-size: 13px;
   font-weight: 500;
-  color: #45669d;
+  color: var(--app-brand-primary);
   line-height: 1.4;
 }
 
@@ -68,13 +68,13 @@
 }
 
 .payment-form-drawer__intro {
-  color: #475569;
+  color: var(--theme-text-muted);
   font-size: 13px;
   line-height: 1.55;
   margin: 0 0 9px;
   padding: 5px 14px;
   background: #f0f4f8;
-  border-left: 3px solid #45669d;
+  border-left: 3px solid var(--app-brand-primary);
   border-radius: 0 6px 6px 0;
 }
 
@@ -83,7 +83,7 @@
   font-weight: 600;
   letter-spacing: 0.02em;
   text-transform: uppercase;
-  color: #45669d;
+  color: var(--app-brand-primary);
   margin: 0 0 8px;
   padding-bottom: 5px;
   border-bottom: 1px solid #e8ecf1;
@@ -99,12 +99,12 @@
 
 .payment-form-drawer__static-text {
   font-size: 13px;
-  color: #475569;
+  color: var(--theme-text-muted);
   line-height: 1.6;
   margin-bottom: 9px;
   white-space: pre-wrap;
   padding: 6px 14px;
-  background: #f8fafc;
+  background: var(--theme-muted-bg);
   border-radius: 6px;
   border: 1px solid #eef2f6;
 }
@@ -121,7 +121,7 @@
   align-items: flex-start;
   width: 100%;
   padding: 6px 14px;
-  background: #f8fafc;
+  background: var(--theme-muted-bg);
   border-radius: 6px;
   border: 1px solid #eef2f6;
 }
@@ -133,7 +133,7 @@
 
 .payment-form-drawer__auth-text {
   font-size: 13px;
-  color: #475569;
+  color: var(--theme-text-muted);
   line-height: 1.6;
   white-space: pre-wrap;
 }
@@ -202,13 +202,13 @@
 
 .payment-form-drawer__hint {
   font-size: 12px;
-  color: #64748b;
+  color: var(--theme-text-muted);
   margin: -4px 0 8px;
   line-height: 1.45;
 }
 
 .payment-form-drawer__readonly-block {
-  background: #f8fafc;
+  background: var(--theme-muted-bg);
   border: 1px solid #e2e8f0;
   border-radius: 8px;
   padding: 7px 18px;
@@ -229,7 +229,7 @@
 }
 
 .payment-form-drawer__readonly-label {
-  color: #64748b;
+  color: var(--theme-text-muted);
   font-weight: 500;
 }
 
@@ -294,7 +294,7 @@
 
 .payment-form-drawer .ant-input[readonly],
 .payment-form-drawer .ant-input-disabled {
-  background: #f1f5f9;
+  background: var(--theme-section-bg);
   color: #0f172a;
   font-weight: 500;
 }
@@ -305,8 +305,8 @@
 }
 
 .payment-form-drawer__footer-actions .ant-btn-primary {
-  background: #45669d;
-  border-color: #45669d;
+  background: var(--app-brand-primary);
+  border-color: var(--app-brand-primary);
 }
 
 .payment-form-drawer__footer-actions .ant-btn-primary:hover {
@@ -348,7 +348,7 @@
 .payment-form-drawer__signature-inline-label {
   font-size: 12px;
   font-weight: 500;
-  color: #475569;
+  color: var(--theme-text-muted);
 }
 
 .payment-form-drawer__signature-image {
@@ -356,7 +356,7 @@
   width: 100%;
   max-height: 120px;
   object-fit: contain;
-  background: #f8fafc;
+  background: var(--theme-muted-bg);
   border: 1px solid #e2e8f0;
   border-radius: 4px;
   padding: 4px;
@@ -367,7 +367,7 @@
   padding: 10px 12px;
   border: 1px solid #e2e8f0;
   border-radius: 6px;
-  background: #f8fafc;
+  background: var(--theme-muted-bg);
 }
 
 .payment-form-drawer__signature-evidence--missing {
@@ -378,7 +378,7 @@
 .payment-form-drawer__signature-evidence-label {
   font-size: 12px;
   font-weight: 600;
-  color: #475569;
+  color: var(--theme-text-muted);
   margin-bottom: 6px;
   text-transform: uppercase;
   letter-spacing: 0.04em;
@@ -386,7 +386,7 @@
 
 .payment-form-drawer__signature-evidence-hint {
   font-size: 13px;
-  color: #64748b;
+  color: var(--theme-text-muted);
 }
 
 .payment-form-drawer__signature-evidence-links {
@@ -437,7 +437,7 @@
   border: 1px solid #e2e8f0;
   border-radius: 6px;
   padding: 8px;
-  background: #f8fafc;
+  background: var(--theme-muted-bg);
 }
 
 .payment-form-drawer__scan-iframe {
@@ -462,7 +462,7 @@
   align-items: center;
   gap: 12px;
   font-size: 12px;
-  color: #475569;
+  color: var(--theme-text-muted);
 }
 
 .payment-form-drawer__scan-name {
@@ -476,7 +476,7 @@
 .payment-form-drawer__header-source {
   font-size: 12px;
   font-weight: 500;
-  color: #64748b;
+  color: var(--theme-text-muted);
 }
 
 .payment-form-drawer__gdpr {
@@ -500,7 +500,7 @@
 }
 
 .payment-form-drawer__compose-member-locked {
-  background: #f8fafc;
+  background: var(--theme-muted-bg);
   color: #1a2b42;
   cursor: default;
 }
@@ -514,7 +514,7 @@
 }
 
 .payment-form-drawer__create-hint {
-  color: #64748b;
+  color: var(--theme-text-muted);
   font-size: 13px;
   line-height: 1.55;
   margin-bottom: 10px;

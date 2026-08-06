@@ -10,8 +10,23 @@ import MyInput from "../common/MyInput";
 import MyDatePicker from "../common/MyDatePicker";
 import CustomSelect from "../common/CustomSelect";
 import MyAlert from "../common/MyAlert";
-import { IoBagRemoveOutline } from "react-icons/io5";
-import { CiCreditCard1 } from "react-icons/ci";
+import {
+  BadgePlus,
+  Briefcase,
+  ClipboardList,
+  Clock,
+  CreditCard,
+  GraduationCap,
+  List,
+  MapPin,
+  Phone,
+  ShieldCheck,
+  ShoppingBag,
+  Umbrella,
+  User,
+  UserPlus,
+  Wallet,
+} from "lucide-react";
 import { useSelector, useDispatch } from "react-redux";
 import { useSearchParams } from "react-router-dom";
 import { getCategoryLookup } from "../../features/CategoryLookupSlice";
@@ -120,6 +135,18 @@ function scalarProfessionalLookupValue(raw) {
   if (raw == null || raw === "") return "";
   if (typeof raw === "object" && raw._id != null) return String(raw._id);
   return String(raw);
+}
+
+function normalizeSubscriptionId(raw) {
+  const value =
+    raw && typeof raw === "object"
+      ? raw._id ?? raw.id ?? raw.value ?? null
+      : raw;
+  const id = String(value ?? "").trim();
+  if (!id || id.toLowerCase() === "undefined" || id.toLowerCase() === "null") {
+    return "";
+  }
+  return id;
 }
 
 function isPayrollOrSalaryDeduction(paymentType) {
@@ -496,8 +523,8 @@ function isSameDayValue(a, b) {
 }
 
 const membershipSaveButtonStyle = {
-  backgroundColor: "#45669d",
-  borderColor: "#45669d",
+  backgroundColor: "var(--app-brand-primary)",
+  borderColor: "var(--app-brand-primary)",
 };
 
 function hasRequiredText(value) {
@@ -539,10 +566,48 @@ function MembershipFormField({ field, fieldErrors, children }) {
   );
 }
 
-function MembershipFormCard({ title, children, className = "" }) {
+const MEMBERSHIP_FORM_CARD_ICONS = {
+  "Personal Information": { icon: User, tone: "blue" },
+  "Correspondence Details": { icon: MapPin, tone: "green" },
+  "Contact Details": { icon: Phone, tone: "amber" },
+  "Consent Management": { icon: ShieldCheck, tone: "violet" },
+  "Employment Details": { icon: Briefcase, tone: "coral" },
+  "Section Details": { icon: List, tone: "blue" },
+  "Nursing Registration & Specialization": {
+    icon: ClipboardList,
+    tone: "green",
+  },
+  "Recruitment Details": { icon: UserPlus, tone: "violet" },
+  "Subscription Details": { icon: Wallet, tone: "green" },
+  "Payment Information": { icon: CreditCard, tone: "amber" },
+  "Educational Details": { icon: GraduationCap, tone: "blue" },
+  "Retirement Details": { icon: Clock, tone: "coral" },
+  "Reminders & Cancellations": { icon: Clock, tone: "violet" },
+  "Additional Memberships": { icon: BadgePlus, tone: "green" },
+  "Income Protection Scheme": { icon: Umbrella, tone: "blue" },
+  CornMarket: { icon: ShoppingBag, tone: "amber" },
+};
+
+function MembershipFormCard({ title, children, className = "", headerExtra }) {
+  const iconConfig = MEMBERSHIP_FORM_CARD_ICONS[title] || {
+    icon: ClipboardList,
+    tone: "blue",
+  };
+  const SectionIcon = iconConfig.icon;
+
   return (
     <Card className={`membership-form-card ${className}`.trim()}>
-      <h3 className="membership-form-card-header">{title}</h3>
+      <div className="membership-form-card-header">
+        <span className={`membership-form-card-icon ${iconConfig.tone}`}>
+          <SectionIcon size={16} strokeWidth={2.2} aria-hidden="true" />
+        </span>
+        <h3>{title}</h3>
+        {headerExtra ? (
+          <span className="membership-form-card-header-extra">
+            {headerExtra}
+          </span>
+        ) : null}
+      </div>
       <div className="membership-form-card-body">{children}</div>
     </Card>
   );
@@ -861,8 +926,13 @@ const MembershipForm = ({
       profileIdParam;
     if (!profileId) return;
 
-    if (subscriptionIdParam) {
-      dispatch(getSubscriptionById(subscriptionIdParam));
+    const source = profileDetails || profileSearchData?.results?.[0] || null;
+    const linkedSubscriptionId = normalizeSubscriptionId(
+      subscriptionIdParam || source?.currentSubscriptionId,
+    );
+
+    if (linkedSubscriptionId) {
+      dispatch(getSubscriptionById(linkedSubscriptionId));
       return;
     }
 
@@ -1703,14 +1773,21 @@ const MembershipForm = ({
     }
   }, [propIsDeceased]);
 
-  // Check if form should be read-only (either not in edit mode or member is deceased or resigned)
+  // Check if form should be read-only (either not in edit mode, member is deceased,
+  // or actually resigned per subscription data). A profile with no subscription at
+  // all is not the same as "Resigned" and must remain editable.
   const isFormReadOnly =
     !isEditMode ||
     formData.isDeceased ||
-    formData.subscriptionStatus === "Resigned";
+    (subscriptionData && formData.subscriptionStatus === "Resigned");
   const isLimitedMembershipEdit = editScope !== "full";
   const membershipDetailsReadOnly =
     isFormReadOnly || isLimitedMembershipEdit;
+  // Non-member (event/course attendee-only) profiles have no membership
+  // number - Subscription Details and Payment Information are membership-
+  // specific and must never be editable for those, independent of edit mode.
+  const isNonMemberProfile = !formData.membershipNumber;
+  const membershipSectionsReadOnly = membershipDetailsReadOnly || isNonMemberProfile;
 
   useEffect(() => {
     if (!isEditMode || isFormReadOnly) {
@@ -1942,7 +2019,7 @@ const MembershipForm = ({
     if (
       !isEditMode ||
       formData.isDeceased ||
-      formData.subscriptionStatus === "Resigned"
+      (subscriptionData && formData.subscriptionStatus === "Resigned")
     ) {
       return;
     }
@@ -2011,8 +2088,13 @@ const MembershipForm = ({
       ).unwrap();
 
       await dispatch(getProfileDetailsById(profileId)).unwrap();
-      if (subscriptionIdParam) {
-        await dispatch(getSubscriptionById(subscriptionIdParam)).unwrap();
+      const linkedSubscriptionId = normalizeSubscriptionId(
+        subscriptionIdParam ||
+          profileDetails?.currentSubscriptionId ||
+          sourceProfile?.currentSubscriptionId,
+      );
+      if (linkedSubscriptionId) {
+        await dispatch(getSubscriptionById(linkedSubscriptionId)).unwrap();
       } else {
         await dispatch(
           getSubscriptionByProfileId({
@@ -2718,7 +2800,17 @@ const MembershipForm = ({
             </MembershipFormCard>
           </MembershipFormCol>
           <MembershipFormCol>
-            <MembershipFormCard title="Subscription Details">
+            <MembershipFormCard
+              title="Subscription Details"
+              className="membership-form-card--subscription"
+              headerExtra={
+                formData.subscriptionYear ? (
+                  <span className="membership-form-year-pill">
+                    {formData.subscriptionYear}
+                  </span>
+                ) : null
+              }
+            >
               <MembershipFormGrid>
                 <MembershipFormGridFull>
                   <MembershipFormField
@@ -2733,7 +2825,7 @@ const MembershipForm = ({
                       onChange={(e) =>
                         handleChange("membershipCategory", e.target.value)
                       }
-                      disabled={membershipDetailsReadOnly}
+                      disabled={membershipSectionsReadOnly}
                       required={true}
                     />
                   </MembershipFormField>
@@ -2760,7 +2852,7 @@ const MembershipForm = ({
                       placeholder="Select start date"
                       value={formData.startDate}
                       onChange={(date) => handleChange("startDate", date)}
-                      disabled={membershipDetailsReadOnly}
+                      disabled={membershipSectionsReadOnly}
                     />
                   </div>
                 </MembershipFormField>
@@ -2791,7 +2883,10 @@ const MembershipForm = ({
               </MembershipFormGrid>
             </MembershipFormCard>
 
-            <MembershipFormCard title="Payment Information">
+            <MembershipFormCard
+              title="Payment Information"
+              className="membership-form-card--payment"
+            >
               <div
                 ref={paymentTypeSectionRef}
                 style={paymentTypeHighlightStyle}
@@ -2817,7 +2912,7 @@ const MembershipForm = ({
                     onChange={(e) =>
                       handleChange("paymentType", e.target.value)
                     }
-                    disabled={membershipDetailsReadOnly}
+                    disabled={membershipSectionsReadOnly}
                     required={!isFormReadOnly && !isPaymentOptionalCategory}
                     isIDs={false}
                     options={filteredPaymentTypeOptions}
@@ -2834,7 +2929,7 @@ const MembershipForm = ({
                     onChange={(e) =>
                       handleChange("payrollNumber", e.target.value)
                     }
-                    disabled={membershipDetailsReadOnly || !payrollDeductionPayment}
+                    disabled={membershipSectionsReadOnly || !payrollDeductionPayment}
                     required={
                       payrollDeductionPayment &&
                       !isFormReadOnly &&
@@ -2850,10 +2945,57 @@ const MembershipForm = ({
                   onChange={(e) =>
                     handleChange("paymentFrequency", e.target.value)
                   }
-                  disabled={membershipDetailsReadOnly}
+                  disabled={membershipSectionsReadOnly}
                 />
               </MembershipFormGrid>
             </MembershipFormCard>
+
+            {showRemindersCancellations && (
+              <MembershipFormCard title="Reminders & Cancellations">
+                <MembershipFormGrid>
+                  <MyDatePicker
+                    label="First Reminder"
+                    placeholder="Select first reminder date"
+                    value={formData.firstReminderDate}
+                    onChange={(date) => handleChange("firstReminderDate", date)}
+                    disabled={true}
+                  />
+                  <MyDatePicker
+                    label="Second Reminder"
+                    placeholder="Select second reminder date"
+                    value={formData.secondReminderDate}
+                    onChange={(date) => handleChange("secondReminderDate", date)}
+                    disabled={true}
+                  />
+                  <MyDatePicker
+                    label="Third Reminder"
+                    placeholder="Select third reminder date"
+                    value={formData.thirdReminderDate}
+                    onChange={(date) => handleChange("thirdReminderDate", date)}
+                    disabled={true}
+                  />
+                  <MyDatePicker
+                    label="Cancellation / Resignation Date"
+                    placeholder="Select cancellation date"
+                    value={formData.dateCancelled}
+                    onChange={(date) => handleChange("dateCancelled", date)}
+                    disabled={true}
+                  />
+                  <MembershipFormGridFull>
+                    <MembershipFormSelect
+                      label="Cancellation / Resignation Reason"
+                      placeholder="Select reason"
+                      options={cancellationReasonOptions}
+                      value={formData.cancellationReason}
+                      onChange={(e) =>
+                        handleChange("cancellationReason", e.target.value)
+                      }
+                      disabled={true}
+                    />
+                  </MembershipFormGridFull>
+                </MembershipFormGrid>
+              </MembershipFormCard>
+            )}
 
             {undergradEducationalActive && (
               <MembershipFormCard title="Educational Details">
@@ -2935,53 +3077,6 @@ const MembershipForm = ({
                       required={!isFormReadOnly}
                     />
                   </MembershipFormField>
-                </MembershipFormGrid>
-              </MembershipFormCard>
-            )}
-
-            {showRemindersCancellations && (
-              <MembershipFormCard title="Reminders & Cancellations">
-                <MembershipFormGrid>
-                  <MyDatePicker
-                    label="First Reminder"
-                    placeholder="Select first reminder date"
-                    value={formData.firstReminderDate}
-                    onChange={(date) => handleChange("firstReminderDate", date)}
-                    disabled={true}
-                  />
-                  <MyDatePicker
-                    label="Second Reminder"
-                    placeholder="Select second reminder date"
-                    value={formData.secondReminderDate}
-                    onChange={(date) => handleChange("secondReminderDate", date)}
-                    disabled={true}
-                  />
-                  <MyDatePicker
-                    label="Third Reminder"
-                    placeholder="Select third reminder date"
-                    value={formData.thirdReminderDate}
-                    onChange={(date) => handleChange("thirdReminderDate", date)}
-                    disabled={true}
-                  />
-                  <MyDatePicker
-                    label="Cancellation / Resignation Date"
-                    placeholder="Select cancellation date"
-                    value={formData.dateCancelled}
-                    onChange={(date) => handleChange("dateCancelled", date)}
-                    disabled={true}
-                  />
-                  <MembershipFormGridFull>
-                    <MembershipFormSelect
-                      label="Cancellation / Resignation Reason"
-                      placeholder="Select reason"
-                      options={cancellationReasonOptions}
-                      value={formData.cancellationReason}
-                      onChange={(e) =>
-                        handleChange("cancellationReason", e.target.value)
-                      }
-                      disabled={true}
-                    />
-                  </MembershipFormGridFull>
                 </MembershipFormGrid>
               </MembershipFormCard>
             )}

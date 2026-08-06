@@ -103,7 +103,7 @@ const Breadcrumb = () => {
     // Cases Pages
     "/CasesSummary": {
       module: "Issues Management",
-      page: "Issues Summary",
+      page: "Open Issues",
       icon: "📋",
     },
     "/IssuesManagementDashboard": {
@@ -122,6 +122,31 @@ const Breadcrumb = () => {
       page: "Case Details",
       icon: "📋",
       recordIdField: "caseId",
+    },
+    "/CasesSummary/Closed": {
+      module: "Issues Management",
+      page: "Closed Issues",
+      icon: "📋",
+    },
+    "/Complaints": {
+      module: "Issues Management",
+      page: "Complaints",
+      icon: "📋",
+    },
+    "/FitnessToPractice": {
+      module: "Issues Management",
+      page: "Fitness to Practice",
+      icon: "📋",
+    },
+    "/IndustrialRelations": {
+      module: "Issues Management",
+      page: "Industrial Relations",
+      icon: "📋",
+    },
+    "/DataProtection": {
+      module: "Issues Management",
+      page: "Data Protection",
+      icon: "📋",
     },
 
     // Claims Pages
@@ -397,7 +422,8 @@ const Breadcrumb = () => {
       page: "Event Details",
       moduleIcon: "📅",
       pageIcon: "📅",
-      recordIdField: "eventId",
+      // No recordIdField: EventDetails passes a human-readable event title via
+      // location.state.recordName instead of showing the raw eventId.
     },
     "/Attendees": {
       module: "Events",
@@ -860,7 +886,7 @@ const Breadcrumb = () => {
       Finance: "/onlinePayment",
       Reports: "/Reports",
       "Year-End Renewal": "/YearEndRenewal",
-      Events: "/EventsDashboard",
+      Events: "/EventsSummary",
       Settings: "/Configuration",
       Courses: "/Courses",
       "Professional Development": "/ProfessionalDevelopment",
@@ -1126,7 +1152,7 @@ const Breadcrumb = () => {
           <span style={{ marginRight: 4 }}>📄</span>
           <span style={{ fontWeight: 600 }}>{recordId}</span>
           {isBatchPage && batchId && (
-            <span style={{ color: "#64748b", fontSize: "12px" }}>({batchId.slice(-6).toUpperCase()})</span>
+            <span style={{ color: "var(--theme-text-muted)", fontSize: "12px" }}>({batchId.slice(-6).toUpperCase()})</span>
           )}
         </span>
       ),

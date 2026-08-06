@@ -7,6 +7,8 @@ import {
   getLookupId,
   getLookupName,
   getParentLookupType,
+  getDrawerParentFieldLabel,
+  canonicalParentTypeName,
   lookupBelongsToType,
   lookupTypeRequiresParent,
 } from "../../utils/lookupHierarchy";
@@ -33,11 +35,34 @@ function ParentLookupSelect({
   const parentType = useMemo(() => {
     if (parentLookupTypeId) {
       const fromId = findLookupTypeById(lookupsTypes, parentLookupTypeId);
-      if (fromId) return fromId;
+      if (fromId) {
+        const canonical = canonicalParentTypeName(
+          fromId.lookuptype || fromId.DisplayName || fromId.name,
+        );
+        if (
+          canonical &&
+          normalizeLoose(canonical) !==
+            normalizeLoose(fromId.lookuptype || fromId.DisplayName || fromId.name)
+        ) {
+          const aliased = findLookupTypeByName(lookupsTypes, canonical);
+          if (aliased) return aliased;
+        }
+        // Branch parent must stay Region even if id points at legacy "Divisions"
+        if (drawerKey === "Districts") {
+          const region = findLookupTypeByName(lookupsTypes, "Region");
+          if (region) return region;
+        }
+        return fromId;
+      }
     }
     if (parentLookupTypeName) {
-      const fromName = findLookupTypeByName(lookupsTypes, parentLookupTypeName);
+      const fromName = findLookupTypeByName(
+        lookupsTypes,
+        canonicalParentTypeName(parentLookupTypeName),
+      );
       if (fromName) return fromName;
+      const raw = findLookupTypeByName(lookupsTypes, parentLookupTypeName);
+      if (raw) return raw;
     }
     return getParentLookupType(lookupsTypes, lookuptypeId, drawerKey);
   }, [
@@ -85,18 +110,24 @@ function ParentLookupSelect({
     drawerKey,
     value,
     parentLabel,
+    parentType,
   ]);
 
-  const hasParentFromApi =
-    !!value || !!parentLookupTypeId || !!parentLookupTypeName;
-  const requiresParent =
-    lookupTypeRequiresParent(lookupsTypes, lookuptypeId, drawerKey) ||
-    hasParentFromApi;
-  const showField = requiresParent && (!!parentType || hasParentFromApi);
+  const requiresParent = lookupTypeRequiresParent(
+    lookupsTypes,
+    lookuptypeId,
+    drawerKey,
+  );
+  const showField = requiresParent && !!parentType;
   const isDisabled = disabled || !showField;
 
+  if (!showField) {
+    return null;
+  }
+
   const fieldLabel =
-    parentLookupTypeName ||
+    getDrawerParentFieldLabel(drawerKey, "") ||
+    canonicalParentTypeName(parentLookupTypeName) ||
     parentType?.lookuptype ||
     parentType?.DisplayName ||
     "Parent Lookup";
@@ -130,6 +161,7 @@ function ParentLookupSelect({
         options={options}
         isSimple={true}
         isIDs={true}
+        showSearch
         disabled={isDisabled}
         required={required && requiresParent}
         hasError={hasError}
@@ -137,6 +169,13 @@ function ParentLookupSelect({
       />
     </Col>
   );
+}
+
+function normalizeLoose(name) {
+  return String(name || "")
+    .trim()
+    .toLowerCase()
+    .replace(/\s+/g, "");
 }
 
 export default ParentLookupSelect;

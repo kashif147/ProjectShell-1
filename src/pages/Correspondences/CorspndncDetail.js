@@ -230,7 +230,7 @@ function CorspndncDetail() {
             <h4
               className=""
               style={{
-                color: "#215E97",
+                color: "var(--app-brand-primary)",
                 fontSize: "10px",
                 fontWeight: "400",
                 margin: "0px",
@@ -325,7 +325,7 @@ function CorspndncDetail() {
                     type="text"
                     icon={
                       <FiCornerUpLeft
-                        style={{ fontSize: 26, color: "#215E97" }}
+                        style={{ fontSize: 26, color: "var(--app-brand-primary)" }}
                       />
                     }
                     style={{ transition: "color 0.3s" }}
@@ -337,7 +337,7 @@ function CorspndncDetail() {
                     type="text"
                     icon={
                       <RiCornerUpLeftDoubleLine
-                        style={{ fontSize: 26, color: "#215E97" }}
+                        style={{ fontSize: 26, color: "var(--app-brand-primary)" }}
                       />
                     }
                   />
@@ -349,7 +349,7 @@ function CorspndncDetail() {
                     onClick={forwardEmail}
                     icon={
                       <FiCornerUpRight
-                        style={{ fontSize: 26, color: "#215E97" }}
+                        style={{ fontSize: 26, color: "var(--app-brand-primary)" }}
                       />
                     }
                   />
@@ -360,7 +360,7 @@ function CorspndncDetail() {
                     type="text"
                     icon={
                       <PiArrowSquareIn
-                        style={{ fontSize: 26, color: "#215E97" }}
+                        style={{ fontSize: 26, color: "var(--app-brand-primary)" }}
                       />
                     }
                   />
@@ -442,7 +442,7 @@ function CorspndncDetail() {
             <h4
               className=""
               style={{
-                color: "#215E97",
+                color: "var(--app-brand-primary)",
                 fontSize: "10px",
                 fontWeight: "400",
                 margin: "0px",
@@ -519,7 +519,7 @@ function CorspndncDetail() {
             <h4
               className=""
               style={{
-                color: "#215E97",
+                color: "var(--app-brand-primary)",
                 fontSize: "10px",
                 fontWeight: "400",
                 margin: "0px",
@@ -561,7 +561,7 @@ function CorspndncDetail() {
           <div className="chat-detail-container">
             <div className="d-flex align-items-baseline justify-content-end">
               <div>
-                <BiSolidPrinter fontSize={"27px"} color="#215E97" />
+                <BiSolidPrinter fontSize={"27px"} color="var(--app-brand-primary)" />
               </div>
             </div>
 
@@ -655,7 +655,7 @@ function CorspndncDetail() {
             <h4
               className=""
               style={{
-                color: "#215E97",
+                color: "var(--app-brand-primary)",
                 fontSize: "10px",
                 fontWeight: "400",
                 margin: "0px",
@@ -862,7 +862,7 @@ function CorspndncDetail() {
               style={{
                 borderLeft: "none",
                 borderColor: "red",
-                backgroundColor: "#215E97",
+                backgroundColor: "var(--app-brand-primary)",
               }}
               // Set dropdown button width
               value={null}

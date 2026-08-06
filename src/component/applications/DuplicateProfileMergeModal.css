@@ -3,8 +3,8 @@
 }
 
 .duplicate-profile-merge-drawer .duplicate-merge-confirm-btn.ant-btn-primary {
-  background: #45669d;
-  border-color: #45669d;
+  background: var(--app-brand-primary);
+  border-color: var(--app-brand-primary);
 }
 
 .duplicate-profile-merge-drawer .duplicate-merge-confirm-btn.ant-btn-primary:hover,
@@ -56,7 +56,7 @@
   .ant-radio-wrapper
   .ant-radio-checked
   .ant-radio-inner::after {
-  background-color: #215e97;
+  background-color: var(--app-brand-primary);
 }
 
 .duplicate-profile-merge-drawer .duplicate-merge-header-profile__details {
@@ -113,7 +113,7 @@
 }
 
 .duplicate-profile-merge-drawer .duplicate-merge-compare-header {
-  background-color: #215e97;
+  background-color: var(--app-brand-primary);
   color: #fff;
   font-size: 12px;
   font-weight: 700;
@@ -126,7 +126,7 @@
 .duplicate-profile-merge-drawer .duplicate-merge-compare-header > div {
   padding: 10px 12px;
   border-right: 1px solid rgba(255, 255, 255, 0.15);
-  background-color: #215e97;
+  background-color: var(--app-brand-primary);
   color: #fff;
 }
 
@@ -145,7 +145,7 @@
   padding: 8px 12px;
   background: #eef4fa;
   border-top: 1px solid #d9d9d9;
-  color: #215e97;
+  color: var(--app-brand-primary);
   font-size: 12px;
   font-weight: 700;
   letter-spacing: 0.02em;
@@ -207,7 +207,7 @@
 }
 
 .duplicate-profile-merge-drawer .duplicate-merge-value-hint {
-  color: #6b7280;
+  color: var(--theme-text-muted);
   font-weight: 500;
 }
 

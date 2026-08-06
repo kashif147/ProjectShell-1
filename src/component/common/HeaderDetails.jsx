@@ -194,6 +194,28 @@ function HeaderDetails({
   const currentURL = `${location?.pathname}`;
   const nav = location?.pathname || "";
   const hideGridToolbar = isNonGridToolbarRoute(nav);
+  // Every route that renders CasesSummary.js (Entry.js) - the plain grid (relabeled
+  // "Open Issues" in the side nav), the Closed view, and the dedicated Complaints/Fitness
+  // to Practice/Industrial Relations/Data Protection side-nav sections - so this header's
+  // icon/title chrome treats them the same way it already treats "/CasesSummary".
+  const isIssuesGridRoute =
+    nav === "/CasesSummary" ||
+    nav === "/CasesSummary/Closed" ||
+    nav === "/Complaints" ||
+    nav === "/FitnessToPractice" ||
+    nav === "/IndustrialRelations" ||
+    nav === "/DataProtection";
+  // The 4 dedicated type-specific side-nav pages (not Open/Closed - creating a
+  // already-closed issue doesn't make sense, and "/CasesSummary" itself covers the
+  // general/Open-Issues case) additionally allow creating an issue with Issue Type
+  // pre-set to match the page, via the "+ Create" button below.
+  const ISSUE_TYPE_BY_ROUTE = {
+    "/Complaints": "COMPLAINT",
+    "/FitnessToPractice": "FTP",
+    "/IndustrialRelations": "IR",
+    "/DataProtection": "DP",
+  };
+  const isIssuesCreateRoute = nav === "/CasesSummary" || Boolean(ISSUE_TYPE_BY_ROUTE[nav]);
   const headerDashboardRange = useMemo(() => {
     const r = searchParams.get("range");
     return HEADER_DASHBOARD_RANGE_KEYS.includes(r) ? r : "YTD";
@@ -227,9 +249,7 @@ function HeaderDetails({
 
   const paymentFormCreateBtnStyle = {
     marginRight: "50px",
-    color: "white",
     borderRadius: "3px",
-    backgroundColor: "#45669d",
   };
 
   const openPaymentFormCreate = (formType = "STANDING_ORDER") => {
@@ -294,6 +314,7 @@ function HeaderDetails({
   }, [reconciliationImportText]);
 
   const [casesDrawerOpen, setCasesDrawerOpen] = useState(false);
+  const [casesDrawerDefaultIssueType, setCasesDrawerDefaultIssueType] = useState(null);
   const [eventDrawerOpen, setEventDrawerOpen] = useState(false);
   const [attendeeDrawerOpen, setAttendeeDrawerOpen] = useState(false);
   const [campaignDrawerOpen, setCampaignDrawerOpen] = useState(false);
@@ -642,8 +663,8 @@ function HeaderDetails({
           disabled: !isValidDecisionDate(date) || loading,
           loading,
           style: {
-            backgroundColor: "#45669d",
-            borderColor: "#45669d",
+            backgroundColor: "var(--app-brand-primary)",
+            borderColor: "var(--app-brand-primary)",
             color: "white",
             opacity: loading ? 0.7 : 1,
           },
@@ -680,8 +701,8 @@ function HeaderDetails({
       okButtonProps: {
         disabled: !isValidDecisionDate(initialDate),
         style: {
-          backgroundColor: "#45669d",
-          borderColor: "#45669d",
+          backgroundColor: "var(--app-brand-primary)",
+          borderColor: "var(--app-brand-primary)",
           color: "white",
         },
       },
@@ -826,8 +847,8 @@ function HeaderDetails({
             disabled: !enabled || loading,
             loading,
             style: {
-              backgroundColor: "#45669d",
-              borderColor: "#45669d",
+              backgroundColor: "var(--app-brand-primary)",
+              borderColor: "var(--app-brand-primary)",
               color: "white",
               opacity: loading ? 0.7 : 1,
             },
@@ -875,10 +896,10 @@ function HeaderDetails({
                 }}
               >
                 <LoadingOutlined
-                  style={{ fontSize: 32, color: "#45669d", marginBottom: 15 }}
+                  style={{ fontSize: 32, color: "var(--app-brand-primary)", marginBottom: 15 }}
                 />
                 <div
-                  style={{ fontSize: 16, fontWeight: 500, color: "#45669d" }}
+                  style={{ fontSize: 16, fontWeight: 500, color: "var(--app-brand-primary)" }}
                 >
                   Processing {selectedApplications.length} application(s)...
                 </div>
@@ -894,8 +915,8 @@ function HeaderDetails({
         okButtonProps: {
           disabled: !isValidProcessingDate(initialDate),
           style: {
-            backgroundColor: "#45669d",
-            borderColor: "#45669d",
+            backgroundColor: "var(--app-brand-primary)",
+            borderColor: "var(--app-brand-primary)",
             color: "white",
           },
         },
@@ -1388,11 +1409,11 @@ function HeaderDetails({
           location?.pathname === "/MembershipDashboard" ||
           location?.pathname === "/EventsSummary" ||
           location?.pathname === "/Attendees" ||
-          location?.pathname === "/CasesSummary") && (
+          isIssuesGridRoute) && (
           <FaClipboardList
             style={{
               fontSize: "15px",
-              color: "#45669d",
+              color: "var(--app-brand-primary)",
             }}
           />
         )}
@@ -1427,7 +1448,18 @@ function HeaderDetails({
   }, [nav, defaultMenuItems, editCasesItem]);
 
   return (
-    <div className="" style={{ width: "100%", minWidth: 0 }}>
+    <div
+      className=""
+      style={{
+        width: "100%",
+        minWidth: 0,
+        // Single left/right origin for breadcrumb + title + search + Filter,
+        // matching the table content start (.common-table paddingLeft: 34px)
+        paddingLeft: 34,
+        paddingRight: 34,
+        boxSizing: "border-box",
+      }}
+    >
       {/* New Breadcrumb Component */}
       {!hideBreadcrumb &&
         location?.pathname !== "/CommunicationBatchDetail" &&
@@ -1441,6 +1473,7 @@ function HeaderDetails({
         className={`details-header d-flex w-100 overflow-hidden ${
           location?.pathname == "/Details" ||
           location?.pathname == "/CasesById" ||
+          location?.pathname == "/CasesDetails" ||
           location?.pathname == "/AddNewProfile" ||
           location?.pathname == "/ClaimsById" ||
           location?.pathname == "/AddClaims" ||
@@ -1453,6 +1486,7 @@ function HeaderDetails({
           {/* Action buttons for detail pages */}
           {(location?.pathname == "/Details" ||
             location?.pathname == "/CasesById" ||
+            location?.pathname == "/CasesDetails" ||
             location?.pathname == "/AddNewProfile" ||
             location?.pathname == "/ClaimsById" ||
             location?.pathname == "/AddClaims" ||
@@ -1477,7 +1511,7 @@ function HeaderDetails({
                       marginRight: "50px",
                       color: "white",
                       borderRadius: "3px",
-                      backgroundColor: "#45669d",
+                      backgroundColor: "var(--app-brand-primary)",
                     }}
                     onClick={() => {
                       if (nav == "/ClaimsById") handlClaimDrawerChng();
@@ -1530,6 +1564,7 @@ function HeaderDetails({
                         "/ClaimsById",
                         "/AddClaims",
                         "/CasesById",
+                        "/CasesDetails",
                         "/AddNewProfile",
                         "/AproveMembersip",
                         "/ChangeCatById",
@@ -1562,7 +1597,7 @@ function HeaderDetails({
             location?.pathname == "/" ||
             location?.pathname == "/Summary" ||
             location?.pathname == "/Members" ||
-            location?.pathname == "/CasesSummary" ||
+            isIssuesGridRoute ||
             location?.pathname == "/Transfers" ||
             location?.pathname == "/CorrespondencesSummary" ||
             location?.pathname == "/RosterSummary" ||
@@ -1618,7 +1653,7 @@ function HeaderDetails({
                         style={{
                           margin: 0,
                           fontSize: 14,
-                          color: "#595959",
+                          color: "var(--theme-text-muted)",
                           fontWeight: 400,
                         }}
                       >
@@ -1634,7 +1669,7 @@ function HeaderDetails({
                         style={{
                           margin: 0,
                           fontSize: 14,
-                          color: "#595959",
+                          color: "var(--theme-text-muted)",
                           fontWeight: 400,
                         }}
                       >
@@ -1701,6 +1736,8 @@ function HeaderDetails({
                   {/* For templateSummary, only show Create button */}
                   {nav === "/templateSummary" ? (
                     <Button
+                      type="primary"
+                      icon={<PlusOutlined />}
                       onClick={() => {
                         navigate("/templateConfig", {
                           state: { state: "templates" },
@@ -1708,11 +1745,9 @@ function HeaderDetails({
                       }}
                       style={{
                         marginRight: "50px", // This gives the margin right
-                        color: "white",
                         borderRadius: "3px",
-                        backgroundColor: "#45669d",
                       }}
-                      className="butn"
+                      className="butn primary-btn"
                     >
                       Create
                     </Button>
@@ -1761,34 +1796,37 @@ function HeaderDetails({
                           !hasPermission("events:create")) ||
                         (nav === "/ChangCateSumm" &&
                           !hasPermission("changeOfCategory:create")) ||
-                        (nav === "/CasesSummary" &&
-                          (screenName === "All Issues" ||
-                            screenName === "Assigned to me") &&
-                          !hasPermission("queries:create")) ||
+                        (isIssuesCreateRoute && !hasPermission("issues:write")) ||
                         (nav === "/InAppNotifications" &&
                           !hasPermission("notifications:create")) ||
                         nav === "/UserNotifications" ||
                         isReportHeaderPath(nav) ? null : nav ===
                         "/PaymentForms" ? (
                         <Button
+                          type="primary"
+                          icon={<PlusOutlined />}
                           onClick={() =>
                             openPaymentFormCreate("STANDING_ORDER")
                           }
                           style={paymentFormCreateBtnStyle}
-                          className="butn"
+                          className="butn primary-btn"
                         >
                           Create
                         </Button>
                       ) : nav === "/DirectDebitAuthorization" ? (
                         <Button
+                          type="primary"
+                          icon={<PlusOutlined />}
                           onClick={() => openPaymentFormCreate("DD_MANDATE")}
                           style={paymentFormCreateBtnStyle}
-                          className="butn"
+                          className="butn primary-btn"
                         >
                           Create
                         </Button>
                       ) : (
                         <Button
+                          type="primary"
+                          icon={<PlusOutlined />}
                           onClick={() => {
                             if (nav == "/Applications") {
                               navigate("/applicationMgt");
@@ -1852,7 +1890,10 @@ function HeaderDetails({
                               setCreditNoteDrawerOpen(true);
                             } else if (nav === "/JournalAdjustments") {
                               setJournalAdjustmentDrawerOpen(true);
-                            } else if (nav === "/CasesSummary") {
+                            } else if (isIssuesCreateRoute) {
+                              setCasesDrawerDefaultIssueType(
+                                ISSUE_TYPE_BY_ROUTE[nav] || null,
+                              );
                               setCasesDrawerOpen(true);
                             } else if (
                               nav === "/EventsDashboard" ||
@@ -1865,11 +1906,9 @@ function HeaderDetails({
                           }}
                           style={{
                             marginRight: "50px",
-                            color: "white",
                             borderRadius: "3px",
-                            backgroundColor: "#45669d",
                           }}
-                          className="butn"
+                          className="butn primary-btn"
                         >
                           {nav === "/Attendees" ? "Add Attendee" : "Create"}
                         </Button>
@@ -1975,7 +2014,7 @@ function HeaderDetails({
                     htmlType="button"
                     onClick={reminderApplySearch}
                     style={{
-                      backgroundColor: "#45669d",
+                      backgroundColor: "var(--app-brand-primary)",
                       borderRadius: "4px",
                       border: "none",
                       height: "32px",
@@ -2032,7 +2071,7 @@ function HeaderDetails({
                     htmlType="button"
                     onClick={cbFilter.applySearch}
                     style={{
-                      backgroundColor: "#45669d",
+                      backgroundColor: "var(--app-brand-primary)",
                       borderRadius: "4px",
                       border: "none",
                       height: "32px",
@@ -2682,7 +2721,7 @@ function HeaderDetails({
         okText="Import"
         width={560}
       >
-        <p style={{ fontSize: 13, color: "#595959" }}>
+        <p style={{ fontSize: 13, color: "var(--theme-text-muted)" }}>
           One line per entry: <code>reference, amount</code> (amount in euros,
           e.g. <code>PO_abc123, 31.50</code>).
         </p>
@@ -2789,7 +2828,11 @@ function HeaderDetails({
       />
       <CreateCasesDrawer
         open={casesDrawerOpen}
-        onClose={() => setCasesDrawerOpen(false)}
+        onClose={() => {
+          setCasesDrawerOpen(false);
+          setCasesDrawerDefaultIssueType(null);
+        }}
+        defaultIssueType={casesDrawerDefaultIssueType}
       />
       <CreateEventDrawer
         open={eventDrawerOpen}
@@ -2828,7 +2871,7 @@ function HeaderDetails({
         >
           {selectedCaseRows.length === 0 ? (
             <div className="create-case-drawer-content">
-              <p style={{ color: "#8c8c8c" }}>
+              <p style={{ color: "var(--theme-text-muted)" }}>
                 Select one or more cases from the table to edit.
               </p>
             </div>

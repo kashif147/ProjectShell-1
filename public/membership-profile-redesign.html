@@ -1,0 +1,500 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Membership Profile — B00001</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#0F2E33;
+    --ink-soft:#3D5257;
+    --bg:#F3F6F6;
+    --surface:#FFFFFF;
+    --border:#E1E9E9;
+    --border-soft:#EDF2F2;
+    --teal:#0E9E93;
+    --teal-deep:#0A6E67;
+    --teal-tint:#E4F5F3;
+    --coral:#FF6F4C;
+    --coral-tint:#FFE9E2;
+    --amber:#F5A524;
+    --amber-tint:#FEF3DE;
+    --shadow-sm:0 1px 2px rgba(15,46,51,0.06);
+    --shadow-md:0 8px 24px rgba(15,46,51,0.08);
+    --radius:14px;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    font-family:'Inter',sans-serif;
+    background:var(--bg);
+    color:var(--ink);
+    -webkit-font-smoothing:antialiased;
+  }
+  .display{font-family:'Space Grotesk',sans-serif;}
+  .mono{font-family:'IBM Plex Mono',monospace;}
+
+  /* ---------- Breadcrumb bar ---------- */
+  .topbar{
+    display:flex;align-items:center;justify-content:space-between;
+    padding:16px 32px;background:var(--surface);border-bottom:1px solid var(--border-soft);
+  }
+  .crumbs{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--ink-soft);font-weight:500;}
+  .crumbs span.active{color:var(--ink);font-weight:600;}
+  .crumbs .sep{color:#C7D3D3;}
+  .topbar-actions{display:flex;align-items:center;gap:8px;}
+  .btn{
+    border:1px solid var(--border);background:var(--surface);color:var(--ink);
+    padding:9px 16px;border-radius:10px;font-size:13.5px;font-weight:600;
+    cursor:pointer;display:flex;align-items:center;gap:6px;transition:.15s ease;
+    font-family:'Inter',sans-serif;
+  }
+  .btn:hover{border-color:var(--teal);color:var(--teal-deep);background:var(--teal-tint);}
+  .btn.primary{background:var(--teal);border-color:var(--teal);color:#fff;box-shadow:var(--shadow-sm);}
+  .btn.primary:hover{background:var(--teal-deep);border-color:var(--teal-deep);color:#fff;}
+  .btn.icon-only{padding:9px 10px;}
+  .pager{display:flex;align-items:center;gap:10px;font-size:13px;color:var(--ink-soft);font-weight:600;margin-left:6px;}
+  .pager button{width:30px;height:30px;border-radius:8px;border:1px solid var(--border);background:var(--surface);cursor:pointer;color:var(--ink-soft);}
+  .pager button:hover{border-color:var(--teal);color:var(--teal-deep);}
+
+  /* ---------- Hero / identity band ---------- */
+  .hero{
+    margin:24px 32px 0 32px;
+    background:linear-gradient(120deg,var(--ink) 0%, #164A47 60%, var(--teal-deep) 100%);
+    border-radius:20px;
+    padding:26px 30px 0 30px;
+    color:#fff;
+    position:relative;
+    overflow:hidden;
+    box-shadow:var(--shadow-md);
+  }
+  .hero::after{
+    content:"";position:absolute;right:-60px;top:-80px;width:280px;height:280px;
+    background:radial-gradient(circle,rgba(255,111,76,0.35) 0%,rgba(255,111,76,0) 70%);
+  }
+  .hero-main{display:flex;align-items:flex-start;justify-content:space-between;gap:24px;position:relative;z-index:2;flex-wrap:wrap;}
+  .identity{display:flex;gap:18px;align-items:center;}
+  .avatar-ring{
+    position:relative;width:72px;height:72px;border-radius:50%;
+    background:conic-gradient(var(--coral) 0% 100%, transparent 100% 100%);
+    display:flex;align-items:center;justify-content:center;flex-shrink:0;
+  }
+  .avatar-ring::before{
+    content:"";position:absolute;inset:4px;border-radius:50%;background:#0F2E33;
+  }
+  .avatar-initials{
+    position:relative;z-index:2;font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:22px;color:#fff;
+  }
+  .id-text .name{font-family:'Space Grotesk',sans-serif;font-size:22px;font-weight:700;margin:0 0 4px 0;letter-spacing:.2px;}
+  .id-text .sub{font-size:13px;color:rgba(255,255,255,0.72);display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+  .id-text .sub .dot-sep{width:3px;height:3px;border-radius:50%;background:rgba(255,255,255,0.4);}
+  .status-chip{
+    display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,0.12);
+    padding:3px 10px 3px 8px;border-radius:100px;font-size:12px;font-weight:600;margin-left:4px;
+  }
+  .status-chip .pulse{width:7px;height:7px;border-radius:50%;background:#4ADE80;box-shadow:0 0 0 3px rgba(74,222,128,0.25);}
+
+  .contact-cluster{display:flex;gap:22px;flex-wrap:wrap;}
+  .contact-item{font-size:13px;color:rgba(255,255,255,0.85);display:flex;align-items:center;gap:8px;}
+  .contact-item svg{opacity:.75;flex-shrink:0;}
+  .balance-card{
+    background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.14);
+    border-radius:14px;padding:14px 18px;min-width:160px;backdrop-filter:blur(2px);
+  }
+  .balance-card .label{font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:rgba(255,255,255,0.6);font-weight:600;}
+  .balance-card .value{font-family:'Space Grotesk',sans-serif;font-size:24px;font-weight:700;color:#7CF2C0;margin-top:2px;}
+  .balance-card .code{font-size:11px;color:rgba(255,255,255,0.55);margin-top:6px;}
+
+  /* Lifecycle timeline strip - signature element */
+  .lifecycle{
+    position:relative;z-index:2;margin-top:22px;
+    display:grid;grid-template-columns:repeat(4,1fr);
+    background:rgba(255,255,255,0.06);
+    border:1px solid rgba(255,255,255,0.12);
+    border-radius:14px 14px 0 0;
+    padding:16px 24px;
+  }
+  .life-step{position:relative;padding-left:20px;}
+  .life-step::before{
+    content:"";position:absolute;left:0;top:4px;width:9px;height:9px;border-radius:50%;
+    background:var(--coral);box-shadow:0 0 0 3px rgba(255,111,76,0.22);
+  }
+  .life-step.done::before{background:#4ADE80;box-shadow:0 0 0 3px rgba(74,222,128,0.22);}
+  .life-step.now::before{background:#FFD166;box-shadow:0 0 0 4px rgba(255,209,102,0.28);}
+  .life-step::after{
+    content:"";position:absolute;left:4px;top:14px;bottom:-16px;width:1px;background:rgba(255,255,255,0.16);
+  }
+  .life-step:last-child::after{display:none;}
+  .life-step .l-label{font-size:10.5px;text-transform:uppercase;letter-spacing:.08em;color:rgba(255,255,255,0.55);font-weight:600;}
+  .life-step .l-value{font-family:'Space Grotesk',sans-serif;font-size:14.5px;font-weight:600;color:#fff;margin-top:2px;}
+
+  /* Badges row under hero (membership category tags) */
+  .badge-row{
+    display:flex;gap:10px;margin:16px 0 0 0;padding-bottom:18px;position:relative;z-index:2;flex-wrap:wrap;
+  }
+  .badge{
+    display:inline-flex;align-items:center;gap:7px;padding:7px 14px;border-radius:100px;
+    font-size:12.5px;font-weight:600;background:rgba(255,255,255,0.1);color:#fff;border:1px solid rgba(255,255,255,0.14);
+  }
+  .badge svg{opacity:.9;}
+  .badge.pay{background:rgba(124,242,192,0.14);border-color:rgba(124,242,192,0.28);color:#7CF2C0;}
+
+  /* ---------- Tabs ---------- */
+  .tabbar{
+    margin:0 32px;background:var(--surface);border:1px solid var(--border-soft);border-top:none;
+    border-radius:0 0 16px 16px;padding:6px;display:flex;gap:4px;box-shadow:var(--shadow-sm);
+    position:relative;z-index:2;
+  }
+  .tab{
+    padding:10px 18px;border-radius:10px;font-size:13.5px;font-weight:600;color:var(--ink-soft);
+    cursor:pointer;transition:.15s ease;display:flex;align-items:center;gap:6px;
+  }
+  .tab:hover{background:var(--teal-tint);color:var(--teal-deep);}
+  .tab.active{background:var(--ink);color:#fff;}
+  .tab.more{margin-left:auto;color:var(--ink-soft);}
+
+  /* ---------- Content grid ---------- */
+  .content{
+    max-width:1720px;margin:22px auto 60px auto;padding:0 32px;
+    display:grid;grid-template-columns:1.35fr 1.35fr 1fr;gap:20px;
+  }
+  .card{
+    background:var(--surface);border:1px solid var(--border-soft);border-radius:var(--radius);
+    padding:22px 22px 20px 22px;box-shadow:var(--shadow-sm);
+  }
+  .card + .card{margin-top:20px;}
+  .card-head{display:flex;align-items:center;gap:10px;margin-bottom:18px;}
+  .card-head .ic{
+    width:32px;height:32px;border-radius:9px;display:flex;align-items:center;justify-content:center;flex-shrink:0;
+  }
+  .ic.teal{background:var(--teal-tint);color:var(--teal-deep);}
+  .ic.coral{background:var(--coral-tint);color:#C7451E;}
+  .ic.amber{background:var(--amber-tint);color:#966208;}
+  .card-head h3{font-family:'Space Grotesk',sans-serif;font-size:15.5px;font-weight:700;margin:0;letter-spacing:.1px;}
+
+  .field-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px 16px;}
+  .field{display:flex;flex-direction:column;gap:6px;}
+  .field.span-2{grid-column:1 / -1;}
+  .field label{
+    font-size:11.5px;font-weight:600;color:var(--ink-soft);text-transform:uppercase;letter-spacing:.04em;
+    display:flex;align-items:center;gap:4px;
+  }
+  .field label .req{color:var(--coral);}
+  .control{
+    border:1.5px solid var(--border);border-radius:10px;padding:9px 12px;font-size:13.5px;
+    font-family:'Inter',sans-serif;color:var(--ink);background:#FBFDFD;
+    transition:.15s ease;width:100%;
+  }
+  .control::placeholder{color:#A6B5B6;}
+  .control:focus{outline:none;border-color:var(--teal);background:#fff;box-shadow:0 0 0 3px rgba(14,158,147,0.14);}
+  select.control{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%235B6B70' stroke-width='1.6' fill='none' fill-rule='evenodd'/%3E%3C/svg%3E");
+    background-repeat:no-repeat;background-position:right 12px center;padding-right:32px;}
+  .control.disabled{background:#F4F6F6;color:#AEBBBC;cursor:not-allowed;}
+  .control-icon-wrap{position:relative;}
+  .control-icon-wrap .control{padding-right:34px;}
+  .control-icon-wrap svg{position:absolute;right:11px;top:50%;transform:translateY(-50%);color:#98A8A9;pointer-events:none;}
+
+  .radio-row{display:flex;gap:18px;padding-top:6px;}
+  .radio-opt{display:flex;align-items:center;gap:7px;font-size:13.5px;font-weight:500;color:var(--ink);cursor:pointer;}
+  .radio-opt input{width:16px;height:16px;accent-color:var(--teal);}
+
+  .section-divider{
+    grid-column:1/-1;font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;
+    color:var(--teal-deep);margin:6px 0 -2px 0;display:flex;align-items:center;gap:8px;
+  }
+  .section-divider::after{content:"";flex:1;height:1px;background:var(--border-soft);}
+
+  .badge-pill-static{
+    display:inline-flex;align-items:center;gap:6px;font-size:11.5px;font-weight:600;
+    padding:4px 10px;border-radius:100px;background:var(--teal-tint);color:var(--teal-deep);
+  }
+
+  /* Payment/subscription highlight accents */
+  .card.accent-coral{border-left:3px solid var(--coral);}
+  .card.accent-teal{border-left:3px solid var(--teal);}
+
+  ::-webkit-scrollbar{height:8px;width:8px;}
+  ::-webkit-scrollbar-thumb{background:#CBD8D8;border-radius:8px;}
+
+  @media (max-width:1400px){
+    .content{grid-template-columns:1fr 1fr;}
+  }
+  @media (max-width:980px){
+    .content{grid-template-columns:1fr;}
+    .hero-main{flex-direction:column;}
+    .lifecycle{grid-template-columns:repeat(2,1fr);row-gap:18px;}
+    .topbar{flex-direction:column;align-items:flex-start;gap:12px;}
+  }
+</style>
+</head>
+<body>
+
+  <!-- Top breadcrumb / actions bar -->
+  <div class="topbar">
+    <div class="crumbs">
+      <span>Membership</span><span class="sep">/</span>
+      <span>Profiles</span><span class="sep">/</span>
+      <span class="active">B00001</span>
+    </div>
+    <div class="topbar-actions">
+      <button class="btn primary">＋ Create</button>
+      <button class="btn">↻ Refresh</button>
+      <button class="btn">Return to summary</button>
+      <button class="btn">⎙ Print</button>
+      <div class="pager">
+        <button>‹</button>
+        <span>2 of 2</span>
+        <button>›</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Hero identity band -->
+  <div class="hero">
+    <div class="hero-main">
+      <div class="identity">
+        <div class="avatar-ring"><span class="avatar-initials">KR</span></div>
+        <div class="id-text">
+          <p class="name">Kashif Rehman</p>
+          <div class="sub">
+            11/08/1989 (M) · 36 yrs
+            <span class="dot-sep"></span>
+            <span class="mono">B00001</span>
+            <span class="status-chip"><span class="pulse"></span>Active</span>
+          </div>
+          <div class="contact-cluster" style="margin-top:10px;">
+            <span class="contact-item">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16v16H4z" opacity="0"/><path d="M3 5h18v14H3z"/><path d="m3 6 9 7 9-7"/></svg>
+              kashif147@gmail.com
+            </span>
+            <span class="contact-item">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3 19.5 19.5 0 0 1-6-6 19.8 19.8 0 0 1-3-8.7A2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1.9.3 1.8.6 2.7a2 2 0 0 1-.5 2.1L8 9.7a16 16 0 0 0 6 6l1.2-1.2a2 2 0 0 1 2.1-.5c.9.3 1.8.5 2.7.6a2 2 0 0 1 1.7 2z"/></svg>
+              +353 87 900 0538
+            </span>
+            <span class="contact-item">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 12-9 12s-9-5-9-12a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+              9 Dalriada Walk, Dublin, County Dublin, D16 CC01
+            </span>
+          </div>
+        </div>
+      </div>
+      <div class="balance-card">
+        <div class="label">Account balance</div>
+        <div class="value">€0.00</div>
+        <div class="code">MB-2026-B00001</div>
+      </div>
+    </div>
+
+    <div class="lifecycle">
+      <div class="life-step done">
+        <div class="l-label">Joined</div>
+        <div class="l-value">09 Jul 2026</div>
+      </div>
+      <div class="life-step now">
+        <div class="l-label">Sub. Year</div>
+        <div class="l-value">2026</div>
+      </div>
+      <div class="life-step">
+        <div class="l-label">Expires</div>
+        <div class="l-value">31 Dec 2026</div>
+      </div>
+      <div class="life-step">
+        <div class="l-label">Last Payment</div>
+        <div class="l-value">€0.00 · N/A</div>
+      </div>
+    </div>
+
+    <div class="badge-row">
+      <span class="badge"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 10 12 5 2 10l10 5 10-5z"/><path d="M6 12v5c3 2 9 2 12 0v-5"/></svg>Undergraduate Student</span>
+      <span class="badge"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m12 2 3 6 6.5 1-4.7 4.6L18 20l-6-3.2L6 20l1.2-6.4L2.5 9l6.5-1 3-6z"/></svg>Student Nurse</span>
+      <span class="badge pay"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="6" width="20" height="12" rx="2"/><path d="M2 10h20"/></svg>Cash Payment</span>
+    </div>
+  </div>
+
+  <!-- Tab bar -->
+  <div class="tabbar">
+    <div class="tab active">Membership</div>
+    <div class="tab">Finance</div>
+    <div class="tab">Documents</div>
+    <div class="tab">Correspondence</div>
+    <div class="tab">Cases</div>
+    <div class="tab">Applications</div>
+    <div class="tab more">•••</div>
+  </div>
+
+  <!-- Content -->
+  <div class="content">
+
+    <!-- COLUMN 1 -->
+    <div>
+      <div class="card">
+        <div class="card-head"><div class="ic teal">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4.4 3.6-8 8-8s8 3.6 8 8"/></svg>
+        </div><h3>Personal Information</h3></div>
+        <div class="field-grid">
+          <div class="field"><label>Title <span class="req">*</span></label><select class="control"><option>Mr</option></select></div>
+          <div class="field"></div>
+          <div class="field"><label>Forename(s) <span class="req">*</span></label><input class="control" value="Kashif"></div>
+          <div class="field"><label>Surname <span class="req">*</span></label><input class="control" value="Rehman"></div>
+          <div class="field"><label>Date of Birth <span class="req">*</span></label>
+            <div class="control-icon-wrap"><input class="control" value="11/08/1989"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg></div>
+          </div>
+          <div class="field"><label>Gender <span class="req">*</span></label><select class="control"><option>Male</option></select></div>
+          <div class="field span-2"><label>Country of Primary Qualification <span class="req">*</span></label><select class="control"><option>Ireland</option></select></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-head"><div class="ic coral">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 12-9 12s-9-5-9-12a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+        </div><h3>Correspondence Details</h3></div>
+        <div class="field-grid">
+          <div class="field span-2">
+            <label>Preferred Address <span class="req">*</span></label>
+            <div class="radio-row">
+              <label class="radio-opt"><input type="radio" name="pref" checked>Home / Personal</label>
+              <label class="radio-opt"><input type="radio" name="pref">Work</label>
+            </div>
+          </div>
+          <div class="field span-2">
+            <label>Search for your address</label>
+            <div class="control-icon-wrap"><input class="control" placeholder="Search address or Eircode">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+            </div>
+          </div>
+          <div class="field"><label>Address Line 1 <span class="req">*</span></label><input class="control" value="9 Dalriada Walk"></div>
+          <div class="field"><label>Address Line 2</label><input class="control" placeholder="Enter…"></div>
+          <div class="field"><label>Town / City <span class="req">*</span></label><input class="control" value="Dublin"></div>
+          <div class="field"><label>County / State</label><input class="control" value="County Dublin"></div>
+          <div class="field"><label>Eircode / Postcode</label><input class="control" value="D16 CC01"></div>
+          <div class="field"><label>Country <span class="req">*</span></label><select class="control"><option>Ireland</option></select></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-head"><div class="ic teal">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3 19.5 19.5 0 0 1-6-6 19.8 19.8 0 0 1-3-8.7A2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1.9.3 1.8.6 2.7a2 2 0 0 1-.5 2.1L8 9.7a16 16 0 0 0 6 6l1.2-1.2a2 2 0 0 1 2.1-.5c.9.3 1.8.5 2.7.6a2 2 0 0 1 1.7 2z"/></svg>
+        </div><h3>Contact Details</h3></div>
+        <div class="field-grid">
+          <div class="field"><label>Mobile Number <span class="req">*</span></label><input class="control" value="+353 87 900 0538"></div>
+          <div class="field"><label>Email Address <span class="req">*</span></label><input class="control" value="kashif147@gmail.com"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- COLUMN 2 -->
+    <div>
+      <div class="card">
+        <div class="card-head"><div class="ic amber">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
+        </div><h3>Employment Details</h3></div>
+        <div class="field-grid">
+          <div class="field span-2"><label>Work Location</label><select class="control disabled"><option></option></select></div>
+          <div class="field"><label>Branch <span class="req">*</span></label><select class="control"><option>Limerick</option></select></div>
+          <div class="field"><label>Region</label><select class="control"><option>Mid-West</option></select></div>
+          <div class="field"><label>Grade <span class="req">*</span></label><select class="control"><option>Student Nurse</option></select></div>
+          <div class="field"></div>
+          <div class="field"><label>Other Work Location</label><input class="control disabled" placeholder="Enabled if 'Other' is selected"></div>
+          <div class="field"><label>Other Grade</label><input class="control disabled" placeholder="Enabled if 'Other' is selected"></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-head"><div class="ic teal">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M3 12h18M3 18h18"/></svg>
+        </div><h3>Section Details</h3></div>
+        <div class="field-grid">
+          <div class="field span-2"><label>Primary Section <span class="req">*</span></label><select class="control"><option>Student Section</option></select></div>
+          <div class="field span-2"><label>Other Primary Section</label><input class="control disabled" placeholder="Enter…"></div>
+          <div class="field span-2"><label>Secondary Section</label><select class="control disabled"><option></option></select></div>
+          <div class="field span-2"><label>Other Secondary Section</label><input class="control disabled" placeholder="Enter…"></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-head"><div class="ic coral">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 12h6M9 16h6M9 8h6"/><path d="M5 3h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z"/></svg>
+        </div><h3>Nursing Registration &amp; Specialization</h3></div>
+        <div class="field-grid">
+          <div class="field span-2">
+            <label>Are you currently on a nursing adaptation program?</label>
+            <div class="radio-row">
+              <label class="radio-opt"><input type="radio" name="adapt">Yes</label>
+              <label class="radio-opt"><input type="radio" name="adapt" checked>No</label>
+            </div>
+          </div>
+          <div class="field span-2"><label>NMBI No. / An Bord Altranais Number</label><input class="control" placeholder="Enter registration number"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- COLUMN 3 -->
+    <div>
+      <div class="card accent-teal">
+        <div class="card-head"><div class="ic teal">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 12V8H6a2 2 0 0 1 0-4h12v4"/><path d="M4 6v12a2 2 0 0 0 2 2h14v-4"/><path d="M18 12a2 2 0 0 0 0 4h4v-4z"/></svg>
+        </div><h3>Subscription Details</h3><span class="badge-pill-static" style="margin-left:auto;">2026</span></div>
+        <div class="field-grid">
+          <div class="field span-2"><label>Membership Category <span class="req">*</span></label><select class="control"><option>Undergraduate Student</option></select></div>
+          <div class="field"><label>Start Date</label>
+            <div class="control-icon-wrap"><input class="control" value="09/07/2026"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg></div>
+          </div>
+          <div class="field"><label>End Date</label>
+            <div class="control-icon-wrap"><input class="control" value="31/12/2026"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg></div>
+          </div>
+          <div class="field"><label>Renewal Date</label>
+            <div class="control-icon-wrap"><input class="control" value="01/01/2027"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg></div>
+          </div>
+          <div class="field"><label>Membership Movement</label><select class="control"><option>New</option></select></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-head"><div class="ic amber">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="6" width="20" height="12" rx="2"/><path d="M2 10h20"/></svg>
+        </div><h3>Payment Information</h3></div>
+        <div class="field-grid">
+          <div class="field span-2"><label>Payment Type</label><select class="control"><option>Cash</option></select></div>
+          <div class="field"><label>Payroll No.</label><input class="control" placeholder="Enter Payroll No."></div>
+          <div class="field"><label>Payment Frequency</label><select class="control"><option>Annually</option></select></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-head"><div class="ic teal">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 10 12 5 2 10l10 5 10-5z"/><path d="M6 12v5c3 2 9 2 12 0v-5"/></svg>
+        </div><h3>Educational Details</h3></div>
+        <div class="field-grid">
+          <div class="field span-2"><label>Study Location</label><select class="control"><option>ATU (Limerick)</option></select></div>
+          <div class="field"><label>Start Date</label>
+            <div class="control-icon-wrap"><input class="control" value="09/07/2026"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg></div>
+          </div>
+          <div class="field"><label>Graduation Date</label>
+            <div class="control-icon-wrap"><input class="control" value="09/07/2026"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg></div>
+          </div>
+          <div class="field span-2"><label>Discipline</label><select class="control"><option>Children's and General Nursing</option></select></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-head"><div class="ic coral">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg>
+        </div><h3>Additional Memberships</h3></div>
+        <p style="font-size:13px;color:var(--ink-soft);margin:0 0 12px 0;">No additional memberships linked to this profile yet.</p>
+        <button class="btn" style="width:100%;justify-content:center;">＋ Add membership</button>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    document.querySelectorAll('.tab:not(.more)').forEach(t=>{
+      t.addEventListener('click',()=>{
+        document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));
+        t.classList.add('active');
+      });
+    });
+  </script>
+</body>
+</html>

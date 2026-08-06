@@ -37,9 +37,9 @@ export const TenantBrandingProvider = ({ children }) => {
     setLoading(true);
     try {
       const resolved = await fetchTenantBranding(tenantId);
-      applyTenantBranding(resolved);
-      setBranding(resolved);
-      return resolved;
+      const applied = applyTenantBranding(resolved);
+      setBranding(applied);
+      return applied;
     } catch (err) {
       console.warn("TenantBranding: failed to load branding", err?.message || err);
       const fallback = applyTenantBranding({});

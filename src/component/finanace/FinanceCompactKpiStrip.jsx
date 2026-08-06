@@ -33,7 +33,7 @@ export function FinanceCompactKpiTile({
   value,
   icon,
   iconColor = "#0f172a",
-  iconBg = "#f1f5f9",
+  iconBg = "var(--theme-section-bg)",
   valueColor = "#0f172a",
   minWidth = 140,
 }) {
@@ -67,7 +67,7 @@ export function FinanceCompactKpiTile({
         <div
           style={{
             fontSize: "11px",
-            color: "#64748b",
+            color: "var(--theme-text-muted)",
             fontWeight: "500",
             lineHeight: "1.2",
           }}

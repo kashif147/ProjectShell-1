@@ -54,7 +54,7 @@ function PerfCell({ positive, pct, size = 13 }) {
         style={{
           fontWeight: 600,
           fontSize: size,
-          color: "#8c8c8c",
+          color: "var(--theme-text-muted)",
           lineHeight: 1.3,
           whiteSpace: "nowrap",
         }}
@@ -152,7 +152,7 @@ function ReminderBatchesTable({
                 {record.title}
               </div>
             </div>
-            <div style={{ ...stackRow2, color: "#8c8c8c" }}>
+            <div style={{ ...stackRow2, color: "var(--theme-text-muted)" }}>
               ID: {record.batchCode}
             </div>
           </>
@@ -227,7 +227,7 @@ function ReminderBatchesTable({
                 {record.user}
               </div>
             </div>
-            <div style={{ ...stackRow2, color: "#8c8c8c" }}>
+            <div style={{ ...stackRow2, color: "var(--theme-text-muted)" }}>
               {formatDateDdMmYyyy(record.date)}
             </div>
           </div>
@@ -264,7 +264,7 @@ function ReminderBatchesTable({
                   {grand != null ? formatCount(grand) : "—"}
                 </div>
               </div>
-              <div style={{ ...stackRow2, color: "#8c8c8c" }}>
+              <div style={{ ...stackRow2, color: "var(--theme-text-muted)" }}>
                 R1 ({r1}) R2 ({r2}) R3 ({r3})
               </div>
             </div>
@@ -306,7 +306,7 @@ function ReminderBatchesTable({
                   />
                 ))}
               </div>
-              <div style={{ ...stackRow2, color: "#8c8c8c" }}>
+              <div style={{ ...stackRow2, color: "var(--theme-text-muted)" }}>
                 {keys.map((k, i) => perfSecondaryLabel(k, perfs[i])).join(" ")}
               </div>
             </div>
@@ -446,17 +446,17 @@ function ReminderBatchesTable({
                   style={{
                     cursor: "pointer",
                     fontSize: "14px",
-                    color: "#215e97",
+                    color: "var(--app-brand-primary)",
                     transition: "color 0.3s ease",
                     marginLeft: "4px",
                   }}
                   onClick={() => window.location.reload()}
                   title="Refresh"
                   onMouseEnter={(e) => {
-                    e.currentTarget.style.color = "#1890ff";
+                    e.currentTarget.style.color = "var(--app-brand-accent)";
                   }}
                   onMouseLeave={(e) => {
-                    e.currentTarget.style.color = "#215e97";
+                    e.currentTarget.style.color = "var(--app-brand-primary)";
                   }}
                 />
               </span>

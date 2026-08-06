@@ -7,16 +7,57 @@
 
 /* Legacy CSS Variables - Maintained for backward compatibility */
 :root {
-  --mainBlue: #215e97;
-  --second: #c97a2f;
+  --mainBlue: var(--theme-color-primary, var(--primary-color, #215e97));
+  --second: var(--theme-color-secondary, var(--secoundry-color, #475569));
   /*#ad8135 */
-  --FontsColor: #123c63;
-  --borderColor: #d9d9d9;
+  --FontsColor: color-mix(in srgb, var(--theme-color-primary, var(--primary-color, #215e97)) 72%, #111827);
+  --borderColor: var(--theme-border, color-mix(in srgb, var(--primary-color, #215e97) 12%, #d9d9d9));
   --fontFamily: "Roboto", sans-serif;
-  --labelColor: #393b3d;
-  --table-row: #fafafa;
-  --btn-hover: #dcdfe4;
-  --gray: rgba(9, 30, 66, 0.04);
+  --labelColor: var(--theme-text, color-mix(in srgb, var(--primary-color, #215e97) 72%, #111827));
+  --table-row: color-mix(in srgb, var(--theme-color-surface, var(--secoundry-bg-color, #eef2f6)) 22%, #ffffff);
+  --btn-hover: color-mix(in srgb, var(--theme-color-surface, var(--secoundry-bg-color, #eef2f6)) 68%, #ffffff);
+  --app-table-surface-bg: #ffffff;
+  --app-table-row-alt-bg: color-mix(in srgb, var(--theme-color-surface, var(--secoundry-bg-color, #eef2f6)) 30%, #ffffff);
+  --app-table-border: color-mix(in srgb, var(--theme-color-primary, var(--primary-color, #215e97)) 10%, #dce4ee);
+  --app-table-header-light-bg: color-mix(in srgb, var(--theme-color-surface, var(--secoundry-bg-color, #eef2f6)) 68%, #ffffff);
+  --app-table-header-text: var(--theme-color-primary, var(--primary-color, #215e97));
+  --app-table-body-text: color-mix(in srgb, var(--theme-color-primary, var(--primary-color, #215e97)) 30%, #26323f);
+  --app-table-muted-text: var(--theme-text-muted, color-mix(in srgb, var(--primary-color, #215e97) 38%, #64748b));
+  --gray: color-mix(in srgb, var(--theme-color-surface, var(--secoundry-bg-color, #eef2f6)) 20%, transparent);
+  --app-brand-primary: var(--theme-color-primary, var(--primary-color, #215e97));
+  --app-brand-secondary: var(--theme-color-secondary, var(--secoundry-color, #475569));
+  --app-brand-accent: var(--theme-color-accent, var(--accent-color, #0d9488));
+  --app-brand-bg: var(--theme-color-surface, var(--secoundry-bg-color, #eef2f6));
+  --app-shell-gradient: linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--app-brand-primary) 92%, #061824) 0%,
+    color-mix(in srgb, var(--app-brand-accent) 24%, var(--app-brand-primary)) 58%,
+    color-mix(in srgb, var(--app-brand-secondary) 28%, var(--app-brand-primary)) 100%
+  );
+  --app-sidebar-gradient: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--app-brand-primary) 88%, #071827) 0%,
+    color-mix(in srgb, var(--app-brand-accent) 18%, var(--app-brand-primary)) 52%,
+    color-mix(in srgb, var(--app-brand-primary) 72%, #061824) 100%
+  );
+  --app-table-header-bg: color-mix(in srgb, var(--app-brand-primary) 86%, #0f172a);
+  --app-selected-bg: color-mix(in srgb, var(--app-brand-bg) 78%, #ffffff);
+  --app-selected-border: color-mix(in srgb, var(--app-brand-secondary) 35%, transparent);
+  --app-brand-shadow: 0 10px 28px color-mix(in srgb, var(--app-brand-primary) 18%, transparent);
+  --app-button-bg: var(--app-brand-primary);
+  --app-button-bg-hover: color-mix(in srgb, var(--app-brand-primary) 84%, #000000);
+  --app-button-bg-soft: color-mix(in srgb, var(--app-brand-primary) 10%, #ffffff);
+  --app-button-border-soft: color-mix(in srgb, var(--app-brand-primary) 26%, #d9d9d9);
+  --app-button-focus-ring: 0 0 0 2px color-mix(in srgb, var(--app-brand-primary) 20%, transparent);
+  --app-control-surface: color-mix(in srgb, var(--app-brand-bg) 18%, #ffffff);
+  --app-control-surface-hover: color-mix(in srgb, var(--app-brand-bg) 34%, #ffffff);
+  --app-control-border: color-mix(in srgb, var(--app-brand-primary) 14%, #d9d9d9);
+  --app-detail-page-bg: color-mix(
+    in srgb,
+    var(--theme-color-surface, var(--secoundry-bg-color, #eef2f6)) 18%,
+    #ffffff
+  );
+  --app-detail-page-border: var(--theme-border, color-mix(in srgb, var(--primary-color, #215e97) 12%, #d9d9d9));
 }
 
 .ql-container.ql-snow {
@@ -162,7 +203,9 @@ textarea:disabled {
 }
 
 .ant-modal-confirm .ant-btn-primary.custom-confirm-ok-button {
-  background-color: var(--FontsColor) !important;
+  background-color: var(--app-button-bg) !important;
+  border-color: var(--app-button-bg) !important;
+  color: var(--brand-on-primary, #ffffff) !important;
 }
 
 .bordr-less {
@@ -173,7 +216,7 @@ textarea:disabled {
 
 /* Center the tick in the Ant Design checkbox */
 .row {
-  /* --bs-gutter-x: 0rem !important; 
+  /* --bs-gutter-x: 0rem !important;
   --bs-gutter-y: 0rem !important;  */
 }
 
@@ -198,15 +241,15 @@ textarea:focus,
 .ant-input:focus,
 .ant-textarea:focus,
 .form-input:focus {
-  background-color: #f0f8ff;
-  border-color: #40a9ff !important;
+  background-color: var(--theme-focus-bg);
+  border-color: var(--app-brand-accent) !important;
   outline: none;
 }
 
 /* Ant Design wrappers: one focus ring, inner input transparent to avoid double box */
 .ant-input-affix-wrapper-focused {
-  background-color: #f0f8ff !important;
-  border-color: #40a9ff !important;
+  background-color: var(--theme-focus-bg) !important;
+  border-color: var(--app-brand-accent) !important;
   outline: none;
   box-shadow: none !important;
 }
@@ -217,13 +260,13 @@ textarea:focus,
 }
 
 .ant-select-focused .ant-select-selector {
-  background-color: #f0f8ff !important;
-  border-color: #40a9ff !important;
+  background-color: var(--theme-focus-bg) !important;
+  border-color: var(--app-brand-accent) !important;
   outline: none;
 }
 .ant-picker-focused {
-  background-color: #f0f8ff !important;
-  border-color: #40a9ff !important;
+  background-color: var(--theme-focus-bg) !important;
+  border-color: var(--app-brand-accent) !important;
   outline: none;
 }
 
@@ -264,31 +307,50 @@ textarea:focus,
   /* Change this value to your desired margin */
 }
 
+.ant-checkbox .ant-checkbox-inner {
+  background-color: #ffffff;
+  border-color: color-mix(in srgb, var(--app-brand-primary, #215e97) 24%, #cbd5e1);
+  border-radius: 5px;
+  box-shadow: inset 0 1px 1px rgba(15, 23, 42, 0.04);
+  transition:
+    background-color 0.15s ease,
+    border-color 0.15s ease,
+    box-shadow 0.15s ease;
+}
+
+.ant-checkbox-wrapper:hover .ant-checkbox-inner,
+.ant-checkbox:hover .ant-checkbox-inner {
+  border-color: color-mix(in srgb, var(--app-brand-primary, #215e97) 58%, #93c5fd);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--app-brand-primary, #215e97) 10%, transparent);
+}
+
 .ant-select-selector {
   border-radius: 3px !important;
   /* Set your desired border-radius */
 }
 
 .ant-checkbox-checked .ant-checkbox-inner {
-  background-color: var(--secoundry-color) !important;
-  /* Set your desired color */
-  border-color: var(--secoundry-color) !important;
-  /* Match border to background */
+  background-color: color-mix(in srgb, var(--app-brand-primary, #215e97) 76%, #38bdf8) !important;
+  border-color: color-mix(in srgb, var(--app-brand-primary, #215e97) 72%, #38bdf8) !important;
+  box-shadow: 0 2px 5px color-mix(in srgb, var(--app-brand-primary, #215e97) 18%, transparent);
 }
 
 .ant-checkbox-checked .ant-checkbox-inner::after {
-  border-color: white;
-  /* Optional: Change the checkmark color */
+  border-color: #ffffff !important;
+}
+
+.ant-checkbox-input:focus-visible + .ant-checkbox-inner {
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--app-brand-primary, #215e97) 16%, transparent);
 }
 
 .consent-checkbox-indeterminate .ant-checkbox-inner {
-  background-color: rgba(201, 122, 47, 0.3) !important;
-  border-color: var(--secoundry-color) !important;
+  background-color: color-mix(in srgb, var(--app-brand-primary, #215e97) 18%, #ffffff) !important;
+  border-color: color-mix(in srgb, var(--app-brand-primary, #215e97) 56%, #93c5fd) !important;
 }
 
 .consent-checkbox-indeterminate .ant-checkbox-inner::after {
-  border-color: var(--secoundry-color) !important;
-  background-color: var(--secoundry-color) !important;
+  border-color: color-mix(in srgb, var(--app-brand-primary, #215e97) 72%, #38bdf8) !important;
+  background-color: color-mix(in srgb, var(--app-brand-primary, #215e97) 72%, #38bdf8) !important;
 }
 
 .ant-table-cell-fix-left {
@@ -336,7 +398,7 @@ select {
 }
 
 .ant-input-focused {
-  background-color: #f0f8ff;
+  background-color: var(--theme-focus-bg);
 }
 
 .ant-select-dropdown {
@@ -346,42 +408,53 @@ select {
 
 .butn {
   border-radius: 3px !important;
-  border: none !important;
+  border: 1px solid transparent !important;
   font-weight: 500;
   font-size: 14px !important;
 }
 
 .primary-btn {
-  background-color: var(--mainBlue);
-  color: white;
+  background-color: var(--app-button-bg) !important;
+  border-color: var(--app-button-bg) !important;
+  color: var(--brand-on-primary, #ffffff) !important;
   font-weight: 400;
   transition: all 0.3s ease;
 }
 
 .primary-btn:hover:not(:disabled) {
-  background-color: #3a7bb8 !important;
-  /* Lighter shade of mainBlue */
-  color: white !important;
+  background-color: var(--app-button-bg-hover) !important;
+  border-color: var(--app-button-bg-hover) !important;
+  color: var(--brand-on-primary, #ffffff) !important;
 }
 
 .primary-btn:disabled {
-  background-color: rgba(33, 94, 151, 0.4) !important;
+  background-color: color-mix(in srgb, var(--app-brand-primary) 40%, transparent) !important;
   /* Light transparent version of mainBlue */
-  color: rgb(255, 255, 255) !important;
+  color: var(--brand-on-primary, #ffffff) !important;
   cursor: not-allowed;
   border: none !important;
 }
 
 .primary-btn:focus {
-  background-color: var(--mainBlue) !important;
-  color: white !important;
-  box-shadow: 0 0 0 2px rgba(33, 94, 151, 0.2) !important;
+  background-color: var(--app-button-bg) !important;
+  border-color: var(--app-button-bg) !important;
+  color: var(--brand-on-primary, #ffffff) !important;
+  box-shadow: var(--app-button-focus-ring) !important;
 }
 
 .secoundry-btn {
-  background-color: var(--gray);
-  color: var(--mainBlue);
+  background-color: var(--app-button-bg-soft) !important;
+  border-color: var(--app-button-border-soft) !important;
+  color: var(--app-brand-primary) !important;
   font-weight: 400;
+}
+
+.secoundry-btn:hover:not(:disabled),
+.secoundry-btn:focus {
+  background-color: color-mix(in srgb, var(--app-brand-primary) 16%, #ffffff) !important;
+  border-color: var(--app-brand-primary) !important;
+  color: var(--app-brand-primary) !important;
+  box-shadow: var(--app-button-focus-ring) !important;
 }
 
 .top-search .ant-input-search-button {
@@ -389,6 +462,90 @@ select {
   border-bottom-right-radius: 4px !important;
   border-left: none !important;
   margin-inline-end: -1px;
+}
+
+.ant-btn {
+  border-radius: 3px !important;
+  font-weight: 500;
+}
+
+.ant-btn-primary:not(.ant-btn-dangerous):not([disabled]):not(:disabled),
+.ant-btn-primary.custom-confirm-ok-button:not([disabled]):not(:disabled),
+.butn.primary-btn:not([disabled]):not(:disabled),
+.theme-btn.theme-btn-primary:not([disabled]):not(:disabled),
+.toolbar-filter-action--primary.ant-btn:not([disabled]):not(:disabled),
+.custom-primary-btn:not([disabled]):not(:disabled),
+.create-button:not([disabled]):not(:disabled) {
+  background: var(--app-button-bg) !important;
+  border-color: var(--app-button-bg) !important;
+  color: var(--brand-on-primary, #ffffff) !important;
+  box-shadow: 0 2px 6px color-mix(in srgb, var(--app-brand-primary) 16%, transparent) !important;
+}
+
+.ant-btn-primary:not(.ant-btn-dangerous):not([disabled]):not(:disabled):hover,
+.ant-btn-primary:not(.ant-btn-dangerous):not([disabled]):not(:disabled):focus,
+.ant-btn-primary.custom-confirm-ok-button:not([disabled]):not(:disabled):hover,
+.ant-btn-primary.custom-confirm-ok-button:not([disabled]):not(:disabled):focus,
+.butn.primary-btn:not([disabled]):not(:disabled):hover,
+.butn.primary-btn:not([disabled]):not(:disabled):focus,
+.theme-btn.theme-btn-primary:not([disabled]):not(:disabled):hover,
+.theme-btn.theme-btn-primary:not([disabled]):not(:disabled):focus,
+.toolbar-filter-action--primary.ant-btn:not([disabled]):not(:disabled):hover,
+.toolbar-filter-action--primary.ant-btn:not([disabled]):not(:disabled):focus,
+.custom-primary-btn:not([disabled]):not(:disabled):hover,
+.custom-primary-btn:not([disabled]):not(:disabled):focus,
+.create-button:not([disabled]):not(:disabled):hover,
+.create-button:not([disabled]):not(:disabled):focus {
+  background: var(--app-button-bg-hover) !important;
+  border-color: var(--app-button-bg-hover) !important;
+  color: var(--brand-on-primary, #ffffff) !important;
+  box-shadow: var(--app-button-focus-ring) !important;
+}
+
+.ant-btn-default:not(.ant-btn-dangerous):not([disabled]):not(:disabled):not(.primary-btn):not(.create-button):not(.custom-primary-btn):not(.theme-btn-primary):not(.toolbar-filter-action--primary):not([style*="background"]),
+.ant-btn-dashed:not(.ant-btn-dangerous):not([disabled]):not(:disabled):not(.primary-btn):not(.create-button):not(.custom-primary-btn):not(.theme-btn-primary):not(.toolbar-filter-action--primary):not([style*="background"]),
+.ant-btn-background-ghost:not(.ant-btn-dangerous):not([disabled]):not(:disabled):not(.primary-btn):not(.create-button):not(.custom-primary-btn):not(.theme-btn-primary):not(.toolbar-filter-action--primary):not([style*="background"]),
+.butn.secoundry-btn:not([disabled]):not(:disabled),
+.butn.gray-btn:not([disabled]):not(:disabled),
+.theme-btn.theme-btn-secondary:not([disabled]):not(:disabled),
+.custom-secondary-btn:not([disabled]):not(:disabled),
+.cancel-button:not([disabled]):not(:disabled) {
+  border-color: var(--app-control-border) !important;
+  color: var(--app-brand-primary) !important;
+  box-shadow: none !important;
+}
+
+.ant-btn-default:not(.ant-btn-dangerous):not([disabled]):not(:disabled):not(.primary-btn):not(.create-button):not(.custom-primary-btn):not(.theme-btn-primary):not(.toolbar-filter-action--primary):not([style*="background"]):hover,
+.ant-btn-default:not(.ant-btn-dangerous):not([disabled]):not(:disabled):not(.primary-btn):not(.create-button):not(.custom-primary-btn):not(.theme-btn-primary):not(.toolbar-filter-action--primary):not([style*="background"]):focus,
+.ant-btn-dashed:not(.ant-btn-dangerous):not([disabled]):not(:disabled):not(.primary-btn):not(.create-button):not(.custom-primary-btn):not(.theme-btn-primary):not(.toolbar-filter-action--primary):not([style*="background"]):hover,
+.ant-btn-dashed:not(.ant-btn-dangerous):not([disabled]):not(:disabled):not(.primary-btn):not(.create-button):not(.custom-primary-btn):not(.theme-btn-primary):not(.toolbar-filter-action--primary):not([style*="background"]):focus,
+.ant-btn-background-ghost:not(.ant-btn-dangerous):not([disabled]):not(:disabled):not(.primary-btn):not(.create-button):not(.custom-primary-btn):not(.theme-btn-primary):not(.toolbar-filter-action--primary):not([style*="background"]):hover,
+.ant-btn-background-ghost:not(.ant-btn-dangerous):not([disabled]):not(:disabled):not(.primary-btn):not(.create-button):not(.custom-primary-btn):not(.theme-btn-primary):not(.toolbar-filter-action--primary):not([style*="background"]):focus,
+.butn.secoundry-btn:not([disabled]):not(:disabled):hover,
+.butn.secoundry-btn:not([disabled]):not(:disabled):focus,
+.butn.gray-btn:not([disabled]):not(:disabled):hover,
+.butn.gray-btn:not([disabled]):not(:disabled):focus,
+.theme-btn.theme-btn-secondary:not([disabled]):not(:disabled):hover,
+.theme-btn.theme-btn-secondary:not([disabled]):not(:disabled):focus,
+.custom-secondary-btn:not([disabled]):not(:disabled):hover,
+.custom-secondary-btn:not([disabled]):not(:disabled):focus,
+.cancel-button:not([disabled]):not(:disabled):hover,
+.cancel-button:not([disabled]):not(:disabled):focus {
+  background: var(--app-control-surface-hover) !important;
+  border-color: var(--app-brand-primary) !important;
+  color: var(--app-brand-primary) !important;
+  box-shadow: none !important;
+}
+
+.ant-btn-link:not(.ant-btn-dangerous):not([disabled]):not(:disabled),
+.ant-btn-text:not(.ant-btn-dangerous):not([disabled]):not(:disabled) {
+  color: var(--app-brand-primary) !important;
+}
+
+.ant-btn-link:not(.ant-btn-dangerous):not([disabled]):not(:disabled):hover,
+.ant-btn-text:not(.ant-btn-dangerous):not([disabled]):not(:disabled):hover {
+  color: var(--app-button-bg-hover) !important;
+  background: var(--app-button-bg-soft) !important;
 }
 
 body {
@@ -439,7 +596,141 @@ body {
 }
 
 .bg {
-  background-color: var(--mainBlue);
+  background: var(--app-shell-gradient);
+}
+
+.Header-border {
+  border-bottom: 1px solid color-mix(in srgb, var(--app-brand-primary) 22%, #ffffff) !important;
+  box-shadow: 0 8px 20px color-mix(in srgb, var(--app-brand-primary) 18%, transparent);
+}
+
+.app-top-nav {
+  box-sizing: border-box;
+  min-height: 56px;
+  padding: 0 22px;
+  width: 100vw;
+  /* Sit flush against the sidebar/content below — no divider line or drop shadow */
+  border-bottom: none !important;
+  box-shadow: none !important;
+}
+
+.app-top-nav__inner {
+  align-items: center;
+  display: grid;
+  gap: 20px;
+  grid-template-columns: minmax(240px, 1fr) minmax(320px, 520px) minmax(180px, 1fr);
+  min-height: 56px;
+  width: 100%;
+}
+
+.app-top-nav__brand,
+.app-top-nav__actions {
+  align-items: center;
+  display: flex;
+  min-width: 0;
+}
+
+.app-top-nav__brand {
+  gap: 10px;
+}
+
+.app-top-nav__actions {
+  gap: 16px;
+  justify-content: flex-end;
+}
+
+.app-top-nav__search {
+  min-width: 0;
+  width: 100%;
+}
+
+.tenant-header-brand-lockup {
+  align-items: center;
+  display: inline-flex;
+  gap: 10px;
+  min-width: 0;
+}
+
+.tenant-header-logo-frame {
+  align-items: center;
+  display: inline-flex;
+  height: 36px;
+  justify-content: center;
+  overflow: hidden;
+  max-width: 160px;
+  min-width: 0;
+}
+
+.tenant-header-logo {
+  display: block;
+  height: 34px;
+  max-width: 160px;
+  object-fit: contain;
+  width: auto;
+}
+
+.tenant-header-title {
+  color: var(--brand-on-primary, #ffffff);
+  display: block;
+  font-size: 15px;
+  font-weight: 700;
+  line-height: 1.2;
+  max-width: 220px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.app-top-nav__search .ant-select,
+.app-top-nav__search .ant-select-auto-complete,
+.app-top-nav__search .ant-select-selector {
+  width: 100% !important;
+}
+
+.app-top-nav__search .ant-input-affix-wrapper {
+  align-items: center;
+  background: rgba(255, 255, 255, 0.96) !important;
+  border: 1px solid rgba(255, 255, 255, 0.68) !important;
+  border-radius: 10px !important;
+  box-shadow:
+    0 8px 18px color-mix(in srgb, var(--app-brand-primary) 16%, transparent),
+    inset 0 1px 0 rgba(255, 255, 255, 0.9);
+  height: 36px !important;
+  padding: 0 12px !important;
+  transition: border-color 0.16s ease, box-shadow 0.16s ease, background 0.16s ease;
+}
+
+.app-top-nav__search .ant-input-affix-wrapper:hover,
+.app-top-nav__search .ant-input-affix-wrapper-focused {
+  background: #ffffff !important;
+  border-color: rgba(255, 255, 255, 0.92) !important;
+  box-shadow:
+    0 10px 22px color-mix(in srgb, var(--app-brand-primary) 20%, transparent),
+    0 0 0 3px rgba(255, 255, 255, 0.16);
+}
+
+.app-top-nav__search .ant-input-affix-wrapper .ant-input {
+  color: #203040;
+  font-size: 13px !important;
+  font-weight: 500;
+  line-height: 34px !important;
+}
+
+.app-top-nav__search .ant-input-affix-wrapper .ant-input::placeholder {
+  color: #6a7b90;
+  font-weight: 500;
+}
+
+.app-top-nav__search .ant-input-prefix {
+  color: #6a7b90;
+  margin-inline-end: 10px;
+}
+
+.app-top-nav__search .ant-input-suffix .ant-btn {
+  background: transparent !important;
+  border: 0 !important;
+  color: #66788d !important;
+  box-shadow: none !important;
 }
 
 .top-search input {
@@ -451,12 +742,20 @@ body {
 }
 
 .details-header {
+  border-bottom: none !important;
+  box-shadow: none !important;
   padding-top: 10px;
-  padding-left: 30px;
-  padding-right: 30px;
+  /* Horizontal padding is provided by the HeaderDetails root so breadcrumb,
+     title, search and Filter all share one left origin (aligned to the table) */
+  padding-left: 0;
+  padding-right: 0;
   width: 100%;
   min-width: 0;
   box-sizing: border-box;
+}
+
+.details-header.Header-border {
+  box-shadow: none !important;
 }
 
 .details-header>div {
@@ -497,6 +796,13 @@ body {
   overflow: auto;
 }
 
+/* Strip the outer left/top border on bordered tables so they match the
+   borderless look of the /Applications table, app-wide. */
+.ant-table-wrapper .ant-table.ant-table-bordered > .ant-table-container {
+  border-inline-start: none !important;
+  border-top: none !important;
+}
+
 .ant-table-header {
   flex: 0 0 auto;
 }
@@ -526,6 +832,13 @@ body {
   display: none !important;
   height: 0 !important;
   line-height: 0 !important;
+}
+
+/* Single clean table frame — replaces AntD `bordered` doubled borders */
+.common-table .ant-table {
+  border: 1px solid var(--app-table-border, #e8edf2);
+  border-radius: 8px;
+  overflow: hidden;
 }
 
 .applications-table .ant-table {
@@ -653,7 +966,7 @@ body {
   display: flex;
   justify-content: center !important;
   align-items: center !important;
-  background-color: #e6f7ff;
+  background-color: var(--app-brand-bg);
   color: var(--second) !important;
   padding: 0.6rem;
   border-radius: 7%;
@@ -701,7 +1014,7 @@ body {
 }
 
 .ant-menu {
-  background-color: var(--mainBlue) !important;
+  background: var(--app-sidebar-gradient) !important;
 }
 
 :where(.css-dev-only-do-not-override-1uq9j6g).ant-menu-dark .ant-menu-item-selected,
@@ -762,7 +1075,7 @@ body {
 }
 
 .custom-highlight {
-  background-color: #1677ff !important;
+  background-color: var(--app-brand-primary) !important;
   color: white !important;
 }
 
@@ -789,10 +1102,54 @@ body {
   font-weight: 500;
   margin: 0px;
   font-family: var(--fontFamily);
-  color: var(--labelColor) !important;
+  color: color-mix(in srgb, var(--app-brand-primary) 70%, #334155) !important;
   cursor: pointer;
-  padding-bottom: 5px;
+  padding-bottom: 2px;
   width: auto;
+}
+
+.bred-cram-main .ant-breadcrumb {
+  align-items: center;
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+  display: inline-flex;
+  min-height: 28px;
+  padding: 0;
+}
+
+.bred-cram-main .ant-breadcrumb a,
+.bred-cram-main .ant-breadcrumb-link,
+.bred-cram-main .ant-breadcrumb-overlay-link {
+  color: color-mix(in srgb, var(--app-brand-primary) 78%, #1f2937) !important;
+  font-weight: 650;
+}
+
+.bred-cram-main .ant-breadcrumb-link > span,
+.bred-cram-main .ant-breadcrumb-link > span > span {
+  align-items: center;
+  display: inline-flex !important;
+  gap: 5px;
+}
+
+.bred-cram-main .ant-breadcrumb-link > span > span:first-child {
+  align-items: center;
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+  color: var(--app-brand-primary);
+  display: inline-flex;
+  height: auto;
+  justify-content: center;
+  line-height: 1;
+  margin-right: 2px !important;
+  width: auto;
+}
+
+.bred-cram-main .ant-breadcrumb-separator {
+  color: color-mix(in srgb, var(--app-brand-primary) 45%, #94a3b8) !important;
+  font-weight: 700;
 }
 
 .title-main {
@@ -848,7 +1205,7 @@ body {
 
 .search-fliters .ant-select .ant-select-selector:hover {
   background-color: #f5f5f5;
-  border-color: #40a9ff;
+  border-color: var(--app-brand-accent);
   color: #333;
 }
 
@@ -865,8 +1222,8 @@ body {
 }
 
 :where(.css-dev-only-do-not-override-1uq9j6g).ant-pagination .ant-pagination-item-active {
-  background-color: #215e97 !important;
-  border-color: #215e97 !important;
+  background-color: var(--app-brand-primary) !important;
+  border-color: var(--app-brand-primary) !important;
 }
 
 :where(.css-dev-only-do-not-override-1uq9j6g).ant-pagination .ant-pagination-item-active a {
@@ -1041,10 +1398,10 @@ tr {
   box-shadow: none !important;
 }
 
-.ant-btn:focus,
-.ant-btn:active {
-  background-color: var(--btn-hover) !important;
-  border-color: none !important;
+.ant-btn:not(.ant-btn-dangerous):focus,
+.ant-btn:not(.ant-btn-dangerous):active {
+  border-color: var(--app-brand-primary) !important;
+  box-shadow: var(--app-button-focus-ring) !important;
 }
 
 .searchfilter- .ant-btn:focus,
@@ -1106,7 +1463,7 @@ tr {
 }
 
 .custom-select {
-  background-color: #215e97 !important;
+  background-color: var(--app-brand-primary) !important;
 }
 
 .hover-col:hover {
@@ -1115,7 +1472,7 @@ tr {
 }
 
 .drawer-tbl .ant-table-thead>tr>th {
-  background-color: #45669d !important;
+  background-color: var(--app-table-header-bg) !important;
   color: #ffffff !important;
   font-weight: bold;
   padding-top: 4px !important;
@@ -1139,7 +1496,7 @@ tr {
 }
 
 .my-btn {
-  color: var(--FontsColor);
+  color: var(--app-brand-primary);
   font-size: 16px;
   font-family: var(--fontFamily);
   border-radius: 3px !important;
@@ -1153,7 +1510,7 @@ tr {
 }
 
 .btn-border {
-  border: 1px solid #c0b9e7 !important;
+  border: 1px solid var(--app-button-border-soft) !important;
 }
 
 .activ-link {}
@@ -1313,10 +1670,12 @@ th.ant-table-cell.ant-table-cell-fix-left.ant-table-cell-fix-left-last {
 }
 
 .common-table .ant-table-thead>tr>th {
-  background-color: #45669d;
-  color: white !important;
+  background-color: var(--app-table-header-light-bg) !important;
+  color: var(--app-table-header-text) !important;
   font-family: var(--fontFamily) !important;
-  font-weight: 480;
+  font-weight: 500;
+  text-transform: capitalize;
+  letter-spacing: 0;
 }
 
 /* Member finance ledger — memo column width + resize grip */
@@ -1414,24 +1773,218 @@ th.ant-table-cell.ant-table-cell-fix-left.ant-table-cell-fix-left-last {
 }
 
 .common-table table tr th {
-  background-color: var(--mainBlue) !important;
-  color: white;
-  padding: 0 10px;
-  font-weight: 600;
+  background-color: var(--app-table-header-light-bg) !important;
+  color: var(--app-table-header-text) !important;
+  padding: 0 18px;
+  font-weight: 700;
   position: sticky !important;
   z-index: 10;
   top: 0;
-  height: 40px !important;
+  height: 52px !important;
   /* normal line-height so filter/sorter controls align; body cells keep numeric line-height in Utilites */
   line-height: normal !important;
+  border-bottom: 1px solid var(--app-table-border) !important;
 }
 
 .common-table table tr td {
-  padding: 0 10px;
+  padding: 0 18px;
   font-weight: 400;
-  color: var(--mainBlue) !important;
-  height: 40px !important;
-  line-height: 40px !important;
+  color: var(--app-table-body-text) !important;
+  height: 74px !important;
+  line-height: 74px !important;
+  border-bottom: 1px solid color-mix(in srgb, var(--app-table-border) 58%, #ffffff) !important;
+}
+
+.common-table {
+  background: transparent;
+}
+
+.common-table .ant-table-wrapper {
+  background: var(--app-table-surface-bg);
+  border: none !important;
+  border-radius: 16px 16px 0 0 !important;
+  box-shadow: 0 8px 22px color-mix(in srgb, var(--app-brand-primary) 8%, transparent);
+  overflow: hidden !important;
+}
+
+.common-table .ant-table {
+  background: var(--app-table-surface-bg);
+  border: none !important;
+  border-radius: 16px 16px 0 0 !important;
+}
+
+.common-table .ant-table-container,
+.common-table .ant-table-header {
+  border-radius: 16px 16px 0 0 !important;
+}
+
+.common-table .ant-table-thead>tr>th:first-child {
+  border-start-start-radius: 16px !important;
+}
+
+.common-table .ant-table-thead>tr>th:last-child {
+  border-start-end-radius: 16px !important;
+}
+
+.common-table .ant-table-cell {
+  font-size: 14px !important;
+}
+
+.common-table .ant-table-column-sorter,
+.common-table .ant-table-filter-trigger {
+  background: transparent !important;
+  color: var(--app-table-header-text) !important;
+}
+
+.common-table .ant-table-filter-trigger:hover,
+.common-table .ant-table-filter-trigger.active {
+  background: color-mix(in srgb, var(--app-brand-primary) 12%, transparent) !important;
+  color: var(--app-table-header-text) !important;
+}
+
+.common-table .ant-table-thead .ant-table-selection-column,
+.common-table .ant-table-thead .ant-table-cell-fix-left,
+.common-table .ant-table-thead .ant-table-cell-fix-right {
+  background-color: var(--app-table-header-light-bg) !important;
+  color: var(--app-table-header-text) !important;
+}
+
+.common-table .ant-table-thead .ant-table-selection-column .ant-checkbox-wrapper,
+.common-table .ant-table-thead .ant-table-selection-column .ant-checkbox,
+.common-table .ant-table-thead .ant-table-selection-column .ant-checkbox-input {
+  background-color: transparent !important;
+}
+
+.common-table .ant-table-thead .ant-table-selection-column .ant-checkbox-wrapper,
+.common-table .ant-table-thead .ant-table-selection-column .ant-checkbox {
+  height: auto !important;
+  width: auto !important;
+}
+
+.common-table .ant-table-thead .ant-table-selection-column .ant-checkbox-inner {
+  background-color: #ffffff !important;
+  border-color: color-mix(in srgb, var(--app-brand-primary) 36%, #cbd5e1) !important;
+}
+
+.common-table .ant-table-tbody>tr:last-child>td {
+  border-bottom: none !important;
+}
+
+.common-table .ant-table-tbody>tr.ant-table-measure-row>td {
+  height: 0 !important;
+  line-height: 0 !important;
+  padding: 0 !important;
+}
+
+.common-table .tbl-footer {
+  justify-content: stretch !important;
+  margin-top: 0 !important;
+  padding: 18px 22px !important;
+  background: var(--app-table-surface-bg) !important;
+  border: none !important;
+  border-radius: 0 0 16px 16px !important;
+  box-shadow: 0 8px 22px color-mix(in srgb, var(--app-brand-primary) 8%, transparent);
+}
+
+.common-table .tbl-footer .unified-pagination-container {
+  justify-content: stretch !important;
+  width: 100%;
+}
+
+.common-table .tbl-footer .ant-pagination {
+  align-items: center;
+  display: flex !important;
+  gap: 8px;
+  margin: 0 !important;
+  width: 100%;
+}
+
+.common-table .tbl-footer .ant-pagination-total-text {
+  color: var(--app-table-muted-text) !important;
+  font-weight: 500;
+  margin-inline-end: auto !important;
+}
+
+.common-table .tbl-footer .ant-pagination-prev,
+.common-table .tbl-footer .ant-pagination-next,
+.common-table .tbl-footer .ant-pagination-item {
+  align-items: center;
+  border: none !important;
+  border-radius: 8px !important;
+  display: inline-flex;
+  height: 34px !important;
+  justify-content: center;
+  line-height: 34px !important;
+  margin-inline-end: 0 !important;
+  min-width: 34px !important;
+}
+
+.common-table .tbl-footer .ant-pagination-prev .ant-pagination-item-link,
+.common-table .tbl-footer .ant-pagination-next .ant-pagination-item-link {
+  align-items: center;
+  background: transparent !important;
+  border: none !important;
+  color: var(--app-table-muted-text) !important;
+  display: inline-flex;
+  height: 34px !important;
+  justify-content: center;
+  min-width: 28px !important;
+}
+
+.common-table .tbl-footer .ant-pagination-prev:hover .ant-pagination-item-link,
+.common-table .tbl-footer .ant-pagination-next:hover .ant-pagination-item-link {
+  background: transparent !important;
+  color: var(--app-table-header-text) !important;
+}
+
+.common-table .tbl-footer .ant-pagination-item {
+  background: transparent !important;
+}
+
+.common-table .tbl-footer .ant-pagination-item a {
+  color: var(--app-table-header-text) !important;
+  font-weight: 600;
+}
+
+.common-table .tbl-footer .ant-pagination-item-active {
+  background-color: var(--app-brand-primary) !important;
+  border-color: var(--app-brand-primary) !important;
+  box-shadow: 0 5px 12px color-mix(in srgb, var(--app-brand-primary) 22%, transparent);
+}
+
+.common-table .tbl-footer .ant-pagination-item-active a {
+  color: #ffffff !important;
+}
+
+.common-table .tbl-footer .ant-pagination-options {
+  margin-inline-start: 10px !important;
+}
+
+.common-table .tbl-footer .ant-pagination-options-size-changer {
+  margin-inline-start: 0 !important;
+}
+
+.common-table .tbl-footer .ant-select-selector {
+  align-items: center;
+  background: #ffffff !important;
+  border: 1px solid var(--app-table-border) !important;
+  border-radius: 10px !important;
+  box-shadow: 0 2px 8px color-mix(in srgb, var(--app-brand-primary) 5%, transparent);
+  color: var(--app-table-body-text) !important;
+  display: flex;
+  font-weight: 500;
+  height: 34px !important;
+  padding: 0 12px !important;
+}
+
+.common-table .tbl-footer .ant-select-selection-item {
+  color: var(--app-table-body-text) !important;
+  font-weight: 500;
+  line-height: 32px !important;
+}
+
+.common-table .tbl-footer .ant-select-arrow {
+  color: var(--app-table-body-text) !important;
 }
 
 /* Global even/odd row styling for all tables */
@@ -1623,7 +2176,7 @@ table tbody tr:nth-child(odd):hover td {
 }
 
 .tbl-footer {
-  background-color: #fafafa !important;
+  background-color: color-mix(in srgb, var(--app-brand-bg) 28%, #ffffff) !important;
   border-top: none;
 }
 
@@ -1659,10 +2212,10 @@ table tbody tr:nth-child(odd):hover td {
   font-size: 14px !important;
 }
 
-/* Apply #215e97 color to all pagination components */
+/* Apply tenant primary color to all pagination components */
 .ant-pagination .ant-pagination-item-active {
-  background-color: #215e97 !important;
-  border-color: #215e97 !important;
+  background-color: var(--app-brand-primary) !important;
+  border-color: var(--app-brand-primary) !important;
 }
 
 .ant-pagination .ant-pagination-item-active a {
@@ -1670,46 +2223,46 @@ table tbody tr:nth-child(odd):hover td {
 }
 
 .ant-pagination .ant-pagination-item:hover {
-  border-color: #215e97 !important;
+  border-color: var(--app-brand-primary) !important;
 }
 
 .ant-pagination .ant-pagination-item:hover a {
-  color: #215e97 !important;
+  color: var(--app-brand-primary) !important;
 }
 
 .ant-pagination .ant-pagination-prev:hover .ant-pagination-item-link,
 .ant-pagination .ant-pagination-next:hover .ant-pagination-item-link {
-  border-color: #215e97 !important;
-  color: #215e97 !important;
+  border-color: var(--app-brand-primary) !important;
+  color: var(--app-brand-primary) !important;
 }
 
 .ant-pagination .ant-pagination-prev:focus .ant-pagination-item-link,
 .ant-pagination .ant-pagination-next:focus .ant-pagination-item-link {
-  border-color: #215e97 !important;
-  color: #215e97 !important;
+  border-color: var(--app-brand-primary) !important;
+  color: var(--app-brand-primary) !important;
 }
 
 .ant-pagination .ant-select:not(.ant-select-disabled):hover .ant-select-selector {
-  border-color: #215e97 !important;
+  border-color: var(--app-brand-primary) !important;
 }
 
 .ant-pagination .ant-select-focused .ant-select-selector {
-  border-color: #215e97 !important;
-  box-shadow: 0 0 0 2px rgba(33, 94, 151, 0.2) !important;
+  border-color: var(--app-brand-primary) !important;
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--app-brand-primary) 20%, transparent) !important;
 }
 
 .ant-pagination .ant-pagination-options .ant-select-item-option-selected:not(.ant-select-item-option-disabled) {
-  background-color: #215e97 !important;
+  background-color: var(--app-brand-primary) !important;
   color: white !important;
 }
 
 .ant-pagination .ant-pagination-options .ant-select-item-option:hover {
-  background-color: rgba(33, 94, 151, 0.1) !important;
+  background-color: color-mix(in srgb, var(--app-brand-primary) 10%, #ffffff) !important;
 }
 
 .unified-pagination-container .ant-pagination .ant-pagination-item-active {
-  background-color: #215e97 !important;
-  border-color: #215e97 !important;
+  background-color: var(--app-brand-primary) !important;
+  border-color: var(--app-brand-primary) !important;
 }
 
 .unified-pagination-container .ant-pagination .ant-pagination-item-active a {
@@ -1717,8 +2270,8 @@ table tbody tr:nth-child(odd):hover td {
 }
 
 .tbl-footer .ant-pagination .ant-pagination-item-active {
-  background-color: #215e97 !important;
-  border-color: #215e97 !important;
+  background-color: var(--app-brand-primary) !important;
+  border-color: var(--app-brand-primary) !important;
 }
 
 .tbl-footer .ant-pagination .ant-pagination-item-active a {
@@ -1805,7 +2358,7 @@ table tbody tr:nth-child(odd):hover td {
 
 /* claims table */
 .claims-table .ant-table-thead>tr>th {
-  background-color: #45669d;
+  background-color: var(--app-table-header-bg);
   color: white !important;
   font-family: var(--fontFamily) !important;
   font-weight: 480;
@@ -1838,7 +2391,7 @@ table tbody tr:nth-child(odd):hover td {
 }
 
 .heading-tbl .ant-table-thead>tr>th {
-  background-color: #45669d !important;
+  background-color: var(--app-table-header-bg) !important;
   color: white !important;
   font-family: var(--fontFamily) !important;
   font-weight: 400;
@@ -1916,9 +2469,9 @@ table tbody tr:nth-child(odd):hover td {
   transition: all 0.3s ease;
 }
 
-/* .form-input:hover, 
+/* .form-input:hover,
   .form-input:focus {
-    border-color: #40a9ff; 
+    border-color: var(--app-brand-accent);
     box-shadow: 0 0 0 2px rgba(24, 144, 255, 0.2);
   } */
 .form-checkbox {
@@ -1965,12 +2518,18 @@ table tbody tr:nth-child(odd):hover td {
 }
 
 .top-icon {
-  font-size: 20px !important;
-  margin-right: 1.25rem;
+  align-items: center;
+  border-radius: 8px;
   color: white !important;
   cursor: pointer;
-  transition: all 0.2s ease;
+  display: inline-flex;
+  font-size: 18px !important;
+  height: 32px;
+  justify-content: center;
+  margin-right: 0;
   stroke-width: 1.5;
+  transition: all 0.2s ease;
+  width: 32px;
 }
 
 .notification-bell-icon {
@@ -1980,18 +2539,42 @@ table tbody tr:nth-child(odd):hover td {
 .notification-bell-wrap {
   display: inline-flex;
   align-items: center;
-  margin-right: 1.25rem;
   cursor: pointer;
 }
 
 .top-icon:hover {
-  color: rgba(255, 255, 255, 0.85) !important;
-  transform: scale(1.1);
+  background: rgba(255, 255, 255, 0.12);
+  color: #ffffff !important;
+  transform: translateY(-1px);
 }
 
 /* Logout icon with subtle hover effect to indicate action */
 .top-icon:last-of-type:hover {
   color: rgba(255, 220, 220, 0.95) !important;
+}
+
+.top-icon-profile {
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+}
+
+@media (max-width: 900px) {
+  .app-top-nav {
+    padding: 0 12px;
+  }
+
+  .app-top-nav__inner {
+    gap: 12px;
+    grid-template-columns: minmax(170px, 1fr) minmax(220px, 1.5fr) auto;
+  }
+
+  .tenant-header-title {
+    max-width: 130px;
+  }
+
+  .app-top-nav__actions {
+    gap: 8px;
+  }
 }
 
 .input-border-active {

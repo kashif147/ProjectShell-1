@@ -3,7 +3,7 @@
   flex-direction: column;
   height: 80vh;
   min-height: 80vh;
-  background-color: #f5f5f5;
+  background-color: var(--app-page-bg, #f8f9f9);
   overflow: hidden;
   /* Hide outer scroll */
   font-family: var(--font-family);
@@ -236,7 +236,7 @@
   font-size: 13px;
   font-weight: 600;
   margin-bottom: 8px;
-  color: #595959;
+  color: var(--theme-text-muted);
 }
 
 /* Input Styles */
@@ -270,7 +270,7 @@
 
 .toolbar-icon {
   font-size: 14px;
-  color: #595959;
+  color: var(--theme-text-muted);
   cursor: pointer;
 }
 
@@ -376,7 +376,7 @@
 
 .upload-hint {
   font-size: 12px;
-  color: #8c8c8c;
+  color: var(--theme-text-muted);
   margin: 0;
 }
 
@@ -500,7 +500,7 @@
 .section-header-collapsible h3 .section-count,
 .section-header-collapsible h3 .section-preview-inline {
   font-weight: 500;
-  color: #8c8c8c;
+  color: var(--theme-text-muted);
   font-size: 14px;
 }
 
@@ -511,7 +511,7 @@
 
 .section-preview {
   font-size: 13px;
-  color: #595959;
+  color: var(--theme-text-muted);
   line-height: 1.5;
   margin-top: -8px;
   margin-bottom: 12px;
@@ -526,11 +526,11 @@
 
 .section-preview-meta {
   font-size: 12px;
-  color: #8c8c8c;
+  color: var(--theme-text-muted);
 }
 
 .section-preview-text {
-  color: #595959;
+  color: var(--theme-text-muted);
 }
 
 .section-header-actions {
@@ -680,14 +680,16 @@
 }
 
 .summary-field-single .ant-input,
-.summary-field-single .ant-picker {
+.summary-field-single .ant-picker,
+.summary-field-single .ant-select {
   flex: 1;
   min-width: 0;
   font-size: 14px;
   font-weight: 500;
 }
 
-.summary-field-single .ant-picker {
+.summary-field-single .ant-picker,
+.summary-field-single .ant-select {
   max-width: 180px;
 }
 
@@ -806,7 +808,7 @@
 .description-box {
   padding: 10px 0;
   margin-top: 8px;
-  color: #595959;
+  color: var(--theme-text-muted);
   font-size: 14px;
   line-height: 1.6;
 }
@@ -999,7 +1001,7 @@
   border: 1px solid #f0f0f0;
   border-radius: 20px;
   font-size: 13px;
-  color: #8c8c8c;
+  color: var(--theme-text-muted);
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -1076,7 +1078,7 @@
 .change-label {
   margin: 0 0 16px 0;
   font-size: 14px;
-  color: #595959;
+  color: var(--theme-text-muted);
   font-weight: 500;
 }
 
@@ -1220,7 +1222,7 @@
   padding: 0;
   background: transparent !important;
   border: none !important;
-  color: #595959;
+  color: var(--theme-text-muted);
 }
 
 .attachments-download-all-btn.ant-btn:hover:not(:disabled) {
@@ -1304,7 +1306,7 @@
 }
 
 .sub-tab.active {
-  color: #1890ff;
+  color: var(--app-brand-accent);
 }
 
 .sub-tab.active::after {
@@ -1314,7 +1316,7 @@
   left: 0;
   width: 100%;
   height: 2px;
-  background: #1890ff;
+  background: var(--app-brand-accent);
 }
 
 .attachments-breadcrumb {
@@ -1333,7 +1335,7 @@
 }
 
 .breadcrumb-item.active {
-  color: #1890ff;
+  color: var(--app-brand-accent);
 }
 
 .breadcrumb-sep {
@@ -1380,7 +1382,7 @@
 
 .attachment-icon-item .file-name-tooltip {
   font-size: 11px;
-  color: #595959;
+  color: var(--theme-text-muted);
   text-align: center;
   max-width: 120px;
   overflow: hidden;
@@ -1414,7 +1416,7 @@
   width: 28px;
   height: 28px;
   border-radius: 6px;
-  color: #595959;
+  color: var(--theme-text-muted);
   cursor: pointer;
   transition: color 0.2s, background 0.2s;
 }
@@ -1486,7 +1488,7 @@
 }
 
 .attachment-actions .anticon:hover {
-  color: #1890ff !important;
+  color: var(--app-brand-accent) !important;
 }
 
 /* Print-only area: hidden on screen */
@@ -1552,7 +1554,7 @@
 
   .issue-print-id {
     font-size: 12px;
-    color: #595959;
+    color: var(--theme-text-muted);
     margin-bottom: 0.25rem;
   }
 
@@ -1592,7 +1594,7 @@
   }
 
   .issue-print-detail-item .issue-print-label {
-    color: #595959;
+    color: var(--theme-text-muted);
     font-size: 11px;
   }
 
@@ -1650,7 +1652,7 @@
   }
 
   .issue-print-meta {
-    color: #595959;
+    color: var(--theme-text-muted);
     font-size: 12px;
   }
 
@@ -1674,7 +1676,7 @@
   }
 
   .issue-print-comment-time {
-    color: #595959;
+    color: var(--theme-text-muted);
     font-size: 12px;
     margin-left: 0.5rem;
   }

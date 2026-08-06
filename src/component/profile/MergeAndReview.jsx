@@ -82,7 +82,7 @@ const MergeAndReview = ({ onBack, primaryMember, secondaryMember, onMergeClick }
         logoContainer: {
             width: '24px',
             height: '24px',
-            color: '#135bec'
+            color: 'var(--theme-color-primary)'
         },
         headerTitle: {
             fontSize: '18px',
@@ -106,7 +106,7 @@ const MergeAndReview = ({ onBack, primaryMember, secondaryMember, onMergeClick }
             height: '40px',
             padding: '0 16px',
             backgroundColor: 'rgba(19, 91, 236, 0.1)',
-            color: '#135bec',
+            color: 'var(--theme-color-primary)',
             fontSize: '14px',
             fontWeight: '700',
             border: 'none',
@@ -168,7 +168,7 @@ const MergeAndReview = ({ onBack, primaryMember, secondaryMember, onMergeClick }
         },
         pageSubtitle: {
             fontSize: '16px',
-            color: '#6b7280',
+            color: 'var(--theme-text-muted)',
             margin: 0
         },
         grid: {
@@ -233,12 +233,12 @@ const MergeAndReview = ({ onBack, primaryMember, secondaryMember, onMergeClick }
         },
         radioCardSelected: {
             backgroundColor: 'rgba(19, 91, 236, 0.05)',
-            borderColor: '#135bec'
+            borderColor: 'var(--theme-color-primary)'
         },
         radioInput: {
             height: '18px',
             width: '18px',
-            accentColor: '#135bec',
+            accentColor: 'var(--theme-color-primary)',
             cursor: 'pointer',
             flexShrink: 0
         },
@@ -337,11 +337,11 @@ const MergeAndReview = ({ onBack, primaryMember, secondaryMember, onMergeClick }
                             <div style={styles.subsRow}>
                                 <div>
                                     <p style={{ margin: 0, fontWeight: 500, color: '#111827' }}>Premium Membership</p>
-                                    <p style={{ margin: 0, fontSize: '14px', color: '#6b7280' }}>Status: <span style={styles.statusActive}>Active</span></p>
+                                    <p style={{ margin: 0, fontSize: '14px', color: 'var(--theme-text-muted)' }}>Status: <span style={styles.statusActive}>Active</span></p>
                                 </div>
                                 <div style={{ textAlign: 'right' }}>
                                     <p style={{ margin: 0, fontWeight: 500, color: '#111827' }}>$0.00</p>
-                                    <p style={{ margin: 0, fontSize: '14px', color: '#6b7280' }}>Balance</p>
+                                    <p style={{ margin: 0, fontSize: '14px', color: 'var(--theme-text-muted)' }}>Balance</p>
                                 </div>
                             </div>
                         </div>
@@ -372,11 +372,11 @@ const MergeAndReview = ({ onBack, primaryMember, secondaryMember, onMergeClick }
                             <div style={styles.subsRow}>
                                 <div>
                                     <p style={{ margin: 0, fontWeight: 500, color: '#111827' }}>Standard Membership</p>
-                                    <p style={{ margin: 0, fontSize: '14px', color: '#6b7280' }}>Status: <span style={styles.statusExpired}>Expired</span></p>
+                                    <p style={{ margin: 0, fontSize: '14px', color: 'var(--theme-text-muted)' }}>Status: <span style={styles.statusExpired}>Expired</span></p>
                                 </div>
                                 <div style={{ textAlign: 'right' }}>
                                     <p style={{ margin: 0, fontWeight: 500, color: '#111827' }}>$25.00</p>
-                                    <p style={{ margin: 0, fontSize: '14px', color: '#6b7280' }}>Balance</p>
+                                    <p style={{ margin: 0, fontSize: '14px', color: 'var(--theme-text-muted)' }}>Balance</p>
                                 </div>
                             </div>
                         </div>

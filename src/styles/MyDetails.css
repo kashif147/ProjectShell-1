@@ -20,7 +20,7 @@ p {
   font-size: 23px;
   text-align: center;
   font-weight: 600;
-  color: #c97a2f;
+  color: var(--theme-color-secondary, var(--secoundry-color, #475569));
   margin: 0px !important;
 }
 

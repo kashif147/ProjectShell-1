@@ -322,7 +322,7 @@ const TenantOfficesPanel = ({
               <Tooltip title="Primary office">
                 <StarFilled
                   style={{
-                    color: "#1677ff",
+                    color: "var(--primary-color)",
                     fontSize: 16,
                     verticalAlign: "middle",
                   }}

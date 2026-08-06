@@ -830,7 +830,7 @@ function AddNewGarda({ open, onClose, isGard }) {
         isDisable={isDisable}
         width="1500px"
       >
-        <div className="" style={{ backgroundColor: "#f6f9fc" }}>
+        <div className="" style={{ backgroundColor: "var(--theme-page-bg)" }}>
           <div>
             <Row
               gutter={18}
@@ -854,7 +854,7 @@ function AddNewGarda({ open, onClose, isGard }) {
                     }}
                   >
                     <MailOutlined
-                      style={{ color: "#2f6bff", fontSize: "18px" }}
+                      style={{ color: "var(--theme-color-primary)", fontSize: "18px" }}
                     />
                   </div>
                   <h2
@@ -1236,7 +1236,7 @@ function AddNewGarda({ open, onClose, isGard }) {
                   }}
                 >
                   <IoBagRemoveOutline
-                    style={{ color: "#bf86f3", fontSize: "18px" }}
+                    style={{ color: "var(--theme-color-accent)", fontSize: "18px" }}
                   />
                 </div>
                 <h2
@@ -1565,7 +1565,7 @@ function AddNewGarda({ open, onClose, isGard }) {
                   }}
                 >
                   <CiCreditCard1
-                    style={{ color: "#ec6d28", fontSize: "18px" }}
+                    style={{ color: "var(--theme-color-secondary)", fontSize: "18px" }}
                   />
                 </div>
                 <h2

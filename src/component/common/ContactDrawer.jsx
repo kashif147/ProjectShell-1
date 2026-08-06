@@ -137,8 +137,8 @@ function ContactDrawer({ open, onClose, title = "Contacts", onAssign, onUnassign
           icon={<Send size={16} />}
           onClick={isAssigning ? handleAssign : handleUnassign}
           style={{
-            backgroundColor: isAssigning ? "#45669d" : "#ff4d4f",
-            borderColor: isAssigning ? "#45669d" : "#ff4d4f",
+            backgroundColor: isAssigning ? "var(--app-brand-primary)" : "#ff4d4f",
+            borderColor: isAssigning ? "var(--app-brand-primary)" : "#ff4d4f",
             display: "flex",
             alignItems: "center",
             gap: "8px",
@@ -181,12 +181,12 @@ function ContactDrawer({ open, onClose, title = "Contacts", onAssign, onUnassign
                   marginBottom: isExpanded ? "8px" : "0",
                 }}
               >
-                <MapPin size={16} color="#1890ff" />
-                <Text strong style={{ color: "#1890ff" }}>
+                <MapPin size={16} color="var(--app-brand-accent)" />
+                <Text strong style={{ color: "var(--app-brand-accent)" }}>
                   Selected {getLabel()} to {isAssigning ? "Assign" : "Unassign"} {getOfficerLabel()}: ({selectedWorkLocations.length})
                 </Text>
               </div>
-              {isExpanded ? <ChevronDown size={18} color="#1890ff" /> : <ChevronRight size={18} color="#1890ff" />}
+              {isExpanded ? <ChevronDown size={18} color="var(--app-brand-accent)" /> : <ChevronRight size={18} color="var(--app-brand-accent)" />}
             </div>
             {isExpanded && (
               <Space size={[0, 8]} wrap>

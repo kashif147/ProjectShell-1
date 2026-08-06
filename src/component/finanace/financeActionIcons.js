@@ -18,8 +18,8 @@ import {
 const FINANCE_ACTION_ICONS = {
   "approve-cn": { Icon: CheckCircleOutlined, color: "#52c41a" },
   approve: { Icon: CheckCircleOutlined, color: "#52c41a" },
-  creditnote: { Icon: FileTextOutlined, color: "#1890ff" },
-  "create-credit-note": { Icon: FileTextOutlined, color: "#1890ff" },
+  creditnote: { Icon: FileTextOutlined, color: "var(--app-brand-accent)" },
+  "create-credit-note": { Icon: FileTextOutlined, color: "var(--app-brand-accent)" },
   "apply-credit": { Icon: SwapOutlined, color: "#13c2c2" },
   "apply-member-credit": { Icon: SwapOutlined, color: "#13c2c2" },
   refund: { Icon: RollbackOutlined, color: "#ff4d4f" },
@@ -34,15 +34,15 @@ const FINANCE_ACTION_ICONS = {
   "reverse-writeoff": { Icon: UndoOutlined, color: "#fa8c16" },
   print: { Icon: PrinterOutlined, color: "#597ef7" },
   send: { Icon: SendOutlined, color: "#2f54eb" },
-  "view-source-batch": { Icon: LinkOutlined, color: "#1890ff" },
+  "view-source-batch": { Icon: LinkOutlined, color: "var(--app-brand-accent)" },
   "retain-credit": { Icon: InboxOutlined, color: "#13c2c2" },
-  match: { Icon: LinkOutlined, color: "#1890ff" },
+  match: { Icon: LinkOutlined, color: "var(--app-brand-accent)" },
   suspense: { Icon: PauseCircleOutlined, color: "#fa8c16" },
   settle: { Icon: CheckCircleOutlined, color: "#52c41a" },
-  loading: { Icon: MoreOutlined, color: "#8c8c8c" },
+  loading: { Icon: MoreOutlined, color: "var(--theme-text-muted)" },
 };
 
-const DEFAULT_ACTION_ICON = { Icon: MoreOutlined, color: "#8c8c8c" };
+const DEFAULT_ACTION_ICON = { Icon: MoreOutlined, color: "var(--theme-text-muted)" };
 
 export function financeLedgerActionIcon(actionId) {
   const key = String(actionId || "").trim();

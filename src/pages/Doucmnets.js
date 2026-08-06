@@ -34,7 +34,7 @@ function Doucmnets() {
                 <div className='chat-detail-container'>
                     <div className='d-flex align-items-baseline justify-content-end'>
                         <div >
-                            <BiSolidPrinter fontSize={'27px'} color='#215E97' />
+                            <BiSolidPrinter fontSize={'27px'} color='var(--app-brand-primary)' />
                         </div>
                     </div>
 

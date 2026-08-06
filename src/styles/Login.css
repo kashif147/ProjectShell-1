@@ -82,8 +82,8 @@
 .login-card {
   background: var(--background-primary);
   border-radius: var(--radius-xl);
-  box-shadow: var(--shadow-xl);
-  border: 1px solid var(--border-color-light);
+  box-shadow: none;
+  border: 1px solid var(--app-control-border, var(--border-color-light));
   overflow: hidden;
   backdrop-filter: blur(10px);
 }
@@ -143,15 +143,15 @@
   font-size: var(--font-size-base);
   font-weight: 600;
   margin-bottom: var(--spacing-lg);
-  background: linear-gradient(135deg, #0078d4 0%, #106ebe 100%) !important;
-  border: none !important;
-  box-shadow: var(--shadow-md);
+  background: var(--app-brand-primary) !important;
+  border: 1px solid var(--app-brand-primary) !important;
+  box-shadow: none;
 }
 
 .microsoft-btn:hover {
-  background: linear-gradient(135deg, #106ebe 0%, #005a9e 100%) !important;
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-lg);
+  background: color-mix(in srgb, var(--app-brand-primary) 84%, #000000) !important;
+  border-color: color-mix(in srgb, var(--app-brand-primary) 84%, #000000) !important;
+  box-shadow: none;
 }
 
 .microsoft-btn svg {
@@ -250,23 +250,15 @@
   font-size: var(--font-size-base);
   font-weight: 600;
   margin-bottom: var(--spacing-lg);
-  background: linear-gradient(
-    135deg,
-    var(--primary-blue) 0%,
-    var(--primary-blue-dark) 100%
-  ) !important;
-  border: none !important;
-  box-shadow: var(--shadow-md);
+  background: var(--app-brand-primary) !important;
+  border: 1px solid var(--app-brand-primary) !important;
+  box-shadow: none;
 }
 
 .login-submit-btn:hover {
-  background: linear-gradient(
-    135deg,
-    var(--primary-blue-dark) 0%,
-    #154a6b 100%
-  ) !important;
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-lg);
+  background: color-mix(in srgb, var(--app-brand-primary) 84%, #000000) !important;
+  border-color: color-mix(in srgb, var(--app-brand-primary) 84%, #000000) !important;
+  box-shadow: none;
 }
 
 .login-submit-btn:active {
@@ -458,7 +450,7 @@ body.login-page {
   height: 100%;
   border-radius: var(--radius-xl) 0 0 var(--radius-xl);
   overflow: hidden;
-  box-shadow: var(--shadow-xl);
+  box-shadow: none;
 }
 
 .login-hero-image {
@@ -511,7 +503,7 @@ body.login-page {
   flex-direction: column;
   height: 100%;
   border-radius: 0 var(--radius-xl) var(--radius-xl) 0;
-  box-shadow: var(--shadow-xl);
+  box-shadow: none;
 }
 
 /* Back Button */
@@ -527,15 +519,15 @@ body.login-page {
 
 /* Secondary Button Styling */
 .theme-btn-secondary {
-  background: var(--background-tertiary);
-  color: var(--font-color);
-  border: 1px solid var(--border-color);
+  background: var(--app-control-surface, var(--background-tertiary));
+  color: var(--app-brand-primary);
+  border: 1px solid var(--app-control-border, var(--border-color));
 }
 
 .theme-btn-secondary:hover {
-  background: var(--background-hover);
-  color: var(--font-color);
-  border-color: var(--primary-blue-light);
+  background: var(--app-control-surface-hover, var(--background-hover));
+  color: var(--app-brand-primary);
+  border-color: var(--app-brand-primary);
 }
 
 /* Responsive Design for Two-Step Layout */

@@ -192,9 +192,33 @@ const Sidebar = () => {
       case "Cases":
       case "All Issues":
       case "All cases":
-        return { path: "/CasesSummary", state: { search: "All Issues" } };
+      case "Open Issues":
+        return { path: "/CasesSummary", state: { search: "Open Issues" } };
       case "Assigned to me":
         return { path: "/CasesSummary", state: { search: "Assigned to me" } };
+      // Dedicated Issue Management side-nav sections (SideNavWithAuth.js's `issuesItems`) -
+      // all render the same CasesSummary.js component, pre-filtered by route
+      // (`defaultView` prop wired in Entry.js). See RoutePermissions.js for the
+      // per-team permission each one is gated on.
+      case "Closed":
+        return { path: "/CasesSummary/Closed", state: { search: "Closed" } };
+      case "Complaints":
+        return { path: "/Complaints", state: { search: "Complaints" } };
+      case "Fitness to Practice":
+        return {
+          path: "/FitnessToPractice",
+          state: { search: "Fitness to Practice" },
+        };
+      case "Industrial Relations":
+        return {
+          path: "/IndustrialRelations",
+          state: { search: "Industrial Relations" },
+        };
+      case "Data Protection":
+        return {
+          path: "/DataProtection",
+          state: { search: "Data Protection" },
+        };
       case "Correspondences":
         return { path: "/CorrespondenceDashboard", state: { search: "" } };
       case "Dashboard":
@@ -499,10 +523,20 @@ const Sidebar = () => {
   const selectedKey = useMemo(() => {
     const routeKeyMap = {
       "/Summary": "Profiles",
+      "/Details": "Profiles",
       "/ClaimSummary": "Claims",
       "/ClaimsById": "Claims",
+      // Must come before the bare "/CasesSummary" entry below - `currentPath` is resolved
+      // via `.startsWith(route)` over `Object.keys()` insertion order, and
+      // "/CasesSummary/Closed".startsWith("/CasesSummary") is also true, so the more
+      // specific route has to win first.
+      "/CasesSummary/Closed": "Closed",
       "/CasesSummary": "Cases",
       "/CasesById": "Cases",
+      "/Complaints": "Complaints",
+      "/FitnessToPractice": "Fitness to Practice",
+      "/IndustrialRelations": "Industrial Relations",
+      "/DataProtection": "Data Protection",
       "/CorrespondencesSummary": "Correspondences",
       "/Transfers": "Transfer Requests",
       "/Configuration": "System Configuration",
@@ -589,20 +623,24 @@ const Sidebar = () => {
     if (!currentPath) return "";
 
     // Handle context-specific mappings
+    if (currentPath === "/Details") {
+      const searchParams = new URLSearchParams(location.search);
+      if (searchParams.get("subscriptionId")) {
+        return "Membership";
+      }
+      return "Profiles";
+    }
     if (currentPath === "/CasesSummary" && activeKey === "Cases") {
       return "Dashboard";
     }
     if (currentPath === "/CasesSummary" && activeKey === "Issues Management") {
-      // Check location state to determine if it's "All Issues" or "Assigned to me"
+      // Check location state to determine if it's "Open Issues" or "Assigned to me"
       const searchState = location.state?.search;
-      if (searchState === "All Issues") {
-        return "All Issues";
-      }
       if (searchState === "Assigned to me") {
         return "Assigned to me";
       }
-      // Default to "All Issues" for Issues Management context
-      return "All Issues";
+      // Default to "Open Issues" for Issues Management context
+      return "Open Issues";
     }
     if (currentPath === "/CasesSummary" && activeKey === "Cases") {
       // Check location state for Cases context
@@ -616,7 +654,7 @@ const Sidebar = () => {
     }
 
     return routeKeyMap[currentPath] || "";
-  }, [location.pathname, activeKey, location.state]);
+  }, [location.pathname, location.search, activeKey, location.state]);
 
   const handleClick = ({ key }) => {
     // We can keep this for any special handling if needed, 

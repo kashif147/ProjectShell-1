@@ -94,7 +94,7 @@ function DirectDebitSummary() {
           ...col,
           render: (text, record) => (
             <span
-              style={{ color: "#1890ff", cursor: "pointer", fontWeight: 500 }}
+              style={{ color: "var(--app-brand-accent)", cursor: "pointer", fontWeight: 500 }}
               onClick={(e) => {
                 e.stopPropagation();
                 openRun(record);

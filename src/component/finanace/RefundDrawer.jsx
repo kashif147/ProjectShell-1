@@ -236,7 +236,7 @@ const RefundDrawer = ({
         fontSize: "14px",
         fontWeight: 600,
         marginBottom: "10px",
-        color: "#6b7280",
+        color: "var(--theme-text-muted)",
         textTransform: "uppercase",
         letterSpacing: "0.5px",
       }}
