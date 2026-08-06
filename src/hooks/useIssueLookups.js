@@ -54,8 +54,15 @@ const EMPTY_DROPDOWN_LOOKUPS = {
  * per-client rate limit on an ordinary page load. Use useIssueStatusOptions()/
  * useResolutionOptions() separately for Issue Status/Resolution, which genuinely depend on
  * the selected Issue Type and can't be prefetched up front.
+ *
+ * `reloadKey` (optional) re-runs the fetch whenever it changes - pass a value that only
+ * changes when you actually want a fresh fetch (e.g. CreateCasesDrawer.jsx bumps one only on
+ * open transitions). Without it, this only ever fetches once per component instance, which
+ * silently starves any consumer that's mounted long before the user needs the data (e.g. a
+ * drawer that's always in the tree, only toggled via an `open` prop) - if that one fetch
+ * raced with auth setup or failed, there was no way to recover short of a full page reload.
  */
-export function useIssueDropdownLookups() {
+export function useIssueDropdownLookups(reloadKey) {
   const [lookups, setLookups] = useState(EMPTY_DROPDOWN_LOOKUPS);
   const [loading, setLoading] = useState(true);
 
@@ -86,7 +93,8 @@ export function useIssueDropdownLookups() {
     return () => {
       cancelled = true;
     };
-  }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [reloadKey]);
 
   return { ...lookups, loading };
 }

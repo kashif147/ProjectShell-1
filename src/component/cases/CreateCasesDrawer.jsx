@@ -69,6 +69,16 @@ const CreateCasesDrawer = ({ open, onClose, presetMember, defaultIssueType }) =>
   const [memberLabels, setMemberLabels] = useState({});
   const [saving, setSaving] = useState(false);
 
+  // This drawer is always mounted (HeaderDetails.jsx just toggles `open`, so its close
+  // animation isn't cut short), so useIssueDropdownLookups()'s one-shot fetch-on-mount would
+  // only ever run once per session - long before the user necessarily opens this drawer, and
+  // with no way to recover if that early fetch raced or failed. Bump dropdownReloadKey only
+  // on true open transitions so every open gets its own fresh, self-healing fetch.
+  const [dropdownReloadKey, setDropdownReloadKey] = useState(0);
+  useEffect(() => {
+    if (open) setDropdownReloadKey((key) => key + 1);
+  }, [open]);
+
   const {
     issueTypeOptions,
     originOptions,
@@ -78,7 +88,7 @@ const CreateCasesDrawer = ({ open, onClose, presetMember, defaultIssueType }) =>
     criteriaLetterStatusOptions,
     legislationOptions,
     caseTypeOptions,
-  } = useIssueDropdownLookups();
+  } = useIssueDropdownLookups(dropdownReloadKey);
   const { options: issueStatusOptions } = useIssueStatusOptions(formValues.issueType);
 
   // Default Issue Status to "Active" for whichever Issue Type is currently selected, then
