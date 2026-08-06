@@ -15,6 +15,7 @@ import { getWorkLocationHierarchy } from "../features/LookupsWorkLocationSlice";
 import { resetInitialization } from "../features/applicationwithfilterslice";
 import { markScreenChanged } from "../features/views/ScreenFilterChangSlice";
 import { fetchSubscriptionYears } from "../features/subscription/subscriptionSlice";
+import { useIssueDropdownLookups } from "../hooks/useIssueLookups";
 import {
   isDateFilterLabel,
   isNumericFilterLabel,
@@ -118,6 +119,16 @@ export const FilterProvider = ({ children }) => {
 
   const MEMBERSHIP_CATEGORY_LOOKUP_ID = "68dae613c5b15073d66b891f";
 
+  // 🔹 Issue Management lookups (Issue Type/Priority/Case Status filter chips on the Issues/
+  // IssuesDashboard screens) - see hooks/useIssueLookups.js. Fetched app-wide on mount, same
+  // eager-bootstrap convention as the Redux lookups above (paymentTypeOptions etc.).
+  const {
+    issueTypeOptions: issueFilterTypeOptions,
+    priorityOptions: issueFilterPriorityOptions,
+    allIssueStatusOptions: issueFilterStatusOptions,
+    loading: issueLookupsLoading,
+  } = useIssueDropdownLookups();
+
   // 🔹 Get hierarchical data from lookupsWorkLocation slice
   const { hierarchyData, workLocationLoading, workLocationError } = useSelector(
     (state) => state.lookupsWorkLocation,
@@ -199,6 +210,30 @@ export const FilterProvider = ({ children }) => {
     // TEMPLATE_IMPLEMENTATION_PLAYBOOK.md's 2026-07-21 entries); not repeating
     // that here.
     Issues: {
+      visibleFilters: [],
+      filtersState: {},
+    },
+    // The other 5 CasesSummary.js routes (Closed, Complaints, Fitness to Practice,
+    // Industrial Relations, Data Protection) each got their own independent Save-View
+    // template/screen key too, instead of sharing `Issues`' - same reasoning as the
+    // `Issues`/`Cases`/`IssuesDashboard` split above.
+    IssuesClosed: {
+      visibleFilters: [],
+      filtersState: {},
+    },
+    Complaints: {
+      visibleFilters: [],
+      filtersState: {},
+    },
+    FitnessToPractice: {
+      visibleFilters: [],
+      filtersState: {},
+    },
+    IndustrialRelations: {
+      visibleFilters: [],
+      filtersState: {},
+    },
+    DataProtection: {
       visibleFilters: [],
       filtersState: {},
     },
@@ -695,14 +730,14 @@ export const FilterProvider = ({ children }) => {
       // /CasesSummary(/Closed) plus the dedicated Complaints/FTP/IR/Data Protection
       // side-nav routes (Entry.js) all reuse the same CasesSummary.js component,
       // pre-filtered client-side by a `defaultView` prop - see that file's own comment for
-      // why. All of them share this one "Issues" FilterContext screen key (same toolbar
-      // filters / Save-View template as the plain "All" view), not a key per route.
+      // why. Each still gets its own FilterContext screen key / Save-View template (see
+      // gridTemplateRoutes.js), not one shared bucket - only the component is shared.
       "/casessummary": "Issues",
-      "/casessummary/closed": "Issues",
-      "/complaints": "Issues",
-      "/fitnesstopractice": "Issues",
-      "/industrialrelations": "Issues",
-      "/dataprotection": "Issues",
+      "/casessummary/closed": "IssuesClosed",
+      "/complaints": "Complaints",
+      "/fitnesstopractice": "FitnessToPractice",
+      "/industrialrelations": "IndustrialRelations",
+      "/dataprotection": "DataProtection",
       "/eventssummary": "Events",
       "/eventsdashboard": "EventsDashboard",
       "/correspondencedashboard": "Communication",
@@ -869,6 +904,13 @@ export const FilterProvider = ({ children }) => {
         "Priority",
       ],
       Issues: ["Priority", "Issue Type", "Case Status", "Owner"],
+      IssuesClosed: ["Priority", "Issue Type", "Case Status", "Owner"],
+      // No "Issue Type" chip - these 4 pages are already scoped to one issue type
+      // (defaultView prop, see CasesSummary.js), so filtering by type would be a no-op.
+      Complaints: ["Priority", "Case Status", "Owner"],
+      FitnessToPractice: ["Priority", "Case Status", "Owner"],
+      IndustrialRelations: ["Priority", "Case Status", "Owner"],
+      DataProtection: ["Priority", "Case Status", "Owner"],
       IssuesDashboard: ["Priority", "Issue Type", "Case Status", "Owner"],
       Events: [
         "Event",
@@ -1028,6 +1070,11 @@ export const FilterProvider = ({ children }) => {
     Communication: ["Grade", "Work Location"],
     Cases: ["Incident Date", "Case Type", "Stakeholder", "Priority"],
     Issues: ["Priority", "Case Status"],
+    IssuesClosed: ["Priority", "Case Status"],
+    Complaints: ["Priority", "Case Status"],
+    FitnessToPractice: ["Priority", "Case Status"],
+    IndustrialRelations: ["Priority", "Case Status"],
+    DataProtection: ["Priority", "Case Status"],
     IssuesDashboard: ["Priority", "Case Status"],
     Events: [
       "Event",
@@ -1177,6 +1224,11 @@ export const FilterProvider = ({ children }) => {
       Communication: getDefaultVisibleFilters("Communication"),
       Cases: getDefaultVisibleFilters("Cases"),
       Issues: getDefaultVisibleFilters("Issues"),
+      IssuesClosed: getDefaultVisibleFilters("IssuesClosed"),
+      Complaints: getDefaultVisibleFilters("Complaints"),
+      FitnessToPractice: getDefaultVisibleFilters("FitnessToPractice"),
+      IndustrialRelations: getDefaultVisibleFilters("IndustrialRelations"),
+      DataProtection: getDefaultVisibleFilters("DataProtection"),
       IssuesDashboard: getDefaultVisibleFilters("IssuesDashboard"),
       Events: getDefaultVisibleFilters("Events"),
       EventsDashboard: getDefaultVisibleFilters("EventsDashboard"),
@@ -1451,6 +1503,82 @@ export const FilterProvider = ({ children }) => {
           selectedValues: [],
         },
         "Issue Type": {
+          operator: "==",
+          selectedValues: [],
+        },
+        "Case Status": {
+          operator: "==",
+          selectedValues: [],
+        },
+        Owner: {
+          operator: "==",
+          selectedValues: [],
+        },
+      },
+      IssuesClosed: {
+        Priority: {
+          operator: "==",
+          selectedValues: [],
+        },
+        "Issue Type": {
+          operator: "==",
+          selectedValues: [],
+        },
+        "Case Status": {
+          operator: "==",
+          selectedValues: [],
+        },
+        Owner: {
+          operator: "==",
+          selectedValues: [],
+        },
+      },
+      // No "Issue Type" entry - these 4 pages are already scoped to one issue type, see the
+      // matching viewFilters comment above.
+      Complaints: {
+        Priority: {
+          operator: "==",
+          selectedValues: [],
+        },
+        "Case Status": {
+          operator: "==",
+          selectedValues: [],
+        },
+        Owner: {
+          operator: "==",
+          selectedValues: [],
+        },
+      },
+      FitnessToPractice: {
+        Priority: {
+          operator: "==",
+          selectedValues: [],
+        },
+        "Case Status": {
+          operator: "==",
+          selectedValues: [],
+        },
+        Owner: {
+          operator: "==",
+          selectedValues: [],
+        },
+      },
+      IndustrialRelations: {
+        Priority: {
+          operator: "==",
+          selectedValues: [],
+        },
+        "Case Status": {
+          operator: "==",
+          selectedValues: [],
+        },
+        Owner: {
+          operator: "==",
+          selectedValues: [],
+        },
+      },
+      DataProtection: {
+        Priority: {
           operator: "==",
           selectedValues: [],
         },
@@ -2357,6 +2485,47 @@ export const FilterProvider = ({ children }) => {
     return found ? found.value : null;
   };
 
+  // 🔹 Issue Management filter dropdowns show friendly display names, but each row stores
+  // the short lookup code (e.g. "FTP", "ACTIVE-FTP") - MultiFilterDropdown/matchTextField
+  // compare selectedValues against the raw row value via substring match, so a friendly
+  // label like "Fitness to Practice" would never match "ftp". Build label -> codes maps
+  // (an array since "Case Status" labels like "Active" are shared across issue types with
+  // different codes - ACTIVE/ACTIVE-FTP/ACTIVE-IR/ACTIVE-DP) so CasesSummary.js /
+  // IssuesManagementDashboard.jsx can translate a checked label to its code(s) before
+  // calling applyClientSideRowFilters, without touching the shared matching utilities used
+  // by every other grid.
+  const issueFilterCodeMaps = useMemo(() => {
+    const buildMap = (options) => {
+      const map = new Map();
+      (options || []).forEach((opt) => {
+        const label = String(opt?.label || "").trim().toLowerCase();
+        if (!label || !opt?.value) return;
+        const codes = map.get(label) || [];
+        codes.push(opt.value);
+        map.set(label, codes);
+      });
+      return map;
+    };
+    return {
+      "Issue Type": buildMap(issueFilterTypeOptions),
+      "Case Status": buildMap(issueFilterStatusOptions),
+      Priority: buildMap(issueFilterPriorityOptions),
+    };
+  }, [issueFilterTypeOptions, issueFilterStatusOptions, issueFilterPriorityOptions]);
+
+  // 🔹 Deduped, sorted display labels for the Issue Management filter dropdowns above.
+  const issueFilterDisplayLabels = useMemo(() => {
+    const toLabels = (options) =>
+      Array.from(new Set((options || []).map((opt) => opt?.label).filter(Boolean))).sort((a, b) =>
+        a.localeCompare(b, undefined, { sensitivity: "base" }),
+      );
+    return {
+      "Issue Type": toLabels(issueFilterTypeOptions),
+      "Case Status": toLabels(issueFilterStatusOptions),
+      Priority: toLabels(issueFilterPriorityOptions),
+    };
+  }, [issueFilterTypeOptions, issueFilterStatusOptions, issueFilterPriorityOptions]);
+
   // 🔹 Dynamic filter options from lookups + loaded grid rows (finance client-side grids)
   const filterOptions = useMemo(() => {
     const categoryOpts =
@@ -2439,7 +2608,22 @@ export const FilterProvider = ({ children }) => {
           : ["", "Paid", "Pending", "Failed", "Refunded"],
       "Billing Cycle": ["", "Annual", "Monthly"],
       "Case Type": ["", "General", "Legal", "Financial", "Other"],
-      Priority: ["", "Low", "Medium", "High", "Critical"],
+      // Issue Management (Issues/IssuesDashboard screens) - sourced live from
+      // issue-service's Lookup-backed dropdowns, see issueFilterDisplayLabels above. Same
+      // "Priority" label as the legacy/unreferenced "Cases" bucket above, but that screen is
+      // dead code (see its own comment in screenFilterStates) so there's no real collision.
+      "Issue Type":
+        issueLookupsLoading && !issueFilterDisplayLabels["Issue Type"].length
+          ? ["Loading..."]
+          : ["", ...issueFilterDisplayLabels["Issue Type"]],
+      "Case Status":
+        issueLookupsLoading && !issueFilterDisplayLabels["Case Status"].length
+          ? ["Loading..."]
+          : ["", ...issueFilterDisplayLabels["Case Status"]],
+      Priority:
+        issueLookupsLoading && !issueFilterDisplayLabels.Priority.length
+          ? ["Loading..."]
+          : ["", ...issueFilterDisplayLabels.Priority],
       Stakeholder: ["", "Internal", "External", "Partner"],
       "Event Type":
         lookupsloading && !eventTypeOptions?.length
@@ -2597,6 +2781,8 @@ export const FilterProvider = ({ children }) => {
     gridFilterRowsTick,
     categoryLoading,
     lookupsloading,
+    issueLookupsLoading,
+    issueFilterDisplayLabels,
   ]);
 
   // 🔹 Helper functions
@@ -2888,6 +3074,7 @@ export const FilterProvider = ({ children }) => {
         getDefaultVisibleFilters,
         screenSpecificDefaultFilters,
         getLookupIdFromLabel,
+        issueFilterCodeMaps,
         filteredWLOptions,
         filteredRegionOptions,
         filteredBranchOptions,

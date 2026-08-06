@@ -50,22 +50,10 @@ export const ISSUE_STATUSES = [
 
 export const OWNER_TEAMS = ["COMPLAINTS", "FTP", "IR", "DATA_PROTECTION"];
 
-export const RESOLUTIONS = [
-  "SECTION_55_PROCEEDING_TO_INQUIRY",
-  "NO_CASE_FOUND_AT_PPC",
-  "CONSENT_AND_UNDERTAKING_AT_PPC_CLOSED_FOLLOWING_INQUIRY",
-  "CAME_OFF_RECORD",
-  "S58_MOVING_TO_S55",
-  "LOCAL_LEVEL",
-  "NO_FURTHER_CONTACT_FROM_MEMBER",
-  "WITH_EMPLOYER",
-  "WITH_THIRD_PARTY",
-  "OTHER",
-  "CLOSED",
-];
-
-// Priority is no longer a static enum - sourced live from user-service's Lookup system
-// (LookupType code "PRIORITY"), see hooks/useIssueLookups.js's useIssueDropdownLookups().
+// Resolution and Priority are no longer static enums - both are now sourced live from
+// user-service's Lookup system (LookupType codes "RESOLUTON"/"PRIORITY"). Resolution is
+// Issue-Type-dependent (see hooks/useIssueLookups.js's useResolutionOptions()); Priority is
+// flat (see useIssueDropdownLookups()).
 
 // ---- Activity (models/activity.model.js) ----
 export const ACTIVITY_TYPES = [
@@ -87,18 +75,12 @@ export const ACTIVITY_TYPES = [
 // useIssueDropdownLookups().
 export const SOLICITORS = ["O_CONNORS", "OTHER"];
 
-// Individual vs Group vs National - backend/issue-service/models/issue.ir.model.js's
-// Ir.CASE_TYPES, transcribed to match exactly (not fetched - this endpoint has no
-// enum-metadata route, same as every other IR/FTP/Complaint/DataProtection enum on this
-// page, all of which are transcribed constants rather than fetched). Drives whether
-// IrFields.jsx shows the single/simple member link (INDIVIDUAL) or the Group-linking
+// Case Type (IR) and Criteria Letter Status/Legislation (FTP) are no longer static enums -
+// all sourced live from user-service's Lookup system (LookupType codes "CASETYPE"/"CLS"/
+// "LEGISLATON"), see hooks/useIssueLookups.js's useIssueDropdownLookups(). Case Type drives
+// whether IrFields.jsx shows the single/simple member link (INDV) or the Group-linking
 // feature (GROUP/NATIONAL) - see IrFields.jsx's header comment for why NATIONAL is grouped
-// with GROUP here.
-export const IR_CASE_TYPES = ["INDIVIDUAL", "GROUP", "NATIONAL"];
-
-// ---- FTP (models/issue.ftp.model.js) ----
-export const CRITERIA_LETTER_STATUSES = ["PENDING", "SENT", "RECEIVED"];
-export const LEGISLATIONS = ["S55_1_I", "S58", "S55_PPC", "S55_INQUIRY"];
+// with GROUP there.
 
 // ---- Data Protection (models/issue.dataprotection.model.js) ----
 export const SEVERITIES = ["LOW", "MEDIUM", "HIGH"];

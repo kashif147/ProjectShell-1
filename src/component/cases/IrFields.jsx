@@ -4,7 +4,6 @@ import MyInput from "../common/MyInput";
 import CustomSelect from "../common/CustomSelect";
 import GroupPicker from "./GroupPicker";
 import { searchIssueDesignations } from "../../services/issuesApi";
-import { IR_CASE_TYPES, toOptions } from "./issueOptions";
 
 /**
  * IR (Industrial Relations) discriminator field set -
@@ -27,7 +26,7 @@ import { IR_CASE_TYPES, toOptions } from "./issueOptions";
  * The resulting groupId is a base-Issue-schema field, not IR-specific - see
  * issueOptions.js's TYPE_FIELDS.IR/buildIssueUpdatePayload for how it's carried.
  */
-function IrFields({ values = {}, onChange, disabled = false }) {
+function IrFields({ values = {}, onChange, disabled = false, caseTypeOptions = [] }) {
   const [designationOptions, setDesignationOptions] = useState(() =>
     values.issueDesignationLabel
       ? [{ value: values.issueDesignation, label: values.issueDesignationLabel }]
@@ -113,11 +112,12 @@ function IrFields({ values = {}, onChange, disabled = false }) {
           <CustomSelect
             label="Case Type"
             name="caseType"
-            value={values.caseType || "INDIVIDUAL"}
+            value={values.caseType || "INDV"}
             onChange={(e) => onChange("caseType", e.target.value)}
-            options={toOptions(IR_CASE_TYPES)}
+            options={caseTypeOptions}
             disabled={disabled}
             allowClear={false}
+            isIDs
           />
         </Col>
       </Row>

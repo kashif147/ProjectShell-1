@@ -44,6 +44,7 @@ import { bumpCreditorsListReportReload } from "../../utils/creditorsListReportWo
 import { bumpDebtorsListReportReload } from "../../utils/debtorsListReportWorkspace";
 import { bumpMembershipStatisticsReportReload } from "../../utils/membershipStatisticsReportWorkspace";
 import { bumpWorkplaceBreakdownReportReload } from "../../utils/workplaceBreakdownReportWorkspace";
+import { resolveGridTemplateTypeFromPath } from "../../utils/gridTemplateRoutes";
 
 const getColumnIdentity = (col) => {
   if (!col) return "";
@@ -99,6 +100,17 @@ function Gridmenu({
   const isCreditorsListReportScreen =
     normalizedGridPath === "/creditorslistreport";
   const isDebtorsListReportScreen = normalizedGridPath === "/debtorslistreport";
+  // Column-menu "Save" (PUT) had no templateType resolution for any of the 6 CasesSummary.js
+  // routes at all before this - gridTemplateType fell through to undefined for them, so this
+  // menu's Save silently couldn't update an Issues template. Each route now has its own
+  // templateType (see Toolbar.jsx's matching fix / gridTemplateRoutes.js).
+  const isIssuesScreen =
+    normalizedGridPath === "/casessummary" ||
+    normalizedGridPath === "/casessummary/closed" ||
+    normalizedGridPath === "/complaints" ||
+    normalizedGridPath === "/fitnesstopractice" ||
+    normalizedGridPath === "/industrialrelations" ||
+    normalizedGridPath === "/dataprotection";
   const { hasAnyRole } = useAuthorization();
   const canEditGridTemplates = hasAnyRole(["SU", "ASU"]);
   const screenChanges = useSelector(
@@ -128,7 +140,9 @@ function Gridmenu({
     ? "members"
     : isEventsScreen
       ? "eventssummary"
-      : isAttendeesScreen
+      : isIssuesScreen
+        ? resolveGridTemplateTypeFromPath(location.pathname)
+        : isAttendeesScreen
         ? "attendees"
         : isCreditNotesScreen
       ? "creditnotes"

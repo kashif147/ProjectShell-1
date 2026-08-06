@@ -9,6 +9,7 @@ import TextFilter from "./TextFilter";
 import { Button, Input, Modal } from "antd";
 import axios from "axios";
 import { resolveTemplatesApiUrl } from "../../config/gridTemplateRouting";
+import { resolveGridTemplateTypeFromPath } from "../../utils/gridTemplateRoutes";
 import MyInput from "./MyInput";
 import { EnterOutlined } from "@ant-design/icons";
 import { useDispatch, useSelector } from "react-redux";
@@ -286,15 +287,15 @@ const Toolbar = () => {
       "/eventsdashboard": "EventsDashboard",
       "/correspondencedashboard": "Communication",
       "/issuesmanagementdashboard": "IssuesDashboard",
-      // Keep in sync with FilterContext.js's own copy of this path map - all of
-      // CasesSummary.js's routes (see its own top-of-file comment) share the "Issues"
-      // screen key.
+      // Keep in sync with FilterContext.js's own copy of this path map - each of
+      // CasesSummary.js's routes (see its own top-of-file comment) has its own screen key/
+      // Save-View template, only the component is shared.
       "/casessummary": "Issues",
-      "/casessummary/closed": "Issues",
-      "/complaints": "Issues",
-      "/fitnesstopractice": "Issues",
-      "/industrialrelations": "Issues",
-      "/dataprotection": "Issues",
+      "/casessummary/closed": "IssuesClosed",
+      "/complaints": "Complaints",
+      "/fitnesstopractice": "FitnessToPractice",
+      "/industrialrelations": "IndustrialRelations",
+      "/dataprotection": "DataProtection",
       "/attendees": "Attendees",
       "/membershipdashboard": "MembershipDashboard",
       "/creditnotes": "CreditNotes",
@@ -383,7 +384,7 @@ const Toolbar = () => {
     : isEventsScreen
       ? "eventssummary"
       : isIssuesScreen
-        ? "issuessummary"
+        ? resolveGridTemplateTypeFromPath(location.pathname)
         : isAttendeesScreen
         ? "attendees"
         : isCreditNotesScreen

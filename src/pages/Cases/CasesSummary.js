@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { useLocation } from "react-router-dom";
 import { useSelector } from "react-redux";
 import { Spin } from "antd";
@@ -7,7 +7,7 @@ import { fetchIssues } from "../../services/issuesApi";
 import { fetchProfilesBatchLookup } from "../../services/profileSearchApi";
 import { useFilters } from "../../context/FilterContext";
 import { useTableColumns } from "../../context/TableColumnsContext ";
-import { applyClientSideRowFilters } from "../../utils/filterUtils";
+import { applyClientSideRowFilters, translateIssueFilterLabelsToCodes } from "../../utils/filterUtils";
 import { useRegisterGridFilterRows } from "../../hooks/useRegisterGridFilterRows";
 
 // Real, issue-service-backed rewrite of the Issues ("Cases") grid, off
@@ -98,7 +98,7 @@ function mergeProfileEnrichment(rows, profileById) {
 
 function CasesSummary({ defaultView = "all" }) {
   const location = useLocation();
-  const { filtersState } = useFilters();
+  const { filtersState, issueFilterCodeMaps } = useFilters();
   const { columns } = useTableColumns();
   const issuesColumns = columns.Issues || [];
   const { isInitialized } = useSelector((state) => state.applicationWithFilter);
@@ -106,10 +106,15 @@ function CasesSummary({ defaultView = "all" }) {
   const { templatesFetching: templatesLoading } = useSelector(
     (state) => state.templateFiltersColumnApi,
   );
-  const [issues, setIssues] = useState([]);
   const [issuesSourceRows, setIssuesSourceRows] = useState([]);
   const [loading, setLoading] = useState(true);
 
+  // fetchIssues() takes no params - the server always returns the same full list regardless
+  // of toolbar filters, so this callback must never depend on filtersState/
+  // issueFilterCodeMaps/issuesColumns. Those are purely client-side filtering concerns
+  // (applied below via the `issues` memo) - coupling them into the fetch trigger risks a
+  // refetch loop if any of them turns out not to be perfectly stable across renders, for no
+  // actual benefit (mirrors IssuesManagementDashboard.jsx's fetch-once/filter-via-memo split).
   const loadIssues = useCallback(() => {
     let cancelled = false;
     setLoading(true);
@@ -139,7 +144,6 @@ function CasesSummary({ defaultView = "all" }) {
         }));
         const scoped = applyDefaultViewFilter(mapped, defaultView);
         setIssuesSourceRows(scoped);
-        setIssues(applyClientSideRowFilters(scoped, filtersState, issuesColumns));
 
         // Best-effort member-name/membership-no/location hydration via profile-service's
         // batch-lookup endpoint (see profileSearchApi.js's fetchProfilesBatchLookup) - fires
@@ -154,7 +158,6 @@ function CasesSummary({ defaultView = "all" }) {
                 profiles.map((profile) => [String(profile._id), profile]),
               );
               setIssuesSourceRows((prev) => mergeProfileEnrichment(prev, profileById));
-              setIssues((prev) => mergeProfileEnrichment(prev, profileById));
             })
             .catch(() => {
               /* best-effort - raw id / "-" placeholders remain */
@@ -164,7 +167,6 @@ function CasesSummary({ defaultView = "all" }) {
       .catch(() => {
         if (!cancelled) {
           setIssuesSourceRows([]);
-          setIssues([]);
         }
       })
       .finally(() => {
@@ -173,8 +175,7 @@ function CasesSummary({ defaultView = "all" }) {
     return () => {
       cancelled = true;
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [filtersState, issuesColumns, defaultView]);
+  }, [defaultView]);
 
   // Re-fetch every time this route is navigated to (not just first mount),
   // gated on template init - Save View filters/columns must resolve before
@@ -189,6 +190,13 @@ function CasesSummary({ defaultView = "all" }) {
     isInitialized,
     templatesLoading,
   ]);
+
+  // Client-side filtering only - never triggers a refetch, just re-derives from whatever
+  // was last fetched.
+  const issues = useMemo(() => {
+    const codedFiltersState = translateIssueFilterLabelsToCodes(filtersState, issueFilterCodeMaps);
+    return applyClientSideRowFilters(issuesSourceRows, codedFiltersState, issuesColumns);
+  }, [issuesSourceRows, filtersState, issuesColumns, issueFilterCodeMaps]);
 
   useRegisterGridFilterRows("Issues", issuesSourceRows, issuesColumns);
 

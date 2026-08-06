@@ -105,11 +105,14 @@ export async function searchIssueDesignations(query) {
 }
 
 // GET /issue-dropdown-lookups - Issue Type + Origin + Issue Source + Priority + Complaint
-// Type in one round trip. Prefer this over calling the individual endpoints separately:
-// firing several as independent requests on every Create/Edit Cases mount was enough
-// concurrent traffic from one client to trip the gateway's per-client rate limit (nginx
-// api_rate zone, see frontend default.conf) on an ordinary page load. Returns
-// {issueTypes, origins, issueSources, priorities, complaintTypes}, each [{id, code, displayName}].
+// Type + Criteria Letter Status + Legislation + Case Type + all-types Issue Status (for the
+// Issues grid's "Case Status" toolbar filter) in one round trip. Prefer this over calling
+// the individual endpoints separately: firing several as independent requests on every
+// Create/Edit Cases mount was enough concurrent traffic from one client to trip the
+// gateway's per-client rate limit (nginx api_rate zone, see frontend default.conf) on an
+// ordinary page load. Returns {issueTypes, origins, issueSources, priorities, complaintTypes,
+// criteriaLetterStatuses, legislations, caseTypes, allIssueStatuses}, each
+// [{id, code, displayName}].
 export async function fetchIssueDropdownLookups() {
   const { data } = await axios.get(`${getIssueServiceBaseUrl()}/issue-dropdown-lookups`, {
     headers: authHeaders(),
@@ -135,6 +138,19 @@ export async function fetchIssueTypes() {
 export async function fetchIssueStatuses(issueType) {
   if (!issueType) return [];
   const { data } = await axios.get(`${getIssueServiceBaseUrl()}/issue-statuses`, {
+    params: { issueType },
+    headers: authHeaders(),
+  });
+  return unwrap({ data });
+}
+
+// GET /resolutions?issueType=<code> - Resolution options are scoped to a given Issue Type
+// (Lookup hierarchy, currently only seeded under FTP/IR - see
+// issue-service/services/lookup.service.client.js's fetchResolutions). Returns
+// [{id, code, displayName}]; `code` is the value to submit as `resolution`.
+export async function fetchResolutions(issueType) {
+  if (!issueType) return [];
+  const { data } = await axios.get(`${getIssueServiceBaseUrl()}/resolutions`, {
     params: { issueType },
     headers: authHeaders(),
   });

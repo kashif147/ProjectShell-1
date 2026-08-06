@@ -59,8 +59,13 @@ const LEGACY_TEMPLATE_TYPE_SERVICE = {
   /** Events grids */
   eventssummary: "events-service",
   attendees: "events-service",
-  /** Issue Management grids */
+  /** Issue Management grids - one templateType per page, see gridTemplateRoutes.js */
   issuessummary: "issue-service",
+  issuesclosed: "issue-service",
+  issuescomplaints: "issue-service",
+  issuesftp: "issue-service",
+  issuesir: "issue-service",
+  issuesdataprotection: "issue-service",
 };
 
 /**
