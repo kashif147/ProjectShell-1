@@ -25,7 +25,7 @@ import {
 import { fetchIssues } from "../../services/issuesApi";
 import { useFilters } from "../../context/FilterContext";
 import { useTableColumns } from "../../context/TableColumnsContext ";
-import { applyClientSideRowFilters } from "../../utils/filterUtils";
+import { applyClientSideRowFilters, translateIssueFilterLabelsToCodes } from "../../utils/filterUtils";
 import { useRegisterGridFilterRows } from "../../hooks/useRegisterGridFilterRows";
 import { useAuthorization } from "../../context/AuthorizationContext";
 import "../../styles/EventsDashboard.css";
@@ -141,7 +141,7 @@ function issueIcon(priority) {
 function IssuesManagementDashboard() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const { filtersState } = useFilters();
+  const { filtersState, issueFilterCodeMaps } = useFilters();
   const { columns: tableColumnsMap } = useTableColumns();
   const { hasPermission } = useAuthorization();
   // Own FilterContext screen ("IssuesDashboard") so its filter chips are independent of
@@ -207,9 +207,10 @@ function IssuesManagementDashboard() {
   useRegisterGridFilterRows("IssuesDashboard", filterableIssues, issuesColumns);
 
   const filteredIssueIds = useMemo(() => {
-    const filtered = applyClientSideRowFilters(filterableIssues, filtersState, issuesColumns);
+    const codedFiltersState = translateIssueFilterLabelsToCodes(filtersState, issueFilterCodeMaps);
+    const filtered = applyClientSideRowFilters(filterableIssues, codedFiltersState, issuesColumns);
     return new Set(filtered.map((row) => row.issueId));
-  }, [filterableIssues, filtersState, issuesColumns]);
+  }, [filterableIssues, filtersState, issuesColumns, issueFilterCodeMaps]);
 
   const visibleIssues = useMemo(
     () => issues.filter((iss) => filteredIssueIds.has(iss._id)),

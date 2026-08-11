@@ -435,6 +435,132 @@
         { "dataIndex": "ownerTeam", "title": "Owner", "isGride": true, "isVisible": true, "ellipsis": true, "width": 150 }
       ]
     },
+    "issuesclosed": {
+      "screenKey": "IssuesClosed",
+      "templateType": "issuesclosed",
+      "service": "issue-service",
+      "filters": {
+        "priority": { "operator": "equal_to", "values": [] },
+        "issueType": { "operator": "equal_to", "values": [] },
+        "issueStatus": { "operator": "equal_to", "values": ["CLOSED"] },
+        "ownerTeam": { "operator": "equal_to", "values": [] },
+        "dateReceived": { "operator": "between", "values": [] }
+      },
+      "columns": [
+        { "dataIndex": "caseTitle", "title": "Issue", "isGride": true, "isVisible": true, "ellipsis": true, "width": 260 },
+        { "dataIndex": "memberIds", "title": "Member Name", "isGride": true, "isVisible": true, "ellipsis": true, "width": 200 },
+        { "dataIndex": "membershipNo", "title": "Membership No", "isGride": true, "isVisible": true, "ellipsis": true, "width": 150 },
+        { "dataIndex": "caseFileNumber", "title": "Case File Number", "isGride": true, "isVisible": true, "ellipsis": true, "width": 170 },
+        { "dataIndex": "nmbiReference", "title": "NMBI Reference No", "isGride": true, "isVisible": true, "ellipsis": true, "width": 170 },
+        { "dataIndex": "location", "title": "Location", "isGride": true, "isVisible": true, "ellipsis": true, "width": 150 },
+        { "dataIndex": "dateReceived", "title": "Date Received", "filterValueType": "date", "isGride": true, "isVisible": true, "ellipsis": true, "width": 150 },
+        { "dataIndex": "criteriaLetterStatus", "title": "Criteria Letter", "isGride": true, "isVisible": true, "ellipsis": true, "width": 140 },
+        { "dataIndex": "legislation", "title": "Legislation", "isGride": true, "isVisible": true, "ellipsis": true, "width": 140 },
+        { "dataIndex": "issueStatus", "title": "Case Status", "isGride": true, "isVisible": true, "ellipsis": true, "width": 190 },
+        { "dataIndex": "priority", "title": "Priority", "isGride": true, "isVisible": true, "ellipsis": true, "width": 110 },
+        { "dataIndex": "ownerTeam", "title": "Owner", "isGride": true, "isVisible": true, "ellipsis": true, "width": 150 }
+      ]
+    },
+    "issuescomplaints": {
+      "screenKey": "Complaints",
+      "templateType": "issuescomplaints",
+      "service": "issue-service",
+      "filters": {
+        "priority": { "operator": "equal_to", "values": [] },
+        "issueStatus": { "operator": "not_equal_to", "values": ["CLOSED"] },
+        "ownerTeam": { "operator": "equal_to", "values": [] },
+        "dateReceived": { "operator": "between", "values": [] }
+      },
+      "columns": [
+        { "dataIndex": "caseTitle", "title": "Issue", "isGride": true, "isVisible": true, "ellipsis": true, "width": 260 },
+        { "dataIndex": "memberIds", "title": "Member Name", "isGride": true, "isVisible": true, "ellipsis": true, "width": 200 },
+        { "dataIndex": "membershipNo", "title": "Membership No", "isGride": true, "isVisible": true, "ellipsis": true, "width": 150 },
+        { "dataIndex": "caseFileNumber", "title": "Case File Number", "isGride": true, "isVisible": true, "ellipsis": true, "width": 170 },
+        { "dataIndex": "nmbiReference", "title": "NMBI Reference No", "isGride": true, "isVisible": true, "ellipsis": true, "width": 170 },
+        { "dataIndex": "location", "title": "Location", "isGride": true, "isVisible": true, "ellipsis": true, "width": 150 },
+        { "dataIndex": "dateReceived", "title": "Date Received", "filterValueType": "date", "isGride": true, "isVisible": true, "ellipsis": true, "width": 150 },
+        { "dataIndex": "criteriaLetterStatus", "title": "Criteria Letter", "isGride": true, "isVisible": true, "ellipsis": true, "width": 140 },
+        { "dataIndex": "legislation", "title": "Legislation", "isGride": true, "isVisible": true, "ellipsis": true, "width": 140 },
+        { "dataIndex": "issueStatus", "title": "Case Status", "isGride": true, "isVisible": true, "ellipsis": true, "width": 190 },
+        { "dataIndex": "priority", "title": "Priority", "isGride": true, "isVisible": true, "ellipsis": true, "width": 110 },
+        { "dataIndex": "ownerTeam", "title": "Owner", "isGride": true, "isVisible": true, "ellipsis": true, "width": 150 }
+      ]
+    },
+    "issuesftp": {
+      "screenKey": "FitnessToPractice",
+      "templateType": "issuesftp",
+      "service": "issue-service",
+      "filters": {
+        "priority": { "operator": "equal_to", "values": [] },
+        "issueStatus": { "operator": "not_equal_to", "values": ["CLOSED"] },
+        "ownerTeam": { "operator": "equal_to", "values": [] },
+        "dateReceived": { "operator": "between", "values": [] }
+      },
+      "columns": [
+        { "dataIndex": "caseTitle", "title": "Issue", "isGride": true, "isVisible": true, "ellipsis": true, "width": 260 },
+        { "dataIndex": "memberIds", "title": "Member Name", "isGride": true, "isVisible": true, "ellipsis": true, "width": 200 },
+        { "dataIndex": "membershipNo", "title": "Membership No", "isGride": true, "isVisible": true, "ellipsis": true, "width": 150 },
+        { "dataIndex": "caseFileNumber", "title": "Case File Number", "isGride": true, "isVisible": true, "ellipsis": true, "width": 170 },
+        { "dataIndex": "nmbiReference", "title": "NMBI Reference No", "isGride": true, "isVisible": true, "ellipsis": true, "width": 170 },
+        { "dataIndex": "location", "title": "Location", "isGride": true, "isVisible": true, "ellipsis": true, "width": 150 },
+        { "dataIndex": "dateReceived", "title": "Date Received", "filterValueType": "date", "isGride": true, "isVisible": true, "ellipsis": true, "width": 150 },
+        { "dataIndex": "criteriaLetterStatus", "title": "Criteria Letter", "isGride": true, "isVisible": true, "ellipsis": true, "width": 140 },
+        { "dataIndex": "legislation", "title": "Legislation", "isGride": true, "isVisible": true, "ellipsis": true, "width": 140 },
+        { "dataIndex": "issueStatus", "title": "Case Status", "isGride": true, "isVisible": true, "ellipsis": true, "width": 190 },
+        { "dataIndex": "priority", "title": "Priority", "isGride": true, "isVisible": true, "ellipsis": true, "width": 110 },
+        { "dataIndex": "ownerTeam", "title": "Owner", "isGride": true, "isVisible": true, "ellipsis": true, "width": 150 }
+      ]
+    },
+    "issuesir": {
+      "screenKey": "IndustrialRelations",
+      "templateType": "issuesir",
+      "service": "issue-service",
+      "filters": {
+        "priority": { "operator": "equal_to", "values": [] },
+        "issueStatus": { "operator": "not_equal_to", "values": ["CLOSED"] },
+        "ownerTeam": { "operator": "equal_to", "values": [] },
+        "dateReceived": { "operator": "between", "values": [] }
+      },
+      "columns": [
+        { "dataIndex": "caseTitle", "title": "Issue", "isGride": true, "isVisible": true, "ellipsis": true, "width": 260 },
+        { "dataIndex": "memberIds", "title": "Member Name", "isGride": true, "isVisible": true, "ellipsis": true, "width": 200 },
+        { "dataIndex": "membershipNo", "title": "Membership No", "isGride": true, "isVisible": true, "ellipsis": true, "width": 150 },
+        { "dataIndex": "caseFileNumber", "title": "Case File Number", "isGride": true, "isVisible": true, "ellipsis": true, "width": 170 },
+        { "dataIndex": "nmbiReference", "title": "NMBI Reference No", "isGride": true, "isVisible": true, "ellipsis": true, "width": 170 },
+        { "dataIndex": "location", "title": "Location", "isGride": true, "isVisible": true, "ellipsis": true, "width": 150 },
+        { "dataIndex": "dateReceived", "title": "Date Received", "filterValueType": "date", "isGride": true, "isVisible": true, "ellipsis": true, "width": 150 },
+        { "dataIndex": "criteriaLetterStatus", "title": "Criteria Letter", "isGride": true, "isVisible": true, "ellipsis": true, "width": 140 },
+        { "dataIndex": "legislation", "title": "Legislation", "isGride": true, "isVisible": true, "ellipsis": true, "width": 140 },
+        { "dataIndex": "issueStatus", "title": "Case Status", "isGride": true, "isVisible": true, "ellipsis": true, "width": 190 },
+        { "dataIndex": "priority", "title": "Priority", "isGride": true, "isVisible": true, "ellipsis": true, "width": 110 },
+        { "dataIndex": "ownerTeam", "title": "Owner", "isGride": true, "isVisible": true, "ellipsis": true, "width": 150 }
+      ]
+    },
+    "issuesdataprotection": {
+      "screenKey": "DataProtection",
+      "templateType": "issuesdataprotection",
+      "service": "issue-service",
+      "filters": {
+        "priority": { "operator": "equal_to", "values": [] },
+        "issueStatus": { "operator": "not_equal_to", "values": ["CLOSED"] },
+        "ownerTeam": { "operator": "equal_to", "values": [] },
+        "dateReceived": { "operator": "between", "values": [] }
+      },
+      "columns": [
+        { "dataIndex": "caseTitle", "title": "Issue", "isGride": true, "isVisible": true, "ellipsis": true, "width": 260 },
+        { "dataIndex": "memberIds", "title": "Member Name", "isGride": true, "isVisible": true, "ellipsis": true, "width": 200 },
+        { "dataIndex": "membershipNo", "title": "Membership No", "isGride": true, "isVisible": true, "ellipsis": true, "width": 150 },
+        { "dataIndex": "caseFileNumber", "title": "Case File Number", "isGride": true, "isVisible": true, "ellipsis": true, "width": 170 },
+        { "dataIndex": "nmbiReference", "title": "NMBI Reference No", "isGride": true, "isVisible": true, "ellipsis": true, "width": 170 },
+        { "dataIndex": "location", "title": "Location", "isGride": true, "isVisible": true, "ellipsis": true, "width": 150 },
+        { "dataIndex": "dateReceived", "title": "Date Received", "filterValueType": "date", "isGride": true, "isVisible": true, "ellipsis": true, "width": 150 },
+        { "dataIndex": "criteriaLetterStatus", "title": "Criteria Letter", "isGride": true, "isVisible": true, "ellipsis": true, "width": 140 },
+        { "dataIndex": "legislation", "title": "Legislation", "isGride": true, "isVisible": true, "ellipsis": true, "width": 140 },
+        { "dataIndex": "issueStatus", "title": "Case Status", "isGride": true, "isVisible": true, "ellipsis": true, "width": 190 },
+        { "dataIndex": "priority", "title": "Priority", "isGride": true, "isVisible": true, "ellipsis": true, "width": 110 },
+        { "dataIndex": "ownerTeam", "title": "Owner", "isGride": true, "isVisible": true, "ellipsis": true, "width": 150 }
+      ]
+    },
     "attendees": {
       "screenKey": "Attendees",
       "templateType": "attendees",

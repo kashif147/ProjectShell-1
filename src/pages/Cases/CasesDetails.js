@@ -55,9 +55,12 @@ import IrFields from "../../component/cases/IrFields";
 import DataProtectionFields from "../../component/cases/DataProtectionFields";
 import GroupPicker from "../../component/cases/GroupPicker";
 import LinkedCasesPicker from "../../component/cases/LinkedCasesPicker";
-import { useIssueStatusOptions, useIssueDropdownLookups } from "../../hooks/useIssueLookups";
 import {
-  RESOLUTIONS,
+  useIssueStatusOptions,
+  useIssueDropdownLookups,
+  useResolutionOptions,
+} from "../../hooks/useIssueLookups";
+import {
   ISSUE_TYPE_LABELS,
   toFormValues,
   buildIssueUpdatePayload,
@@ -131,10 +134,19 @@ function CasesDetails() {
 
   const { activeIssue, activities, loading } = useSelector((state) => state.issues);
 
-  // Issue Status options are scoped to the case's (fixed, non-editable-post-create) Issue
-  // Type - see hooks/useIssueLookups.js.
+  // Issue Status/Resolution options are scoped to the case's (fixed, non-editable-post-create)
+  // Issue Type - see hooks/useIssueLookups.js.
   const { options: issueStatusOptions } = useIssueStatusOptions(activeIssue?.issueType);
-  const { originOptions, issueSourceOptions, priorityOptions, complaintTypeOptions } = useIssueDropdownLookups();
+  const { options: resolutionOptions } = useResolutionOptions(activeIssue?.issueType);
+  const {
+    originOptions,
+    issueSourceOptions,
+    priorityOptions,
+    complaintTypeOptions,
+    criteriaLetterStatusOptions,
+    legislationOptions,
+    caseTypeOptions,
+  } = useIssueDropdownLookups();
 
   const [formValues, setFormValues] = useState({});
   const [savingGeneral, setSavingGeneral] = useState(false);
@@ -807,6 +819,9 @@ function CasesDetails() {
                     values={formValues}
                     onChange={handleFieldChange}
                     complaintTypeOptions={complaintTypeOptions}
+                    criteriaLetterStatusOptions={criteriaLetterStatusOptions}
+                    legislationOptions={legislationOptions}
+                    caseTypeOptions={caseTypeOptions}
                   />
                 </div>
               )}
@@ -1089,10 +1104,10 @@ function CasesDetails() {
                       bordered={false}
                       placeholder="Select resolution"
                       allowClear
-                      options={RESOLUTIONS.map((v) => ({ value: v, label: enumLabel(v) }))}
+                      options={resolutionOptions}
                     />
                   </div>
-                  {formValues.resolution === "OTHER" && (
+                  {formValues.resolution === "OTHR" && (
                     <div className="summary-field-single">
                       <span className="summary-label">Resolution (Other)</span>
                       <Input
