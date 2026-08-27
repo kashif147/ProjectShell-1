@@ -32,6 +32,9 @@ export const ISSUE_TYPE_LABELS = {
 
 export const ISSUE_STATUSES = [
   "ACTIVE",
+  "ACTIVE-FTP",
+  "ACTIVE-IR",
+  "ACTIVE-DP",
   "ACTIVE_BEFORE_BOARD",
   "ACTIVE_INQUIRY",
   "ACTIVE_PPC",
