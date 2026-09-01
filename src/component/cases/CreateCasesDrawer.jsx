@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { Progress, Radio, Upload, Button, Row, Col, Tag, message } from "antd";
-import { InboxOutlined } from "@ant-design/icons";
+import { InboxOutlined, DeleteOutlined } from "@ant-design/icons";
 import MyDrawer from "../common/MyDrawer";
 import MyInput from "../common/MyInput";
 import MyDatePicker1 from "../common/MyDatePicker1";
@@ -11,7 +11,7 @@ import ComplaintFields from "./ComplaintFields";
 import FtpFields from "./FtpFields";
 import IrFields from "./IrFields";
 import DataProtectionFields from "./DataProtectionFields";
-import { createIssue, createActivity } from "../../services/issuesApi";
+import { createIssue, createActivity, uploadIssueAttachment } from "../../services/issuesApi";
 import { useIssueDropdownLookups, useIssueStatusOptions } from "../../hooks/useIssueLookups";
 import { useTeamUserOptions } from "../../hooks/useTeamUsers";
 import { buildIssueCreatePayload, ISSUE_TYPE_TO_TEAM_RESOURCE } from "./issueOptions";
@@ -71,6 +71,12 @@ const CreateCasesDrawer = ({ open, onClose, presetMember, defaultIssueType }) =>
   const [formValues, setFormValues] = useState(emptyFormValues);
   const [memberLabels, setMemberLabels] = useState({});
   const [saving, setSaving] = useState(false);
+  // Files picked in the Documentation section before the issue exists yet - there's no
+  // issueId to attach them to until after createIssue() returns, so they're held here and
+  // uploaded as a best-effort follow-up step in handleSave (same "issue is already saved,
+  // don't let a follow-up failure undo/block that" pattern the Advice Given activity below
+  // already uses).
+  const [pendingAttachments, setPendingAttachments] = useState([]);
 
   // This drawer is always mounted (HeaderDetails.jsx just toggles `open`, so its close
   // animation isn't cut short), so useIssueDropdownLookups()'s one-shot fetch-on-mount would
@@ -204,6 +210,7 @@ const CreateCasesDrawer = ({ open, onClose, presetMember, defaultIssueType }) =>
   const resetAndClose = () => {
     setFormValues(emptyFormValues());
     setMemberLabels({});
+    setPendingAttachments([]);
     onClose();
   };
 
@@ -233,6 +240,17 @@ const CreateCasesDrawer = ({ open, onClose, presetMember, defaultIssueType }) =>
         }).catch((error) => {
           console.error("Failed to log Advice Given activity:", error);
         });
+      }
+      if (newIssueId && pendingAttachments.length > 0) {
+        // Same best-effort reasoning as Advice Given above - upload one at a time (not
+        // Promise.all) so a single bad file doesn't abort the rest.
+        for (const file of pendingAttachments) {
+          // eslint-disable-next-line no-await-in-loop
+          await uploadIssueAttachment(newIssueId, file).catch((error) => {
+            console.error(`Failed to upload attachment "${file.name}":`, error);
+            message.warning(`Issue created, but "${file.name}" failed to upload`);
+          });
+        }
       }
       message.success("Issue created");
       // No live-refresh hook available: CasesSummary.js fetches its own row list with
@@ -475,19 +493,62 @@ const CreateCasesDrawer = ({ open, onClose, presetMember, defaultIssueType }) =>
     </div>
   );
 
+  // Files can't be attached to the issue until it exists (issue-service's attachment
+  // endpoint is POST /issues/:id/attachments, id-scoped) - beforeUpload just collects them
+  // into pendingAttachments and returns false to stop antd's own auto-upload; handleSave
+  // uploads them one by one right after createIssue() resolves.
+  const handleFilePicked = (file) => {
+    const allowed = ["application/pdf", "image/jpeg", "image/png", "image/webp"];
+    if (!allowed.includes(file.type)) {
+      message.error(`${file.name}: only PDF, JPEG, PNG, or WEBP files are allowed`);
+      return Upload.LIST_IGNORE;
+    }
+    setPendingAttachments((prev) => [...prev, file]);
+    return false;
+  };
+
+  const removePendingAttachment = (file) => {
+    setPendingAttachments((prev) => prev.filter((f) => f !== file));
+  };
+
   const renderDocumentation = () => (
     <div className="form-section">
       <h3 className="section-title">Documentation</h3>
       <label className="form-label">Attachments</label>
-      <Dragger className="case-upload-dragger" disabled>
+      <Dragger
+        className="case-upload-dragger"
+        multiple
+        showUploadList={false}
+        beforeUpload={handleFilePicked}
+        disabled={saving}
+      >
         <p className="upload-icon-wrapper">
           <InboxOutlined style={{ fontSize: "32px", color: "var(--app-brand-accent)" }} />
         </p>
         <p className="upload-hint">
-          Drag &amp; drop or tap to select PDFs, PNGs, or DOCX (not yet wired to a backend -
-          issue-service has no attachments endpoint)
+          Drag &amp; drop or tap to select PDF, JPEG, PNG, or WEBP files - uploaded once the
+          issue is saved
         </p>
       </Dragger>
+      {pendingAttachments.length > 0 && (
+        <div style={{ marginTop: 8, display: "flex", flexDirection: "column", gap: 4 }}>
+          {pendingAttachments.map((file, index) => (
+            <div
+              key={`${file.name}-${index}`}
+              style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}
+            >
+              <span style={{ fontSize: 13 }}>{file.name}</span>
+              <Button
+                type="text"
+                danger
+                size="small"
+                icon={<DeleteOutlined />}
+                onClick={() => removePendingAttachment(file)}
+              />
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 

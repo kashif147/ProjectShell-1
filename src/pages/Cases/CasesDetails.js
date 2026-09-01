@@ -43,6 +43,9 @@ import {
   createActivity,
   updateIssue,
   updateIssueStatus,
+  fetchIssueAttachments,
+  uploadIssueAttachment,
+  getAttachmentDownloadUrl,
 } from "../../services/issuesApi";
 import {
   getIssueById,
@@ -476,10 +479,27 @@ function CasesDetails() {
     setActivityForm((prev) => ({ ...prev, [field]: value }));
   };
 
+  // Mirrors issue-service's server-side rule (controllers/issueActivity.controller.js's
+  // assertIssueNotClosed / issuePortal.controller.js's portalAddIssueComment) - a closed
+  // issue is done, so neither activities nor attachments should be addable to it. This is
+  // the UX-side guard (disable the controls); the backend still enforces it independently.
+  const isIssueClosed = formValues.issueStatus === "CLOSED";
+
   const handlePostActivity = async () => {
     if (!issueId) return;
+    if (isIssueClosed) {
+      message.error("Cannot add an activity to a closed issue");
+      return;
+    }
     if (!activityForm.activityType) {
       message.error("Activity type is required");
+      return;
+    }
+    // ReactQuill's empty state is HTML like "<p><br></p>", not "" - stripHtml (already used
+    // elsewhere in this file for displaying logged activities) extracts the actual text so
+    // whitespace-only/formatting-only input doesn't slip past as "has content".
+    if (!stripHtml(activityForm.body)) {
+      message.error("Activity text is required");
       return;
     }
     setPostingActivity(true);
@@ -532,76 +552,119 @@ function CasesDetails() {
 
   const handlePrint = () => window.print();
 
-  // ---- Attachments: purely presentational mock, no issue-service backend counterpart
-  // (issue-service has no attachments endpoints) - left as-is per the task's scope, not
-  // wired to any real data and not removed.
-  const attachmentsData = [
-    {
-      name: "Case_Summary_V2.pdf",
-      date: "Oct 24, 2023",
-      time: "10:30 AM",
-      modifiedBy: "J. DOE",
-      type: "pdf",
-      icon: <FileTextOutlined style={{ color: "#ff4d4f" }} />,
-    },
-    {
-      name: "Internal_Review_Notes.docx",
-      date: "Oct 19, 2023",
-      time: "04:20 PM",
-      modifiedBy: "M. LEGAL",
-      type: "doc",
-      icon: <FileTextOutlined style={{ color: "var(--app-brand-accent)" }} />,
-    },
-  ];
+  // ---- Attachments: real data, backed by issue-service's
+  // GET/POST /issues/:id/attachments (issueActivity.controller.js's listIssueAttachments/
+  // uploadIssueAttachment) - each entry stores an {activityId, index} pair since attachments
+  // live on an Activity, not a separate Issue-level document model (see that controller's
+  // doc comment for why).
+  const [attachments, setAttachments] = useState([]);
+  const [attachmentsLoading, setAttachmentsLoading] = useState(false);
+  const [uploadingAttachment, setUploadingAttachment] = useState(false);
+
+  const loadAttachments = useCallback(async () => {
+    if (!issueId) return;
+    setAttachmentsLoading(true);
+    try {
+      const data = await fetchIssueAttachments(issueId);
+      setAttachments(Array.isArray(data) ? data : []);
+    } catch (error) {
+      // Best-effort - a listing failure shouldn't block the rest of the page.
+      setAttachments([]);
+    } finally {
+      setAttachmentsLoading(false);
+    }
+  }, [issueId]);
+
+  useEffect(() => {
+    loadAttachments();
+  }, [loadAttachments]);
 
   const handleUploadFile = () => {
     const input = document.createElement("input");
     input.type = "file";
-    input.multiple = true;
-    input.onchange = () => {};
+    input.accept = ".pdf,.jpg,.jpeg,.png,.webp";
+    input.onchange = async (e) => {
+      const files = Array.from(e.target.files || []);
+      if (files.length === 0) return;
+      setUploadingAttachment(true);
+      try {
+        for (const file of files) {
+          // eslint-disable-next-line no-await-in-loop
+          await uploadIssueAttachment(issueId, file);
+        }
+        message.success(files.length > 1 ? "Files uploaded" : "File uploaded");
+        loadAttachments();
+      } catch (error) {
+        message.error(
+          error?.response?.data?.error?.message ||
+            error?.response?.data?.message ||
+            error?.message ||
+            "Failed to upload attachment",
+        );
+      } finally {
+        setUploadingAttachment(false);
+      }
+    };
     input.click();
   };
-  const handleDownloadFile = (file) => {
-    const blob = new Blob([`Placeholder content for ${file.name}`], {
-      type: "application/octet-stream",
-    });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = file.name;
-    a.click();
-    URL.revokeObjectURL(url);
-  };
-  const handleViewFile = (file) => {
-    const w = window.open("", "_blank");
-    if (w) {
-      w.document.write(
-        `<html><body style="font-family:sans-serif;padding:24px"><h2>${file.name}</h2><p>Preview not available for this file type.</p></body></html>`,
+
+  const openAttachment = async (file) => {
+    try {
+      const { url } = await getAttachmentDownloadUrl(file.activityId, file.index);
+      if (url) window.open(url, "_blank", "noopener,noreferrer");
+    } catch (error) {
+      message.error(
+        error?.response?.data?.error?.message ||
+          error?.response?.data?.message ||
+          error?.message ||
+          "Failed to open attachment",
       );
     }
   };
+
   const handleDownloadAll = () => {
-    attachmentsData.forEach((file, i) => setTimeout(() => handleDownloadFile(file), i * 200));
+    attachments.forEach((file, i) => setTimeout(() => openAttachment(file), i * 200));
+  };
+
+  const fileIconFor = (filename = "") => {
+    const ext = filename.split(".").pop()?.toLowerCase();
+    if (ext === "pdf") return <FileTextOutlined style={{ color: "#ff4d4f" }} />;
+    if (["doc", "docx"].includes(ext)) {
+      return <FileTextOutlined style={{ color: "var(--app-brand-accent)" }} />;
+    }
+    return <FileTextOutlined style={{ color: "var(--theme-text-muted, #8c8c8c)" }} />;
   };
 
   const renderAttachments = () => (
     <div className="attachments-tab-content">
       <div className="attachments-icons-grid">
-        {attachmentsData.map((file, index) => (
-          <div key={index} className="attachment-icon-item" title={file.name}>
-            <div className={`file-type-icon ${file.type}`}>{file.icon}</div>
-            <div className="file-name-tooltip">{file.name}</div>
-            <div className="file-upload-date">
-              {file.date} {file.time}
-            </div>
+        {attachmentsLoading && (
+          <div style={{ color: "var(--theme-text-muted)", fontSize: 13, padding: "8px 0" }}>
+            Loading attachments...
+          </div>
+        )}
+        {!attachmentsLoading && attachments.length === 0 && (
+          <div style={{ color: "var(--theme-text-muted)", fontSize: 13, padding: "8px 0" }}>
+            No attachments yet.
+          </div>
+        )}
+        {attachments.map((file) => (
+          <div
+            key={`${file.activityId}-${file.index}`}
+            className="attachment-icon-item"
+            title={file.filename}
+          >
+            <div className="file-type-icon">{fileIconFor(file.filename)}</div>
+            <div className="file-name-tooltip">{file.filename}</div>
+            <div className="file-upload-date">{formatDate(file.uploadedAt, true)}</div>
             <div className="attachment-item-actions">
               <Tooltip title="View">
                 <span
                   className="attachment-action-btn"
-                  onClick={() => handleViewFile(file)}
+                  onClick={() => openAttachment(file)}
                   role="button"
                   tabIndex={0}
-                  onKeyDown={(e) => e.key === "Enter" && handleViewFile(file)}
+                  onKeyDown={(e) => e.key === "Enter" && openAttachment(file)}
                 >
                   <EyeOutlined />
                 </span>
@@ -609,10 +672,10 @@ function CasesDetails() {
               <Tooltip title="Download">
                 <span
                   className="attachment-action-btn"
-                  onClick={() => handleDownloadFile(file)}
+                  onClick={() => openAttachment(file)}
                   role="button"
                   tabIndex={0}
-                  onKeyDown={(e) => e.key === "Enter" && handleDownloadFile(file)}
+                  onKeyDown={(e) => e.key === "Enter" && openAttachment(file)}
                 >
                   <DownloadOutlined />
                 </span>
@@ -620,14 +683,19 @@ function CasesDetails() {
             </div>
           </div>
         ))}
-        <div className="attachment-icon-item upload-icon-item" onClick={handleUploadFile}>
-          <Avatar
-            className="upload-new-avatar"
-            icon={<PlusOutlined />}
-            style={{ backgroundColor: "var(--primary-blue)", cursor: "pointer" }}
-          />
-          <div className="file-name-tooltip">Upload New</div>
-        </div>
+        {!isIssueClosed && (
+          <div
+            className="attachment-icon-item upload-icon-item"
+            onClick={uploadingAttachment ? undefined : handleUploadFile}
+          >
+            <Avatar
+              className="upload-new-avatar"
+              icon={<PlusOutlined />}
+              style={{ backgroundColor: "var(--primary-blue)", cursor: uploadingAttachment ? "wait" : "pointer" }}
+            />
+            <div className="file-name-tooltip">{uploadingAttachment ? "Uploading..." : "Upload New"}</div>
+          </div>
+        )}
       </div>
     </div>
   );
@@ -682,6 +750,11 @@ function CasesDetails() {
       >
         <Avatar icon={<UserAddOutlined />} />
         <div style={{ flex: 1 }}>
+          {isIssueClosed && (
+            <div style={{ marginBottom: 12, color: "var(--theme-text-muted)", fontSize: 13 }}>
+              This issue is closed - activities can no longer be added.
+            </div>
+          )}
           <Row gutter={12} style={{ marginBottom: 12 }}>
             <Col span={8}>
               <Select
@@ -689,6 +762,7 @@ function CasesDetails() {
                 onChange={(v) => handleActivityFieldChange("activityType", v)}
                 style={{ width: "100%" }}
                 options={ACTIVITY_TYPE_OPTIONS.map((v) => ({ value: v, label: enumLabel(v) }))}
+                disabled={isIssueClosed}
               />
             </Col>
             <Col span={8}>
@@ -698,6 +772,7 @@ function CasesDetails() {
                 style={{ width: "100%" }}
                 format="DD/MM/YYYY HH:mm"
                 showTime
+                disabled={isIssueClosed}
               />
             </Col>
             <Col span={8}>
@@ -705,6 +780,7 @@ function CasesDetails() {
                 placeholder="Subject"
                 value={activityForm.subject}
                 onChange={(e) => handleActivityFieldChange("subject", e.target.value)}
+                disabled={isIssueClosed}
               />
             </Col>
           </Row>
@@ -714,6 +790,7 @@ function CasesDetails() {
               value={activityForm.body}
               onChange={(v) => handleActivityFieldChange("body", v)}
               placeholder="Add activity details..."
+              readOnly={isIssueClosed}
               modules={{
                 toolbar: [
                   ["bold", "italic", "underline"],
@@ -730,6 +807,7 @@ function CasesDetails() {
                 onChange={(e) =>
                   handleActivityFieldChange("pertinentToFileReview", e.target.checked)
                 }
+                disabled={isIssueClosed}
               >
                 Pertinent to File Review
               </Checkbox>
@@ -738,6 +816,7 @@ function CasesDetails() {
               <Checkbox
                 checked={activityForm.sendNotification}
                 onChange={(e) => handleActivityFieldChange("sendNotification", e.target.checked)}
+                disabled={isIssueClosed}
               >
                 Notify owner
               </Checkbox>
@@ -746,7 +825,7 @@ function CasesDetails() {
           <button
             className="custom-action-btn custom-primary-btn"
             onClick={handlePostActivity}
-            disabled={postingActivity}
+            disabled={postingActivity || isIssueClosed}
           >
             {postingActivity ? "Logging..." : "Log Activity"}
           </button>
@@ -917,8 +996,8 @@ function CasesDetails() {
                 <div className="section-header-collapsible">
                   <h3>
                     Attachments
-                    {collapsedSections.Attachments && attachmentsData.length > 0 && (
-                      <span className="section-count"> ({attachmentsData.length} documents)</span>
+                    {collapsedSections.Attachments && attachments.length > 0 && (
+                      <span className="section-count"> ({attachments.length} documents)</span>
                     )}
                   </h3>
                   <div className="section-header-actions">
