@@ -316,6 +316,10 @@
 .create-case-drawer .form-section .ant-row .ant-col {
   display: flex;
   flex-direction: column;
+  /* Without this, a long option label (e.g. a configurable Complaint Type/Service
+     Provider lookup value) forces the column's content-based min-width past its
+     max-width, so the select spills across the two-column row instead of truncating. */
+  min-width: 0;
 }
 
 .create-case-drawer .form-section .ant-row .ant-col .case-input-container {
@@ -370,6 +374,17 @@
   .my-input-wrapper:has(#stakeholders)
   .my-input-label {
   margin-bottom: 8px !important;
+}
+
+.create-case-drawer .form-section .ant-row .ant-col .my-input-label.related-members-label {
+  margin-bottom: 0 !important;
+}
+
+/* ARAG Reference No (MyInput) sits beside Criteria Letter Status (CustomSelect, whose label
+   always carries Bootstrap's `.mb-0`) - MyInput has no equivalent class, so it falls back to
+   this file's general 0.5rem label margin above and sits 8px lower than its row partner. */
+.create-case-drawer .form-section .ant-row .ant-col label[for="aragReferenceNo"].my-input-label {
+  margin-bottom: 0 !important;
 }
 
 /* Edit cases drawer – same styling as create case with extra left padding */

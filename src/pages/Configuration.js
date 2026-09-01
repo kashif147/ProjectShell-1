@@ -3307,9 +3307,10 @@ const Configuration = () => {
                 title: "Confirm Deletion",
                 message: "Do You Want To Delete This Item?",
                 onConfirm: async () => {
-                  await deleteFtn(`contact-types/${record?._id}`, null, () =>
-                    dispatch(getContactTypes()),
-                  );
+                  await deleteFtn(`contact-types/${record?._id}`, null, () => {
+                    dispatch(resetContactTypes());
+                    dispatch(getContactTypes());
+                  });
                 },
               });
             }}
@@ -6785,8 +6786,10 @@ const Configuration = () => {
             "Data inserted successfully:",
             "Data did not insert:",
             () => {
-              resetCounteries("ContactType", () => dispatch(getContactTypes()));
-              dispatch(getContactTypes());
+              resetCounteries("ContactType", () => {
+                dispatch(resetContactTypes());
+                dispatch(getContactTypes());
+              });
             },
           );
         }}
@@ -6797,9 +6800,11 @@ const Configuration = () => {
             `/contact-types/${drawerIpnuts?.ContactType?.id}`,
             drawerIpnuts?.ContactType,
             () =>
-              resetCounteries("ContactType", () => dispatch(getContactTypes())),
+              resetCounteries("ContactType", () => {
+                dispatch(resetContactTypes());
+                dispatch(getContactTypes());
+              }),
           );
-          dispatch(getContactTypes());
           // dispatch(getAllLookups());
           // IsUpdateFtn("Divisions", false);
         }}

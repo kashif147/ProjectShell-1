@@ -60,13 +60,16 @@ import {
   useIssueDropdownLookups,
   useResolutionOptions,
 } from "../../hooks/useIssueLookups";
+import { useTeamUserOptions } from "../../hooks/useTeamUsers";
 import {
   ISSUE_TYPE_LABELS,
+  ISSUE_TYPE_TO_TEAM_RESOURCE,
   toFormValues,
   buildIssueUpdatePayload,
   buildIssueStatusPayload,
   enumLabel,
 } from "../../component/cases/issueOptions";
+import { fetchProfilesBatchLookup } from "../../services/profileSearchApi";
 
 const TYPE_FIELDS_COMPONENT = {
   COMPLAINT: ComplaintFields,
@@ -138,6 +141,9 @@ function CasesDetails() {
   // Issue Type - see hooks/useIssueLookups.js.
   const { options: issueStatusOptions } = useIssueStatusOptions(activeIssue?.issueType);
   const { options: resolutionOptions } = useResolutionOptions(activeIssue?.issueType);
+  const { options: ownerOptions } = useTeamUserOptions(
+    ISSUE_TYPE_TO_TEAM_RESOURCE[activeIssue?.issueType],
+  );
   const {
     originOptions,
     issueSourceOptions,
@@ -322,21 +328,85 @@ function CasesDetails() {
     }
   };
 
+  const memberDisplayLabel = (memberData) =>
+    `${memberData?.personalInfo?.forename || ""} ${memberData?.personalInfo?.surname || ""}`.trim() ||
+    memberData?.membershipNumber ||
+    memberData?._id;
+
   const handleAddMember = async (memberData) => {
     const id = memberData?._id;
     if (!id || memberIds.includes(id)) return;
-    setMemberLabels((prev) => ({
-      ...prev,
-      [id]: `${memberData?.personalInfo?.forename || ""} ${memberData?.personalInfo?.surname || ""}`.trim() ||
-        memberData?.membershipNumber ||
-        id,
-    }));
+    setMemberLabels((prev) => ({ ...prev, [id]: memberDisplayLabel(memberData) }));
     await persistMemberIds([...memberIds, id]);
+  };
+
+  // Complaint Type "Member On Member" only - moves the selected complainant to memberIds[0]
+  // specifically rather than just appending, since the backend derives the auto-generated
+  // complainant label from memberIds[0] (issue-service's assignAutoTitles/resolveContactName).
+  // Same persistImmediately behavior as handleAddMember - also satisfies "auto-added as a
+  // Related Member" since memberIds is the same array Related Member(s) renders below.
+  const handleSelectComplainant = async (memberData) => {
+    const id = memberData?._id;
+    if (!id) return;
+    setMemberLabels((prev) => ({ ...prev, [id]: memberDisplayLabel(memberData) }));
+    await persistMemberIds([id, ...memberIds.filter((m) => m !== id)]);
+  };
+
+  // Complaint Type "Member On Member" only - the person the complaint is *about*.
+  // issue-service never auto-matches this when the complaint comes in via the member
+  // portal (see controllers/issuePortal.controller.js#requireRelatedMemberDescription) - it
+  // only stores the free-text name the member typed in respondents[0].name. A CRM staffer
+  // searches for and attaches the real profile here, which lands at memberIds[1]
+  // specifically (memberIds[0] stays the complainant) - keeps the two roles from
+  // colliding if a staffer links them in either order.
+  const handleSelectRelatedMember = async (memberData) => {
+    const id = memberData?._id;
+    if (!id) return;
+    setMemberLabels((prev) => ({ ...prev, [id]: memberDisplayLabel(memberData) }));
+    const withoutId = memberIds.filter((m) => m !== id);
+    const next = withoutId.length > 0 ? [withoutId[0], id, ...withoutId.slice(1)] : [id];
+    await persistMemberIds(next);
   };
 
   const handleRemoveMember = (id) => {
     persistMemberIds(memberIds.filter((m) => m !== id));
   };
+
+  // Hydrate memberLabels for memberIds the page loaded with (e.g. a portal-submitted
+  // complaint's complainant, or any pre-existing linked member) - memberLabels otherwise
+  // only gets populated in-session via handleAddMember/handleSelectComplainant/
+  // handleSelectRelatedMember, so a freshly-opened case would show raw profile ids in the
+  // "Related Member(s)" tags and the Complainant/Related Member fields above until someone
+  // happened to re-search the same person this session.
+  useEffect(() => {
+    const unresolved = memberIds.filter((id) => id && !memberLabels[id]);
+    if (unresolved.length === 0) return;
+    let cancelled = false;
+    fetchProfilesBatchLookup(unresolved)
+      .then((profiles) => {
+        if (cancelled || !Array.isArray(profiles) || profiles.length === 0) return;
+        setMemberLabels((prev) => {
+          const next = { ...prev };
+          profiles.forEach((profile) => {
+            const id = String(profile?._id || "");
+            if (!id) return;
+            next[id] =
+              profile?.personalInfo?.fullName ||
+              memberDisplayLabel(profile) ||
+              id;
+          });
+          return next;
+        });
+      })
+      .catch(() => {
+        // Best-effort - a lookup failure just leaves those tags showing raw ids, same as
+        // today's behavior, rather than blocking the page.
+      });
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [memberIds.join(",")]);
 
   // Group linking (profile-service's Group feature, GroupPicker.jsx) - persists immediately
   // on select/create/clear, same "must survive navigating away without Save" reasoning as
@@ -781,6 +851,19 @@ function CasesDetails() {
             />
           )}
         </div>
+
+        {/* Base Issue schema field (issue.model.js), common to all 4 issue types - same
+            pattern as Description above, minus the collapse chrome (kept simple since it
+            wasn't asked for here). */}
+        <div className="description-section">
+          <h3>Availability</h3>
+          <Input.TextArea
+            value={formValues.availability || ""}
+            onChange={(e) => handleFieldChange("availability", e.target.value)}
+            autoSize={{ minRows: 2, maxRows: 6 }}
+            placeholder="Availability notes..."
+          />
+        </div>
       </div>
     </div>
   );
@@ -822,6 +905,10 @@ function CasesDetails() {
                     criteriaLetterStatusOptions={criteriaLetterStatusOptions}
                     legislationOptions={legislationOptions}
                     caseTypeOptions={caseTypeOptions}
+                    memberIds={memberIds}
+                    memberLabels={memberLabels}
+                    onSelectComplainant={handleSelectComplainant}
+                    onSelectRelatedMember={handleSelectRelatedMember}
                   />
                 </div>
               )}
@@ -952,6 +1039,15 @@ function CasesDetails() {
                   </div>
 
                   <div className="summary-field-single">
+                    <span className="summary-label">Last Updated</span>
+                    <Input
+                      value={formatDate(activeIssue.updatedAt, true)}
+                      bordered={false}
+                      disabled
+                    />
+                  </div>
+
+                  <div className="summary-field-single">
                     <span className="summary-label">Date Received</span>
                     <DatePicker
                       value={formValues.dateReceived}
@@ -1016,12 +1112,16 @@ function CasesDetails() {
                   </div>
                   <div className="summary-field-single">
                     <span className="summary-label">Owner (User Id)</span>
-                    <Input
-                      value={formValues.owner?.userId || ""}
-                      onChange={(e) => handleOwnerUserIdChange(e.target.value)}
+                    <Select
+                      value={formValues.owner?.userId || undefined}
+                      onChange={(v) => handleOwnerUserIdChange(v)}
                       className="summary-input"
                       bordered={false}
-                      placeholder="userId"
+                      allowClear
+                      showSearch
+                      optionFilterProp="label"
+                      placeholder="Select owner"
+                      options={ownerOptions}
                     />
                   </div>
 
