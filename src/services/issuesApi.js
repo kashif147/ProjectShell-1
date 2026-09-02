@@ -80,6 +80,39 @@ export async function createActivity(issueId, payload) {
   return unwrap({ data });
 }
 
+// PUT /activities/:activityId - edits an already-logged activity (body/subject/
+// pertinentToFileReview/sendNotification/visibleToMember/etc). issue-service strips
+// _id/tenantId/issueId/createdBy from the payload server-side regardless of what's sent.
+export async function updateActivity(activityId, payload) {
+  const { data } = await axios.put(
+    `${getIssueServiceBaseUrl()}/activities/${activityId}`,
+    payload,
+    { headers: authHeaders() },
+  );
+  return unwrap({ data });
+}
+
+// DELETE /activities/:activityId - soft-delete (issue-service preserves the content so the
+// History tab's DELETED entry can show what was actually removed - see
+// models/activity.model.js's meta field doc comment).
+export async function deleteActivity(activityId) {
+  const { data } = await axios.delete(`${getIssueServiceBaseUrl()}/activities/${activityId}`, {
+    headers: authHeaders(),
+  });
+  return unwrap({ data });
+}
+
+// GET /issues/:id/history - the Case Details "History" tab's real data source
+// (controllers/issueActivity.controller.js's listHistory), replacing what was previously a
+// hardcoded single mock entry. Each row: {entityType, entityId, action, summary,
+// changedFields, actorId, actorEmail, createdAt}.
+export async function fetchIssueHistory(issueId) {
+  const { data } = await axios.get(`${getIssueServiceBaseUrl()}/issues/${issueId}/history`, {
+    headers: authHeaders(),
+  });
+  return unwrap({ data });
+}
+
 // GET /issues/search?q= - "Find Issues" (see issue.controller.js's searchIssues). One
 // unified query string matched against internalReferenceNumber/caseFileNumber/wrcCaseNumber
 // locally, issueType on exact match, and membership no/email/surname/forename/mobile via
