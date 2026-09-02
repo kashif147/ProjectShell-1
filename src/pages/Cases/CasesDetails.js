@@ -120,6 +120,11 @@ function emptyActivityForm() {
     // Default checked per the plan/backend model default (Activity.sendNotification
     // defaults true unless explicitly opted out).
     sendNotification: true,
+    // Default unchecked, matching Activity.visibleToMember's schema default (false) - an
+    // internal note/call stays internal unless a staffer explicitly opts it into the
+    // member's portal activity view (controllers/issuePortal.controller.js's
+    // portalListMyIssueActivities only returns visibleToMember:true entries).
+    visibleToMember: false,
   };
 }
 
@@ -513,6 +518,7 @@ function CasesDetails() {
           : new Date().toISOString(),
         pertinentToFileReview: !!activityForm.pertinentToFileReview,
         sendNotification: activityForm.sendNotification !== false,
+        visibleToMember: !!activityForm.visibleToMember,
       });
       message.success("Activity logged");
       setActivityForm(emptyActivityForm());
@@ -801,7 +807,7 @@ function CasesDetails() {
             />
           </div>
           <Row style={{ marginBottom: 12 }} align="middle">
-            <Col span={12}>
+            <Col span={8}>
               <Checkbox
                 checked={activityForm.pertinentToFileReview}
                 onChange={(e) =>
@@ -812,7 +818,7 @@ function CasesDetails() {
                 Pertinent to File Review
               </Checkbox>
             </Col>
-            <Col span={12}>
+            <Col span={8}>
               <Checkbox
                 checked={activityForm.sendNotification}
                 onChange={(e) => handleActivityFieldChange("sendNotification", e.target.checked)}
@@ -820,6 +826,17 @@ function CasesDetails() {
               >
                 Notify owner
               </Checkbox>
+            </Col>
+            <Col span={8}>
+              <Tooltip title="Members can only see activities marked visible here - internal notes/calls stay hidden by default.">
+                <Checkbox
+                  checked={activityForm.visibleToMember}
+                  onChange={(e) => handleActivityFieldChange("visibleToMember", e.target.checked)}
+                  disabled={isIssueClosed}
+                >
+                  Visible to member
+                </Checkbox>
+              </Tooltip>
             </Col>
           </Row>
           <button
@@ -851,6 +868,11 @@ function CasesDetails() {
                   {activity.pertinentToFileReview && (
                     <Tag color="gold" style={{ marginLeft: 8 }}>
                       File Review
+                    </Tag>
+                  )}
+                  {activity.visibleToMember && (
+                    <Tag color="green" style={{ marginLeft: 8 }}>
+                      Visible to member
                     </Tag>
                   )}
                 </span>
