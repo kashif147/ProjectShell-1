@@ -573,6 +573,14 @@ export const useAuthorization = () => {
   return context;
 };
 
+// Non-throwing variant, for the rare legitimate case of a hook/component that may render
+// both inside AND outside the AuthorizationProvider tree - e.g. FilterContext.js's
+// FilterProvider is mounted in index.js *above* <App />/<Entry />, which is where
+// AuthorizationProvider actually lives, so useAuthorization() would always throw there.
+// Returns null when there's no provider ancestor, instead of throwing - callers must treat
+// null as "authorization state isn't available here", not as "user is unauthenticated".
+export const useAuthorizationSafe = () => useContext(AuthorizationContext);
+
 // Higher-order component for permission-based rendering
 export const withPermission = (WrappedComponent, requiredPermission) => {
   return function PermissionWrapper(props) {

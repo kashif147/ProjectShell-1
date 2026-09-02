@@ -122,6 +122,10 @@ const Breadcrumb = () => {
       page: "Case Details",
       icon: "📋",
       recordIdField: "caseId",
+      // The "Case Details" breadcrumb segment otherwise just self-refreshes the current page
+      // (handlePageClick's default) - that's not useful on a detail page, so route it back
+      // to the actual issues list instead, same as clicking "Return to summary" would.
+      listingPath: "/CasesSummary",
     },
     "/CasesSummary/Closed": {
       module: "Issues Management",
@@ -779,6 +783,7 @@ const Breadcrumb = () => {
       path: currentPath,
       matchedPath,
       recordIdField: breadcrumbData.recordIdField,
+      listingPath: breadcrumbData.listingPath,
       membershipNav,
     };
   };
@@ -904,6 +909,13 @@ const Breadcrumb = () => {
   };
 
   const handlePageClick = () => {
+    // A route can opt into "go back to the listing page" instead of the default
+    // self-refresh, e.g. /CasesDetails -> /CasesSummary (see routeBreadcrumbMap's
+    // listingPath) - a detail page's own breadcrumb segment refreshing itself isn't useful.
+    if (breadcrumbData.listingPath) {
+      navigate(breadcrumbData.listingPath);
+      return;
+    }
     // Navigate to the current page (refresh) while preserving state
     navigate(breadcrumbData.path, {
       state: location.state,

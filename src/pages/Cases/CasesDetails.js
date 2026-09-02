@@ -207,7 +207,10 @@ function CasesDetails() {
           dispatch(setActivities(Array.isArray(data) ? data : []));
         })
         .catch(() => {
-          dispatch(setActivities([]));
+          // Deliberately does NOT clear activities to [] here - a duplicate/retried request
+          // that happens to fail (e.g. gateway rate-limiting a request burst) must never wipe
+          // out data an earlier successful call already loaded. Worst case on a genuine
+          // first-load failure: the list just stays empty, same end result as clearing it.
         })
         .finally(() => setActivitiesLoading(false));
     },
@@ -228,7 +231,10 @@ function CasesDetails() {
     setHistoryLoading(true);
     fetchIssueHistory(id)
       .then((data) => setHistoryEntries(Array.isArray(data) ? data : []))
-      .catch(() => setHistoryEntries([]))
+      .catch(() => {
+        // Same reasoning as loadActivities above - don't clobber already-loaded data with a
+        // later failing duplicate/retried request.
+      })
       .finally(() => setHistoryLoading(false));
   }, []);
 
@@ -288,6 +294,11 @@ function CasesDetails() {
       },
       0,
     );
+    // NOTE: this used to also self-heal `gridData` (fetching the full issues list here so
+    // prev/next works even when this page wasn't reached via the Issues grid) - reverted
+    // while investigating a request-storm/503 issue, since that added a heavy extra
+    // fetchIssues() call on every Case Details mount. Prev/next may be disabled again on
+    // direct-entry pages until this is revisited.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeIssue?._id]);
 
@@ -682,8 +693,10 @@ function CasesDetails() {
       const data = await fetchIssueAttachments(issueId);
       setAttachments(Array.isArray(data) ? data : []);
     } catch (error) {
-      // Best-effort - a listing failure shouldn't block the rest of the page.
-      setAttachments([]);
+      // Best-effort - a listing failure shouldn't block the rest of the page, and
+      // deliberately doesn't clear already-loaded attachments (same reasoning as
+      // loadActivities/loadHistory - a later failing duplicate request must never wipe out
+      // data an earlier successful one already loaded).
     } finally {
       setAttachmentsLoading(false);
     }
@@ -981,9 +994,10 @@ function CasesDetails() {
         {activities.map((activity) => {
           const isEditing = editingActivityId === activity._id;
           // updatedAt is set on every save, including creation itself (Mongoose timestamps),
-          // so it always exists even for never-edited activities - only show "Last updated"
-          // once it's meaningfully after createdAt (i.e. actually been edited), not on the
-          // millisecond-identical initial save.
+          // so it always exists even for never-edited activities - only treat it as "the
+          // date to show" once it's meaningfully after createdAt (i.e. actually been
+          // edited), not on the millisecond-identical initial save. One timestamp shown per
+          // row - whichever is latest - rather than both logged-on and last-updated.
           const wasEdited =
             activity.updatedAt &&
             activity.createdAt &&
@@ -1090,13 +1104,7 @@ function CasesDetails() {
                   </span>
                   <span style={{ display: "flex", alignItems: "center", gap: 8 }}>
                     <span style={{ color: "#bfbfbf", fontSize: 12, textAlign: "right" }}>
-                      {formatDate(activity.interactionDate, true)}
-                      {wasEdited && (
-                        <>
-                          <br />
-                          Last updated: {formatDate(activity.updatedAt, true)}
-                        </>
-                      )}
+                      {formatDate(wasEdited ? activity.updatedAt : activity.interactionDate, true)}
                     </span>
                     <Tooltip title="Edit">
                       <span
@@ -1123,7 +1131,7 @@ function CasesDetails() {
                           tabIndex={0}
                           aria-disabled={deletingActivityId === activity._id}
                         >
-                          <DeleteOutlined />
+                          <DeleteOutlined style={{ color: "#ff4d4f" }} />
                         </span>
                       </Tooltip>
                     </Popconfirm>

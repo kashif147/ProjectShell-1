@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { fetchIssueDropdownLookups, fetchIssueStatuses, fetchResolutions } from "../services/issuesApi";
+import { useAuthorizationSafe } from "../context/AuthorizationContext";
 
 function toSelectOptions(lookups) {
   return (lookups || [])
@@ -59,14 +60,26 @@ const EMPTY_DROPDOWN_LOOKUPS = {
  * changes when you actually want a fresh fetch (e.g. CreateCasesDrawer.jsx bumps one only on
  * open transitions). Without it, this only ever fetches once per component instance, which
  * silently starves any consumer that's mounted long before the user needs the data (e.g. a
- * drawer that's always in the tree, only toggled via an `open` prop) - if that one fetch
- * raced with auth setup or failed, there was no way to recover short of a full page reload.
+ * drawer that's always in the tree, only toggled via an `open` prop).
+ *
+ * Gated on AuthorizationContext's `isInitialized` when that context is actually available
+ * (previously it fired unconditionally on mount) - a page whose home route lands directly on
+ * a page using this hook could otherwise fire this fetch in the brief window between the
+ * Azure login callback storing the JWT and AuthorizationProvider finishing initializing,
+ * getting a 401 with no automatic recovery (see the reloadKey note above - a caller not
+ * bumping it manually was stuck until a full page reload). Uses useAuthorizationSafe(), not
+ * useAuthorization(), because this hook is also called from FilterContext.js's
+ * FilterProvider, mounted in index.js *above* AuthorizationProvider - there, the safe variant
+ * returns null and this hook simply isn't gated (fires as it always did).
  */
 export function useIssueDropdownLookups(reloadKey) {
+  const authCtx = useAuthorizationSafe();
+  const isInitialized = authCtx ? authCtx.isInitialized : true;
   const [lookups, setLookups] = useState(EMPTY_DROPDOWN_LOOKUPS);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    if (!isInitialized) return undefined;
     let cancelled = false;
     setLoading(true);
     fetchIssueDropdownLookups()
@@ -94,7 +107,7 @@ export function useIssueDropdownLookups(reloadKey) {
       cancelled = true;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [reloadKey]);
+  }, [reloadKey, isInitialized]);
 
   return { ...lookups, loading };
 }
@@ -107,11 +120,13 @@ export function useIssueDropdownLookups(reloadKey) {
  * empty list (not an error) when no issue type is selected yet.
  */
 export function useIssueStatusOptions(issueTypeCode) {
+  const authCtx = useAuthorizationSafe();
+  const isInitialized = authCtx ? authCtx.isInitialized : true;
   const [options, setOptions] = useState([]);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    if (!issueTypeCode) {
+    if (!issueTypeCode || !isInitialized) {
       setOptions([]);
       setLoading(false);
       return undefined;
@@ -131,7 +146,7 @@ export function useIssueStatusOptions(issueTypeCode) {
     return () => {
       cancelled = true;
     };
-  }, [issueTypeCode]);
+  }, [issueTypeCode, isInitialized]);
 
   return { options, loading };
 }
@@ -145,11 +160,13 @@ export function useIssueStatusOptions(issueTypeCode) {
  * type with no resolutions configured, or when no issue type is selected yet.
  */
 export function useResolutionOptions(issueTypeCode) {
+  const authCtx = useAuthorizationSafe();
+  const isInitialized = authCtx ? authCtx.isInitialized : true;
   const [options, setOptions] = useState([]);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    if (!issueTypeCode) {
+    if (!issueTypeCode || !isInitialized) {
       setOptions([]);
       setLoading(false);
       return undefined;
@@ -169,7 +186,7 @@ export function useResolutionOptions(issueTypeCode) {
     return () => {
       cancelled = true;
     };
-  }, [issueTypeCode]);
+  }, [issueTypeCode, isInitialized]);
 
   return { options, loading };
 }
