@@ -32,6 +32,9 @@ export const ISSUE_TYPE_LABELS = {
 
 export const ISSUE_STATUSES = [
   "ACTIVE",
+  "ACTIVE-FTP",
+  "ACTIVE-IR",
+  "ACTIVE-DP",
   "ACTIVE_BEFORE_BOARD",
   "ACTIVE_INQUIRY",
   "ACTIVE_PPC",
@@ -93,6 +96,19 @@ export const ISSUE_TYPE_TO_TEAM = {
   FTP: "FTP",
   IR: "IR",
   DP: "DATA_PROTECTION",
+};
+
+/**
+ * issueType -> the RBAC resource slug gating that team's issues, mirrors issue-service's
+ * TEAM_RESOURCE_BY_ISSUE_TYPE (services/issue.service.js). Used to scope Owner/Resolved By
+ * user pickers to whichever users hold write permission on that resource - see
+ * hooks/useTeamUsers.js.
+ */
+export const ISSUE_TYPE_TO_TEAM_RESOURCE = {
+  COMPLAINT: "issues-complaints",
+  FTP: "issues-ftp",
+  IR: "issues-ir",
+  DP: "issues-dataprotection",
 };
 
 // issueType -> the discriminator-only field names accepted by that type's model, used to
@@ -192,6 +208,7 @@ export function serializeIssuePayload(values) {
 export function buildIssueUpdatePayload(values, issueType, extraBaseFields = []) {
   const baseFields = [
     "description",
+    "availability",
     "issueSource",
     "issueSourceOther",
     "origin",
@@ -222,6 +239,7 @@ export function buildIssueUpdatePayload(values, issueType, extraBaseFields = [])
 export function buildIssueCreatePayload(values, issueType) {
   const baseFields = [
     "description",
+    "availability",
     "issueSource",
     "issueSourceOther",
     "origin",

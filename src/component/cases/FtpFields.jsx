@@ -45,11 +45,15 @@ function FtpFields({
         </Col>
       </Row>
 
-      <Row gutter={16}>
+      <Row gutter={16} align="top">
         <Col span={8}>
+          {/* Same label + `.my-input-container` box shape as the CustomSelect/MyInput fields
+              beside it (rather than a bare div with a hand-tuned marginTop), so this column's
+              label and control row line up with its siblings' by construction instead of by
+              magic-number guesswork - see ComplaintFields.jsx's identical fix. */}
           <div className="my-input-wrapper">
-            <label className="my-input-label">External Solicitor Involved</label>
-            <div style={{ marginTop: 6 }}>
+            <label className="my-input-label mb-0">External Solicitor Involved</label>
+            <div className="my-input-container" style={{ paddingLeft: 12 }}>
               <Checkbox
                 checked={!!values.externalSolicitorInvolved}
                 onChange={(e) =>
@@ -73,6 +77,7 @@ function FtpFields({
                 options={toOptions(SOLICITORS)}
                 placeholder="Select solicitor"
                 disabled={disabled}
+                required
               />
             </Col>
             {values.solicitor === "OTHER" && (
@@ -83,6 +88,7 @@ function FtpFields({
                   value={values.solicitorOther || ""}
                   onChange={(e) => onChange("solicitorOther", e.target.value)}
                   disabled={disabled}
+                  required
                 />
               </Col>
             )}
@@ -90,11 +96,11 @@ function FtpFields({
         )}
       </Row>
 
-      <Row gutter={16}>
+      <Row gutter={16} align="top">
         <Col span={8}>
           <div className="my-input-wrapper">
-            <label className="my-input-label">Membership Verified</label>
-            <div style={{ marginTop: 6 }}>
+            <label className="my-input-label mb-0">Membership Verified</label>
+            <div className="my-input-container" style={{ paddingLeft: 12 }}>
               <Checkbox
                 checked={!!values.membershipVerified}
                 onChange={(e) =>

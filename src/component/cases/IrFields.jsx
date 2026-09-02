@@ -4,6 +4,7 @@ import MyInput from "../common/MyInput";
 import CustomSelect from "../common/CustomSelect";
 import GroupPicker from "./GroupPicker";
 import { searchIssueDesignations } from "../../services/issuesApi";
+import { useTeamUserOptions } from "../../hooks/useTeamUsers";
 
 /**
  * IR (Industrial Relations) discriminator field set -
@@ -27,6 +28,7 @@ import { searchIssueDesignations } from "../../services/issuesApi";
  * issueOptions.js's TYPE_FIELDS.IR/buildIssueUpdatePayload for how it's carried.
  */
 function IrFields({ values = {}, onChange, disabled = false, caseTypeOptions = [] }) {
+  const { options: resolvedByOptions } = useTeamUserOptions("issues-ir");
   const [designationOptions, setDesignationOptions] = useState(() =>
     values.issueDesignationLabel
       ? [{ value: values.issueDesignation, label: values.issueDesignationLabel }]
@@ -125,7 +127,9 @@ function IrFields({ values = {}, onChange, disabled = false, caseTypeOptions = [
       <Row gutter={16}>
         <Col span={24}>
           <div className="my-input-wrapper">
-            <label className="my-input-label">Issue Designation</label>
+            <label className="my-input-label">
+              Issue Designation <span className="required-star">*</span>
+            </label>
             <Select
               showSearch
               value={values.issueDesignation || undefined}
@@ -176,8 +180,8 @@ function IrFields({ values = {}, onChange, disabled = false, caseTypeOptions = [
       <Row gutter={16}>
         <Col span={8}>
           <div className="my-input-wrapper">
-            <label className="my-input-label">Correspondence With External Party</label>
-            <div style={{ marginTop: 6 }}>
+            <label className="my-input-label mb-0">Correspondence With External Party</label>
+            <div className="my-input-container" style={{ paddingLeft: 12 }}>
               <Checkbox
                 checked={!!values.correspondenceWithExternalParty}
                 onChange={(e) =>
@@ -192,8 +196,8 @@ function IrFields({ values = {}, onChange, disabled = false, caseTypeOptions = [
         </Col>
         <Col span={8}>
           <div className="my-input-wrapper">
-            <label className="my-input-label">Membership Verified</label>
-            <div style={{ marginTop: 6 }}>
+            <label className="my-input-label mb-0">Membership Verified</label>
+            <div className="my-input-container" style={{ paddingLeft: 12 }}>
               <Checkbox
                 checked={!!values.membershipVerified}
                 onChange={(e) => onChange("membershipVerified", e.target.checked)}
@@ -205,14 +209,16 @@ function IrFields({ values = {}, onChange, disabled = false, caseTypeOptions = [
           </div>
         </Col>
         <Col span={8}>
-          {/* No staff/user-picker component in this codebase - see ComplaintFields.jsx's
-              same note on resolvedByUserId. */}
-          <MyInput
+          <CustomSelect
             label="Resolved By (User Id)"
             name="resolvedByUserId"
             value={values.resolvedByUserId || ""}
             onChange={(e) => onChange("resolvedByUserId", e.target.value)}
+            options={resolvedByOptions}
+            placeholder="Select user"
             disabled={disabled}
+            showSearch
+            isIDs
           />
         </Col>
       </Row>
@@ -220,8 +226,8 @@ function IrFields({ values = {}, onChange, disabled = false, caseTypeOptions = [
       <Row gutter={16}>
         <Col span={8}>
           <div className="my-input-wrapper">
-            <label className="my-input-label">Referred to Third Party</label>
-            <div style={{ marginTop: 6 }}>
+            <label className="my-input-label mb-0">Referred to Third Party</label>
+            <div className="my-input-container" style={{ paddingLeft: 12 }}>
               <Checkbox
                 checked={!!values.referredToThirdParty}
                 onChange={(e) => onChange("referredToThirdParty", e.target.checked)}
@@ -234,8 +240,8 @@ function IrFields({ values = {}, onChange, disabled = false, caseTypeOptions = [
         </Col>
         <Col span={8}>
           <div className="my-input-wrapper">
-            <label className="my-input-label">Submission Issued to Third Party</label>
-            <div style={{ marginTop: 6 }}>
+            <label className="my-input-label mb-0">Submission Issued to Third Party</label>
+            <div className="my-input-container" style={{ paddingLeft: 12 }}>
               <Checkbox
                 checked={!!values.submissionIssuedToThirdParty}
                 onChange={(e) =>
@@ -250,8 +256,8 @@ function IrFields({ values = {}, onChange, disabled = false, caseTypeOptions = [
         </Col>
         <Col span={8}>
           <div className="my-input-wrapper">
-            <label className="my-input-label">Outcome Received From Third Party</label>
-            <div style={{ marginTop: 6 }}>
+            <label className="my-input-label mb-0">Outcome Received From Third Party</label>
+            <div className="my-input-container" style={{ paddingLeft: 12 }}>
               <Checkbox
                 checked={!!values.outcomeReceivedFromThirdParty}
                 onChange={(e) =>

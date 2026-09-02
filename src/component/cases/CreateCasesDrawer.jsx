@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { Progress, Radio, Upload, Button, Row, Col, Tag, message } from "antd";
-import { InboxOutlined } from "@ant-design/icons";
+import { InboxOutlined, DeleteOutlined } from "@ant-design/icons";
 import MyDrawer from "../common/MyDrawer";
 import MyInput from "../common/MyInput";
 import MyDatePicker1 from "../common/MyDatePicker1";
@@ -11,9 +11,10 @@ import ComplaintFields from "./ComplaintFields";
 import FtpFields from "./FtpFields";
 import IrFields from "./IrFields";
 import DataProtectionFields from "./DataProtectionFields";
-import { createIssue } from "../../services/issuesApi";
+import { createIssue, createActivity, uploadIssueAttachment } from "../../services/issuesApi";
 import { useIssueDropdownLookups, useIssueStatusOptions } from "../../hooks/useIssueLookups";
-import { buildIssueCreatePayload } from "./issueOptions";
+import { useTeamUserOptions } from "../../hooks/useTeamUsers";
+import { buildIssueCreatePayload, ISSUE_TYPE_TO_TEAM_RESOURCE } from "./issueOptions";
 import "../../styles/CreateCasesDrawer.css";
 
 const { Dragger } = Upload;
@@ -28,6 +29,8 @@ const TYPE_FIELDS_COMPONENT = {
 function emptyFormValues() {
   return {
     description: "",
+    availability: "",
+    adviceGiven: "",
     dateReceived: null,
     origin: null,
     issueType: null,
@@ -68,6 +71,12 @@ const CreateCasesDrawer = ({ open, onClose, presetMember, defaultIssueType }) =>
   const [formValues, setFormValues] = useState(emptyFormValues);
   const [memberLabels, setMemberLabels] = useState({});
   const [saving, setSaving] = useState(false);
+  // Files picked in the Documentation section before the issue exists yet - there's no
+  // issueId to attach them to until after createIssue() returns, so they're held here and
+  // uploaded as a best-effort follow-up step in handleSave (same "issue is already saved,
+  // don't let a follow-up failure undo/block that" pattern the Advice Given activity below
+  // already uses).
+  const [pendingAttachments, setPendingAttachments] = useState([]);
 
   // This drawer is always mounted (HeaderDetails.jsx just toggles `open`, so its close
   // animation isn't cut short), so useIssueDropdownLookups()'s one-shot fetch-on-mount would
@@ -90,6 +99,9 @@ const CreateCasesDrawer = ({ open, onClose, presetMember, defaultIssueType }) =>
     caseTypeOptions,
   } = useIssueDropdownLookups(dropdownReloadKey);
   const { options: issueStatusOptions } = useIssueStatusOptions(formValues.issueType);
+  const { options: ownerOptions } = useTeamUserOptions(
+    ISSUE_TYPE_TO_TEAM_RESOURCE[formValues.issueType],
+  );
 
   // Default Issue Status to "Active" for whichever Issue Type is currently selected, then
   // leave the user's choice alone. Issue Status options are type-scoped (see
@@ -139,6 +151,11 @@ const CreateCasesDrawer = ({ open, onClose, presetMember, defaultIssueType }) =>
     setFormValues((prev) => ({ ...prev, [field]: value }));
   };
 
+  const memberDisplayLabel = (memberData) =>
+    `${memberData?.personalInfo?.forename || ""} ${memberData?.personalInfo?.surname || ""}`.trim() ||
+    memberData?.membershipNumber ||
+    memberData?._id;
+
   const handleAddMember = (memberData) => {
     const id = memberData?._id;
     if (!id) return;
@@ -147,13 +164,37 @@ const CreateCasesDrawer = ({ open, onClose, presetMember, defaultIssueType }) =>
       if (current.includes(id)) return prev;
       return { ...prev, memberIds: [...current, id] };
     });
-    setMemberLabels((prev) => ({
-      ...prev,
-      [id]:
-        `${memberData?.personalInfo?.forename || ""} ${memberData?.personalInfo?.surname || ""}`.trim() ||
-        memberData?.membershipNumber ||
-        id,
-    }));
+    setMemberLabels((prev) => ({ ...prev, [id]: memberDisplayLabel(memberData) }));
+  };
+
+  // Complaint Type "Member On Member" only - the selected complainant becomes memberIds[0]
+  // specifically (moved to the front, not just appended), since the backend derives the
+  // auto-generated complainant label from memberIds[0] (see issue-service's
+  // assignAutoTitles/resolveContactName). Also satisfies "auto-added as a Related Member"
+  // since memberIds is the same array Related Member(s) renders below.
+  const handleSelectComplainant = (memberData) => {
+    const id = memberData?._id;
+    if (!id) return;
+    setFormValues((prev) => {
+      const current = Array.isArray(prev.memberIds) ? prev.memberIds : [];
+      return { ...prev, memberIds: [id, ...current.filter((m) => m !== id)] };
+    });
+    setMemberLabels((prev) => ({ ...prev, [id]: memberDisplayLabel(memberData) }));
+  };
+
+  // Complaint Type "Member On Member" only - the person the complaint is about, distinct
+  // from the complainant (memberIds[0]) - see CasesDetails.js's handleSelectRelatedMember
+  // for why this lands at memberIds[1] specifically rather than just appending.
+  const handleSelectRelatedMember = (memberData) => {
+    const id = memberData?._id;
+    if (!id) return;
+    setFormValues((prev) => {
+      const current = Array.isArray(prev.memberIds) ? prev.memberIds : [];
+      const withoutId = current.filter((m) => m !== id);
+      const next = withoutId.length > 0 ? [withoutId[0], id, ...withoutId.slice(1)] : [id];
+      return { ...prev, memberIds: next };
+    });
+    setMemberLabels((prev) => ({ ...prev, [id]: memberDisplayLabel(memberData) }));
   };
 
   const handleRemoveMember = (id) => {
@@ -169,6 +210,7 @@ const CreateCasesDrawer = ({ open, onClose, presetMember, defaultIssueType }) =>
   const resetAndClose = () => {
     setFormValues(emptyFormValues());
     setMemberLabels({});
+    setPendingAttachments([]);
     onClose();
   };
 
@@ -184,7 +226,32 @@ const CreateCasesDrawer = ({ open, onClose, presetMember, defaultIssueType }) =>
     setSaving(true);
     try {
       const payload = buildIssueCreatePayload(formValues, formValues.issueType);
-      await createIssue(payload);
+      const created = await createIssue(payload);
+      const newIssueId = created?._id || created?.id;
+      if (newIssueId && formValues.adviceGiven?.trim()) {
+        // Best-effort: the issue is already saved at this point, so a failure here shouldn't
+        // block/undo the create - same "swallow and log" reasoning issue-service's own
+        // publishSafely uses for RabbitMQ publishes.
+        await createActivity(newIssueId, {
+          activityType: "ADVICE_GIVEN",
+          body: formValues.adviceGiven.trim(),
+          interactionDate: new Date().toISOString(),
+          sendNotification: false,
+        }).catch((error) => {
+          console.error("Failed to log Advice Given activity:", error);
+        });
+      }
+      if (newIssueId && pendingAttachments.length > 0) {
+        // Same best-effort reasoning as Advice Given above - upload one at a time (not
+        // Promise.all) so a single bad file doesn't abort the rest.
+        for (const file of pendingAttachments) {
+          // eslint-disable-next-line no-await-in-loop
+          await uploadIssueAttachment(newIssueId, file).catch((error) => {
+            console.error(`Failed to upload attachment "${file.name}":`, error);
+            message.warning(`Issue created, but "${file.name}" failed to upload`);
+          });
+        }
+      }
       message.success("Issue created");
       // No live-refresh hook available: CasesSummary.js fetches its own row list with
       // local useState (not the issues Redux slice), and this drawer is out of scope to
@@ -260,6 +327,7 @@ const CreateCasesDrawer = ({ open, onClose, presetMember, defaultIssueType }) =>
             options={issueStatusOptions}
             disabled={!formValues.issueType}
             isIDs
+            required
           />
         </Col>
       </Row>
@@ -283,6 +351,27 @@ const CreateCasesDrawer = ({ open, onClose, presetMember, defaultIssueType }) =>
         rows={2}
         required
       />
+      <MyInput
+        label="Availability"
+        name="availability"
+        value={formValues.availability || ""}
+        onChange={(e) => handleChange("availability", e.target.value)}
+        placeholder="Availability notes..."
+        type="textarea"
+        rows={2}
+      />
+      {/* Not an Issue field - saved as an Activity tagged ADVICE_GIVEN (see
+          backend/issue-service/models/activity.model.js's comment) once the issue exists,
+          same as CasesDetails.js's log-activity form. Left blank = no activity logged. */}
+      <MyInput
+        label="Advice Given"
+        name="adviceGiven"
+        value={formValues.adviceGiven || ""}
+        onChange={(e) => handleChange("adviceGiven", e.target.value)}
+        placeholder="Advice given to the member..."
+        type="textarea"
+        rows={2}
+      />
     </div>
   );
 
@@ -298,6 +387,7 @@ const CreateCasesDrawer = ({ open, onClose, presetMember, defaultIssueType }) =>
             onChange={(d) => handleChange("dateReceived", d)}
             placeholder="DD/MM/YYYY"
             format="DD/MM/YYYY"
+            required
           />
         </Col>
         <Col span={8}>
@@ -309,6 +399,7 @@ const CreateCasesDrawer = ({ open, onClose, presetMember, defaultIssueType }) =>
             placeholder="How was this reported?"
             options={originOptions}
             isIDs
+            required
           />
         </Col>
         <Col span={8}>
@@ -339,22 +430,28 @@ const CreateCasesDrawer = ({ open, onClose, presetMember, defaultIssueType }) =>
       <h3 className="section-title">Ownership &amp; Members</h3>
       <Row gutter={16}>
         <Col span={12}>
-          {/* No staff/user-picker component exists in this codebase - freeform userId text,
-              same simplification as CasesDetails.js's Owner field. Ignored server-side for
-              IR (auto-resolved to the member's IRO). */}
-          <MyInput
+          {/* Scoped to whichever team the selected Issue Type routes to (see
+              ISSUE_TYPE_TO_TEAM_RESOURCE) - only users with write permission on that team's
+              issues show up here. Ignored server-side for IR (auto-resolved to the member's
+              IRO) - still editable here since the picker can't know that ahead of save. */}
+          <CustomSelect
             label="Owner (User Id)"
             name="ownerUserId"
             value={formValues.owner?.userId || ""}
             onChange={(e) =>
               setFormValues((prev) => ({ ...prev, owner: { ...(prev.owner || {}), userId: e.target.value } }))
             }
-            placeholder="Optional - auto-resolved for IR"
+            options={ownerOptions}
+            placeholder={formValues.issueType ? "Select owner" : "Select Issue Type first"}
+            disabled={!formValues.issueType}
+            showSearch
+            isIDs
+            required
           />
         </Col>
         <Col span={12}>
-          <label className="my-input-label">Related Member(s)</label>
-          <MemberSearch onSelectBehavior="callback" onSelectCallback={handleAddMember} fullWidth compact showStatus={false} />
+          <label className="my-input-label related-members-label">Related Member(s)</label>
+          <MemberSearch onSelectBehavior="callback" onSelectCallback={handleAddMember} fullWidth showStatus={false} />
         </Col>
       </Row>
       <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginTop: 8 }}>
@@ -396,19 +493,62 @@ const CreateCasesDrawer = ({ open, onClose, presetMember, defaultIssueType }) =>
     </div>
   );
 
+  // Files can't be attached to the issue until it exists (issue-service's attachment
+  // endpoint is POST /issues/:id/attachments, id-scoped) - beforeUpload just collects them
+  // into pendingAttachments and returns false to stop antd's own auto-upload; handleSave
+  // uploads them one by one right after createIssue() resolves.
+  const handleFilePicked = (file) => {
+    const allowed = ["application/pdf", "image/jpeg", "image/png", "image/webp"];
+    if (!allowed.includes(file.type)) {
+      message.error(`${file.name}: only PDF, JPEG, PNG, or WEBP files are allowed`);
+      return Upload.LIST_IGNORE;
+    }
+    setPendingAttachments((prev) => [...prev, file]);
+    return false;
+  };
+
+  const removePendingAttachment = (file) => {
+    setPendingAttachments((prev) => prev.filter((f) => f !== file));
+  };
+
   const renderDocumentation = () => (
     <div className="form-section">
       <h3 className="section-title">Documentation</h3>
       <label className="form-label">Attachments</label>
-      <Dragger className="case-upload-dragger" disabled>
+      <Dragger
+        className="case-upload-dragger"
+        multiple
+        showUploadList={false}
+        beforeUpload={handleFilePicked}
+        disabled={saving}
+      >
         <p className="upload-icon-wrapper">
           <InboxOutlined style={{ fontSize: "32px", color: "var(--app-brand-accent)" }} />
         </p>
         <p className="upload-hint">
-          Drag &amp; drop or tap to select PDFs, PNGs, or DOCX (not yet wired to a backend -
-          issue-service has no attachments endpoint)
+          Drag &amp; drop or tap to select PDF, JPEG, PNG, or WEBP files - uploaded once the
+          issue is saved
         </p>
       </Dragger>
+      {pendingAttachments.length > 0 && (
+        <div style={{ marginTop: 8, display: "flex", flexDirection: "column", gap: 4 }}>
+          {pendingAttachments.map((file, index) => (
+            <div
+              key={`${file.name}-${index}`}
+              style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}
+            >
+              <span style={{ fontSize: 13 }}>{file.name}</span>
+              <Button
+                type="text"
+                danger
+                size="small"
+                icon={<DeleteOutlined />}
+                onClick={() => removePendingAttachment(file)}
+              />
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 
@@ -416,9 +556,7 @@ const CreateCasesDrawer = ({ open, onClose, presetMember, defaultIssueType }) =>
     <div className="form-section">
       <h3 className="section-title">Workflow</h3>
       <div className="case-input-container">
-        <label className="form-label">
-          Priority <span className="required-star">*</span>
-        </label>
+        <label className="form-label">Priority</label>
         <div className="priority-control-container">
           <Radio.Group
             value={formValues.priority}
@@ -477,6 +615,10 @@ const CreateCasesDrawer = ({ open, onClose, presetMember, defaultIssueType }) =>
               criteriaLetterStatusOptions={criteriaLetterStatusOptions}
               legislationOptions={legislationOptions}
               caseTypeOptions={caseTypeOptions}
+              memberIds={memberIds}
+              memberLabels={memberLabels}
+              onSelectComplainant={handleSelectComplainant}
+              onSelectRelatedMember={handleSelectRelatedMember}
             />
           )}
           {renderOwnership()}

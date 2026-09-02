@@ -43,6 +43,9 @@ import {
   createActivity,
   updateIssue,
   updateIssueStatus,
+  fetchIssueAttachments,
+  uploadIssueAttachment,
+  getAttachmentDownloadUrl,
 } from "../../services/issuesApi";
 import {
   getIssueById,
@@ -60,13 +63,16 @@ import {
   useIssueDropdownLookups,
   useResolutionOptions,
 } from "../../hooks/useIssueLookups";
+import { useTeamUserOptions } from "../../hooks/useTeamUsers";
 import {
   ISSUE_TYPE_LABELS,
+  ISSUE_TYPE_TO_TEAM_RESOURCE,
   toFormValues,
   buildIssueUpdatePayload,
   buildIssueStatusPayload,
   enumLabel,
 } from "../../component/cases/issueOptions";
+import { fetchProfilesBatchLookup } from "../../services/profileSearchApi";
 
 const TYPE_FIELDS_COMPONENT = {
   COMPLAINT: ComplaintFields,
@@ -138,6 +144,9 @@ function CasesDetails() {
   // Issue Type - see hooks/useIssueLookups.js.
   const { options: issueStatusOptions } = useIssueStatusOptions(activeIssue?.issueType);
   const { options: resolutionOptions } = useResolutionOptions(activeIssue?.issueType);
+  const { options: ownerOptions } = useTeamUserOptions(
+    ISSUE_TYPE_TO_TEAM_RESOURCE[activeIssue?.issueType],
+  );
   const {
     originOptions,
     issueSourceOptions,
@@ -322,21 +331,85 @@ function CasesDetails() {
     }
   };
 
+  const memberDisplayLabel = (memberData) =>
+    `${memberData?.personalInfo?.forename || ""} ${memberData?.personalInfo?.surname || ""}`.trim() ||
+    memberData?.membershipNumber ||
+    memberData?._id;
+
   const handleAddMember = async (memberData) => {
     const id = memberData?._id;
     if (!id || memberIds.includes(id)) return;
-    setMemberLabels((prev) => ({
-      ...prev,
-      [id]: `${memberData?.personalInfo?.forename || ""} ${memberData?.personalInfo?.surname || ""}`.trim() ||
-        memberData?.membershipNumber ||
-        id,
-    }));
+    setMemberLabels((prev) => ({ ...prev, [id]: memberDisplayLabel(memberData) }));
     await persistMemberIds([...memberIds, id]);
+  };
+
+  // Complaint Type "Member On Member" only - moves the selected complainant to memberIds[0]
+  // specifically rather than just appending, since the backend derives the auto-generated
+  // complainant label from memberIds[0] (issue-service's assignAutoTitles/resolveContactName).
+  // Same persistImmediately behavior as handleAddMember - also satisfies "auto-added as a
+  // Related Member" since memberIds is the same array Related Member(s) renders below.
+  const handleSelectComplainant = async (memberData) => {
+    const id = memberData?._id;
+    if (!id) return;
+    setMemberLabels((prev) => ({ ...prev, [id]: memberDisplayLabel(memberData) }));
+    await persistMemberIds([id, ...memberIds.filter((m) => m !== id)]);
+  };
+
+  // Complaint Type "Member On Member" only - the person the complaint is *about*.
+  // issue-service never auto-matches this when the complaint comes in via the member
+  // portal (see controllers/issuePortal.controller.js#requireRelatedMemberDescription) - it
+  // only stores the free-text name the member typed in respondents[0].name. A CRM staffer
+  // searches for and attaches the real profile here, which lands at memberIds[1]
+  // specifically (memberIds[0] stays the complainant) - keeps the two roles from
+  // colliding if a staffer links them in either order.
+  const handleSelectRelatedMember = async (memberData) => {
+    const id = memberData?._id;
+    if (!id) return;
+    setMemberLabels((prev) => ({ ...prev, [id]: memberDisplayLabel(memberData) }));
+    const withoutId = memberIds.filter((m) => m !== id);
+    const next = withoutId.length > 0 ? [withoutId[0], id, ...withoutId.slice(1)] : [id];
+    await persistMemberIds(next);
   };
 
   const handleRemoveMember = (id) => {
     persistMemberIds(memberIds.filter((m) => m !== id));
   };
+
+  // Hydrate memberLabels for memberIds the page loaded with (e.g. a portal-submitted
+  // complaint's complainant, or any pre-existing linked member) - memberLabels otherwise
+  // only gets populated in-session via handleAddMember/handleSelectComplainant/
+  // handleSelectRelatedMember, so a freshly-opened case would show raw profile ids in the
+  // "Related Member(s)" tags and the Complainant/Related Member fields above until someone
+  // happened to re-search the same person this session.
+  useEffect(() => {
+    const unresolved = memberIds.filter((id) => id && !memberLabels[id]);
+    if (unresolved.length === 0) return;
+    let cancelled = false;
+    fetchProfilesBatchLookup(unresolved)
+      .then((profiles) => {
+        if (cancelled || !Array.isArray(profiles) || profiles.length === 0) return;
+        setMemberLabels((prev) => {
+          const next = { ...prev };
+          profiles.forEach((profile) => {
+            const id = String(profile?._id || "");
+            if (!id) return;
+            next[id] =
+              profile?.personalInfo?.fullName ||
+              memberDisplayLabel(profile) ||
+              id;
+          });
+          return next;
+        });
+      })
+      .catch(() => {
+        // Best-effort - a lookup failure just leaves those tags showing raw ids, same as
+        // today's behavior, rather than blocking the page.
+      });
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [memberIds.join(",")]);
 
   // Group linking (profile-service's Group feature, GroupPicker.jsx) - persists immediately
   // on select/create/clear, same "must survive navigating away without Save" reasoning as
@@ -406,10 +479,27 @@ function CasesDetails() {
     setActivityForm((prev) => ({ ...prev, [field]: value }));
   };
 
+  // Mirrors issue-service's server-side rule (controllers/issueActivity.controller.js's
+  // assertIssueNotClosed / issuePortal.controller.js's portalAddIssueComment) - a closed
+  // issue is done, so neither activities nor attachments should be addable to it. This is
+  // the UX-side guard (disable the controls); the backend still enforces it independently.
+  const isIssueClosed = formValues.issueStatus === "CLOSED";
+
   const handlePostActivity = async () => {
     if (!issueId) return;
+    if (isIssueClosed) {
+      message.error("Cannot add an activity to a closed issue");
+      return;
+    }
     if (!activityForm.activityType) {
       message.error("Activity type is required");
+      return;
+    }
+    // ReactQuill's empty state is HTML like "<p><br></p>", not "" - stripHtml (already used
+    // elsewhere in this file for displaying logged activities) extracts the actual text so
+    // whitespace-only/formatting-only input doesn't slip past as "has content".
+    if (!stripHtml(activityForm.body)) {
+      message.error("Activity text is required");
       return;
     }
     setPostingActivity(true);
@@ -462,76 +552,119 @@ function CasesDetails() {
 
   const handlePrint = () => window.print();
 
-  // ---- Attachments: purely presentational mock, no issue-service backend counterpart
-  // (issue-service has no attachments endpoints) - left as-is per the task's scope, not
-  // wired to any real data and not removed.
-  const attachmentsData = [
-    {
-      name: "Case_Summary_V2.pdf",
-      date: "Oct 24, 2023",
-      time: "10:30 AM",
-      modifiedBy: "J. DOE",
-      type: "pdf",
-      icon: <FileTextOutlined style={{ color: "#ff4d4f" }} />,
-    },
-    {
-      name: "Internal_Review_Notes.docx",
-      date: "Oct 19, 2023",
-      time: "04:20 PM",
-      modifiedBy: "M. LEGAL",
-      type: "doc",
-      icon: <FileTextOutlined style={{ color: "var(--app-brand-accent)" }} />,
-    },
-  ];
+  // ---- Attachments: real data, backed by issue-service's
+  // GET/POST /issues/:id/attachments (issueActivity.controller.js's listIssueAttachments/
+  // uploadIssueAttachment) - each entry stores an {activityId, index} pair since attachments
+  // live on an Activity, not a separate Issue-level document model (see that controller's
+  // doc comment for why).
+  const [attachments, setAttachments] = useState([]);
+  const [attachmentsLoading, setAttachmentsLoading] = useState(false);
+  const [uploadingAttachment, setUploadingAttachment] = useState(false);
+
+  const loadAttachments = useCallback(async () => {
+    if (!issueId) return;
+    setAttachmentsLoading(true);
+    try {
+      const data = await fetchIssueAttachments(issueId);
+      setAttachments(Array.isArray(data) ? data : []);
+    } catch (error) {
+      // Best-effort - a listing failure shouldn't block the rest of the page.
+      setAttachments([]);
+    } finally {
+      setAttachmentsLoading(false);
+    }
+  }, [issueId]);
+
+  useEffect(() => {
+    loadAttachments();
+  }, [loadAttachments]);
 
   const handleUploadFile = () => {
     const input = document.createElement("input");
     input.type = "file";
-    input.multiple = true;
-    input.onchange = () => {};
+    input.accept = ".pdf,.jpg,.jpeg,.png,.webp";
+    input.onchange = async (e) => {
+      const files = Array.from(e.target.files || []);
+      if (files.length === 0) return;
+      setUploadingAttachment(true);
+      try {
+        for (const file of files) {
+          // eslint-disable-next-line no-await-in-loop
+          await uploadIssueAttachment(issueId, file);
+        }
+        message.success(files.length > 1 ? "Files uploaded" : "File uploaded");
+        loadAttachments();
+      } catch (error) {
+        message.error(
+          error?.response?.data?.error?.message ||
+            error?.response?.data?.message ||
+            error?.message ||
+            "Failed to upload attachment",
+        );
+      } finally {
+        setUploadingAttachment(false);
+      }
+    };
     input.click();
   };
-  const handleDownloadFile = (file) => {
-    const blob = new Blob([`Placeholder content for ${file.name}`], {
-      type: "application/octet-stream",
-    });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = file.name;
-    a.click();
-    URL.revokeObjectURL(url);
-  };
-  const handleViewFile = (file) => {
-    const w = window.open("", "_blank");
-    if (w) {
-      w.document.write(
-        `<html><body style="font-family:sans-serif;padding:24px"><h2>${file.name}</h2><p>Preview not available for this file type.</p></body></html>`,
+
+  const openAttachment = async (file) => {
+    try {
+      const { url } = await getAttachmentDownloadUrl(file.activityId, file.index);
+      if (url) window.open(url, "_blank", "noopener,noreferrer");
+    } catch (error) {
+      message.error(
+        error?.response?.data?.error?.message ||
+          error?.response?.data?.message ||
+          error?.message ||
+          "Failed to open attachment",
       );
     }
   };
+
   const handleDownloadAll = () => {
-    attachmentsData.forEach((file, i) => setTimeout(() => handleDownloadFile(file), i * 200));
+    attachments.forEach((file, i) => setTimeout(() => openAttachment(file), i * 200));
+  };
+
+  const fileIconFor = (filename = "") => {
+    const ext = filename.split(".").pop()?.toLowerCase();
+    if (ext === "pdf") return <FileTextOutlined style={{ color: "#ff4d4f" }} />;
+    if (["doc", "docx"].includes(ext)) {
+      return <FileTextOutlined style={{ color: "var(--app-brand-accent)" }} />;
+    }
+    return <FileTextOutlined style={{ color: "var(--theme-text-muted, #8c8c8c)" }} />;
   };
 
   const renderAttachments = () => (
     <div className="attachments-tab-content">
       <div className="attachments-icons-grid">
-        {attachmentsData.map((file, index) => (
-          <div key={index} className="attachment-icon-item" title={file.name}>
-            <div className={`file-type-icon ${file.type}`}>{file.icon}</div>
-            <div className="file-name-tooltip">{file.name}</div>
-            <div className="file-upload-date">
-              {file.date} {file.time}
-            </div>
+        {attachmentsLoading && (
+          <div style={{ color: "var(--theme-text-muted)", fontSize: 13, padding: "8px 0" }}>
+            Loading attachments...
+          </div>
+        )}
+        {!attachmentsLoading && attachments.length === 0 && (
+          <div style={{ color: "var(--theme-text-muted)", fontSize: 13, padding: "8px 0" }}>
+            No attachments yet.
+          </div>
+        )}
+        {attachments.map((file) => (
+          <div
+            key={`${file.activityId}-${file.index}`}
+            className="attachment-icon-item"
+            title={file.filename}
+          >
+            <div className="file-type-icon">{fileIconFor(file.filename)}</div>
+            <div className="file-name-tooltip">{file.filename}</div>
+            <div className="file-upload-date">{formatDate(file.uploadedAt, true)}</div>
             <div className="attachment-item-actions">
               <Tooltip title="View">
                 <span
                   className="attachment-action-btn"
-                  onClick={() => handleViewFile(file)}
+                  onClick={() => openAttachment(file)}
                   role="button"
                   tabIndex={0}
-                  onKeyDown={(e) => e.key === "Enter" && handleViewFile(file)}
+                  onKeyDown={(e) => e.key === "Enter" && openAttachment(file)}
                 >
                   <EyeOutlined />
                 </span>
@@ -539,10 +672,10 @@ function CasesDetails() {
               <Tooltip title="Download">
                 <span
                   className="attachment-action-btn"
-                  onClick={() => handleDownloadFile(file)}
+                  onClick={() => openAttachment(file)}
                   role="button"
                   tabIndex={0}
-                  onKeyDown={(e) => e.key === "Enter" && handleDownloadFile(file)}
+                  onKeyDown={(e) => e.key === "Enter" && openAttachment(file)}
                 >
                   <DownloadOutlined />
                 </span>
@@ -550,14 +683,19 @@ function CasesDetails() {
             </div>
           </div>
         ))}
-        <div className="attachment-icon-item upload-icon-item" onClick={handleUploadFile}>
-          <Avatar
-            className="upload-new-avatar"
-            icon={<PlusOutlined />}
-            style={{ backgroundColor: "var(--primary-blue)", cursor: "pointer" }}
-          />
-          <div className="file-name-tooltip">Upload New</div>
-        </div>
+        {!isIssueClosed && (
+          <div
+            className="attachment-icon-item upload-icon-item"
+            onClick={uploadingAttachment ? undefined : handleUploadFile}
+          >
+            <Avatar
+              className="upload-new-avatar"
+              icon={<PlusOutlined />}
+              style={{ backgroundColor: "var(--primary-blue)", cursor: uploadingAttachment ? "wait" : "pointer" }}
+            />
+            <div className="file-name-tooltip">{uploadingAttachment ? "Uploading..." : "Upload New"}</div>
+          </div>
+        )}
       </div>
     </div>
   );
@@ -612,6 +750,11 @@ function CasesDetails() {
       >
         <Avatar icon={<UserAddOutlined />} />
         <div style={{ flex: 1 }}>
+          {isIssueClosed && (
+            <div style={{ marginBottom: 12, color: "var(--theme-text-muted)", fontSize: 13 }}>
+              This issue is closed - activities can no longer be added.
+            </div>
+          )}
           <Row gutter={12} style={{ marginBottom: 12 }}>
             <Col span={8}>
               <Select
@@ -619,6 +762,7 @@ function CasesDetails() {
                 onChange={(v) => handleActivityFieldChange("activityType", v)}
                 style={{ width: "100%" }}
                 options={ACTIVITY_TYPE_OPTIONS.map((v) => ({ value: v, label: enumLabel(v) }))}
+                disabled={isIssueClosed}
               />
             </Col>
             <Col span={8}>
@@ -628,6 +772,7 @@ function CasesDetails() {
                 style={{ width: "100%" }}
                 format="DD/MM/YYYY HH:mm"
                 showTime
+                disabled={isIssueClosed}
               />
             </Col>
             <Col span={8}>
@@ -635,6 +780,7 @@ function CasesDetails() {
                 placeholder="Subject"
                 value={activityForm.subject}
                 onChange={(e) => handleActivityFieldChange("subject", e.target.value)}
+                disabled={isIssueClosed}
               />
             </Col>
           </Row>
@@ -644,6 +790,7 @@ function CasesDetails() {
               value={activityForm.body}
               onChange={(v) => handleActivityFieldChange("body", v)}
               placeholder="Add activity details..."
+              readOnly={isIssueClosed}
               modules={{
                 toolbar: [
                   ["bold", "italic", "underline"],
@@ -660,6 +807,7 @@ function CasesDetails() {
                 onChange={(e) =>
                   handleActivityFieldChange("pertinentToFileReview", e.target.checked)
                 }
+                disabled={isIssueClosed}
               >
                 Pertinent to File Review
               </Checkbox>
@@ -668,6 +816,7 @@ function CasesDetails() {
               <Checkbox
                 checked={activityForm.sendNotification}
                 onChange={(e) => handleActivityFieldChange("sendNotification", e.target.checked)}
+                disabled={isIssueClosed}
               >
                 Notify owner
               </Checkbox>
@@ -676,7 +825,7 @@ function CasesDetails() {
           <button
             className="custom-action-btn custom-primary-btn"
             onClick={handlePostActivity}
-            disabled={postingActivity}
+            disabled={postingActivity || isIssueClosed}
           >
             {postingActivity ? "Logging..." : "Log Activity"}
           </button>
@@ -781,6 +930,19 @@ function CasesDetails() {
             />
           )}
         </div>
+
+        {/* Base Issue schema field (issue.model.js), common to all 4 issue types - same
+            pattern as Description above, minus the collapse chrome (kept simple since it
+            wasn't asked for here). */}
+        <div className="description-section">
+          <h3>Availability</h3>
+          <Input.TextArea
+            value={formValues.availability || ""}
+            onChange={(e) => handleFieldChange("availability", e.target.value)}
+            autoSize={{ minRows: 2, maxRows: 6 }}
+            placeholder="Availability notes..."
+          />
+        </div>
       </div>
     </div>
   );
@@ -822,6 +984,10 @@ function CasesDetails() {
                     criteriaLetterStatusOptions={criteriaLetterStatusOptions}
                     legislationOptions={legislationOptions}
                     caseTypeOptions={caseTypeOptions}
+                    memberIds={memberIds}
+                    memberLabels={memberLabels}
+                    onSelectComplainant={handleSelectComplainant}
+                    onSelectRelatedMember={handleSelectRelatedMember}
                   />
                 </div>
               )}
@@ -830,8 +996,8 @@ function CasesDetails() {
                 <div className="section-header-collapsible">
                   <h3>
                     Attachments
-                    {collapsedSections.Attachments && attachmentsData.length > 0 && (
-                      <span className="section-count"> ({attachmentsData.length} documents)</span>
+                    {collapsedSections.Attachments && attachments.length > 0 && (
+                      <span className="section-count"> ({attachments.length} documents)</span>
                     )}
                   </h3>
                   <div className="section-header-actions">
@@ -952,6 +1118,15 @@ function CasesDetails() {
                   </div>
 
                   <div className="summary-field-single">
+                    <span className="summary-label">Last Updated</span>
+                    <Input
+                      value={formatDate(activeIssue.updatedAt, true)}
+                      bordered={false}
+                      disabled
+                    />
+                  </div>
+
+                  <div className="summary-field-single">
                     <span className="summary-label">Date Received</span>
                     <DatePicker
                       value={formValues.dateReceived}
@@ -1016,12 +1191,16 @@ function CasesDetails() {
                   </div>
                   <div className="summary-field-single">
                     <span className="summary-label">Owner (User Id)</span>
-                    <Input
-                      value={formValues.owner?.userId || ""}
-                      onChange={(e) => handleOwnerUserIdChange(e.target.value)}
+                    <Select
+                      value={formValues.owner?.userId || undefined}
+                      onChange={(v) => handleOwnerUserIdChange(v)}
                       className="summary-input"
                       bordered={false}
-                      placeholder="userId"
+                      allowClear
+                      showSearch
+                      optionFilterProp="label"
+                      placeholder="Select owner"
+                      options={ownerOptions}
                     />
                   </div>
 

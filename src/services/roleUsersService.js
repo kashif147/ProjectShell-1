@@ -79,6 +79,37 @@ export async function fetchUsersByRoleIds(
 }
 
 /**
+ * Users holding a given resource:action permission (e.g. "issues-complaints"/"write") - for
+ * Owner/Resolved By pickers scoped to whichever team a case's Issue Type routes to. See
+ * backend/user-service's GET /roles/users/by-permission (role.handler.js's
+ * getUsersByPermission).
+ */
+export async function fetchUsersByPermission(
+  resource,
+  action = "write",
+  { q = "", limit = 20, token = localStorage.getItem("token") } = {},
+) {
+  if (!resource || !token) return [];
+
+  const baseUrl = getUserServiceBaseUrl();
+  const params = new URLSearchParams({ resource, action, limit: String(limit) });
+  if (q) params.set("q", q);
+  const response = await fetch(`${baseUrl}/roles/users/by-permission?${params}`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error(`Failed to fetch users for permission ${resource}:${action}`);
+  }
+
+  const data = await response.json();
+  return normalizeUsersResponse(data);
+}
+
+/**
  * Load officer users per drawer from tenant roles catalog:
  * IRO → Work Location, BO → Branch, RO → Region.
  * Skips fetch when the role code is not in the roles list.

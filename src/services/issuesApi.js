@@ -167,6 +167,45 @@ export async function fetchOrigins() {
   return unwrap({ data });
 }
 
+// GET /issues/:id/attachments - flattened list of every attachment logged against this
+// issue (issueActivity.controller.js's listIssueAttachments). Each entry carries
+// {activityId, index} - the pair getAttachmentDownloadUrl/uploadIssueAttachment need.
+export async function fetchIssueAttachments(issueId) {
+  const { data } = await axios.get(
+    `${getIssueServiceBaseUrl()}/issues/${issueId}/attachments`,
+    { headers: authHeaders() },
+  );
+  return unwrap({ data });
+}
+
+// POST /issues/:id/attachments (multipart) - uploads a file and files it against the issue
+// as a bare Activity (see issueActivity.controller.js's uploadIssueAttachment doc comment
+// for why there's no separate Issue-level document model). 25MB/PDF+image limit, enforced
+// by middlewares/upload.mw.js server-side.
+export async function uploadIssueAttachment(issueId, file) {
+  const formData = new FormData();
+  formData.append("file", file);
+  const { data } = await axios.post(
+    `${getIssueServiceBaseUrl()}/issues/${issueId}/attachments`,
+    formData,
+    { headers: { ...authHeaders(), "Content-Type": "multipart/form-data" } },
+  );
+  return unwrap({ data });
+}
+
+// GET /activities/:activityId/attachments/:index/download - resolves to a short-lived
+// (15 min) Azure Blob SAS url, NOT a redirect (the route needs our Authorization header,
+// which a plain browser navigation wouldn't send - see the backend controller's comment).
+// Fetch this first, then window.open()/set as a download link's href - the SAS url itself
+// needs no further auth.
+export async function getAttachmentDownloadUrl(activityId, index) {
+  const { data } = await axios.get(
+    `${getIssueServiceBaseUrl()}/activities/${activityId}/attachments/${index}/download`,
+    { headers: authHeaders() },
+  );
+  return unwrap({ data });
+}
+
 // GET /issue-sources - a thin read-through proxy over user-service's Lookup system
 // (LookupType code "ISSUESRC"), replacing the formerly-hardcoded ISSUE_SOURCES constant.
 // Flat list, no issue-type dependency. Returns [{id, code, displayName}]; `code` is the

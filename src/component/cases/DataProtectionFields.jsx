@@ -10,6 +10,7 @@ import {
   SOLICITORS,
   toOptions,
 } from "./issueOptions";
+import { useTeamUserOptions } from "../../hooks/useTeamUsers";
 
 /**
  * DP discriminator field set -
@@ -19,6 +20,7 @@ import {
  * the base Issue's `issueStatus`, per the backend model's own naming note.
  */
 function DataProtectionFields({ values = {}, onChange, disabled = false }) {
+  const { options: resolvedByOptions } = useTeamUserOptions("issues-dataprotection");
   return (
     <div className="form-section issue-type-fields-section">
       <h3 className="section-title">Data Protection Details</h3>
@@ -70,8 +72,8 @@ function DataProtectionFields({ values = {}, onChange, disabled = false }) {
         </Col>
         <Col span={6}>
           <div className="my-input-wrapper">
-            <label className="my-input-label">DPC Informed</label>
-            <div style={{ marginTop: 6 }}>
+            <label className="my-input-label mb-0">DPC Informed</label>
+            <div className="my-input-container" style={{ paddingLeft: 12 }}>
               <Checkbox
                 checked={!!values.dpcInformed}
                 onChange={(e) => onChange("dpcInformed", e.target.checked)}
@@ -99,8 +101,8 @@ function DataProtectionFields({ values = {}, onChange, disabled = false }) {
       <Row gutter={16}>
         <Col span={8}>
           <div className="my-input-wrapper">
-            <label className="my-input-label">External Solicitor Involved</label>
-            <div style={{ marginTop: 6 }}>
+            <label className="my-input-label mb-0">External Solicitor Involved</label>
+            <div className="my-input-container" style={{ paddingLeft: 12 }}>
               <Checkbox
                 checked={!!values.externalSolicitorInvolved}
                 onChange={(e) =>
@@ -152,14 +154,16 @@ function DataProtectionFields({ values = {}, onChange, disabled = false }) {
           />
         </Col>
         <Col span={12}>
-          {/* No staff/user-picker component in this codebase - see ComplaintFields.jsx's
-              same note on resolvedByUserId. */}
-          <MyInput
+          <CustomSelect
             label="Resolved By (User Id)"
             name="resolvedByUserId"
             value={values.resolvedByUserId || ""}
             onChange={(e) => onChange("resolvedByUserId", e.target.value)}
+            options={resolvedByOptions}
+            placeholder="Select user"
             disabled={disabled}
+            showSearch
+            isIDs
           />
         </Col>
       </Row>
