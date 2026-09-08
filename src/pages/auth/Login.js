@@ -13,6 +13,7 @@ import {
   getHomeRouteFromRoles,
 } from "../../utils/roleHomeModule";
 import { generatePKCE } from "../../utils/Utilities";
+import { bumpAuthReady } from "../../utils/authReadyEvent";
 import { useAuthorization } from "../../context/AuthorizationContext";
 import { getRedirectUri } from "../../component/msft/msalConfig";
 import MyAlert from "../../component/common/MyAlert";
@@ -266,6 +267,7 @@ const Login = () => {
         let token = data.accessToken;
         const token1 = await decryptTokenReact(token);
         localStorage.setItem("token", token1);
+        bumpAuthReady();
         let decode = decodeToken(token1);
         localStorage.setItem("userData", JSON.stringify(decode));
         // Extract roles and permissions from the decoded JWT token
