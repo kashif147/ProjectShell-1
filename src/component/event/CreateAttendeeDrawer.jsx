@@ -32,6 +32,7 @@ import {
     createRegistration,
     approveRegistration,
     rejectRegistration,
+    retryRegistrationPayment,
 } from '../../services/eventsApi';
 import { dispatchProfileInvalidate } from '../../utils/profileRealtimeEvents';
 import { computeEventFormat } from '../../utils/eventFormat';
@@ -127,8 +128,22 @@ const CreateAttendeeDrawerInner = ({ open, onClose, eventId, registration, onApp
     const viewMode = !!registration;
     const [registrationStatus, setRegistrationStatus] = useState(registration?.status);
     const [approvalStatus, setApprovalStatus] = useState(registration?.approvalStatus);
+    // View mode only - live payment status/method, re-synced from the
+    // registration prop below and updated locally right after a successful
+    // retry/switch (see handleRetryPayment) so Approve unblocks immediately
+    // rather than waiting on the async requires_capture RabbitMQ event to
+    // land.
+    const [paymentStatus, setPaymentStatus] = useState(registration?.paymentStatus);
+    const [viewPaymentMethod, setViewPaymentMethod] = useState(registration?.paymentMethod);
     const [approving, setApproving] = useState(false);
     const [rejecting, setRejecting] = useState(false);
+    const [retryingPayment, setRetryingPayment] = useState(false);
+    const [retryCardComplete, setRetryCardComplete] = useState({ number: false, expiry: false, cvc: false });
+    // View mode only - the CRM user opted to change a manual/comp/invoice
+    // registration over to Card (Stripe) instead; reveals the same card-entry
+    // UI used to retry a stuck stripe payment. Irrelevant once
+    // viewPaymentMethod is already "stripe".
+    const [switchToCard, setSwitchToCard] = useState(false);
     // View mode only - the recorded duplicateReview verdict from intake, and
     // (for POTENTIAL_MATCH) the reviewer's resolution this session, needed
     // before Approve is allowed to proceed.
@@ -207,6 +222,10 @@ const CreateAttendeeDrawerInner = ({ open, onClose, eventId, registration, onApp
         setPaymentMethod(registration.paymentMethod || 'stripe');
         setRegistrationStatus(registration.status);
         setApprovalStatus(registration.approvalStatus);
+        setPaymentStatus(registration.paymentStatus);
+        setViewPaymentMethod(registration.paymentMethod);
+        setRetryCardComplete({ number: false, expiry: false, cvc: false });
+        setSwitchToCard(false);
         const review = registration.duplicateReview || {};
         setDuplicateReviewStatus(review.status || null);
         setPendingReviewDecision(null);
@@ -809,6 +828,18 @@ const CreateAttendeeDrawerInner = ({ open, onClose, eventId, registration, onApp
             onApproved?.(updated);
         } catch (err) {
             message.error(err?.response?.data?.error?.message || err?.message || 'Failed to approve registration');
+            // A capture conflict (e.g. the Stripe authorization hold expired
+            // between authorization and approval - see events-service's
+            // registrationApproval.service.js) already corrected paymentStatus
+            // server-side, but this drawer instance's local paymentStatus is
+            // still the stale "authorized" value it opened with. Without this,
+            // the red tag/Approve-block/Retry Payment section below never
+            // engage until the drawer is closed and reopened with fresh data -
+            // the same "gap" this whole retry flow exists to close.
+            const stripeStatus = err?.response?.data?.error?.details?.stripeStatus;
+            if (stripeStatus && stripeStatus !== 'requires_capture') {
+                setPaymentStatus(stripeStatus === 'succeeded' ? 'succeeded' : 'failed');
+            }
         }
     };
 
@@ -821,6 +852,71 @@ const CreateAttendeeDrawerInner = ({ open, onClose, eventId, registration, onApp
             onApproved?.(updated);
         } catch (err) {
             message.error(err?.response?.data?.error?.message || err?.message || 'Failed to reject registration');
+        }
+    };
+
+    // View mode only - (re-)establishes a capturable Stripe payment for a
+    // pending-review registration. Two situations land here: a stripe
+    // registration whose card was never actually confirmed (the Add Attendee
+    // drawer's client-side confirmCardPayment failed or was abandoned - a
+    // declined card, closed tab, abandoned 3DS - which otherwise made every
+    // /approve attempt fail forever with "PaymentIntent cannot be captured
+    // when its status is requires_payment_method" and gave the CRM user no
+    // way to fix it); or a manual/comp/invoice registration the CRM user now
+    // wants to charge a card for instead (see switchToCard/canPayByCard
+    // below). Re-fetches a clientSecret (events-service reuses the same
+    // PaymentIntent when it's still confirmable, supersedes it with a fresh
+    // one if it's dead, or creates a brand new one when switching off a
+    // manual/comp/invoice method) and re-runs stripe.confirmCardPayment
+    // against the card fields below.
+    const handleRetryPayment = async () => {
+        if (!registration?._id) return;
+        setRetryingPayment(true);
+        try {
+            const result = await retryRegistrationPayment(registration._id);
+            if (result?.paymentMethod) setViewPaymentMethod(result.paymentMethod);
+            if (result?.paymentStatus === 'authorized') {
+                // Already authorized server-side (e.g. the requires_capture
+                // webhook/listener update had simply not reached this drawer
+                // yet) - nothing left to confirm client-side.
+                setPaymentStatus('authorized');
+                message.success('Payment is already authorized - you can Approve now.');
+                return;
+            }
+            if (!result?.clientSecret) {
+                message.error('Could not start a new payment attempt for this registration.');
+                return;
+            }
+            if (!stripe || !elements) {
+                message.error('Stripe has not finished loading yet - try again in a moment.');
+                return;
+            }
+            const cardNumberElement = elements.getElement(CardNumberElement);
+            if (!cardNumberElement) {
+                message.error('Enter the card details below, then try again.');
+                return;
+            }
+            const confirmResult = await stripe.confirmCardPayment(result.clientSecret, {
+                payment_method: { card: cardNumberElement },
+            });
+            if (confirmResult.error) {
+                message.error(`Card payment failed: ${confirmResult.error.message || 'unknown error'}`);
+                return;
+            }
+            // Use the synchronous confirm result to unblock Approve now,
+            // rather than waiting on the async requires_capture RabbitMQ
+            // event (webhook lag, or never arrives at all in local dev - see
+            // events-service's payment.status.listener.js).
+            if (confirmResult.paymentIntent?.status === 'requires_capture') {
+                setPaymentStatus('authorized');
+                message.success('Card confirmed - you can Approve now.');
+            } else {
+                message.info('Card submitted - waiting for confirmation before Approve can proceed.');
+            }
+        } catch (err) {
+            message.error(err?.response?.data?.error?.message || err?.message || 'Failed to retry payment');
+        } finally {
+            setRetryingPayment(false);
         }
     };
 
@@ -841,6 +937,10 @@ const CreateAttendeeDrawerInner = ({ open, onClose, eventId, registration, onApp
             message.error(`Group Student pricing requires at least ${invalidGroupRow.minGroupSize} tickets`);
             return;
         }
+        if (paymentMethod === 'stripe' && !(cardComplete.number && cardComplete.expiry && cardComplete.cvc)) {
+            message.error('Card number, expiry date and CVC are required for card payments');
+            return;
+        }
 
         // Duplicate detection now always runs server-side at intake
         // (createRegistration), regardless of source (CRM/portal/mobile) or
@@ -854,18 +954,42 @@ const CreateAttendeeDrawerInner = ({ open, onClose, eventId, registration, onApp
     // CREATE_NEW below) - there's nothing ambiguous to gate on for any other
     // duplicateReviewStatus.
     const approveBlockedByReview = duplicateReviewStatus === 'POTENTIAL_MATCH' && !pendingReviewDecision;
+    // A stripe registration whose card was never actually confirmed
+    // (paymentStatus stuck at "pending"/"failed") always fails capture at
+    // approval with a 409 - block Approve and point at the retry UI below
+    // instead of letting the CRM user hit that dead end.
+    const stripePaymentNotAuthorized =
+        viewPaymentMethod === 'stripe' && !['authorized', 'succeeded'].includes(paymentStatus);
+    const approveBlockedByPayment = viewMode && stripePaymentNotAuthorized;
+    // View mode only - a manual/comp/invoice registration can be switched to
+    // Card (Stripe) any time before approval, if the CRM user changes their
+    // mind about how the attendee is paying.
+    // Stripe rejects sub-minimum PaymentIntents, so a free (comp) or
+    // zero-amount registration has nothing a card payment could actually
+    // charge - don't offer to switch it to Card.
+    const canPayByCard =
+        viewMode && approvalStatus === 'pending_review' && viewPaymentMethod !== 'stripe' && registration?.amount > 0;
+    const showCardCaptureSection =
+        viewMode && approvalStatus === 'pending_review' && (stripePaymentNotAuthorized || (canPayByCard && switchToCard));
+    // Create mode only - card number/expiry/CVC must all be entered before
+    // Add Attendee is clickable when Card (Stripe) is the chosen payment
+    // method; nothing to check for invoice/comp/manual.
+    const stripeCardIncomplete =
+        !viewMode && paymentMethod === 'stripe' && !(cardComplete.number && cardComplete.expiry && cardComplete.cvc);
 
     const headerExtra = viewMode ? (
         approvalStatus === 'pending_review' ? (
             <Space>
+                <Tooltip title={approveBlockedByPayment ? 'Payment has not been authorized yet - retry payment below before approving.' : undefined}>
                 <Button
                     className="butn primary-btn"
-                    disabled={approveBlockedByReview}
+                    disabled={approveBlockedByReview || approveBlockedByPayment}
                     loading={approving}
                     onClick={handleApprove}
                 >
                     Approve
                 </Button>
+                </Tooltip>
                 <Popconfirm
                     title="Reject this registration?"
                     description="The registration will be cancelled and the seat released; any Stripe authorization is cancelled (not refunded, since nothing was captured)."
@@ -891,14 +1015,16 @@ const CreateAttendeeDrawerInner = ({ open, onClose, eventId, registration, onApp
                 <Radio.Button value="accept">Approve now</Radio.Button>
                 <Radio.Button value="reject">Reject</Radio.Button>
             </Radio.Group>
-            <Button
-                className="butn primary-btn"
-                loading={submitting}
-                disabled={!!duplicateCandidates || !!createdRegistrationId}
-                onClick={handleSubmit}
-            >
-                Add Attendee
-            </Button>
+            <Tooltip title={stripeCardIncomplete ? 'Enter the card number, expiry date and CVC before adding this attendee.' : undefined}>
+                <Button
+                    className="butn primary-btn"
+                    loading={submitting}
+                    disabled={!!duplicateCandidates || !!createdRegistrationId || stripeCardIncomplete}
+                    onClick={handleSubmit}
+                >
+                    Add Attendee
+                </Button>
+            </Tooltip>
         </Space>
     );
 
@@ -1077,6 +1203,7 @@ const CreateAttendeeDrawerInner = ({ open, onClose, eventId, registration, onApp
                             onChange={handleInputChange}
                             placeholder="john.doe@example.com"
                             disabled={fieldsDisabled}
+                            required={!viewMode}
                         />
 
                         <MyInput
@@ -1233,6 +1360,7 @@ const CreateAttendeeDrawerInner = ({ open, onClose, eventId, registration, onApp
                             disabled={viewMode || !!eventId}
                             showSearch
                             isIDs
+                            required={!viewMode}
                         />
 
                         <div className="event-summary-box">
@@ -1359,7 +1487,12 @@ const CreateAttendeeDrawerInner = ({ open, onClose, eventId, registration, onApp
                                     <div className="total-label">
                                         Registration Fee
                                         <p style={{ textTransform: 'capitalize' }}>
-                                            {registration?.paymentMethod || '-'} · {registration?.paymentStatus || '-'}
+                                            {viewPaymentMethod || '-'} · {paymentStatus || '-'}
+                                            {stripePaymentNotAuthorized && (
+                                                <Tag color="red" style={{ marginLeft: 8, textTransform: 'none' }}>
+                                                    Payment method not attached
+                                                </Tag>
+                                            )}
                                         </p>
                                     </div>
                                     <div className="total-amount">
@@ -1369,7 +1502,93 @@ const CreateAttendeeDrawerInner = ({ open, onClose, eventId, registration, onApp
                                     </div>
                                 </div>
                             )}
+                            {canPayByCard && !switchToCard && (
+                                <div style={{ marginTop: 8 }}>
+                                    <Button
+                                        size="small"
+                                        onClick={() => {
+                                            setRetryCardComplete({ number: false, expiry: false, cvc: false });
+                                            setSwitchToCard(true);
+                                        }}
+                                    >
+                                        Pay by Card instead
+                                    </Button>
+                                </div>
+                            )}
                         </div>
+
+                        {showCardCaptureSection && (
+                            <div className="payment-details-section">
+                                <div className="drawer-subsection-title">
+                                    {stripePaymentNotAuthorized ? 'Retry payment' : 'Pay by Card'}
+                                </div>
+                                <Text type="secondary" style={{ display: 'block', marginBottom: 16 }}>
+                                    {stripePaymentNotAuthorized
+                                        ? 'The card was never successfully charged for this registration (declined, or the session was closed before it confirmed) - Approve will fail until a payment method is attached. Enter a card below and retry.'
+                                        : `This registration was recorded as ${registration?.paymentMethod || 'a non-card'} payment - enter a card below to charge it instead. The recorded ${registration?.paymentMethod || 'non-card'} payment will be voided.`}
+                                </Text>
+                                {canPayByCard && switchToCard && (
+                                    <Button
+                                        size="small"
+                                        style={{ marginBottom: 16 }}
+                                        onClick={() => {
+                                            setRetryCardComplete({ number: false, expiry: false, cvc: false });
+                                            setSwitchToCard(false);
+                                        }}
+                                    >
+                                        Cancel
+                                    </Button>
+                                )}
+                                <div className="my-input-wrapper">
+                                    <label className="my-input-label">
+                                        Card number<span className="required-star"> *</span>
+                                    </label>
+                                    <div className="stripe-element-input">
+                                        <CreditCardOutlined style={{ marginRight: 8, color: '#bfbfbf' }} />
+                                        <CardNumberElement
+                                            options={STRIPE_ELEMENT_OPTIONS}
+                                            onChange={(e) => setRetryCardComplete((prev) => ({ ...prev, number: e.complete }))}
+                                        />
+                                    </div>
+                                </div>
+                                <Row gutter={16} style={{ marginBottom: 16 }}>
+                                    <Col span={12}>
+                                        <div className="my-input-wrapper">
+                                            <label className="my-input-label">
+                                                Expiry date<span className="required-star"> *</span>
+                                            </label>
+                                            <div className="stripe-element-input">
+                                                <CardExpiryElement
+                                                    options={STRIPE_ELEMENT_OPTIONS}
+                                                    onChange={(e) => setRetryCardComplete((prev) => ({ ...prev, expiry: e.complete }))}
+                                                />
+                                            </div>
+                                        </div>
+                                    </Col>
+                                    <Col span={12}>
+                                        <div className="my-input-wrapper">
+                                            <label className="my-input-label">
+                                                CVC<span className="required-star"> *</span>
+                                            </label>
+                                            <div className="stripe-element-input">
+                                                <CardCvcElement
+                                                    options={STRIPE_ELEMENT_OPTIONS}
+                                                    onChange={(e) => setRetryCardComplete((prev) => ({ ...prev, cvc: e.complete }))}
+                                                />
+                                            </div>
+                                        </div>
+                                    </Col>
+                                </Row>
+                                <Button
+                                    className="butn primary-btn"
+                                    loading={retryingPayment}
+                                    disabled={!retryCardComplete.number || !retryCardComplete.expiry || !retryCardComplete.cvc}
+                                    onClick={handleRetryPayment}
+                                >
+                                    {stripePaymentNotAuthorized ? 'Retry Payment' : 'Capture Card Payment'}
+                                </Button>
+                            </div>
+                        )}
 
                         {!viewMode && (
                         <div className="payment-details-section">
@@ -1388,7 +1607,9 @@ const CreateAttendeeDrawerInner = ({ open, onClose, eventId, registration, onApp
                             {paymentMethod === 'stripe' && (
                                 <>
                                     <div className="my-input-wrapper">
-                                        <label className="my-input-label">Card number</label>
+                                        <label className="my-input-label">
+                                            Card number<span className="required-star"> *</span>
+                                        </label>
                                         <div className="stripe-element-input">
                                             <CreditCardOutlined style={{ marginRight: 8, color: '#bfbfbf' }} />
                                             <CardNumberElement
@@ -1400,7 +1621,9 @@ const CreateAttendeeDrawerInner = ({ open, onClose, eventId, registration, onApp
                                     <Row gutter={16}>
                                         <Col span={12}>
                                             <div className="my-input-wrapper">
-                                                <label className="my-input-label">Expiry date</label>
+                                                <label className="my-input-label">
+                                                    Expiry date<span className="required-star"> *</span>
+                                                </label>
                                                 <div className="stripe-element-input">
                                                     <CardExpiryElement
                                                         options={STRIPE_ELEMENT_OPTIONS}
@@ -1411,7 +1634,9 @@ const CreateAttendeeDrawerInner = ({ open, onClose, eventId, registration, onApp
                                         </Col>
                                         <Col span={12}>
                                             <div className="my-input-wrapper">
-                                                <label className="my-input-label">Cvv</label>
+                                                <label className="my-input-label">
+                                                    CVC<span className="required-star"> *</span>
+                                                </label>
                                                 <div className="stripe-element-input">
                                                     <CardCvcElement
                                                         options={STRIPE_ELEMENT_OPTIONS}
@@ -1421,6 +1646,11 @@ const CreateAttendeeDrawerInner = ({ open, onClose, eventId, registration, onApp
                                             </div>
                                         </Col>
                                     </Row>
+                                    {!(cardComplete.number && cardComplete.expiry && cardComplete.cvc) && (
+                                        <Text type="secondary" style={{ display: 'block', marginTop: -8, marginBottom: 16 }}>
+                                            All card fields are required before this attendee can be added.
+                                        </Text>
+                                    )}
                                 </>
                             )}
                             {paymentMethod !== 'stripe' && (

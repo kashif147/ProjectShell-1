@@ -71,6 +71,12 @@ const EventRegistrationViewDrawer = ({ open, onClose, registration, onApproved }
   const [confirmChecked, setConfirmChecked] = useState(false);
   const [approving, setApproving] = useState(false);
   const [rejecting, setRejecting] = useState(false);
+  // Local override for a stale registration.paymentStatus prop, set right
+  // after a capture conflict (see handleApprove's catch) - this drawer has no
+  // retry UI of its own, but without this override the checkbox+Approve
+  // combo stays clickable and re-fails identically forever, since the
+  // registration prop itself never refetches mid-session.
+  const [paymentStatusOverride, setPaymentStatusOverride] = useState(null);
 
   useEffect(() => {
     if (!open || !registration?.eventId || registration.registrationType !== "event") {
@@ -87,9 +93,21 @@ const EventRegistrationViewDrawer = ({ open, onClose, registration, onApproved }
   useEffect(() => {
     setStatus(registration?.status);
     setConfirmChecked(false);
+    setPaymentStatusOverride(null);
   }, [registration?._id, registration?.status]);
 
   if (!registration) return null;
+
+  const effectivePaymentStatus = paymentStatusOverride || registration.paymentStatus;
+
+  // A stripe registration whose card was never actually confirmed, or whose
+  // authorization hold has since expired (Stripe auto-releases uncaptured
+  // manual-capture holds after several days), always fails capture at
+  // approval with a 409 - block Approve here too (this drawer has no retry
+  // UI of its own; CreateAttendeeDrawer's view mode does).
+  const stripePaymentNotAuthorized =
+    registration.paymentMethod === "stripe" &&
+    !["authorized", "succeeded"].includes(effectivePaymentStatus);
 
   const handleApprove = async () => {
     if (!registration?._id) return;
@@ -102,6 +120,10 @@ const EventRegistrationViewDrawer = ({ open, onClose, registration, onApproved }
       onApproved?.(updated);
     } catch (err) {
       message.error(err?.response?.data?.error?.message || err?.message || "Failed to confirm registration");
+      const stripeStatus = err?.response?.data?.error?.details?.stripeStatus;
+      if (stripeStatus && stripeStatus !== "requires_capture") {
+        setPaymentStatusOverride(stripeStatus === "succeeded" ? "succeeded" : "failed");
+      }
     } finally {
       setApproving(false);
     }
@@ -215,7 +237,7 @@ const EventRegistrationViewDrawer = ({ open, onClose, registration, onApproved }
           <Button
             type="primary"
             size="small"
-            disabled={!confirmChecked}
+            disabled={!confirmChecked || stripePaymentNotAuthorized}
             loading={approving}
             onClick={handleApprove}
           >
@@ -232,6 +254,13 @@ const EventRegistrationViewDrawer = ({ open, onClose, registration, onApproved }
               Reject
             </Button>
           </Popconfirm>
+          {stripePaymentNotAuthorized && (
+            <div style={{ width: "100%", color: "#cf1322", fontSize: 12 }}>
+              This card was never successfully charged, or the authorization has expired (payment status "
+              {effectivePaymentStatus}") - approving would fail. Open this attendee from the Attendees grid to
+              retry payment.
+            </div>
+          )}
         </div>
       ) : null}
 
@@ -243,8 +272,8 @@ const EventRegistrationViewDrawer = ({ open, onClose, registration, onApproved }
         style={{ marginTop: 16 }}
       >
         <Descriptions.Item label="Payment Status">
-          <Tag color={PAYMENT_STATUS_COLORS[registration.paymentStatus] || "default"}>
-            {registration.paymentStatus}
+          <Tag color={PAYMENT_STATUS_COLORS[effectivePaymentStatus] || "default"}>
+            {effectivePaymentStatus}
           </Tag>
         </Descriptions.Item>
         <Descriptions.Item label="Payment Method">
