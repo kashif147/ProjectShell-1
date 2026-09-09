@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { fetchIssueDropdownLookups, fetchIssueStatuses, fetchResolutions } from "../services/issuesApi";
+import { subscribeAuthReady } from "../utils/authReadyEvent";
 
 function toSelectOptions(lookups) {
   return (lookups || [])
@@ -43,6 +44,30 @@ const EMPTY_DROPDOWN_LOOKUPS = {
 };
 
 /**
+ * True once a JWT is actually in localStorage - checked directly rather than via
+ * AuthorizationContext because these hooks are called both inside AND outside that context's
+ * tree (FilterContext.js's FilterProvider is mounted in index.js *above*
+ * <App />/<Entry />/AuthorizationProvider, so no context signal is available there at all).
+ * A plain localStorage check works identically everywhere, no tree-position assumptions.
+ */
+function hasAuthToken() {
+  return !!localStorage.getItem("token");
+}
+
+/**
+ * Re-renders whenever a token becomes available (immediately, if one already exists at mount
+ * - e.g. a page refresh while already logged in - and again on the `auth-token-ready` event
+ * Login.js fires right after storing a fresh one). Lets a hook that skipped its fetch
+ * pre-login retry automatically once login completes, instead of being permanently stuck
+ * with no token and no fetch (see utils/authReadyEvent.js's doc comment).
+ */
+function useAuthTokenTick() {
+  const [tick, setTick] = useState(0);
+  useEffect(() => subscribeAuthReady(() => setTick((t) => t + 1)), []);
+  return tick;
+}
+
+/**
  * Issue Type + Origin + Issue Source + Priority + Complaint Type + Criteria Letter Status +
  * Legislation + Case Type dropdown options, sourced from user-service's Lookup system via
  * issue-service's single GET /issue-dropdown-lookups proxy - replaces the formerly-hardcoded
@@ -59,14 +84,20 @@ const EMPTY_DROPDOWN_LOOKUPS = {
  * changes when you actually want a fresh fetch (e.g. CreateCasesDrawer.jsx bumps one only on
  * open transitions). Without it, this only ever fetches once per component instance, which
  * silently starves any consumer that's mounted long before the user needs the data (e.g. a
- * drawer that's always in the tree, only toggled via an `open` prop) - if that one fetch
- * raced with auth setup or failed, there was no way to recover short of a full page reload.
+ * drawer that's always in the tree, only toggled via an `open` prop).
+ *
+ * Gated on hasAuthToken() (previously fired unconditionally on mount) - FilterContext.js's
+ * FilterProvider mounts this globally at app startup, before any login, so an ungated fetch
+ * here 401s on every fresh/unauthenticated page load. useAuthTokenTick() re-triggers this
+ * once login actually completes.
  */
 export function useIssueDropdownLookups(reloadKey) {
+  const authTick = useAuthTokenTick();
   const [lookups, setLookups] = useState(EMPTY_DROPDOWN_LOOKUPS);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    if (!hasAuthToken()) return undefined;
     let cancelled = false;
     setLoading(true);
     fetchIssueDropdownLookups()
@@ -94,7 +125,7 @@ export function useIssueDropdownLookups(reloadKey) {
       cancelled = true;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [reloadKey]);
+  }, [reloadKey, authTick]);
 
   return { ...lookups, loading };
 }
@@ -104,14 +135,16 @@ export function useIssueDropdownLookups(reloadKey) {
  * Lookup system (LookupType code "ISSUSTATUS", scoped to the Issue Type via the Lookup
  * hierarchy - see issue-service/services/lookup.service.client.js's fetchIssueStatuses).
  * Statuses are type-dependent: refetches whenever `issueTypeCode` changes, and returns an
- * empty list (not an error) when no issue type is selected yet.
+ * empty list (not an error) when no issue type is selected yet. Gated on hasAuthToken() for
+ * the same reason useIssueDropdownLookups is above.
  */
 export function useIssueStatusOptions(issueTypeCode) {
+  const authTick = useAuthTokenTick();
   const [options, setOptions] = useState([]);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    if (!issueTypeCode) {
+    if (!issueTypeCode || !hasAuthToken()) {
       setOptions([]);
       setLoading(false);
       return undefined;
@@ -131,7 +164,7 @@ export function useIssueStatusOptions(issueTypeCode) {
     return () => {
       cancelled = true;
     };
-  }, [issueTypeCode]);
+  }, [issueTypeCode, authTick]);
 
   return { options, loading };
 }
@@ -145,11 +178,12 @@ export function useIssueStatusOptions(issueTypeCode) {
  * type with no resolutions configured, or when no issue type is selected yet.
  */
 export function useResolutionOptions(issueTypeCode) {
+  const authTick = useAuthTokenTick();
   const [options, setOptions] = useState([]);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    if (!issueTypeCode) {
+    if (!issueTypeCode || !hasAuthToken()) {
       setOptions([]);
       setLoading(false);
       return undefined;
@@ -169,7 +203,7 @@ export function useResolutionOptions(issueTypeCode) {
     return () => {
       cancelled = true;
     };
-  }, [issueTypeCode]);
+  }, [issueTypeCode, authTick]);
 
   return { options, loading };
 }

@@ -3,6 +3,7 @@ import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import axios from "axios";
 import MyAlert from "../component/common/MyAlert";
 import { updateMenuLbl } from "./MenuLblSlice";
+import { bumpAuthReady } from "../utils/authReadyEvent";
 
 const baseURL = `${process.env.REACT_APP_BASE_URL_DEV}/auth`;
 console.log("API Base URL (ENV):", process.env.REACT_APP_BASE_URL_DEV);
@@ -82,6 +83,7 @@ const authSlice = createSlice({
             token = token.replace(/^Bearer\s/, "");
           }
           localStorage.setItem("token", token);
+          bumpAuthReady();
 
           // Decode token to extract roles and permissions
           try {

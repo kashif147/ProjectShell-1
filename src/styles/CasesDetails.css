@@ -443,6 +443,14 @@
   display: flex;
   flex-direction: column;
   gap: 0;
+  /* Without flex:1/min-height:0 here, this wrapper sizes to its own content instead of
+     shrinking to .cases-content-body's actual available height (flex:1; overflow:hidden) -
+     that breaks the height chain .main-content-layout/.left-column-sections rely on to
+     scroll correctly, so .left-column-sections's own max-height (a viewport-relative magic
+     number, disconnected from the real constrained space) silently lets its last section
+     (History) render past the visible/clipped area with no way to scroll to it. */
+  flex: 1;
+  min-height: 0;
 }
 
 .main-content-layout {
@@ -460,7 +468,10 @@
   flex-direction: column;
   overflow-y: auto;
   overflow-x: visible;
-  max-height: calc(100vh - 100px);
+  /* height (not max-height): now that the flex chain above correctly constrains available
+     space, this should size to whatever room .main-content-layout actually has, not a
+     standalone viewport calc that doesn't account for the page's own header/nav chrome. */
+  height: 100%;
   padding-right: 8px;
 
   /* Hide scrollbar */

@@ -16,6 +16,7 @@ import {
   Tag,
   Spin,
   message,
+  Popconfirm,
 } from "antd";
 import dayjs from "dayjs";
 import {
@@ -30,6 +31,8 @@ import {
   EyeOutlined,
   SaveOutlined,
   CloseOutlined,
+  EditOutlined,
+  DeleteOutlined,
 } from "@ant-design/icons";
 import "../../styles/CasesDetails.css";
 import ReactQuill from "react-quill-new";
@@ -41,11 +44,14 @@ import { useTableColumns } from "../../context/TableColumnsContext ";
 import {
   fetchActivities,
   createActivity,
+  updateActivity,
+  deleteActivity,
   updateIssue,
   updateIssueStatus,
   fetchIssueAttachments,
   uploadIssueAttachment,
   getAttachmentDownloadUrl,
+  fetchIssueHistory,
 } from "../../services/issuesApi";
 import {
   getIssueById,
@@ -120,6 +126,11 @@ function emptyActivityForm() {
     // Default checked per the plan/backend model default (Activity.sendNotification
     // defaults true unless explicitly opted out).
     sendNotification: true,
+    // Default unchecked, matching Activity.visibleToMember's schema default (false) - an
+    // internal note/call stays internal unless a staffer explicitly opts it into the
+    // member's portal activity view (controllers/issuePortal.controller.js's
+    // portalListMyIssueActivities only returns visibleToMember:true entries).
+    visibleToMember: false,
   };
 }
 
@@ -167,6 +178,13 @@ function CasesDetails() {
   const [activityForm, setActivityForm] = useState(emptyActivityForm);
   const [postingActivity, setPostingActivity] = useState(false);
 
+  // Inline edit state for an already-logged activity - editingActivityId is null when
+  // nothing's being edited; editActivityForm holds the draft while editingActivityId is set.
+  const [editingActivityId, setEditingActivityId] = useState(null);
+  const [editActivityForm, setEditActivityForm] = useState(null);
+  const [savingActivityEdit, setSavingActivityEdit] = useState(false);
+  const [deletingActivityId, setDeletingActivityId] = useState(null);
+
   const [collapsedSections, setCollapsedSections] = useState({
     Attachments: false,
     Activities: false,
@@ -189,12 +207,36 @@ function CasesDetails() {
           dispatch(setActivities(Array.isArray(data) ? data : []));
         })
         .catch(() => {
-          dispatch(setActivities([]));
+          // Deliberately does NOT clear activities to [] here - a duplicate/retried request
+          // that happens to fail (e.g. gateway rate-limiting a request burst) must never wipe
+          // out data an earlier successful call already loaded. Worst case on a genuine
+          // first-load failure: the list just stays empty, same end result as clearing it.
         })
         .finally(() => setActivitiesLoading(false));
     },
     [dispatch],
   );
+
+  // "History" tab data - who changed/deleted what and when (controllers/issueActivity.
+  // controller.js's listHistory, backed by services/history.service.js's recordHistory
+  // calls sprinkled through issue/activity create-update-delete). Local state, not Redux -
+  // matches the Attachments tab's own local-state pattern above rather than adding a new
+  // slice for something this page-scoped.
+  const [historyEntries, setHistoryEntries] = useState([]);
+  const [historyLoading, setHistoryLoading] = useState(false);
+  const [historySearchQuery, setHistorySearchQuery] = useState("");
+
+  const loadHistory = useCallback((id) => {
+    if (!id) return;
+    setHistoryLoading(true);
+    fetchIssueHistory(id)
+      .then((data) => setHistoryEntries(Array.isArray(data) ? data : []))
+      .catch(() => {
+        // Same reasoning as loadActivities above - don't clobber already-loaded data with a
+        // later failing duplicate/retried request.
+      })
+      .finally(() => setHistoryLoading(false));
+  }, []);
 
   // Re-load whenever issueId changes (direct nav, prev/next, or a fresh mount) - clear the
   // previous issue's data first so a stale record never flashes while the new one loads.
@@ -203,7 +245,8 @@ function CasesDetails() {
     dispatch(clearActiveIssue());
     dispatch(getIssueById(issueId));
     loadActivities(issueId);
-  }, [issueId, dispatch, loadActivities]);
+    loadHistory(issueId);
+  }, [issueId, dispatch, loadActivities, loadHistory]);
 
   // Sync local editable form state whenever a (new) issue finishes loading.
   useEffect(() => {
@@ -251,6 +294,11 @@ function CasesDetails() {
       },
       0,
     );
+    // NOTE: this used to also self-heal `gridData` (fetching the full issues list here so
+    // prev/next works even when this page wasn't reached via the Issues grid) - reverted
+    // while investigating a request-storm/503 issue, since that added a heavy extra
+    // fetchIssues() call on every Case Details mount. Prev/next may be disabled again on
+    // direct-entry pages until this is revisited.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeIssue?._id]);
 
@@ -263,8 +311,13 @@ function CasesDetails() {
   }, []);
 
   const refreshIssue = useCallback(() => {
-    if (issueId) dispatch(getIssueById(issueId));
-  }, [issueId, dispatch]);
+    if (!issueId) return;
+    dispatch(getIssueById(issueId));
+    // Every place that calls refreshIssue() just made a change that's history-worthy
+    // (general save, status update, logging an activity) - piggyback the History tab's
+    // refresh here rather than remembering to call both separately at each call site.
+    loadHistory(issueId);
+  }, [issueId, dispatch, loadHistory]);
 
   const handleSaveGeneral = async () => {
     if (!issueId || !activeIssue) return;
@@ -513,6 +566,7 @@ function CasesDetails() {
           : new Date().toISOString(),
         pertinentToFileReview: !!activityForm.pertinentToFileReview,
         sendNotification: activityForm.sendNotification !== false,
+        visibleToMember: !!activityForm.visibleToMember,
       });
       message.success("Activity logged");
       setActivityForm(emptyActivityForm());
@@ -527,6 +581,77 @@ function CasesDetails() {
       );
     } finally {
       setPostingActivity(false);
+    }
+  };
+
+  const handleStartEditActivity = (activity) => {
+    setEditingActivityId(activity._id);
+    setEditActivityForm({
+      activityType: activity.activityType,
+      subject: activity.subject || "",
+      body: activity.body || "",
+      pertinentToFileReview: !!activity.pertinentToFileReview,
+      visibleToMember: !!activity.visibleToMember,
+    });
+  };
+
+  const handleCancelEditActivity = () => {
+    setEditingActivityId(null);
+    setEditActivityForm(null);
+  };
+
+  const handleEditActivityFieldChange = (field, value) => {
+    setEditActivityForm((prev) => ({ ...prev, [field]: value }));
+  };
+
+  const handleSaveEditActivity = async () => {
+    if (!editingActivityId || !editActivityForm) return;
+    if (!stripHtml(editActivityForm.body)) {
+      message.error("Activity text is required");
+      return;
+    }
+    setSavingActivityEdit(true);
+    try {
+      await updateActivity(editingActivityId, {
+        activityType: editActivityForm.activityType,
+        subject: editActivityForm.subject || null,
+        body: editActivityForm.body || null,
+        pertinentToFileReview: !!editActivityForm.pertinentToFileReview,
+        visibleToMember: !!editActivityForm.visibleToMember,
+      });
+      message.success("Activity updated");
+      handleCancelEditActivity();
+      loadActivities(issueId);
+      loadHistory(issueId);
+    } catch (error) {
+      message.error(
+        error?.response?.data?.error?.message ||
+          error?.response?.data?.message ||
+          error?.message ||
+          "Failed to update activity",
+      );
+    } finally {
+      setSavingActivityEdit(false);
+    }
+  };
+
+  const handleDeleteActivity = async (activityId) => {
+    setDeletingActivityId(activityId);
+    try {
+      await deleteActivity(activityId);
+      message.success("Comment deleted");
+      if (editingActivityId === activityId) handleCancelEditActivity();
+      loadActivities(issueId);
+      loadHistory(issueId);
+    } catch (error) {
+      message.error(
+        error?.response?.data?.error?.message ||
+          error?.response?.data?.message ||
+          error?.message ||
+          "Failed to delete comment",
+      );
+    } finally {
+      setDeletingActivityId(null);
     }
   };
 
@@ -568,8 +693,10 @@ function CasesDetails() {
       const data = await fetchIssueAttachments(issueId);
       setAttachments(Array.isArray(data) ? data : []);
     } catch (error) {
-      // Best-effort - a listing failure shouldn't block the rest of the page.
-      setAttachments([]);
+      // Best-effort - a listing failure shouldn't block the rest of the page, and
+      // deliberately doesn't clear already-loaded attachments (same reasoning as
+      // loadActivities/loadHistory - a later failing duplicate request must never wipe out
+      // data an earlier successful one already loaded).
     } finally {
       setAttachmentsLoading(false);
     }
@@ -700,41 +827,57 @@ function CasesDetails() {
     </div>
   );
 
-  // ---- History timeline: purely presentational mock, no issue-service backend counterpart
-  // either (no audit/history-timeline endpoint on this service) - left as-is per the task's
-  // scope. audit-service does receive issues.issue.audit.v1 events, but exposing a grid over
-  // that is out of scope here (see TEMPLATE_IMPLEMENTATION_PLAYBOOK.md's note that
-  // audit-service has no Template/grid support yet for any service).
-  const historyData = [
-    {
-      actor: { name: "System", title: "STATUS CHANGE" },
-      time: "-",
-      label: "Issue created",
-    },
-  ];
+  // History timeline - real data from issue-service's GET /issues/:id/history
+  // (controllers/issueActivity.controller.js's listHistory), written by
+  // services/history.service.js#recordHistory wherever this issue or one of its
+  // activities/comments is created, edited, or deleted. Filtered client-side by actor email
+  // or summary text - small per-issue lists, no need for a server-side search param.
+  const historyActionColor = { CREATED: "blue", UPDATED: "gold", DELETED: "red" };
+
+  const filteredHistoryEntries = historyEntries.filter((entry) => {
+    if (!historySearchQuery.trim()) return true;
+    const needle = historySearchQuery.trim().toLowerCase();
+    return (
+      (entry.summary || "").toLowerCase().includes(needle) ||
+      (entry.actorEmail || "").toLowerCase().includes(needle)
+    );
+  });
 
   const renderHistory = () => (
     <div className="history-tab-content">
       <div className="history-header">
         <div className="history-search-wrapper">
-          <MySearchInput placeholder="Search by actor or field..." />
+          <MySearchInput
+            placeholder="Search by actor or change..."
+            value={historySearchQuery}
+            onChange={(e) => setHistorySearchQuery(e.target.value)}
+          />
         </div>
       </div>
       <div className="history-timeline">
-        {historyData.map((item, index) => (
-          <div key={index} className="history-card">
+        {historyLoading && <Spin size="small" />}
+        {!historyLoading && filteredHistoryEntries.length === 0 && (
+          <div style={{ color: "var(--theme-text-muted)" }}>No history yet.</div>
+        )}
+        {filteredHistoryEntries.map((item) => (
+          <div key={item._id} className="history-card">
             <div className="history-card-header">
               <div className="actor-info">
                 <Avatar icon={<UserAddOutlined />} />
                 <div className="actor-text">
-                  <h4>{item.actor.name}</h4>
-                  <span className="actor-title">{item.actor.title}</span>
+                  <h4>{item.actorEmail || item.actorId || "System"}</h4>
+                  <span className="actor-title">
+                    <Tag color={historyActionColor[item.action] || "default"}>
+                      {item.action}
+                    </Tag>{" "}
+                    {item.entityType === "ACTIVITY" ? "Comment/Activity" : "Issue"}
+                  </span>
                 </div>
               </div>
-              <span className="time-stamp">{item.time}</span>
+              <span className="time-stamp">{formatDate(item.createdAt, true)}</span>
             </div>
             <div className="history-card-body">
-              <p className="change-label">{item.label}</p>
+              <p className="change-label">{item.summary}</p>
             </div>
           </div>
         ))}
@@ -801,7 +944,7 @@ function CasesDetails() {
             />
           </div>
           <Row style={{ marginBottom: 12 }} align="middle">
-            <Col span={12}>
+            <Col span={8}>
               <Checkbox
                 checked={activityForm.pertinentToFileReview}
                 onChange={(e) =>
@@ -812,7 +955,7 @@ function CasesDetails() {
                 Pertinent to File Review
               </Checkbox>
             </Col>
-            <Col span={12}>
+            <Col span={8}>
               <Checkbox
                 checked={activityForm.sendNotification}
                 onChange={(e) => handleActivityFieldChange("sendNotification", e.target.checked)}
@@ -820,6 +963,17 @@ function CasesDetails() {
               >
                 Notify owner
               </Checkbox>
+            </Col>
+            <Col span={8}>
+              <Tooltip title="Members can only see activities marked visible here - internal notes/calls stay hidden by default.">
+                <Checkbox
+                  checked={activityForm.visibleToMember}
+                  onChange={(e) => handleActivityFieldChange("visibleToMember", e.target.checked)}
+                  disabled={isIssueClosed}
+                >
+                  Visible to member
+                </Checkbox>
+              </Tooltip>
             </Col>
           </Row>
           <button
@@ -837,43 +991,169 @@ function CasesDetails() {
         {!activitiesLoading && activities.length === 0 && (
           <div style={{ color: "var(--theme-text-muted)" }}>No activities logged yet.</div>
         )}
-        {activities.map((activity) => (
-          <div key={activity._id} className="note-item" style={{ display: "flex", gap: 16 }}>
-            <Avatar icon={<UserAddOutlined />} />
-            <div className="note-content" style={{ flex: 1 }}>
-              <div
-                className="note-header"
-                style={{ display: "flex", justifyContent: "space-between", marginBottom: 4 }}
-              >
-                <span style={{ fontWeight: 600, fontSize: 14 }}>
-                  {enumLabel(activity.activityType)}
-                  {activity.subject ? ` — ${activity.subject}` : ""}
-                  {activity.pertinentToFileReview && (
-                    <Tag color="gold" style={{ marginLeft: 8 }}>
-                      File Review
-                    </Tag>
-                  )}
-                </span>
-                <span style={{ color: "#bfbfbf", fontSize: 12 }}>
-                  {formatDate(activity.interactionDate, true)}
-                </span>
+        {activities.map((activity) => {
+          const isEditing = editingActivityId === activity._id;
+          // updatedAt is set on every save, including creation itself (Mongoose timestamps),
+          // so it always exists even for never-edited activities - only treat it as "the
+          // date to show" once it's meaningfully after createdAt (i.e. actually been
+          // edited), not on the millisecond-identical initial save. One timestamp shown per
+          // row - whichever is latest - rather than both logged-on and last-updated.
+          const wasEdited =
+            activity.updatedAt &&
+            activity.createdAt &&
+            dayjs(activity.updatedAt).diff(dayjs(activity.createdAt), "second") > 0;
+
+          if (isEditing) {
+            return (
+              <div key={activity._id} className="note-item" style={{ display: "flex", gap: 16 }}>
+                <Avatar icon={<UserAddOutlined />} />
+                <div className="note-content" style={{ flex: 1 }}>
+                  <Row gutter={12} style={{ marginBottom: 12 }}>
+                    <Col span={12}>
+                      <Select
+                        value={editActivityForm.activityType}
+                        onChange={(v) => handleEditActivityFieldChange("activityType", v)}
+                        style={{ width: "100%" }}
+                        options={ACTIVITY_TYPE_OPTIONS.map((v) => ({ value: v, label: enumLabel(v) }))}
+                      />
+                    </Col>
+                    <Col span={12}>
+                      <Input
+                        placeholder="Subject"
+                        value={editActivityForm.subject}
+                        onChange={(e) => handleEditActivityFieldChange("subject", e.target.value)}
+                      />
+                    </Col>
+                  </Row>
+                  <div className="rich-text-editor-wrapper" style={{ marginBottom: 12 }}>
+                    <ReactQuill
+                      theme="snow"
+                      value={editActivityForm.body}
+                      onChange={(v) => handleEditActivityFieldChange("body", v)}
+                      placeholder="Add activity details..."
+                      modules={{
+                        toolbar: [
+                          ["bold", "italic", "underline"],
+                          [{ list: "ordered" }, { list: "bullet" }],
+                          ["clean"],
+                        ],
+                      }}
+                    />
+                  </div>
+                  <Row style={{ marginBottom: 12 }} align="middle">
+                    <Col span={12}>
+                      <Checkbox
+                        checked={editActivityForm.pertinentToFileReview}
+                        onChange={(e) =>
+                          handleEditActivityFieldChange("pertinentToFileReview", e.target.checked)
+                        }
+                      >
+                        Pertinent to File Review
+                      </Checkbox>
+                    </Col>
+                    <Col span={12}>
+                      <Checkbox
+                        checked={editActivityForm.visibleToMember}
+                        onChange={(e) =>
+                          handleEditActivityFieldChange("visibleToMember", e.target.checked)
+                        }
+                      >
+                        Visible to member
+                      </Checkbox>
+                    </Col>
+                  </Row>
+                  <div style={{ display: "flex", gap: 8 }}>
+                    <Button
+                      type="primary"
+                      icon={<SaveOutlined />}
+                      loading={savingActivityEdit}
+                      onClick={handleSaveEditActivity}
+                    >
+                      Save
+                    </Button>
+                    <Button icon={<CloseOutlined />} onClick={handleCancelEditActivity}>
+                      Cancel
+                    </Button>
+                  </div>
+                </div>
               </div>
-              {activity.body && (
+            );
+          }
+
+          return (
+            <div key={activity._id} className="note-item" style={{ display: "flex", gap: 16 }}>
+              <Avatar icon={<UserAddOutlined />} />
+              <div className="note-content" style={{ flex: 1 }}>
                 <div
-                  className="note-text"
-                  style={{
-                    background: "#f8faff",
-                    padding: 12,
-                    borderRadius: 8,
-                    color: "var(--theme-text-muted)",
-                    fontSize: 14,
-                  }}
-                  dangerouslySetInnerHTML={{ __html: activity.body }}
-                />
-              )}
+                  className="note-header"
+                  style={{ display: "flex", justifyContent: "space-between", marginBottom: 4 }}
+                >
+                  <span style={{ fontWeight: 600, fontSize: 14 }}>
+                    {enumLabel(activity.activityType)}
+                    {activity.subject ? ` — ${activity.subject}` : ""}
+                    {activity.pertinentToFileReview && (
+                      <Tag color="gold" style={{ marginLeft: 8 }}>
+                        File Review
+                      </Tag>
+                    )}
+                    {activity.visibleToMember && (
+                      <Tag color="green" style={{ marginLeft: 8 }}>
+                        Visible to member
+                      </Tag>
+                    )}
+                  </span>
+                  <span style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                    <span style={{ color: "#bfbfbf", fontSize: 12, textAlign: "right" }}>
+                      {formatDate(wasEdited ? activity.updatedAt : activity.interactionDate, true)}
+                    </span>
+                    <Tooltip title="Edit">
+                      <span
+                        className="attachment-action-btn"
+                        onClick={() => handleStartEditActivity(activity)}
+                        role="button"
+                        tabIndex={0}
+                        onKeyDown={(e) => e.key === "Enter" && handleStartEditActivity(activity)}
+                      >
+                        <EditOutlined />
+                      </span>
+                    </Tooltip>
+                    <Popconfirm
+                      title="Delete this comment?"
+                      description="It will be removed from the activity list, but a record of the deletion (and by whom) stays visible in History."
+                      okText="Delete"
+                      okButtonProps={{ danger: true }}
+                      onConfirm={() => handleDeleteActivity(activity._id)}
+                    >
+                      <Tooltip title="Delete">
+                        <span
+                          className="attachment-action-btn"
+                          role="button"
+                          tabIndex={0}
+                          aria-disabled={deletingActivityId === activity._id}
+                        >
+                          <DeleteOutlined style={{ color: "#ff4d4f" }} />
+                        </span>
+                      </Tooltip>
+                    </Popconfirm>
+                  </span>
+                </div>
+                {activity.body && (
+                  <div
+                    className="note-text"
+                    style={{
+                      background: "#f8faff",
+                      padding: 12,
+                      borderRadius: 8,
+                      color: "var(--theme-text-muted)",
+                      fontSize: 14,
+                    }}
+                    dangerouslySetInnerHTML={{ __html: activity.body }}
+                  />
+                )}
+              </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
     </div>
   );

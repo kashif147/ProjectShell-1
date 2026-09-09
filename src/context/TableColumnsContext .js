@@ -2245,7 +2245,7 @@ const staticColumns = {
         return (
           <>
             <Link
-              to="/CasesDetails"
+              to={{ pathname: "/CasesDetails", search: buildIssueDetailsSearch(issueId) }}
               state={{ issueId, recordName: label }}
               onClick={(e) => e.stopPropagation()}
               style={{ color: "blue", textDecoration: "underline", cursor: "pointer" }}

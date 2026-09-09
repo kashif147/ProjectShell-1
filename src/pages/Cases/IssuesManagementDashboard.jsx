@@ -23,6 +23,7 @@ import {
   YAxis,
 } from "recharts";
 import { fetchIssues } from "../../services/issuesApi";
+import { buildIssueDetailsSearch } from "../../utils/detailsRoute";
 import { useFilters } from "../../context/FilterContext";
 import { useTableColumns } from "../../context/TableColumnsContext ";
 import { applyClientSideRowFilters, translateIssueFilterLabelsToCodes } from "../../utils/filterUtils";
@@ -840,9 +841,10 @@ function IssuesManagementDashboard() {
                 showHeader
                 onRow={(record) => ({
                   onClick: () =>
-                    navigate("/CasesDetails", {
-                      state: { issueId: record.issueId },
-                    }),
+                    navigate(
+                      { pathname: "/CasesDetails", search: buildIssueDetailsSearch(record.issueId) },
+                      { state: { issueId: record.issueId } },
+                    ),
                 })}
               />
             </div>
@@ -902,7 +904,10 @@ function IssuesManagementDashboard() {
               disabled={!focusIssue}
               onClick={() =>
                 focusIssue &&
-                navigate("/CasesDetails", { state: { issueId: focusIssue._id } })
+                navigate(
+                  { pathname: "/CasesDetails", search: buildIssueDetailsSearch(focusIssue._id) },
+                  { state: { issueId: focusIssue._id } },
+                )
               }
             >
               Open issue
