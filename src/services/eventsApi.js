@@ -201,6 +201,22 @@ export async function approveRegistration(id, { decision, candidateProfileId } =
   return unwrap({ data });
 }
 
+// (Re-)establishes a capturable Stripe payment for a pending-review
+// registration - either a stripe registration whose PaymentIntent never got
+// confirmed (declined card, closed tab, abandoned 3DS), or a manual/comp/
+// invoice registration the CRM user now wants to charge a card for instead
+// (events-service voids the superseded manual/comp/invoice payment). Returns
+// a fresh clientSecret to run stripe.confirmCardPayment against. See
+// CreateAttendeeDrawer's view-mode payment retry/capture UI.
+export async function retryRegistrationPayment(id) {
+  const { data } = await axios.post(
+    `${getEventsServiceBaseUrl()}/registrations/${id}/retry-payment`,
+    {},
+    { headers: authHeaders() },
+  );
+  return unwrap({ data });
+}
+
 // Releases the Stripe authorization (no refund - nothing was captured) or
 // voids the recorded-but-unposted manual/comp/invoice payment, then cancels
 // the registration and frees the seat.
