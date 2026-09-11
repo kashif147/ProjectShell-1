@@ -15,6 +15,8 @@ import {
 import { CreditCardOutlined, MinusOutlined, PlusOutlined, DiffOutlined, SafetyCertificateOutlined } from '@ant-design/icons';
 import MyInput from '../common/MyInput';
 import CustomSelect from '../common/CustomSelect';
+import MyDatePicker1 from '../common/MyDatePicker1';
+import dayjs from 'dayjs';
 import MemberSearch from '../profile/MemberSearch';
 import ProfileDuplicateReview from '../profile/ProfileDuplicateReview';
 import AttendeeDuplicateCompareDrawer from './AttendeeDuplicateCompareDrawer';
@@ -78,8 +80,11 @@ const STRIPE_ELEMENT_OPTIONS = {
 };
 
 const INITIAL_FORM_DATA = {
+    title: '',
     firstName: '',
     surname: '',
+    gender: '',
+    dob: null,
     email: '',
     phone: '',
     workPlace: '',
@@ -198,7 +203,7 @@ const CreateAttendeeDrawerInner = ({ open, onClose, eventId, registration, onApp
     const inputRef = useRef(null);
     const dispatch = useDispatch();
     const { countriesOptions } = useSelector((state) => state.countries);
-    const { workLocationOptions, gradeOptions, eventTypeOptions, eventCategoryOptions } = useSelector((state) => state.lookups);
+    const { workLocationOptions, gradeOptions, eventTypeOptions, eventCategoryOptions, titleOptions, genderOptions } = useSelector((state) => state.lookups);
     const { isLoaded } = useJsApiLoader({
         id: 'google-map-script',
         googleMapsApiKey: 'AIzaSyCJYpj8WV5Rzof7O3jGhW9XabD0J4Yqe1o',
@@ -234,12 +239,16 @@ const CreateAttendeeDrawerInner = ({ open, onClose, eventId, registration, onApp
         );
         setFormData({
             ...INITIAL_FORM_DATA,
+            title: snapshot.title || '',
             firstName: snapshot.firstName || '',
             surname: snapshot.lastName || '',
+            gender: snapshot.gender || '',
+            dob: snapshot.dateOfBirth ? dayjs(snapshot.dateOfBirth) : null,
             email: snapshot.email || '',
             phone: snapshot.phone || '',
             workPlace: snapshot.workLocation || '',
             grade: snapshot.grade || '',
+            nmbiNumber: snapshot.nmbiNumber || '',
             addressLine1: snapshot.addressLine1 || '',
             addressLine2: snapshot.addressLine2 || '',
             townCity: snapshot.townCity || '',
@@ -372,6 +381,10 @@ const CreateAttendeeDrawerInner = ({ open, onClose, eventId, registration, onApp
         });
     };
 
+    const handleDobChange = (date) => {
+        setFormData((prev) => ({ ...prev, dob: date }));
+    };
+
     const handleMemberSelect = (memberData) => {
         setSelectedProfileId(memberData._id || memberData.profileId || null);
         setAttendeeMembershipNumber(memberData.membershipNumber || null);
@@ -387,8 +400,11 @@ const CreateAttendeeDrawerInner = ({ open, onClose, eventId, registration, onApp
         setNmbiLocked(!!existingNmbi);
         setFormData({
             ...formData,
+            title: memberData.personalInfo?.title || '',
             firstName: toTitleCase(memberData.personalInfo?.forename),
             surname: toTitleCase(memberData.personalInfo?.surname),
+            gender: memberData.personalInfo?.gender || '',
+            dob: memberData.personalInfo?.dateOfBirth ? dayjs(memberData.personalInfo.dateOfBirth) : null,
             email: memberData.contactInfo?.personalEmail || '',
             phone: memberData.contactInfo?.mobileNumber || '',
             workPlace: memberData.professionalDetails?.workLocation || '',
@@ -664,8 +680,13 @@ const CreateAttendeeDrawerInner = ({ open, onClose, eventId, registration, onApp
                 profile: {
                     profileId: selectedProfileId || undefined,
                     email: formData.email,
+                    title: formData.title || undefined,
                     firstName: formData.firstName,
                     lastName: formData.surname,
+                    gender: formData.gender || undefined,
+                    dateOfBirth: formData.dob && dayjs.isDayjs(formData.dob) && formData.dob.isValid()
+                        ? formData.dob.toISOString()
+                        : undefined,
                     phone: formData.phone,
                     workLocation: isOtherSelection(formData.workPlace) ? formData.otherWorkPlace : formData.workPlace,
                     grade: isOtherSelection(formData.grade) ? formData.otherGrade : formData.grade,
@@ -1173,6 +1194,21 @@ const CreateAttendeeDrawerInner = ({ open, onClose, eventId, registration, onApp
                             )}
                         </div>
 
+                        {viewMode ? (
+                            <MyInput label="Title" name="title" value={formData.title} disabled />
+                        ) : (
+                            <CustomSelect
+                                label="Title"
+                                name="title"
+                                value={formData.title}
+                                onChange={handleInputChange}
+                                options={titleOptions}
+                                placeholder="Select title"
+                                disabled={fieldsDisabled}
+                                showSearch
+                            />
+                        )}
+
                         <Row gutter={16}>
                             <Col span={12}>
                                 <MyInput
@@ -1193,6 +1229,43 @@ const CreateAttendeeDrawerInner = ({ open, onClose, eventId, registration, onApp
                                     placeholder="Doe"
                                     disabled={fieldsDisabled}
                                 />
+                            </Col>
+                        </Row>
+
+                        <Row gutter={16}>
+                            <Col span={12}>
+                                {viewMode ? (
+                                    <MyInput label="Gender" name="gender" value={formData.gender} disabled />
+                                ) : (
+                                    <CustomSelect
+                                        label="Gender"
+                                        name="gender"
+                                        value={formData.gender}
+                                        onChange={handleInputChange}
+                                        options={genderOptions}
+                                        placeholder="Select gender"
+                                        disabled={fieldsDisabled}
+                                        showSearch
+                                    />
+                                )}
+                            </Col>
+                            <Col span={12}>
+                                {viewMode ? (
+                                    <MyInput
+                                        label="Date of Birth"
+                                        name="dob"
+                                        value={formData.dob && dayjs.isDayjs(formData.dob) && formData.dob.isValid() ? formData.dob.format('DD/MM/YYYY') : ''}
+                                        disabled
+                                    />
+                                ) : (
+                                    <MyDatePicker1
+                                        label="Date of Birth"
+                                        name="dob"
+                                        value={formData.dob}
+                                        onChange={handleDobChange}
+                                        disabled={fieldsDisabled}
+                                    />
+                                )}
                             </Col>
                         </Row>
 
@@ -1263,16 +1336,14 @@ const CreateAttendeeDrawerInner = ({ open, onClose, eventId, registration, onApp
                                 disabled={fieldsDisabled}
                             />
                         )}
-                        {!viewMode && (
-                            <MyInput
-                                label="NMBI No."
-                                name="nmbiNumber"
-                                value={formData.nmbiNumber}
-                                onChange={handleInputChange}
-                                placeholder="Enter NMBI registration number"
-                                disabled={fieldsDisabled || nmbiLocked}
-                            />
-                        )}
+                        <MyInput
+                            label="NMBI No."
+                            name="nmbiNumber"
+                            value={formData.nmbiNumber}
+                            onChange={handleInputChange}
+                            placeholder="Enter NMBI registration number"
+                            disabled={viewMode || fieldsDisabled || nmbiLocked}
+                        />
                         {!viewMode && nmbiLocked && (
                             <Text type="secondary" style={{ display: 'block', marginTop: -12, marginBottom: 12 }}>
                                 Already on file for this profile.

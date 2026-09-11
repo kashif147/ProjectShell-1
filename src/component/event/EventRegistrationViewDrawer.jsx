@@ -162,7 +162,16 @@ const EventRegistrationViewDrawer = ({ open, onClose, registration, onApproved }
       styles={{ body: { padding: "20px 28px" } }}
     >
       <Descriptions title="Attendee" column={2} size="small" bordered>
+        <Descriptions.Item label="Title">
+          {registration.attendeeSnapshot?.title || "-"}
+        </Descriptions.Item>
         <Descriptions.Item label="Name">{attendeeName}</Descriptions.Item>
+        <Descriptions.Item label="Gender">
+          {registration.attendeeSnapshot?.gender || "-"}
+        </Descriptions.Item>
+        <Descriptions.Item label="Date of Birth">
+          {formatDate(registration.attendeeSnapshot?.dateOfBirth)}
+        </Descriptions.Item>
         <Descriptions.Item label="Email">
           {registration.attendeeSnapshot?.email || "-"}
         </Descriptions.Item>
@@ -174,6 +183,9 @@ const EventRegistrationViewDrawer = ({ open, onClose, registration, onApproved }
         </Descriptions.Item>
         <Descriptions.Item label="Grade">
           {registration.attendeeSnapshot?.grade || "-"}
+        </Descriptions.Item>
+        <Descriptions.Item label="NMBI No.">
+          {registration.attendeeSnapshot?.nmbiNumber || "-"}
         </Descriptions.Item>
         <Descriptions.Item label="Address" span={2}>
           {buildAttendeeAddress(registration.attendeeSnapshot)}

@@ -163,6 +163,7 @@ export async function checkAttendeeDuplicates({
   lastName,
   phone,
   nmbiNumber,
+  dateOfBirth,
   addressLine1,
   townCity,
   countyState,
@@ -171,7 +172,7 @@ export async function checkAttendeeDuplicates({
 }) {
   const { data } = await axios.post(
     `${getEventsServiceBaseUrl()}/registrations/attendee-duplicate-check`,
-    { email, firstName, lastName, phone, nmbiNumber, addressLine1, townCity, countyState, eircode, country },
+    { email, firstName, lastName, phone, nmbiNumber, dateOfBirth, addressLine1, townCity, countyState, eircode, country },
     { headers: authHeaders() },
   );
   return unwrap({ data });
