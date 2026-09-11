@@ -178,6 +178,23 @@ export async function checkAttendeeDuplicates({
   return unwrap({ data });
 }
 
+// CRM edit of an already-existing registration's attendee details (title,
+// name, gender, DOB, contact, work location/grade, NMBI, address). Updates
+// the Registration's attendeeSnapshot always, and (if already linked to a
+// real Profile) profile-service's Profile too - see
+// registration.controller.js's updateRegistrationAttendee. Returns
+// { data: <updated registration>, warning?: <string> } rather than going
+// through the generic unwrap() helper, since a partial-success response
+// carries a top-level `warning` alongside `data` that unwrap() would drop.
+export async function updateRegistrationAttendee(id, payload) {
+  const { data } = await axios.put(
+    `${getEventsServiceBaseUrl()}/registrations/${id}/attendee`,
+    payload,
+    { headers: authHeaders() },
+  );
+  return { data: data?.data, warning: data?.warning };
+}
+
 export async function cancelRegistration(id) {
   const { data } = await axios.put(
     `${getEventsServiceBaseUrl()}/registrations/${id}/cancel`,

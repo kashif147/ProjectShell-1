@@ -35,6 +35,7 @@ import {
     approveRegistration,
     rejectRegistration,
     retryRegistrationPayment,
+    updateRegistrationAttendee,
 } from '../../services/eventsApi';
 import { dispatchProfileInvalidate } from '../../utils/profileRealtimeEvents';
 import { computeEventFormat } from '../../utils/eventFormat';
@@ -101,6 +102,31 @@ const INITIAL_FORM_DATA = {
     country: 'Ireland',
 };
 
+// Shared between the initial view-mode populate and reverting an in-progress
+// edit (Cancel) / re-syncing after a successful save - so all three read the
+// snapshot into formData the exact same way.
+function snapshotToFormData(snapshot = {}) {
+    return {
+        ...INITIAL_FORM_DATA,
+        title: snapshot.title || '',
+        firstName: snapshot.firstName || '',
+        surname: snapshot.lastName || '',
+        gender: snapshot.gender || '',
+        dob: snapshot.dateOfBirth ? dayjs(snapshot.dateOfBirth) : null,
+        email: snapshot.email || '',
+        phone: snapshot.phone || '',
+        workPlace: snapshot.workLocation || '',
+        grade: snapshot.grade || '',
+        nmbiNumber: snapshot.nmbiNumber || '',
+        addressLine1: snapshot.addressLine1 || '',
+        addressLine2: snapshot.addressLine2 || '',
+        townCity: snapshot.townCity || '',
+        countyState: snapshot.countyState || '',
+        eircode: snapshot.eircode || '',
+        country: snapshot.country || 'Ireland',
+    };
+}
+
 function toTitleCase(value) {
     return String(value || '')
         .trim()
@@ -154,6 +180,13 @@ const CreateAttendeeDrawerInner = ({ open, onClose, eventId, registration, onApp
     // before Approve is allowed to proceed.
     const [duplicateReviewStatus, setDuplicateReviewStatus] = useState(null);
     const [pendingReviewDecision, setPendingReviewDecision] = useState(null); // 'LINK' | 'CREATE_NEW' | null
+    // View mode only - CRM correcting an existing registration's attendee
+    // details (title/name/gender/DOB/contact/work/grade/NMBI/address) rather
+    // than approving/rejecting it. Saving pushes the edit to both the
+    // Registration's attendeeSnapshot and (if already linked) the attendee's
+    // Profile in profile-service - see handleSaveAttendeeEdit.
+    const [editMode, setEditMode] = useState(false);
+    const [savingAttendee, setSavingAttendee] = useState(false);
 
     const [selectedSessionIds, setSelectedSessionIds] = useState([]);
     const [events, setEvents] = useState([]);
@@ -224,6 +257,8 @@ const CreateAttendeeDrawerInner = ({ open, onClose, eventId, registration, onApp
         setSelectedProfileId(registration.profileId || null);
         setAttendeeMembershipNumber(registration.membershipNumber || null);
         setNmbiLocked(false);
+        setEditMode(false);
+        setSavingAttendee(false);
         setPaymentMethod(registration.paymentMethod || 'stripe');
         setRegistrationStatus(registration.status);
         setApprovalStatus(registration.approvalStatus);
@@ -237,25 +272,7 @@ const CreateAttendeeDrawerInner = ({ open, onClose, eventId, registration, onApp
         setDuplicateCandidates(
             review.status === 'POTENTIAL_MATCH' && review.matchSummary?.length ? review.matchSummary : null,
         );
-        setFormData({
-            ...INITIAL_FORM_DATA,
-            title: snapshot.title || '',
-            firstName: snapshot.firstName || '',
-            surname: snapshot.lastName || '',
-            gender: snapshot.gender || '',
-            dob: snapshot.dateOfBirth ? dayjs(snapshot.dateOfBirth) : null,
-            email: snapshot.email || '',
-            phone: snapshot.phone || '',
-            workPlace: snapshot.workLocation || '',
-            grade: snapshot.grade || '',
-            nmbiNumber: snapshot.nmbiNumber || '',
-            addressLine1: snapshot.addressLine1 || '',
-            addressLine2: snapshot.addressLine2 || '',
-            townCity: snapshot.townCity || '',
-            countyState: snapshot.countyState || '',
-            eircode: snapshot.eircode || '',
-            country: snapshot.country || 'Ireland',
-        });
+        setFormData(snapshotToFormData(snapshot));
         setSelectedEventId(registration.eventId || registration.courseId || '');
     }, [open, registration]);
 
@@ -509,8 +526,14 @@ const CreateAttendeeDrawerInner = ({ open, onClose, eventId, registration, onApp
         typeof value === 'string' && value.trim().toLowerCase() === 'other';
 
     const fieldsEnabled = isNewAttendee || !!selectedProfileId;
-    // View mode always shows populated fields, but never editable ones.
-    const fieldsDisabled = viewMode || !fieldsEnabled;
+    // View mode shows populated fields, editable only once the CRM user
+    // clicks Edit (editMode) - create mode's own fieldsEnabled gating
+    // (nothing to edit until an attendee is searched/added) is unaffected.
+    const fieldsDisabled = viewMode ? !editMode : !fieldsEnabled;
+    // Selects/date-picker render their interactive widget in create mode, or
+    // in view mode once editing - otherwise a plain disabled MyInput, same as
+    // every other view-mode field.
+    const showEditableWidget = !viewMode || editMode;
 
     // View mode (and the eventId-prop-locked create case) is always locked to
     // a single event, resolved via fetchEventById into selectedEvent - the
@@ -665,6 +688,31 @@ const CreateAttendeeDrawerInner = ({ open, onClose, eventId, registration, onApp
         }
     };
 
+    // Shared between create (submitRegistration) and edit
+    // (handleSaveAttendeeEdit) - both send the same profile fields, just to
+    // different endpoints.
+    const buildAttendeeProfilePayload = () => ({
+        profileId: selectedProfileId || undefined,
+        email: formData.email,
+        title: formData.title || undefined,
+        firstName: formData.firstName,
+        lastName: formData.surname,
+        gender: formData.gender || undefined,
+        dateOfBirth: formData.dob && dayjs.isDayjs(formData.dob) && formData.dob.isValid()
+            ? formData.dob.toISOString()
+            : undefined,
+        phone: formData.phone,
+        workLocation: isOtherSelection(formData.workPlace) ? formData.otherWorkPlace : formData.workPlace,
+        grade: isOtherSelection(formData.grade) ? formData.otherGrade : formData.grade,
+        nmbiNumber: formData.nmbiNumber || undefined,
+        addressLine1: formData.addressLine1,
+        addressLine2: formData.addressLine2,
+        townCity: formData.townCity,
+        countyState: formData.countyState,
+        eircode: formData.eircode,
+        country: formData.country,
+    });
+
     const submitRegistration = async () => {
         setSubmitting(true);
         try {
@@ -677,27 +725,7 @@ const CreateAttendeeDrawerInner = ({ open, onClose, eventId, registration, onApp
                 eventId: selectedEventId,
                 sessionIds: selectedSessionIds,
                 lineItems,
-                profile: {
-                    profileId: selectedProfileId || undefined,
-                    email: formData.email,
-                    title: formData.title || undefined,
-                    firstName: formData.firstName,
-                    lastName: formData.surname,
-                    gender: formData.gender || undefined,
-                    dateOfBirth: formData.dob && dayjs.isDayjs(formData.dob) && formData.dob.isValid()
-                        ? formData.dob.toISOString()
-                        : undefined,
-                    phone: formData.phone,
-                    workLocation: isOtherSelection(formData.workPlace) ? formData.otherWorkPlace : formData.workPlace,
-                    grade: isOtherSelection(formData.grade) ? formData.otherGrade : formData.grade,
-                    nmbiNumber: formData.nmbiNumber || undefined,
-                    addressLine1: formData.addressLine1,
-                    addressLine2: formData.addressLine2,
-                    townCity: formData.townCity,
-                    countyState: formData.countyState,
-                    eircode: formData.eircode,
-                    country: formData.country,
-                },
+                profile: buildAttendeeProfilePayload(),
                 paymentMethod,
                 registeredVia: 'crm',
             };
@@ -876,6 +904,48 @@ const CreateAttendeeDrawerInner = ({ open, onClose, eventId, registration, onApp
         }
     };
 
+    const handleStartEditAttendee = () => {
+        setEditMode(true);
+    };
+
+    // Discards any unsaved edits and re-populates formData from the
+    // registration prop exactly as it was before Edit was clicked - the prop
+    // itself was never touched, only local formData was.
+    const handleCancelEditAttendee = () => {
+        setFormData(snapshotToFormData(registration?.attendeeSnapshot || {}));
+        setEditMode(false);
+    };
+
+    // Saves the attendee-detail edit to the Registration's attendeeSnapshot
+    // (always) and, if this registration is already linked to a real Profile,
+    // pushes the same edit to profile-service too (see
+    // updateRegistrationAttendee/updateAttendeeProfileFields on the backend).
+    // A profile-sync failure is reported as a warning rather than blocking -
+    // the registration edit itself already succeeded by that point.
+    const handleSaveAttendeeEdit = async () => {
+        if (!registration?._id) return;
+        setSavingAttendee(true);
+        try {
+            const result = await updateRegistrationAttendee(registration._id, {
+                profile: buildAttendeeProfilePayload(),
+            });
+            const updatedRegistration = result?.data || result;
+            setFormData(snapshotToFormData(updatedRegistration?.attendeeSnapshot || {}));
+            setEditMode(false);
+            if (result?.warning) {
+                message.warning(result.warning);
+            } else {
+                message.success('Attendee details updated');
+            }
+            dispatchProfileInvalidate({ scopes: ['events'], profileId: updatedRegistration?.profileId || registration.profileId });
+            onApproved?.(updatedRegistration);
+        } catch (err) {
+            message.error(err?.response?.data?.error?.message || err?.message || 'Failed to update attendee details');
+        } finally {
+            setSavingAttendee(false);
+        }
+    };
+
     // View mode only - (re-)establishes a capturable Stripe payment for a
     // pending-review registration. Two situations land here: a stripe
     // registration whose card was never actually confirmed (the Add Attendee
@@ -999,31 +1069,45 @@ const CreateAttendeeDrawerInner = ({ open, onClose, eventId, registration, onApp
         !viewMode && paymentMethod === 'stripe' && !(cardComplete.number && cardComplete.expiry && cardComplete.cvc);
 
     const headerExtra = viewMode ? (
-        approvalStatus === 'pending_review' ? (
-            <Space>
-                <Tooltip title={approveBlockedByPayment ? 'Payment has not been authorized yet - retry payment below before approving.' : undefined}>
-                <Button
-                    className="butn primary-btn"
-                    disabled={approveBlockedByReview || approveBlockedByPayment}
-                    loading={approving}
-                    onClick={handleApprove}
-                >
-                    Approve
-                </Button>
-                </Tooltip>
-                <Popconfirm
-                    title="Reject this registration?"
-                    description="The registration will be cancelled and the seat released; any Stripe authorization is cancelled (not refunded, since nothing was captured)."
-                    okText="Reject"
-                    okButtonProps={{ danger: true }}
-                    onConfirm={handleReject}
-                >
-                    <Button danger loading={rejecting}>
-                        Reject
+        <Space>
+            {editMode ? (
+                <>
+                    <Button onClick={handleCancelEditAttendee} disabled={savingAttendee}>
+                        Cancel
                     </Button>
-                </Popconfirm>
-            </Space>
-        ) : null
+                    <Button className="butn primary-btn" loading={savingAttendee} onClick={handleSaveAttendeeEdit}>
+                        Save
+                    </Button>
+                </>
+            ) : (
+                <Button onClick={handleStartEditAttendee}>Edit Attendee</Button>
+            )}
+            {!editMode && approvalStatus === 'pending_review' && (
+                <>
+                    <Tooltip title={approveBlockedByPayment ? 'Payment has not been authorized yet - retry payment below before approving.' : undefined}>
+                    <Button
+                        className="butn primary-btn"
+                        disabled={approveBlockedByReview || approveBlockedByPayment}
+                        loading={approving}
+                        onClick={handleApprove}
+                    >
+                        Approve
+                    </Button>
+                    </Tooltip>
+                    <Popconfirm
+                        title="Reject this registration?"
+                        description="The registration will be cancelled and the seat released; any Stripe authorization is cancelled (not refunded, since nothing was captured)."
+                        okText="Reject"
+                        okButtonProps={{ danger: true }}
+                        onConfirm={handleReject}
+                    >
+                        <Button danger loading={rejecting}>
+                            Reject
+                        </Button>
+                    </Popconfirm>
+                </>
+            )}
+        </Space>
     ) : (
         <Space>
             <Radio.Group
@@ -1194,7 +1278,7 @@ const CreateAttendeeDrawerInner = ({ open, onClose, eventId, registration, onApp
                             )}
                         </div>
 
-                        {viewMode ? (
+                        {!showEditableWidget ? (
                             <MyInput label="Title" name="title" value={formData.title} disabled />
                         ) : (
                             <CustomSelect
@@ -1234,7 +1318,7 @@ const CreateAttendeeDrawerInner = ({ open, onClose, eventId, registration, onApp
 
                         <Row gutter={16}>
                             <Col span={12}>
-                                {viewMode ? (
+                                {!showEditableWidget ? (
                                     <MyInput label="Gender" name="gender" value={formData.gender} disabled />
                                 ) : (
                                     <CustomSelect
@@ -1250,7 +1334,7 @@ const CreateAttendeeDrawerInner = ({ open, onClose, eventId, registration, onApp
                                 )}
                             </Col>
                             <Col span={12}>
-                                {viewMode ? (
+                                {!showEditableWidget ? (
                                     <MyInput
                                         label="Date of Birth"
                                         name="dob"
@@ -1276,7 +1360,7 @@ const CreateAttendeeDrawerInner = ({ open, onClose, eventId, registration, onApp
                             onChange={handleInputChange}
                             placeholder="john.doe@example.com"
                             disabled={fieldsDisabled}
-                            required={!viewMode}
+                            required={showEditableWidget}
                         />
 
                         <MyInput
@@ -1288,7 +1372,7 @@ const CreateAttendeeDrawerInner = ({ open, onClose, eventId, registration, onApp
                             disabled={fieldsDisabled}
                         />
 
-                        {viewMode ? (
+                        {!showEditableWidget ? (
                             <MyInput label="Work location" name="workPlace" value={formData.workPlace} disabled />
                         ) : (
                             <CustomSelect
@@ -1302,7 +1386,7 @@ const CreateAttendeeDrawerInner = ({ open, onClose, eventId, registration, onApp
                                 showSearch
                             />
                         )}
-                        {!viewMode && isOtherSelection(formData.workPlace) && (
+                        {showEditableWidget && isOtherSelection(formData.workPlace) && (
                             <MyInput
                                 label="Other work location"
                                 name="otherWorkPlace"
@@ -1312,7 +1396,7 @@ const CreateAttendeeDrawerInner = ({ open, onClose, eventId, registration, onApp
                                 disabled={fieldsDisabled}
                             />
                         )}
-                        {viewMode ? (
+                        {!showEditableWidget ? (
                             <MyInput label="Grade" name="grade" value={formData.grade} disabled />
                         ) : (
                             <CustomSelect
@@ -1326,7 +1410,7 @@ const CreateAttendeeDrawerInner = ({ open, onClose, eventId, registration, onApp
                                 showSearch
                             />
                         )}
-                        {!viewMode && isOtherSelection(formData.grade) && (
+                        {showEditableWidget && isOtherSelection(formData.grade) && (
                             <MyInput
                                 label="Other grade"
                                 name="otherGrade"
@@ -1342,15 +1426,15 @@ const CreateAttendeeDrawerInner = ({ open, onClose, eventId, registration, onApp
                             value={formData.nmbiNumber}
                             onChange={handleInputChange}
                             placeholder="Enter NMBI registration number"
-                            disabled={viewMode || fieldsDisabled || nmbiLocked}
+                            disabled={fieldsDisabled || nmbiLocked}
                         />
-                        {!viewMode && nmbiLocked && (
+                        {showEditableWidget && nmbiLocked && (
                             <Text type="secondary" style={{ display: 'block', marginTop: -12, marginBottom: 12 }}>
                                 Already on file for this profile.
                             </Text>
                         )}
 
-                        {!viewMode && isLoaded && (
+                        {showEditableWidget && isLoaded && (
                             <StandaloneSearchBox
                                 onLoad={(ref) => (inputRef.current = ref)}
                                 onPlacesChanged={handlePlacesChanged}
