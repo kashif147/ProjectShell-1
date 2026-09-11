@@ -541,7 +541,7 @@
 
 .membership-form.compact .my-input-container.disabled .my-input-field,
 .membership-form.compact .my-input-container.disabled .my-input-prefix {
-  color: #7f9092 !important;
+  color: var(--membership-ink) !important;
 }
 
 .membership-form.compact .my-input-container .ant-picker {
