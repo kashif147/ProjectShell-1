@@ -30,6 +30,9 @@ import CostsFeesDrawer from "./CostsFeesDrawer";
 import {
   createEvent,
   updateEvent as updateEventApi,
+  unpublishEvent,
+  cancelEvent,
+  completeEvent,
   deleteEvent,
   fetchEventById,
   addEventSession,
@@ -37,6 +40,7 @@ import {
   deleteEventSession,
   uploadEventImage,
 } from "../../services/eventsApi";
+import { fetchDocumentTemplates } from "../../services/communicationTemplatesApi";
 import { computeEventFormat, resolveFallbackImageFormat } from "../../utils/eventFormat";
 import { buildEventFallbackImageDataUri } from "../../utils/eventFallbackImageDataUri";
 
@@ -207,6 +211,13 @@ const CreateEventDrawer = ({ open, onClose, eventId, onDeleted, cloneFromEventId
   const [accreditationBody, setAccreditationBody] = useState("");
   const [certificationType, setCertificationType] = useState("");
   const [autoIssueOnFinish, setAutoIssueOnFinish] = useState(true);
+  // communication-service Template id used when auto-issuing a certificate
+  // on completion (see events-service's autoCertificate.service.js) -
+  // sourced from the Templates module (Configuration > Templates), not a
+  // free-text field.
+  const [certificateTemplateId, setCertificateTemplateId] = useState("");
+  const [certificateTemplateOptions, setCertificateTemplateOptions] = useState([]);
+  const [loadingCertificateTemplates, setLoadingCertificateTemplates] = useState(false);
   const [accreditationType, setAccreditationType] = useState("");
   const [allowVirtualHosting, setAllowVirtualHosting] = useState(false);
   const [bookingOnMultipleDays, setBookingOnMultipleDays] = useState(false);
@@ -219,6 +230,7 @@ const CreateEventDrawer = ({ open, onClose, eventId, onDeleted, cloneFromEventId
     date: null,
     location: "",
     zoomLink: "",
+    organizerUpn: "",
     isOnline: false,
     sessions: [{ id: 1, sessionId: null, startTime: dayjs("09:00", "HH:mm"), endTime: null }],
   };
@@ -229,13 +241,59 @@ const CreateEventDrawer = ({ open, onClose, eventId, onDeleted, cloneFromEventId
 
   const [costsData, setCostsData] = useState([]);
 
-  // Once a Published event is loaded for edit, every field except Status and
-  // Active locks - mirrors the backend guard in event.controller.js.
+  // Once a Published event is loaded for edit, every field except Active
+  // locks - status can no longer be changed via this generic Save path at
+  // all (mirrors the backend guard in event.controller.js's updateEvent) -
+  // status transitions instead go through the dedicated Unpublish/Cancel
+  // Event/Mark Completed actions below.
   const isLocked = Boolean(eventId) && initialStatus === "Published";
+
+  // Client-side mirror of getLastRelevantDate (event.controller.js) - the
+  // backend re-validates this regardless, this only gates the "Mark
+  // Completed" button's enabled state for a good UX.
+  const lastRelevantDate = useMemo(() => {
+    const daysWithDates = scheduleData.filter((d) => d.date);
+    if (!daysWithDates.length) return eventDate ? dayjs(eventDate) : null;
+    const maxDateDay = daysWithDates.reduce(
+      (max, d) => (!max || dayjs(d.date).isAfter(dayjs(max.date), "day") ? d : max),
+      null,
+    );
+    const sessions = maxDateDay?.sessions || [];
+    const lastSession = sessions[sessions.length - 1];
+    const time = lastSession?.endTime || lastSession?.startTime;
+    const base = dayjs(maxDateDay.date);
+    return time ? base.hour(dayjs(time).hour()).minute(dayjs(time).minute()) : base;
+  }, [scheduleData, eventDate]);
+  const canMarkCompleted = Boolean(lastRelevantDate) && dayjs().isAfter(lastRelevantDate);
 
   useEffect(() => {
     if (!certificationType) setAutoIssueOnFinish(false);
   }, [certificationType]);
+
+  useEffect(() => {
+    if (!open) return;
+    let cancelled = false;
+    setLoadingCertificateTemplates(true);
+    fetchDocumentTemplates()
+      .then((templates) => {
+        if (cancelled) return;
+        setCertificateTemplateOptions(
+          templates.map((t) => ({
+            value: t._id,
+            label: t.category ? `${t.name} (${t.category})` : t.name,
+          })),
+        );
+      })
+      .catch(() => {
+        if (!cancelled) setCertificateTemplateOptions([]);
+      })
+      .finally(() => {
+        if (!cancelled) setLoadingCertificateTemplates(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [open]);
 
   // Selected Venue lookup (pulled from Configuration > Venue), with its address.
   const selectedVenue = useMemo(
@@ -335,6 +393,7 @@ const CreateEventDrawer = ({ open, onClose, eventId, onDeleted, cloneFromEventId
         setAccreditationBody(ev.accreditationBody || "");
         setCertificationType(ev.certificationType || "");
         setAutoIssueOnFinish(ev.autoIssueOnFinish !== false);
+        setCertificateTemplateId(ev.certificateTemplateId || "");
         setCostsData(
           (ev.costs || []).map((c, idx) => ({
             id: idx + 1,
@@ -365,7 +424,8 @@ const CreateEventDrawer = ({ open, onClose, eventId, onDeleted, cloneFromEventId
                 day: `Day ${days.length + 1}`,
                 date: s.date ? dayjs(s.date) : null,
                 location: "",
-                zoomLink: "",
+                zoomLink: s.meeting?.joinUrl || "",
+                organizerUpn: s.meeting?.organizerUpn || "",
                 isOnline: !!s.isVirtual,
                 sessions: [],
               };
@@ -435,6 +495,7 @@ const CreateEventDrawer = ({ open, onClose, eventId, onDeleted, cloneFromEventId
         setAccreditationBody(ev.accreditationBody || "");
         setCertificationType(ev.certificationType || "");
         setAutoIssueOnFinish(ev.autoIssueOnFinish !== false);
+        setCertificateTemplateId(ev.certificateTemplateId || "");
         setCostsData(
           (ev.costs || []).map((c, idx) => ({
             id: idx + 1,
@@ -546,6 +607,7 @@ const CreateEventDrawer = ({ open, onClose, eventId, onDeleted, cloneFromEventId
         date: nextDate,
         location: venueName,
         zoomLink: "",
+        organizerUpn: "",
         isOnline: false,
         sessions: [{ id: newSessionId, sessionId: null, startTime: dayjs("09:00", "HH:mm"), endTime: null }],
       },
@@ -757,7 +819,11 @@ const CreateEventDrawer = ({ open, onClose, eventId, onDeleted, cloneFromEventId
     if (isLocked) {
       setSaving(true);
       try {
-        await updateEventApi(eventId, { status, isActive });
+        // status can no longer be changed through this generic path once
+        // Published (see event.controller.js's updateEvent) - only isActive
+        // is still editable here; status transitions go through the
+        // dedicated Unpublish/Cancel Event/Mark Completed actions below.
+        await updateEventApi(eventId, { isActive });
         message.success("Event updated");
         dispatch(bumpEventsRefresh());
         onClose();
@@ -867,6 +933,7 @@ const CreateEventDrawer = ({ open, onClose, eventId, onDeleted, cloneFromEventId
         accreditationBody: accreditationBody || undefined,
         certificationType: certificationType || undefined,
         autoIssueOnFinish,
+        certificateTemplateId: certificateTemplateId || null,
         costs: costsData
           .filter((c) => c.name)
           .map((c) => ({ name: c.name, amount: Number(c.amount) || 0 })),
@@ -896,6 +963,15 @@ const CreateEventDrawer = ({ open, onClose, eventId, onDeleted, cloneFromEventId
               startTime: session.startTime ? dayjs(session.startTime).format("HH:mm") : undefined,
               endTime: session.endTime ? dayjs(session.endTime).format("HH:mm") : undefined,
               isVirtual: !!day.isOnline,
+              // day.zoomLink was previously collected here and silently
+              // dropped - never sent to the backend, no field to store it -
+              // see event.controller.js's buildMeetingField, which detects
+              // Zoom/Teams from the link for the attendance-sync job.
+              joinUrl: day.isOnline ? day.zoomLink || null : null,
+              // Teams-only - Graph looks a meeting up by organizer + exact
+              // joinUrl match, there's no separate meeting id to parse out of
+              // a Teams link the way Zoom's /j/{id} works.
+              organizerUpn: day.isOnline ? day.organizerUpn || null : null,
             };
             if (session.sessionId) {
               await updateEventSession(event._id, session.sessionId, sessionPayload);
@@ -952,8 +1028,89 @@ const CreateEventDrawer = ({ open, onClose, eventId, onDeleted, cloneFromEventId
     });
   };
 
+  const [unpublishing, setUnpublishing] = useState(false);
+  const [cancelling, setCancelling] = useState(false);
+  const [completing, setCompleting] = useState(false);
+
+  const handleUnpublishEvent = () => {
+    MyConfirm({
+      title: "Unpublish Event",
+      message:
+        "This will move the event back to Draft so you can make changes. Existing registrations are kept - you can publish it again once you're done. Continue?",
+      onConfirm: async () => {
+        setUnpublishing(true);
+        try {
+          await unpublishEvent(eventId);
+          message.success("Event unpublished - now in Draft");
+          dispatch(bumpEventsRefresh());
+          onClose();
+        } catch (err) {
+          message.error(err?.response?.data?.error?.message || err?.message || "Failed to unpublish event");
+        } finally {
+          setUnpublishing(false);
+        }
+      },
+    });
+  };
+
+  const handleCancelEvent = () => {
+    MyConfirm({
+      title: "Cancel Event",
+      message:
+        "This will cancel the event, notify every registered attendee by email, and automatically refund anyone who paid. This cannot be undone. Are you sure you want to cancel?",
+      onConfirm: async () => {
+        setCancelling(true);
+        try {
+          await cancelEvent(eventId);
+          message.success("Event cancelled - attendees notified and refunds processed");
+          dispatch(bumpEventsRefresh());
+          onClose();
+        } catch (err) {
+          message.error(err?.response?.data?.error?.message || err?.message || "Failed to cancel event");
+        } finally {
+          setCancelling(false);
+        }
+      },
+    });
+  };
+
+  const handleCompleteEvent = () => {
+    MyConfirm({
+      title: "Mark Event Completed",
+      message: "This marks the event as Completed. Continue?",
+      onConfirm: async () => {
+        setCompleting(true);
+        try {
+          await completeEvent(eventId);
+          message.success("Event marked Completed");
+          dispatch(bumpEventsRefresh());
+          onClose();
+        } catch (err) {
+          message.error(err?.response?.data?.error?.message || err?.message || "Failed to complete event");
+        } finally {
+          setCompleting(false);
+        }
+      },
+    });
+  };
+
   const headerActions = (
     <div className="event-drawer-header-actions">
+      {isLocked ? (
+        <>
+          <Button danger loading={cancelling} onClick={handleCancelEvent}>
+            Cancel Event
+          </Button>
+          <Button loading={unpublishing} onClick={handleUnpublishEvent}>
+            Unpublish
+          </Button>
+          <Tooltip title={canMarkCompleted ? "" : "Available once the event's last day/date has passed"}>
+            <Button loading={completing} disabled={!canMarkCompleted} onClick={handleCompleteEvent}>
+              Mark Completed
+            </Button>
+          </Tooltip>
+        </>
+      ) : null}
       <Button
         className="header-save-btn"
         type="primary"
@@ -998,8 +1155,13 @@ const CreateEventDrawer = ({ open, onClose, eventId, onDeleted, cloneFromEventId
                     label="Status"
                     value={status}
                     onChange={(e) => setStatus(e.target.value)}
+                    // Published events can no longer change status through
+                    // this field/Save - use the Unpublish/Cancel Event/Mark
+                    // Completed actions in the header instead (see
+                    // event.controller.js's updateEvent guard).
                     options={initialStatus === "Published" ? PUBLISHED_STATUS_OPTIONS : DRAFT_STATUS_OPTIONS}
                     isIDs={true}
+                    disabled={isLocked}
                   />
                 </Col>
                 <Col xs={24} sm={12}>
@@ -1357,6 +1519,27 @@ const CreateEventDrawer = ({ open, onClose, eventId, onDeleted, cloneFromEventId
                   </div>
                 </Col>
               </Row>
+
+              {autoIssueOnFinish && (
+                <Row gutter={[16, 16]}>
+                  <Col xs={24} sm={12}>
+                    <CustomSelect
+                      label="Certificate Template"
+                      placeholder={loadingCertificateTemplates ? "Loading templates..." : "Select a certificate template"}
+                      value={certificateTemplateId}
+                      onChange={(e) => setCertificateTemplateId(e.target.value)}
+                      options={certificateTemplateOptions}
+                      disabled={isLocked || loadingCertificateTemplates}
+                      isIDs
+                      showSearch
+                    />
+                    <div style={{ fontSize: 12, color: "#8c8c8c", marginTop: -8, marginBottom: 8 }}>
+                      From Configuration &gt; Templates. Add a new one there (category "Certificate")
+                      if you don't see it here.
+                    </div>
+                  </Col>
+                </Row>
+              )}
             </div>
 
             {/* DELETE EVENT SECTION - Draft only */}

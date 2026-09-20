@@ -199,6 +199,20 @@ const ScheduleManagementDrawer = ({
                                     onChange={(e) => onDayChange(day.id, 'zoomLink', e.target.value)}
                                     placeholder="Enter Zoom, Teams or Google Meet link"
                                 />
+                                {/\bteams\.microsoft\.com\b/i.test(day.zoomLink || '') && (
+                                    <div style={{ marginTop: 8 }}>
+                                        <label className="location-label">Meeting Organizer Email</label>
+                                        <Input
+                                            value={day.organizerUpn}
+                                            onChange={(e) => onDayChange(day.id, 'organizerUpn', e.target.value)}
+                                            placeholder="organizer@yourtenant.onmicrosoft.com"
+                                        />
+                                        <div style={{ fontSize: 12, color: '#8c8c8c', marginTop: 4 }}>
+                                            Required for automatic Teams attendance tracking - the email of
+                                            whoever scheduled/organized this Teams meeting.
+                                        </div>
+                                    </div>
+                                )}
                             </div>
                         ) : (
                             <div className="location-input-container">

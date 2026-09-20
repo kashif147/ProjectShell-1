@@ -12,7 +12,6 @@ import {
   getHomeMenuKeyFromRoles,
   getHomeRouteFromRoles,
 } from "../../utils/roleHomeModule";
-import { generatePKCE } from "../../utils/Utilities";
 import { bumpAuthReady } from "../../utils/authReadyEvent";
 import { useAuthorization } from "../../context/AuthorizationContext";
 import { getRedirectUri } from "../../component/msft/msalConfig";
@@ -139,31 +138,57 @@ const Login = () => {
 
   // Step 1: Login button click
   const handleLogin = async () => {
-    // Reset auth processing refs when starting a new login
     isProcessingAuthRef.current = false;
     processedCodeRef.current = null;
 
-    const { codeVerifier, codeChallenge } = await generatePKCE();
-    // Save codeVerifier for later token exchange
-    localStorage.setItem("pkce_code_verifier", codeVerifier);
-    const tenantId = "39866a06-30bc-4a89-80c6-9dd9357dd453";
-    const clientId = "ad25f823-e2d3-43e2-bea5-a9e6c9b0dbae";
-    const redirectUri = getRedirectUri();
-    const scopes = "openid profile email offline_access";
-    const authUrl = new URL(
-      `https://login.microsoftonline.com/${tenantId}/oauth2/v2.0/authorize`
-    );
-    authUrl.searchParams.set("client_id", clientId);
-    authUrl.searchParams.set("response_type", "code");
-    authUrl.searchParams.set("redirect_uri", redirectUri);
-    authUrl.searchParams.set("scope", scopes);
-    authUrl.searchParams.set("code_challenge", codeChallenge);
-    authUrl.searchParams.set("code_challenge_method", "S256");
-    authUrl.searchParams.set("state", "12345");
-    authUrl.searchParams.set("prompt", "login");
+    try {
+      const response = await fetch(
+        `${process.env.REACT_APP_BASE_URL_DEV}/pkce/generate`
+      );
 
-    // Redirect to Microsoft login
-    window.location.href = authUrl.toString();
+      if (!response.ok) {
+        console.error(
+          "Failed to obtain PKCE parameters from backend:",
+          response.status,
+          response.statusText
+        );
+        MyAlert("error", "Unable to start sign-in", "Please try again.");
+        return;
+      }
+
+      const data = await response.json();
+      const authorizeUrl = data?.authorizationUrls?.azureAD;
+      const codeVerifier = data?.codeVerifier;
+
+      if (!authorizeUrl || !codeVerifier) {
+        console.error("Malformed /pkce/generate response");
+        MyAlert("error", "Unable to start sign-in", "Please try again.");
+        return;
+      }
+
+      let expectedState;
+      try {
+        expectedState = new URL(authorizeUrl).searchParams.get("state");
+      } catch {
+        console.error("Backend returned an invalid Microsoft authorize URL");
+        MyAlert("error", "Unable to start sign-in", "Please try again.");
+        return;
+      }
+
+      if (!expectedState) {
+        console.error("Backend authorize URL is missing state");
+        MyAlert("error", "Unable to start sign-in", "Please try again.");
+        return;
+      }
+
+      localStorage.setItem("pkce_code_verifier", codeVerifier);
+      localStorage.setItem("pkce_state", expectedState);
+
+      window.location.href = authorizeUrl;
+    } catch (error) {
+      console.error("Failed to start Microsoft sign-in");
+      MyAlert("error", "Unable to start sign-in", "Please try again.");
+    }
   };
   const handleAuthRedirect = useCallback(async () => {
     // Prevent multiple concurrent calls
@@ -195,7 +220,18 @@ const Login = () => {
     // Clean up URL immediately to prevent re-triggering
     window.history.replaceState({}, document.title, window.location.pathname);
 
+    const returnedState = urlParams.get("state");
     const codeVerifier = localStorage.getItem("pkce_code_verifier");
+    const expectedState = localStorage.getItem("pkce_state");
+
+    // Single-use: clear the stored transaction immediately after reading it, before
+    // doing anything else, so neither value can be reused regardless of what happens
+    // next (success, mismatch, or a network error below) - mirrors the backend's own
+    // state/nonce store, which is also single-use-on-read (see
+    // helpers/pkceStateStore.js's takeNonceForState/takePolicyForState).
+    localStorage.removeItem("pkce_code_verifier");
+    localStorage.removeItem("pkce_state");
+
     console.log(
       "handleAuthRedirect - Code verifier:",
       codeVerifier ? "exists" : "missing"
@@ -204,6 +240,20 @@ const Login = () => {
     if (!codeVerifier) {
       console.error("Missing PKCE code_verifier from sessionStorage");
       isProcessingAuthRef.current = false;
+      setAuthLoading(false);
+      return;
+    }
+
+    // Client-side correlation check only - the backend remains the authoritative
+    // verifier of state/nonce (see helpers/pkceStateStore.js). This cannot approve
+    // anything the backend would otherwise reject; it can only refuse to call the
+    // backend at all for a stale/replayed/missing state (e.g. a second tab, a
+    // bookmarked callback URL, or a browser back-button replay), before spending a
+    // network round-trip on it.
+    if (!returnedState || !expectedState || returnedState !== expectedState) {
+      console.error("handleAuthRedirect - state mismatch or missing, aborting");
+      isProcessingAuthRef.current = false;
+      processedCodeRef.current = null;
       setAuthLoading(false);
       return;
     }
@@ -222,6 +272,7 @@ const Login = () => {
             code: code, // backend expects this
             codeVerifier: codeVerifier,
             redirectUri: redirectUri, // must match the one used in authorization request
+            state: returnedState,
           }),
         }
       );

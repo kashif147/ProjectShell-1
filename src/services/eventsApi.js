@@ -80,6 +80,41 @@ export async function uploadEventImage(eventId, file) {
   return unwrap({ data });
 }
 
+// Published -> Draft, so changes can be made and the event republished
+// without losing its registrations (a separate collection, untouched by this).
+export async function unpublishEvent(id) {
+  const { data } = await axios.put(
+    `${getEventsServiceBaseUrl()}/events/${id}/unpublish`,
+    {},
+    { headers: authHeaders() },
+  );
+  return unwrap({ data });
+}
+
+// Bulk-cancels every active registration, emails each attendee, and
+// automatically refunds anyone who paid - see event.controller.js's
+// cancelEvent. Irreversible; the caller must confirm with the user first
+// (see handleCancelEvent's MyConfirm below).
+export async function cancelEvent(id) {
+  const { data } = await axios.put(
+    `${getEventsServiceBaseUrl()}/events/${id}/cancel`,
+    {},
+    { headers: authHeaders() },
+  );
+  return unwrap({ data });
+}
+
+// Only allowed once the event's last day/date has passed - the backend
+// re-validates this regardless of what the UI already gated on.
+export async function completeEvent(id) {
+  const { data } = await axios.put(
+    `${getEventsServiceBaseUrl()}/events/${id}/complete`,
+    {},
+    { headers: authHeaders() },
+  );
+  return unwrap({ data });
+}
+
 export async function deleteEvent(id) {
   const { data } = await axios.delete(`${getEventsServiceBaseUrl()}/events/${id}`, {
     headers: authHeaders(),
