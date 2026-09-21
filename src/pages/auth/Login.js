@@ -28,77 +28,6 @@ const loginImage =
   "https://images.unsplash.com/photo-1551434678-e076c223a692?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80";
 
 const { Title, Text } = Typography;
-const textToArrayBuffer = (text) => new TextEncoder().encode(text);
-const base64ToUint8Array = (base64) =>
-  Uint8Array.from(atob(base64), (c) => c.charCodeAt(0));
-
-async function deriveKeyFromSecret(secret) {
-  const secretBuffer = textToArrayBuffer(secret);
-
-  const hash = await crypto.subtle.digest("SHA-256", secretBuffer);
-  const salt = new Uint8Array(hash).slice(0, 64);
-
-  const keyMaterial = await crypto.subtle.importKey(
-    "raw",
-    secretBuffer,
-    "PBKDF2",
-    false,
-    ["deriveBits", "deriveKey"]
-  );
-
-  return await crypto.subtle.deriveKey(
-    {
-      name: "PBKDF2",
-      salt,
-      iterations: 100000,
-      hash: "SHA-256",
-    },
-    keyMaterial,
-    {
-      name: "AES-GCM",
-      length: 256,
-    },
-    false,
-    ["decrypt"]
-  );
-}
-async function decryptAES256GCM(encrypted, ivB64, authTagB64, key) {
-  const iv = base64ToUint8Array(ivB64);
-  const authTag = base64ToUint8Array(authTagB64);
-  const encryptedData = base64ToUint8Array(encrypted);
-
-  const combined = new Uint8Array(encryptedData.length + authTag.length);
-  combined.set(encryptedData);
-  combined.set(authTag, encryptedData.length);
-
-  const decrypted = await crypto.subtle.decrypt(
-    {
-      name: "AES-GCM",
-      iv,
-      tagLength: 128,
-    },
-    key,
-    combined
-  );
-
-  return new TextDecoder().decode(decrypted);
-}
-
-async function decryptTokenReact(encryptedToken) {
-  const jwtSecret = process.env.REACT_APP_JWT_SECRET;
-  if (!encryptedToken) throw new Error("Encrypted token missing");
-  if (!jwtSecret) throw new Error("JWT_SECRET missing");
-
-  const parts = encryptedToken.split(":");
-  if (parts.length !== 3)
-    throw new Error("Invalid encrypted token format (must be iv:tag:data)");
-
-  const [ivBase64, authTagBase64, encrypted] = parts;
-  const key = await deriveKeyFromSecret(jwtSecret);
-
-  return await decryptAES256GCM(encrypted, ivBase64, authTagBase64, key);
-}
-
 const Login = () => {
   const dispatch = useDispatch();
   const { setUserData } = useAuthorization();
@@ -167,8 +96,11 @@ const Login = () => {
       }
 
       let expectedState;
+      let authorizeRedirectUri;
       try {
-        expectedState = new URL(authorizeUrl).searchParams.get("state");
+        const authorizeParams = new URL(authorizeUrl).searchParams;
+        expectedState = authorizeParams.get("state");
+        authorizeRedirectUri = authorizeParams.get("redirect_uri");
       } catch {
         console.error("Backend returned an invalid Microsoft authorize URL");
         MyAlert("error", "Unable to start sign-in", "Please try again.");
@@ -183,6 +115,12 @@ const Login = () => {
 
       localStorage.setItem("pkce_code_verifier", codeVerifier);
       localStorage.setItem("pkce_state", expectedState);
+      // Microsoft only redeems the code if the token request's redirect_uri matches the
+      // authorize request's exactly, so remember the backend's value instead of
+      // re-deriving one from REACT_APP_REDIRECT_URI (which can drift from it).
+      if (authorizeRedirectUri) {
+        localStorage.setItem("pkce_redirect_uri", authorizeRedirectUri);
+      }
 
       window.location.href = authorizeUrl;
     } catch (error) {
@@ -223,14 +161,16 @@ const Login = () => {
     const returnedState = urlParams.get("state");
     const codeVerifier = localStorage.getItem("pkce_code_verifier");
     const expectedState = localStorage.getItem("pkce_state");
+    const authorizeRedirectUri = localStorage.getItem("pkce_redirect_uri");
 
     // Single-use: clear the stored transaction immediately after reading it, before
-    // doing anything else, so neither value can be reused regardless of what happens
-    // next (success, mismatch, or a network error below) - mirrors the backend's own
-    // state/nonce store, which is also single-use-on-read (see
+    // doing anything else, so none of these values can be reused regardless of what
+    // happens next (success, mismatch, or a network error below) - mirrors the
+    // backend's own state/nonce store, which is also single-use-on-read (see
     // helpers/pkceStateStore.js's takeNonceForState/takePolicyForState).
     localStorage.removeItem("pkce_code_verifier");
     localStorage.removeItem("pkce_state");
+    localStorage.removeItem("pkce_redirect_uri");
 
     console.log(
       "handleAuthRedirect - Code verifier:",
@@ -258,7 +198,9 @@ const Login = () => {
       return;
     }
 
-    const redirectUri = getRedirectUri();
+    // Must equal the redirect_uri of the authorize request, which the backend chose
+    // (see handleLogin); getRedirectUri() is only a fallback for a missing stored value.
+    const redirectUri = authorizeRedirectUri || getRedirectUri();
     console.log("handleAuthRedirect - Redirect URI:", redirectUri);
 
     try {
@@ -315,8 +257,21 @@ const Login = () => {
 
       // Save tokens to localStorage if presents
       if (data && data.accessToken) {
-        let token = data.accessToken;
-        const token1 = await decryptTokenReact(token);
+        // user-service returns the signed JWT as-is (TLS protects it in transit). Anything
+        // that isn't a three-part JWT (e.g. an old "iv:tag:data" encrypted value) can't be
+        // used as a Bearer token, so stop here rather than store a token the gateway rejects.
+        const token1 = data.accessToken;
+        if (typeof token1 !== "string" || token1.split(".").length !== 3) {
+          console.error("Backend returned an accessToken that is not a JWT");
+          MyAlert(
+            "error",
+            "Authentication failed",
+            "Unexpected sign-in response from the server."
+          );
+          isProcessingAuthRef.current = false;
+          setAuthLoading(false);
+          return;
+        }
         localStorage.setItem("token", token1);
         bumpAuthReady();
         let decode = decodeToken(token1);

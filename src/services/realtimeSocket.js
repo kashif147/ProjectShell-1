@@ -1,7 +1,10 @@
 import { io } from "socket.io-client";
 
-const NOTIFICATION_SERVICE_FALLBACK =
-  "https://projectshell-vm.northeurope.cloudapp.azure.com/notification-service/api";
+// The gateway serves the DEV APIs on :8443; the bare :443 host does not allow the
+// Vercel-hosted CRM's origin, so a fallback there would be blocked by CORS.
+const GATEWAY_FALLBACK_ORIGIN =
+  "https://projectshell-vm.northeurope.cloudapp.azure.com:8443";
+const NOTIFICATION_SERVICE_FALLBACK = `${GATEWAY_FALLBACK_ORIGIN}/notification-service/api`;
 
 export function getNotificationServiceUrl() {
   const env = (process.env.REACT_APP_NOTIFICATION_SERVICE_URL || "").trim();
@@ -19,7 +22,7 @@ export function getNotificationSocketConfig() {
     };
   } catch {
     return {
-      origin: "https://projectshell-vm.northeurope.cloudapp.azure.com",
+      origin: GATEWAY_FALLBACK_ORIGIN,
       path: "/notification-service/api/socket.io",
     };
   }

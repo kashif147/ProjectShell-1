@@ -104,6 +104,20 @@ describe("Login (CRM Microsoft sign-in)", () => {
       );
     });
 
+    test("stores the redirect_uri the backend put in the authorize URL", async () => {
+      global.fetch = jest.fn().mockResolvedValueOnce(mockPkceGenerateResponse());
+
+      render(<Login />);
+      fireEvent.click(screen.getByText(/Sign in with Microsoft/i));
+
+      await waitFor(() => {
+        expect(window.location.href).toContain("login.microsoftonline.com");
+      });
+
+      // mockPkceGenerateResponse's authorize URL carries redirect_uri=http%3A%2F%2Flocalhost
+      expect(localStorage.getItem("pkce_redirect_uri")).toBe("http://localhost");
+    });
+
     test("does not redirect if the backend response has no state parameter", async () => {
       global.fetch = jest.fn().mockResolvedValueOnce(
         mockPkceGenerateResponse({
@@ -159,6 +173,84 @@ describe("Login (CRM Microsoft sign-in)", () => {
             }),
           })
         );
+      });
+    });
+
+    test("sends the redirect_uri saved at sign-in instead of getRedirectUri(), and clears it", async () => {
+      localStorage.setItem("pkce_code_verifier", "stored-code-verifier");
+      localStorage.setItem("pkce_state", "matching-state");
+      localStorage.setItem(
+        "pkce_redirect_uri",
+        "https://project-shell-crm-dev.vercel.app/auth/azure-crm"
+      );
+
+      global.fetch = jest.fn().mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ success: true, accessToken: null }),
+      });
+
+      renderAtCallback({ code: "auth-code", state: "matching-state" });
+
+      await waitFor(() => {
+        expect(global.fetch).toHaveBeenCalledWith(
+          `${BASE_URL}/auth/azure-crm`,
+          expect.objectContaining({
+            body: JSON.stringify({
+              code: "auth-code",
+              codeVerifier: "stored-code-verifier",
+              redirectUri: "https://project-shell-crm-dev.vercel.app/auth/azure-crm",
+              state: "matching-state",
+            }),
+          })
+        );
+      });
+      expect(localStorage.getItem("pkce_redirect_uri")).toBeNull();
+    });
+
+    describe("accessToken handling", () => {
+      const b64url = (obj) =>
+        Buffer.from(JSON.stringify(obj))
+          .toString("base64")
+          .replace(/=/g, "")
+          .replace(/\+/g, "-")
+          .replace(/\//g, "_");
+      const jwt = [
+        b64url({ alg: "HS256", typ: "JWT" }),
+        b64url({ id: "user-1", tenantId: "tenant-1", roles: [{ code: "SU" }], permissions: [] }),
+        "signature",
+      ].join(".");
+
+      function mockExchange(accessToken) {
+        localStorage.setItem("pkce_code_verifier", "stored-code-verifier");
+        localStorage.setItem("pkce_state", "matching-state");
+        global.fetch = jest.fn().mockResolvedValueOnce({
+          ok: true,
+          json: async () => ({ success: true, accessToken }),
+        });
+        renderAtCallback({ code: "auth-code", state: "matching-state" });
+      }
+
+      test("stores the JWT returned by the backend as-is (no client-side decryption)", async () => {
+        mockExchange(jwt);
+
+        await waitFor(() => {
+          expect(localStorage.getItem("token")).toBe(jwt);
+        });
+        expect(JSON.parse(localStorage.getItem("userData")).id).toBe("user-1");
+      });
+
+      test("rejects an accessToken that is not a JWT (e.g. the old iv:tag:data form) and stores no token", async () => {
+        mockExchange("aXY=:dGFn:ZGF0YQ==");
+
+        await waitFor(() => {
+          expect(require("../../component/common/MyAlert")).toHaveBeenCalledWith(
+            "error",
+            "Authentication failed",
+            expect.any(String)
+          );
+        });
+        expect(localStorage.getItem("token")).toBeNull();
+        expect(localStorage.getItem("userData")).toBeNull();
       });
     });
 

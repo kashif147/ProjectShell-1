@@ -317,6 +317,7 @@ function Entry() {
   // Define routes where sidebar should NOT be shown
   const noSidebarRoutes = [
     "/", // login page
+    "/auth/azure-crm", // Microsoft sign-in callback (renders Login)
     "/rewards/insurance",
     "/rewards/rewards",
     "/MembershipDashboard/chart",
@@ -431,6 +432,8 @@ function Entry() {
                       >
                         <Routes>
                           <Route path="/" element={<Login />} />
+                          {/* user-service's /pkce/generate authorize URL redirects Microsoft back here */}
+                          <Route path="/auth/azure-crm" element={<Login />} />
 
                           {/* Protected Routes with Authorization */}
                           <Route
