@@ -25,6 +25,7 @@ import { useAuthorization } from "../../context/AuthorizationContext";
 import { clearAuth } from "../../features/AuthSlice";
 import "../../styles/AppLauncher.css";
 import axios from "axios";
+import { redirectToMicrosoftLogout } from "../../utils/microsoftLogout";
 import MemberSearch from "../profile/MemberSearch";
 import { useNotifications } from "../../context/NotificationContext";
 import { useTenantBranding } from "../../context/TenantBrandingContext";
@@ -287,8 +288,11 @@ function Header() {
     localStorage.removeItem("userdata");
     localStorage.removeItem("activeMenuModule");
 
-    // Navigate immediately (don't wait for API)
-    navigate("/");
+    // Redirect to Microsoft's own logout endpoint, not just navigate("/") - clearing our
+    // own localStorage doesn't end Microsoft's session cookie, so a plain in-app navigate
+    // would let the next "Sign in with Microsoft" silently re-authenticate with no
+    // credential prompt. See utils/microsoftLogout.js.
+    redirectToMicrosoftLogout();
 
     // Call logout API in background with timeout (non-blocking)
     if (token) {

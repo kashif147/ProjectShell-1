@@ -2,20 +2,29 @@ import React, { useState, useEffect, useRef } from "react";
 import { useIdleTimer } from "react-idle-timer";
 import { ExclamationCircleOutlined } from "@ant-design/icons";
 import { Modal, Button, Typography } from "antd";
-import { useNavigate } from "react-router-dom";
+import { redirectToMicrosoftLogout } from "../../utils/microsoftLogout";
 
 const { Title, Text } = Typography;
 
 const IdleModal = () => {
-  const navigate = useNavigate();
   const [isPrompted, setIsPrompted] = useState(false);
   const [remaining, setRemaining] = useState(60);
 
-  // Final Idle Logout
+  // Final Idle Logout - same cleanup as Header.jsx's explicit logout, and the same
+  // redirect to Microsoft's own logout endpoint (clearing localStorage alone doesn't end
+  // Microsoft's session cookie, so the next sign-in would silently skip the credential
+  // prompt - see utils/microsoftLogout.js).
   const onIdle = () => {
     setIsPrompted(false);
     localStorage.removeItem("token");
-    navigate("/");
+    localStorage.removeItem("userData");
+    localStorage.removeItem("userRoles");
+    localStorage.removeItem("userPermissions");
+    localStorage.removeItem("token_expiry");
+    localStorage.removeItem("refresh_token");
+    localStorage.removeItem("userdata");
+    localStorage.removeItem("activeMenuModule");
+    redirectToMicrosoftLogout();
   };
 
   // User is idle for 9 minutes
