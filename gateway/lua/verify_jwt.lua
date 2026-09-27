@@ -23,6 +23,7 @@ local trusted_headers = {
   "x-token-expires-at", "x-service-caller",
   "x-gateway-signature", "x-gateway-timestamp",
   "x-service-secret",
+  "x-internal-request",
 }
 for _, h in ipairs(trusted_headers) do
   ngx.req.clear_header(h)
