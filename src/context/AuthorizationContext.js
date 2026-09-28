@@ -165,7 +165,11 @@ export const AuthorizationProvider = ({ children }) => {
   // Initialize auth state from localStorage on mount
   useEffect(() => {
     console.log("AuthorizationContext - useEffect triggered");
-    console.log("AuthorizationContext - Current state:", state);
+    console.log("AuthorizationContext - state:", {
+      isAuthenticated: state?.isAuthenticated,
+      loading: state?.loading,
+      isInitialized: state?.isInitialized,
+    });
 
     const token = localStorage.getItem("token");
     const userData = localStorage.getItem("userData");
@@ -179,11 +183,6 @@ export const AuthorizationProvider = ({ children }) => {
       userRoles: userRoles ? "exists" : "missing",
       userPermissions: userPermissions ? "exists" : "missing",
       tokenExpiry: tokenExpiry ? "exists" : "missing",
-      allKeys: Object.keys(localStorage),
-      allLocalStorageData: Object.keys(localStorage).reduce((acc, key) => {
-        acc[key] = localStorage.getItem(key);
-        return acc;
-      }, {}),
     });
 
     // Check if token is expired
@@ -237,10 +236,6 @@ export const AuthorizationProvider = ({ children }) => {
         let finalRoles = [];
 
         // First try from userData
-        console.log("Raw userData string:", userData);
-        console.log("Parsed userData object:", parsedUserData);
-        console.log("userData.permissions:", parsedUserData.permissions);
-        console.log("userData.roles:", parsedUserData.roles);
         console.log("permissions length:", parsedUserData.permissions?.length);
         console.log("roles length:", parsedUserData.roles?.length);
 
@@ -248,8 +243,12 @@ export const AuthorizationProvider = ({ children }) => {
         finalPermissions = parsedUserData.permissions || [];
         finalRoles = parsedUserData.roles || [];
 
-        console.log("FORCED EXTRACTION - finalPermissions:", finalPermissions);
-        console.log("FORCED EXTRACTION - finalRoles:", finalRoles);
+        console.log(
+          "FORCED EXTRACTION - permissionCount:",
+          Array.isArray(finalPermissions) ? finalPermissions.length : 0,
+          "roleCount:",
+          Array.isArray(finalRoles) ? finalRoles.length : 0
+        );
 
         // If empty, try separate localStorage keys
         if (finalPermissions.length === 0 && userPermissions) {
@@ -271,23 +270,15 @@ export const AuthorizationProvider = ({ children }) => {
         // Convert roles array to role codes if needed
         const roleCodes = finalRoles.map((role) => {
           if (typeof role === "string") return role;
-          const roleCode = role.code || role.name || role;
-          console.log("Converting role:", role, "to code:", roleCode);
-          return roleCode;
-        });
-
-        console.log("Final extracted data:", {
-          finalPermissions,
-          finalRoles,
-          roleCodes,
+          return role.code || role.name || role;
         });
 
         console.log("AuthorizationContext Debug:", {
-          rawUserData: userData,
-          parsedUserData: parsedUserData,
-          finalPermissions: finalPermissions,
-          finalRoles: finalRoles,
-          roleCodes: roleCodes,
+          userDataPresent: !!userData,
+          roleCount: Array.isArray(finalRoles) ? finalRoles.length : 0,
+          permissionCount: Array.isArray(finalPermissions)
+            ? finalPermissions.length
+            : 0,
         });
 
         console.log("AuthorizationContext - Dispatching actions...");
@@ -377,9 +368,9 @@ export const AuthorizationProvider = ({ children }) => {
   // Set user data and permissions
   const setUserData = async (userData, roles = [], permissions = []) => {
     console.log("AuthorizationContext - setUserData called with:", {
-      userData,
-      roles,
-      permissions,
+      userDataPresent: !!userData,
+      roleCount: Array.isArray(roles) ? roles.length : 0,
+      permissionCount: Array.isArray(permissions) ? permissions.length : 0,
     });
 
     dispatch({ type: AUTH_ACTIONS.SET_USER_DATA, payload: userData });

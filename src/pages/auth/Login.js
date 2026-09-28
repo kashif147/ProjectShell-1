@@ -251,9 +251,8 @@ const Login = () => {
       }
 
       const data = await response.json();
-      console.log("Token response from backend:", data);
+      console.log("Azure authentication response received:", response.ok);
       console.log("Response status:", response.status);
-      console.log("Response ok:", response.ok);
 
       // Save tokens to localStorage if presents
       if (data && data.accessToken) {
@@ -287,10 +286,10 @@ const Login = () => {
         });
 
         console.log("Extracted from JWT token:", {
-          userRoles,
-          userPermissions,
-          roleCodes,
-          decodedToken: decode,
+          roleCount: Array.isArray(roleCodes) ? roleCodes.length : 0,
+          permissionCount: Array.isArray(userPermissions)
+            ? userPermissions.length
+            : 0,
         });
 
         // Set user data in authorization context
@@ -318,7 +317,10 @@ const Login = () => {
           console.warn("⚠️ FCM permission request function not available yet");
         }
 
-        console.log("Login Debug - roleCodes:", roleCodes);
+        console.log(
+          "Login Debug - role count:",
+          Array.isArray(roleCodes) ? roleCodes.length : 0
+        );
         const homeRoute = getHomeRouteFromRoles(roleCodes);
         const homeMenuKey = getHomeMenuKeyFromRoles(roleCodes);
         navigate(homeRoute, {
@@ -359,8 +361,7 @@ const Login = () => {
 
     console.log("Login useEffect - token exists:", !!token);
     console.log("Login useEffect - userData exists:", !!userData);
-    console.log("Login useEffect - URL code:", code);
-    console.log("Login useEffect - Current URL:", window.location.href);
+    console.log("Login useEffect - Authorization code present:", !!code);
     console.log(
       "Login useEffect - isProcessingAuth:",
       isProcessingAuthRef.current
@@ -454,10 +455,10 @@ const Login = () => {
       });
 
       console.log("Traditional login - extracted from JWT token:", {
-        userRoles,
-        userPermissions,
-        roleCodes,
-        decodedToken,
+        roleCount: Array.isArray(roleCodes) ? roleCodes.length : 0,
+        permissionCount: Array.isArray(userPermissions)
+          ? userPermissions.length
+          : 0,
       });
 
       // Set user data in authorization context

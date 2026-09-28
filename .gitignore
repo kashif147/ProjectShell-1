@@ -24,3 +24,6 @@ yarn-debug.log*
 yarn-error.log*
 .vercel
 .env*
+
+# Never commit JWT tokens (e.g. stray smoke-test tokens)
+*.jwt
