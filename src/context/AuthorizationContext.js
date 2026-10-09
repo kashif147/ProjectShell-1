@@ -5,7 +5,6 @@ import React, {
   useEffect,
   useCallback,
 } from "react";
-import AuthorizationAPI from "../services/AuthorizationAPI";
 import PolicyClient from "../utils/node-policy-client";
 import { usePolicyClient } from "../utils/react-policy-hooks";
 import { clearBrandingOnLogout } from "./TenantBrandingContext";
@@ -318,52 +317,6 @@ export const AuthorizationProvider = ({ children }) => {
     dispatch({ type: AUTH_ACTIONS.SET_INITIALIZED, payload: true });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [loadAllAuthorizationData]);
-
-  // Load permission definitions from API (fallback)
-  const loadPermissionDefinitions = async (token) => {
-    try {
-      const permissions = await AuthorizationAPI.fetchPermissionDefinitions(
-        token
-      );
-      dispatch({
-        type: AUTH_ACTIONS.SET_PERMISSION_DEFINITIONS,
-        payload: permissions,
-      });
-    } catch (error) {
-      console.error("Error loading permission definitions:", error);
-      throw error;
-    }
-  };
-
-  // Load role definitions from API (fallback)
-  const loadRoleDefinitions = async (token) => {
-    try {
-      const roles = await AuthorizationAPI.fetchRoleDefinitions(token);
-      dispatch({
-        type: AUTH_ACTIONS.SET_ROLE_DEFINITIONS,
-        payload: roles,
-      });
-    } catch (error) {
-      console.error("Error loading role definitions:", error);
-      throw error;
-    }
-  };
-
-  // Load route permissions from API (fallback)
-  const loadRoutePermissions = async (token) => {
-    try {
-      const routePermissions = await AuthorizationAPI.fetchRoutePermissions(
-        token
-      );
-      dispatch({
-        type: AUTH_ACTIONS.SET_ROUTE_PERMISSIONS,
-        payload: routePermissions,
-      });
-    } catch (error) {
-      console.error("Error loading route permissions:", error);
-      throw error;
-    }
-  };
 
   // Set user data and permissions
   const setUserData = async (userData, roles = [], permissions = []) => {

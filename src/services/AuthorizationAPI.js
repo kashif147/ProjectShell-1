@@ -48,57 +48,6 @@ class AuthorizationAPI {
     };
   }
 
-  // Fetch all permission definitions from the API (using policy endpoint)
-  static async fetchPermissionDefinitions(token) {
-    try {
-      // Use policy endpoint to get effective permissions for a general resource
-      const response = await fetch(
-        `${API_BASE_URL}/policy/permissions/system`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-        }
-      );
-
-      if (!response.ok) {
-        throw new Error(`Failed to fetch permissions: ${response.status}`);
-      }
-
-      const data = await response.json();
-      return data.permissions || data.definitions || []; // Handle different response formats
-    } catch (error) {
-      console.error("Error fetching permission definitions:", error);
-      // Fallback: return empty array if policy endpoint fails
-      return [];
-    }
-  }
-
-  // Fetch all role definitions from the API (using policy endpoint)
-  static async fetchRoleDefinitions(token) {
-    try {
-      // Use policy endpoint to get role information
-      const response = await fetch(`${API_BASE_URL}/policy/permissions/roles`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-      });
-
-      if (!response.ok) {
-        throw new Error(`Failed to fetch roles: ${response.status}`);
-      }
-
-      const data = await response.json();
-      return data.roles || data.definitions || []; // Handle different response formats
-    } catch (error) {
-      console.error("Error fetching role definitions:", error);
-      // Fallback: return empty array if policy endpoint fails
-      return [];
-    }
-  }
-
   // Fetch user's specific permissions and roles (from JWT token)
   static async fetchUserPermissions(token) {
     try {
@@ -150,77 +99,6 @@ class AuthorizationAPI {
     } catch (error) {
       console.error("Error checking role:", error);
       return false;
-    }
-  }
-
-  // Fetch route permissions configuration from API (using policy endpoint)
-  static async fetchRoutePermissions(token) {
-    try {
-      // Use policy endpoint to get route-specific permissions
-      const response = await fetch(
-        `${API_BASE_URL}/policy/permissions/routes`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-        }
-      );
-
-      if (!response.ok) {
-        throw new Error(
-          `Failed to fetch route permissions: ${response.status}`
-        );
-      }
-
-      const data = await response.json();
-      return data.routePermissions || data.permissions || {}; // Handle different response formats
-    } catch (error) {
-      console.error("Error fetching route permissions:", error);
-      // Fallback: return empty object if policy endpoint fails
-      return {};
-    }
-  }
-
-  // Consolidated API call to fetch all authorization data
-  static async fetchAllAuthorizationData(token) {
-    try {
-      // Extract user data from JWT token
-      const userData = this.extractUserData(token);
-
-      // Fetch permission and role definitions using policy endpoints
-      const [permissionDefinitions, roleDefinitions, routePermissions] =
-        await Promise.allSettled([
-          this.fetchPermissionDefinitions(token),
-          this.fetchRoleDefinitions(token),
-          this.fetchRoutePermissions(token),
-        ]);
-
-      return {
-        permissions: userData.permissions || [],
-        roles: userData.roles || [],
-        permissionDefinitions:
-          permissionDefinitions.status === "fulfilled"
-            ? permissionDefinitions.value
-            : [],
-        roleDefinitions:
-          roleDefinitions.status === "fulfilled" ? roleDefinitions.value : [],
-        routePermissions:
-          routePermissions.status === "fulfilled" ? routePermissions.value : {},
-        user: userData.user || null,
-      };
-    } catch (error) {
-      console.error("Error fetching all authorization data:", error);
-      // Return minimal data structure on error
-      const userData = this.extractUserData(token);
-      return {
-        permissions: userData.permissions || [],
-        roles: userData.roles || [],
-        permissionDefinitions: [],
-        roleDefinitions: [],
-        routePermissions: {},
-        user: userData.user || null,
-      };
     }
   }
 
