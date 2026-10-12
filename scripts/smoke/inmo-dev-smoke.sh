@@ -149,10 +149,17 @@ expect_exact() {
 # expect_read ID LABEL PATH  — required-when-token read: 2xx PASS, 400/403 WARN, else FAIL
 expect_read() {
   local id="$1" label="$2" path="$3"; shift 3
+  expect_read_method "$id" "$label" GET "$path" "$@"
+}
+
+# expect_read_method ID LABEL METHOD PATH  — same classification as expect_read, for read
+# endpoints that are not GET (e.g. reporting-service's POST dashboard queries).
+expect_read_method() {
+  local id="$1" label="$2" method="$3" path="$4"; shift 4
   if [ "$HAVE_TOKEN" -ne 1 ]; then
     SKIP=$((SKIP+1)); report_line SKIP "$id" "$label" "no JWT supplied"; return
   fi
-  local code; code="$(do_req GET "$path" 1 "$@")"
+  local code; code="$(do_req "$method" "$path" 1 "$@")"
   case "$code" in
     2??) PASS=$((PASS+1)); report_line PASS "$id" "$label" "$code" ;;
     400) WARN=$((WARN+1)); report_line WARN "$id" "$label" "$code (missing param? see README)" ;;
@@ -198,7 +205,7 @@ expect_read A4 "profile-service profile read"   "/profile-service/api/profile"
 expect_read A5 "subscription-service read"      "/subscription-service/api/v1/subscriptions"
 expect_read A6 "events-service events read"     "/events-service/api/events"
 expect_read A7 "issue-service issues read"      "/issue-service/api/issues"
-expect_read A8 "reporting-service dashboard"    "/reporting-service/api/dashboard/overview"
+expect_read_method A8 "reporting-service dashboard" POST "/reporting-service/api/dashboard" -d '{}'
 expect_read A9 "audit-service audit-logs read"  "/audit-service/api/audit-logs"
 
 # ---------------------------------------------------------------------------
@@ -207,6 +214,9 @@ expect_read A9 "audit-service audit-logs read"  "/audit-service/api/audit-logs"
 INT_EP="/profile-service/api/profile/internal/by-email?tenantId=${TENANT_ID}&email=nonexistent@example.invalid"
 expect_exact S14 "external x-internal-request denied" GET "$INT_EP" 1 403 -H "x-internal-request: true"
 expect_exact S15 "spoofed x-jwt-verified no bypass"   GET "$INT_EP" 1 403 -H "x-jwt-verified: true"
+# reporting-service 09d752b removed the legacy GET dashboard routes (/overview, /trends, ...):
+# they read global, untenanted data. They must stay gone.
+expect_exact S16 "legacy reporting dashboard removed" GET "/reporting-service/api/dashboard/overview" 1 404
 
 # ---------------------------------------------------------------------------
 # Optional / informational checks (never FAIL the gate)

@@ -79,7 +79,7 @@ Authenticated reads (run only with a token; **required-when-token**; `2xx`=PASS,
 | A5 | subscription-service | `GET /subscription-service/api/v1/subscriptions` |
 | A6 | events-service | `GET /events-service/api/events` |
 | A7 | issue-service | `GET /issue-service/api/issues` |
-| A8 | reporting-service | `GET /reporting-service/api/dashboard/overview` |
+| A8 | reporting-service | `POST /reporting-service/api/dashboard` (empty body; the legacy GET routes were removed, see S16) |
 | A9 | audit-service | `GET /audit-service/api/audit-logs` (tenant from gateway-injected `x-tenant-id`) |
 
 Security regression (require a token to reach the backend; **required**, exact status):
@@ -87,6 +87,7 @@ Security regression (require a token to reach the backend; **required**, exact s
 |----|-------|----------|
 | S14 | internal by-email + external `x-internal-request: true` | **403** (0B-7 — header stripped at gateway) |
 | S15 | internal by-email + spoofed `x-jwt-verified: true` | **403** (spoofed header creates no trust) |
+| S16 | `GET /reporting-service/api/dashboard/overview` | **404** (legacy untenanted dashboard routes removed in reporting-service 09d752b) |
 
 S14/S15 use `email=nonexistent@example.invalid` and never a real member email.
 
