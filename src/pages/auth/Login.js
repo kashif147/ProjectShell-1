@@ -62,6 +62,20 @@ const Login = () => {
   }
   const [authLoading, setAuthLoading] = useState(false);
   const [showTraditionalLogin, setShowTraditionalLogin] = useState(false);
+  // ProjectShell organisation (tenant) this sign-in is for. Several organisations can share one
+  // Microsoft directory, so Microsoft cannot tell them apart: the backend binds this choice to the
+  // OAuth state and restores it on the callback. ?tenant=<code> in the URL pre-fills it.
+  const [tenantCode, setTenantCode] = useState(() => {
+    try {
+      return (
+        new URLSearchParams(window.location.search).get("tenant") ||
+        localStorage.getItem("login_tenant_code") ||
+        ""
+      ).trim();
+    } catch {
+      return "";
+    }
+  });
   const isProcessingAuthRef = useRef(false);
   const processedCodeRef = useRef(null);
 
@@ -71,10 +85,20 @@ const Login = () => {
     processedCodeRef.current = null;
 
     try {
+      const code = tenantCode.trim();
       const response = await fetch(
-        `${process.env.REACT_APP_BASE_URL_DEV}/pkce/generate`
+        `${process.env.REACT_APP_BASE_URL_DEV}/pkce/generate` +
+          (code ? `?tenant=${encodeURIComponent(code)}` : "")
       );
 
+      if (response.status === 400 && code) {
+        MyAlert(
+          "error",
+          "Organisation not available",
+          "Check the organisation code, or contact your administrator."
+        );
+        return;
+      }
       if (!response.ok) {
         console.error(
           "Failed to obtain PKCE parameters from backend:",
@@ -115,6 +139,8 @@ const Login = () => {
 
       localStorage.setItem("pkce_code_verifier", codeVerifier);
       localStorage.setItem("pkce_state", expectedState);
+      if (code) localStorage.setItem("login_tenant_code", code);
+      else localStorage.removeItem("login_tenant_code");
       // Microsoft only redeems the code if the token request's redirect_uri matches the
       // authorize request's exactly, so remember the backend's value instead of
       // re-deriving one from REACT_APP_REDIRECT_URI (which can drift from it).
@@ -539,6 +565,21 @@ const Login = () => {
               {!showTraditionalLogin ? (
                 // Step 1: Microsoft Login (Primary)
                 <>
+                  <div className="form-group">
+                    <label className="form-label" htmlFor="login-tenant-code">
+                      Organisation code
+                    </label>
+                    <Input
+                      id="login-tenant-code"
+                      className="theme-input"
+                      placeholder="e.g. MULTIAUTH"
+                      value={tenantCode}
+                      onChange={(e) => setTenantCode(e.target.value)}
+                      onPressEnter={handleLogin}
+                      size="large"
+                      autoComplete="organization"
+                    />
+                  </div>
                   <Button
                     className="theme-btn theme-btn-primary microsoft-btn"
                     onClick={handleLogin}

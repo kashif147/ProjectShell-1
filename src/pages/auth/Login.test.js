@@ -104,6 +104,55 @@ describe("Login (CRM Microsoft sign-in)", () => {
       );
     });
 
+    test("organisation code: /pkce/generate gets ?tenant=<code> (the backend binds it to the state) and the code is remembered", async () => {
+      global.fetch = jest.fn().mockResolvedValueOnce(mockPkceGenerateResponse());
+
+      render(<Login />);
+      fireEvent.change(screen.getByLabelText(/Organisation code/i), {
+        target: { value: " DEVTENANTB " },
+      });
+      fireEvent.click(screen.getByText(/Sign in with Microsoft/i));
+
+      await waitFor(() => {
+        expect(window.location.href).toContain("login.microsoftonline.com");
+      });
+      expect(global.fetch).toHaveBeenCalledWith(
+        `${BASE_URL}/pkce/generate?tenant=DEVTENANTB`
+      );
+      expect(localStorage.getItem("login_tenant_code")).toBe("DEVTENANTB");
+    });
+
+    test("?tenant=<code> in the login URL pre-fills the organisation code", async () => {
+      window.location.search = "?tenant=MULTIAUTH";
+      global.fetch = jest.fn().mockResolvedValueOnce(mockPkceGenerateResponse());
+
+      render(<Login />);
+      expect(screen.getByLabelText(/Organisation code/i).value).toBe("MULTIAUTH");
+      fireEvent.click(screen.getByText(/Sign in with Microsoft/i));
+      await waitFor(() =>
+        expect(global.fetch).toHaveBeenCalledWith(
+          `${BASE_URL}/pkce/generate?tenant=MULTIAUTH`
+        )
+      );
+    });
+
+    test("unknown organisation (400) shows an error and does not redirect", async () => {
+      const MyAlert = require("../../component/common/MyAlert");
+      global.fetch = jest.fn().mockResolvedValueOnce({ ok: false, status: 400, json: async () => ({}) });
+
+      render(<Login />);
+      fireEvent.change(screen.getByLabelText(/Organisation code/i), {
+        target: { value: "NOPE" },
+      });
+      fireEvent.click(screen.getByText(/Sign in with Microsoft/i));
+
+      await waitFor(() =>
+        expect(MyAlert).toHaveBeenCalledWith("error", "Organisation not available", expect.any(String))
+      );
+      expect(window.location.href).toBe("");
+      expect(localStorage.getItem("pkce_state")).toBeNull();
+    });
+
     test("stores the redirect_uri the backend put in the authorize URL", async () => {
       global.fetch = jest.fn().mockResolvedValueOnce(mockPkceGenerateResponse());
 
