@@ -40,6 +40,7 @@ import {
   resolveTenantId,
 } from "../../services/tenantBrandingService";
 import { recommendBrandingColors } from "../../utils/brandingPalette";
+import { fetchDefaultRoleOptions } from "../../services/tenantAuthConnectionsApi";
 const { TabPane } = Tabs;
 
 const ColorField = ({ label, value, onChange, recommendation, onApply }) => (
@@ -101,6 +102,17 @@ const SCHEDULE_DAY_OPTIONS = [
   { label: "First calendar day", key: "FIRST_DAY" },
 ];
 
+const PROVISIONING_OPTIONS = [
+  { label: "Automatic", key: "automatic" },
+  { label: "Pre-authorised users only", key: "preauthorised" },
+];
+
+const provisioningKey = (connection) => {
+  if (connection.autoProvisionUsers === true) return "automatic";
+  if (connection.autoProvisionUsers === false) return "preauthorised";
+  return ""; // unset: treated as pre-authorised by the server
+};
+
 const getChangedFields = (current, original) =>
   Object.keys(current).reduce((acc, key) => {
     if (JSON.stringify(current[key]) !== JSON.stringify(original?.[key])) {
@@ -124,6 +136,31 @@ const TenantForm = ({ tenant, onClose }) => {
   useEffect(() => {
     setActiveTabKey("details");
   }, [tenant?._id]);
+
+  // Default-role options per connection type, from the server for the organisation being edited
+  // (never the signed-in user's own organisation's roles).
+  const [roleOptionsByType, setRoleOptionsByType] = useState({});
+  const connectionTypesKey = (iData.authenticationConnections || [])
+    .map((c) => c?.connectionType)
+    .filter(Boolean)
+    .sort()
+    .join("|");
+  useEffect(() => {
+    setRoleOptionsByType({});
+  }, [tenant?._id]);
+  useEffect(() => {
+    if (!tenant?._id) return;
+    const types = [...new Set(connectionTypesKey.split("|").filter(Boolean))];
+    types.forEach((type) => {
+      fetchDefaultRoleOptions(tenant._id, type)
+        .then((roles) =>
+          setRoleOptionsByType((prev) => ({ ...prev, [type]: roles })),
+        )
+        .catch(() =>
+          setRoleOptionsByType((prev) => ({ ...prev, [type]: [] })),
+        );
+    });
+  }, [tenant?._id, connectionTypesKey]);
 
   const handleTabChange = useCallback((key) => {
     if (TENANT_TAB_KEYS.includes(key)) {
@@ -161,6 +198,15 @@ const TenantForm = ({ tenant, onClose }) => {
       newErrors.description = "Description is required";
     if (!iData.subscription.plan)
       newErrors.subscriptionPlan = "Plan is required";
+    (iData.authenticationConnections || []).forEach((c, idx) => {
+      if (c?.autoProvisionUsers === true && !c.defaultRoleId) {
+        newErrors[`connectionDefaultRole${idx}`] =
+          "Default role is required for automatic provisioning";
+      }
+    });
+    if (Object.keys(newErrors).some((k) => k.startsWith("connectionDefaultRole"))) {
+      setActiveTabKey("details");
+    }
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -719,6 +765,7 @@ const TenantForm = ({ tenant, onClose }) => {
                         directoryId: "",
                         audience: "",
                         isActive: true,
+                        autoProvisionUsers: false,
                       },
                     ],
                   }))
@@ -865,6 +912,84 @@ const TenantForm = ({ tenant, onClose }) => {
                             }));
                           }}
                         />
+                      </Col>
+
+                      <Col span={12}>
+                        <CustomSelect
+                          label="User provisioning"
+                          isIDs
+                          allowClear={false}
+                          disabled={!tenant?._id}
+                          value={provisioningKey(connection)}
+                          placeholder="Pre-authorised users only (not set)"
+                          options={PROVISIONING_OPTIONS}
+                          extra={
+                            !tenant?._id
+                              ? "Save the organisation first to enable automatic provisioning"
+                              : null
+                          }
+                          onChange={(e) => {
+                            const newCons = [
+                              ...(iData.authenticationConnections || []),
+                            ];
+                            newCons[idx] = {
+                              ...connection,
+                              autoProvisionUsers:
+                                e.target.value === "automatic",
+                            };
+                            setIData((prev) => ({
+                              ...prev,
+                              authenticationConnections: newCons,
+                            }));
+                          }}
+                        />
+                      </Col>
+
+                      <Col span={12}>
+                        {(() => {
+                          const roles =
+                            roleOptionsByType[connection.connectionType] || [];
+                          const options = roles.map((r) => ({
+                            label: `${r.name} (${r.code})`,
+                            key: r._id,
+                          }));
+                          const current = connection.defaultRoleId
+                            ? String(connection.defaultRoleId)
+                            : "";
+                          if (current && !roles.some((r) => r._id === current)) {
+                            options.push({
+                              label: "Unavailable role (inactive or not allowed)",
+                              key: current,
+                            });
+                          }
+                          return (
+                            <CustomSelect
+                              label="Default role"
+                              isIDs
+                              disabled={
+                                !tenant?._id || !connection.connectionType
+                              }
+                              required={connection.autoProvisionUsers === true}
+                              hasError={!!errors[`connectionDefaultRole${idx}`]}
+                              errorMessage={errors[`connectionDefaultRole${idx}`]}
+                              value={current}
+                              options={options}
+                              onChange={(e) => {
+                                const newCons = [
+                                  ...(iData.authenticationConnections || []),
+                                ];
+                                newCons[idx] = {
+                                  ...connection,
+                                  defaultRoleId: e?.target?.value || null,
+                                };
+                                setIData((prev) => ({
+                                  ...prev,
+                                  authenticationConnections: newCons,
+                                }));
+                              }}
+                            />
+                          );
+                        })()}
                       </Col>
                     </Row>
                   </div>

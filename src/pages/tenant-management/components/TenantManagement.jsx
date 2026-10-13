@@ -176,6 +176,8 @@ const TenantManagement = ({ onClose }) => {
               className="mb-1"
             >
               {conn.connectionType === "Entra ID (Azure AD)" ? "Entra" : "B2C"}
+              {" · "}
+              {conn.autoProvisionUsers === true ? "Automatic" : "Pre-authorised"}
             </Tag>
           ))}
         </div>
