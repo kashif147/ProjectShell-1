@@ -24,6 +24,7 @@ import MyTable from "../../../component/common/MyTable";
 import { useAuthorization } from "../../../context/AuthorizationContext";
 import { Card } from "antd";
 import "../../../styles/TenantManagement.css";
+import AuthConnectionTags from "../../../component/tenant/AuthConnectionTags";
 
 const TenantManagement = ({ onClose }) => {
   const dispatch = useDispatch();
@@ -163,24 +164,8 @@ const TenantManagement = ({ onClose }) => {
       title: "Auth Connections",
       dataIndex: "authenticationConnections",
       key: "authenticationConnections",
-      render: (connections) => (
-        <div>
-          {connections?.map((conn, index) => (
-            <Tag
-              key={index}
-              color={
-                conn.connectionType === "Entra ID (Azure AD)"
-                  ? "green"
-                  : "orange"
-              }
-              className="mb-1"
-            >
-              {conn.connectionType === "Entra ID (Azure AD)" ? "Entra" : "B2C"}
-              {" · "}
-              {conn.autoProvisionUsers === true ? "Automatic" : "Pre-authorised"}
-            </Tag>
-          ))}
-        </div>
+      render: (connections, record) => (
+        <AuthConnectionTags tenantId={record?._id} connections={connections} />
       ),
     },
     {

@@ -40,7 +40,14 @@ import {
   resolveTenantId,
 } from "../../services/tenantBrandingService";
 import { recommendBrandingColors } from "../../utils/brandingPalette";
-import { fetchDefaultRoleOptions } from "../../services/tenantAuthConnectionsApi";
+import useDefaultRoleOptions, {
+  clearDefaultRoleOptionsCache,
+} from "../../hooks/useDefaultRoleOptions";
+import {
+  DEFAULT_ROLE_OPTIONS_ERROR,
+  automaticConnectionError,
+  roleIdOf,
+} from "../../utils/authConnectionDisplay";
 const { TabPane } = Tabs;
 
 const ColorField = ({ label, value, onChange, recommendation, onApply }) => (
@@ -138,29 +145,13 @@ const TenantForm = ({ tenant, onClose }) => {
   }, [tenant?._id]);
 
   // Default-role options per connection type, from the server for the organisation being edited
-  // (never the signed-in user's own organisation's roles).
-  const [roleOptionsByType, setRoleOptionsByType] = useState({});
-  const connectionTypesKey = (iData.authenticationConnections || [])
-    .map((c) => c?.connectionType)
-    .filter(Boolean)
-    .sort()
-    .join("|");
-  useEffect(() => {
-    setRoleOptionsByType({});
-  }, [tenant?._id]);
-  useEffect(() => {
-    if (!tenant?._id) return;
-    const types = [...new Set(connectionTypesKey.split("|").filter(Boolean))];
-    types.forEach((type) => {
-      fetchDefaultRoleOptions(tenant._id, type)
-        .then((roles) =>
-          setRoleOptionsByType((prev) => ({ ...prev, [type]: roles })),
-        )
-        .catch(() =>
-          setRoleOptionsByType((prev) => ({ ...prev, [type]: [] })),
-        );
-    });
-  }, [tenant?._id, connectionTypesKey]);
+  // (never the signed-in user's own organisation's roles). A failed load is an error state, not an
+  // empty list.
+  const roleOptionsByType = useDefaultRoleOptions(
+    tenant?._id,
+    (iData.authenticationConnections || []).map((c) => c?.connectionType),
+    { fresh: true },
+  );
 
   const handleTabChange = useCallback((key) => {
     if (TENANT_TAB_KEYS.includes(key)) {
@@ -199,10 +190,12 @@ const TenantForm = ({ tenant, onClose }) => {
     if (!iData.subscription.plan)
       newErrors.subscriptionPlan = "Plan is required";
     (iData.authenticationConnections || []).forEach((c, idx) => {
-      if (c?.autoProvisionUsers === true && !c.defaultRoleId) {
-        newErrors[`connectionDefaultRole${idx}`] =
-          "Default role is required for automatic provisioning";
-      }
+      const message = automaticConnectionError(
+        c,
+        roleOptionsByType[c?.connectionType],
+        originalTenant?.authenticationConnections,
+      );
+      if (message) newErrors[`connectionDefaultRole${idx}`] = message;
     });
     if (Object.keys(newErrors).some((k) => k.startsWith("connectionDefaultRole"))) {
       setActiveTabKey("details");
@@ -354,13 +347,19 @@ const TenantForm = ({ tenant, onClose }) => {
             }),
           ).unwrap();
         } else {
-          await updateFtn(
+          // updateFtn shows the server's message itself and resolves without data on failure:
+          // keep the drawer open with the user's edits unless the save succeeded.
+          const saved = await updateFtn(
             process.env.REACT_APP_POLICY_SERVICE_URL,
             `/tenants/${tenant?._id}`,
             { ...changedFields },
             null,
             "Tenant updated successfully",
           );
+          if (!saved) return;
+          if (changedFields.authenticationConnections) {
+            clearDefaultRoleOptionsCache(tenant?._id);
+          }
           await afterUpdate();
           return;
         }
@@ -947,16 +946,20 @@ const TenantForm = ({ tenant, onClose }) => {
 
                       <Col span={12}>
                         {(() => {
-                          const roles =
-                            roleOptionsByType[connection.connectionType] || [];
+                          const entry =
+                            roleOptionsByType[connection.connectionType];
+                          const loadFailed = entry?.status === "error";
+                          const roles = entry?.roles || [];
                           const options = roles.map((r) => ({
                             label: `${r.name} (${r.code})`,
                             key: r._id,
                           }));
-                          const current = connection.defaultRoleId
-                            ? String(connection.defaultRoleId)
-                            : "";
-                          if (current && !roles.some((r) => r._id === current)) {
+                          const current = roleIdOf(connection);
+                          if (
+                            current &&
+                            entry?.status === "loaded" &&
+                            !roles.some((r) => String(r._id) === current)
+                          ) {
                             options.push({
                               label: "Unavailable role (inactive or not allowed)",
                               key: current,
@@ -966,8 +969,25 @@ const TenantForm = ({ tenant, onClose }) => {
                             <CustomSelect
                               label="Default role"
                               isIDs
+                              placeholder={
+                                entry?.status === "loading"
+                                  ? "Loading roles..."
+                                  : "Select..."
+                              }
+                              extra={
+                                loadFailed ? (
+                                  <span
+                                    role="alert"
+                                    className="tenant-default-role-error"
+                                  >
+                                    {DEFAULT_ROLE_OPTIONS_ERROR}
+                                  </span>
+                                ) : null
+                              }
                               disabled={
-                                !tenant?._id || !connection.connectionType
+                                !tenant?._id ||
+                                !connection.connectionType ||
+                                loadFailed
                               }
                               required={connection.autoProvisionUsers === true}
                               hasError={!!errors[`connectionDefaultRole${idx}`]}
