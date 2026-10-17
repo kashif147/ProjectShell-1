@@ -59,3 +59,12 @@ test("a malformed code or missing name is not remembered", async () => {
   await fetchTenantRecord(null, { force: true });
   expect(localStorage.getItem("login_tenant_code")).toBeNull();
 });
+
+test("a 403 from GET /tenants/:id (ordinary staff, no tenant:read) leaves the callback-remembered organisation intact", async () => {
+  localStorage.setItem("login_tenant_code", "MULTIAUTH");
+  localStorage.setItem("login_tenant_name", "Digital Informatics");
+  axios.get.mockRejectedValue(Object.assign(new Error("Forbidden"), { response: { status: 403 } }));
+  await expect(fetchTenantRecord(null, { force: true })).rejects.toThrow();
+  expect(localStorage.getItem("login_tenant_code")).toBe("MULTIAUTH");
+  expect(localStorage.getItem("login_tenant_name")).toBe("Digital Informatics");
+});

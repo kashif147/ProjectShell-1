@@ -216,3 +216,80 @@ test("31 starting sign-in stores no organisation data and no internal identifier
   expect(values).not.toMatch(/\b[0-9a-f]{24}\b/i);
   expect(values).not.toContain(DIRECTORY);
 });
+
+describe("remembered organisation comes from the verified sign-in callback (no tenant:read needed)", () => {
+  const b64 = (o) => btoa(JSON.stringify(o)).replace(/=+$/, "").replace(/\+/g, "-").replace(/\//g, "_");
+  const jwtLike = `${b64({ alg: "HS256" })}.${b64({ roles: ["REO"], permissions: [] })}.sig`;
+  const callbackReply = (extra = {}) => ({ ok: true, status: 200, json: async () => ({ success: true, accessToken: jwtLike, ...extra }) });
+  const arriveFromMicrosoft = () => {
+    localStorage.setItem("pkce_state", "STATE1");
+    localStorage.setItem("pkce_code_verifier", "VERIFIER1");
+    window.location.href = "https://crm.test/auth/azure-crm?code=CODE1&state=STATE1";
+    window.location.search = "?code=CODE1&state=STATE1";
+    window.location.pathname = "/auth/azure-crm";
+  };
+  const stored = () => ({ code: localStorage.getItem("login_tenant_code"), name: localStorage.getItem("login_tenant_name") });
+
+  test("1/2/4 ordinary staff: the callback's { code, name } is stored, replacing a stale code-only entry; no GET /tenants call is involved", async () => {
+    localStorage.setItem("login_tenant_code", "OLDCODE"); // left by the previous build, no name
+    arriveFromMicrosoft();
+    global.fetch.mockResolvedValueOnce(callbackReply({ organisation: { code: "MULTIAUTH", name: "Digital Informatics" } }));
+    render(<Login />);
+    await waitFor(() => expect(stored()).toEqual({ code: "MULTIAUTH", name: "Digital Informatics" }));
+    expect(global.fetch).toHaveBeenCalledTimes(1);
+    expect(global.fetch.mock.calls[0][0]).toBe(`${BASE_URL}/auth/azure-crm`);
+    expect(global.fetch.mock.calls.some(([u]) => /\/tenants\//.test(String(u)))).toBe(false);
+  });
+
+  test("a success WITHOUT organisation metadata (e.g. older backend) drops any remembered organisation - nothing invented", async () => {
+    localStorage.setItem("login_tenant_code", "DEVTENANTB");
+    localStorage.setItem("login_tenant_name", "Some Earlier Org");
+    arriveFromMicrosoft();
+    global.fetch.mockResolvedValueOnce(callbackReply());
+    render(<Login />);
+    await waitFor(() => expect(localStorage.getItem("token")).toBe(jwtLike));
+    expect(stored()).toEqual({ code: null, name: null });
+  });
+
+  test("malformed metadata is not stored (fail safe)", async () => {
+    arriveFromMicrosoft();
+    global.fetch.mockResolvedValueOnce(callbackReply({ organisation: { code: "bad code!", name: "X" } }));
+    render(<Login />);
+    await waitFor(() => expect(localStorage.getItem("token")).toBe(jwtLike));
+    expect(stored()).toEqual({ code: null, name: null });
+  });
+
+  test("7-10 only code + name are stored by this feature: no internal tenant id, directory, connection, oid or tid", async () => {
+    arriveFromMicrosoft();
+    global.fetch.mockResolvedValueOnce(
+      callbackReply({ organisation: { code: "MULTIAUTH", name: "Digital Informatics", tenantId: INTERNAL_ID, directoryId: DIRECTORY } })
+    );
+    render(<Login />);
+    await waitFor(() => expect(stored().code).toBe("MULTIAUTH"));
+    const feature = Object.entries(localStorage).filter(([k]) => k.startsWith("login_tenant"));
+    expect(feature.map(([k]) => k).sort()).toEqual(["login_tenant_code", "login_tenant_name"]);
+    expect(JSON.stringify(feature)).not.toMatch(/[0-9a-f]{24}|[0-9a-f]{8}-[0-9a-f]{4}-/i);
+  });
+
+  test("5/6 round trip: after the callback, a fresh visit shows 'Welcome back - Continue with <name>' and starts with the CODE", async () => {
+    arriveFromMicrosoft();
+    global.fetch.mockResolvedValueOnce(callbackReply({ organisation: { code: "DEVTENANTB", name: "DEV Tenant B" } }));
+    const first = render(<Login />);
+    await waitFor(() => expect(stored().name).toBe("DEV Tenant B"));
+    first.unmount();
+    // later visit to "/" (signed out)
+    localStorage.removeItem("token");
+    localStorage.removeItem("userData");
+    window.location.href = "https://crm.test/";
+    window.location.search = "";
+    window.location.pathname = "/";
+    global.fetch.mockReset();
+    global.fetch.mockResolvedValueOnce(pkceOk());
+    const { container } = render(<Login />);
+    expect(screen.getByText("Welcome back")).toBeInTheDocument();
+    expect(screen.getByTestId("remembered-organisation")).toHaveTextContent("Continue with DEV Tenant B");
+    expect(container.innerHTML).not.toContain("DEVTENANTB");
+    continueWithMicrosoft();
+    await waitFor(() => expect(global.fetch).toHaveBeenCalledWith(startUrl("DEVTENANTB")));
+  });
+});

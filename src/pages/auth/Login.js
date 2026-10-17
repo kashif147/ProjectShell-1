@@ -24,6 +24,7 @@ import {
   getRememberedOrganisation,
   isOrganisationCode,
   readExplicitOrganisation,
+  rememberOrganisation,
   removeExplicitOrganisationFromUrl,
 } from "../../utils/loginOrganisation";
 import {
@@ -335,6 +336,15 @@ const Login = () => {
           return;
         }
         localStorage.setItem("token", token1);
+        // Remembered sign-in organisation: ONLY the display context of the authenticated session's
+        // organisation returned by the verified callback (no tenant:read needed). Without it, any
+        // previously remembered organisation is dropped, so a stale or code-only entry never survives
+        // a successful sign-in.
+        if (data.organisation) rememberOrganisation(data.organisation);
+        const rememberedNow = getRememberedOrganisation();
+        if (!rememberedNow || rememberedNow.code !== String(data.organisation?.code ?? "").trim()) {
+          forgetRememberedOrganisation();
+        }
         bumpAuthReady();
         let decode = decodeToken(token1);
         localStorage.setItem("userData", JSON.stringify(decode));
