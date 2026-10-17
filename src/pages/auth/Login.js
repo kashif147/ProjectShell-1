@@ -400,13 +400,8 @@ const Login = () => {
           state: { search: homeMenuKey === "Finance" ? "Finance" : homeMenuKey },
         });
 
-        if (data.refresh_token) {
-          localStorage.setItem("refresh_token", data.refresh_token);
-        }
-        if (data.expires_in) {
-          const expiryTime = Date.now() + data.expires_in * 1000;
-          localStorage.setItem("token_expiry", expiryTime.toString());
-        }
+        // The CRM keeps only the ProjectShell JWT: the callback returns no Microsoft token (refresh
+        // token / expiry). Logout still removes the legacy refresh_token / token_expiry keys.
       } else {
         console.error("No data received from backend");
         isProcessingAuthRef.current = false;

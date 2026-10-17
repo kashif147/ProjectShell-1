@@ -9,7 +9,6 @@ import lookupsReducer from "../features/LookupsSlice";
 import regionTypeReducer from "../features/RegionTypeSlice";
 import partnerReducer from "../features/PartnersSlice";
 import childrenReducer from "../features/ChildrenSlice";
-import refreshReducer from "../features/RefreshSlice";
 import contactTypeReducer from "../features/ContactTypeSlice";
 import contactReducer from "../features/ContactSlice";
 import menuLblReducer from "../features/MenuLblSlice";
@@ -76,7 +75,6 @@ const store = configureStore({
     filterTransfer: filterTransferReducer,
     children: childrenReducer,
     hierarchicalLookups: hierarchicalLookupsReducer,
-    refresh: refreshReducer,
     contactType: contactTypeReducer,
     profile: profileReducer,
     contact: contactReducer,
