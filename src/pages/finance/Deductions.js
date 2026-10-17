@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { io } from "socket.io-client";
+import { notificationSocketAuth } from "../../services/realtimeSocket";
 import { Tag } from "antd";
 import { ReloadOutlined } from "@ant-design/icons";
 import MyTable from "../../component/common/MyTable";
@@ -113,8 +114,7 @@ const Deductions = () => {
     const { origin, path } = getNotificationSocketConfig();
     const socket = io(origin, {
       path,
-      auth: { token },
-      query: { token },
+      auth: notificationSocketAuth,
       transports: ["websocket"],
     });
 

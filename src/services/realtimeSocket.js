@@ -28,6 +28,15 @@ export function getNotificationSocketConfig() {
   }
 }
 
+/**
+ * Socket.IO `auth` for notification-service: a FUNCTION, so the CURRENT ProjectShell token is read
+ * on every connection and reconnection (never captured once). It travels only in the Socket.IO
+ * CONNECT packet - never in the request URL - and is never logged.
+ */
+export function notificationSocketAuth(cb) {
+  cb({ token: localStorage.getItem("token") || "" });
+}
+
 let socket = null;
 
 /** One shared Socket.IO connection for notifications + profile realtime invalidation. */
@@ -42,8 +51,7 @@ export function getRealtimeSocket() {
   const { origin, path } = getNotificationSocketConfig();
   socket = io(origin, {
     path,
-    auth: { token },
-    query: { token },
+    auth: notificationSocketAuth,
     transports: ["websocket"],
   });
   return socket;
