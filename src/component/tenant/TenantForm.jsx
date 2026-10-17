@@ -6,6 +6,7 @@ import {
   Row,
   Col,
   Tabs,
+  ConfigProvider,
   Divider,
   Switch,
   message,
@@ -16,7 +17,6 @@ import {
   isIbanFieldComplete,
 } from "../../utils/iban";
 import CustomSelect from "../common/CustomSelect";
-import { PlusOutlined, MinusCircleOutlined } from "@ant-design/icons";
 import {
   getAllTenants,
   updateOrganisationProfile,
@@ -40,14 +40,7 @@ import {
   resolveTenantId,
 } from "../../services/tenantBrandingService";
 import { recommendBrandingColors } from "../../utils/brandingPalette";
-import useDefaultRoleOptions, {
-  clearDefaultRoleOptionsCache,
-} from "../../hooks/useDefaultRoleOptions";
-import {
-  DEFAULT_ROLE_OPTIONS_ERROR,
-  automaticConnectionError,
-  roleIdOf,
-} from "../../utils/authConnectionDisplay";
+import TenantAuthenticationTab from "./auth/TenantAuthenticationTab";
 const { TabPane } = Tabs;
 
 const ColorField = ({ label, value, onChange, recommendation, onApply }) => (
@@ -89,8 +82,25 @@ const ColorField = ({ label, value, onChange, recommendation, onApply }) => (
   </div>
 );
 
+/**
+ * View-only tenant tabs (tenant:read without tenant:write): every native control is disabled by the
+ * fieldset and every antd control by ConfigProvider. The Authentication tab is not wrapped - its own
+ * controls are gated on tenant:admin.
+ */
+const TenantReadOnlyScope = ({ readOnly, children }) =>
+  readOnly ? (
+    <ConfigProvider componentDisabled>
+      <fieldset disabled className="tenant-readonly-scope" style={{ border: 0, padding: 0, margin: 0, minWidth: 0 }}>
+        {children}
+      </fieldset>
+    </ConfigProvider>
+  ) : (
+    children
+  );
+
 const TENANT_TAB_KEYS = [
   "details",
+  "authentication",
   "lifecycle",
   "publicHolidays",
   "organisation",
@@ -109,17 +119,6 @@ const SCHEDULE_DAY_OPTIONS = [
   { label: "First calendar day", key: "FIRST_DAY" },
 ];
 
-const PROVISIONING_OPTIONS = [
-  { label: "Automatic", key: "automatic" },
-  { label: "Pre-authorised users only", key: "preauthorised" },
-];
-
-const provisioningKey = (connection) => {
-  if (connection.autoProvisionUsers === true) return "automatic";
-  if (connection.autoProvisionUsers === false) return "preauthorised";
-  return ""; // unset: treated as pre-authorised by the server
-};
-
 const getChangedFields = (current, original) =>
   Object.keys(current).reduce((acc, key) => {
     if (JSON.stringify(current[key]) !== JSON.stringify(original?.[key])) {
@@ -128,30 +127,23 @@ const getChangedFields = (current, original) =>
     return acc;
   }, {});
 
-const TenantForm = ({ tenant, onClose }) => {
+const TenantForm = ({ tenant, onClose, initialTab = "details", readOnly = false }) => {
   const dispatch = useDispatch();
   const [originalTenant, setOriginalTenant] = useState(null);
   const [iData, setIData] = useState(mergeTenantFormData(null));
 
   const [errors, setErrors] = useState({});
-  const [activeTabKey, setActiveTabKey] = useState("details");
+  const [activeTabKey, setActiveTabKey] = useState(
+    TENANT_TAB_KEYS.includes(initialTab) ? initialTab : "details",
+  );
   const brandingRecommendations = useMemo(
     () => recommendBrandingColors(iData.branding?.primaryColor),
     [iData.branding?.primaryColor],
   );
 
   useEffect(() => {
-    setActiveTabKey("details");
-  }, [tenant?._id]);
-
-  // Default-role options per connection type, from the server for the organisation being edited
-  // (never the signed-in user's own organisation's roles). A failed load is an error state, not an
-  // empty list.
-  const roleOptionsByType = useDefaultRoleOptions(
-    tenant?._id,
-    (iData.authenticationConnections || []).map((c) => c?.connectionType),
-    { fresh: true },
-  );
+    setActiveTabKey(TENANT_TAB_KEYS.includes(initialTab) ? initialTab : "details");
+  }, [tenant?._id, initialTab]);
 
   const handleTabChange = useCallback((key) => {
     if (TENANT_TAB_KEYS.includes(key)) {
@@ -189,18 +181,6 @@ const TenantForm = ({ tenant, onClose }) => {
       newErrors.description = "Description is required";
     if (!iData.subscription.plan)
       newErrors.subscriptionPlan = "Plan is required";
-    (iData.authenticationConnections || []).forEach((c, idx) => {
-      const message = automaticConnectionError(
-        c,
-        roleOptionsByType[c?.connectionType],
-        originalTenant?.authenticationConnections,
-      );
-      if (message) newErrors[`connectionDefaultRole${idx}`] = message;
-    });
-    if (Object.keys(newErrors).some((k) => k.startsWith("connectionDefaultRole"))) {
-      setActiveTabKey("details");
-    }
-
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -218,13 +198,6 @@ const TenantForm = ({ tenant, onClose }) => {
             [field]: value,
           },
         };
-      } else if (section === "authenticationConnections" && index !== null) {
-        const connections = [...prev.authenticationConnections];
-        connections[index] = {
-          ...connections[index],
-          [field]: value,
-        };
-        updated.authenticationConnections = connections;
       } else if (section === "organisationProfileBankAddress") {
         updated.organisationProfile = {
           ...prev.organisationProfile,
@@ -295,6 +268,7 @@ const TenantForm = ({ tenant, onClose }) => {
   };
 
   const handleSubmit = async () => {
+    if (readOnly) return; // view-only: there is no save
     if (!validate()) {
       return;
     }
@@ -357,9 +331,6 @@ const TenantForm = ({ tenant, onClose }) => {
             "Tenant updated successfully",
           );
           if (!saved) return;
-          if (changedFields.authenticationConnections) {
-            clearDefaultRoleOptionsCache(tenant?._id);
-          }
           await afterUpdate();
           return;
         }
@@ -392,22 +363,24 @@ const TenantForm = ({ tenant, onClose }) => {
   return (
     <Drawer
       className="tenant-form-drawer"
-      title={tenant ? "Edit Tenant" : "Add New Tenant"}
+      title={readOnly ? "View Tenant" : tenant ? "Edit Tenant" : "Add New Tenant"}
       width={1000}
       open={true}
       onClose={onClose}
       extra={
         <Space>
           <Button onClick={onClose} className="butn secoundry-btn">
-            Cancel
+            {readOnly ? "Close" : "Cancel"}
           </Button>
-          <Button
-            type="primary"
-            onClick={handleSubmit}
-            className="butn primary-btn"
-          >
-            {tenant ? "Update" : "Create"}
-          </Button>
+          {readOnly ? null : (
+            <Button
+              type="primary"
+              onClick={handleSubmit}
+              className="butn primary-btn"
+            >
+              {tenant ? "Update" : "Create"}
+            </Button>
+          )}
         </Space>
       }
     >
@@ -420,6 +393,7 @@ const TenantForm = ({ tenant, onClose }) => {
           size="small"
         >
           <TabPane tab="Tenant Details" key="details">
+            <TenantReadOnlyScope readOnly={readOnly}>
             <div className="drawer-tab-content pt-2">
               <Row gutter={16}>
                 <Col span={12}>
@@ -749,276 +723,23 @@ const TenantForm = ({ tenant, onClose }) => {
                 </Col>
               </Row>
 
-              <div className="section-header">Authentication Connections</div>
-              <Button
-                type="dashed"
-                icon={<PlusOutlined />}
-                onClick={() =>
-                  setIData((prev) => ({
-                    ...prev,
-                    authenticationConnections: [
-                      ...(prev.authenticationConnections || []),
-                      {
-                        connectionType: "",
-                        issuerUrl: "",
-                        directoryId: "",
-                        audience: "",
-                        isActive: true,
-                        autoProvisionUsers: false,
-                      },
-                    ],
-                  }))
-                }
-                className="tenant-add-connection-btn"
-              >
-                Add Connection
-              </Button>
+            </div>
+            </TenantReadOnlyScope>
+          </TabPane>
 
-              {(iData.authenticationConnections?.length
-                ? iData.authenticationConnections
-                : [{}]
-              ).map((conn, idx) => {
-                const connection = {
-                  connectionType: "",
-                  issuerUrl: "",
-                  directoryId: "",
-                  audience: "",
-                  isActive: true,
-                  ...conn,
-                };
-
-                return (
-                  <div key={idx} className="auth-connection-card">
-                    <div className="d-flex justify-content-end align-items-center mb-2 auth-connection-actions">
-                      {iData.authenticationConnections?.length > 0 && (
-                        <Button
-                          danger
-                          icon={<MinusCircleOutlined />}
-                          onClick={() =>
-                            setIData((prev) => ({
-                              ...prev,
-                              authenticationConnections:
-                                prev.authenticationConnections.filter(
-                                  (_, i) => i !== idx,
-                                ),
-                            }))
-                          }
-                        >
-                          Remove
-                        </Button>
-                      )}
-
-                      <Switch
-                        checked={connection.isActive}
-                        onChange={(val) => {
-                          const newCons = [
-                            ...(iData.authenticationConnections || []),
-                          ];
-                          newCons[idx] = { ...connection, isActive: val };
-                          setIData((prev) => ({
-                            ...prev,
-                            authenticationConnections: newCons,
-                          }));
-                        }}
-                      />
-                    </div>
-
-                    <Row gutter={[16, 8]}>
-                      <Col span={12}>
-                        <CustomSelect
-                          label="Connection Type"
-                          value={connection.connectionType}
-                          onChange={(value) => {
-                            const newCons = [
-                              ...(iData.authenticationConnections || []),
-                            ];
-                            newCons[idx] = {
-                              ...connection,
-                              connectionType: value?.target.value,
-                            };
-                            setIData((prev) => ({
-                              ...prev,
-                              authenticationConnections: newCons,
-                            }));
-                          }}
-                          options={[
-                            {
-                              label: "Entra ID (Azure AD)",
-                              value: "Entra ID (Azure AD)",
-                            },
-                            { label: "Azure B2C", value: "Azure B2C" },
-                          ]}
-                        />
-                      </Col>
-
-                      <Col span={12}>
-                        <MyInput
-                          label="Issuer URL"
-                          placeholder="https://login.microsoftonline.com/{tid}/v2.0"
-                          value={connection.issuerUrl}
-                          onChange={(e) => {
-                            const newCons = [
-                              ...(iData.authenticationConnections || []),
-                            ];
-                            newCons[idx] = {
-                              ...connection,
-                              issuerUrl: e.target.value,
-                            };
-                            setIData((prev) => ({
-                              ...prev,
-                              authenticationConnections: newCons,
-                            }));
-                          }}
-                        />
-                      </Col>
-
-                      <Col span={12}>
-                        <MyInput
-                          label="Directory Id"
-                          value={connection.directoryId}
-                          onChange={(e) => {
-                            const newCons = [
-                              ...(iData.authenticationConnections || []),
-                            ];
-                            newCons[idx] = {
-                              ...connection,
-                              directoryId: e.target.value,
-                            };
-                            setIData((prev) => ({
-                              ...prev,
-                              authenticationConnections: newCons,
-                            }));
-                          }}
-                        />
-                      </Col>
-
-                      <Col span={12}>
-                        <MyInput
-                          label="Audience"
-                          value={connection.audience}
-                          placeholder="{clientId}"
-                          onChange={(e) => {
-                            const newCons = [
-                              ...(iData.authenticationConnections || []),
-                            ];
-                            newCons[idx] = {
-                              ...connection,
-                              audience: e.target.value,
-                            };
-                            setIData((prev) => ({
-                              ...prev,
-                              authenticationConnections: newCons,
-                            }));
-                          }}
-                        />
-                      </Col>
-
-                      <Col span={12}>
-                        <CustomSelect
-                          label="User provisioning"
-                          isIDs
-                          allowClear={false}
-                          disabled={!tenant?._id}
-                          value={provisioningKey(connection)}
-                          placeholder="Pre-authorised users only (not set)"
-                          options={PROVISIONING_OPTIONS}
-                          extra={
-                            !tenant?._id
-                              ? "Save the organisation first to enable automatic provisioning"
-                              : null
-                          }
-                          onChange={(e) => {
-                            const newCons = [
-                              ...(iData.authenticationConnections || []),
-                            ];
-                            newCons[idx] = {
-                              ...connection,
-                              autoProvisionUsers:
-                                e.target.value === "automatic",
-                            };
-                            setIData((prev) => ({
-                              ...prev,
-                              authenticationConnections: newCons,
-                            }));
-                          }}
-                        />
-                      </Col>
-
-                      <Col span={12}>
-                        {(() => {
-                          const entry =
-                            roleOptionsByType[connection.connectionType];
-                          const loadFailed = entry?.status === "error";
-                          const roles = entry?.roles || [];
-                          const options = roles.map((r) => ({
-                            label: `${r.name} (${r.code})`,
-                            key: r._id,
-                          }));
-                          const current = roleIdOf(connection);
-                          if (
-                            current &&
-                            entry?.status === "loaded" &&
-                            !roles.some((r) => String(r._id) === current)
-                          ) {
-                            options.push({
-                              label: "Unavailable role (inactive or not allowed)",
-                              key: current,
-                            });
-                          }
-                          return (
-                            <CustomSelect
-                              label="Default role"
-                              isIDs
-                              placeholder={
-                                entry?.status === "loading"
-                                  ? "Loading roles..."
-                                  : "Select..."
-                              }
-                              extra={
-                                loadFailed ? (
-                                  <span
-                                    role="alert"
-                                    className="tenant-default-role-error"
-                                  >
-                                    {DEFAULT_ROLE_OPTIONS_ERROR}
-                                  </span>
-                                ) : null
-                              }
-                              disabled={
-                                !tenant?._id ||
-                                !connection.connectionType ||
-                                loadFailed
-                              }
-                              required={connection.autoProvisionUsers === true}
-                              hasError={!!errors[`connectionDefaultRole${idx}`]}
-                              errorMessage={errors[`connectionDefaultRole${idx}`]}
-                              value={current}
-                              options={options}
-                              onChange={(e) => {
-                                const newCons = [
-                                  ...(iData.authenticationConnections || []),
-                                ];
-                                newCons[idx] = {
-                                  ...connection,
-                                  defaultRoleId: e?.target?.value || null,
-                                };
-                                setIData((prev) => ({
-                                  ...prev,
-                                  authenticationConnections: newCons,
-                                }));
-                              }}
-                            />
-                          );
-                        })()}
-                      </Col>
-                    </Row>
-                  </div>
-                );
-              })}
+          <TabPane tab="Authentication" key="authentication" disabled={!tenant?._id}>
+            <div className="drawer-tab-content pt-2">
+              {tenant?._id ? (
+                <TenantAuthenticationTab
+                  tenantId={tenant._id}
+                  onTenantChanged={() => dispatch(getAllTenants())}
+                />
+              ) : null}
             </div>
           </TabPane>
 
           <TabPane tab="Lifecycle Automation" key="lifecycle">
+            <TenantReadOnlyScope readOnly={readOnly}>
             <div className="drawer-tab-content pt-2">
               <div className="section-header">Reminder batches</div>
               <Row gutter={[16, 8]}>
@@ -1121,9 +842,11 @@ const TenantForm = ({ tenant, onClose }) => {
                 </Col>
               </Row>
             </div>
+            </TenantReadOnlyScope>
           </TabPane>
 
           <TabPane tab="Public Holidays" key="publicHolidays" disabled={!tenant?._id}>
+            <TenantReadOnlyScope readOnly={readOnly}>
             {tenant?._id ? (
               <TenantPublicHolidaysPanel tenantId={tenant._id} />
             ) : (
@@ -1131,9 +854,11 @@ const TenantForm = ({ tenant, onClose }) => {
                 Save the tenant first to manage public holidays.
               </p>
             )}
+            </TenantReadOnlyScope>
           </TabPane>
 
           <TabPane tab="Organisation Profile" key="organisation">
+            <TenantReadOnlyScope readOnly={readOnly}>
             <div className="drawer-tab-content pt-2">
               <div className="section-header">Legal & Registration</div>
               <Row gutter={16}>
@@ -1439,9 +1164,11 @@ const TenantForm = ({ tenant, onClose }) => {
                 </Row>
               </div>
             </div>
+            </TenantReadOnlyScope>
           </TabPane>
 
           <TabPane tab="Branding" key="branding">
+            <TenantReadOnlyScope readOnly={readOnly}>
             <div className="drawer-tab-content pt-2">
               <div className="section-header">Logos & Assets</div>
               <p className="text-muted tenant-branding-hint mb-3">
@@ -1644,9 +1371,11 @@ const TenantForm = ({ tenant, onClose }) => {
                 </Col>
               </Row>
             </div>
+            </TenantReadOnlyScope>
           </TabPane>
 
           <TabPane tab="Departments" key="departments" disabled={!tenant?._id}>
+            <TenantReadOnlyScope readOnly={readOnly}>
             <div className="drawer-tab-content pt-2">
               {tenant?._id ? (
                 <TenantDepartmentsPanel tenantId={tenant._id} />
@@ -1656,9 +1385,11 @@ const TenantForm = ({ tenant, onClose }) => {
                 </p>
               )}
             </div>
+            </TenantReadOnlyScope>
           </TabPane>
 
           <TabPane tab="Offices" key="offices" disabled={!tenant?._id}>
+            <TenantReadOnlyScope readOnly={readOnly}>
             <div className="drawer-tab-content pt-2">
               {tenant?._id ? (
                 <TenantOfficesPanel tenantId={tenant._id} />
@@ -1668,6 +1399,7 @@ const TenantForm = ({ tenant, onClose }) => {
                 </p>
               )}
             </div>
+            </TenantReadOnlyScope>
           </TabPane>
         </Tabs>
       </div>

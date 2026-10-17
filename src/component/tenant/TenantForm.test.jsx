@@ -83,43 +83,21 @@ test("successful save still closes and reloads", async () => {
   expect(updateFtn.mock.calls[0][2]).toEqual({ name: "Edited Org" });
 });
 
-test("role options that cannot be loaded (403) show an explanatory message, not an empty list", async () => {
-  fetchDefaultRoleOptions.mockRejectedValue(Object.assign(new Error("Forbidden"), { status: 403 }));
+test("read-only (tenant:read without tenant:write): View Tenant, no Update, fields disabled, nothing can be saved", async () => {
+  render(<TenantForm tenant={tenantWith(preauthorised)} onClose={jest.fn()} readOnly />);
+  expect(screen.getByText("View Tenant")).toBeInTheDocument();
+  expect(screen.queryByRole("button", { name: "Update" })).toBeNull();
+  expect(screen.getByText("Close", { selector: "button.butn span, button.butn" })).toBeInTheDocument();
+  expect(screen.getByDisplayValue("Original Org")).toBeDisabled();
+  expect(updateFtn).not.toHaveBeenCalled();
+  // the Authentication tab stays reachable (its controls follow tenant:admin)
+  expect(screen.getByRole("tab", { name: "Authentication" })).not.toHaveAttribute("aria-disabled", "true");
+});
+
+test("Tenant Details no longer renders the raw connection editor", () => {
   render(<TenantForm tenant={tenantWith(preauthorised)} onClose={jest.fn()} />);
-  expect(
-    await screen.findByText("Default role options could not be loaded for this organisation."),
-  ).toBeInTheDocument();
-  expect(fetchDefaultRoleOptions).toHaveBeenCalledWith("t1", ENTRA); // the organisation being edited
-});
-
-test("Automatic cannot be saved without a default role", async () => {
-  render(
-    <TenantForm
-      tenant={tenantWith([{ ...preauthorised[0], autoProvisionUsers: true, defaultRoleId: null }])}
-      onClose={jest.fn()}
-    />,
-  );
-  editName("Edited Org");
-  clickUpdate();
-  expect(await screen.findByText(/Default role is required for automatic provisioning/)).toBeInTheDocument();
-  expect(updateFtn).not.toHaveBeenCalled();
-});
-
-test("Automatic cannot be saved while role options could not be loaded", async () => {
-  fetchDefaultRoleOptions.mockRejectedValue(Object.assign(new Error("Forbidden"), { status: 403 }));
-  // A connection not yet stored (no _id) set to Automatic with a role: unverifiable -> blocked.
-  render(
-    <TenantForm
-      tenant={tenantWith([{ connectionType: ENTRA, issuerUrl: "https://issuer", directoryId: "d", audience: "a", autoProvisionUsers: true, defaultRoleId: "r-reo" }])}
-      onClose={jest.fn()}
-    />,
-  );
-  await screen.findAllByText("Default role options could not be loaded for this organisation.");
-  editName("Edited Org");
-  clickUpdate();
-  await new Promise((r) => setTimeout(r, 50));
-  // The selector is disabled while options are unavailable; the inline message explains why, and
-  // nothing is sent.
-  expect(updateFtn).not.toHaveBeenCalled();
-  expect(screen.getByText("Default role options could not be loaded for this organisation.")).toBeInTheDocument();
+  expect(screen.queryByText("Authentication Connections")).toBeNull();
+  expect(screen.queryByText(/Issuer URL/)).toBeNull();
+  expect(screen.queryByText(/Audience/)).toBeNull();
+  expect(screen.queryByDisplayValue("https://issuer")).toBeNull();
 });

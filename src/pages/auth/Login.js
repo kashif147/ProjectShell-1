@@ -17,6 +17,13 @@ import { useAuthorization } from "../../context/AuthorizationContext";
 import { getRedirectUri } from "../../component/msft/msalConfig";
 import MyAlert from "../../component/common/MyAlert";
 import { notifyBrandingRefresh } from "../../context/TenantBrandingContext";
+import { completeEntraConnect } from "../../services/tenantAuthConnectionsApi";
+import { takeConnectReturn } from "../../utils/entraConnectReturn";
+import {
+  SUCCESS_MESSAGES,
+  errorMessage,
+  microsoftCallbackErrorMessage,
+} from "../../utils/entraConnectionStatus";
 import {
   UserOutlined,
   LockOutlined,
@@ -78,6 +85,7 @@ const Login = () => {
   });
   const isProcessingAuthRef = useRef(false);
   const processedCodeRef = useRef(null);
+  const connectHandledRef = useRef(false);
 
   // Step 1: Login button click
   const handleLogin = async () => {
@@ -378,7 +386,66 @@ const Login = () => {
     isProcessingAuthRef.current = false;
     setAuthLoading(false);
   }, [navigate, setUserData, setMenuLabelForRole]);
+
+  // "Connect Microsoft Entra" (Tenant Management) returns to this same registered redirect URI.
+  // The single-use return note was already consumed by takeConnectReturn; the URL is cleaned
+  // before the request and nothing about the callback is logged. The backend's single-use Connect
+  // state decides; this only routes the browser.
+  const handleConnectCallback = useCallback(
+    async (target, { code, state, msError }) => {
+      connectHandledRef.current = true;
+      isProcessingAuthRef.current = true;
+      setAuthLoading(true);
+      window.history.replaceState({}, document.title, window.location.pathname);
+      let failure = null;
+      if (msError || !code) {
+        failure = microsoftCallbackErrorMessage(msError);
+      } else {
+        try {
+          await completeEntraConnect(target.tenantId, target.connectionId, { code, state });
+        } catch (e) {
+          failure = errorMessage(e, "complete");
+        }
+      }
+      if (failure) MyAlert("error", "Microsoft Entra was not connected", failure);
+      else MyAlert("success", SUCCESS_MESSAGES.connect);
+      isProcessingAuthRef.current = false;
+      setAuthLoading(false);
+      if (!localStorage.getItem("token")) {
+        navigate("/");
+        return;
+      }
+      navigate("/TenantManagement", {
+        state: { search: "TenantManagement", openTenantAuthentication: target.tenantId },
+      });
+    },
+    [navigate]
+  );
+
   useEffect(() => {
+    // A Connect callback owns this page until it navigates away: never fall through to the
+    // ordinary sign-in exchange or the "already signed in" redirect while it completes.
+    if (connectHandledRef.current) return undefined;
+    if (!isProcessingAuthRef.current) {
+      const callbackParams = new URLSearchParams(window.location.search);
+      const callbackCode = callbackParams.get("code");
+      const callbackError = callbackParams.get("error");
+      if (callbackCode || callbackError) {
+        const target = takeConnectReturn({
+          returnedState: callbackParams.get("state"),
+          signInState: localStorage.getItem("pkce_state"),
+        });
+        if (target) {
+          handleConnectCallback(target, {
+            code: callbackCode,
+            state: callbackParams.get("state"),
+            msError: callbackError,
+          });
+          return undefined;
+        }
+      }
+    }
+
     // Check if user is already authenticated before running auth redirect
     const token = localStorage.getItem("token");
     const userData = localStorage.getItem("userData");
@@ -436,7 +503,7 @@ const Login = () => {
     return () => {
       document.body.classList.remove("login-page");
     };
-  }, [handleAuthRedirect, navigate, setMenuLabelForRole]);
+  }, [handleAuthRedirect, handleConnectCallback, navigate, setMenuLabelForRole]);
 
   // Step 2: Handle redirect after Microsoft login
 

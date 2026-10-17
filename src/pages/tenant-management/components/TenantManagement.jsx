@@ -8,8 +8,9 @@ import {
 } from "@ant-design/icons";
 import { FaRegCircleQuestion } from "react-icons/fa6";
 import { AiFillDelete } from "react-icons/ai";
-import { FaEdit } from "react-icons/fa";
+import { FaEdit, FaRegEye } from "react-icons/fa";
 import { useDispatch, useSelector } from "react-redux";
+import { useLocation, useNavigate } from "react-router-dom";
 import {
   getAllTenants,
   deleteTenant,
@@ -39,10 +40,27 @@ const TenantManagement = ({ onClose }) => {
   const [searchQuery, setSearchQuery] = useState("");
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingTenant, setEditingTenant] = useState(null);
+  const [initialTab, setInitialTab] = useState("details");
+  const location = useLocation();
+  const navigate = useNavigate();
 
   useEffect(() => {
     dispatch(getAllTenants());
   }, [dispatch]);
+
+  // Back from "Connect Microsoft Entra" (pages/auth/Login.js): reopen that organisation on its
+  // Authentication tab once the list has loaded. The router state is consumed once.
+  const returnTenantId = location.state?.openTenantAuthentication;
+  useEffect(() => {
+    if (!returnTenantId || !tenants?.length) return;
+    navigate(location.pathname, { replace: true, state: { search: location.state?.search } });
+    const target = tenants.find((t) => String(t._id) === String(returnTenantId));
+    if (target && canReadTenants) {
+      setEditingTenant(target);
+      setInitialTab("authentication");
+      setIsFormOpen(true);
+    }
+  }, [returnTenantId, tenants, canReadTenants, navigate, location.pathname, location.state?.search]);
 
   const filteredTenants = tenants?.filter(
     (tenant) =>
@@ -53,6 +71,7 @@ const TenantManagement = ({ onClose }) => {
   );
 
   const handleEdit = (tenant) => {
+    setInitialTab("details");
     setEditingTenant(tenant);
     setIsFormOpen(true);
   };
@@ -69,6 +88,7 @@ const TenantManagement = ({ onClose }) => {
   };
 
   const handleAddNew = () => {
+    setInitialTab("details");
     setEditingTenant(null);
     setIsFormOpen(true);
   };
@@ -200,7 +220,7 @@ const TenantManagement = ({ onClose }) => {
       align: "center",
       render: (_, record) => (
         <Space size="middle">
-          {canWriteTenants && (
+          {canWriteTenants ? (
             <Tooltip title="Edit Tenant">
               <FaEdit
                 size={16}
@@ -208,7 +228,18 @@ const TenantManagement = ({ onClose }) => {
                 onClick={() => handleEdit(record)}
               />
             </Tooltip>
-          )}
+          ) : canReadTenants ? (
+            // Read-only drawer (tenant details view-only); the Authentication tab's own controls
+            // follow tenant:admin, never tenant:write.
+            <Tooltip title="View Tenant">
+              <FaRegEye
+                size={16}
+                aria-label="View Tenant"
+                style={{ cursor: "pointer", color: "var(--app-brand-accent)" }}
+                onClick={() => handleEdit(record)}
+              />
+            </Tooltip>
+          ) : null}
           {canDeleteTenants && (
             <Tooltip title="Delete Tenant">
               <AiFillDelete
@@ -276,12 +307,14 @@ const TenantManagement = ({ onClose }) => {
       )}
 
       {/* Tenant Form Drawer */}
-      {isFormOpen && canWriteTenants && (
+      {isFormOpen && (canWriteTenants || (canReadTenants && editingTenant)) && (
         <TenantForm
           tenant={editingTenant}
           onClose={handleFormClose}
           onSubmit={handleFormSubmit}
           open={isFormOpen}
+          initialTab={initialTab}
+          readOnly={!canWriteTenants}
         />
       )}
     </div>
