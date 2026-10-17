@@ -20,6 +20,13 @@ import { notifyBrandingRefresh } from "../../context/TenantBrandingContext";
 import { completeEntraConnect } from "../../services/tenantAuthConnectionsApi";
 import { takeConnectReturn } from "../../utils/entraConnectReturn";
 import {
+  forgetRememberedOrganisation,
+  getRememberedOrganisation,
+  isOrganisationCode,
+  readExplicitOrganisation,
+  removeExplicitOrganisationFromUrl,
+} from "../../utils/loginOrganisation";
+import {
   SUCCESS_MESSAGES,
   errorMessage,
   microsoftCallbackErrorMessage,
@@ -35,6 +42,8 @@ const loginImage =
   "https://images.unsplash.com/photo-1551434678-e076c223a692?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80";
 
 const { Title, Text } = Typography;
+export const ORGANISATION_START_FAILED =
+  "We couldn't start sign-in. Check the organisation details or contact your administrator.";
 const Login = () => {
   const dispatch = useDispatch();
   const { setUserData } = useAuthorization();
@@ -71,18 +80,31 @@ const Login = () => {
   const [showTraditionalLogin, setShowTraditionalLogin] = useState(false);
   // ProjectShell organisation (tenant) this sign-in is for. Several organisations can share one
   // Microsoft directory, so Microsoft cannot tell them apart: the backend binds this choice to the
-  // OAuth state and restores it on the callback. ?tenant=<code> in the URL pre-fills it.
-  const [tenantCode, setTenantCode] = useState(() => {
-    try {
-      return (
-        new URLSearchParams(window.location.search).get("tenant") ||
-        localStorage.getItem("login_tenant_code") ||
-        ""
-      ).trim();
-    } catch {
-      return "";
-    }
-  });
+  // OAuth state and restores it on the callback. The Organisation Code is only a locator, never
+  // rendered for a customer link or a remembered organisation (utils/loginOrganisation.js):
+  //   explicit   - /?tenant=<code> customer link (code kept in memory, removed from the URL)
+  //   remembered - the organisation of the last authenticated session (name is display-only)
+  //   manual     - "Use a different organisation" / no context: the code is typed in
+  const [explicitCode] = useState(() => readExplicitOrganisation());
+  const [remembered, setRemembered] = useState(() => (explicitCode ? null : getRememberedOrganisation()));
+  const [orgMode, setOrgMode] = useState(() => (explicitCode ? "explicit" : remembered ? "remembered" : "manual"));
+  const [manualCode, setManualCode] = useState("");
+  const [orgError, setOrgError] = useState(null);
+  const activeTenantCode =
+    orgMode === "explicit" ? explicitCode : orgMode === "remembered" ? remembered?.code || "" : manualCode.trim();
+
+  useEffect(() => {
+    // The code is already held in memory (explicitCode): keep it out of the visible URL.
+    if (explicitCode) removeExplicitOrganisationFromUrl();
+  }, [explicitCode]);
+
+  const chooseDifferentOrganisation = () => {
+    // Only the active screen changes; the remembered organisation stays until a new sign-in
+    // succeeds and the authenticated organisation replaces it.
+    setOrgMode("manual");
+    setManualCode("");
+    setOrgError(null);
+  };
   const isProcessingAuthRef = useRef(false);
   const processedCodeRef = useRef(null);
   const connectHandledRef = useRef(false);
@@ -93,18 +115,27 @@ const Login = () => {
     processedCodeRef.current = null;
 
     try {
-      const code = tenantCode.trim();
+      const code = activeTenantCode;
+      setOrgError(null);
+      // Organisation context is required: the CRM no longer offers the legacy no-code sign-in.
+      if (!isOrganisationCode(code)) {
+        setOrgError(ORGANISATION_START_FAILED);
+        return;
+      }
       const response = await fetch(
-        `${process.env.REACT_APP_BASE_URL_DEV}/pkce/generate` +
-          (code ? `?tenant=${encodeURIComponent(code)}` : "")
+        `${process.env.REACT_APP_BASE_URL_DEV}/pkce/generate?tenant=${encodeURIComponent(code)}`
       );
 
-      if (response.status === 400 && code) {
-        MyAlert(
-          "error",
-          "Organisation not available",
-          "Check the organisation code, or contact your administrator."
-        );
+      if (response.status === 400) {
+        // Same message whatever the reason (unknown code, no / several Entra connections,
+        // internal id, stale remembered organisation): never reveal which.
+        if (orgMode === "remembered") {
+          forgetRememberedOrganisation();
+          setRemembered(null);
+        }
+        setOrgMode("manual");
+        setManualCode("");
+        setOrgError(ORGANISATION_START_FAILED);
         return;
       }
       if (!response.ok) {
@@ -147,8 +178,6 @@ const Login = () => {
 
       localStorage.setItem("pkce_code_verifier", codeVerifier);
       localStorage.setItem("pkce_state", expectedState);
-      if (code) localStorage.setItem("login_tenant_code", code);
-      else localStorage.removeItem("login_tenant_code");
       // Microsoft only redeems the code if the token request's redirect_uri matches the
       // authorize request's exactly, so remember the backend's value instead of
       // re-deriving one from REACT_APP_REDIRECT_URI (which can drift from it).
@@ -619,39 +648,57 @@ const Login = () => {
                 <UserOutlined />
               </div>
               <Title level={2} className="login-title">
-                {showTraditionalLogin ? "Sign In" : "Welcome Back"}
-              </Title>
-              <Text className="login-subtitle">
                 {showTraditionalLogin
-                  ? "Enter your credentials to continue"
-                  : "Choose your preferred sign-in method"}
-              </Text>
+                  ? "Sign In"
+                  : orgMode === "explicit"
+                    ? "Sign in to your organisation"
+                    : orgMode === "remembered"
+                      ? "Welcome back"
+                      : "Sign in to ProjectShell"}
+              </Title>
+              {showTraditionalLogin ? (
+                <Text className="login-subtitle">Enter your credentials to continue</Text>
+              ) : orgMode === "remembered" ? (
+                <Text className="login-subtitle" data-testid="remembered-organisation">
+                  Continue with <strong>{remembered?.name}</strong>
+                </Text>
+              ) : null}
             </div>
 
             <div className="login-content">
               {!showTraditionalLogin ? (
                 // Step 1: Microsoft Login (Primary)
                 <>
-                  <div className="form-group">
-                    <label className="form-label" htmlFor="login-tenant-code">
-                      Organisation code
-                    </label>
-                    <Input
-                      id="login-tenant-code"
-                      className="theme-input"
-                      placeholder="e.g. MULTIAUTH"
-                      value={tenantCode}
-                      onChange={(e) => setTenantCode(e.target.value)}
-                      onPressEnter={handleLogin}
-                      size="large"
-                      autoComplete="organization"
-                    />
-                  </div>
+                  {orgMode === "manual" ? (
+                    <div className="form-group">
+                      <label className="form-label" htmlFor="login-tenant-code">
+                        Organisation code
+                      </label>
+                      <Input
+                        id="login-tenant-code"
+                        className="theme-input"
+                        value={manualCode}
+                        onChange={(e) => {
+                          setManualCode(e.target.value);
+                          setOrgError(null);
+                        }}
+                        onPressEnter={handleLogin}
+                        size="large"
+                        autoComplete="organization"
+                      />
+                    </div>
+                  ) : null}
+                  {orgError ? (
+                    <div className="login-org-error" role="alert">
+                      {orgError}
+                    </div>
+                  ) : null}
                   <Button
                     className="theme-btn theme-btn-primary microsoft-btn"
                     onClick={handleLogin}
                     size="large"
                     block
+                    disabled={orgMode === "manual" && !manualCode.trim()}
                   >
                     <svg
                       xmlns="http://www.w3.org/2000/svg"
@@ -684,9 +731,14 @@ const Login = () => {
                       />
                     </svg>
                     {inProgress === InteractionStatus.None
-                      ? "Sign in with Microsoft"
+                      ? "Continue with Microsoft"
                       : "Signing in..."}
                   </Button>
+                  {orgMode !== "manual" ? (
+                    <Button type="link" block onClick={chooseDifferentOrganisation}>
+                      Use a different organisation
+                    </Button>
+                  ) : null}
 
                   <Divider className="login-divider">Or</Divider>
 

@@ -1,4 +1,5 @@
 import axios from "axios";
+import { rememberOrganisation } from "../utils/loginOrganisation";
 import AuthorizationAPI from "./AuthorizationAPI";
 import { applyBrandingPlaceholders } from "../constants/tenantBrandingPlaceholders";
 
@@ -58,13 +59,28 @@ export const resolveTenantId = () => {
   }
 };
 
+/**
+ * The signed-in session's OWN organisation (authenticated record) becomes the remembered sign-in
+ * organisation: its code and display name only. Records of other organisations (e.g. an admin
+ * viewing another tenant) are never remembered.
+ */
+function rememberIfSessionOrganisation(id, tenant) {
+  const sessionTenantId = resolveTenantId();
+  if (tenant && sessionTenantId && String(id) === String(sessionTenantId)) {
+    rememberOrganisation({ code: tenant.code, name: tenant.name });
+  }
+}
+
 export async function fetchTenantRecord(tenantId, { force = false } = {}) {
   const id = tenantId || resolveTenantId();
   if (!id) return null;
 
   if (!force) {
     const cached = getTenantCache(id);
-    if (cached) return cached;
+    if (cached) {
+      rememberIfSessionOrganisation(id, cached);
+      return cached;
+    }
   }
 
   const token = localStorage.getItem("token");
@@ -77,6 +93,7 @@ export async function fetchTenantRecord(tenantId, { force = false } = {}) {
 
   const tenant = response.data?.data || null;
   if (tenant) setTenantCache(id, tenant);
+  rememberIfSessionOrganisation(id, tenant);
   return tenant;
 }
 

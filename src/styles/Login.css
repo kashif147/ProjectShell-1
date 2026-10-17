@@ -614,3 +614,10 @@ body.login-page {
     font-size: var(--font-size-xs);
   }
 }
+
+/* Generic sign-in start failure (never says whether an organisation exists). */
+.login-org-error {
+  margin: 4px 0 12px;
+  color: #cf1322;
+  font-size: 13px;
+}

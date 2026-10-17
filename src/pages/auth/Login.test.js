@@ -75,12 +75,19 @@ describe("Login (CRM Microsoft sign-in)", () => {
     window.location = originalLocation;
   });
 
+  // The CRM no longer offers the legacy no-code sign-in: organisation context is required
+  // (customer link, remembered organisation or the manual "Organisation code" fallback).
+  const enterOrganisation = (code) =>
+    fireEvent.change(screen.getByLabelText(/Organisation code/i), { target: { value: code } });
+  const continueWithMicrosoft = () => fireEvent.click(screen.getByText(/Continue with Microsoft/i));
+
   describe("handleLogin", () => {
     test("fetches /pkce/generate, redirects to the backend-provided URL, and stores codeVerifier + the state parsed from that URL", async () => {
       global.fetch = jest.fn().mockResolvedValueOnce(mockPkceGenerateResponse());
 
       render(<Login />);
-      fireEvent.click(screen.getByText(/Sign in with Microsoft/i));
+      enterOrganisation("MULTIAUTH");
+      continueWithMicrosoft();
 
       await waitFor(() => {
         expect(window.location.href).toContain(
@@ -88,7 +95,7 @@ describe("Login (CRM Microsoft sign-in)", () => {
         );
       });
 
-      expect(global.fetch).toHaveBeenCalledWith(`${BASE_URL}/pkce/generate`);
+      expect(global.fetch).toHaveBeenCalledWith(`${BASE_URL}/pkce/generate?tenant=MULTIAUTH`);
       expect(localStorage.getItem("pkce_code_verifier")).toBe(
         "server-generated-code-verifier"
       );
@@ -104,14 +111,12 @@ describe("Login (CRM Microsoft sign-in)", () => {
       );
     });
 
-    test("organisation code: /pkce/generate gets ?tenant=<code> (the backend binds it to the state) and the code is remembered", async () => {
+    test("organisation code: /pkce/generate gets ?tenant=<code> (the backend binds it to the state); nothing is remembered at sign-in start", async () => {
       global.fetch = jest.fn().mockResolvedValueOnce(mockPkceGenerateResponse());
 
       render(<Login />);
-      fireEvent.change(screen.getByLabelText(/Organisation code/i), {
-        target: { value: " DEVTENANTB " },
-      });
-      fireEvent.click(screen.getByText(/Sign in with Microsoft/i));
+      enterOrganisation(" DEVTENANTB ");
+      continueWithMicrosoft();
 
       await waitFor(() => {
         expect(window.location.href).toContain("login.microsoftonline.com");
@@ -119,16 +124,20 @@ describe("Login (CRM Microsoft sign-in)", () => {
       expect(global.fetch).toHaveBeenCalledWith(
         `${BASE_URL}/pkce/generate?tenant=DEVTENANTB`
       );
-      expect(localStorage.getItem("login_tenant_code")).toBe("DEVTENANTB");
+      // remembered only from the AUTHENTICATED organisation after sign-in, never from input
+      expect(localStorage.getItem("login_tenant_code")).toBeNull();
+      expect(localStorage.getItem("login_tenant_name")).toBeNull();
     });
 
-    test("?tenant=<code> in the login URL pre-fills the organisation code", async () => {
+    test("?tenant=<code> customer link: the code is used for sign-in but never rendered", async () => {
       window.location.search = "?tenant=MULTIAUTH";
       global.fetch = jest.fn().mockResolvedValueOnce(mockPkceGenerateResponse());
 
-      render(<Login />);
-      expect(screen.getByLabelText(/Organisation code/i).value).toBe("MULTIAUTH");
-      fireEvent.click(screen.getByText(/Sign in with Microsoft/i));
+      const { container } = render(<Login />);
+      expect(screen.getByText("Sign in to your organisation")).toBeInTheDocument();
+      expect(screen.queryByLabelText(/Organisation code/i)).toBeNull();
+      expect(container.innerHTML).not.toContain("MULTIAUTH");
+      continueWithMicrosoft();
       await waitFor(() =>
         expect(global.fetch).toHaveBeenCalledWith(
           `${BASE_URL}/pkce/generate?tenant=MULTIAUTH`
@@ -136,18 +145,15 @@ describe("Login (CRM Microsoft sign-in)", () => {
       );
     });
 
-    test("unknown organisation (400) shows an error and does not redirect", async () => {
-      const MyAlert = require("../../component/common/MyAlert");
+    test("unknown organisation (400) shows the generic message and does not redirect", async () => {
       global.fetch = jest.fn().mockResolvedValueOnce({ ok: false, status: 400, json: async () => ({}) });
 
       render(<Login />);
-      fireEvent.change(screen.getByLabelText(/Organisation code/i), {
-        target: { value: "NOPE" },
-      });
-      fireEvent.click(screen.getByText(/Sign in with Microsoft/i));
+      enterOrganisation("NOPE");
+      continueWithMicrosoft();
 
-      await waitFor(() =>
-        expect(MyAlert).toHaveBeenCalledWith("error", "Organisation not available", expect.any(String))
+      expect(await screen.findByRole("alert")).toHaveTextContent(
+        "We couldn't start sign-in. Check the organisation details or contact your administrator."
       );
       expect(window.location.href).toBe("");
       expect(localStorage.getItem("pkce_state")).toBeNull();
@@ -157,7 +163,8 @@ describe("Login (CRM Microsoft sign-in)", () => {
       global.fetch = jest.fn().mockResolvedValueOnce(mockPkceGenerateResponse());
 
       render(<Login />);
-      fireEvent.click(screen.getByText(/Sign in with Microsoft/i));
+      enterOrganisation("MULTIAUTH");
+      continueWithMicrosoft();
 
       await waitFor(() => {
         expect(window.location.href).toContain("login.microsoftonline.com");
@@ -178,7 +185,8 @@ describe("Login (CRM Microsoft sign-in)", () => {
       );
 
       render(<Login />);
-      fireEvent.click(screen.getByText(/Sign in with Microsoft/i));
+      enterOrganisation("MULTIAUTH");
+      continueWithMicrosoft();
 
       await waitFor(() => {
         expect(global.fetch).toHaveBeenCalled();
