@@ -2,40 +2,33 @@
 -- verify_jwt.lua
 -- Gateway Authentication Layer
 --
--- RS256 (Microsoft/Azure AD) tokens are verified by delegating to
--- user-service's POST /api/internal/verify-ms-token via an nginx `internal;`
--- subrequest, not by hand-rolled JWKS/signature logic in Lua. HS256
--- (ProjectShell-internal) tokens are verified directly here via
--- resty.jwt + JWT_SECRET.
+-- Only ProjectShell-issued HS256 JWTs authenticate at the gateway (verified
+-- here via resty.jwt + JWT_SECRET). The ProjectShell tenant boundary
+-- (x-tenant-id) comes ONLY from that token's internal tenantId.
+--
+-- Microsoft / Azure AD RS256 tokens are NOT accepted here (retired): a
+-- Microsoft directory id (tid) is not a ProjectShell tenant, and Entra app
+-- roles are not ProjectShell roles. Users sign in with Microsoft through
+-- /user-service/auth/azure-* and then use the ProjectShell JWT it issues.
 -- =====================================================================
 
 local jwt = require "resty.jwt"
 local cjson = require "cjson.safe"
+local trusted_headers = require "trusted_headers"
 
 local uri = ngx.var.uri or ""
 
 -----------------------------------------------------------------------
 -- 1. CLEAR SPOOFABLE / INTERNAL-ONLY HEADERS (before any bypass decision)
 -----------------------------------------------------------------------
-local trusted_headers = {
-  "x-jwt-verified", "x-auth-source", "x-user-id", "x-tenant-id",
-  "x-user-email", "x-user-type", "x-user-roles", "x-user-permissions",
-  "x-token-expires-at", "x-service-caller",
-  "x-gateway-signature", "x-gateway-timestamp",
-  "x-service-secret",
-  "x-internal-request",
-}
-for _, h in ipairs(trusted_headers) do
-  ngx.req.clear_header(h)
-end
+trusted_headers.clear()
 
 -----------------------------------------------------------------------
 -- 2. BYPASSES (unauthenticated endpoints only)
+--    /user-service/auth/* is NOT bypassed here: its public endpoints run
+--    in a location without this script, and the one protected auth
+--    endpoint (/user-service/auth/logout) runs this script on purpose.
 -----------------------------------------------------------------------
-if uri:match("^/user-service/auth/") then
-  return
-end
-
 if uri == "/account-service/api/webhook/stripe" then
   return
 end
@@ -87,127 +80,9 @@ end
 local header = jwt_obj.header or {}
 
 -----------------------------------------------------------------------
--- 6. MICROSOFT / AZURE AD TOKEN (RS256) - delegated verification
------------------------------------------------------------------------
-if header.alg == "RS256" then
-  local verify_secret = os.getenv("GATEWAY_VERIFY_SECRET")
-  if not verify_secret or verify_secret == "" then
-    return ngx.exit(401)
-  end
-
-  local original_content_type = req_headers["content-type"]
-  ngx.req.set_header("Content-Type", "application/json")
-  ngx.req.set_header("x-service-secret", verify_secret)
-
-  local ok_capture, res = pcall(ngx.location.capture, "/_internal/verify-ms-token", {
-    method = ngx.HTTP_POST,
-    body = cjson.encode({ token = token }),
-  })
-
-  ngx.req.clear_header("x-service-secret")
-  if original_content_type then
-    ngx.req.set_header("Content-Type", original_content_type)
-  else
-    ngx.req.clear_header("Content-Type")
-  end
-
-  if not ok_capture or not res or res.status ~= 200 then
-    return ngx.exit(401)
-  end
-
-  local ok_decode, body = pcall(cjson.decode, res.body)
-  if not ok_decode or type(body) ~= "table" then
-    return ngx.exit(401)
-  end
-
-  if body.verified ~= true then
-    return ngx.exit(401)
-  end
-
-  if type(body.tid) ~= "string" or body.tid == "" then
-    return ngx.exit(401)
-  end
-
-  if body.exp ~= nil and type(body.exp) ~= "number" then
-    return ngx.exit(401)
-  end
-
-  local function is_nonempty_string(v)
-    return type(v) == "string" and v ~= ""
-  end
-
-  local function has_items(v)
-    return type(v) == "table" and #v > 0
-  end
-
-  -- Classify strictly from verified claims returned by the Node verifier -
-  -- never from clientAppId's mere presence, and never from anything in the
-  -- caller's own (unverified-until-now) token.
-  local idtyp = body.idtyp
-  local has_scp = is_nonempty_string(body.scp)
-  local has_roles = has_items(body.roles)
-
-  local is_app_token
-  if idtyp == "app" then
-    is_app_token = true
-  elseif has_scp then
-    is_app_token = false
-  elseif idtyp == nil and has_roles and not has_scp then
-    is_app_token = true
-  else
-    -- Ambiguous - neither a clear app-only nor a clear delegated user token.
-    return ngx.exit(401)
-  end
-
-  if is_app_token then
-    -- Being a genuine, verifiable app-only token is not by itself
-    -- authorization to assume the privileged system:notifier identity -
-    -- the specific client application must be explicitly allow-listed.
-    local notifier_app_id = os.getenv("NOTIFIER_APP_ID")
-    if not notifier_app_id or notifier_app_id == "" then
-      return ngx.exit(401)
-    end
-    if body.clientAppId ~= notifier_app_id then
-      return ngx.exit(401)
-    end
-  else
-    -- Delegated user token: must carry a real subject identifier. Never
-    -- promote to system:notifier merely because clientAppId (azp) exists.
-    if not is_nonempty_string(body.oid) and not is_nonempty_string(body.sub) then
-      return ngx.exit(401)
-    end
-  end
-
-  ngx.req.set_header("x-jwt-verified", "true")
-  ngx.req.set_header("x-auth-source", "azuread")
-  ngx.req.set_header("x-tenant-id", body.tid)
-
-  if body.exp then
-    ngx.req.set_header(
-      "x-token-expires-at",
-      tostring(body.exp * 1000)
-    )
-  end
-
-  if is_app_token then
-    ngx.req.set_header("x-user-id", "system:notifier")
-    ngx.req.set_header("x-user-type", "system")
-    ngx.req.set_header("x-service-caller", "n8n")
-    ngx.req.set_header("x-user-roles", '["system.notifier"]')
-    ngx.req.set_header("x-user-permissions", "[]")
-  else
-    ngx.req.set_header("x-user-id", body.oid or body.sub)
-    ngx.req.set_header("x-user-type", "user")
-    ngx.req.set_header("x-user-email", body.preferred_username or "")
-    ngx.req.set_header("x-user-roles", cjson.encode(body.roles or {}))
-    ngx.req.set_header("x-user-permissions", "[]")
-  end
-
-  return
-end
-
------------------------------------------------------------------------
--- 7. INTERNAL HS256 (ProjectShell-issued tokens)
+-- 6. ONLY PROJECTSHELL HS256 TOKENS
+--    Every other algorithm - including Microsoft RS256 delegated-user and
+--    app-only tokens - is rejected before any verification or header is set.
 -----------------------------------------------------------------------
 if header.alg ~= "HS256" then
   return ngx.exit(401)
@@ -237,10 +112,18 @@ if not payload.id or not payload.tenantId then
   return ngx.exit(401)
 end
 
+-- The tenant boundary must be an internal ProjectShell tenant id: exactly 24 lowercase hex
+-- characters (a MongoDB ObjectId string, as user-service issues it). Anything else is refused -
+-- never forwarded, never normalised, never replaced by a client-supplied value.
+local tenant_id = payload.tenantId
+if type(tenant_id) ~= "string" or #tenant_id ~= 24 or not tenant_id:match("^[0-9a-f]+$") then
+  return ngx.exit(401)
+end
+
 ngx.req.set_header("x-jwt-verified", "true")
 ngx.req.set_header("x-auth-source", "gateway")
 ngx.req.set_header("x-user-id", payload.id)
-ngx.req.set_header("x-tenant-id", payload.tenantId)
+ngx.req.set_header("x-tenant-id", tenant_id)
 ngx.req.set_header("x-user-type", payload.userType or "")
 ngx.req.set_header("x-user-email", payload.email or "")
 ngx.req.set_header("x-user-roles", cjson.encode(payload.roles or {}))
