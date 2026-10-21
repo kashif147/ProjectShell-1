@@ -33,10 +33,6 @@ if uri == "/account-service/api/webhook/stripe" then
   return
 end
 
-if uri == "/api/profile/validate" and ngx.req.get_method() == "POST" then
-  return
-end
-
 -----------------------------------------------------------------------
 -- 3. CORS PREFLIGHT
 -----------------------------------------------------------------------

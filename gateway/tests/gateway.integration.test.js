@@ -312,4 +312,70 @@ test.describe("gateway (real OpenResty, tracked config)", { skip: !RUN && "set G
       assert.equal(count, 0, p);
     }
   });
+
+  // ---------------------------------------------------------------- Azure B2C API connector
+  const BASIC = { authorization: `Basic ${Buffer.from("b2c-test-user:test-only-password").toString("base64")}` };
+  const B2C_BODY = JSON.stringify({ email: "new.member@example.test", client_id: "00000000-0000-0000-0000-00000000b2c0", step: "PostAttributeCollection" });
+  const JSON_CT = { "content-type": "application/json" };
+
+  test("B2C connector: POST reaches user-service /api/users/validate without a ProjectShell JWT; Basic auth forwarded; spoofed trusted headers stripped", async () => {
+    const { res, up, count } = await through("POST", "/user-service/api/users/validate", { ...SPOOF, ...BASIC, ...JSON_CT }, B2C_BODY);
+    assert.equal(res.status, 200);
+    assert.equal(count, 1);
+    assert.equal(up.port, 5001);
+    assert.match(up.url, /^\/api\/users\/validate\?it=\d+$/);
+    assert.equal(up.headers.authorization, BASIC.authorization); // user-service does the Basic check
+    assertNoTrusted(up, "b2c connector");
+  });
+
+  test("B2C connector: no or wrong Basic credentials are still passed to user-service (which rejects them), never trusted headers", async () => {
+    for (const auth of [{}, { authorization: "Basic d3Jvbmc6d3Jvbmc=" }, bearer(hs256(claims()))]) {
+      const { res, up } = await through("POST", "/user-service/api/users/validate", { ...SPOOF, ...auth, ...JSON_CT }, B2C_BODY);
+      assert.equal(res.status, 200);
+      assertNoTrusted(up, JSON.stringify(Object.keys(auth))); // even a valid JWT sets no identity here
+    }
+  });
+
+  test("B2C connector: only POST (GET/PUT/DELETE/PATCH -> 403, nothing forwarded)", async () => {
+    for (const m of ["GET", "PUT", "DELETE", "PATCH"]) {
+      const { res, count } = await through(m, "/user-service/api/users/validate", { ...BASIC, ...JSON_CT }, m === "GET" ? undefined : B2C_BODY);
+      assert.equal(res.status, 403, m);
+      assert.equal(count, 0, m);
+    }
+  });
+
+  test("B2C connector: oversized body -> 413, nothing forwarded", async () => {
+    const big = JSON.stringify({ email: "x@example.test", pad: "a".repeat(20 * 1024) });
+    const { res, count } = await through("POST", "/user-service/api/users/validate", { ...BASIC, ...JSON_CT }, big);
+    assert.equal(res.status, 413);
+    assert.equal(count, 0);
+  });
+
+  test("B2C connector is exact: neighbouring user-service paths without a JWT stay 401", async () => {
+    for (const p of ["/user-service/api/users/validate/", "/user-service/api/users/VALIDATE", "/user-service/api/users/validatex", "/user-service/api/users", "/user-service/api/users/validate/../me", "/user-service/api/me"]) {
+      const { res, count } = await through("POST", p, { ...SPOOF, ...BASIC, ...JSON_CT }, B2C_BODY);
+      assert.equal(res.status, 401, p);
+      assert.equal(count, 0, p);
+    }
+  });
+
+  test("profile-service validate is not public: 401 without a JWT; with a JWT no internal/trusted headers from the client", async () => {
+    const anon = await through("POST", "/profile-service/api/profile/validate", { ...SPOOF, ...BASIC, ...JSON_CT }, B2C_BODY);
+    assert.equal(anon.res.status, 401);
+    assert.equal(anon.count, 0);
+    const withJwt = await through("POST", "/profile-service/api/profile/validate", { ...SPOOF, ...bearer(hs256(claims())), ...JSON_CT }, B2C_BODY);
+    assert.equal(withJwt.up.headers["x-internal-request"], undefined); // profile-service then refuses (not internal)
+    assert.equal(withJwt.up.headers["x-tenant-id"], TENANT_A);
+  });
+
+  test("B2C connector: dedicated rate limit (burst beyond the zone -> 503)", async () => {
+    await new Promise((s) => setTimeout(s, 3000)); // drain the zone used by the tests above
+    await received();
+    const rs = await Promise.all(Array.from({ length: 60 }, () => request("POST", "/user-service/api/users/validate", { ...BASIC, ...JSON_CT }, B2C_BODY)));
+    const limited = rs.filter((r) => r.status === 503).length;
+    assert.ok(limited > 0, "some requests rate-limited");
+    assert.ok(rs.filter((r) => r.status === 200).length >= 20, "burst allowance served");
+    await new Promise((s) => setTimeout(s, 3000)); // let the zone drain
+  });
+
 });
