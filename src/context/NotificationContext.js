@@ -130,11 +130,13 @@ export const NotificationProvider = ({ children }) => {
   const fetchUnreadCount = useCallback(async () => {
     const token = localStorage.getItem("token");
     if (!token) return;
+    const notificationServiceUrl = getNotificationServiceUrl();
+    if (!notificationServiceUrl) return;
     if (unreadCountFetchInFlight) return unreadCountFetchInFlight;
     unreadCountFetchInFlight = (async () => {
       try {
         const res = await axios.get(
-          `${getNotificationServiceUrl()}/notifications?limit=1`,
+          `${notificationServiceUrl}/notifications?limit=1`,
           { headers: { Authorization: `Bearer ${token}` } },
         );
         const { unreadCount } = res.data?.data ?? res.data ?? {};
