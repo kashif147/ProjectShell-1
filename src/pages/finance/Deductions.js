@@ -111,7 +111,9 @@ const Deductions = () => {
     const token = localStorage.getItem("token");
     if (!token) return undefined;
 
-    const { origin, path } = getNotificationSocketConfig();
+    const socketConfig = getNotificationSocketConfig();
+    if (!socketConfig) return undefined;
+    const { origin, path } = socketConfig;
     const socket = io(origin, {
       path,
       auth: notificationSocketAuth,

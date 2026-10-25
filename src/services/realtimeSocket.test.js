@@ -13,6 +13,16 @@ const TOKEN_B = "synthetic.token-B.marker";
 jest.mock("socket.io-client", () => ({ io: jest.fn() }));
 const sockets = [];
 
+// The socket only connects when a notification-service URL is configured (no built-in host).
+const savedNotificationUrl = process.env.REACT_APP_NOTIFICATION_SERVICE_URL;
+beforeAll(() => {
+  process.env.REACT_APP_NOTIFICATION_SERVICE_URL = "https://notif.example.test/notification-service/api";
+});
+afterAll(() => {
+  if (savedNotificationUrl === undefined) delete process.env.REACT_APP_NOTIFICATION_SERVICE_URL;
+  else process.env.REACT_APP_NOTIFICATION_SERVICE_URL = savedNotificationUrl;
+});
+
 let consoleSpies;
 beforeEach(() => {
   disconnectRealtimeSocket();
