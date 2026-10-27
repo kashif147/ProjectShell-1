@@ -33,6 +33,13 @@ import { getPartners } from "../../features/PartnersSlice";
 import { getChildren } from "../../features/ChildrenSlice";
 import { baseURL } from "../../utils/Utilities";
 import axios from "axios";
+
+// Phase A / A12: this legacy screen calls /region, /children and /partner endpoints that no backend
+// serves (404 today). The ObjectIds it used (a profile id and two region-type ids) exist in no
+// DEV/UAT data, so they are removed: local tags keep the existing (404) region flow unchanged and
+// the profile id now comes from no hardcoded value.
+const LEGACY_DIVISION_REGION_TYPE = "legacy-division";
+const LEGACY_STATION_REGION_TYPE = "legacy-station";
 const { TextArea } = Input;
 
 function MyDeatails() {
@@ -53,7 +60,7 @@ function MyDeatails() {
   const { register } = useForm();
   const [InfData, setInfData] = useState();
   const [InfDataPartner, setInfDataPartner] = useState({
-    profileId: "67a1b268a203d65ec4a553e2",
+    profileId: "",
     maidenName: "",
     dateOfBirth: "",
     deceased: false,
@@ -97,7 +104,7 @@ function MyDeatails() {
         () => {
           dispatch(getPartners());
           setInfDataPartner({
-            profileId: "67a1b268a203d65ec4a553e2",
+            profileId: "",
             maidenName: "",
             dateOfBirth: "",
             deceased: false,
@@ -115,7 +122,7 @@ function MyDeatails() {
   // children
 
   const [childrenData, setChildrenData] = useState({
-    profileId: "67a1b268a203d65ec4a553e2",
+    profileId: "",
     title: "",
     forename: "",
     surname: "",
@@ -373,7 +380,7 @@ function MyDeatails() {
       // Check if the RegionTypeID matches and the response status is OK (200)
       if (
         response.status === 200 &&
-        data?.RegionTypeID === "671822bca0072a28aab883e7"
+        data?.RegionTypeID === LEGACY_DIVISION_REGION_TYPE
       ) {
         setregionByParntTyp((prev) => ({
           ...prev,
@@ -387,7 +394,7 @@ function MyDeatails() {
       // In case the resource is not found, handle the 404 status code as necessary
       if (
         response.status === 404 &&
-        data?.RegionTypeID === "671822bca0072a28aab883e7"
+        data?.RegionTypeID === LEGACY_DIVISION_REGION_TYPE
       ) {
         setregionByParntTyp((prev) => ({
           ...prev,
@@ -395,7 +402,7 @@ function MyDeatails() {
         }));
       }
 
-      if (data?.RegionTypeID === "671822c6a0072a28aab883e9") {
+      if (data?.RegionTypeID === LEGACY_STATION_REGION_TYPE) {
         if (response.status === 200) {
           setregionByParntTyp((prev) => ({
             ...prev,
@@ -1048,7 +1055,7 @@ function MyDeatails() {
                       placeholder="Select Station"
                       isSimple={true}
                       options={regionByParntTyp?.station}
-                      // onChange={(e)=>getRegionsByTypAndPrntId({RegionTypeID:'671822bca0072a28aab883e7',ParentRegion:e})}
+                      // onChange={(e)=>getRegionsByTypAndPrntId({RegionTypeID:LEGACY_DIVISION_REGION_TYPE,ParentRegion:e})}
                     />
                   </div>
                   <Button
@@ -1096,7 +1103,7 @@ function MyDeatails() {
                     options={regionByParntTyp?.Districts}
                     onChange={(e) =>
                       getRegionsByTypAndPrntId({
-                        RegionTypeID: "671822c6a0072a28aab883e9",
+                        RegionTypeID: LEGACY_STATION_REGION_TYPE,
                         ParentRegion: e,
                       })
                     }
@@ -1115,7 +1122,7 @@ function MyDeatails() {
                     options={selectLokups?.Divisions}
                     onChange={(e) =>
                       getRegionsByTypAndPrntId({
-                        RegionTypeID: "671822bca0072a28aab883e7",
+                        RegionTypeID: LEGACY_DIVISION_REGION_TYPE,
                         ParentRegion: e,
                       })
                     }

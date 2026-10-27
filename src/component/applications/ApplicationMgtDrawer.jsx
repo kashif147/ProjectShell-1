@@ -62,7 +62,11 @@ import { FaAngleLeft } from "react-icons/fa6";
 import { FaAngleRight, FaClone } from "react-icons/fa";
 import { fetchCountries } from "../../features/CountriesSlice";
 import MyDatePicker1 from "../common/MyDatePicker1";
-import { getCategoryLookup } from "../../features/CategoryLookupSlice";
+import {
+  getCategoryLookup,
+  RETIRED_ASSOCIATE_PRODUCT_CODE,
+  UNDERGRADUATE_STUDENT_PRODUCT_CODE,
+} from "../../features/CategoryLookupSlice";
 import { useFilters } from "../../context/FilterContext";
 import {
   searchProfiles,
@@ -83,6 +87,8 @@ import { fetchTenantTradingName } from "../../services/tenantBrandingService";
 import DuplicateProfileReview from "./DuplicateProfileReview";
 import { useRegisterUnsavedFormGuard } from "../../context/UnsavedFormContext";
 import "../../styles/ApplicationForm.css";
+import { readTenantItem } from "../../utils/tenantStorage";
+import { optionHasProductCode } from "../../utils/membershipProductCode";
 
 const baseURL = process.env.REACT_APP_PROFILE_SERVICE_URL;
 
@@ -357,7 +363,7 @@ const resolveWorkLocationProcessSalaryDeduction = (
     if (fromRawById) return !!fromRawById.processSalaryDeduction;
 
     try {
-      const stored = localStorage.getItem("hierarchicalLookups");
+      const stored = readTenantItem("hierarchicalLookups");
       const hierarchicalLookups = stored ? JSON.parse(stored) : [];
       const fromHierarchy = hierarchicalLookups.find(
         (item) =>
@@ -386,7 +392,7 @@ const resolveWorkLocationProcessSalaryDeduction = (
   if (fromRaw) return !!fromRaw.processSalaryDeduction;
 
   try {
-    const stored = localStorage.getItem("hierarchicalLookups");
+    const stored = readTenantItem("hierarchicalLookups");
     const hierarchicalLookups = stored ? JSON.parse(stored) : [];
     const fromHierarchy = hierarchicalLookups.find((item) => {
       const type = item.type || item.lookuptypeName || "";
@@ -405,7 +411,7 @@ const resolveWorkLocationProcessSalaryDeduction = (
 
 const readStoredHierarchicalLookups = () => {
   try {
-    const stored = localStorage.getItem("hierarchicalLookups");
+    const stored = readTenantItem("hierarchicalLookups");
     const parsed = stored ? JSON.parse(stored) : [];
     return Array.isArray(parsed) ? parsed : [];
   } catch {
@@ -479,8 +485,10 @@ const resolveWorkLocationIroName = (
 };
 
 /** Product ids used for conditional retired / student fields (policy service products). */
-const RETIRED_MEMBERSHIP_CATEGORY_ID = "68dae699c5b15073d66b892c";
-const STUDENT_MEMBERSHIP_CATEGORY_ID = "68dae699c5b15073d66b892d";
+// Phase A / A12: behaviour keys off the membership product's stable CODE (4080 Retired Associate,
+// 4090 Undergraduate Student) of the session tenant's MEM products - never a product id or label.
+const RETIRED_MEMBERSHIP_PRODUCT_CODE = RETIRED_ASSOCIATE_PRODUCT_CODE;
+const STUDENT_MEMBERSHIP_PRODUCT_CODE = UNDERGRADUATE_STUDENT_PRODUCT_CODE;
 
 function membershipCategoryCompareKey(s) {
   if (s == null || s === "") return "";
@@ -594,15 +602,15 @@ function membershipCategoryLabelToId(labelOrId, categoryData) {
   return str;
 }
 
-function membershipCategoryMatchesProductId(
+function membershipCategoryMatchesProductCode(
   storedValue,
-  productId,
+  productCode,
   categoryData,
 ) {
-  if (!storedValue || !productId) return false;
-  if (String(storedValue).trim() === productId) return true;
+  if (!storedValue || !productCode) return false;
+  if (!Array.isArray(categoryData) || categoryData.length === 0) return false;
   const id = membershipCategoryLabelToId(storedValue, categoryData);
-  return id === productId;
+  return optionHasProductCode(id, productCode, categoryData);
 }
 
 const prepareApplicationSubmitPayload = (infData, categoryData) => {
@@ -615,9 +623,9 @@ const prepareApplicationSubmitPayload = (infData, categoryData) => {
       membershipCategory: label !== "" ? label : raw,
     };
   }
-  const isUndergraduateStudent = membershipCategoryMatchesProductId(
+  const isUndergraduateStudent = membershipCategoryMatchesProductCode(
     infData?.subscriptionDetails?.membershipCategory,
-    STUDENT_MEMBERSHIP_CATEGORY_ID,
+    STUDENT_MEMBERSHIP_PRODUCT_CODE,
     categoryData,
   );
 
@@ -1525,7 +1533,7 @@ function ApplicationMgtDrawer({
   }, [dispatch]);
 
   useEffect(() => {
-    dispatch(getCategoryLookup("68dae613c5b15073d66b891f"));
+    dispatch(getCategoryLookup()); // MEM (by code) for the session tenant
   }, [dispatch]);
 
   useEffect(() => {
@@ -1886,9 +1894,9 @@ function ApplicationMgtDrawer({
     InfData.subscriptionDetails?.paymentType === SALARY_DEDUCTION_PAYMENT_TYPE;
   const isUndergraduateStudentCategory = useMemo(
     () =>
-      membershipCategoryMatchesProductId(
+      membershipCategoryMatchesProductCode(
         InfData?.subscriptionDetails?.membershipCategory,
-        STUDENT_MEMBERSHIP_CATEGORY_ID,
+        STUDENT_MEMBERSHIP_PRODUCT_CODE,
         categoryData,
       ),
     [InfData?.subscriptionDetails?.membershipCategory, categoryData],
@@ -2009,7 +2017,7 @@ function ApplicationMgtDrawer({
     selectedLookupIdOrLabel,
     processSalaryDeductionOverride,
   ) => {
-    const storedLookups = localStorage.getItem("hierarchicalLookups");
+    const storedLookups = readTenantItem("hierarchicalLookups");
     const hierarchicalLookups = storedLookups ? JSON.parse(storedLookups) : [];
     const labelKey = normalizeLookupMatchKey(selectedLookupIdOrLabel);
 
@@ -2099,9 +2107,9 @@ function ApplicationMgtDrawer({
   useEffect(() => {
     if (!application || !isEdit || lookupsloading) return;
 
-    const isUg = membershipCategoryMatchesProductId(
+    const isUg = membershipCategoryMatchesProductCode(
       InfData?.subscriptionDetails?.membershipCategory,
-      STUDENT_MEMBERSHIP_CATEGORY_ID,
+      STUDENT_MEMBERSHIP_PRODUCT_CODE,
       categoryData,
     );
 
@@ -2156,9 +2164,9 @@ function ApplicationMgtDrawer({
 
   useEffect(() => {
     if (
-      membershipCategoryMatchesProductId(
+      membershipCategoryMatchesProductCode(
         InfData?.subscriptionDetails?.membershipCategory,
-        STUDENT_MEMBERSHIP_CATEGORY_ID,
+        STUDENT_MEMBERSHIP_PRODUCT_CODE,
         categoryData,
       ) &&
       !hasWorkLocationSelection(InfData?.professionalDetails?.workLocation)
@@ -2188,9 +2196,9 @@ function ApplicationMgtDrawer({
   ]);
 
   const validateForm = () => {
-    const isUndergraduateStudent = membershipCategoryMatchesProductId(
+    const isUndergraduateStudent = membershipCategoryMatchesProductCode(
       InfData?.subscriptionDetails?.membershipCategory,
-      STUDENT_MEMBERSHIP_CATEGORY_ID,
+      STUDENT_MEMBERSHIP_PRODUCT_CODE,
       categoryData,
     );
     const isHonorary = isHonoraryMembershipCategory(
@@ -2455,9 +2463,9 @@ function ApplicationMgtDrawer({
     }
 
     if (
-      membershipCategoryMatchesProductId(
+      membershipCategoryMatchesProductCode(
         InfData?.subscriptionDetails?.membershipCategory,
-        RETIRED_MEMBERSHIP_CATEGORY_ID,
+        RETIRED_MEMBERSHIP_PRODUCT_CODE,
         categoryData,
       )
     ) {
@@ -2472,9 +2480,9 @@ function ApplicationMgtDrawer({
     }
 
     if (
-      membershipCategoryMatchesProductId(
+      membershipCategoryMatchesProductCode(
         InfData?.subscriptionDetails?.membershipCategory,
-        STUDENT_MEMBERSHIP_CATEGORY_ID,
+        STUDENT_MEMBERSHIP_PRODUCT_CODE,
         categoryData,
       )
     ) {
@@ -3228,9 +3236,6 @@ function ApplicationMgtDrawer({
     }
   };
 
-  const { hierarchicalData, hierarchicalDataLoading, hierarchicalDataError } =
-    useSelector((state) => state.hierarchicalDataByLocation);
-  console.log(hierarchicalData, "hierarchicalData");
 
   const handleInputChange = (section, field, value) => {
     if (section === "subscriptionDetails" && field === "sendGapLetter") {
@@ -3383,9 +3388,9 @@ function ApplicationMgtDrawer({
       });
 
       const resolvedLocation = locationLabel || value;
-      const isUg = membershipCategoryMatchesProductId(
+      const isUg = membershipCategoryMatchesProductCode(
         InfData?.subscriptionDetails?.membershipCategory,
-        STUDENT_MEMBERSHIP_CATEGORY_ID,
+        STUDENT_MEMBERSHIP_PRODUCT_CODE,
         categoryData,
       );
 
@@ -4860,9 +4865,9 @@ function ApplicationMgtDrawer({
                   hasError={!!errors?.membershipCategory}
                 />
               </AppFormCell>
-              {membershipCategoryMatchesProductId(
+              {membershipCategoryMatchesProductCode(
                 InfData.subscriptionDetails?.membershipCategory,
-                RETIRED_MEMBERSHIP_CATEGORY_ID,
+                RETIRED_MEMBERSHIP_PRODUCT_CODE,
                 categoryData,
               ) ? (
                 <>
@@ -4873,15 +4878,15 @@ function ApplicationMgtDrawer({
                       value={InfData?.professionalDetails?.retiredDate}
                       disabled={
                         isDisable ||
-                        !membershipCategoryMatchesProductId(
+                        !membershipCategoryMatchesProductCode(
                           InfData?.subscriptionDetails?.membershipCategory,
-                          RETIRED_MEMBERSHIP_CATEGORY_ID,
+                          RETIRED_MEMBERSHIP_PRODUCT_CODE,
                           categoryData,
                         )
                       }
-                      required={membershipCategoryMatchesProductId(
+                      required={membershipCategoryMatchesProductCode(
                         InfData?.subscriptionDetails?.membershipCategory,
-                        RETIRED_MEMBERSHIP_CATEGORY_ID,
+                        RETIRED_MEMBERSHIP_PRODUCT_CODE,
                         categoryData,
                       )}
                       onChange={(date, dateString) => {
@@ -4901,15 +4906,15 @@ function ApplicationMgtDrawer({
                       value={InfData.professionalDetails?.pensionNo}
                       disabled={
                         isDisable ||
-                        !membershipCategoryMatchesProductId(
+                        !membershipCategoryMatchesProductCode(
                           InfData?.subscriptionDetails?.membershipCategory,
-                          RETIRED_MEMBERSHIP_CATEGORY_ID,
+                          RETIRED_MEMBERSHIP_PRODUCT_CODE,
                           categoryData,
                         )
                       }
-                      required={membershipCategoryMatchesProductId(
+                      required={membershipCategoryMatchesProductCode(
                         InfData?.subscriptionDetails?.membershipCategory,
-                        RETIRED_MEMBERSHIP_CATEGORY_ID,
+                        RETIRED_MEMBERSHIP_PRODUCT_CODE,
                         categoryData,
                       )}
                       onChange={(e) =>

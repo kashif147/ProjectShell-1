@@ -27,7 +27,6 @@ import productTypesWithProductsReducer from "../features/ProducttypeWithProducts
 import lookupsWorkLocationReducer from "../features/LookupsWorkLocationSlice";
 import categoryLookupReducer from "../features/CategoryLookupSlice";
 import hierarchicalLookupsReducer from "../features/lookupHierarchySlice";
-import hierarchicalDataByLocationReducer from "../features/HierarchicalDataByLocationSlice";
 import countriesReducer from "../features/CountriesSlice"; // Countries slice
 import batchReducer from "../features/BatchesSlice";
 import bookmarkReducer from "../features/template/BookmarkActions";
@@ -83,7 +82,6 @@ const store = configureStore({
     applicationWithFilter: applicationWithFilterReducer,
     paymentFormsWithFilter: paymentFormsWithFilterReducer,
     applicationDetails: applicationDetailsReducer,
-    hierarchicalDataByLocation: hierarchicalDataByLocationReducer,
     tenants: tenantReducer,
     profileDetails: profileDetailsReducer,
     users: userReducer,

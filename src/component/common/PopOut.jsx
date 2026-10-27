@@ -10,8 +10,6 @@ import MyInput from "./MyInput";
 import HeaderDetails from "./HeaderDetails";
 import ContactDrawer from "./ContactDrawer";
 
-const IRO_ROLE_ID = "68c6b4d1e42306a6836622fa";
-
 function PopOut() {
   const dispatch = useDispatch();
   const location = useLocation();

@@ -8,6 +8,7 @@ import React, {
 import PolicyClient from "../utils/node-policy-client";
 import { usePolicyClient } from "../utils/react-policy-hooks";
 import { clearBrandingOnLogout } from "./TenantBrandingContext";
+import { clearTenantStorage } from "../utils/tenantStorage";
 
 const AuthorizationContext = createContext();
 
@@ -159,6 +160,8 @@ export const AuthorizationProvider = ({ children }) => {
     localStorage.removeItem("token_expiry");
     localStorage.removeItem("refresh_token");
     localStorage.removeItem("activeMenuModule");
+    // Phase A / A12: also on token expiry (both expiry checks below call clearAuth).
+    clearTenantStorage();
   };
 
   // Initialize auth state from localStorage on mount

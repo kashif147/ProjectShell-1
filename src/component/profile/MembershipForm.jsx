@@ -69,6 +69,7 @@ import timezone from "dayjs/plugin/timezone";
 import dayjs from "dayjs";
 import { useJsApiLoader, StandaloneSearchBox } from "@react-google-maps/api";
 import "../../styles/MembershipForm.css";
+import { readTenantItem } from "../../utils/tenantStorage";
 
 const GOOGLE_MAPS_LIBRARIES = ["places", "maps"];
 
@@ -209,7 +210,7 @@ const resolveWorkLocationProcessSalaryDeduction = (
     if (fromRawById) return !!fromRawById.processSalaryDeduction;
 
     try {
-      const stored = localStorage.getItem("hierarchicalLookups");
+      const stored = readTenantItem("hierarchicalLookups");
       const hierarchicalLookups = stored ? JSON.parse(stored) : [];
       const fromHierarchy = hierarchicalLookups.find(
         (item) =>
@@ -238,7 +239,7 @@ const resolveWorkLocationProcessSalaryDeduction = (
   if (fromRaw) return !!fromRaw.processSalaryDeduction;
 
   try {
-    const stored = localStorage.getItem("hierarchicalLookups");
+    const stored = readTenantItem("hierarchicalLookups");
     const hierarchicalLookups = stored ? JSON.parse(stored) : [];
     const fromHierarchy = hierarchicalLookups.find((item) => {
       const type = item.type || item.lookuptypeName || "";
@@ -257,7 +258,7 @@ const resolveWorkLocationProcessSalaryDeduction = (
 
 const readStoredHierarchicalLookups = () => {
   try {
-    const stored = localStorage.getItem("hierarchicalLookups");
+    const stored = readTenantItem("hierarchicalLookups");
     const parsed = stored ? JSON.parse(stored) : [];
     return Array.isArray(parsed) ? parsed : [];
   } catch {
@@ -379,7 +380,7 @@ function resolveBranchRegionFromWorkLocation(
   workLocationOptions,
 ) {
   try {
-    const storedLookups = localStorage.getItem("hierarchicalLookups");
+    const storedLookups = readTenantItem("hierarchicalLookups");
     const hierarchicalLookups = storedLookups ? JSON.parse(storedLookups) : [];
     const labelKey = normalizeLookupMatchKey(selectedLookupIdOrLabel);
 
@@ -913,7 +914,7 @@ const MembershipForm = ({
   };
 
   useEffect(() => {
-    dispatch(getCategoryLookup("68dae613c5b15073d66b891f"));
+    dispatch(getCategoryLookup()); // MEM (by code) for the session tenant
   }, []);
 
   // Subscription-service is the source of truth for membership movement (and other subscription fields).
@@ -1415,7 +1416,7 @@ const MembershipForm = ({
   /** Match ApplicationMgtDrawer: hierarchical rows have lookup / branch / region with lookupname. */
   const resolveWorkLocationFromHierarchy = (branchLabel, regionLabel) => {
     try {
-      const raw = localStorage.getItem("hierarchicalLookups");
+      const raw = readTenantItem("hierarchicalLookups");
       if (!raw) return null;
       const rows = JSON.parse(raw);
       if (!Array.isArray(rows) || rows.length === 0) return null;

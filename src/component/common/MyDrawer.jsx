@@ -137,7 +137,8 @@ function MyDrawer({
         cityCountyOrPostCode: "",
         eircode: "",
       },
-      contactTypeId: "68ea77798ff5d8c2b3f175c4",
+      // Phase A / A12: chosen from the tenant's contact types; the old default id exists in no data.
+      contactTypeId: "",
       isactive: true, // ✅ added based on API field
       isDeleted: false, // keep this if your app uses soft-delete flag
     },

@@ -3,6 +3,7 @@ import { useIdleTimer } from "react-idle-timer";
 import { ExclamationCircleOutlined } from "@ant-design/icons";
 import { Modal, Button, Typography } from "antd";
 import { redirectToMicrosoftLogout } from "../../utils/microsoftLogout";
+import { clearTenantStorage } from "../../utils/tenantStorage";
 
 const { Title, Text } = Typography;
 
@@ -24,6 +25,7 @@ const IdleModal = () => {
     localStorage.removeItem("refresh_token");
     localStorage.removeItem("userdata");
     localStorage.removeItem("activeMenuModule");
+    clearTenantStorage(); // Phase A / A12: tenant-keyed metadata + legacy global keys
     redirectToMicrosoftLogout();
   };
 

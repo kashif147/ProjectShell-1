@@ -7,11 +7,13 @@ import { baseURL } from "../utils/Utilities";
 // Fetch all partners
 export const getPartners = createAsyncThunk(
   "partner/getPartners",
-  async (_, { rejectWithValue }) => {
+  async (profileId, { rejectWithValue }) => {
+    // Phase A / A12: no hardcoded profile id - nothing to fetch without the caller's profile.
+    if (!profileId) return [];
     try {
       const token = localStorage.getItem("token");
       const response = await axios.get(
-       ` ${baseURL}/partner/profile/67a1b268a203d65ec4a553e2`,
+       `${baseURL}/partner/profile/${encodeURIComponent(profileId)}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,

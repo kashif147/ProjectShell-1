@@ -11,6 +11,7 @@ import { ConfigProvider, theme as antdTheme } from "antd";
 import { useSelector, useDispatch } from "react-redux";
 import { getAllLookups } from "./features/LookupsSlice";
 import { getHierarchicalLookups } from "./features/GetLocationWithHierarky";
+import { purgeForeignTenantStorage, sessionTenantId } from "./utils/tenantStorage";
 import "antd/dist/reset.css";
 import { NotificationProvider } from "./context/NotificationContext";
 import { ProfileRealtimeProvider } from "./context/ProfileRealtimeContext";
@@ -102,7 +103,10 @@ function BrandedAntTheme({ children }) {
 function App() {
   const dispatch = useDispatch();
   const [api, contextHolder] = notification.useNotification();
-  const bootstrapRef = useRef({ lookups: false, hierarchical: false });
+  const bootstrapRef = useRef({ lookups: false, hierarchical: false, tenantId: null });
+  // Phase A / A12: the signed-in session's tenant (token claim). Tenant-keyed metadata is reloaded
+  // when it changes, and other tenants' cached entries are dropped.
+  const sessionTenant = sessionTenantId();
 
   const {
     hierarchicalLookups,
@@ -121,9 +125,13 @@ function App() {
 
   useEffect(() => {
     const token = localStorage.getItem("token");
-    if (!token) {
-      bootstrapRef.current = { lookups: false, hierarchical: false };
+    if (!token || !sessionTenant) {
+      bootstrapRef.current = { lookups: false, hierarchical: false, tenantId: null };
       return;
+    }
+    if (bootstrapRef.current.tenantId !== sessionTenant) {
+      purgeForeignTenantStorage(sessionTenant);
+      bootstrapRef.current = { lookups: false, hierarchical: false, tenantId: sessionTenant };
     }
 
     if (
@@ -137,7 +145,6 @@ function App() {
 
     if (
       !hierarchicalLookupsLoading &&
-      (!hierarchicalLookups || hierarchicalLookups.length === 0) &&
       !bootstrapRef.current.hierarchical
     ) {
       bootstrapRef.current.hierarchical = true;
@@ -149,6 +156,7 @@ function App() {
     lookups,
     hierarchicalLookupsLoading,
     hierarchicalLookups,
+    sessionTenant,
   ]);
   useEffect(() => {
     const loadWorklet = async () => {

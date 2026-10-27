@@ -7,6 +7,8 @@ import { useMsal } from "@azure/msal-react";
 import { InteractionStatus } from "@azure/msal-browser";
 import { useDispatch, useSelector } from "react-redux";
 import { loginUser } from "../../features/AuthSlice";
+import { getHierarchicalLookups } from "../../features/GetLocationWithHierarky";
+import { purgeForeignTenantStorage } from "../../utils/tenantStorage";
 import { updateMenuLbl } from "../../features/MenuLblSlice";
 import {
   getHomeMenuKeyFromRoles,
@@ -336,6 +338,10 @@ const Login = () => {
           return;
         }
         localStorage.setItem("token", token1);
+        // Phase A / A12: a new session never sees another tenant's cached metadata - drop the legacy
+        // global keys and other tenants' entries, then load this tenant's work-location hierarchy.
+        purgeForeignTenantStorage();
+        dispatch(getHierarchicalLookups());
         // Remembered sign-in organisation: ONLY the display context of the authenticated session's
         // organisation returned by the verified callback (no tenant:read needed). Without it, any
         // previously remembered organisation is dropped, so a stale or code-only entry never survives

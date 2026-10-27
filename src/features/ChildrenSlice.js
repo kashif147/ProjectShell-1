@@ -7,12 +7,13 @@ import { baseURL } from "../utils/Utilities";
 // Fetch all children
 export const getChildren = createAsyncThunk(
   "children/getChildren",
-  async (_, { rejectWithValue }) => {
+  async (profileId, { rejectWithValue }) => {
+    // Phase A / A12: no hardcoded profile id - nothing to fetch without the caller's profile.
+    if (!profileId) return [];
     try {
       const token = localStorage.getItem("token");
       const response = await axios.get(
-        `${baseURL}/children/profile/67a1b268a203d65ec4a553e2`, // Update this endpoint as needed
-        // `http://localhost:3500/children/profile/67a1b268a203d65ec4a553e2`, // Update this endpoint as needed
+        `${baseURL}/children/profile/${encodeURIComponent(profileId)}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,

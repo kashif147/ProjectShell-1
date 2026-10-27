@@ -357,9 +357,8 @@ const CommunicationBatchDetail = () => {
       title: notificationTitle,
       body: notificationMessage,
       userId: selectedRows.map((row) => row.userId),
-      tenantId: selectedRows.map(
-        (row) => row.tenantId || "68cbf7806080b4621d469d34",
-      ),
+      // Phase A / A12: no tenantId in the body - notification-service takes the tenant from the
+      // caller's verified token (the old per-row MULTIAUTH fallback is removed).
     };
 
     dispatch(sendNotification(payload));

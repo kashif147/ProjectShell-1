@@ -10,7 +10,7 @@ import {
 import { useLocation } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
 import { getAllLookups } from "../features/LookupsSlice";
-import { getCategoryLookup } from "../features/CategoryLookupSlice";
+import { categoryCacheKey, getCategoryLookup } from "../features/CategoryLookupSlice";
 import { getWorkLocationHierarchy } from "../features/LookupsWorkLocationSlice";
 import { resetInitialization } from "../features/applicationwithfilterslice";
 import { markScreenChanged } from "../features/views/ScreenFilterChangSlice";
@@ -32,6 +32,7 @@ import {
 } from "../utils/gridFilterOptionsRegistry";
 import { getDefaultReportingPeriodValues } from "../utils/creditorsListReportWorkspace";
 import { getDefaultReportingPeriodValues as getDebtorsDefaultReportingPeriodValues } from "../utils/debtorsListReportWorkspace";
+import { readTenantItem } from "../utils/tenantStorage";
 
 const FilterContext = createContext();
 
@@ -117,7 +118,8 @@ export const FilterProvider = ({ children }) => {
     (state) => state.categoryLookup,
   );
 
-  const MEMBERSHIP_CATEGORY_LOOKUP_ID = "68dae613c5b15073d66b891f";
+  // Phase A / A12: membership categories = products of product type MEM (by code, this tenant).
+  const membershipCategoryCacheKey = categoryCacheKey();
 
   // 🔹 Issue Management lookups (Issue Type/Priority/Case Status filter chips on the Issues/
   // IssuesDashboard screens) - see hooks/useIssueLookups.js. Fetched app-wide on mount, same
@@ -149,7 +151,7 @@ export const FilterProvider = ({ children }) => {
   // 🔹 Load hierarchy data from localStorage on mount
   useEffect(() => {
     try {
-      const stored = localStorage.getItem("hierarchicalLookups");
+      const stored = readTenantItem("hierarchicalLookups");
       if (stored) {
         const parsed = JSON.parse(stored);
         if (Array.isArray(parsed)) {
@@ -402,12 +404,12 @@ export const FilterProvider = ({ children }) => {
     }
     if (
       !categoryLoading &&
-      (currentCategoryId !== MEMBERSHIP_CATEGORY_LOOKUP_ID ||
+      (currentCategoryId !== membershipCategoryCacheKey ||
         !categoryData?.length) &&
       !categoryFetchAttemptedRef.current
     ) {
       categoryFetchAttemptedRef.current = true;
-      dispatch(getCategoryLookup(MEMBERSHIP_CATEGORY_LOOKUP_ID));
+      dispatch(getCategoryLookup());
     }
   }, [
     dispatch,

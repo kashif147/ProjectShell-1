@@ -26,6 +26,7 @@ import { clearAuth } from "../../features/AuthSlice";
 import "../../styles/AppLauncher.css";
 import axios from "axios";
 import { redirectToMicrosoftLogout } from "../../utils/microsoftLogout";
+import { clearTenantStorage } from "../../utils/tenantStorage";
 import MemberSearch from "../profile/MemberSearch";
 import { useNotifications } from "../../context/NotificationContext";
 import { useTenantBranding } from "../../context/TenantBrandingContext";
@@ -287,6 +288,7 @@ function Header() {
     localStorage.removeItem("refresh_token");
     localStorage.removeItem("userdata");
     localStorage.removeItem("activeMenuModule");
+    clearTenantStorage(); // Phase A / A12: tenant-keyed metadata + legacy global keys
 
     // Redirect to Microsoft's own logout endpoint, not just navigate("/") - clearing our
     // own localStorage doesn't end Microsoft's session cookie, so a plain in-app navigate

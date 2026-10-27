@@ -6864,19 +6864,17 @@ export const TableColumnsProvider = ({ children }) => {
   useEffect(() => {
     if (!Array.isArray(regions)) return;
 
+    // Phase A / A12: the legacy region-type ids that used to be filtered on here match no lookup
+    // type in DEV/UAT (and the "lookuptypeId?._id" key never matched a field), so these lists were
+    // always empty. They stay empty - no replacement ids are invented.
     setRegionLookups((prevState) => ({
       ...prevState,
-      Provinces: filterRegions("lookuptypeId?._id", "67f5945517f0ecf3dbf79db4"),
-      county: filterRegions(
-        "lookuptypeId?._id",
-        "67f5971f17f0ecf3dbf79df6",
-        "ParentRegion",
-        "",
-      ),
-      Divisions: filterRegions("lookuptypeId?._id", "67f5990b17f0ecf3dbf79e35"),
-      Districts: filterRegions("lookuptypeId?._id", "67f626ed17f0ecf3dbf79ed1"),
-      Cities: filterRegions("lookuptypeId?._id", "67f6282f17f0ecf3dbf79ef8"),
-      Stations: filterRegions("lookuptypeId?._id", "67f6297617f0ecf3dbf79f12"),
+      Provinces: [],
+      county: [],
+      Divisions: [],
+      Districts: [],
+      Cities: [],
+      Stations: [],
     }));
   }, [regions, filterRegions]);
 
@@ -6894,18 +6892,22 @@ export const TableColumnsProvider = ({ children }) => {
   // General lookups processing
   useEffect(() => {
     if (lookups && Array.isArray(lookups)) {
-      const lookupTypes = {
-        gender: "68c85f21302e5600dc8477da",
-        Duties: "68c85f22302e5600dc847805",
-        MaritalStatus: "68c85f21302e5600dc8477e1",
-        Titles: "68c85f21302e5600dc8477d6",
-        Ranks: "68c85f22302e5600dc847809",
+      // Phase A / A12: lookup types by stable code (002 Gender, 016 Duties, 001 Title), not ids.
+      // MaritalStatus and Ranks referenced ids that exist in no DEV/UAT data; they stay empty
+      // until the lookup work maps them (no code is invented here).
+      const lookupTypeCodes = {
+        gender: "002",
+        Duties: "016",
+        MaritalStatus: null,
+        Titles: "001",
+        Ranks: null,
       };
 
-      const updatedLookups = Object.keys(lookupTypes).reduce((acc, key) => {
-        acc[key] = lookups.filter(
-          (item) => item?.lookuptypeId?._id === lookupTypes[key],
-        );
+      const updatedLookups = Object.keys(lookupTypeCodes).reduce((acc, key) => {
+        const code = lookupTypeCodes[key];
+        acc[key] = code
+          ? lookups.filter((item) => item?.lookuptypeId?.code === code)
+          : [];
         return acc;
       }, {});
 
