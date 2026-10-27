@@ -14,7 +14,8 @@ const module_ = stripComments(read("lua/trusted_headers.lua"), "--");
 const conf = stripComments(read("sites-enabled/default.conf"), "#");
 
 const REQUIRED = ["x-tenant-id", "x-jwt-verified", "x-auth-source", "x-user-id", "x-user-roles", "x-internal-request"];
-const listed = [...module_.matchAll(/"(x-[a-z-]+)"/g)].map((m) => m[1]);
+const headersBlock = module_.slice(module_.indexOf("M.HEADERS"), module_.indexOf("}", module_.indexOf("M.HEADERS")));
+const listed = [...headersBlock.matchAll(/"(x-[a-z-]+)"/g)].map((m) => m[1]);
 
 /** Location blocks of the TLS server, with their bodies (brace-matched). */
 function locations() {
@@ -36,6 +37,17 @@ test("the shared list holds every trusted header (incl. the six required) exactl
   assert.equal(new Set(listed).size, listed.length);
   assert.deepEqual([...listed].sort(), ["x-auth-source", "x-gateway-signature", "x-gateway-timestamp", "x-internal-request", "x-jwt-verified", "x-service-caller", "x-service-secret", "x-tenant-id", "x-token-expires-at", "x-user-email", "x-user-id", "x-user-permissions", "x-user-roles", "x-user-type"]);
   assert.doesNotMatch(module_, /x-correlation-id|authorization|x-real-ip/i); // functional headers untouched
+});
+
+test("Phase B Z1: every x-platform-* header is stripped by prefix, case-insensitively, over ALL request headers", () => {
+  assert.match(module_, /M\.PREFIXES = \{ "x-platform-" \}/);
+  const clear = module_.slice(module_.indexOf("function M.clear()"));
+  assert.match(clear, /ngx\.req\.get_headers\(0\)/); // 0 = no header-count limit to hide behind
+  assert.match(clear, /local lower = name:lower\(\)/);
+  assert.match(clear, /lower:sub\(1, #prefix\) == prefix/);
+  assert.match(clear, /ngx\.req\.clear_header\(name\)/);
+  // the fixed list is still cleared first, unchanged
+  assert.ok(clear.indexOf("M.HEADERS") < clear.indexOf("M.PREFIXES"));
 });
 
 test("there is ONE list: verify_jwt.lua and default.conf use the module, no hand-copied lists remain", () => {

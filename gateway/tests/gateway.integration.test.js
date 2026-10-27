@@ -257,6 +257,27 @@ test.describe("gateway (real OpenResty, tracked config)", { skip: !RUN && "set G
   });
 
   // ---------------------------------------------------------------- logout (21-24)
+  test("Phase B Z1: client x-platform-* headers never reach an upstream (any case, any suffix, after many headers); x-correlation-id kept", async () => {
+    const PLATFORM = { "x-platform-principal": "6a0000000000000000000a01", "X-Platform-Permissions": '["platform:tenant:create"]', "X-PLATFORM-TARGET-TENANT": TENANT_B, "x-Platform-Auth": "true" };
+    const filler = Object.fromEntries(Array.from({ length: 150 }, (_, i) => [`x-filler-${i}`, "1"]));
+    const cases = [
+      ["GET", "/user-service/api/roles", { ...SPOOF, ...PLATFORM, ...bearer(hs256(claims({ plat: { v: 1, pid: "6a0000000000000000000a01", rev: 1 } }))) }],
+      // Authorization first: verify_jwt.lua reads the default first 100 headers (beyond that it fails closed, 401).
+      ["GET", "/user-service/api/roles", { ...bearer(hs256(claims())), ...filler, ...PLATFORM }],
+      ["POST", "/user-service/auth/azure-crm", { ...SPOOF, ...PLATFORM, "content-type": "application/json" }, "{}"],
+      ["GET", "/user-service/pkce/generate?tenant=MULTIAUTH", { ...filler, ...PLATFORM }],
+    ];
+    for (const [m, p, h, body] of cases) {
+      const { res, up } = await through(m, p, h, body);
+      assert.ok(up, `${p} reached upstream (gateway status ${res.status}, filler=${"x-filler-0" in h}, jwt=${!!h.authorization})`);
+      const left = Object.keys(up.headers).filter((k) => k.toLowerCase().startsWith("x-platform-"));
+      assert.deepEqual(left, [], `${p}: x-platform-* must not reach the upstream`);
+      assert.ok(up.headers["x-correlation-id"], `${p}: x-correlation-id kept`);
+      if (!h.authorization) assertNoTrusted(up, p); // JWT locations: verify_jwt.lua sets the verified values
+      else assert.equal(up.headers["x-tenant-id"], TENANT_A, `${p}: tenant from the verified token only`);
+    }
+  });
+
   test("21 logout with no token -> 401, user-service never called", async () => {
     const { res, count } = await through("POST", "/user-service/auth/logout", { "content-type": "application/json" }, "{}");
     assert.equal(res.status, 401);

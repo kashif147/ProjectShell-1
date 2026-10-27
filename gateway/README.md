@@ -28,6 +28,9 @@ Changes are deployed to DEV by copying these files and reloading the gateway (`o
   server-level block in `default.conf` for public locations, and by `verify_jwt.lua` (which then sets
   the verified values) for JWT-protected ones. `Authorization`, `x-correlation-id` and the
   gateway-set `X-Real-IP` are not stripped.
+- **Every client-supplied `x-platform-*` header is stripped** (Phase B Z1; same `clear()`, by prefix,
+  case-insensitive, over all request headers). Platform authority comes only from the `plat` claim inside
+  a ProjectShell JWT signed by user-service, never from a header, body or query value.
 - `/user-service/auth/` and `/user-service/pkce/` stay public (sign-in callbacks, refresh, login
   start), except **`/user-service/auth/logout`, which requires a verified ProjectShell JWT** (exact
   location).
