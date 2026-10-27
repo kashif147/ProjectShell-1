@@ -278,6 +278,24 @@ test.describe("gateway (real OpenResty, tracked config)", { skip: !RUN && "set G
     }
   });
 
+  test("Phase B Z2: the ProjectShell Bearer reaches user-service /api/ unchanged (platform checks re-verify it there); x-platform-* never does", async () => {
+    const token = hs256(claims({ plat: { v: 1, pid: "6a0000000000000000000a01", rev: 1 } }));
+    const PLATFORM = { "x-platform-principal": "6a0000000000000000000a01", "X-PLATFORM-PERMISSIONS": '["platform:tenant:create"]', "X-Platform-Rev": "1", "x-PLATFORM-target-tenant": TENANT_B };
+    for (const p of ["/user-service/api/platform/authz-probe/platform:tenant:read:any", "/user-service/api/tenants", "/user-service/api/cache/stats"]) {
+      const { res, up } = await through("GET", p, { ...SPOOF, ...PLATFORM, ...bearer(token) });
+      assert.equal(res.status, 200, p);
+      assert.equal(up.port, 5001, p);
+      assert.equal(up.headers.authorization, `Bearer ${token}`, `${p}: Authorization forwarded byte-for-byte`);
+      assert.deepEqual(Object.keys(up.headers).filter((k) => k.toLowerCase().startsWith("x-platform-")), [], p);
+      // existing trusted-header behaviour unchanged: identity only from the verified token
+      assert.equal(up.headers["x-tenant-id"], TENANT_A, p);
+      assert.equal(up.headers["x-user-id"], USER_A, p);
+      assert.equal(up.headers["x-jwt-verified"], "true", p);
+      assert.equal(up.headers["x-internal-request"], undefined, p);
+      assert.equal(up.headers["x-user-roles"], JSON.stringify(["REO"]), p);
+    }
+  });
+
   test("21 logout with no token -> 401, user-service never called", async () => {
     const { res, count } = await through("POST", "/user-service/auth/logout", { "content-type": "application/json" }, "{}");
     assert.equal(res.status, 401);
