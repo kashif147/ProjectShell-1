@@ -21,6 +21,7 @@ import MyAlert from "../../component/common/MyAlert";
 import { notifyBrandingRefresh } from "../../context/TenantBrandingContext";
 import { completeEntraConnect } from "../../services/tenantAuthConnectionsApi";
 import { takeConnectReturn } from "../../utils/entraConnectReturn";
+import { rememberMicrosoftLogoutHint } from "../../utils/microsoftLogout";
 import {
   forgetRememberedOrganisation,
   getRememberedOrganisation,
@@ -347,6 +348,8 @@ const Login = () => {
         // previously remembered organisation is dropped, so a stale or code-only entry never survives
         // a successful sign-in.
         if (data.organisation) rememberOrganisation(data.organisation);
+        // Lets logout skip Microsoft's account picker (utils/microsoftLogout.js).
+        rememberMicrosoftLogoutHint(data.logoutHint);
         const rememberedNow = getRememberedOrganisation();
         if (!rememberedNow || rememberedNow.code !== String(data.organisation?.code ?? "").trim()) {
           forgetRememberedOrganisation();

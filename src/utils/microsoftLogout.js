@@ -11,17 +11,59 @@
  * before calling this - it only handles the cross-domain redirect, and navigates away from
  * the SPA entirely, so nothing after this call runs.
  */
+const LOGOUT_HINT_KEY = "msLogoutHint";
+
+function storage() {
+  try {
+    return window.localStorage;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Called on a successful CRM sign-in with the callback's `logoutHint` (the ID token's opaque
+ * `login_hint` claim - not a credential). Sent back on logout as Microsoft's `logout_hint` so
+ * the user goes straight back to the app instead of the "pick an account to sign out" screen.
+ * A sign-in without one drops any hint left over from an earlier session.
+ */
+export function rememberMicrosoftLogoutHint(hint) {
+  const s = storage();
+  if (!s) return;
+  try {
+    if (typeof hint === "string" && hint) s.setItem(LOGOUT_HINT_KEY, hint);
+    else s.removeItem(LOGOUT_HINT_KEY);
+  } catch {
+    // Storage unavailable: logout still works, just with Microsoft's account picker.
+  }
+}
+
+/** Reads and removes the stored hint - each one is used for a single logout. */
+function takeMicrosoftLogoutHint() {
+  const s = storage();
+  if (!s) return null;
+  try {
+    const hint = s.getItem(LOGOUT_HINT_KEY);
+    s.removeItem(LOGOUT_HINT_KEY);
+    return hint || null;
+  } catch {
+    return null;
+  }
+}
+
 export async function redirectToMicrosoftLogout() {
   const fallback = () => {
     window.location.href = "/";
   };
+  const logoutHint = takeMicrosoftLogoutHint();
 
   try {
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 4000);
 
+    const query = logoutHint ? `?logoutHint=${encodeURIComponent(logoutHint)}` : "";
     const response = await fetch(
-      `${process.env.REACT_APP_BASE_URL_DEV}/pkce/logout-urls`,
+      `${process.env.REACT_APP_BASE_URL_DEV}/pkce/logout-urls${query}`,
       { signal: controller.signal },
     );
     clearTimeout(timeoutId);
