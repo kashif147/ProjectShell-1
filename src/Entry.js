@@ -1022,7 +1022,7 @@ function Entry() {
                                   "subscriptions:write",
                                   "payments:write",
                                 ]}
-                                requiredRoles={["SU"]}
+                                requiredRoles={["ASU"]}
                                 requireAnyAccess
                               >
                                 <YearEndRenewal />

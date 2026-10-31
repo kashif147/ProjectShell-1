@@ -116,7 +116,7 @@ const AppLauncherMenu = ({ closeDropdown }) => {
       icon: FaCalendarCheck,
       bgColor: "#2E7D32",
       permissions: ["subscriptions:write", "payments:write"],
-      roles: ["SU"],
+      roles: ["ASU"], // Phase B / Z9: tenant administrator (SU retired)
       route: "/YearEndRenewal",
     },
   ];

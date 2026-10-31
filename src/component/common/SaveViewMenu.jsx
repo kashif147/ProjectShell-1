@@ -91,7 +91,7 @@ const SaveViewMenu = ({ className, style }) => {
   const dispatch = useDispatch();
   const location = useLocation();
   const { hasAnyRole } = useAuthorization();
-  const canEditGridTemplates = hasAnyRole(["SU", "ASU"]);
+  const canEditGridTemplates = hasAnyRole(["ASU"]) /* Phase B / Z9: tenant administrator (SU retired) */;
   const { templates, loading, templatesFetching } = useSelector(
     (state) => state.templateFiltersColumnApi,
   );

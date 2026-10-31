@@ -63,7 +63,7 @@ export function getRoleCodesFromStorage() {
  * @returns {string}
  */
 export function getHomeMenuKeyFromRoles(roleCodes = []) {
-  if (roleCodes.includes("SU") || roleCodes.includes("ASU")) {
+  if (roleCodes.includes("ASU")) { // Phase B / Z9: SU retired
     return "Configuration";
   }
   if (roleCodes.includes("GS") || roleCodes.includes("DGS")) {
