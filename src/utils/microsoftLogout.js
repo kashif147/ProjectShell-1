@@ -23,9 +23,11 @@ function storage() {
 
 /**
  * Called on a successful CRM sign-in with the callback's `logoutHint` (the ID token's opaque
- * `login_hint` claim - not a credential). Sent back on logout as Microsoft's `logout_hint` so
- * the user goes straight back to the app instead of the "pick an account to sign out" screen.
- * A sign-in without one drops any hint left over from an earlier session.
+ * `login_hint` claim - not a credential). On logout it is appended as Microsoft's `logout_hint`
+ * to the Entra logout URL, in the browser only, so the user goes straight back to the app instead
+ * of the "pick an account to sign out" screen. It is never sent to ProjectShell (gateway access
+ * logs record full request URLs). A sign-in without one drops any hint left over from an earlier
+ * session.
  */
 export function rememberMicrosoftLogoutHint(hint) {
   const s = storage();
@@ -36,6 +38,27 @@ export function rememberMicrosoftLogoutHint(hint) {
   } catch {
     // Storage unavailable: logout still works, just with Microsoft's account picker.
   }
+}
+
+// Same bound as user-service applied when it issued the hint: storage is not trusted, so anything
+// else is discarded and logout proceeds without a hint (Microsoft shows its account picker).
+const LOGOUT_HINT_PATTERN = /^[A-Za-z0-9._~+\/=-]{1,2048}$/;
+const ENTRA_LOGOUT_HOST = "login.microsoftonline.com";
+
+/**
+ * Appends `logout_hint` to the Microsoft Entra logout URL only (https, login.microsoftonline.com);
+ * any other URL, or an invalid hint, is returned unchanged.
+ */
+export function withLogoutHint(logoutUrl, hint) {
+  if (typeof hint !== "string" || !LOGOUT_HINT_PATTERN.test(hint)) return logoutUrl;
+  let url;
+  try {
+    url = new URL(logoutUrl);
+  } catch {
+    return logoutUrl;
+  }
+  if (url.protocol !== "https:" || url.hostname !== ENTRA_LOGOUT_HOST) return logoutUrl;
+  return `${logoutUrl}${url.search ? "&" : "?"}logout_hint=${encodeURIComponent(hint)}`;
 }
 
 /** Reads and removes the stored hint - each one is used for a single logout. */
@@ -61,9 +84,8 @@ export async function redirectToMicrosoftLogout() {
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 4000);
 
-    const query = logoutHint ? `?logoutHint=${encodeURIComponent(logoutHint)}` : "";
     const response = await fetch(
-      `${process.env.REACT_APP_BASE_URL_DEV}/pkce/logout-urls${query}`,
+      `${process.env.REACT_APP_BASE_URL_DEV}/pkce/logout-urls`,
       { signal: controller.signal },
     );
     clearTimeout(timeoutId);
@@ -81,7 +103,7 @@ export async function redirectToMicrosoftLogout() {
       return;
     }
 
-    window.location.href = data.azureADLogoutUrl;
+    window.location.href = withLogoutHint(data.azureADLogoutUrl, logoutHint);
   } catch (error) {
     console.warn("Microsoft logout redirect failed, falling back to /:", error);
     fallback();
