@@ -1,8 +1,8 @@
 // System Roles Constants
 export const ROLES = {
   // System Roles
+  // Phase B / Z9: the legacy tenant SU is retired - ASU is the highest tenant role (a tenant CRM role).
   SYSTEM: {
-    SUPER_USER: "SU",
     AI_AGENT: "AI",
   },
 
@@ -51,45 +51,6 @@ export const ROLES = {
 };
 
 export const SAMPLE_ROLES = [
-  {
-    id: "SU",
-    code: "SU",
-    name: "Super User",
-    description: "Full system access with all administrative permissions",
-    tenantId: "tenant1",
-    tenantName: "Main Organization",
-    category: "SYSTEM",
-    permissions: [
-      "read:all",
-      "user:read",
-      "user:write",
-      "user:delete",
-      "user:create",
-      "user:update",
-      "user:list",
-      "user:manage_roles",
-      "role:read",
-      "role:write",
-      "role:delete",
-      "role:create",
-      "role:update",
-      "role:list",
-      "role:assign",
-      "role:remove",
-      "account:read",
-      "account:write",
-      "account:delete",
-      "account:payment",
-      "portal:access",
-      "crm:access",
-      "audit:read",
-      "audit:write",
-      "audit:delete",
-    ],
-    status: "active",
-    createdAt: "2024-01-15T10:00:00Z",
-    updatedAt: "2024-01-15T10:00:00Z",
-  },
   {
     id: "AI",
     code: "AI",
@@ -505,7 +466,7 @@ export const getTenantsList = () => {
 
 export const getRolesByCategory = () => {
   return {
-    SYSTEM: SAMPLE_ROLES.filter((role) => role.id === "SU" || role.id === "AI"),
+    SYSTEM: SAMPLE_ROLES.filter((role) => role.id === "AI"),
     PORTAL: SAMPLE_ROLES.filter(
       (role) => role.id === "MEMBER" || role.id === "NON-MEMBER"
     ),

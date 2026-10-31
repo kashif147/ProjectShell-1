@@ -257,7 +257,7 @@ const Toolbar = () => {
   const { columns, applyTemplate } = useTableColumns();
   const { templates } = useSelector((state) => state.templateFiltersColumnApi);
   const { hasAnyRole } = useAuthorization();
-  const canEditGridTemplates = hasAnyRole(["SU", "ASU"]);
+  const canEditGridTemplates = hasAnyRole(["ASU"]) /* Phase B / Z9: tenant administrator (SU retired) */;
   const { currentTemplateId } = useSelector(
     (state) => state.applicationWithFilter,
   );

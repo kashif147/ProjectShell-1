@@ -207,7 +207,7 @@ export const financeItems = [
   //   <FaCashRegister />,
   //   "DD Batches",
   //   ["USER_READ", "USER_WRITE"],
-  //   ["AM", "DAM", "GS", "DGS", "ASU", "SU"]
+  //   ["AM", "DAM", "GS", "DGS", "ASU"]
   // ),
 ];
 
@@ -298,7 +298,7 @@ export const subscriptionItems = [
   //   <FaBuilding />,
   //   "CornMarket",
   //   ["menu:correspondence:access"],
-  //   ["MO", "AMO", "GS", "DGS", "IRO", "SU"]
+  //   ["MO", "AMO", "GS", "DGS", "IRO", "ASU"]
   // ),
 
   createMenuItem(
@@ -327,7 +327,7 @@ export const yearEndRenewalItems = [
     <FaCalendarCheck />,
     "Year-End Renewal",
     ["subscriptions:write", "payments:write"],
-    ["SU"]
+    ["ASU"] // Phase B / Z9: tenant administrator (SU retired)
   ),
 ];
 

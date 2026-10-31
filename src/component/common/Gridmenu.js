@@ -112,7 +112,7 @@ function Gridmenu({
     normalizedGridPath === "/industrialrelations" ||
     normalizedGridPath === "/dataprotection";
   const { hasAnyRole } = useAuthorization();
-  const canEditGridTemplates = hasAnyRole(["SU", "ASU"]);
+  const canEditGridTemplates = hasAnyRole(["ASU"]) /* Phase B / Z9: tenant administrator (SU retired) */;
   const screenChanges = useSelector(
     (state) => state.screenFilter?.screenFilterChanged || {},
   );
