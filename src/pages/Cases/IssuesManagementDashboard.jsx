@@ -1013,7 +1013,7 @@ function IssuesManagementDashboard() {
               dataSource={resolvedBreakdown.userRows}
               locale={{ emptyText: "No closed issues match the current filters" }}
               columns={[
-                { title: "USER ID", dataIndex: "label", ellipsis: true },
+                { title: "USER", dataIndex: "label", ellipsis: true },
                 { title: "CLOSED ISSUES", dataIndex: "count", width: 130, align: "right" },
               ]}
             />

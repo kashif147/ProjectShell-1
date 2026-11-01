@@ -124,6 +124,16 @@ test("no duplicates when a stored view already lists the new columns", () => {
   expect(keys.filter((k) => k === "createdBy")).toHaveLength(1);
 });
 
+test("built-in fallback keeps the built-in titles (Open Issues: blank view, no issuessummary system default)", () => {
+  apply(fixtures().blankSummaryView);
+  const titles = Object.fromEntries(shown().map((c) => [key(c), c.title]));
+  expect(titles).toMatchObject({
+    caseTitle: "Issue", memberIds: "Member Name", nmbiReference: "NMBI Reference No",
+    criteriaLetterStatus: "Criteria Letter", issueStatus: "Case Status",
+    ownerName: "Owner", ownerTeam: "Team", createdBy: "Created By",
+  }); // before the fix: key-derived "Member Ids", "Nmbi Reference", "Issue Status", ...
+});
+
 test("system-default fallback: an empty user view falls back to the system default's columns", () => {
   const f = fixtures();
   apply(f.blankSummaryView, f.complaintsSystemDefault);
