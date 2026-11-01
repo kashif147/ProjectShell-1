@@ -42,14 +42,18 @@ export function withIssueDisplayColumns(columns = []) {
   return out;
 }
 
-const withCanonicalTitles = (labels) => ({ ...(labels && typeof labels === "object" ? labels : {}), ...ISSUE_CANONICAL_TITLES });
+const asLabels = (labels) => (labels && typeof labels === "object" ? labels : {});
+
+/** Built-in titles first (a blank view stores no labels), then the stored labels, then the canonical ones. */
+const withCanonicalTitles = (labels, fallbackLabels) => ({ ...asLabels(fallbackLabels), ...asLabels(labels), ...ISSUE_CANONICAL_TITLES });
 
 /**
  * Inputs for applyTemplate("Issues", ...) reshaped for read:
  *  - an empty stored column list falls back to the system default's columns, then to the built-in
  *    default column set (never "hide everything");
  *  - the new Owner / Created By columns are added to older lists (no duplicates);
- *  - ownerName / ownerTeam / createdBy always carry their canonical titles (Owner / Team / Created By).
+ *  - ownerName / ownerTeam / createdBy always carry their canonical titles (Owner / Team / Created By);
+ *  - columns without a stored label keep the built-in title (fallbackColumnLabels), not a key-derived one.
  * Returns new arrays/objects; the arguments are left untouched.
  */
 export function normalizeIssueTemplateForRead({
@@ -58,6 +62,7 @@ export function normalizeIssueTemplateForRead({
   templateColumnLabels,
   masterColumnLabels,
   fallbackColumns = [],
+  fallbackColumnLabels = {},
 } = {}) {
   const stored = (Array.isArray(templateColumns) ? templateColumns : []).map(keyOf).filter(Boolean);
   const master = (Array.isArray(masterColumns) ? masterColumns : []).map(keyOf).filter(Boolean);
@@ -66,7 +71,7 @@ export function normalizeIssueTemplateForRead({
   return {
     templateColumns: withIssueDisplayColumns(base),
     masterColumns: master.length ? withIssueDisplayColumns(master) : [],
-    templateColumnLabels: withCanonicalTitles(templateColumnLabels),
-    masterColumnLabels: withCanonicalTitles(masterColumnLabels),
+    templateColumnLabels: withCanonicalTitles(templateColumnLabels, fallbackColumnLabels),
+    masterColumnLabels: withCanonicalTitles(masterColumnLabels, fallbackColumnLabels),
   };
 }

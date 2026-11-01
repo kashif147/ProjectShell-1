@@ -45,6 +45,7 @@ import {
   GRID_COLUMN_DEFAULTS,
   mergeGridColumnDefaults,
   buildVisibleColumnKeys,
+  buildColumnLabelsMap,
 } from "../config/gridColumnDefaults";
 import {
   ISSUE_GRID_SCREEN,
@@ -7077,6 +7078,7 @@ export const TableColumnsProvider = ({ children }) => {
             templateColumnLabels: storedTemplateColumnLabels,
             masterColumnLabels: storedMasterColumnLabels,
             fallbackColumns: buildVisibleColumnKeys(GRID_COLUMN_DEFAULTS[ISSUE_GRID_SCREEN] || []),
+            fallbackColumnLabels: buildColumnLabelsMap(GRID_COLUMN_DEFAULTS[ISSUE_GRID_SCREEN] || []),
           })
         : null;
     const templateColumns = issueCompat ? issueCompat.templateColumns : storedTemplateColumns;
