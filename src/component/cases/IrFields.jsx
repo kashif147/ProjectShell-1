@@ -4,7 +4,7 @@ import MyInput from "../common/MyInput";
 import CustomSelect from "../common/CustomSelect";
 import GroupPicker from "./GroupPicker";
 import { searchIssueDesignations } from "../../services/issuesApi";
-import { useTeamUserOptions } from "../../hooks/useTeamUsers";
+import { useTeamUserOptions, withSelectedUserOption } from "../../hooks/useTeamUsers";
 
 /**
  * IR (Industrial Relations) discriminator field set -
@@ -27,8 +27,19 @@ import { useTeamUserOptions } from "../../hooks/useTeamUsers";
  * The resulting groupId is a base-Issue-schema field, not IR-specific - see
  * issueOptions.js's TYPE_FIELDS.IR/buildIssueUpdatePayload for how it's carried.
  */
-function IrFields({ values = {}, onChange, disabled = false, caseTypeOptions = [] }) {
-  const { options: resolvedByOptions } = useTeamUserOptions("issues-ir");
+function IrFields({
+  values = {},
+  onChange,
+  disabled = false,
+  caseTypeOptions = [],
+  userLabels = {},
+}) {
+  const { options: teamUserOptions } = useTeamUserOptions("issues-ir");
+  const resolvedByOptions = withSelectedUserOption(
+    teamUserOptions,
+    values.resolvedByUserId,
+    userLabels[values.resolvedByUserId],
+  );
   const [designationOptions, setDesignationOptions] = useState(() =>
     values.issueDesignationLabel
       ? [{ value: values.issueDesignation, label: values.issueDesignationLabel }]
@@ -210,7 +221,7 @@ function IrFields({ values = {}, onChange, disabled = false, caseTypeOptions = [
         </Col>
         <Col span={8}>
           <CustomSelect
-            label="Resolved By (User Id)"
+            label="Resolved By"
             name="resolvedByUserId"
             value={values.resolvedByUserId || ""}
             onChange={(e) => onChange("resolvedByUserId", e.target.value)}

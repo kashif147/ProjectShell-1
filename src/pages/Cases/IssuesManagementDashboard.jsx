@@ -198,6 +198,9 @@ function IssuesManagementDashboard() {
         priority: iss.priority,
         issueStatus: iss.issueStatus,
         ownerTeam: iss.owner?.team || null,
+        // Names hydrated by issue-service (services/issueNames.service.js); raw id fallback.
+        ownerName: iss.ownerName || iss.owner?.userId || null,
+        createdBy: iss.createdByName || iss.createdBy || null,
         dateReceived: iss.dateReceived,
         createdOn: iss.createdOn || iss.createdAt,
         dateResolved: iss.dateResolved,
@@ -437,6 +440,7 @@ function IssuesManagementDashboard() {
           priority: iss.priority,
           status: iss.issueStatus,
           ownerTeam: iss.owner?.team || null,
+          ownerName: iss.ownerName || null,
           updated: iss.lastActivityAt || iss.updatedAt || iss.createdOn,
         })),
     [drilledIssues],
@@ -523,17 +527,19 @@ function IssuesManagementDashboard() {
   // DataProtection discriminators (models/issue.complaint.model.js, issue.ir.model.js,
   // issue.dataprotection.model.js) - FTP has no such field (models/issue.ftp.model.js) - so
   // fall back to the base schema's owner.userId (present on every issue type) when it's
-  // unset. No user-directory lookup is wired into the frontend yet (a separate, parallel
-  // task is building one), so the raw userId is shown as-is for now; swap this label for a
-  // real display-name lookup once that lands.
+  // unset. Labels use the names issue-service hydrates (resolvedByName / ownerName), falling
+  // back to the raw userId when a name couldn't be resolved.
   const resolvedBreakdown = useMemo(() => {
     const closedIssues = scopedIssues.filter((iss) => iss.issueStatus === "CLOSED");
     const byUser = new Map();
+    const userNames = new Map();
     const byTeam = new Map();
     closedIssues.forEach((iss) => {
       const userId = iss.resolvedByUserId || iss.owner?.userId || null;
       const userKey = userId || "__unassigned__";
       byUser.set(userKey, (byUser.get(userKey) || 0) + 1);
+      const userName = iss.resolvedByUserId ? iss.resolvedByName : iss.ownerName;
+      if (userId && userName && !userNames.has(userKey)) userNames.set(userKey, userName);
 
       const team = iss.owner?.team || null;
       const teamKey = team || "__unassigned__";
@@ -543,8 +549,7 @@ function IssuesManagementDashboard() {
     const userRows = Array.from(byUser.entries())
       .map(([key, count]) => ({
         key,
-        // TODO: replace with a real display-name lookup once the user-directory work lands.
-        label: key === "__unassigned__" ? "Unassigned" : key,
+        label: key === "__unassigned__" ? "Unassigned" : userNames.get(key) || key,
         count,
       }))
       .sort((a, b) => b.count - a.count);
@@ -585,7 +590,9 @@ function IssuesManagementDashboard() {
           <div>
             <div className="events-dashboard__event-name">{text}</div>
             <div className="events-dashboard__event-loc">
-              {record.reference} · {record.ownerTeam ? formatEnumLabel(record.ownerTeam) : "Unassigned"}
+              {record.reference} ·{" "}
+              {record.ownerName ||
+                (record.ownerTeam ? formatEnumLabel(record.ownerTeam) : "Unassigned")}
             </div>
           </div>
         </div>

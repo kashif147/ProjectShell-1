@@ -7,7 +7,7 @@ import CustomSelect from "../common/CustomSelect";
 import MyDatePicker1 from "../common/MyDatePicker1";
 import MemberSearch from "../profile/MemberSearch";
 import { baseURL } from "../../utils/Utilities";
-import { useTeamUserOptions } from "../../hooks/useTeamUsers";
+import { useTeamUserOptions, withSelectedUserOption } from "../../hooks/useTeamUsers";
 import { SOLICITORS, toOptions } from "./issueOptions";
 
 const EMPTY_RESPONDENT = { name: "", email: "", phone: "", relationship: "" };
@@ -79,11 +79,17 @@ function ComplaintFields({
   complaintTypeOptions = [],
   memberIds = [],
   memberLabels = {},
+  userLabels = {},
   onSelectComplainant,
   onSelectRelatedMember,
 }) {
   const serviceProviderOptions = useServiceProviderOptions();
-  const { options: resolvedByOptions } = useTeamUserOptions("issues-complaints");
+  const { options: teamUserOptions } = useTeamUserOptions("issues-complaints");
+  const resolvedByOptions = withSelectedUserOption(
+    teamUserOptions,
+    values.resolvedByUserId,
+    userLabels[values.resolvedByUserId],
+  );
   const complainantId = memberIds[0] || null;
   // The person the complaint is *about* - memberIds[1], distinct from the complainant
   // (memberIds[0]). For a member-portal submission, issue-service never auto-matches this -
@@ -258,7 +264,7 @@ function ComplaintFields({
       <Row gutter={16}>
         <Col span={12}>
           <CustomSelect
-            label="Resolved By (User Id)"
+            label="Resolved By"
             name="resolvedByUserId"
             value={values.resolvedByUserId || ""}
             onChange={(e) => onChange("resolvedByUserId", e.target.value)}

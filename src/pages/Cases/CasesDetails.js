@@ -69,7 +69,7 @@ import {
   useIssueDropdownLookups,
   useResolutionOptions,
 } from "../../hooks/useIssueLookups";
-import { useTeamUserOptions } from "../../hooks/useTeamUsers";
+import { useTeamUserOptions, withSelectedUserOption } from "../../hooks/useTeamUsers";
 import {
   ISSUE_TYPE_LABELS,
   ISSUE_TYPE_TO_TEAM_RESOURCE,
@@ -155,9 +155,26 @@ function CasesDetails() {
   // Issue Type - see hooks/useIssueLookups.js.
   const { options: issueStatusOptions } = useIssueStatusOptions(activeIssue?.issueType);
   const { options: resolutionOptions } = useResolutionOptions(activeIssue?.issueType);
-  const { options: ownerOptions } = useTeamUserOptions(
+  const { options: teamUserOptions } = useTeamUserOptions(
     ISSUE_TYPE_TO_TEAM_RESOURCE[activeIssue?.issueType],
   );
+
+  // userId -> display name for the ids on this issue, from issue-service's server-side
+  // hydration (createdByName / ownerName / resolvedByName on GET /issues/:id).
+  const userLabels = useMemo(() => {
+    const labels = {};
+    if (!activeIssue) return labels;
+    if (activeIssue.createdBy && activeIssue.createdByName) {
+      labels[activeIssue.createdBy] = activeIssue.createdByName;
+    }
+    if (activeIssue.owner?.userId && activeIssue.ownerName) {
+      labels[activeIssue.owner.userId] = activeIssue.ownerName;
+    }
+    if (activeIssue.resolvedByUserId && activeIssue.resolvedByName) {
+      labels[activeIssue.resolvedByUserId] = activeIssue.resolvedByName;
+    }
+    return labels;
+  }, [activeIssue]);
   const {
     originOptions,
     issueSourceOptions,
@@ -427,6 +444,22 @@ function CasesDetails() {
   const handleRemoveMember = (id) => {
     persistMemberIds(memberIds.filter((m) => m !== id));
   };
+
+  // Seed memberLabels from the names issue-service already hydrated onto the loaded issue
+  // (members[]), so the Complainant / Related Member(s) tags show names immediately; the
+  // profile-service lookup below then only covers anything still unresolved.
+  useEffect(() => {
+    const members = Array.isArray(activeIssue?.members) ? activeIssue.members : [];
+    const resolved = members.filter((m) => m?.profileId && m?.fullName);
+    if (resolved.length === 0) return;
+    setMemberLabels((prev) => {
+      const next = { ...prev };
+      resolved.forEach((m) => {
+        if (!next[m.profileId]) next[m.profileId] = m.fullName;
+      });
+      return next;
+    });
+  }, [activeIssue]);
 
   // Hydrate memberLabels for memberIds the page loaded with (e.g. a portal-submitted
   // complaint's complainant, or any pre-existing linked member) - memberLabels otherwise
@@ -1266,6 +1299,7 @@ function CasesDetails() {
                     caseTypeOptions={caseTypeOptions}
                     memberIds={memberIds}
                     memberLabels={memberLabels}
+                    userLabels={userLabels}
                     onSelectComplainant={handleSelectComplainant}
                     onSelectRelatedMember={handleSelectRelatedMember}
                   />
@@ -1391,7 +1425,7 @@ function CasesDetails() {
                   <div className="summary-field-single">
                     <span className="summary-label">Created By / On</span>
                     <Input
-                      value={`${activeIssue.createdBy || "-"} · ${formatDate(activeIssue.createdOn, true)}`}
+                      value={`${activeIssue.createdByName || activeIssue.createdBy || "-"} · ${formatDate(activeIssue.createdOn, true)}`}
                       bordered={false}
                       disabled
                     />
@@ -1470,7 +1504,7 @@ function CasesDetails() {
                     <Input value={enumLabel(activeIssue.owner?.team) || "-"} bordered={false} disabled />
                   </div>
                   <div className="summary-field-single">
-                    <span className="summary-label">Owner (User Id)</span>
+                    <span className="summary-label">Owner</span>
                     <Select
                       value={formValues.owner?.userId || undefined}
                       onChange={(v) => handleOwnerUserIdChange(v)}
@@ -1480,7 +1514,11 @@ function CasesDetails() {
                       showSearch
                       optionFilterProp="label"
                       placeholder="Select owner"
-                      options={ownerOptions}
+                      options={withSelectedUserOption(
+                        teamUserOptions,
+                        formValues.owner?.userId,
+                        userLabels[formValues.owner?.userId],
+                      )}
                     />
                   </div>
 

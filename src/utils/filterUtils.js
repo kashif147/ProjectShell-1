@@ -502,7 +502,11 @@ export const getLabelToKeyMap = (screenCols) => {
         'Priority': 'priority',
         'Issue Type': 'issueType',
         'Case Status': 'issueStatus',
-        'Owner': 'ownerTeam',
+        // Issues: "Team" = owner.team, "Assigned To" = the owner user's name (ownerName,
+        // hydrated by issue-service). Explicit so a saved view whose columnLabels still title
+        // ownerTeam "Owner" (pre-change templates) can't redirect these chips.
+        'Team': 'ownerTeam',
+        'Assigned To': 'ownerName',
     };
 
     if (screenCols && Array.isArray(screenCols)) {
@@ -622,7 +626,8 @@ const APPLICATION_API_FILTER_KEY_TO_LABEL = {
     priority: "Priority",
     issueType: "Issue Type",
     issueStatus: "Case Status",
-    ownerTeam: "Owner",
+    ownerTeam: "Team",
+    ownerName: "Assigned To",
 };
 
 /**
