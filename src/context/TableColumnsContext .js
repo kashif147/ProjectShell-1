@@ -44,7 +44,12 @@ import {
 import {
   GRID_COLUMN_DEFAULTS,
   mergeGridColumnDefaults,
+  buildVisibleColumnKeys,
 } from "../config/gridColumnDefaults";
+import {
+  ISSUE_GRID_SCREEN,
+  normalizeIssueTemplateForRead,
+} from "../utils/issueGridCompat";
 import {
   callOnlinePaymentOpenFinance,
   callOnlinePaymentRefund,
@@ -7054,12 +7059,30 @@ export const TableColumnsProvider = ({ children }) => {
 
   const applyTemplate = useCallback((
     screenName,
-    templateColumns,
-    masterColumns = null,
-    templateColumnLabels = {},
-    masterColumnLabels = {},
+    storedTemplateColumns,
+    storedMasterColumns = null,
+    storedTemplateColumnLabels = {},
+    storedMasterColumnLabels = {},
   ) => {
-    if (!screenName || !templateColumns) return;
+    if (!screenName || !storedTemplateColumns) return;
+
+    // Issue grids: read-time compatibility with stored views that predate the Issue Display Names
+    // columns (empty column lists, legacy ownerTeam "Owner" label, no ownerName / createdBy).
+    // Pure - the stored template objects are never modified or saved back (utils/issueGridCompat.js).
+    const issueCompat =
+      screenName === ISSUE_GRID_SCREEN
+        ? normalizeIssueTemplateForRead({
+            templateColumns: storedTemplateColumns,
+            masterColumns: storedMasterColumns,
+            templateColumnLabels: storedTemplateColumnLabels,
+            masterColumnLabels: storedMasterColumnLabels,
+            fallbackColumns: buildVisibleColumnKeys(GRID_COLUMN_DEFAULTS[ISSUE_GRID_SCREEN] || []),
+          })
+        : null;
+    const templateColumns = issueCompat ? issueCompat.templateColumns : storedTemplateColumns;
+    const masterColumns = issueCompat ? issueCompat.masterColumns : storedMasterColumns;
+    const templateColumnLabels = issueCompat ? issueCompat.templateColumnLabels : storedTemplateColumnLabels;
+    const masterColumnLabels = issueCompat ? issueCompat.masterColumnLabels : storedMasterColumnLabels;
 
     const normalizeTemplateColumnKey = (key) => {
       const value = String(key || "");

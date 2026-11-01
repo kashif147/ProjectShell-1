@@ -517,6 +517,14 @@ export const getLabelToKeyMap = (screenCols) => {
     }
 
     const merged = { ...mapping, ...overrides };
+    // Issue grids: the old "Owner" filter chip (stored views from before Issue Display Names)
+    // meant the team (ownerTeam). Keep that meaning even though the "Owner" COLUMN is now the
+    // assigned person (ownerName, filtered by "Assigned To").
+    const hasIssueTeamColumn = Array.isArray(screenCols) && screenCols.some((col) => {
+        const key = Array.isArray(col.dataIndex) ? col.dataIndex.join('.') : col.dataIndex;
+        return key === 'ownerTeam';
+    });
+    if (hasIssueTeamColumn) merged['Owner'] = 'ownerTeam';
     // 'Event Date' is ambiguous across screens - Events Summary needs
     // 'startDate' (the override above) but Attendees' own eventDate column
     // needs its own dataIndex. When the current screen actually has a column
