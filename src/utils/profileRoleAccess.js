@@ -1,6 +1,5 @@
 const FULL_MEMBERSHIP_UPDATE_ROLES = new Set([
-  "SU",
-  "SUPER USER",
+  // Phase B / Z9: the legacy tenant SU is retired; ASU is the tenant administrator (mirrors the services).
   "ASU",
   "ASSISTANT SUPER USER",
   "MO",
@@ -10,8 +9,7 @@ const FULL_MEMBERSHIP_UPDATE_ROLES = new Set([
 ]);
 
 const FINANCE_ACTION_ROLES = new Set([
-  "SU",
-  "SUPER USER",
+  // Phase B / Z9: the legacy tenant SU is retired; ASU is the tenant administrator (mirrors the services).
   "ASU",
   "ASSISTANT SUPER USER",
   "AM",
