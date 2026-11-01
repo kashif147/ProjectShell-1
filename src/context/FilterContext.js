@@ -905,15 +905,15 @@ export const FilterProvider = ({ children }) => {
         "Stakeholder",
         "Priority",
       ],
-      Issues: ["Priority", "Issue Type", "Case Status", "Owner"],
-      IssuesClosed: ["Priority", "Issue Type", "Case Status", "Owner"],
+      Issues: ["Priority", "Issue Type", "Case Status", "Team", "Assigned To", "Created By"],
+      IssuesClosed: ["Priority", "Issue Type", "Case Status", "Team", "Assigned To", "Created By"],
       // No "Issue Type" chip - these 4 pages are already scoped to one issue type
       // (defaultView prop, see CasesSummary.js), so filtering by type would be a no-op.
-      Complaints: ["Priority", "Case Status", "Owner"],
-      FitnessToPractice: ["Priority", "Case Status", "Owner"],
-      IndustrialRelations: ["Priority", "Case Status", "Owner"],
-      DataProtection: ["Priority", "Case Status", "Owner"],
-      IssuesDashboard: ["Priority", "Issue Type", "Case Status", "Owner"],
+      Complaints: ["Priority", "Case Status", "Team", "Assigned To", "Created By"],
+      FitnessToPractice: ["Priority", "Case Status", "Team", "Assigned To", "Created By"],
+      IndustrialRelations: ["Priority", "Case Status", "Team", "Assigned To", "Created By"],
+      DataProtection: ["Priority", "Case Status", "Team", "Assigned To", "Created By"],
+      IssuesDashboard: ["Priority", "Issue Type", "Case Status", "Team", "Assigned To", "Created By"],
       Events: [
         "Event",
         "Event Type",
@@ -1512,7 +1512,15 @@ export const FilterProvider = ({ children }) => {
           operator: "==",
           selectedValues: [],
         },
-        Owner: {
+        Team: {
+          operator: "==",
+          selectedValues: [],
+        },
+        "Assigned To": {
+          operator: "==",
+          selectedValues: [],
+        },
+        "Created By": {
           operator: "==",
           selectedValues: [],
         },
@@ -1530,7 +1538,15 @@ export const FilterProvider = ({ children }) => {
           operator: "==",
           selectedValues: [],
         },
-        Owner: {
+        Team: {
+          operator: "==",
+          selectedValues: [],
+        },
+        "Assigned To": {
+          operator: "==",
+          selectedValues: [],
+        },
+        "Created By": {
           operator: "==",
           selectedValues: [],
         },
@@ -1546,7 +1562,15 @@ export const FilterProvider = ({ children }) => {
           operator: "==",
           selectedValues: [],
         },
-        Owner: {
+        Team: {
+          operator: "==",
+          selectedValues: [],
+        },
+        "Assigned To": {
+          operator: "==",
+          selectedValues: [],
+        },
+        "Created By": {
           operator: "==",
           selectedValues: [],
         },
@@ -1560,7 +1584,15 @@ export const FilterProvider = ({ children }) => {
           operator: "==",
           selectedValues: [],
         },
-        Owner: {
+        Team: {
+          operator: "==",
+          selectedValues: [],
+        },
+        "Assigned To": {
+          operator: "==",
+          selectedValues: [],
+        },
+        "Created By": {
           operator: "==",
           selectedValues: [],
         },
@@ -1574,7 +1606,15 @@ export const FilterProvider = ({ children }) => {
           operator: "==",
           selectedValues: [],
         },
-        Owner: {
+        Team: {
+          operator: "==",
+          selectedValues: [],
+        },
+        "Assigned To": {
+          operator: "==",
+          selectedValues: [],
+        },
+        "Created By": {
           operator: "==",
           selectedValues: [],
         },
@@ -1588,7 +1628,15 @@ export const FilterProvider = ({ children }) => {
           operator: "==",
           selectedValues: [],
         },
-        Owner: {
+        Team: {
+          operator: "==",
+          selectedValues: [],
+        },
+        "Assigned To": {
+          operator: "==",
+          selectedValues: [],
+        },
+        "Created By": {
           operator: "==",
           selectedValues: [],
         },
@@ -1606,7 +1654,15 @@ export const FilterProvider = ({ children }) => {
           operator: "==",
           selectedValues: [],
         },
-        Owner: {
+        Team: {
+          operator: "==",
+          selectedValues: [],
+        },
+        "Assigned To": {
+          operator: "==",
+          selectedValues: [],
+        },
+        "Created By": {
           operator: "==",
           selectedValues: [],
         },

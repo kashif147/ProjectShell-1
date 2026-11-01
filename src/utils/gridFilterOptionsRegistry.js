@@ -21,6 +21,11 @@ export const CLIENT_SIDE_GRID_FILTER_SCREENS = new Set([
   "EventsDashboard",
   "Attendees",
   "Issues",
+  "IssuesClosed",
+  "Complaints",
+  "FitnessToPractice",
+  "IndustrialRelations",
+  "DataProtection",
   "IssuesDashboard",
 ]);
 

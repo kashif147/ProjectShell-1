@@ -44,7 +44,12 @@ import {
 import {
   GRID_COLUMN_DEFAULTS,
   mergeGridColumnDefaults,
+  buildVisibleColumnKeys,
 } from "../config/gridColumnDefaults";
+import {
+  ISSUE_GRID_SCREEN,
+  normalizeIssueTemplateForRead,
+} from "../utils/issueGridCompat";
 import {
   callOnlinePaymentOpenFinance,
   callOnlinePaymentRefund,
@@ -2258,11 +2263,10 @@ const staticColumns = {
       },
     },
     {
-      // `record.memberName` is populated post-render by CasesSummary.js's best-effort
-      // profile-service batch-lookup enrichment (fetchProfilesBatchLookup, keyed off
-      // memberIds[0]) once it resolves; until then (or if it can't resolve - no linked
-      // member, lookup failure, etc.) this falls back to the raw linked profileId(s), same
-      // placeholder behavior as before that enrichment existed.
+      // `record.memberName` / `record.memberNames` come from issue-service's server-side
+      // name hydration (members[], see CasesSummary.js's row mapper), with CasesSummary.js's
+      // profile-service batch lookup as a fallback; the raw linked profileId(s) show only if
+      // neither resolved.
       dataIndex: "memberIds",
       title: "Member Name",
       ellipsis: true,
@@ -2270,6 +2274,9 @@ const staticColumns = {
       isVisible: true,
       width: 200,
       render: (value, record) => {
+        if (Array.isArray(record?.memberNames) && record.memberNames.length) {
+          return record.memberNames.join(", ");
+        }
         if (record?.memberName) return record.memberName;
         return Array.isArray(value) && value.length ? value.join(", ") : "-";
       },
@@ -2371,13 +2378,35 @@ const staticColumns = {
       },
     },
     {
-      dataIndex: "ownerTeam",
+      // The assigned user (owner.userId), name hydrated by issue-service - filtered by the
+      // "Assigned To" chip (filterUtils.js maps it to ownerName).
+      dataIndex: "ownerName",
       title: "Owner",
+      ellipsis: true,
+      isGride: true,
+      isVisible: true,
+      width: 170,
+      render: (value) => value || "Unassigned",
+    },
+    {
+      // owner.team (Complaints / FTP / IR / Data Protection) - this column was titled
+      // "Owner" before the user-level Owner column above existed.
+      dataIndex: "ownerTeam",
+      title: "Team",
       ellipsis: true,
       isGride: true,
       isVisible: true,
       width: 150,
       render: (value) => (value ? formatIssueEnumLabel(value) : "Unassigned"),
+    },
+    {
+      dataIndex: "createdBy",
+      title: "Created By",
+      ellipsis: true,
+      isGride: true,
+      isVisible: true,
+      width: 170,
+      render: (value) => value || "-",
     },
   ],
   Claims: [
@@ -4693,7 +4722,21 @@ const staticSearchFilters = {
       comp: "==",
     },
     {
-      titleColumn: "Owner",
+      titleColumn: "Team",
+      isSearch: true,
+      isCheck: false,
+      lookups: {},
+      comp: "==",
+    },
+    {
+      titleColumn: "Assigned To",
+      isSearch: true,
+      isCheck: false,
+      lookups: {},
+      comp: "==",
+    },
+    {
+      titleColumn: "Created By",
       isSearch: true,
       isCheck: false,
       lookups: {},
@@ -7016,12 +7059,30 @@ export const TableColumnsProvider = ({ children }) => {
 
   const applyTemplate = useCallback((
     screenName,
-    templateColumns,
-    masterColumns = null,
-    templateColumnLabels = {},
-    masterColumnLabels = {},
+    storedTemplateColumns,
+    storedMasterColumns = null,
+    storedTemplateColumnLabels = {},
+    storedMasterColumnLabels = {},
   ) => {
-    if (!screenName || !templateColumns) return;
+    if (!screenName || !storedTemplateColumns) return;
+
+    // Issue grids: read-time compatibility with stored views that predate the Issue Display Names
+    // columns (empty column lists, legacy ownerTeam "Owner" label, no ownerName / createdBy).
+    // Pure - the stored template objects are never modified or saved back (utils/issueGridCompat.js).
+    const issueCompat =
+      screenName === ISSUE_GRID_SCREEN
+        ? normalizeIssueTemplateForRead({
+            templateColumns: storedTemplateColumns,
+            masterColumns: storedMasterColumns,
+            templateColumnLabels: storedTemplateColumnLabels,
+            masterColumnLabels: storedMasterColumnLabels,
+            fallbackColumns: buildVisibleColumnKeys(GRID_COLUMN_DEFAULTS[ISSUE_GRID_SCREEN] || []),
+          })
+        : null;
+    const templateColumns = issueCompat ? issueCompat.templateColumns : storedTemplateColumns;
+    const masterColumns = issueCompat ? issueCompat.masterColumns : storedMasterColumns;
+    const templateColumnLabels = issueCompat ? issueCompat.templateColumnLabels : storedTemplateColumnLabels;
+    const masterColumnLabels = issueCompat ? issueCompat.masterColumnLabels : storedMasterColumnLabels;
 
     const normalizeTemplateColumnKey = (key) => {
       const value = String(key || "");

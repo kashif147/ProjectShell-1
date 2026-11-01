@@ -502,7 +502,11 @@ export const getLabelToKeyMap = (screenCols) => {
         'Priority': 'priority',
         'Issue Type': 'issueType',
         'Case Status': 'issueStatus',
-        'Owner': 'ownerTeam',
+        // Issues: "Team" = owner.team, "Assigned To" = the owner user's name (ownerName,
+        // hydrated by issue-service). Explicit so a saved view whose columnLabels still title
+        // ownerTeam "Owner" (pre-change templates) can't redirect these chips.
+        'Team': 'ownerTeam',
+        'Assigned To': 'ownerName',
     };
 
     if (screenCols && Array.isArray(screenCols)) {
@@ -513,6 +517,14 @@ export const getLabelToKeyMap = (screenCols) => {
     }
 
     const merged = { ...mapping, ...overrides };
+    // Issue grids: the old "Owner" filter chip (stored views from before Issue Display Names)
+    // meant the team (ownerTeam). Keep that meaning even though the "Owner" COLUMN is now the
+    // assigned person (ownerName, filtered by "Assigned To").
+    const hasIssueTeamColumn = Array.isArray(screenCols) && screenCols.some((col) => {
+        const key = Array.isArray(col.dataIndex) ? col.dataIndex.join('.') : col.dataIndex;
+        return key === 'ownerTeam';
+    });
+    if (hasIssueTeamColumn) merged['Owner'] = 'ownerTeam';
     // 'Event Date' is ambiguous across screens - Events Summary needs
     // 'startDate' (the override above) but Attendees' own eventDate column
     // needs its own dataIndex. When the current screen actually has a column
@@ -622,7 +634,8 @@ const APPLICATION_API_FILTER_KEY_TO_LABEL = {
     priority: "Priority",
     issueType: "Issue Type",
     issueStatus: "Case Status",
-    ownerTeam: "Owner",
+    ownerTeam: "Team",
+    ownerName: "Assigned To",
 };
 
 /**

@@ -98,7 +98,7 @@ function mergeProfileEnrichment(rows, profileById) {
 
 function CasesSummary({ defaultView = "all" }) {
   const location = useLocation();
-  const { filtersState, issueFilterCodeMaps } = useFilters();
+  const { filtersState, issueFilterCodeMaps, activePage } = useFilters();
   const { columns } = useTableColumns();
   const issuesColumns = columns.Issues || [];
   const { isInitialized } = useSelector((state) => state.applicationWithFilter);
@@ -129,8 +129,12 @@ function CasesSummary({ defaultView = "all" }) {
           caseTitle: iss.caseTitle || iss.internalReferenceNumber || "-",
           issueType: iss.issueType,
           memberIds: Array.isArray(iss.memberIds) ? iss.memberIds : [],
-          memberName: null,
-          membershipNo: null,
+          // issue-service hydrates names server-side (members/createdByName/ownerName, see
+          // its services/issueNames.service.js) - the profile batch lookup below now only
+          // fills Location, plus these as a fallback if that hydration came back empty.
+          memberName: iss.members?.[0]?.fullName || null,
+          memberNames: Array.isArray(iss.memberNames) ? iss.memberNames.filter(Boolean) : [],
+          membershipNo: iss.members?.[0]?.membershipNumber || null,
           caseFileNumber: iss.caseFileNumber || null,
           nmbiReference: iss.nmbiReference || null,
           location: null,
@@ -141,6 +145,13 @@ function CasesSummary({ defaultView = "all" }) {
           issueStatus: iss.issueStatus,
           priority: iss.priority,
           ownerTeam: iss.owner?.team || null,
+          // Owner = the assigned user (owner.userId), not the team. "Created By" / "Assigned
+          // To" filter on these name fields (filterUtils.js label map); raw ids are the
+          // fallback when a name couldn't be resolved.
+          ownerName: iss.ownerName || iss.owner?.userId || null,
+          createdBy: iss.createdByName || iss.createdBy || null,
+          resolvedBy: iss.resolvedByName || iss.resolvedByUserId || null,
+          complainantName: iss.complainantName || null,
         }));
         const scoped = applyDefaultViewFilter(mapped, defaultView);
         setIssuesSourceRows(scoped);
@@ -198,7 +209,10 @@ function CasesSummary({ defaultView = "all" }) {
     return applyClientSideRowFilters(issuesSourceRows, codedFiltersState, issuesColumns);
   }, [issuesSourceRows, filtersState, issuesColumns, issueFilterCodeMaps]);
 
-  useRegisterGridFilterRows("Issues", issuesSourceRows, issuesColumns);
+  // Registered under the route's own screen key (Issues / IssuesClosed / Complaints / ...),
+  // which is what the toolbar reads filter options from - registering only under "Issues"
+  // left grid-derived chips (Team / Assigned To / Created By) empty on the other routes.
+  useRegisterGridFilterRows(activePage || "Issues", issuesSourceRows, issuesColumns);
 
   if (!isInitialized || templatesLoading) {
     return (

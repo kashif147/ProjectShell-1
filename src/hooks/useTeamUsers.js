@@ -17,6 +17,19 @@ function toUserOptions(users) {
 }
 
 /**
+ * Makes sure the currently-saved user (e.g. an issue's owner.userId / resolvedByUserId) is
+ * selectable with a readable label even when the team picker list doesn't include them
+ * (role changed, lookup failed, or the caller can't load the list) - otherwise the Select
+ * shows the raw user id. `label` comes from issue-service's hydrated names (ownerName /
+ * resolvedByName); the raw id is the last-resort label.
+ */
+export function withSelectedUserOption(options, id, label) {
+  const list = Array.isArray(options) ? options : [];
+  if (!id || list.some((opt) => String(opt.value) === String(id))) return list;
+  return [{ value: id, label: label || String(id) }, ...list];
+}
+
+/**
  * Select options for users holding write permission on a given RBAC resource - backs the
  * Owner (User Id) / Resolved By (User Id) pickers, scoped per Issue Type via
  * issueOptions.js's ISSUE_TYPE_TO_TEAM_RESOURCE. Empty resource (e.g. no Issue Type picked

@@ -432,7 +432,9 @@
         { "dataIndex": "legislation", "title": "Legislation", "isGride": true, "isVisible": true, "ellipsis": true, "width": 140 },
         { "dataIndex": "issueStatus", "title": "Case Status", "isGride": true, "isVisible": true, "ellipsis": true, "width": 190 },
         { "dataIndex": "priority", "title": "Priority", "isGride": true, "isVisible": true, "ellipsis": true, "width": 110 },
-        { "dataIndex": "ownerTeam", "title": "Owner", "isGride": true, "isVisible": true, "ellipsis": true, "width": 150 }
+        { "dataIndex": "ownerName", "title": "Owner", "isGride": true, "isVisible": true, "ellipsis": true, "width": 170 },
+        { "dataIndex": "ownerTeam", "title": "Team", "isGride": true, "isVisible": true, "ellipsis": true, "width": 150 },
+        { "dataIndex": "createdBy", "title": "Created By", "isGride": true, "isVisible": true, "ellipsis": true, "width": 170 }
       ]
     },
     "issuesclosed": {
@@ -458,7 +460,9 @@
         { "dataIndex": "legislation", "title": "Legislation", "isGride": true, "isVisible": true, "ellipsis": true, "width": 140 },
         { "dataIndex": "issueStatus", "title": "Case Status", "isGride": true, "isVisible": true, "ellipsis": true, "width": 190 },
         { "dataIndex": "priority", "title": "Priority", "isGride": true, "isVisible": true, "ellipsis": true, "width": 110 },
-        { "dataIndex": "ownerTeam", "title": "Owner", "isGride": true, "isVisible": true, "ellipsis": true, "width": 150 }
+        { "dataIndex": "ownerName", "title": "Owner", "isGride": true, "isVisible": true, "ellipsis": true, "width": 170 },
+        { "dataIndex": "ownerTeam", "title": "Team", "isGride": true, "isVisible": true, "ellipsis": true, "width": 150 },
+        { "dataIndex": "createdBy", "title": "Created By", "isGride": true, "isVisible": true, "ellipsis": true, "width": 170 }
       ]
     },
     "issuescomplaints": {
@@ -483,7 +487,9 @@
         { "dataIndex": "legislation", "title": "Legislation", "isGride": true, "isVisible": true, "ellipsis": true, "width": 140 },
         { "dataIndex": "issueStatus", "title": "Case Status", "isGride": true, "isVisible": true, "ellipsis": true, "width": 190 },
         { "dataIndex": "priority", "title": "Priority", "isGride": true, "isVisible": true, "ellipsis": true, "width": 110 },
-        { "dataIndex": "ownerTeam", "title": "Owner", "isGride": true, "isVisible": true, "ellipsis": true, "width": 150 }
+        { "dataIndex": "ownerName", "title": "Owner", "isGride": true, "isVisible": true, "ellipsis": true, "width": 170 },
+        { "dataIndex": "ownerTeam", "title": "Team", "isGride": true, "isVisible": true, "ellipsis": true, "width": 150 },
+        { "dataIndex": "createdBy", "title": "Created By", "isGride": true, "isVisible": true, "ellipsis": true, "width": 170 }
       ]
     },
     "issuesftp": {
@@ -508,7 +514,9 @@
         { "dataIndex": "legislation", "title": "Legislation", "isGride": true, "isVisible": true, "ellipsis": true, "width": 140 },
         { "dataIndex": "issueStatus", "title": "Case Status", "isGride": true, "isVisible": true, "ellipsis": true, "width": 190 },
         { "dataIndex": "priority", "title": "Priority", "isGride": true, "isVisible": true, "ellipsis": true, "width": 110 },
-        { "dataIndex": "ownerTeam", "title": "Owner", "isGride": true, "isVisible": true, "ellipsis": true, "width": 150 }
+        { "dataIndex": "ownerName", "title": "Owner", "isGride": true, "isVisible": true, "ellipsis": true, "width": 170 },
+        { "dataIndex": "ownerTeam", "title": "Team", "isGride": true, "isVisible": true, "ellipsis": true, "width": 150 },
+        { "dataIndex": "createdBy", "title": "Created By", "isGride": true, "isVisible": true, "ellipsis": true, "width": 170 }
       ]
     },
     "issuesir": {
@@ -533,7 +541,9 @@
         { "dataIndex": "legislation", "title": "Legislation", "isGride": true, "isVisible": true, "ellipsis": true, "width": 140 },
         { "dataIndex": "issueStatus", "title": "Case Status", "isGride": true, "isVisible": true, "ellipsis": true, "width": 190 },
         { "dataIndex": "priority", "title": "Priority", "isGride": true, "isVisible": true, "ellipsis": true, "width": 110 },
-        { "dataIndex": "ownerTeam", "title": "Owner", "isGride": true, "isVisible": true, "ellipsis": true, "width": 150 }
+        { "dataIndex": "ownerName", "title": "Owner", "isGride": true, "isVisible": true, "ellipsis": true, "width": 170 },
+        { "dataIndex": "ownerTeam", "title": "Team", "isGride": true, "isVisible": true, "ellipsis": true, "width": 150 },
+        { "dataIndex": "createdBy", "title": "Created By", "isGride": true, "isVisible": true, "ellipsis": true, "width": 170 }
       ]
     },
     "issuesdataprotection": {
@@ -558,7 +568,9 @@
         { "dataIndex": "legislation", "title": "Legislation", "isGride": true, "isVisible": true, "ellipsis": true, "width": 140 },
         { "dataIndex": "issueStatus", "title": "Case Status", "isGride": true, "isVisible": true, "ellipsis": true, "width": 190 },
         { "dataIndex": "priority", "title": "Priority", "isGride": true, "isVisible": true, "ellipsis": true, "width": 110 },
-        { "dataIndex": "ownerTeam", "title": "Owner", "isGride": true, "isVisible": true, "ellipsis": true, "width": 150 }
+        { "dataIndex": "ownerName", "title": "Owner", "isGride": true, "isVisible": true, "ellipsis": true, "width": 170 },
+        { "dataIndex": "ownerTeam", "title": "Team", "isGride": true, "isVisible": true, "ellipsis": true, "width": 150 },
+        { "dataIndex": "createdBy", "title": "Created By", "isGride": true, "isVisible": true, "ellipsis": true, "width": 170 }
       ]
     },
     "attendees": {

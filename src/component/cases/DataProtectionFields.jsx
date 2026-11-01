@@ -10,7 +10,7 @@ import {
   SOLICITORS,
   toOptions,
 } from "./issueOptions";
-import { useTeamUserOptions } from "../../hooks/useTeamUsers";
+import { useTeamUserOptions, withSelectedUserOption } from "../../hooks/useTeamUsers";
 
 /**
  * DP discriminator field set -
@@ -19,8 +19,13 @@ import { useTeamUserOptions } from "../../hooks/useTeamUsers";
  * ComplaintFields.jsx's header comment. `dpStatus` (not `status`) to avoid colliding with
  * the base Issue's `issueStatus`, per the backend model's own naming note.
  */
-function DataProtectionFields({ values = {}, onChange, disabled = false }) {
-  const { options: resolvedByOptions } = useTeamUserOptions("issues-dataprotection");
+function DataProtectionFields({ values = {}, onChange, disabled = false, userLabels = {} }) {
+  const { options: teamUserOptions } = useTeamUserOptions("issues-dataprotection");
+  const resolvedByOptions = withSelectedUserOption(
+    teamUserOptions,
+    values.resolvedByUserId,
+    userLabels[values.resolvedByUserId],
+  );
   return (
     <div className="form-section issue-type-fields-section">
       <h3 className="section-title">Data Protection Details</h3>
@@ -155,7 +160,7 @@ function DataProtectionFields({ values = {}, onChange, disabled = false }) {
         </Col>
         <Col span={12}>
           <CustomSelect
-            label="Resolved By (User Id)"
+            label="Resolved By"
             name="resolvedByUserId"
             value={values.resolvedByUserId || ""}
             onChange={(e) => onChange("resolvedByUserId", e.target.value)}
