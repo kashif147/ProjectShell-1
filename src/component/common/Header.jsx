@@ -94,7 +94,16 @@ const AppLauncherMenu = ({ closeDropdown }) => {
       name: "Issues Management",
       icon: MdOutlineWork,
       bgColor: "#3F51B5",
-      permissions: ["menu:issues_management:access"],
+      // No catalogue code issues a menu permission for this module, so gate the tile on the
+      // same read permissions the Issues side nav / routes use (SideNavWithAuth issuesItems,
+      // RoutePermissions): base issues:read or any team read. Any one is enough.
+      permissions: [
+        "issues:read",
+        "issues-complaints:read",
+        "issues-ftp:read",
+        "issues-ir:read",
+        "issues-dataprotection:read",
+      ],
       route: "/CasesSummary",
     },
     {
