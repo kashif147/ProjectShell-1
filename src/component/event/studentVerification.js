@@ -20,11 +20,18 @@ export function studentVerificationState(registration) {
     return status === 'verified' || status === 'rejected' ? status : 'pending';
 }
 
-/** What the drawer shows for the claim, or null when the registration has no student claim to show. */
-export function studentClaimView(registration) {
+/**
+ * What the drawer shows for the claim, or null when the registration has no student claim to show.
+ * A row with no studentEligibility record (created before events-service enforced the policy) is only
+ * shown as a pending claim once the server has said so (`serverRequiresDecision`, set after a 409
+ * STUDENT_VERIFICATION_PENDING): against an events-service without the policy, such rows stay approvable
+ * and nothing in the drawer changes.
+ */
+export function studentClaimView(registration, { serverRequiresDecision = false } = {}) {
     const state = studentVerificationState(registration);
     if (state === 'not_required') return null;
     const eligibility = registration.studentEligibility || null;
+    if (!eligibility && !serverRequiresDecision) return null;
     const source = eligibility?.source || (registration.registeredVia === 'crm' ? 'crm_assigned' : 'declared_claim');
     // Only a member-declared claim (or a pre-policy portal row) is decided here; membership-verified and
     // CRM-assigned student pricing needs no decision.
@@ -44,6 +51,11 @@ const MESSAGES = {
     STUDENT_VERIFICATION_NOT_REQUIRED: 'This registration has no student pricing claim to decide.',
     STUDENT_VERIFICATION_FAILED: 'The payment could not be released, so the claim was not rejected. Please try again.',
 };
+
+/** Error code from an axios error (events-service `{ error: { code } }` or `{ code }`). */
+export function studentVerificationErrorCode(err) {
+    return err?.response?.data?.error?.code || err?.response?.data?.code || null;
+}
 
 /** User-facing message for an axios error from approve / student-verification calls. */
 export function studentVerificationErrorMessage(err, fallback) {

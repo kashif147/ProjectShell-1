@@ -55,8 +55,16 @@ describe('studentClaimView', () => {
         expect(studentClaimView(reg({ studentEligibility: { source: 'crm_assigned', verification: { status: 'verified' } } }))).toBeNull();
         expect(studentClaimView(reg({ studentEligibility: null, registeredVia: 'crm' }))).toBeNull();
     });
-    test('pre-policy portal student row is shown as a pending claim with no institution', () => {
-        expect(studentClaimView(reg({ studentEligibility: null }))).toEqual({ state: 'pending', institution: null, note: null, decidable: true });
+    test('pre-policy portal student row: hidden (approvable) until the server requires a decision', () => {
+        // Against an events-service without the policy (no record is ever written) nothing changes.
+        expect(studentClaimView(reg({ studentEligibility: null }))).toBeNull();
+        // After a 409 STUDENT_VERIFICATION_PENDING the drawer offers the decision.
+        expect(studentClaimView(reg({ studentEligibility: null }), { serverRequiresDecision: true })).toEqual({
+            state: 'pending',
+            institution: null,
+            note: null,
+            decidable: true,
+        });
     });
     test('non-student registration -> null', () => {
         expect(studentClaimView(reg({ priceCategory: 'standard', priceBreakdown: [] }))).toBeNull();
@@ -106,6 +114,10 @@ describe('CreateAttendeeDrawer wiring', () => {
     test('Approve is disabled while the student claim is unresolved', () => {
         expect(src).toMatch(/disabled=\{approveBlockedByReview \|\| approveBlockedByPayment \|\| approveBlockedByStudentClaim\}/);
         expect(src).toMatch(/approveBlockedByStudentClaim = Boolean\(studentClaim && studentClaim\.state !== 'verified'\)/);
+    });
+    test('a 409 STUDENT_VERIFICATION_PENDING on approve reveals the decision for unrecorded rows', () => {
+        expect(src).toMatch(/studentVerificationErrorCode\(err\) === 'STUDENT_VERIFICATION_PENDING'\) setStudentDecisionRequired\(true\)/);
+        expect(src).toMatch(/serverRequiresDecision: studentDecisionRequired/);
     });
     test('Verify / Reject call decideStudentVerification; approve errors use the 409 messages', () => {
         expect(src).toMatch(/decideStudentVerification\(registration\._id, \{ decision, note: note \|\| undefined \}\)/);

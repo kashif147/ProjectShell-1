@@ -42,6 +42,7 @@ import {
 import {
     STUDENT_VERIFICATION_NOTE_MAX,
     studentClaimView,
+    studentVerificationErrorCode,
     studentVerificationErrorMessage,
 } from './studentVerification';
 import { dispatchProfileInvalidate } from '../../utils/profileRealtimeEvents';
@@ -180,6 +181,8 @@ const CreateAttendeeDrawerInner = ({ open, onClose, eventId, registration, onApp
     const [studentEligibility, setStudentEligibility] = useState(registration?.studentEligibility || null);
     const [studentNote, setStudentNote] = useState('');
     const [studentDeciding, setStudentDeciding] = useState(null);
+    // Set when the server refused approval for an unrecorded (pre-policy) student-priced row.
+    const [studentDecisionRequired, setStudentDecisionRequired] = useState(false);
     const [retryingPayment, setRetryingPayment] = useState(false);
     const [retryCardComplete, setRetryCardComplete] = useState({ number: false, expiry: false, cvc: false });
     // View mode only - the CRM user opted to change a manual/comp/invoice
@@ -278,6 +281,7 @@ const CreateAttendeeDrawerInner = ({ open, onClose, eventId, registration, onApp
         setViewPaymentMethod(registration.paymentMethod);
         setStudentEligibility(registration.studentEligibility || null);
         setStudentNote('');
+        setStudentDecisionRequired(false);
         setRetryCardComplete({ number: false, expiry: false, cvc: false });
         setSwitchToCard(false);
         const review = registration.duplicateReview || {};
@@ -891,6 +895,7 @@ const CreateAttendeeDrawerInner = ({ open, onClose, eventId, registration, onApp
             onApproved?.(updated);
         } catch (err) {
             message.error(studentVerificationErrorMessage(err, 'Failed to approve registration'));
+            if (studentVerificationErrorCode(err) === 'STUDENT_VERIFICATION_PENDING') setStudentDecisionRequired(true);
             // A capture conflict (e.g. the Stripe authorization hold expired
             // between authorization and approval - see events-service's
             // registrationApproval.service.js) already corrected paymentStatus
@@ -1094,7 +1099,9 @@ const CreateAttendeeDrawerInner = ({ open, onClose, eventId, registration, onApp
         viewPaymentMethod === 'stripe' && !['authorized', 'succeeded'].includes(paymentStatus);
     const approveBlockedByPayment = viewMode && stripePaymentNotAuthorized;
     // P5 STUDENT policy: the server refuses approval (409) until a declared claim is verified.
-    const studentClaim = viewMode ? studentClaimView({ ...registration, studentEligibility, approvalStatus }) : null;
+    const studentClaim = viewMode
+        ? studentClaimView({ ...registration, studentEligibility, approvalStatus }, { serverRequiresDecision: studentDecisionRequired })
+        : null;
     const approveBlockedByStudentClaim = Boolean(studentClaim && studentClaim.state !== 'verified');
     // View mode only - a manual/comp/invoice registration can be switched to
     // Card (Stripe) any time before approval, if the CRM user changes their
