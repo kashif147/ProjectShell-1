@@ -323,6 +323,7 @@ function buildOnlinePaymentColumns() {
     captured: "green",
     cancelled: "default",
     failed: "volcano",
+    refund_required: "gold",
     refunded: "red",
     partially_refunded: "magenta",
     unknown: "purple",
@@ -394,8 +395,11 @@ function buildOnlinePaymentColumns() {
       render: (value) => euro(value),
     },
     amountRefundedEuro: {
-      // null = refunded at Stripe but the amount is not stored (partially_refunded, no Refund rows).
-      render: (value) => euro(value),
+      // null amountRefunded = refunded amount not known (no Refund rows) -> "Unknown", never 0 / "—".
+      render: (value, record) =>
+        record?.amountRefundedUnknown || value === null || value === undefined
+          ? "Unknown"
+          : euro(value),
     },
     date: {
       render: (value) => (value ? formatDateOnly(value) : "—"),

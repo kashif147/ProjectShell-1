@@ -25,6 +25,8 @@ export const LIFECYCLE_STATUS_LABELS = Object.freeze({
   pending: "Pending",
   authorised: "Authorised (not captured)",
   captured: "Captured",
+  // Money was captured and a refund is owed - never shown as plain "Captured".
+  refund_required: "Refund required",
   cancelled: "Cancelled",
   failed: "Failed",
   refunded: "Refunded",
@@ -181,8 +183,17 @@ const text = (v) => {
   return s || null;
 };
 
+/** Server-provided refundable amount (minor units) when known and > 0, else null. */
+function knownRefundableMinor(row) {
+  const v = row?.refundableAmount;
+  if (v === null || v === undefined || v === "") return null;
+  const n = Number(v);
+  return Number.isFinite(n) && n > 0 ? n : null;
+}
+
+/** Refund needs BOTH actions.canRefund === true and a known refundableAmount > 0. */
 export function canRefundAttempt(row) {
-  return row?.actions?.canRefund === true;
+  return row?.actions?.canRefund === true && knownRefundableMinor(row) !== null;
 }
 
 export function hasReceipt(row) {
@@ -241,15 +252,17 @@ export function normalizeAttemptRow(item, index = 0) {
     paidAmount: capturedEuro,
     paidAmountEuro: capturedEuro,
     amountRefundedEuro: refundedEuro,
+    // null = refunded amount not known (e.g. refunded at Stripe without Refund rows).
+    amountRefundedUnknown: row.amountRefunded === null || row.amountRefunded === undefined,
+    refundableAmountEuro: centsToEuro(row.refundableAmount),
     paymentIntentId: text(row.paymentIntentId),
   };
 }
 
 /** Prefill for the refund drawer: what is still refundable on this attempt, in EUR. */
+// Only the server's refundableAmount is used - never amountCaptured - amountRefunded, and never the
+// full captured amount when prior refunds are unknown (refundableAmount null).
 export function refundablePrefillEuro(row) {
-  const captured = Number(row?.amountCaptured);
-  if (!Number.isFinite(captured) || captured <= 0) return null;
-  const refunded = Number(row?.amountRefunded);
-  const remaining = captured - (Number.isFinite(refunded) ? refunded : 0);
-  return remaining > 0 ? Math.round(remaining) / 100 : null;
+  const minor = knownRefundableMinor(row);
+  return minor === null ? null : Math.round(minor) / 100;
 }

@@ -41,7 +41,7 @@ const base = {
   capturableUntil: null, failureCode: null, cancellationReason: null, paymentIntentId: "pi_test_1",
   receipt: null, membershipNumber: null, fullName: "Test Applicant", membershipCategory: "General",
   membershipStatus: null, joinDate: null, renewalDate: null, billingCycle: null, paymentMethod: null,
-  amountCaptured: 0, amountRefunded: 0, actions: { canRefund: false },
+  amountCaptured: 0, amountRefunded: 0, refundableAmount: null, actions: { canRefund: false },
 };
 const receipt = {
   id: "650000000000000000000001", docNo: "RCP-650000000000000000000002", date: "2026-11-02T10:05:00.000Z",
@@ -55,15 +55,19 @@ const ITEMS = {
   failed: item({ id: "a4", lifecycleStatus: "failed", providerStatus: "failed", failureCode: "card_declined" }),
   captured: item({
     id: "a5", lifecycleStatus: "captured", providerStatus: "succeeded", amountCaptured: 5000, amountRefunded: 0,
-    capturedAt: "2026-11-02T10:05:00.000Z", receipt, actions: { canRefund: true },
+    capturedAt: "2026-11-02T10:05:00.000Z", receipt, refundableAmount: 5000, actions: { canRefund: true },
   }),
   capturedNoRefund: item({
-    id: "a6", lifecycleStatus: "captured", providerStatus: "refund_required", amountCaptured: 5000, receipt,
-    actions: { canRefund: false },
+    id: "a6", lifecycleStatus: "refund_required", providerStatus: "refund_required", amountCaptured: 5000, receipt,
+    amountRefunded: 0, refundableAmount: null, actions: { canRefund: false },
   }),
   partial: item({
     id: "a7", lifecycleStatus: "partially_refunded", providerStatus: "partially_refunded", amountCaptured: 5000,
-    amountRefunded: null, receipt, actions: { canRefund: false },
+    amountRefunded: null, refundableAmount: null, receipt, actions: { canRefund: false },
+  }),
+  knownPartial: item({
+    id: "a9", lifecycleStatus: "partially_refunded", providerStatus: "partially_refunded", amountCaptured: 5000,
+    amountRefunded: 1500, refundableAmount: 3500, receipt, actions: { canRefund: true },
   }),
   unknown: item({ id: "a8", lifecycleStatus: "unknown", providerStatus: "manual_review" }),
 };
@@ -71,13 +75,13 @@ const ITEMS = {
 // ---- query builder ----------------------------------------------------------------------------
 describe("buildAttemptsQuery", () => {
   test("emits only allowed keys, always mode=stripe, default limit 200", () => {
-    const p = buildAttemptsQuery({ statuses: ["captured", "authorised"], from: "2026-11-01", to: "2026-11-02", tenantId: "x", append: true, requestId: "r" });
+    const p = buildAttemptsQuery({ statuses: ["captured", "authorised", "refund_required"], from: "2026-11-01", to: "2026-11-02", tenantId: "x", append: true, requestId: "r" });
     const keys = [...p.keys()];
     keys.forEach((k) => expect(ATTEMPT_QUERY_KEYS).toContain(k));
     expect(keys).not.toContain("tenantId");
     expect(keys).not.toContain("append");
     expect(p.get("mode")).toBe("stripe");
-    expect(p.get("status")).toBe("captured,authorised");
+    expect(p.get("status")).toBe("captured,authorised,refund_required");
     expect(p.get("from")).toBe("2026-11-01");
     expect(p.get("to")).toBe("2026-11-02");
     expect(p.get("limit")).toBe("200");
@@ -107,7 +111,9 @@ describe("server-side filters", () => {
     expect(statusFilterToServerStatuses({ operator: "==", selectedValues: ["Paid"] })).toEqual(["captured"]); // legacy saved views
     const notCancelled = statusFilterToServerStatuses({ operator: "!=", selectedValues: ["Cancelled"] });
     expect(notCancelled).not.toContain("cancelled");
-    expect(notCancelled).toHaveLength(7);
+    expect(notCancelled).toHaveLength(8);
+    expect(notCancelled).toContain("refund_required");
+    expect(statusFilterToServerStatuses({ operator: "==", selectedValues: ["Refund required"] })).toEqual(["refund_required"]);
     expect(statusFilterToServerStatuses({ operator: "==", selectedValues: [] })).toBeNull();
     expect(statusFilterToServerStatuses({ operator: "==", selectedValues: ["Nonsense"] })).toEqual([]);
     expect(isEmptyStatusSelection({ statuses: [] })).toBe(true);
@@ -163,7 +169,7 @@ describe("normalizeAttemptRow", () => {
     expect(auth.paidAmount).toBe(0);
     expect(auth.amountEuro).toBe(50);
     expect(Object.values(LIFECYCLE_STATUS_LABELS)).toEqual([
-      "Pending", "Authorised (not captured)", "Captured", "Cancelled", "Failed", "Refunded", "Partially refunded", "Unknown",
+      "Pending", "Authorised (not captured)", "Captured", "Refund required", "Cancelled", "Failed", "Refunded", "Partially refunded", "Unknown",
     ]);
     expect(lifecycleLabel("weird")).toBe("Unknown");
     expect(normalizeAttemptRow({ ...ITEMS.pending, lifecycleStatus: "weird" }).paymentStatus).toBe("Unknown");
@@ -174,7 +180,7 @@ describe("normalizeAttemptRow", () => {
     expect(r.paymentStatus).toBe("Partially refunded");
     expect(r.amountRefundedEuro).toBeNull();
     expect(r.paidAmount).toBe(50);
-    expect(refundablePrefillEuro(ITEMS.partial)).toBe(50);
+    expect(refundablePrefillEuro(ITEMS.partial)).toBeNull();
   });
 
   test("receipt identity only when a receipt exists", () => {
@@ -197,7 +203,10 @@ describe("normalizeAttemptRow", () => {
     );
     expect(canRefundAttempt({ actions: { canRefund: "true" } })).toBe(false);
     expect(canRefundAttempt({})).toBe(false);
-    expect(refundablePrefillEuro({ amountCaptured: 5000, amountRefunded: 1000 })).toBe(40);
+    expect(refundablePrefillEuro({ amountCaptured: 5000, amountRefunded: 1000 })).toBeNull(); // never computed client-side
+    expect(canRefundAttempt({ actions: { canRefund: true }, refundableAmount: null })).toBe(false);
+    expect(canRefundAttempt({ actions: { canRefund: true }, refundableAmount: 0 })).toBe(false);
+    expect(canRefundAttempt({ actions: { canRefund: false }, refundableAmount: 100 })).toBe(false);
     expect(refundablePrefillEuro(ITEMS.authorised)).toBeNull();
   });
 });
@@ -280,7 +289,7 @@ test("actions column: refund menu only for canRefund rows", () => {
 
 test("cells render safely: null refunded amount, status tag label, transaction ref fallback", () => {
   const partial = normalizeAttemptRow(ITEMS.partial);
-  expect(col("amountRefundedEuro").render(partial.amountRefundedEuro, partial)).toBe("—");
+  expect(col("amountRefundedEuro").render(partial.amountRefundedEuro, partial)).toBe("Unknown");
   const { container } = render(<div>{col("paymentStatus").render(partial.paymentStatus, partial)}</div>);
   expect(container.textContent).toBe("Partially refunded");
   const auth = normalizeAttemptRow(ITEMS.authorised);
@@ -296,4 +305,43 @@ test("client-side filters still work on mapped rows (Captured Amount / Full Name
     "Full Name": { operator: "==", selectedValues: ["Test"] },
   }), ctx.columns.OnlinePayment);
   expect(out).toHaveLength(rows.length);
+});
+
+// ---- refund_required / partial refunds (contract update) ---------------------------------------
+describe("refund_required and partial refunds", () => {
+  test("refund_required: labelled 'Refund required' (never Captured), captured amount shown, no refund action", () => {
+    const r = normalizeAttemptRow(ITEMS.capturedNoRefund);
+    expect(r.paymentStatus).toBe("Refund required");
+    expect(r.paymentStatus).not.toBe("Captured");
+    expect(r.paidAmount).toBe(50);
+    expect(col("paidAmount").render(r.paidAmount, r)).not.toBe("—");
+    expect(canRefundAttempt(r)).toBe(false);
+    expect(col("_actions").render(null, r)).toBeNull();
+    expect(refundablePrefillEuro(r)).toBeNull();
+  });
+
+  test("unknown partial refund: 'Unknown' refunded amount, no refund action, no prefill", () => {
+    const r = normalizeAttemptRow(ITEMS.partial);
+    expect(col("amountRefundedEuro").render(r.amountRefundedEuro, r)).toBe("Unknown");
+    expect(canRefundAttempt(r)).toBe(false);
+    expect(col("_actions").render(null, r)).toBeNull();
+    expect(refundablePrefillEuro(r)).toBeNull();
+    // even if the server flag were true, an unknown refundable amount gives no action / prefill
+    const forced = { ...r, actions: { canRefund: true } };
+    expect(canRefundAttempt(forced)).toBe(false);
+    expect(refundablePrefillEuro(forced)).toBeNull();
+  });
+
+  test("known partial refund: prefill = refundableAmount / 100, refund action shown", () => {
+    const r = normalizeAttemptRow(ITEMS.knownPartial);
+    expect(refundablePrefillEuro(r)).toBe(35);
+    expect(canRefundAttempt(r)).toBe(true);
+    expect(col("_actions").render(null, r)).not.toBeNull();
+    expect(col("amountRefundedEuro").render(r.amountRefundedEuro, r)).not.toBe("Unknown");
+  });
+
+  test("Refund required is offered in the Payment Status filter options", () => {
+    const { ONLINE_PAYMENT_STATUS_FILTER_OPTIONS } = require("../../utils/onlinePaymentAttempts");
+    expect(ONLINE_PAYMENT_STATUS_FILTER_OPTIONS).toContain("Refund required");
+  });
 });
