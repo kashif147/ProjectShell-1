@@ -306,6 +306,18 @@ export async function rejectRegistration(id) {
   return unwrap({ data });
 }
 
+// P5 STUDENT policy: verify or reject a member-declared student pricing claim (CRM + events:write).
+// Verifying unblocks approval; rejecting rejects the registration and releases/voids its payment.
+// decision: "verify" | "reject"; note: optional, at most 500 characters (staff-only, never shown to the member).
+export async function decideStudentVerification(id, { decision, note } = {}) {
+  const { data } = await axios.put(
+    `${getEventsServiceBaseUrl()}/registrations/${id}/student-verification`,
+    { decision, ...(note ? { note } : {}) },
+    { headers: authHeaders() },
+  );
+  return unwrap({ data });
+}
+
 // Certificates
 export async function issueCertificate(registrationId, templateId) {
   const { data } = await axios.post(
