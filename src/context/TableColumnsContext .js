@@ -54,9 +54,12 @@ import {
 import {
   callOnlinePaymentOpenFinance,
   callOnlinePaymentRefund,
-  isOnlinePaymentRefundableUnapproved,
+  isOnlinePaymentRefundable,
 } from "../utils/onlinePaymentsWorkspace";
-import { resolvePaidAmountEuro } from "../utils/onlinePaymentAmount";
+import {
+  ONLINE_PAYMENT_GRID_SCREEN,
+  normalizeOnlinePaymentTemplateForRead,
+} from "../utils/onlinePaymentGridCompat";
 import {
   callEventsEdit,
   callEventsClone,
@@ -314,6 +317,20 @@ function buildJournalAdjustmentsColumns() {
 }
 
 function buildOnlinePaymentColumns() {
+  const statusColor = {
+    pending: "orange",
+    authorised: "blue",
+    captured: "green",
+    cancelled: "default",
+    failed: "volcano",
+    refunded: "red",
+    partially_refunded: "magenta",
+    unknown: "purple",
+  };
+  const euro = (value) =>
+    value === null || value === undefined || !Number.isFinite(Number(value))
+      ? "—"
+      : formatCurrency(Number(value));
   return mergeGridColumnDefaults(GRID_COLUMN_DEFAULTS.OnlinePayment || [], {
     memberNo: {
       render: (text) => text || "—",
@@ -350,8 +367,9 @@ function buildOnlinePaymentColumns() {
       render: (value) => (value ? formatDateOnly(value) : "—"),
     },
     transactionId: {
+      // Receipt docNo when a GL Receipt exists; otherwise the Stripe payment intent reference.
       render: (text, row) => {
-        const value = text || row?.docNo || row?.id || row?._id || "—";
+        const value = text || row?.paymentIntentId || "—";
         if (row?.highlight) {
           return (
             <span
@@ -368,8 +386,16 @@ function buildOnlinePaymentColumns() {
         return value;
       },
     },
+    amountEuro: {
+      render: (value) => euro(value),
+    },
     paidAmount: {
-      render: (_, row) => formatCurrency(resolvePaidAmountEuro(row)),
+      // Captured amount only - an authorised hold shows 0, never as paid.
+      render: (value) => euro(value),
+    },
+    amountRefundedEuro: {
+      // null = refunded at Stripe but the amount is not stored (partially_refunded, no Refund rows).
+      render: (value) => euro(value),
     },
     date: {
       render: (value) => (value ? formatDateOnly(value) : "—"),
@@ -378,57 +404,47 @@ function buildOnlinePaymentColumns() {
       render: (text) => text || "—",
     },
     paymentStatus: {
-      render: (status) => {
-        const value = String(status || "").toLowerCase();
-        let color = "default";
-        if (value === "paid" || value === "captured") color = "green";
-        else if (value === "authorised" || value === "requires capture")
-          color = "blue";
-        else if (value === "cancelled" || value === "canceled") color = "default";
-        else if (value === "refunded") color = "red";
-        else if (value === "pending" || value === "payment required") color = "orange";
-        else if (value === "refund required" || value === "manual review")
-          color = "purple";
-        else if (value === "authorisation expired") color = "volcano";
-        else if (value === "failed") color = "volcano";
-        return <Tag color={color}>{status || "—"}</Tag>;
-      },
+      render: (label, record) => (
+        <Tag color={statusColor[record?.lifecycleStatus] || "default"}>
+          {label || "—"}
+        </Tag>
+      ),
+    },
+    purposeLabel: {
+      render: (text) => text || "—",
     },
     billingCycle: {
       render: (text) => text || "—",
-    },
-    email: {
-      render: (text) => text || "—",
-    },
-    phone: {
-      render: (value) => (value ? formatMobileNumber(value) : "—"),
     },
     joinDate: {
       render: (value) => (value ? formatDateOnly(value) : "—"),
     },
     _actions: {
-      render: (_, record) => (
-        <Dropdown
-          menu={{
-            items: [
-              {
-                key: "Refund",
-                label: "Refund",
-                disabled: !isOnlinePaymentRefundableUnapproved(record),
-                onClick: () => callOnlinePaymentRefund(record),
-              },
-            ],
-          }}
-          trigger={["click"]}
-          placement="bottomRight"
-        >
-          <Button
-            type="text"
-            icon={<MoreOutlined style={{ fontSize: "20px" }} />}
-            onClick={(e) => e.stopPropagation()}
-          />
-        </Dropdown>
-      ),
+      // Refund only when the server says so (actions.canRefund). Cancelled / failed / authorised /
+      // pending / unknown rows get no action at all.
+      render: (_, record) =>
+        isOnlinePaymentRefundable(record) ? (
+          <Dropdown
+            menu={{
+              items: [
+                {
+                  key: "Refund",
+                  label: "Refund",
+                  onClick: () => callOnlinePaymentRefund(record),
+                },
+              ],
+            }}
+            trigger={["click"]}
+            placement="bottomRight"
+          >
+            <Button
+              type="text"
+              aria-label="Payment actions"
+              icon={<MoreOutlined style={{ fontSize: "20px" }} />}
+              onClick={(e) => e.stopPropagation()}
+            />
+          </Dropdown>
+        ) : null,
     },
   });
 }
@@ -7081,10 +7097,23 @@ export const TableColumnsProvider = ({ children }) => {
             fallbackColumnLabels: buildColumnLabelsMap(GRID_COLUMN_DEFAULTS[ISSUE_GRID_SCREEN] || []),
           })
         : null;
-    const templateColumns = issueCompat ? issueCompat.templateColumns : storedTemplateColumns;
-    const masterColumns = issueCompat ? issueCompat.masterColumns : storedMasterColumns;
-    const templateColumnLabels = issueCompat ? issueCompat.templateColumnLabels : storedTemplateColumnLabels;
-    const masterColumnLabels = issueCompat ? issueCompat.masterColumnLabels : storedMasterColumnLabels;
+    // Online Payments: stored views predate the payment-attempts grid (email/phone dropped, new
+    // amount/purpose columns added) - same read-time, never-written-back approach.
+    const onlinePaymentCompat =
+      screenName === ONLINE_PAYMENT_GRID_SCREEN
+        ? normalizeOnlinePaymentTemplateForRead({
+            templateColumns: storedTemplateColumns,
+            masterColumns: storedMasterColumns,
+            templateColumnLabels: storedTemplateColumnLabels,
+            masterColumnLabels: storedMasterColumnLabels,
+            fallbackColumns: buildVisibleColumnKeys(GRID_COLUMN_DEFAULTS[ONLINE_PAYMENT_GRID_SCREEN] || []),
+          })
+        : null;
+    const compat = issueCompat || onlinePaymentCompat;
+    const templateColumns = compat ? compat.templateColumns : storedTemplateColumns;
+    const masterColumns = compat ? compat.masterColumns : storedMasterColumns;
+    const templateColumnLabels = compat ? compat.templateColumnLabels : storedTemplateColumnLabels;
+    const masterColumnLabels = compat ? compat.masterColumnLabels : storedMasterColumnLabels;
 
     const normalizeTemplateColumnKey = (key) => {
       const value = String(key || "");
