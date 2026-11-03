@@ -140,9 +140,33 @@ export async function updateEventSession(eventId, sessionId, payload) {
   return unwrap({ data });
 }
 
-export async function deleteEventSession(eventId, sessionId) {
+// scheduleChangeReason travels in the request BODY, never the URL (gateway access logs record full
+// query strings).
+export async function deleteEventSession(eventId, sessionId, scheduleChangeReason) {
   const { data } = await axios.delete(
     `${getEventsServiceBaseUrl()}/events/${eventId}/sessions/${sessionId}`,
+    { headers: authHeaders(), ...(scheduleChangeReason ? { data: { scheduleChangeReason } } : {}) },
+  );
+  return unwrap({ data });
+}
+
+// P5: the event's IANA timezone is set/corrected only through this audited endpoint (the generic
+// event update refuses timezone fields). scheduleChangeReason is required once the event is
+// published, has registrations, or already had a timezone.
+export async function setEventTimezone(eventId, { timezone, scheduleChangeReason } = {}) {
+  const { data } = await axios.put(
+    `${getEventsServiceBaseUrl()}/events/${eventId}/timezone`,
+    { timezone, ...(scheduleChangeReason ? { scheduleChangeReason } : {}) },
+    { headers: authHeaders() },
+  );
+  return unwrap({ data });
+}
+
+// P5 organiser check-in: the organiser scans the attendee's pass; the pass alone records nothing.
+export async function scanCheckinPass(token) {
+  const { data } = await axios.post(
+    `${getEventsServiceBaseUrl()}/registrations/checkin/scan`,
+    { token },
     { headers: authHeaders() },
   );
   return unwrap({ data });

@@ -307,6 +307,7 @@ const EventsDashboard = lazyWithRetry(
   () => import("./pages/events/EventsDashboard"),
 );
 const EventDetails = lazyWithRetry(() => import("./pages/events/EventDetails"));
+const CheckinScan = lazyWithRetry(() => import("./pages/events/CheckinScan"));
 const AttendeesSummary = lazyWithRetry(
   () => import("./pages/events/AttendeesSummary"),
 );
@@ -895,6 +896,18 @@ function Entry() {
                                 }
                               >
                                 <EventDetails />
+                              </ProtectedRoute>
+                            }
+                          />
+                          <Route
+                            path="CheckinScan"
+                            element={
+                              <ProtectedRoute
+                                requiredPermission={
+                                  RoutePermissions["CheckinScan"]
+                                }
+                              >
+                                <CheckinScan />
                               </ProtectedRoute>
                             }
                           />

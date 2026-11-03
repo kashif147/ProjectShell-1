@@ -13,6 +13,7 @@ import {
   Upload,
   message,
   Tooltip,
+  Modal,
 } from "antd";
 import { EnvironmentOutlined, InfoCircleOutlined, UploadOutlined, LoadingOutlined } from "@ant-design/icons";
 import ImgCrop from "antd-img-crop";
@@ -38,8 +39,10 @@ import {
   addEventSession,
   updateEventSession,
   deleteEventSession,
+  setEventTimezone,
   uploadEventImage,
 } from "../../services/eventsApi";
+import { fetchTenantRecord, resolveTenantId } from "../../services/tenantBrandingService";
 import { fetchDocumentTemplates } from "../../services/communicationTemplatesApi";
 import { computeEventFormat, resolveFallbackImageFormat } from "../../utils/eventFormat";
 import { buildEventFallbackImageDataUri } from "../../utils/eventFallbackImageDataUri";
@@ -173,6 +176,51 @@ const DESCRIPTION_EDITOR_MODULES = {
   ],
 };
 
+
+// P5 attendance window: every event needs an explicit IANA timezone (attendance fails closed
+// without one). Options come from the browser's own IANA list; the value is never guessed.
+const TIMEZONE_OPTIONS = (() => {
+  let zones = [];
+  try {
+    zones = typeof Intl.supportedValuesOf === "function" ? Intl.supportedValuesOf("timeZone") : [];
+  } catch {
+    zones = [];
+  }
+  if (!zones.includes("UTC")) zones = ["UTC", ...zones];
+  return zones.map((z) => ({ value: z, label: z }));
+})();
+
+// Asks for the reason the server requires for an audited schedule / timezone change.
+// Resolves the trimmed text, or null when the user cancels.
+function promptScheduleChangeReason() {
+  return new Promise((resolve) => {
+    let text = "";
+    Modal.confirm({
+      title: "Reason for this schedule change",
+      content: (
+        <Input.TextArea
+          rows={3}
+          maxLength={500}
+          placeholder="This event is published or has registrations, so the change is audited. Why is it changing?"
+          onChange={(e) => {
+            text = e.target.value;
+          }}
+        />
+      ),
+      okText: "Save change",
+      onOk: () => {
+        if (!text.trim()) {
+          message.error("A reason is required");
+          return Promise.reject(new Error("reason required"));
+        }
+        resolve(text.trim());
+        return undefined;
+      },
+      onCancel: () => resolve(null),
+    });
+  });
+}
+
 const CreateEventDrawer = ({ open, onClose, eventId, onDeleted, cloneFromEventId }) => {
   const dispatch = useDispatch();
   const { eventTypeOptions, eventCategoryOptions, venueOptions, accreditationBodyOptions } = useSelector(
@@ -181,6 +229,8 @@ const CreateEventDrawer = ({ open, onClose, eventId, onDeleted, cloneFromEventId
 
   const [eventName, setEventName] = useState("");
   const [eventDate, setEventDate] = useState(null);
+  const [timezone, setTimezone] = useState("");
+  const [loadedTimezone, setLoadedTimezone] = useState("");
   const [eventType, setEventType] = useState("");
   const [seatLimit, setSeatLimit] = useState("");
   const [description, setDescription] = useState("");
@@ -295,6 +345,25 @@ const CreateEventDrawer = ({ open, onClose, eventId, onDeleted, cloneFromEventId
     };
   }, [open]);
 
+  // New event: pre-fill the timezone from the tenant's regional setting when the caller can read it
+  // (the user still sees and confirms it). If it can't be read, the field stays empty and must be
+  // chosen - never guessed from the browser or defaulted.
+  useEffect(() => {
+    if (!open || eventId || cloneFromEventId) return;
+    let cancelled = false;
+    fetchTenantRecord(resolveTenantId())
+      .then((tenant) => {
+        const tz = tenant?.regionalSettings?.timezone;
+        if (!cancelled && tz && TIMEZONE_OPTIONS.some((o) => o.value === tz)) {
+          setTimezone((prev) => prev || tz);
+        }
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, [open, eventId, cloneFromEventId]);
+
   // Selected Venue lookup (pulled from Configuration > Venue), with its address.
   const selectedVenue = useMemo(
     () => venueOptions.find((v) => String(v.value) === String(venueId)) || null,
@@ -375,6 +444,8 @@ const CreateEventDrawer = ({ open, onClose, eventId, onDeleted, cloneFromEventId
         setEventName(ev.title || "");
         setDescription(ev.description || "");
         setEventDate(ev.startDate ? dayjs(ev.startDate) : null);
+        setTimezone(ev.timezone || "");
+        setLoadedTimezone(ev.timezone || "");
         setSeatLimit(ev.capacity != null ? String(ev.capacity) : "");
         setVenueId(ev.venueId || "");
         setImageUrl(ev.imageUrl || "");
@@ -467,6 +538,8 @@ const CreateEventDrawer = ({ open, onClose, eventId, onDeleted, cloneFromEventId
         const ev = await fetchEventById(cloneFromEventId);
         if (cancelled || !ev) return;
         setEventName(ev.title ? `${ev.title} (Copy)` : "");
+        setTimezone(ev.timezone || "");
+        setLoadedTimezone("");
         setDescription(ev.description || "");
         setEventDate(null);
         setSeatLimit(ev.capacity != null ? String(ev.capacity) : "");
@@ -824,6 +897,14 @@ const CreateEventDrawer = ({ open, onClose, eventId, onDeleted, cloneFromEventId
         // is still editable here; status transitions go through the
         // dedicated Unpublish/Cancel Event/Mark Completed actions below.
         await updateEventApi(eventId, { isActive });
+        // P5 correction path for published events: the timezone stays editable and is saved through
+        // the audited endpoint (a reason is always required on a published event).
+        if (timezone && timezone !== loadedTimezone) {
+          const reason = await promptScheduleChangeReason();
+          if (!reason) throw new Error("Timezone not changed - a reason is required");
+          await setEventTimezone(eventId, { timezone, scheduleChangeReason: reason });
+          setLoadedTimezone(timezone);
+        }
         message.success("Event updated");
         dispatch(bumpEventsRefresh());
         onClose();
@@ -873,8 +954,28 @@ const CreateEventDrawer = ({ open, onClose, eventId, onDeleted, cloneFromEventId
       return;
     }
 
+    if (!timezone) {
+      message.error("Timezone is required - attendance check-in windows are calculated in the event's timezone");
+      return;
+    }
+
     setSaving(true);
     try {
+      // Audited schedule changes: the server answers SCHEDULE_CHANGE_REASON_REQUIRED once the event
+      // is published or has registrations; ask once per save and reuse the reason for every call.
+      let scheduleReason = null;
+      const withScheduleReason = async (call) => {
+        try {
+          return await call(scheduleReason);
+        } catch (err) {
+          if (err?.response?.data?.error?.code !== "SCHEDULE_CHANGE_REASON_REQUIRED" || scheduleReason) throw err;
+          scheduleReason = await promptScheduleChangeReason();
+          if (!scheduleReason) throw new Error("Schedule change not saved - a reason is required");
+          return call(scheduleReason);
+        }
+      };
+      const withReason = (body, reason) => (reason ? { ...body, scheduleChangeReason: reason } : body);
+
       // Span the event across the earliest and latest scheduled day, not
       // array position - a day's date can be edited to any value, so it
       // isn't guaranteed to stay in chronological order in scheduleData.
@@ -941,7 +1042,13 @@ const CreateEventDrawer = ({ open, onClose, eventId, onDeleted, cloneFromEventId
 
       const event = eventId
         ? await updateEventApi(eventId, payload)
-        : await createEvent(payload);
+        : await createEvent({ ...payload, timezone });
+
+      // Timezone changes on an existing event go through the audited endpoint.
+      if (eventId && event?._id && timezone !== loadedTimezone) {
+        await withScheduleReason((reason) => setEventTimezone(event._id, withReason({ timezone }, reason)));
+        setLoadedTimezone(timezone);
+      }
 
       // Persist the schedule as sessions - create/update/delete to match
       // scheduleData - for every event, single-day included (a single-day
@@ -960,6 +1067,9 @@ const CreateEventDrawer = ({ open, onClose, eventId, onDeleted, cloneFromEventId
             const sessionPayload = {
               label: daySessions.length > 1 ? `${day.day} - Session ${i + 1}` : day.day,
               date: dayjs(day.date).toISOString(),
+              // P5: the calendar day as the user picked it - the attendance window is computed from
+              // this + startTime/endTime in the event timezone (never from `date`).
+              localDate: dayjs(day.date).format("YYYY-MM-DD"),
               startTime: session.startTime ? dayjs(session.startTime).format("HH:mm") : undefined,
               endTime: session.endTime ? dayjs(session.endTime).format("HH:mm") : undefined,
               isVirtual: !!day.isOnline,
@@ -974,14 +1084,16 @@ const CreateEventDrawer = ({ open, onClose, eventId, onDeleted, cloneFromEventId
               organizerUpn: day.isOnline ? day.organizerUpn || null : null,
             };
             if (session.sessionId) {
-              await updateEventSession(event._id, session.sessionId, sessionPayload);
+              await withScheduleReason((reason) =>
+                updateEventSession(event._id, session.sessionId, withReason(sessionPayload, reason)),
+              );
             } else {
-              await addEventSession(event._id, sessionPayload);
+              await withScheduleReason((reason) => addEventSession(event._id, withReason(sessionPayload, reason)));
             }
           }
         }
         for (const sessionId of removedSessionIds) {
-          await deleteEventSession(event._id, sessionId);
+          await withScheduleReason((reason) => deleteEventSession(event._id, sessionId, reason || undefined));
         }
       }
 
@@ -1259,6 +1371,23 @@ const CreateEventDrawer = ({ open, onClose, eventId, onDeleted, cloneFromEventId
                     placeholder="DD/MM/YYYY"
                     disabled={isLocked}
                     required
+                  />
+                </Col>
+                <Col xs={24} sm={12}>
+                  <CustomSelect
+                    label="Timezone"
+                    name="timezone"
+                    value={timezone}
+                    onChange={(e) => setTimezone(e?.target?.value || "")}
+                    options={TIMEZONE_OPTIONS}
+                    isIDs={true}
+                    showSearch
+                    allowClear={false}
+                    required
+                    placeholder="e.g. Europe/Dublin"
+                    // Editable on published events too: it is saved through the audited timezone
+                    // endpoint (reason prompted), so incomplete legacy events can be corrected.
+                    disabled={false}
                   />
                 </Col>
                 <Col xs={24} sm={12}>

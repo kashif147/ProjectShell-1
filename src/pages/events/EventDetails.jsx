@@ -489,6 +489,13 @@ const EventDetails = () => {
                                 Clone Event
                             </Button>
                             <Button
+                                className="butn"
+                                // P5 organiser check-in (route requires events:write, as does the backend)
+                                onClick={() => navigate('/CheckinScan')}
+                            >
+                                Check-in Scan
+                            </Button>
+                            <Button
                                 className="butn primary-btn"
                                 icon={<EditOutlined />}
                                 onClick={() => setIsEditEventDrawerVisible(true)}
