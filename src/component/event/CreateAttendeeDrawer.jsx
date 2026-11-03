@@ -10,6 +10,7 @@ import {
     Tooltip,
     Space,
     Popconfirm,
+    Input,
     message
 } from 'antd';
 import { CreditCardOutlined, MinusOutlined, PlusOutlined, DiffOutlined, SafetyCertificateOutlined } from '@ant-design/icons';
@@ -36,7 +37,14 @@ import {
     rejectRegistration,
     retryRegistrationPayment,
     updateRegistrationAttendee,
+    decideStudentVerification,
 } from '../../services/eventsApi';
+import {
+    STUDENT_VERIFICATION_NOTE_MAX,
+    studentClaimView,
+    studentVerificationErrorCode,
+    studentVerificationErrorMessage,
+} from './studentVerification';
 import { dispatchProfileInvalidate } from '../../utils/profileRealtimeEvents';
 import { computeEventFormat } from '../../utils/eventFormat';
 import { resolveEventCategoryLabel } from '../../utils/eventCategory';
@@ -168,6 +176,13 @@ const CreateAttendeeDrawerInner = ({ open, onClose, eventId, registration, onApp
     const [viewPaymentMethod, setViewPaymentMethod] = useState(registration?.paymentMethod);
     const [approving, setApproving] = useState(false);
     const [rejecting, setRejecting] = useState(false);
+    // P5 STUDENT policy - the registration's student pricing claim (view mode), updated locally after
+    // a Verify/Reject decision so Approve unblocks (or the rejection shows) without reopening.
+    const [studentEligibility, setStudentEligibility] = useState(registration?.studentEligibility || null);
+    const [studentNote, setStudentNote] = useState('');
+    const [studentDeciding, setStudentDeciding] = useState(null);
+    // Set when the server refused approval for an unrecorded (pre-policy) student-priced row.
+    const [studentDecisionRequired, setStudentDecisionRequired] = useState(false);
     const [retryingPayment, setRetryingPayment] = useState(false);
     const [retryCardComplete, setRetryCardComplete] = useState({ number: false, expiry: false, cvc: false });
     // View mode only - the CRM user opted to change a manual/comp/invoice
@@ -264,6 +279,9 @@ const CreateAttendeeDrawerInner = ({ open, onClose, eventId, registration, onApp
         setApprovalStatus(registration.approvalStatus);
         setPaymentStatus(registration.paymentStatus);
         setViewPaymentMethod(registration.paymentMethod);
+        setStudentEligibility(registration.studentEligibility || null);
+        setStudentNote('');
+        setStudentDecisionRequired(false);
         setRetryCardComplete({ number: false, expiry: false, cvc: false });
         setSwitchToCard(false);
         const review = registration.duplicateReview || {};
@@ -876,7 +894,8 @@ const CreateAttendeeDrawerInner = ({ open, onClose, eventId, registration, onApp
             dispatchProfileInvalidate({ scopes: ['events'], profileId: updated?.profileId || registration.profileId });
             onApproved?.(updated);
         } catch (err) {
-            message.error(err?.response?.data?.error?.message || err?.message || 'Failed to approve registration');
+            message.error(studentVerificationErrorMessage(err, 'Failed to approve registration'));
+            if (studentVerificationErrorCode(err) === 'STUDENT_VERIFICATION_PENDING') setStudentDecisionRequired(true);
             // A capture conflict (e.g. the Stripe authorization hold expired
             // between authorization and approval - see events-service's
             // registrationApproval.service.js) already corrected paymentStatus
@@ -889,6 +908,33 @@ const CreateAttendeeDrawerInner = ({ open, onClose, eventId, registration, onApp
             if (stripeStatus && stripeStatus !== 'requires_capture') {
                 setPaymentStatus(stripeStatus === 'succeeded' ? 'succeeded' : 'failed');
             }
+        }
+    };
+
+    // P5 STUDENT policy - verify or reject a declared student pricing claim. Verifying unblocks
+    // Approve; rejecting rejects the registration (v1 - re-pricing is a separate flow) and releases or
+    // voids its payment server-side.
+    const handleStudentDecision = async (decision) => {
+        if (!registration?._id) return;
+        setStudentDeciding(decision);
+        try {
+            const note = studentNote.trim();
+            const updated = await decideStudentVerification(registration._id, { decision, note: note || undefined });
+            setStudentEligibility(updated?.studentEligibility || null);
+            if (updated?.approvalStatus) setApprovalStatus(updated.approvalStatus);
+            if (updated?.status) setRegistrationStatus(updated.status);
+            setStudentNote('');
+            if (decision === 'verify') {
+                message.success('Student pricing verified');
+            } else {
+                message.success('Student pricing rejected - the registration was rejected');
+                dispatchProfileInvalidate({ scopes: ['events'], profileId: registration.profileId });
+                onApproved?.(updated);
+            }
+        } catch (err) {
+            message.error(studentVerificationErrorMessage(err, 'Failed to record the student pricing decision'));
+        } finally {
+            setStudentDeciding(null);
         }
     };
 
@@ -1052,6 +1098,11 @@ const CreateAttendeeDrawerInner = ({ open, onClose, eventId, registration, onApp
     const stripePaymentNotAuthorized =
         viewPaymentMethod === 'stripe' && !['authorized', 'succeeded'].includes(paymentStatus);
     const approveBlockedByPayment = viewMode && stripePaymentNotAuthorized;
+    // P5 STUDENT policy: the server refuses approval (409) until a declared claim is verified.
+    const studentClaim = viewMode
+        ? studentClaimView({ ...registration, studentEligibility, approvalStatus }, { serverRequiresDecision: studentDecisionRequired })
+        : null;
+    const approveBlockedByStudentClaim = Boolean(studentClaim && studentClaim.state !== 'verified');
     // View mode only - a manual/comp/invoice registration can be switched to
     // Card (Stripe) any time before approval, if the CRM user changes their
     // mind about how the attendee is paying.
@@ -1084,10 +1135,18 @@ const CreateAttendeeDrawerInner = ({ open, onClose, eventId, registration, onApp
             )}
             {!editMode && approvalStatus === 'pending_review' && (
                 <>
-                    <Tooltip title={approveBlockedByPayment ? 'Payment has not been authorized yet - retry payment below before approving.' : undefined}>
+                    <Tooltip
+                        title={
+                            approveBlockedByPayment
+                                ? 'Payment has not been authorized yet - retry payment below before approving.'
+                                : approveBlockedByStudentClaim
+                                    ? 'Verify or reject the student pricing claim before approving.'
+                                    : undefined
+                        }
+                    >
                     <Button
                         className="butn primary-btn"
-                        disabled={approveBlockedByReview || approveBlockedByPayment}
+                        disabled={approveBlockedByReview || approveBlockedByPayment || approveBlockedByStudentClaim}
                         loading={approving}
                         onClick={handleApprove}
                     >
@@ -1613,6 +1672,54 @@ const CreateAttendeeDrawerInner = ({ open, onClose, eventId, registration, onApp
                                                 {registration?.createdAt ? new Date(registration.createdAt).toLocaleString() : '-'}
                                             </div>
                                         </div>
+                                        {studentClaim && (
+                                            <div className="summary-table-row" data-testid="student-claim-row">
+                                                <div className="summary-table-label">Student claim</div>
+                                                <div className="summary-table-value">
+                                                    {studentClaim.institution || 'Institution not recorded'}{' '}
+                                                    <Tag color={{ pending: 'gold', verified: 'green', rejected: 'red' }[studentClaim.state]}>
+                                                        {{ pending: 'Awaiting verification', verified: 'Verified', rejected: 'Rejected' }[studentClaim.state]}
+                                                    </Tag>
+                                                    {studentClaim.note && (
+                                                        <div style={{ marginTop: 4, fontSize: 12 }}>Note: {studentClaim.note}</div>
+                                                    )}
+                                                    {studentClaim.decidable && (
+                                                        <div style={{ marginTop: 8 }}>
+                                                            <Input.TextArea
+                                                                rows={2}
+                                                                maxLength={STUDENT_VERIFICATION_NOTE_MAX}
+                                                                placeholder="Note (optional)"
+                                                                value={studentNote}
+                                                                onChange={(e) => setStudentNote(e.target.value)}
+                                                                disabled={!!studentDeciding}
+                                                            />
+                                                            <Space style={{ marginTop: 8 }}>
+                                                                <Button
+                                                                    size="small"
+                                                                    className="butn primary-btn"
+                                                                    loading={studentDeciding === 'verify'}
+                                                                    disabled={!!studentDeciding}
+                                                                    onClick={() => handleStudentDecision('verify')}
+                                                                >
+                                                                    Verify student pricing
+                                                                </Button>
+                                                                <Popconfirm
+                                                                    title="Reject the student pricing claim?"
+                                                                    description="The registration will be rejected and its payment released or voided (v1 - no re-pricing)."
+                                                                    okText="Reject claim"
+                                                                    okButtonProps={{ danger: true }}
+                                                                    onConfirm={() => handleStudentDecision('reject')}
+                                                                >
+                                                                    <Button size="small" danger loading={studentDeciding === 'reject'} disabled={!!studentDeciding}>
+                                                                        Reject claim
+                                                                    </Button>
+                                                                </Popconfirm>
+                                                            </Space>
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        )}
                                     </>
                                 )}
                             </div>
