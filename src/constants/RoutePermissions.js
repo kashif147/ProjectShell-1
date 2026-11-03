@@ -109,6 +109,8 @@ export const RoutePermissions = {
   "EventsDashboard": "events:read",
   "EventsSummary": "events:read",
   "EventDetails": "events:read",
+  // P5 organiser check-in scan - the backend requires CRM + events:write.
+  "CheckinScan": "events:write",
   "Attendees": "portal:read",
   "Reporting": "portal:read",
   "EventsSettings": "portal:read",
