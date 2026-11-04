@@ -234,5 +234,25 @@ describe("DuplicateProfileReview", () => {
       expect(await screen.findByText(/Profile already exists/)).toBeInTheDocument();
       expect(axios.get.mock.calls.length).toBe(getsBefore);
     });
+
+    test("a pending identity-link decision is shown", async () => {
+      axios.get.mockReset();
+      axios.get.mockResolvedValue({
+        data: {
+          data: {
+            applicationStatus: "processed",
+            isReadOnly: true,
+            reviewVersion: 6,
+            duplicateReview: { status: "LINKED", reviewVersion: 6 },
+            identityLink: { status: "PENDING", reason: "PROFILE_BOUND_TO_OTHER_USER" },
+            matchingProfiles: [],
+            matchingApplications: [],
+          },
+        },
+      });
+      render(<DuplicateProfileReview open applicationId="app-10" applicationStatus="processed" />);
+      expect(await screen.findByText("Portal account not linked")).toBeInTheDocument();
+      expect(screen.getByText(/already belongs to another portal account/)).toBeInTheDocument();
+    });
   });
 });

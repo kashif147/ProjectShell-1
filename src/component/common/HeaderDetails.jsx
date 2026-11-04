@@ -1026,6 +1026,18 @@ function HeaderDetails({
               } = response.data || {};
               const processingDateLabel =
                 dayjs(selectedDate).format("DD/MM/YYYY");
+              // P5: rows approved into an existing profile without linking the applicant's portal
+              // account (pending identity-link decision on the application).
+              const pendingIdentityRows = results.filter(
+                (r) => r.success && r.identityLink?.status === "PENDING",
+              ).length;
+              if (pendingIdentityRows > 0) {
+                MyAlert(
+                  "warning",
+                  "Portal accounts not linked",
+                  `${pendingIdentityRows} application(s) were approved into an existing profile without linking the applicant's portal account. An identity-link decision is pending for each.`,
+                );
+              }
 
               if (successful > 0 && failed === 0) {
                 MyAlert(

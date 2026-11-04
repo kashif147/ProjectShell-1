@@ -53,6 +53,7 @@ import {
 import {
   createOperationKeyStore,
   describeDecisionError,
+  describePendingIdentityLink,
   reviewVersionOf,
   withDecisionPreconditions,
 } from "../../utils/applicationDecisionRequest";
@@ -3801,6 +3802,7 @@ function ApplicationMgtDrawer({
     disableFtn(true);
     let actionSucceeded = false;
     let decisionActionKey = null;
+    let approvalResponse = null;
 
     try {
       const token = localStorage.getItem("token");
@@ -3927,7 +3929,7 @@ function ApplicationMgtDrawer({
         };
 
         decisionActionKey = `${applicationId}:approve`;
-        const approvalResponse = await axios.post(
+        approvalResponse = await axios.post(
           `${process.env.REACT_APP_PROFILE_SERVICE_URL}/applications/${applicationId}/approve`,
           withDecisionPreconditions(approvalPayload, {
             reviewVersion: reviewVersionOf(application),
@@ -3976,6 +3978,7 @@ function ApplicationMgtDrawer({
         Reject: action === "rejected",
       }));
 
+      const decisionResponseData = approvalResponse?.data?.data || approvalResponse?.data;
       const successMessage =
         action === "processed"
           ? "Application processed successfully!"
@@ -3983,6 +3986,12 @@ function ApplicationMgtDrawer({
 
       if (decisionActionKey) decisionKeysRef.current.settle(decisionActionKey);
       MyAlert("success", successMessage);
+      const pendingIdentity = describePendingIdentityLink(
+        decisionResponseData?.identityLink,
+      );
+      if (pendingIdentity) {
+        MyAlert("warning", "Portal account not linked", pendingIdentity);
+      }
       actionSucceeded = true;
       disableFtn(true);
 

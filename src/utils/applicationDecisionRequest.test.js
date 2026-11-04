@@ -4,6 +4,7 @@ import {
   decisionErrorCode,
   describeBulkRow,
   describeDecisionError,
+  describePendingIdentityLink,
   isRetryableDecisionError,
   newOperationKey,
   reviewVersionOf,
@@ -112,6 +113,8 @@ describe("error handling", () => {
     ["PROFILE_EMAIL_EXISTS", false],
     ["PAYMENT_BINDING_MISSING", false],
     ["PAYMENT_APPLICATION_MISMATCH", false],
+    ["DECISION_LEASE_LOST", false],
+    ["IDEMPOTENCY_KEY_REUSED", false],
   ])("%s: specific message, reloadReview=%s", (code, reload) => {
     const info = describeDecisionError(httpError(code.endsWith("REQUIRED") && code !== "DUPLICATE_REVIEW_REQUIRED" ? 428 : 409, code));
     expect(info.code).toBe(code);
@@ -139,3 +142,19 @@ describe("error handling", () => {
     expect(describeBulkRow({ applicationId: "a2", error: "raw" })).toBe("a2: raw");
   });
 });
+
+describe("pending identity link", () => {
+  test("text only for a PENDING record, by reason", () => {
+    expect(describePendingIdentityLink(null)).toBeNull();
+    expect(describePendingIdentityLink({ status: "RESOLVED" })).toBeNull();
+    expect(describePendingIdentityLink({ status: "PENDING", reason: "PROFILE_BOUND_TO_OTHER_USER" })).toMatch(/already belongs to another portal account/);
+    expect(describePendingIdentityLink({ status: "PENDING", reason: "PROFILE_UNBOUND" })).toMatch(/NOT linked/);
+  });
+  test("a key reused with another payload starts a new action", () => {
+    const store = createOperationKeyStore();
+    const k = store.keyFor("a");
+    store.settle("a", httpError(422, "IDEMPOTENCY_KEY_REUSED"));
+    expect(store.keyFor("a")).not.toBe(k);
+  });
+});
+

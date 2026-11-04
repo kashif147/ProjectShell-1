@@ -29,6 +29,7 @@ import DuplicateProfileMergeDrawer from "./DuplicateProfileMergeDrawer";
 import {
   createOperationKeyStore,
   describeDecisionError,
+  describePendingIdentityLink,
   reviewVersionOf,
   withDecisionPreconditions,
 } from "../../utils/applicationDecisionRequest";
@@ -545,6 +546,16 @@ const DuplicateProfileReview = ({
       >
         <div className="duplicate-review-drawer-content">
           <Spin spinning={loading || submitting}>
+            {describePendingIdentityLink(data?.identityLink) && (
+              <Alert
+                type="warning"
+                showIcon
+                className="duplicate-review-identity-link-alert"
+                message="Portal account not linked"
+                description={describePendingIdentityLink(data?.identityLink)}
+                style={{ marginBottom: 12 }}
+              />
+            )}
             {reviewStatus && (
               <div className="duplicate-review-status">
                 <Text type="secondary">Review status: </Text>

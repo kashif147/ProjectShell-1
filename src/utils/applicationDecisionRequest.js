@@ -151,6 +151,14 @@ const MESSAGES = {
     title: "Payment belongs to another application",
     text: "The payment found belongs to a different application. Nothing was charged or released - contact Finance.",
   },
+  DECISION_LEASE_LOST: {
+    title: "Decision taken over",
+    text: "Another run took over this decision while it was waiting. Nothing more was recorded by this attempt - refresh to see the current status.",
+  },
+  IDEMPOTENCY_KEY_REUSED: {
+    title: "Different request",
+    text: "This action was already submitted with different details. Refresh and try again.",
+  },
   APPLICATION_ALREADY_DECIDED: {
     title: "Already decided",
     text: "This application has already been decided. Refresh to see its current status.",
@@ -197,3 +205,15 @@ export function describeBulkRow(row) {
   const known = row?.code ? MESSAGES[row.code] : null;
   return `${row?.applicationId}: ${known?.title || row?.error || "failed"}`;
 }
+
+/**
+ * P5: an approval into an existing profile never binds the applicant's portal account to it; the
+ * server returns / records a PENDING identity-link decision instead. Text for the user, or null.
+ */
+export function describePendingIdentityLink(identityLink) {
+  if (!identityLink || identityLink.status !== "PENDING") return null;
+  return identityLink.reason === "PROFILE_BOUND_TO_OTHER_USER"
+    ? "The applicant's portal account was NOT linked: the selected profile already belongs to another portal account. An identity-link decision is pending."
+    : "The applicant's portal account was NOT linked to the existing profile (it has no portal account). An identity-link decision is pending.";
+}
+
