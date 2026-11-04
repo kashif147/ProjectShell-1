@@ -827,7 +827,7 @@ function Entry() {
                             path="Reports"
                             element={
                               <ProtectedRoute
-                                requiredPermission={RoutePermissions["Reports"]}
+                                requiredPermissions={RoutePermissions["Reports"]}
                               >
                                 <ReportsIndex />
                               </ProtectedRoute>

@@ -6,15 +6,15 @@ export const RoutePermissions = {
   // Profiles & Membership
   "Summary": "profile:read",
   "Details": "profile:read",
-  "Members": "crm:member:read",
-  "MembershipDashboard": "reporting:read",
+  "Members": "crm:member_read",
+  "MembershipDashboard": "reporting.statistics:read",
   "Applications": "application:read",
   "PaymentForms": "application:read",
   "Transfers": "transferrequests:read",
   "ChangCateSumm": "changeofcategory:read",
   "Cancallation": "subscriptions:read",
   "YearEndRenewal": "subscriptions:write",
-  "RemindersSummary": "notifications:read",
+  "RemindersSummary": "notification:read",
 
   // Finance
   "onlinePayment": "payments:read",
@@ -33,9 +33,9 @@ export const RoutePermissions = {
 
   // Correspondence
   "CorrespondenceDashboard": "dashboard:read",
-  "InAppNotifications": "notifications:read",
-  "UserNotifications": "notifications:read",
-  "/UserNotifications": "notifications:read",
+  "InAppNotifications": "notification:read",
+  "UserNotifications": "notification:read",
+  "/UserNotifications": "notification:read",
   "Email": "communication:write",
   "EmailCampaignDetail": "communication:write",
   "Sms": "communication:write",
@@ -55,22 +55,25 @@ export const RoutePermissions = {
   "TenantDepartments": "tenant:read",
   "PolicyClientExample": "portal:read",
 
-  // Reports
-  "Reports": "reporting:read",
-  "AccountsReports": "reporting:read",
-  "CancelledMembersReport": "reporting:read",
-  "JoinersReport": "reporting:read",
-  "LeaversReport": "crm:member:read",
-  "NewMembersReport": "reporting:read",
-  "ResignedMembersReport": "reporting:read",
-  "ComparisonReport": "reporting:read",
-  "LiveStatsReport": "reporting:read",
-  "MembershipListingReport": "reporting:read",
-  "StatisticsReport": "reporting:read",
-  "WorkplaceBreakdownReport": "reporting:read",
-  "CreditorsListReport": "reporting:read",
-  "DebtorsListReport": "reporting:read",
-  "SuspendedMembersReport": "crm:member:read",
+  // Reports - PDP rollout P2: per-family codes matching reporting-service's backend checks
+  // (statistics = aggregates/dashboard, listings = row-level member listings, finance =
+  // creditors/debtors). "Reports" is the membership-reports hub (listing + statistics cards), so it
+  // is an ANY-of array consumed via ProtectedRoute requiredPermissions in Entry.js.
+  "Reports": ["reporting.statistics:read", "reporting.listings:read"],
+  "AccountsReports": "reporting.finance:read",
+  "CancelledMembersReport": "reporting.listings:read",
+  "JoinersReport": "reporting.listings:read",
+  "LeaversReport": "reporting.listings:read",
+  "NewMembersReport": "reporting.listings:read",
+  "ResignedMembersReport": "reporting.listings:read",
+  "ComparisonReport": "reporting.statistics:read",
+  "LiveStatsReport": "reporting.statistics:read",
+  "MembershipListingReport": "reporting.listings:read",
+  "StatisticsReport": "reporting.statistics:read",
+  "WorkplaceBreakdownReport": "reporting.statistics:read",
+  "CreditorsListReport": "reporting.finance:read",
+  "DebtorsListReport": "reporting.finance:read",
+  "SuspendedMembersReport": "reporting.listings:read",
 
   // Cases & Issues
   // Reachability floor only - real team-based visibility (Complaints/FTP/IR/Data
