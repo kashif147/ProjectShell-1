@@ -31,6 +31,11 @@ Changes are deployed to DEV by copying these files and reloading the gateway (`o
 - **Every client-supplied `x-platform-*` header is stripped** (Phase B Z1; same `clear()`, by prefix,
   case-insensitive, over all request headers). Platform authority comes only from the `plat` claim inside
   a ProjectShell JWT signed by user-service, never from a header, body or query value.
+- **`/profile-service/api/internal/` is never public (P5):** a `^~` prefix location returns 404 for every
+  method before any JWT check, and a case-insensitive guard inside the profile location catches
+  `/api/Internal`, `/api/internal` (no slash) and similar variants. These are profile-service's signed
+  service-to-service reads (p5-svc-sig/1, e.g. `GET /api/internal/applications/:id/refund-state` for
+  account-service), reached over the internal network only. Every other profile route is unchanged.
 - `/user-service/auth/` and `/user-service/pkce/` stay public (sign-in callbacks, refresh, login
   start), except **`/user-service/auth/logout`, which requires a verified ProjectShell JWT** (exact
   location).

@@ -91,3 +91,29 @@ test("verify_jwt.lua: the dead /api/profile/validate bypass is gone (profile val
   assert.doesNotMatch(code, /validate/);
   assert.doesNotMatch(active, /location\s+[=~^]*\s*\/profile-service\/api\/profile\/validate/);
 });
+
+// ---------------------------------------------------------------- P5 profile internal routes
+test("P5: /profile-service/api/internal/ is a 404 prefix location (every method, no JWT script, no proxy)", () => {
+  const hits = [...active.matchAll(/location\s+(=|\^~|~\*?)?\s*\/profile-service\/api\/internal\b[^{]*\{/g)];
+  assert.equal(hits.length, 1);
+  assert.equal(hits[0][1], "^~");
+  const b = block(active, "location ^~ /profile-service/api/internal/");
+  assert.match(b, /^location \^~ \/profile-service\/api\/internal\/ \{\s*return 404;\s*\}$/);
+});
+
+test("P5: the profile location keeps its JWT check and also guards case / slash variants of /api/internal", () => {
+  const b = block(active, "location ^~ /profile-service/api/ {");
+  assert.ok(b);
+  assert.match(b, /access_by_lua_file\s+\/etc\/nginx\/lua\/verify_jwt\.lua;/);
+  assert.match(b, /proxy_pass\s+http:\/\/profile-service:4002\/;/);
+  const guard = b.indexOf('if ($uri ~* "^/profile-service/api/internal(/|$)") {');
+  assert.ok(guard > -1, "case-insensitive internal guard present");
+  assert.match(b.slice(guard), /^if \(\$uri ~\* "\^\/profile-service\/api\/internal\(\/\|\$\)"\) \{\s*return 404;\s*\}/);
+  // the guard runs before the CORS preflight shortcut, so OPTIONS gets 404 too
+  assert.ok(guard < b.indexOf("if ($request_method = OPTIONS)"));
+});
+
+test("P5: no other profile-service path is denied", () => {
+  const denies = [...active.matchAll(/location\s+(?:=|\^~)\s*(\/profile-service\/\S+)\s*\{\s*return\s+404;\s*\}/g)].map((m) => m[1]);
+  assert.deepEqual(denies, ["/profile-service/api/internal/"]);
+});
