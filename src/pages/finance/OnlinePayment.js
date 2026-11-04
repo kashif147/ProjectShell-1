@@ -27,6 +27,7 @@ import {
   serverFiltersFromFiltersState,
   withoutServerSideFilters,
 } from "../../utils/onlinePaymentAttempts";
+import { notifyViaMessage, runRefundRequest } from "../../utils/refundOutcome";
 import {
   registerOnlinePaymentHandlers,
   clearOnlinePaymentHandlers,
@@ -357,41 +358,46 @@ const OnlinePayment = () => {
     };
   };
 
+  const closeRefundAndReload = () => {
+    setRefundDrawerOpen(false);
+    setSelectedRecord(null);
+    setPrefillRefundAmountEuro(null);
+    setRefundInitialMode("stripe");
+    setRefundMemberSummary(null);
+    setSelectedRowKeys([]);
+    load();
+  };
+
   const handleRefundSubmit = async (refundData) => {
     if (!selectedRecord || refundSubmitting) return false;
+    let payload;
     try {
-      setRefundSubmitting(true);
-      const payload = buildRefundPayload(refundData, selectedRecord);
-      const token = localStorage.getItem("token");
-      await axios.post(
-        `${getAccountServiceBaseUrl()}/payments/refunds`,
-        payload,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-        },
-      );
-
-      message.success(
-        `Refund of ${refundData.refund} processed successfully for ${selectedRecord?.fullName || selectedRecord?.memberNo}`,
-      );
-      setRefundDrawerOpen(false);
-      setSelectedRecord(null);
-      setPrefillRefundAmountEuro(null);
-      setRefundInitialMode("stripe");
-      setRefundMemberSummary(null);
-      setSelectedRowKeys([]);
-      load();
-      return true;
+      payload = buildRefundPayload(refundData, selectedRecord);
     } catch (error) {
-      const backendMessage =
-        error?.response?.data?.message ||
-        error?.response?.data?.error ||
-        error?.message;
-      message.error(backendMessage || "Unable to process refund.");
+      message.error(error?.message || "Unable to process refund.");
       return false;
+    }
+    setRefundSubmitting(true);
+    try {
+      const token = localStorage.getItem("token");
+      // Pending / uncertain are not shown as completed; the grid reloads from the server and
+      // the row's status comes from there (never marked refunded here).
+      const result = await runRefundRequest({
+        request: () =>
+          axios.post(`${getAccountServiceBaseUrl()}/payments/refunds`, payload, {
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "Content-Type": "application/json",
+            },
+          }),
+        notify: notifyViaMessage(message),
+        successText: `Refund of ${refundData.refund} processed successfully for ${selectedRecord?.fullName || selectedRecord?.memberNo}`,
+        onCompleted: closeRefundAndReload,
+        onPending: closeRefundAndReload,
+        onUncertain: closeRefundAndReload,
+        onFailed: () => load(),
+      });
+      return result.ok;
     } finally {
       setRefundSubmitting(false);
     }
