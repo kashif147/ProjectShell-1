@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   Alert,
   Button,
@@ -26,6 +26,13 @@ import { buildDetailsSearch } from "../../utils/detailsRoute";
 import { getApplicationById } from "../../features/ApplicationDetailsSlice";
 import MyTable from "../common/MyTable";
 import DuplicateProfileMergeDrawer from "./DuplicateProfileMergeDrawer";
+import {
+  createOperationKeyStore,
+  describeDecisionError,
+  describePendingIdentityLink,
+  reviewVersionOf,
+  withDecisionPreconditions,
+} from "../../utils/applicationDecisionRequest";
 import {
   APPLICATION_DUPLICATE_REVIEW_LOCKED_MESSAGE,
   isProcessedApplicationStatus,
@@ -285,6 +292,9 @@ const DuplicateProfileReview = ({
   const [loading, setLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [data, setData] = useState(null);
+  // P5: one operation key per decision action, reused when that action is retried.
+  const operationKeys = useRef(null);
+  if (!operationKeys.current) operationKeys.current = createOperationKeyStore();
   const [mergeModal, setMergeModal] = useState({
     open: false,
     record: null,
@@ -375,18 +385,26 @@ const DuplicateProfileReview = ({
       return false;
     }
     setSubmitting(true);
+    const actionKey = `${applicationId}:${action}:${sourceType || ""}:${sourceId || ""}`;
     try {
       const response = await axios.post(
         `${baseURL}/applications/${applicationId}/duplicate-review`,
-        {
-          action,
-          sourceType,
-          sourceId,
-          decisionReason: reason || undefined,
-          mergeFieldChoices,
-        },
+        withDecisionPreconditions(
+          {
+            action,
+            sourceType,
+            sourceId,
+            decisionReason: reason || undefined,
+            mergeFieldChoices,
+          },
+          {
+            reviewVersion: reviewVersionOf(data),
+            idempotencyKey: operationKeys.current.keyFor(actionKey),
+          },
+        ),
         { headers: authHeaders() },
       );
+      operationKeys.current.settle(actionKey);
       const payload = response.data?.data || response.data;
       setData((prev) => ({ ...(prev || {}), ...payload }));
       message.success("Duplicate review decision saved");
@@ -395,9 +413,13 @@ const DuplicateProfileReview = ({
       onClose?.();
       return true;
     } catch (error) {
-      message.error(
-        error.response?.data?.message || "Failed to save duplicate review decision",
-      );
+      operationKeys.current.settle(actionKey, error);
+      const info = describeDecisionError(error, "Failed to save duplicate review decision");
+      message.error(info.code ? `${info.title}: ${info.text}` : info.text);
+      if (info.reloadReview) {
+        // The review changed (or the target is no longer valid): show the current one.
+        await loadMatches();
+      }
       return false;
     } finally {
       setSubmitting(false);
@@ -524,6 +546,16 @@ const DuplicateProfileReview = ({
       >
         <div className="duplicate-review-drawer-content">
           <Spin spinning={loading || submitting}>
+            {describePendingIdentityLink(data?.identityLink) && (
+              <Alert
+                type="warning"
+                showIcon
+                className="duplicate-review-identity-link-alert"
+                message="Portal account not linked"
+                description={describePendingIdentityLink(data?.identityLink)}
+                style={{ marginBottom: 12 }}
+              />
+            )}
             {reviewStatus && (
               <div className="duplicate-review-status">
                 <Text type="secondary">Review status: </Text>
