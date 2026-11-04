@@ -60,6 +60,11 @@ import axios from "axios";
 import { useSelector } from "react-redux";
 import { useAuthorization } from "../../context/AuthorizationContext";
 import { getAccountServiceBaseUrl } from "../../config/serviceUrls";
+import {
+  notifyViaNotification,
+  runRefundRequest,
+  withRemainingRefundableHint,
+} from "../../utils/refundOutcome";
 import MyTable from "../common/MyTable";
 import { centsToEuro, formatDateOnly } from "../../utils/Utilities";
 import {
@@ -2261,43 +2266,44 @@ const TransactionHistory = () => {
   const handleRefundSubmit = useCallback(
     async (values) => {
       if (refundSubmitting) return false;
+      let payload;
       try {
-        setRefundSubmitting(true);
-        const payload = buildRefundPayload(values, refundReceiptRows);
-        await submitRefundRequest(payload);
-        notification.success({
-          message: "Refund",
-          description: "Refund request submitted.",
+        payload = buildRefundPayload(values, refundReceiptRows);
+      } catch (error) {
+        notification.error({
+          message: "Refund failed",
+          description: error?.message || "Unable to submit refund request.",
           placement: "topRight",
         });
+        return false;
+      }
+      // Pending / uncertain are not presented as completed; the ledger is refreshed from the
+      // server (nothing is marked refunded client-side).
+      const refreshAndClose = async () => {
         setSelectedRowKeys([]);
         await refreshFinanceViewsAndPublish();
         closeRefundDrawer();
-        return true;
+      };
+      try {
+        setRefundSubmitting(true);
+        const result = await runRefundRequest({
+          request: () => submitRefundRequest(payload),
+          notify: notifyViaNotification(notification),
+          successText: "Refund request submitted.",
+          onCompleted: refreshAndClose,
+          onPending: refreshAndClose,
+          onUncertain: refreshAndClose,
+          onFailed: () => refreshFinanceViewsAndPublish(),
+          describeError: (interpreted, error) =>
+            interpreted.outcome === "error"
+              ? withRemainingRefundableHint(error, interpreted.message)
+              : interpreted.message,
+        });
+        return result.ok;
       } catch (error) {
-        const remainingRefundableCentsRaw =
-          error?.response?.data?.remainingRefundableCents ??
-          error?.response?.data?.data?.remainingRefundableCents;
-        const remainingRefundableCents = Number(remainingRefundableCentsRaw);
-        const hasRemainingRefundableCents = Number.isFinite(
-          remainingRefundableCents,
-        );
-        const maxRefundableAmount = hasRemainingRefundableCents
-          ? `€${centsToEuro(remainingRefundableCents).toLocaleString("en-IE", {
-              minimumFractionDigits: 2,
-              maximumFractionDigits: 2,
-            })}`
-          : null;
-        const backendMessage =
-          error?.response?.data?.message ||
-          error?.response?.data?.error ||
-          error?.message;
-        const errorDescription = hasRemainingRefundableCents
-          ? `${backendMessage || "Unable to submit refund request."} Max refundable amount: ${maxRefundableAmount}.`
-          : backendMessage || "Unable to submit refund request.";
         notification.error({
           message: "Refund failed",
-          description: errorDescription,
+          description: error?.message || "Unable to submit refund request.",
           placement: "topRight",
         });
         return false;
