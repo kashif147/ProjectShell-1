@@ -1,6 +1,7 @@
 import React from "react";
-import { render, screen, waitFor } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import axios from "axios";
+import { Modal } from "antd";
 import DuplicateProfileReview from "./DuplicateProfileReview";
 import { APPLICATION_DUPLICATE_REVIEW_LOCKED_MESSAGE } from "../../utils/duplicateReviewApproval";
 
@@ -132,5 +133,106 @@ describe("DuplicateProfileReview", () => {
       expect(screen.getAllByText("Create New Profile").length).toBeGreaterThan(0);
     });
     expect(screen.getByRole("button", { name: /refresh/i })).toBeInTheDocument();
+  });
+
+  describe("P5 decision preconditions", () => {
+    const pendingReview = {
+      data: {
+        data: {
+          applicationStatus: "submitted",
+          isReadOnly: false,
+          reviewVersion: 4,
+          duplicateReview: { status: "POTENTIAL_MATCH", reviewVersion: 4 },
+          matchingProfiles: [],
+          matchingApplications: [],
+        },
+      },
+    };
+
+    const renderPending = async () => {
+      axios.get.mockReset();
+      axios.post.mockReset();
+      axios.get.mockResolvedValue(pendingReview);
+      render(
+        <DuplicateProfileReview
+          open
+          applicationId="app-9"
+          applicationStatus="submitted"
+        />,
+      );
+      // the review payload (and its reviewVersion) has loaded
+      expect(await screen.findByText("POTENTIAL_MATCH")).toBeInTheDocument();
+    };
+
+    afterEach(() => {
+      Modal.destroyAll();
+    });
+
+    const clickCreateNewAndConfirm = async () => {
+      Modal.destroyAll();
+      await waitFor(() =>
+        expect(document.querySelectorAll(".ant-modal-confirm").length).toBe(0),
+      );
+      fireEvent.click(document.querySelector(".duplicate-review-create-new-btn"));
+      let ok;
+      await waitFor(() => {
+        ok = document.querySelector(".ant-modal-confirm .ant-modal-confirm-btns .ant-btn-primary");
+        expect(ok).toBeTruthy();
+      });
+      fireEvent.click(ok);
+    };
+
+    const conflict = (code, status = 409) =>
+      Object.assign(new Error(code), {
+        response: { status, data: { success: false, error: { code, status, message: code } } },
+      });
+
+    test("sends the loaded review version and a per-action idempotency key", async () => {
+      await renderPending();
+      axios.post.mockResolvedValueOnce({ data: { data: { reviewVersion: 5 } } });
+      await clickCreateNewAndConfirm();
+      await waitFor(() => expect(axios.post).toHaveBeenCalledTimes(1));
+      const [url, body] = axios.post.mock.calls[0];
+      expect(url).toContain("/applications/app-9/duplicate-review");
+      expect(body).toMatchObject({ action: "MARKED_NEW", expectedReviewVersion: 4 });
+      expect(typeof body.idempotencyKey).toBe("string");
+      expect(body.idempotencyKey.length).toBeGreaterThan(8);
+    });
+
+    test("a retry of the same action after a network failure reuses its key", async () => {
+      await renderPending();
+      axios.post.mockRejectedValueOnce(Object.assign(new Error("Network Error"), { request: {} }));
+      await clickCreateNewAndConfirm();
+      await waitFor(() => expect(axios.post).toHaveBeenCalledTimes(1));
+      axios.post.mockResolvedValueOnce({ data: { data: { reviewVersion: 5 } } });
+      await clickCreateNewAndConfirm();
+      await waitFor(() => expect(axios.post).toHaveBeenCalledTimes(2));
+      expect(axios.post.mock.calls[1][1].idempotencyKey).toBe(axios.post.mock.calls[0][1].idempotencyKey);
+    });
+
+    test("409 REVIEW_VERSION_CONFLICT reloads the review and the next click is a new action", async () => {
+      await renderPending();
+      const getsBefore = axios.get.mock.calls.length;
+      axios.post.mockRejectedValueOnce(conflict("REVIEW_VERSION_CONFLICT"));
+      await clickCreateNewAndConfirm();
+      await waitFor(() => expect(axios.post).toHaveBeenCalledTimes(1));
+      await waitFor(() => expect(axios.get.mock.calls.length).toBeGreaterThan(getsBefore));
+      expect(axios.get.mock.calls[axios.get.mock.calls.length - 1][0]).toContain(
+        "/applications/app-9/duplicate-matches",
+      );
+      axios.post.mockResolvedValueOnce({ data: { data: { reviewVersion: 5 } } });
+      await clickCreateNewAndConfirm();
+      await waitFor(() => expect(axios.post).toHaveBeenCalledTimes(2));
+      expect(axios.post.mock.calls[1][1].idempotencyKey).not.toBe(axios.post.mock.calls[0][1].idempotencyKey);
+    });
+
+    test("PROFILE_EMAIL_EXISTS is shown and does not reload the review", async () => {
+      await renderPending();
+      const getsBefore = axios.get.mock.calls.length;
+      axios.post.mockRejectedValueOnce(conflict("PROFILE_EMAIL_EXISTS"));
+      await clickCreateNewAndConfirm();
+      expect(await screen.findByText(/Profile already exists/)).toBeInTheDocument();
+      expect(axios.get.mock.calls.length).toBe(getsBefore);
+    });
   });
 });

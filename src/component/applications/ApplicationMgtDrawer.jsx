@@ -50,6 +50,12 @@ import {
   isDuplicateReviewBlockingApproval,
   isMergedDuplicateReview,
 } from "../../utils/duplicateReviewApproval";
+import {
+  createOperationKeyStore,
+  describeDecisionError,
+  reviewVersionOf,
+  withDecisionPreconditions,
+} from "../../utils/applicationDecisionRequest";
 import DuplicateMergeIndicator from "./DuplicateMergeIndicator";
 import {
   APPLICATION_MGT_PATH,
@@ -1068,6 +1074,9 @@ function ApplicationMgtDrawer({
   const loadedApplicationKeyRef = useRef(null);
   /** Retain application id after a partial submit so retries update instead of create. */
   const pendingSubmitApplicationIdRef = useRef(null);
+  // P5: one operation key per approve/reject action, reused when that action is retried.
+  const decisionKeysRef = useRef(null);
+  if (!decisionKeysRef.current) decisionKeysRef.current = createOperationKeyStore();
   /** Edit mode follows URL only so "new application" clears reliably (no stale location.state). */
   const isEdit = Boolean(appIdFromUrl || draftIdFromUrl);
   const { applications, applicationsLoading } = useSelector(
@@ -2711,11 +2720,14 @@ function ApplicationMgtDrawer({
       pendingSubmitApplicationIdRef.current = null;
 
       let duplicateDetected = false;
+      // P5: the review version the detection just produced; the auto-approval is bound to it.
+      let detectedReviewVersion;
       try {
         const duplicateResult =
           await runDuplicateDetectionForApplication(applicationId);
         duplicateDetected =
           hasPotentialDuplicateFromDetection(duplicateResult);
+        detectedReviewVersion = reviewVersionOf(duplicateResult);
       } catch (duplicateError) {
         console.error("Duplicate detection failed:", duplicateError);
       }
@@ -2766,16 +2778,30 @@ function ApplicationMgtDrawer({
                 };
               }
 
-              await axios.post(
-                `${process.env.REACT_APP_PROFILE_SERVICE_URL}/applications/${applicationId}/approve`,
-                approvalPayload,
-                {
-                  headers: {
-                    "Content-Type": "application/json",
-                    Authorization: `Bearer ${token}`,
+              const submitApproveKey = `${applicationId}:approve`;
+              try {
+                await axios.post(
+                  `${process.env.REACT_APP_PROFILE_SERVICE_URL}/applications/${applicationId}/approve`,
+                  withDecisionPreconditions(approvalPayload, {
+                    reviewVersion: detectedReviewVersion,
+                    idempotencyKey:
+                      decisionKeysRef.current.keyFor(submitApproveKey),
+                  }),
+                  {
+                    headers: {
+                      "Content-Type": "application/json",
+                      Authorization: `Bearer ${token}`,
+                    },
                   },
-                },
-              );
+                );
+                decisionKeysRef.current.settle(submitApproveKey);
+              } catch (submitApproveError) {
+                decisionKeysRef.current.settle(
+                  submitApproveKey,
+                  submitApproveError,
+                );
+                throw submitApproveError;
+              }
 
               MyAlert(
                 "success",
@@ -2800,10 +2826,13 @@ function ApplicationMgtDrawer({
                 isBulk: selected?.Bulk === true,
               });
             } else {
+              const info = describeDecisionError(approveError);
               MyAlert(
                 "warning",
                 "Application submitted successfully but processing failed",
-                "The application was created but could not be automatically processed. Please process it manually.",
+                info.code
+                  ? `${info.title}: ${info.text}`
+                  : "The application was created but could not be automatically processed. Please process it manually.",
               );
             }
           }
@@ -3771,6 +3800,7 @@ function ApplicationMgtDrawer({
     setIsProcessing(true);
     disableFtn(true);
     let actionSucceeded = false;
+    let decisionActionKey = null;
 
     try {
       const token = localStorage.getItem("token");
@@ -3896,9 +3926,13 @@ function ApplicationMgtDrawer({
             isEdit && hasChanges ? apiInfData || {} : apiOriginalData || {},
         };
 
+        decisionActionKey = `${applicationId}:approve`;
         const approvalResponse = await axios.post(
           `${process.env.REACT_APP_PROFILE_SERVICE_URL}/applications/${applicationId}/approve`,
-          approvalPayload,
+          withDecisionPreconditions(approvalPayload, {
+            reviewVersion: reviewVersionOf(application),
+            idempotencyKey: decisionKeysRef.current.keyFor(decisionActionKey),
+          }),
           {
             headers: {
               "Content-Type": "application/json",
@@ -3920,9 +3954,13 @@ function ApplicationMgtDrawer({
           reason: rejectionData.reason,
         };
 
+        decisionActionKey = `${applicationId}:reject`;
         await axios.post(
           `${process.env.REACT_APP_PROFILE_SERVICE_URL}/applications/${applicationId}/reject`,
-          rejectionPayload,
+          withDecisionPreconditions(rejectionPayload, {
+            reviewVersion: reviewVersionOf(application),
+            idempotencyKey: decisionKeysRef.current.keyFor(decisionActionKey),
+          }),
           {
             headers: {
               "Content-Type": "application/json",
@@ -3943,6 +3981,7 @@ function ApplicationMgtDrawer({
           ? "Application processed successfully!"
           : "Application rejected successfully!";
 
+      if (decisionActionKey) decisionKeysRef.current.settle(decisionActionKey);
       MyAlert("success", successMessage);
       actionSucceeded = true;
       disableFtn(true);
@@ -3963,19 +4002,33 @@ function ApplicationMgtDrawer({
         error.response?.data?.code === "DUPLICATE_REVIEW_REQUIRED" ||
         error.response?.data?.error?.code === "DUPLICATE_REVIEW_REQUIRED";
 
+      if (decisionActionKey) {
+        decisionKeysRef.current.settle(decisionActionKey, error);
+      }
+      const info = describeDecisionError(error, `Failed to ${action} application`);
+
       if (duplicateBlocked) {
         MyAlert(
           "warning",
           "Duplicate review required",
-          error.response?.data?.message ||
+          error.response?.data?.error?.message ||
+            error.response?.data?.message ||
             "Open Duplicate Profile Review before processing this application.",
         );
         openDuplicateReviewDrawer(false);
+      } else if (info.reloadReview) {
+        // P5: the duplicate review changed (or its target is no longer valid): reload the
+        // application so the next attempt uses the current review, and show the review.
+        MyAlert("warning", info.title, info.text);
+        if (application?.applicationId) {
+          await dispatch(getApplicationById({ id: application.applicationId }));
+        }
+        openDuplicateReviewDrawer(false);
       } else {
         MyAlert(
-          "error",
-          `Failed to ${action} application`,
-          error?.response?.data?.error?.message || error.message,
+          info.code ? "warning" : "error",
+          info.code ? info.title : `Failed to ${action} application`,
+          info.text,
         );
       }
 

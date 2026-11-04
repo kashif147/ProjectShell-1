@@ -95,6 +95,13 @@ import {
   DUPLICATE_REVIEW_REQUIRED_MESSAGE,
   getPendingDuplicateReviewApplications,
 } from "../../utils/duplicateReviewApproval";
+import {
+  buildBulkApprovalItems,
+  decisionErrorCode,
+  describeBulkRow,
+  describeDecisionError,
+  newOperationKey,
+} from "../../utils/applicationDecisionRequest";
 import Toolbar from "./Toolbar";
 import { useFilters } from "../../context/FilterContext";
 import { useAuthorization } from "../../context/AuthorizationContext";
@@ -827,6 +834,10 @@ function HeaderDetails({
       return;
     }
 
+    // P5: one operation key per bulk action (this modal); a retry from the same modal reuses it,
+    // so rows already approved by a lost-response attempt are replayed, not decided again.
+    const bulkOperationKey = newOperationKey();
+
     const openBulkApprovalProcessingModal = () => {
       const isValidProcessingDate = (date) =>
         date && dayjs.isDayjs(date) && date.isValid();
@@ -970,9 +981,14 @@ function HeaderDetails({
               }
             }
 
+            // P5: per-row duplicate-review version the grid showed (rows without one are
+            // decided against the current version while profile-service is in compat mode).
+            const items = buildBulkApprovalItems(gridData, applicationIds);
             const requestData = {
               applicationIds: applicationIds,
               processingDate: formattedDate,
+              ...(items.length ? { items } : {}),
+              idempotencyKey: bulkOperationKey,
             };
 
             // Show processing notification
@@ -1020,7 +1036,7 @@ function HeaderDetails({
               } else if (successful > 0 && failed > 0) {
                 const failedDetails = results
                   .filter((r) => !r.success)
-                  .map((r) => `${r.applicationId}: ${r.error || "failed"}`)
+                  .map(describeBulkRow)
                   .slice(0, 5)
                   .join("; ");
                 MyAlert(
@@ -1030,7 +1046,7 @@ function HeaderDetails({
                 );
               } else {
                 const failedDetails = results
-                  .map((r) => `${r.applicationId}: ${r.error || "failed"}`)
+                  .map(describeBulkRow)
                   .slice(0, 5)
                   .join("; ");
                 MyAlert(
@@ -1098,11 +1114,14 @@ function HeaderDetails({
                 `The processing request is taking too long to process ${selectedApplications.length} applications. ` +
                   `The process may still be running in the background. Please check back later.`,
               );
+            } else if (error.response && decisionErrorCode(error)) {
+              const info = describeDecisionError(error, "Processing Failed");
+              MyAlert("error", info.title, info.text);
             } else if (error.response) {
               MyAlert(
                 "error",
                 "Processing Failed",
-                `Error ${error.response.status}: ${error.response.data?.message || "Failed to process applications"}`,
+                `Error ${error.response.status}: ${error.response.data?.error?.message || error.response.data?.message || "Failed to process applications"}`,
               );
             } else if (error.request) {
               MyAlert(
