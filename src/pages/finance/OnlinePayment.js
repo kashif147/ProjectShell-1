@@ -1,9 +1,12 @@
-import React, { useCallback, useEffect, useMemo, useState } from "react";
-import { message, Spin } from "antd";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { Button, message, Spin } from "antd";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import axios from "axios";
-import { fetchStripePayments } from "../../features/AccountSlice";
+import {
+  fetchPaymentAttempts,
+  resetPaymentAttempts,
+} from "../../features/AccountSlice";
 import { getAccountServiceBaseUrl } from "../../config/serviceUrls";
 import RefundDrawer from "../../component/finanace/RefundDrawer";
 import AssociateMemberModal from "../../component/finanace/AssociateMemberModal";
@@ -14,119 +17,36 @@ import { applyClientSideRowFilters } from "../../utils/filterUtils";
 import { useRegisterGridFilterRows } from "../../hooks/useRegisterGridFilterRows";
 import { buildDetailsSearch } from "../../utils/detailsRoute";
 import { buildApplicationMgtSearch } from "../../utils/applicationMgtRoute";
-import { resolvePaidAmountEuro } from "../../utils/onlinePaymentAmount";
+import {
+  ATTEMPTS_PAGE_SIZE,
+  canRefundAttempt,
+  hasReceipt,
+  isEmptyStatusSelection,
+  normalizeAttemptRow,
+  refundablePrefillEuro,
+  serverFiltersFromFiltersState,
+  withoutServerSideFilters,
+} from "../../utils/onlinePaymentAttempts";
 import {
   registerOnlinePaymentHandlers,
   clearOnlinePaymentHandlers,
   subscribeOnlinePaymentsReload,
 } from "../../utils/onlinePaymentsWorkspace";
 
-const APPROVED_MEMBERSHIP_STATUSES = new Set([
-  "active",
-  "resigned",
-  "cancelled",
-  "suspended",
-  "archived",
-]);
-
-function isApprovedRow(row) {
-  const status = String(row?.membershipStatus || "")
-    .trim()
-    .toLowerCase();
-  const hasMembershipNo =
-    String(row?.membershipNumber || row?.memberId || "").trim() !== "";
-  return hasMembershipNo || APPROVED_MEMBERSHIP_STATUSES.has(status);
-}
-
-function normalizePaymentStatus(row) {
-  return String(
-    row?.paymentStatus || row?.settlement?.status || row?.status || "",
-  )
-    .trim()
-    .toLowerCase();
-}
-
-function isRefundablePayment(row) {
-  return normalizePaymentStatus(row) === "pending";
-}
-
 function isUnapprovedMemberRow(row) {
   return String(row?.memberId || "").trim() === "";
 }
 
-function isRefundableUnapprovedRow(row) {
-  return isRefundablePayment(row) && isUnapprovedMemberRow(row);
-}
-
 function resolvePaymentIntentId(row) {
-  const candidates = [
-    row?.paymentIntentId,
-    row?.paymentIntent,
-    row?.settlement?.paymentIntentId,
-    row?.settlement?.paymentIntent,
-  ];
-  for (const value of candidates) {
-    const normalized = String(value || "").trim();
-    if (normalized) return normalized;
-  }
-  return "";
+  return String(row?.paymentIntentId || "").trim();
 }
 
 function refundInitialModeFromRecord(row) {
   if (resolvePaymentIntentId(row)) return "stripe";
-  const provider = String(row?.settlement?.provider || "")
+  const provider = String(row?.receipt?.settlementProvider || "")
     .trim()
     .toLowerCase();
   return provider === "stripe" ? "stripe" : "external";
-}
-
-function resolvePrefillRefundAmountEuro(row) {
-  const entries = Array.isArray(row?.entries) ? row.entries : [];
-  if (!entries.length) return null;
-  const recordApplicationId = String(row?.applicationId || "").trim();
-  const matchById = recordApplicationId
-    ? entries.find(
-        (entry) =>
-          String(entry?.applicationId || "").trim() === recordApplicationId,
-      )
-    : null;
-  const withApplicationId =
-    matchById ||
-    entries.find((entry) => String(entry?.applicationId || "").trim() !== "");
-  const cents = Number(withApplicationId?.amount);
-  if (!Number.isFinite(cents) || cents <= 0) return null;
-  return Math.round(cents) / 100;
-}
-
-function normalizeOnlinePaymentRow(row, index) {
-  const paymentStatus = row?.settlement?.status || row?.paymentStatus || "-";
-  const paymentMethod =
-    row?.paymentMethod || row?.paymentType || row?.settlement?.provider || "-";
-  const transactionId =
-    row?.transactionId || row?.docNo || row?.id || row?._id || "";
-  return {
-    isApproved: isApprovedRow(row),
-    ...row,
-    key: transactionId || `online-payment-${index}`,
-    applicationId:
-      row?.applicationId || row?.ApplicationId || row?.appId || null,
-    memberNo: isApprovedRow(row)
-      ? row?.membershipNumber || row?.memberId || row?.["Member No"] || "-"
-      : row?.applicationId || row?.ApplicationId || row?.appId || "-",
-    category: row?.category || row?.membershipCategory || "-",
-    membershipCategory: row?.category || row?.membershipCategory || "-",
-    membershipStatus: row?.membershipStatus || row?.memberhsipStatus || "-",
-    renewalDate: row?.renewalDate || row?.RenewalDate || null,
-    billingCycle: row?.billingCycle || "-",
-    email: row?.email || row?.normalizedEmail || "-",
-    phone: row?.phone || row?.mobileNumber || null,
-    joinDate: row?.joinDate || row?.JoinDate || null,
-    paymentStatus,
-    paymentMethod,
-    transactionId,
-    fullName: row?.fullName || "-",
-    paidAmount: resolvePaidAmountEuro(row),
-  };
 }
 
 const OnlinePayment = () => {
@@ -136,7 +56,12 @@ const OnlinePayment = () => {
   const { filtersState } = useFilters();
   const { columns, setGridData, getProfile } = useTableColumns();
   const onlineColumns = columns.OnlinePayment || [];
-  const { stripePayments, loading } = useSelector((state) => state.account);
+  const {
+    paymentAttempts,
+    paymentAttemptsNextCursor,
+    paymentAttemptsTotal,
+    paymentAttemptsLoading: loading,
+  } = useSelector((state) => state.account);
   const { isInitialized } = useSelector((state) => state.applicationWithFilter);
   const { activeTemplateId } = useSelector((state) => state.activeTemplate);
   const { templatesFetching: templatesLoading } = useSelector(
@@ -160,24 +85,47 @@ const OnlinePayment = () => {
     .trim()
     .toLowerCase();
 
+  // Payment Status (lifecycle) and Payment Date go to the server; the key re-fetches page 1
+  // whenever they change. The ref lets the toolbar's reload event use the latest filters.
+  const serverFilters = useMemo(
+    () => serverFiltersFromFiltersState(filtersState),
+    [filtersState],
+  );
+  const serverFiltersKey = JSON.stringify(serverFilters);
+  const serverFiltersRef = useRef(serverFilters);
+  serverFiltersRef.current = serverFilters;
+
   const load = useCallback(() => {
-    dispatch(fetchStripePayments());
+    const filters = serverFiltersRef.current;
+    if (isEmptyStatusSelection(filters)) {
+      dispatch(resetPaymentAttempts());
+      return;
+    }
+    dispatch(fetchPaymentAttempts({ ...filters, limit: ATTEMPTS_PAGE_SIZE }));
   }, [dispatch]);
+
+  const loadMore = useCallback(() => {
+    if (!paymentAttemptsNextCursor) return;
+    dispatch(
+      fetchPaymentAttempts({
+        ...serverFiltersRef.current,
+        limit: ATTEMPTS_PAGE_SIZE,
+        cursor: paymentAttemptsNextCursor,
+        append: true,
+      }),
+    );
+  }, [dispatch, paymentAttemptsNextCursor]);
 
   useEffect(() => {
     if (!isInitialized || templatesLoading) return;
     load();
-  }, [activeTemplateId, isInitialized, load, templatesLoading]);
+  }, [activeTemplateId, isInitialized, load, templatesLoading, serverFiltersKey]);
 
   useEffect(() => subscribeOnlinePaymentsReload(load), [load]);
 
   const handleRefund = useCallback((record) => {
-    if (!isRefundablePayment(record)) {
-      message.warning("Refund is only available for pending transactions.");
-      return;
-    }
-    if (!isUnapprovedMemberRow(record)) {
-      message.warning("Refund is only available for unapproved members.");
+    if (!canRefundAttempt(record)) {
+      message.warning("Refund is not available for this payment.");
       return;
     }
     const applicationId = String(record?.applicationId || "").trim();
@@ -186,7 +134,7 @@ const OnlinePayment = () => {
       return;
     }
     setSelectedRecord(record);
-    setPrefillRefundAmountEuro(resolvePrefillRefundAmountEuro(record));
+    setPrefillRefundAmountEuro(refundablePrefillEuro(record));
     setRefundInitialMode(refundInitialModeFromRecord(record));
     setRefundMemberSummary({
       fullName: String(record?.fullName || "").trim() || "-",
@@ -263,8 +211,10 @@ const OnlinePayment = () => {
           "memberId",
           matchedProfile.membershipNumber || memberOrApplicationNo,
         );
-        if (record?.transactionId) {
-          detailsParams.set("transactionId", String(record.transactionId));
+        // Receipt link only when this attempt has a GL Receipt (FinanceByID matches its docNo).
+        const receiptRef = hasReceipt(record) ? String(record?.transactionId || "") : "";
+        if (receiptRef) {
+          detailsParams.set("transactionId", receiptRef);
         }
         navigate(
           {
@@ -281,7 +231,7 @@ const OnlinePayment = () => {
               name: record?.fullName || "",
               code:
                 matchedProfile.membershipNumber || memberOrApplicationNo || "",
-              transactionId: record?.transactionId || "",
+              transactionId: receiptRef,
             },
           },
         );
@@ -297,15 +247,21 @@ const OnlinePayment = () => {
     registerOnlinePaymentHandlers({
       onRefund: handleRefund,
       onOpenFinance: handleOpenMemberFinance,
-      isRefundableUnapprovedRow,
     });
     return () => clearOnlinePaymentHandlers();
   }, [handleOpenMemberFinance, handleRefund]);
 
   const filterSourceRows = useMemo(() => {
-    if (!Array.isArray(stripePayments)) return [];
-    return stripePayments.map(normalizeOnlinePaymentRow);
-  }, [stripePayments]);
+    if (!Array.isArray(paymentAttempts)) return [];
+    return paymentAttempts.map(normalizeAttemptRow);
+  }, [paymentAttempts]);
+
+  // Server-side filters (Payment Status) are not re-applied client-side: the label match there is
+  // a substring match ("Refunded" would also keep "Partially refunded").
+  const clientFiltersState = useMemo(
+    () => withoutServerSideFilters(filtersState),
+    [filtersState],
+  );
 
   const rows = useMemo(() => {
     if (!filterSourceRows.length) {
@@ -315,7 +271,7 @@ const OnlinePayment = () => {
 
     const filtered = applyClientSideRowFilters(
       filterSourceRows,
-      filtersState,
+      clientFiltersState,
       onlineColumns,
     );
 
@@ -340,7 +296,7 @@ const OnlinePayment = () => {
     return withHighlights;
   }, [
     filterSourceRows,
-    filtersState,
+    clientFiltersState,
     onlineColumns,
     highlightDocNo,
     highlightPaymentIntentId,
@@ -427,7 +383,7 @@ const OnlinePayment = () => {
       setRefundInitialMode("stripe");
       setRefundMemberSummary(null);
       setSelectedRowKeys([]);
-      dispatch(fetchStripePayments());
+      load();
       return true;
     } catch (error) {
       const backendMessage =
@@ -486,8 +442,19 @@ const OnlinePayment = () => {
         screenName="OnlinePayment"
         selectedRowKeys={selectedRowKeys}
         onSelectionChange={(keys) => setSelectedRowKeys(keys)}
-        disableRowFn={(record) => !isRefundableUnapprovedRow(record)}
+        disableRowFn={(record) => !canRefundAttempt(record)}
       />
+      {paymentAttemptsNextCursor && (
+        <div style={{ padding: "8px 34px", display: "flex", alignItems: "center", gap: 12 }}>
+          <Button onClick={loadMore} loading={loading} disabled={loading}>
+            Load more
+          </Button>
+          <span style={{ fontSize: 13 }}>
+            Loaded {Array.isArray(paymentAttempts) ? paymentAttempts.length : 0} of{" "}
+            {paymentAttemptsTotal} payment attempts
+          </span>
+        </div>
+      )}
       <RefundDrawer
         open={refundDrawerOpen}
         onClose={() => {
@@ -507,7 +474,7 @@ const OnlinePayment = () => {
       <AssociateMemberModal
         open={associateRecord != null}
         onClose={() => setAssociateRecord(null)}
-        onSuccess={() => dispatch(fetchStripePayments())}
+        onSuccess={() => load()}
         selectedRows={associateRecord ? [associateRecord] : []}
         variant="receipts"
       />

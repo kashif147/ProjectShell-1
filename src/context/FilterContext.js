@@ -33,6 +33,7 @@ import {
 import { getDefaultReportingPeriodValues } from "../utils/creditorsListReportWorkspace";
 import { getDefaultReportingPeriodValues as getDebtorsDefaultReportingPeriodValues } from "../utils/debtorsListReportWorkspace";
 import { readTenantItem } from "../utils/tenantStorage";
+import { ONLINE_PAYMENT_STATUS_FILTER_OPTIONS } from "../utils/onlinePaymentAttempts";
 
 const FilterContext = createContext();
 
@@ -883,8 +884,6 @@ export const FilterProvider = ({ children }) => {
         "Payment Method",
         "Payment Status",
         "Billing Cycle",
-        "Email",
-        "Phone",
         "Join Date",
       ],
       Communication: [
@@ -1435,14 +1434,6 @@ export const FilterProvider = ({ children }) => {
           selectedValues: [],
         },
         "Full Name": {
-          operator: "==",
-          selectedValues: [],
-        },
-        Email: {
-          operator: "==",
-          selectedValues: [],
-        },
-        Phone: {
           operator: "==",
           selectedValues: [],
         },
@@ -2663,7 +2654,9 @@ export const FilterProvider = ({ children }) => {
       "Payment Status":
         activePage === "Attendees"
           ? ["", "Pending", "Succeeded", "Failed", "Waived", "Manual"]
-          : ["", "Paid", "Pending", "Failed", "Refunded"],
+          : activePage === "OnlinePayment"
+            ? ["", ...ONLINE_PAYMENT_STATUS_FILTER_OPTIONS]
+            : ["", "Paid", "Pending", "Failed", "Refunded"],
       "Billing Cycle": ["", "Annual", "Monthly"],
       "Case Type": ["", "General", "Legal", "Financial", "Other"],
       // Issue Management (Issues/IssuesDashboard screens) - sourced live from
