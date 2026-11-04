@@ -200,6 +200,14 @@ export function hasReceipt(row) {
   return Boolean(row?.receipt && (text(row.receipt.id) || text(row.receipt.docNo)));
 }
 
+/** How this attempt was charged, from the Payment's mode. */
+export function chargedViaLabel(mode) {
+  const m = String(mode || "").trim().toLowerCase();
+  if (m === "stripe") return "Card (Stripe)";
+  if (m === "external") return "External";
+  return "-";
+}
+
 const APPROVED_MEMBERSHIP_STATUSES = new Set(["active", "resigned", "cancelled", "suspended", "archived"]);
 
 const PURPOSE_LABELS = {
@@ -239,7 +247,13 @@ export function normalizeAttemptRow(item, index = 0) {
     membershipStatus: text(row.membershipStatus) || "-",
     fullName: text(row.fullName) || "-",
     billingCycle: text(row.billingCycle) || "-",
-    paymentMethod: text(row.paymentMethod) || (row.mode === "stripe" ? "Card (Stripe)" : text(row.mode) || "-"),
+    // Member's / application's subscription payment type (account-service enrichment), NOT how
+    // this charge was paid - see chargedVia for that.
+    paymentMethod: text(row.paymentMethod) || "-",
+    // filterUtils getLabelToKeyMap resolves the "Payment Method" chip to `paymentType` (its later
+    // duplicate override wins), so mirror the value for that chip to match on this grid.
+    paymentType: text(row.paymentMethod) || "-",
+    chargedVia: chargedViaLabel(row.mode),
     paymentStatus: lifecycleLabel(lifecycleStatus),
     purposeLabel: PURPOSE_LABELS[row.purpose] || text(row.purpose) || "-",
     // Receipt identity (only when a GL Receipt exists): docNo is what ledger links highlight

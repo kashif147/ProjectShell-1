@@ -17,7 +17,20 @@ const ADDED_COLUMNS = Object.freeze([
   { key: "amountEuro", after: "transactionId" },
   { key: "amountRefundedEuro", after: "paidAmount" },
   { key: "purposeLabel", after: "paymentStatus" },
+  { key: "chargedVia", after: "paymentMethod" },
 ]);
+
+/**
+ * Code-defined titles that always win over a stored view's columnLabels. Stored views (and the
+ * seeded system default) label paidAmount "Paid Amount" and paymentMethod "Payment Method"; on
+ * this grid paidAmount is the captured amount and paymentMethod is the member's subscription
+ * payment type (not how the charge was paid), so the stored titles would mislead.
+ */
+export const ONLINE_PAYMENT_CANONICAL_TITLES = Object.freeze({
+  paidAmount: "Captured Amount",
+  paymentMethod: "Subscription Payment Method",
+  chargedVia: "Charged Via",
+});
 
 const keyOf = (k) => String(k || "").trim();
 const removed = new Set(ONLINE_PAYMENT_REMOVED_COLUMNS);
@@ -36,8 +49,11 @@ export function withOnlinePaymentAttemptColumns(columns = []) {
 }
 
 function withoutRemovedLabels(labels) {
-  if (!labels || typeof labels !== "object") return {};
-  return Object.fromEntries(Object.entries(labels).filter(([k]) => !removed.has(k)));
+  const src = labels && typeof labels === "object" ? labels : {};
+  return {
+    ...Object.fromEntries(Object.entries(src).filter(([k]) => !removed.has(k))),
+    ...ONLINE_PAYMENT_CANONICAL_TITLES,
+  };
 }
 
 /**
