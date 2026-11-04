@@ -12,6 +12,7 @@ import { TableColumnsProvider, useTableColumns } from "../../context/TableColumn
 import { applyClientSideRowFilters } from "../../utils/filterUtils";
 import {
   ATTEMPT_QUERY_KEYS,
+  chargedViaLabel,
   LIFECYCLE_STATUS_LABELS,
   buildAttemptsQuery,
   canRefundAttempt,
@@ -27,6 +28,7 @@ import {
   withoutServerSideFilters,
 } from "../../utils/onlinePaymentAttempts";
 import {
+  ONLINE_PAYMENT_CANONICAL_TITLES,
   normalizeOnlinePaymentTemplateForRead,
   withOnlinePaymentAttemptColumns,
 } from "../../utils/onlinePaymentGridCompat";
@@ -343,5 +345,67 @@ describe("refund_required and partial refunds", () => {
   test("Refund required is offered in the Payment Status filter options", () => {
     const { ONLINE_PAYMENT_STATUS_FILTER_OPTIONS } = require("../../utils/onlinePaymentAttempts");
     expect(ONLINE_PAYMENT_STATUS_FILTER_OPTIONS).toContain("Refund required");
+  });
+});
+
+// ---- labels: Captured Amount / Subscription Payment Method / Charged Via ------------------------
+describe("column titles and Charged Via", () => {
+  const titleOf = (k) => col(k)?.title;
+  const applyStored = (view, master = view) =>
+    act(() => {
+      ctx.applyTemplate("OnlinePayment", [...view.columns], [...master.columns], { ...view.columnLabels }, { ...master.columnLabels });
+    });
+
+  test("Charged Via derives from mode only", () => {
+    expect(chargedViaLabel("stripe")).toBe("Card (Stripe)");
+    expect(chargedViaLabel("external")).toBe("External");
+    expect(chargedViaLabel(null)).toBe("-");
+    const r = normalizeAttemptRow({ ...ITEMS.captured, paymentMethod: "Salary Deduction" });
+    expect(r.chargedVia).toBe("Card (Stripe)");
+    expect(r.paymentMethod).toBe("Salary Deduction"); // subscription payment type, unchanged
+    expect(normalizeAttemptRow({ ...ITEMS.pending, mode: "external", paymentMethod: null })).toMatchObject({ chargedVia: "External", paymentMethod: "-" });
+    expect(col("chargedVia").render(r.chargedVia, r)).toBe("Card (Stripe)");
+  });
+
+  test("stored template with old labels ('Paid Amount', 'Payment Method') renders the code-defined titles", () => {
+    expect(STORED_SYSTEM_DEFAULT.columnLabels.paidAmount).toBe("Paid Amount");
+    expect(STORED_SYSTEM_DEFAULT.columnLabels.paymentMethod).toBe("Payment Method");
+    applyStored(STORED_SYSTEM_DEFAULT);
+    expect(titleOf("paidAmount")).toBe("Captured Amount");
+    expect(titleOf("paymentMethod")).toBe("Subscription Payment Method");
+    expect(titleOf("chargedVia")).toBe("Charged Via");
+    const keys = shown();
+    expect(keys.indexOf("chargedVia")).toBe(keys.indexOf("paymentMethod") + 1);
+    const titles = ctx.columns.OnlinePayment.filter((c) => c.isGride).map((c) => c.title);
+    expect(titles).not.toContain("Paid Amount");
+    expect(titles).not.toContain("Payment Method");
+  });
+
+  test("a user view with custom labels still gets the forced titles; other labels kept", () => {
+    applyStored({
+      columns: ["memberNo", "paidAmount", "paymentMethod"],
+      columnLabels: { memberNo: "My Member Col", paidAmount: "Paid", paymentMethod: "Method" },
+    }, { columns: [], columnLabels: {} });
+    expect(titleOf("paidAmount")).toBe("Captured Amount");
+    expect(titleOf("paymentMethod")).toBe("Subscription Payment Method");
+    expect(titleOf("memberNo")).toBe("My Member Col");
+    expect(shown()).toEqual(expect.arrayContaining(["chargedVia"]));
+  });
+
+  test("compat labels are pure and canonical titles are frozen", () => {
+    const labels = { paidAmount: "Paid Amount" };
+    const r = normalizeOnlinePaymentTemplateForRead({ templateColumns: ["paidAmount"], templateColumnLabels: labels });
+    expect(labels.paidAmount).toBe("Paid Amount");
+    expect(r.templateColumnLabels).toMatchObject(ONLINE_PAYMENT_CANONICAL_TITLES);
+    expect(Object.isFrozen(ONLINE_PAYMENT_CANONICAL_TITLES)).toBe(true);
+  });
+
+  test("Payment Method filter chip still filters the paymentMethod field", () => {
+    const rows = [
+      normalizeAttemptRow({ ...ITEMS.captured, paymentMethod: "Salary Deduction" }),
+      normalizeAttemptRow({ ...ITEMS.pending, paymentMethod: "Direct Debit" }),
+    ];
+    const out = applyClientSideRowFilters(rows, { "Payment Method": { operator: "==", selectedValues: ["Salary Deduction"] } }, ctx.columns.OnlinePayment);
+    expect(out.map((r) => r.id)).toEqual(["a5"]);
   });
 });

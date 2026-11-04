@@ -417,6 +417,9 @@ function buildOnlinePaymentColumns() {
     purposeLabel: {
       render: (text) => text || "—",
     },
+    chargedVia: {
+      render: (text) => (text && text !== "-" ? text : "—"),
+    },
     billingCycle: {
       render: (text) => text || "—",
     },
