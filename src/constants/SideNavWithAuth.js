@@ -94,7 +94,7 @@ export const correspondenceItems = [
     "InAppNotifications",
     <FaBell />,
     "In-App Notifications",
-    ["notifications:read"]
+    ["notification:read"]
   ),
   createMenuItem(
     "Email",
@@ -222,19 +222,19 @@ export const profileItems = [
     "Membership",
     <FaUsers />,
     "Membership",
-    ["crm:member:read"]
+    ["crm:member_read"]
   ),
   createMenuItem(
     "Leavers",
     <FaUserMinus />,
     "Leavers",
-    ["crm:member:read"]
+    ["crm:member_read"]
   ),
   createMenuItem(
     "Joiners",
     <FaUserPlus />,
     "Joiners",
-    ["crm:member:read"]
+    ["crm:member_read"]
   ),
 ];
 
@@ -261,19 +261,19 @@ export const subscriptionItems = [
     "Membership",
     <FaIdCard />,
     "Membership",
-    ["crm:member:read"]
+    ["crm:member_read"]
   ),
   createMenuItem(
     "Payment Forms",
     <FaWallet />,
     "Payment Forms",
-    ["crm:member:read"]
+    ["crm:member_read"]
   ),
   createMenuItem(
     "Reminders",
     <FaRegClock />,
     "Reminders",
-    ["notifications:read"]
+    ["notification:read"]
   ),
   createMenuItem(
     "Cancellations",
@@ -305,19 +305,19 @@ export const subscriptionItems = [
     "CornMarket New Graduate",
     <FaGraduationCap />,
     "New Graduate",
-    ["corn:market:new:graduate:read"]
+    ["profile_new_graduate:read"]
   ),
   createMenuItem(
     "CornMarket Rewards",
     <FaUserPlus />,
     "INMO Rewards",
-    ["corn:market:rewards:read"]
+    ["profile.corn_market_rewards:read"]
   ),
   createMenuItem(
     "Recruit a Friend",
     <FaUserFriends />,
     "Recruit a Friend",
-    ["recruit:friend:read"]
+    ["profile.recruit_friend:read"]
   ),
 ];
 
@@ -390,19 +390,19 @@ export const reportItems = [
     "Membership Reports",
     <FaFileAlt />,
     "Membership Reports",
-    ["reporting:read"]
+    ["reporting.statistics:read", "reporting.listings:read"]
   ),
   createMenuItem(
     "Accounts Reports",
     <FaFileInvoiceDollar />,
     "Accounts Reports",
-    ["reporting:read"]
+    ["reporting.finance:read"]
   ),
   createMenuItem(
     "Comparison Report",
     <FaBalanceScale />,
     "Comparison Report",
-    ["reporting:read"]
+    ["reporting.statistics:read"]
   ),
   createMenuItem(
     "Control Report",

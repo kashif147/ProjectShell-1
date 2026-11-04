@@ -705,10 +705,10 @@ const TableComponent = ({
                     record?.personalInfo?.fullName ||
                     `${record?.personalInfo?.forename || ""} ${record?.personalInfo?.surname || ""}`.trim() ||
                     "-";
-              // Check for crm:member:read permission on Summary page
+              // Check for crm:member_read (CRM_MEMBER_READ issued as resource "crm" : action "member_read") on Summary page
               const isFullNameOnSummaryPage = location.pathname.toLowerCase().includes('/summary');
-              const hasMemberReadPermission = hasPermission('crm:member:read');
-              // On Summary page, only show link if user has crm:member:read permission
+              const hasMemberReadPermission = hasPermission('crm:member_read');
+              // On Summary page, only show link if user has crm:member_read permission
               if (isFullNameOnSummaryPage && !hasMemberReadPermission) {
                 return (
                   <span style={{ textOverflow: "ellipsis" }}>
