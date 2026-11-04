@@ -407,6 +407,49 @@ test.describe("gateway (real OpenResty, tracked config)", { skip: !RUN && "set G
     assert.equal(withJwt.up.headers["x-tenant-id"], TENANT_A);
   });
 
+  // ---------------------------------------------------------------- P5 profile internal routes
+  test("P5: /profile-service/api/internal/* -> 404 for every method, with or without a JWT; never proxied", async () => {
+    const crm = bearer(hs256(claims()));
+    const portal = bearer(hs256(claims({ userType: "PORTAL", roles: ["MEMBER"], permissions: ["portal:read"] })));
+    const SIG = { "x-svc-version": "1", "x-svc-caller": "account-service", "x-svc-kid": "as-it", "x-svc-ts": String(now()), "x-svc-nonce": "aXQtbm9uY2UtMDAwMDAwMDAwMDAx", "x-svc-sig": "A".repeat(43) };
+    const paths = [
+      "/profile-service/api/internal/applications/APP-1/refund-state",
+      "/profile-service/api/internal/",
+      "/profile-service/api/internal",
+      "/profile-service/api/Internal/applications/APP-1/refund-state",
+      "/profile-service/api/INTERNAL/applications/APP-1/refund-state",
+      "/profile-service/api//internal/applications/APP-1/refund-state",
+      "/profile-service/api/%69nternal/applications/APP-1/refund-state",
+      "/profile-service/api/internal/x/../applications/APP-1/refund-state",
+    ];
+    for (const p of paths) {
+      for (const [label, h] of [["anon", {}], ["crm", crm], ["portal", portal], ["crm+spoof+sig", { ...crm, ...SPOOF, ...SIG }]]) {
+        for (const method of ["GET", "POST", "OPTIONS"]) {
+          const { res, count } = await through(method, p, { origin: "https://project-shell-crm-dev.vercel.app", ...h });
+          assert.equal(res.status, 404, `${method} ${p} ${label}`);
+          assert.equal(count, 0, `${method} ${p} ${label}: nothing proxied`);
+        }
+      }
+    }
+  });
+
+  test("P5: normal profile routes are unchanged (JWT required, proxied with the verified identity; preflight 204)", async () => {
+    for (const p of ["/profile-service/api/profile/internal/by-email?email=a%40example.test", "/profile-service/api/applications", "/profile-service/api/personal-details", "/profile-service/api/internals-report", "/profile-service/api/profile/x/internal"]) {
+      const anon = await through("GET", p);
+      assert.equal(anon.res.status, 401, `anon ${p}`);
+      assert.equal(anon.count, 0);
+      const ok = await through("GET", p, { ...SPOOF, ...bearer(hs256(claims())) });
+      assert.equal(ok.res.status, 200, `jwt ${p}`);
+      assert.equal(ok.count, 1);
+      assert.equal(ok.up.port, 4002);
+      assert.equal(ok.up.headers["x-tenant-id"], TENANT_A);
+      assert.equal(ok.up.headers["x-internal-request"], undefined);
+    }
+    const pre = await through("OPTIONS", "/profile-service/api/applications", { origin: "https://project-shell-crm-dev.vercel.app", "access-control-request-method": "GET" });
+    assert.equal(pre.res.status, 204);
+    assert.equal(pre.count, 0);
+  });
+
   test("B2C connector: dedicated rate limit (burst beyond the zone -> 503)", async () => {
     await new Promise((s) => setTimeout(s, 3000)); // drain the zone used by the tests above
     await received();
