@@ -26,6 +26,7 @@ import { Triangle, AlertCircle } from "lucide-react";
 import { Tooltip } from "antd";
 import SimpleMenu from "./SimpleMenu";
 import { useAuthorization } from "../../context/AuthorizationContext";
+import RoutePermissions from "../../constants/RoutePermissions";
 import {
   filterTransferById,
   fetchAndFilterTransferById,
@@ -705,10 +706,11 @@ const TableComponent = ({
                     record?.personalInfo?.fullName ||
                     `${record?.personalInfo?.forename || ""} ${record?.personalInfo?.surname || ""}`.trim() ||
                     "-";
-              // Check for crm:member_read (CRM_MEMBER_READ issued as resource "crm" : action "member_read") on Summary page
+              // On the Summary page the name links to the member Details page, so it uses the same access
+              // check as that page (RoutePermissions.Details = profile:read), not the legacy crm:member_read.
               const isFullNameOnSummaryPage = location.pathname.toLowerCase().includes('/summary');
-              const hasMemberReadPermission = hasPermission('crm:member_read');
-              // On Summary page, only show link if user has crm:member_read permission
+              const hasMemberReadPermission = hasPermission(RoutePermissions.Details);
+              // On Summary page, only show link if user can open the member Details page
               if (isFullNameOnSummaryPage && !hasMemberReadPermission) {
                 return (
                   <span style={{ textOverflow: "ellipsis" }}>
@@ -910,7 +912,8 @@ const TableComponent = ({
               const isPotentialDuplicate =
                 !!record?.isPotentialDuplicate ||
                 !!record?.personalDetails?.duplicateDetection?.isPotentialDuplicate;
-              const hasProfileRead =  hasPermission('crm:access')
+              // Links to the member Details page: same access check as that page (profile:read), not crm:access.
+              const hasProfileRead = hasPermission(RoutePermissions.Details);
             
               const isSummaryPage = currentPath.includes("summary");
 
