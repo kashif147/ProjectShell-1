@@ -1,7 +1,7 @@
 import { getCommunicationContentTemplatesBaseUrl } from "./serviceUrls";
 
 /**
- * Content template domain ownership (letter, email, SMS — not grid Save View).
+ * Content template domain ownership (letter, email, SMS, In-App — not grid Save View).
  * All content templates live in communication-service.
  */
 export const CONTENT_TEMPLATE_SERVICE = "communication-service";
@@ -13,14 +13,44 @@ export const CONTENT_TEMPLATE_TYPES = new Set([
   "email",
   "sms",
   "text",
+  "in-app",
+  "inapp",
 ]);
 
-export function isContentTemplateType(type) {
-  const normalized = String(type || "").trim().toLowerCase();
-  return CONTENT_TEMPLATE_TYPES.has(normalized);
+/** Channels that use subject + HTML/text body (no DOCX upload). */
+export const HTML_BODY_TEMPLATE_TYPES = new Set([
+  "email",
+  "sms",
+  "text",
+  "in-app",
+  "inapp",
+]);
+
+export function normalizeContentTemplateType(type) {
+  return String(type || "")
+    .trim()
+    .toLowerCase()
+    .replace(/[\s_]+/g, "-");
 }
 
-/** REST base for letter / email / SMS template CRUD (upload, SES HTML, etc.). */
+export function isContentTemplateType(type) {
+  return CONTENT_TEMPLATE_TYPES.has(normalizeContentTemplateType(type));
+}
+
+/** Email / In-App / SMS — Quill editor path (not Word upload). */
+export function isHtmlBodyTemplateType(type) {
+  return HTML_BODY_TEMPLATE_TYPES.has(normalizeContentTemplateType(type));
+}
+
+/** Canonical type string for create/update payloads. */
+export function canonicalHtmlTemplateType(type) {
+  const t = normalizeContentTemplateType(type);
+  if (t === "in-app" || t === "inapp") return "In-App";
+  if (t === "sms" || t === "text") return "SMS";
+  return "Email";
+}
+
+/** REST base for letter / email / SMS / In-App template CRUD. */
 export function resolveContentTemplatesApiUrl() {
   return getCommunicationContentTemplatesBaseUrl();
 }

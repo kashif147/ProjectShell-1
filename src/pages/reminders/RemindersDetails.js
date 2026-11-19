@@ -45,6 +45,7 @@ import CustomSelect from "../../component/common/CustomSelect";
 import { useReminders } from "../../context/CampaignDetailsProvider";
 import { useTableColumns } from "../../context/TableColumnsContext ";
 import { getSubscriptionServiceBaseUrl } from "../../config/serviceUrls";
+import { resolveContentTemplatesApiUrl } from "../../config/contentTemplateRouting";
 import { formatDateDdMmYyyy } from "../../utils/Utilities";
 import MemberProfileDrawer from "../../component/profile/MemberProfileDrawer";
 import {
@@ -137,38 +138,42 @@ function buildWaveMembers(members, wave) {
         .map((row, i) => ({ ...row, _rowKey: `${wave}-${i}` }));
 }
 
-const TEMPLATE_PREVIEWS = {
-    email: {
-        label: "Email",
-        subject: "Outstanding Account Balance Reminder",
-        body: `Dear {{Name}},
+const CHANNEL_TEMPLATE_META = {
+    email: { label: "Email", tempolateType: "Email" },
+    inapp: { label: "In-app", tempolateType: "In-App" },
+    letters: { label: "Letters", tempolateType: "Letter" },
+    sms: { label: "SMS", tempolateType: "SMS" },
+};
 
-This is a friendly reminder that your account currently has an outstanding balance of {{Balance}} for your {{Category}} package.
+function reminderCategoryForView(activeView) {
+    if (activeView === "R2") return "Reminder 2";
+    if (activeView === "R3") return "Reminder 3";
+    return "Reminder 1";
+}
 
-Please arrange payment at your earliest convenience to avoid any interruption to your membership benefits.
+function stripHtmlForPreview(html) {
+    return String(html || "")
+        .replace(/<br\s*\/?>/gi, "\n")
+        .replace(/<\/p>/gi, "\n")
+        .replace(/<[^>]+>/g, "")
+        .replace(/&nbsp;/g, " ")
+        .replace(/\n{3,}/g, "\n\n")
+        .trim();
+}
 
-Kind regards,
-Membership Team`,
-    },
-    inapp: {
-        label: "In-app",
-        subject: "Payment reminder",
-        body: `Hi {{Name}}, your membership account has an outstanding balance of {{Balance}}. Tap to view details and pay online.`,
-    },
-    letters: {
-        label: "Letters",
-        subject: "Outstanding balance notice",
-        body: `Dear {{Name}},
+function applyReminderSampleMerge(text, sample) {
+    if (!text) return "";
+    return String(text)
+        .replace(/\{\{\s*Name\s*\}\}/gi, sample.name || "Member")
+        .replace(/\{\{\s*Balance\s*\}\}/gi, sample.balance || "€0.00")
+        .replace(/\{\{\s*Category\s*\}\}/gi, sample.category || "Membership");
+}
 
-We write to inform you that your account shows an outstanding balance of {{Balance}} relating to your {{Category}} membership.
-
-Please contact us or submit payment within 14 days.`,
-    },
-    sms: {
-        label: "SMS",
-        subject: "SMS preview",
-        body: `Hi {{Name}}, reminder: outstanding balance {{Balance}} on your {{Category}} membership. Pay online or call us. Reply STOP to opt out.`,
-    },
+const TIER_TAG_COLOR = {
+    R1: "blue",
+    R2: "green",
+    R3: "purple",
+    CANCEL: "orange",
 };
 
 const DELIVERY_CHANNELS = [
@@ -203,6 +208,14 @@ const DELIVERY_CHANNELS = [
 ];
 
 const WAVE_ORDER = ["R1", "R2", "R3"];
+
+function previewTierForView(activeView, includedWaves = []) {
+    if (activeView === "R1" || activeView === "R2" || activeView === "R3") {
+        return activeView;
+    }
+    const first = WAVE_ORDER.find((w) => includedWaves.includes(w));
+    return first || "R1";
+}
 const STALE_BUILD_MS = 2 * 60 * 1000;
 
 function sortWaves(waves) {
@@ -304,10 +317,22 @@ function RemindersDetails() {
     const mapReminderBatch = useCallback(({ batchId, batchDoc, rows, batchTitle }) => {
         const grouped = { R1: [], R2: [], R3: [] };
         const allMembers = [];
-        rows.forEach((row, index) => {
-            const tier = row.tier || "R1";
+        const tierOrder = { R1: 1, R2: 2, R3: 3, CANCEL: 4 };
+        const sortedRows = [...(rows || [])].sort((a, b) => {
+            const ta = tierOrder[String(a?.tier || "R1").toUpperCase()] || 9;
+            const tb = tierOrder[String(b?.tier || "R1").toUpperCase()] || 9;
+            if (ta !== tb) return ta - tb;
+            // Included first within a tier so KPI drill-down matches send list.
+            const ia = a?.included === false ? 1 : 0;
+            const ib = b?.included === false ? 1 : 0;
+            return ia - ib;
+        });
+        sortedRows.forEach((row, index) => {
+            const rawTier = row.tier || "R1";
+            const tier = String(rawTier).toUpperCase();
             const mapped = {
                 ...row,
+                tier,
                 membershipNo: row.membershipNo || row.membershipNumber || row.memberId,
                 outstandingBalance:
                     row.outstandingBalance == null ? 0 : row.outstandingBalance,
@@ -398,6 +423,11 @@ function RemindersDetails() {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [activeChannel, setActiveChannel] = useState("email");
     const [buildSubmitting, setBuildSubmitting] = useState(false);
+    const [templatePreview, setTemplatePreview] = useState({
+        loading: false,
+        template: null,
+        error: null,
+    });
     const [memberProfileDrawer, setMemberProfileDrawer] = useState({
         open: false,
         profileId: null,
@@ -444,9 +474,15 @@ function RemindersDetails() {
         setSelectedRowKeys([]);
     }, [selectionKey]);
 
-    const totalR1 = selectedBatch?.members?.R1?.length ?? 0;
-    const totalR2 = selectedBatch?.members?.R2?.length ?? 0;
-    const totalR3 = selectedBatch?.members?.R3?.length ?? 0;
+    const totalR1 =
+        selectedBatch?.members?.R1?.length ||
+        Number(selectedBatch?.countsByTier?.r1 ?? 0);
+    const totalR2 =
+        selectedBatch?.members?.R2?.length ||
+        Number(selectedBatch?.countsByTier?.r2 ?? 0);
+    const totalR3 =
+        selectedBatch?.members?.R3?.length ||
+        Number(selectedBatch?.countsByTier?.r3 ?? 0);
 
     const feeR1 = sumMemberFees(selectedBatch?.members?.R1);
     const feeR2 = sumMemberFees(selectedBatch?.members?.R2);
@@ -456,7 +492,22 @@ function RemindersDetails() {
         () => buildComprehensiveMembers(selectedBatch?.members),
         [selectedBatch],
     );
-    const totalBatchCount = comprehensiveMembers.length;
+    const totalBatchCount = useMemo(() => {
+        // Prefer included-tier counts so excluded rows (payment window, free category)
+        // do not inflate the "Total batch" KPI.
+        const fromGrouped =
+            (selectedBatch?.members?.R1?.length || 0) +
+            (selectedBatch?.members?.R2?.length || 0) +
+            (selectedBatch?.members?.R3?.length || 0);
+        if (fromGrouped > 0) return fromGrouped;
+        const tierCountSum =
+            (Number(selectedBatch?.countsByTier?.r1) || 0) +
+            (Number(selectedBatch?.countsByTier?.r2) || 0) +
+            (Number(selectedBatch?.countsByTier?.r3) || 0);
+        if (tierCountSum > 0) return tierCountSum;
+        if (comprehensiveMembers.length) return comprehensiveMembers.length;
+        return Number(selectedBatch?.buildProgress?.totalMembersEstimated) || 0;
+    }, [selectedBatch, comprehensiveMembers]);
     const feeBatchTotal = sumMemberFees(comprehensiveMembers);
 
     const tableMembers = useMemo(() => {
@@ -494,7 +545,92 @@ function RemindersDetails() {
         [paymentRowsScaled],
     );
 
-    const activeTemplate = TEMPLATE_PREVIEWS[activeChannel] || TEMPLATE_PREVIEWS.email;
+    const previewTier = previewTierForView(activeView, includedWaves);
+    const channelMeta =
+        CHANNEL_TEMPLATE_META[activeChannel] || CHANNEL_TEMPLATE_META.email;
+    const previewCategory = reminderCategoryForView(previewTier);
+
+    const sampleMerge = useMemo(() => {
+        const firstIncluded = (tableMembers || []).find(
+            (row) => row.included !== false,
+        );
+        const balanceRaw =
+            firstIncluded?.outstandingBalance ??
+            firstIncluded?.membershipFee ??
+            firstIncluded?.lastPaymentAmount ??
+            null;
+        return {
+            name: firstIncluded?.fullName || firstIncluded?.name || "Member",
+            balance: formatEuroAmount(balanceRaw).replace(/^—$/, "€0.00"),
+            category:
+                firstIncluded?.membershipCategory ||
+                firstIncluded?.category ||
+                "Membership",
+        };
+    }, [tableMembers]);
+
+    useEffect(() => {
+        let cancelled = false;
+        const token = localStorage.getItem("token");
+        const base = resolveContentTemplatesApiUrl();
+        if (!token || !base) {
+            setTemplatePreview({
+                loading: false,
+                template: null,
+                error: "Templates API unavailable",
+            });
+            return undefined;
+        }
+        setTemplatePreview((prev) => ({ ...prev, loading: true, error: null }));
+        axios
+            .get(base, {
+                headers: { Authorization: `Bearer ${token}` },
+                params: {
+                    tempolateType: channelMeta.tempolateType,
+                    category: previewCategory,
+                },
+            })
+            .then((res) => {
+                if (cancelled) return;
+                const templates = res?.data?.data?.templates || [];
+                setTemplatePreview({
+                    loading: false,
+                    template: templates[0] || null,
+                    error: null,
+                });
+            })
+            .catch((err) => {
+                if (cancelled) return;
+                setTemplatePreview({
+                    loading: false,
+                    template: null,
+                    error:
+                        err?.response?.data?.message ||
+                        "Could not load template",
+                });
+            });
+        return () => {
+            cancelled = true;
+        };
+    }, [channelMeta.tempolateType, previewCategory, selectedBatch?.id]);
+
+    const activeTemplate = useMemo(() => {
+        const tpl = templatePreview.template;
+        const rawSubject = tpl?.subject || "";
+        const rawBody =
+            stripHtmlForPreview(tpl?.htmlBody || tpl?.textBody || "") ||
+            (tpl ? "" : "No template configured for this channel and reminder wave.");
+        return {
+            label: channelMeta.label,
+            subject: applyReminderSampleMerge(rawSubject, sampleMerge) ||
+                (tpl ? "(no subject)" : "—"),
+            body: applyReminderSampleMerge(rawBody, sampleMerge),
+            templateId: tpl?._id || null,
+            loading: templatePreview.loading,
+            error: templatePreview.error,
+            missing: !tpl && !templatePreview.loading,
+        };
+    }, [templatePreview, channelMeta.label, sampleMerge]);
 
     const memberListTitle = memberListHeading(activeView, includedWaves);
 
@@ -616,6 +752,25 @@ function RemindersDetails() {
                 }
                 return null;
             },
+        },
+        {
+            title: "Tier",
+            dataIndex: "tier",
+            key: "tier",
+            width: 90,
+            fixed: "left",
+            render: (tier, row) => (
+                <Tag
+                    color={
+                        row.included === false
+                            ? "default"
+                            : TIER_TAG_COLOR[tier] || "blue"
+                    }
+                    style={{ margin: 0 }}
+                >
+                    {tier || "—"}
+                </Tag>
+            ),
         },
         {
             title: "Full name",
@@ -796,13 +951,25 @@ function RemindersDetails() {
         URL.revokeObjectURL(url);
     };
 
-    const handleDownloadReminder3Word = () => {
+    const handleDownloadReminderWord = () => {
         if (isDisable) return;
-        if (activeView !== "R3") return;
-        if (!tableMembers.length) {
+        const wave =
+            activeView === "R1" || activeView === "R2" || activeView === "R3"
+                ? activeView
+                : null;
+        if (!wave) {
+            message.info("Select Reminder 1, 2, or 3 to download a letter list.");
+            return;
+        }
+        const waveMembers = (selectedBatch?.members?.[wave] || []).filter(
+            (row) => row?.included !== false,
+        );
+        if (!waveMembers.length) {
             message.info("No members to export.");
             return;
         }
+        const waveFee =
+            wave === "R1" ? feeR1 : wave === "R2" ? feeR2 : feeR3;
         try {
             const headerCells = [
                 "Full name",
@@ -822,7 +989,7 @@ function RemindersDetails() {
                         )}</th>`,
                 )
                 .join("");
-            const bodyRows = tableMembers
+            const bodyRows = waveMembers
                 .map((row) => {
                     const cells = [
                         row.fullName,
@@ -845,6 +1012,12 @@ function RemindersDetails() {
                     return `<tr>${cells}</tr>`;
                 })
                 .join("");
+            const waveLabel =
+                wave === "R1"
+                    ? "Reminder 1"
+                    : wave === "R2"
+                      ? "Reminder 2"
+                      : "Reminder 3";
             const completeHtml = `<!DOCTYPE html>
 <html>
 <head>
@@ -857,9 +1030,9 @@ table { border-collapse: collapse; width: 100%; }
 </style>
 </head>
 <body>
-<h1>Reminder 3 — ${escapeHtmlDocx(pageTitle)}</h1>
-<p class="meta">Members: ${tableMembers.length.toLocaleString()} · Total fees (R3): ${escapeHtmlDocx(
-                formatCurrencyAmount(feeR3),
+<h1>${escapeHtmlDocx(waveLabel)} — ${escapeHtmlDocx(pageTitle)}</h1>
+<p class="meta">Members: ${waveMembers.length.toLocaleString()} · Total fees (${wave}): ${escapeHtmlDocx(
+                formatCurrencyAmount(waveFee),
             )}</p>
 <table>
 <thead><tr>${headerCells}</tr></thead>
@@ -879,7 +1052,7 @@ table { border-collapse: collapse; width: 100%; }
             const url = URL.createObjectURL(docxBlob);
             const a = document.createElement("a");
             a.href = url;
-            a.download = `reminder-3-${sanitizeDocxFileBase(
+            a.download = `reminder-${wave.toLowerCase()}-${sanitizeDocxFileBase(
                 pageTitle,
             )}.docx`;
             a.click();
@@ -992,7 +1165,10 @@ table { border-collapse: collapse; width: 100%; }
         );
     };
 
-    const channelMemberCount = tableMembers.length;
+    const channelMemberCount = useMemo(
+        () => tableMembers.filter((row) => row.included !== false).length,
+        [tableMembers],
+    );
 
     const renderChannelTab = ({ key, label, icon: Icon, iconClass }) => {
         const active = activeChannel === key;
@@ -1272,20 +1448,47 @@ table { border-collapse: collapse; width: 100%; }
                             </span>
                         }
                         extra={
-                            <button
-                                type="button"
-                                className="reminder-details-preview-link"
-                                disabled={isDisable}
-                                onClick={() =>
-                                    message.info(
-                                        `Preview full ${activeTemplate.label.toLowerCase()} (demo)`,
-                                    )
-                                }
-                            >
-                                Preview full{" "}
-                                {activeTemplate.label.toLowerCase()}
-                                <LinkOutlined />
-                            </button>
+                            activeTemplate.templateId ? (
+                                <button
+                                    type="button"
+                                    className="reminder-details-preview-link"
+                                    onClick={() =>
+                                        navigate(
+                                            `/templateConfig?id=${encodeURIComponent(
+                                                activeTemplate.templateId,
+                                            )}`,
+                                        )
+                                    }
+                                >
+                                    Edit template
+                                    <LinkOutlined />
+                                </button>
+                            ) : (
+                                <button
+                                    type="button"
+                                    className="reminder-details-preview-link"
+                                    onClick={() =>
+                                        navigate(
+                                            `/templateConfig?tempolateType=${encodeURIComponent(
+                                                channelMeta.tempolateType,
+                                            )}&category=${encodeURIComponent(
+                                                previewCategory,
+                                            )}`,
+                                            {
+                                                state: {
+                                                    prefillTempolateType:
+                                                        channelMeta.tempolateType,
+                                                    prefillCategory:
+                                                        previewCategory,
+                                                },
+                                            },
+                                        )
+                                    }
+                                >
+                                    Create in Templates
+                                    <LinkOutlined />
+                                </button>
+                            )
                         }
                         styles={{
                             body: {
@@ -1293,12 +1496,29 @@ table { border-collapse: collapse; width: 100%; }
                             },
                         }}
                     >
-                        <div className="reminder-details-template-subject">
-                            Subject: {activeTemplate.subject}
-                        </div>
-                        <div className="reminder-details-template-body">
-                            {activeTemplate.body}
-                        </div>
+                        {activeTemplate.loading ? (
+                            <div className="reminder-details-template-body">
+                                Loading template…
+                            </div>
+                        ) : (
+                            <>
+                                <div className="reminder-details-template-subject">
+                                    Subject: {activeTemplate.subject}
+                                </div>
+                                <div className="reminder-details-template-body">
+                                    {activeTemplate.error
+                                        ? activeTemplate.error
+                                        : activeTemplate.body}
+                                </div>
+                                {activeTemplate.missing ? (
+                                    <div className="reminder-details-empty-sub">
+                                        Configure a {channelMeta.tempolateType}{" "}
+                                        template for {previewCategory} in
+                                        Templates.
+                                    </div>
+                                ) : null}
+                            </>
+                        )}
                     </Card>
                 </Col>
             </Row>
@@ -1340,12 +1560,14 @@ table { border-collapse: collapse; width: 100%; }
                         >
                             Download CSV
                         </Button>
-                        {activeView === "R3" && (
+                        {(activeView === "R1" ||
+                            activeView === "R2" ||
+                            activeView === "R3") && (
                             <Button
                                 className="reminder-details-action-download"
                                 icon={<FileTextOutlined />}
                                 disabled={isDisable}
-                                onClick={handleDownloadReminder3Word}
+                                onClick={handleDownloadReminderWord}
                             >
                                 Download Word
                             </Button>

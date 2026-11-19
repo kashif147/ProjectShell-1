@@ -137,33 +137,89 @@ const Login = () => {
   const isProcessingAuthRef = useRef(false);
   const processedCodeRef = useRef(null);
 
-  // Step 1: Login button click
+  // Step 1: Login button click — calls backend /pkce/generate which registers state
+  // server-side, then redirects to Microsoft using the backend-supplied URL.
   const handleLogin = async () => {
-    // Reset auth processing refs when starting a new login
     isProcessingAuthRef.current = false;
     processedCodeRef.current = null;
 
-    const { codeVerifier, codeChallenge } = await generatePKCE();
-    // Save codeVerifier for later token exchange
-    localStorage.setItem("pkce_code_verifier", codeVerifier);
-    const tenantId = "39866a06-30bc-4a89-80c6-9dd9357dd453";
-    const clientId = "ad25f823-e2d3-43e2-bea5-a9e6c9b0dbae";
-    const redirectUri = getRedirectUri();
-    const scopes = "openid profile email offline_access";
-    const authUrl = new URL(
-      `https://login.microsoftonline.com/${tenantId}/oauth2/v2.0/authorize`
-    );
-    authUrl.searchParams.set("client_id", clientId);
-    authUrl.searchParams.set("response_type", "code");
-    authUrl.searchParams.set("redirect_uri", redirectUri);
-    authUrl.searchParams.set("scope", scopes);
-    authUrl.searchParams.set("code_challenge", codeChallenge);
-    authUrl.searchParams.set("code_challenge_method", "S256");
-    authUrl.searchParams.set("state", "12345");
-    authUrl.searchParams.set("prompt", "login");
+    try {
+      const pkceUrl = `${process.env.REACT_APP_BASE_URL_DEV}/pkce/generate`;
 
-    // Redirect to Microsoft login
-    window.location.href = authUrl.toString();
+      const response = await fetch(pkceUrl);
+
+      if (response.status === 400) {
+        MyAlert("error", "Unable to start sign-in", "Please try again.");
+        return;
+      }
+      if (!response.ok) {
+        console.error(
+          "Failed to obtain PKCE parameters from backend:",
+          response.status,
+          response.statusText
+        );
+        MyAlert("error", "Unable to start sign-in", "Please try again.");
+        return;
+      }
+
+      const data = await response.json();
+      const authorizeUrl = data?.authorizationUrls?.azureAD;
+      const codeVerifier = data?.codeVerifier;
+
+      if (!authorizeUrl || !codeVerifier) {
+        console.error("Malformed /pkce/generate response", data);
+        MyAlert("error", "Unable to start sign-in", "Please try again.");
+        return;
+      }
+
+      let expectedState;
+      let authorizeRedirectUri;
+      try {
+        const authorizeParams = new URLSearchParams(new URL(authorizeUrl).search);
+        expectedState = authorizeParams.get("state");
+        authorizeRedirectUri = authorizeParams.get("redirect_uri");
+
+        // In local development, override the backend's redirect_uri with the local one
+        // (the backend always returns the production Vercel URI, but localhost is also
+        // registered in Azure AD). The backend validates state — not redirect_uri ownership.
+        if (process.env.NODE_ENV === "development") {
+          const localRedirectUri = getRedirectUri(); // e.g. "http://localhost:3000"
+          authorizeParams.set("redirect_uri", localRedirectUri);
+          const parsedUrl = new URL(authorizeUrl);
+          parsedUrl.search = authorizeParams.toString();
+          // Redirect to Microsoft using the local override URL
+          localStorage.setItem("pkce_code_verifier", codeVerifier);
+          localStorage.setItem("pkce_state", expectedState);
+          localStorage.setItem("pkce_redirect_uri", localRedirectUri);
+          window.location.href = parsedUrl.toString();
+          return;
+        }
+      } catch {
+        console.error("Backend returned an invalid Microsoft authorize URL");
+        MyAlert("error", "Unable to start sign-in", "Please try again.");
+        return;
+      }
+
+      if (!expectedState) {
+        console.error("Backend authorize URL is missing state");
+        MyAlert("error", "Unable to start sign-in", "Please try again.");
+        return;
+      }
+
+      localStorage.setItem("pkce_code_verifier", codeVerifier);
+      localStorage.setItem("pkce_state", expectedState);
+      // Remember the exact redirect_uri the backend embedded — Microsoft requires
+      // the token request to use the same value as the authorize request.
+      if (authorizeRedirectUri) {
+        localStorage.setItem("pkce_redirect_uri", authorizeRedirectUri);
+      }
+
+      // Redirect browser to Microsoft login (backend-generated URL)
+      window.location.href = authorizeUrl;
+    } catch (error) {
+      console.error("Failed to start Microsoft sign-in", error);
+      MyAlert("error", "Unable to start sign-in", "Please try again.");
+    }
   };
   const handleAuthRedirect = useCallback(async () => {
     // Prevent multiple concurrent calls
@@ -195,36 +251,55 @@ const Login = () => {
     // Clean up URL immediately to prevent re-triggering
     window.history.replaceState({}, document.title, window.location.pathname);
 
+    const returnedState = urlParams.get("state");
     const codeVerifier = localStorage.getItem("pkce_code_verifier");
+    const expectedState = localStorage.getItem("pkce_state");
+    const authorizeRedirectUri = localStorage.getItem("pkce_redirect_uri");
+
+    // Single-use: clear stored transaction immediately after reading — mirrors the
+    // backend's own state/nonce store (single-use-on-read).
+    localStorage.removeItem("pkce_code_verifier");
+    localStorage.removeItem("pkce_state");
+    localStorage.removeItem("pkce_redirect_uri");
+
     console.log(
       "handleAuthRedirect - Code verifier:",
       codeVerifier ? "exists" : "missing"
     );
 
     if (!codeVerifier) {
-      console.error("Missing PKCE code_verifier from sessionStorage");
+      console.error("Missing PKCE code_verifier from localStorage");
       isProcessingAuthRef.current = false;
       setAuthLoading(false);
       return;
     }
 
-    const redirectUri = getRedirectUri();
+    // Client-side state correlation check — backend is the authoritative verifier.
+    if (!returnedState || !expectedState || returnedState !== expectedState) {
+      console.error("handleAuthRedirect - state mismatch or missing, aborting");
+      isProcessingAuthRef.current = false;
+      processedCodeRef.current = null;
+      setAuthLoading(false);
+      return;
+    }
+
+    // Use the exact redirect_uri the backend embedded in the authorize URL.
+    const redirectUri = authorizeRedirectUri || getRedirectUri();
     console.log("handleAuthRedirect - Redirect URI:", redirectUri);
 
     try {
-      const response = await fetch(
-        //fixing login api call
-        `${process.env.REACT_APP_BASE_URL_DEV}/auth/azure-crm`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            code: code, // backend expects this
-            codeVerifier: codeVerifier,
-            redirectUri: redirectUri, // must match the one used in authorization request
-          }),
-        }
-      );
+      const authApiUrl = `${process.env.REACT_APP_BASE_URL_DEV}/auth/azure-crm`;
+
+      const response = await fetch(authApiUrl, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          code: code,
+          codeVerifier: codeVerifier,
+          redirectUri: redirectUri,
+          state: returnedState,
+        }),
+      });
 
       if (!response.ok) {
         let errorMessage = `${response.status} ${response.statusText}`;

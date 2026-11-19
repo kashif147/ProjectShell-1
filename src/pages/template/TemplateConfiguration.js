@@ -18,7 +18,7 @@ import {
   Tooltip,
   Tag,
 } from "antd";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useNavigate, useSearchParams, useLocation } from "react-router-dom";
 import "./TemplateConfiguration.css";
 import ReactQuill from "react-quill-new";
 import Quill from "quill";
@@ -58,6 +58,10 @@ import {
 } from "../../utils/templateLookupHelpers";
 import htmlDocx from "html-docx-js/dist/html-docx";
 import { communicationServicePath } from "../../utils/communicationServiceUrl";
+import {
+  isHtmlBodyTemplateType,
+  canonicalHtmlTemplateType,
+} from "../../config/contentTemplateRouting";
 import MemberSearch from "../../component/profile/MemberSearch";
 import {
   buildBookmarkPreviewMap,
@@ -1018,13 +1022,10 @@ const updateTemplateAPI = async (
       hasFile: !!file,
     });
 
-    const isEmailTemplate =
-      String(tempolateType || "")
-        .trim()
-        .toLowerCase() === "email";
+    const isHtmlBody = isHtmlBodyTemplateType(tempolateType);
 
     let response;
-    if (isEmailTemplate) {
+    if (isHtmlBody) {
       response = await fetch(
         communicationServicePath(`templates/${templateId}`),
         {
@@ -1037,7 +1038,7 @@ const updateTemplateAPI = async (
             name: name.trim(),
             description: description.trim(),
             category: category.trim(),
-            tempolateType: "Email",
+            tempolateType: canonicalHtmlTemplateType(tempolateType),
             subject: (subject || "").trim(),
             htmlBody: htmlBody || "<p></p>",
             textBody: textBody || "",
@@ -1125,14 +1126,11 @@ const uploadTemplateAPI = async ({
     throw new Error("No authentication token found");
   }
 
-  const isEmailTemplate =
-    String(tempolateType || "")
-      .trim()
-      .toLowerCase() === "email";
+  const isHtmlBody = isHtmlBodyTemplateType(tempolateType);
 
   try {
     let response;
-    if (isEmailTemplate) {
+    if (isHtmlBody) {
       response = await fetch(communicationServicePath("templates/email"), {
         method: "POST",
         headers: {
@@ -1143,6 +1141,7 @@ const uploadTemplateAPI = async ({
           name: name.trim(),
           description: description.trim(),
           category: category.trim(),
+          tempolateType: canonicalHtmlTemplateType(tempolateType),
           subject: (subject || "").trim(),
           htmlBody: htmlBody || "<p></p>",
           textBody: textBody || "",
@@ -1276,11 +1275,25 @@ const TemplateConfiguration = () => {
   const [bookmarksRefreshing, setBookmarksRefreshing] = useState(false);
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  const location = useLocation();
   const [searchParams] = useSearchParams();
   const templateIdFromUrl = searchParams.get("id");
   const editingTemplateId =
     templateId || templateIdFromUrl || templateData?.template?._id || null;
   const isEditMode = Boolean(editingTemplateId);
+
+  // Prefill type/category when creating from Reminder Details empty state
+  useEffect(() => {
+    if (isEditMode) return;
+    const type =
+      searchParams.get("tempolateType") ||
+      location.state?.prefillTempolateType ||
+      "";
+    const category =
+      searchParams.get("category") || location.state?.prefillCategory || "";
+    if (type) setValue("tempolateType", type);
+    if (category) setValue("category", category);
+  }, [isEditMode, searchParams, location.state, setValue]);
 
   // Watch template type for conditional rendering
   const watchedTemplateType = watch("tempolateType");
@@ -1410,12 +1423,9 @@ const TemplateConfiguration = () => {
       let nextEditorHtml = "<p></p>";
 
       try {
-        const isEmailTemplate =
-          String(template.tempolateType || "")
-            .trim()
-            .toLowerCase() === "email";
+        const isHtmlBody = isHtmlBodyTemplateType(template.tempolateType);
 
-        if (isEmailTemplate && template.htmlBody) {
+        if (isHtmlBody && template.htmlBody) {
           const content = template.htmlBody;
           setOriginalContent(content);
           nextEditorHtml = normalizeTableUpWrapTagsInHtmlString(content);
@@ -1646,10 +1656,10 @@ const TemplateConfiguration = () => {
     },
     subject: {
       validate: (value) => {
-        const type = String(getValues("tempolateType") || "").toLowerCase();
-        if (type !== "email") return true;
+        const type = getValues("tempolateType");
+        if (!isHtmlBodyTemplateType(type)) return true;
         if (!value || !String(value).trim()) {
-          return "Subject is required for email templates";
+          return "Subject is required for Email, In-App, and SMS templates";
         }
         if (String(value).length > 500) {
           return "Subject must be less than 500 characters";
@@ -1725,15 +1735,12 @@ const TemplateConfiguration = () => {
         });
       }
 
-      const isEmailTemplate =
-        String(data.tempolateType || "")
-          .trim()
-          .toLowerCase() === "email";
+      const isHtmlBody = isHtmlBodyTemplateType(data.tempolateType);
 
       // Create DOCX file if:
       // 1. Creating new template, OR
       // 2. Updating template AND content has changed
-      if (!isEmailTemplate && (!isEditMode || contentChanged)) {
+      if (!isHtmlBody && (!isEditMode || contentChanged)) {
         console.log("📄 Creating/updating DOCX file...");
         docResult = await createDocxFile({
           name: data.templateName.trim(),
@@ -1794,7 +1801,7 @@ const TemplateConfiguration = () => {
         }
       } else {
         // CREATE NEW TEMPLATE
-        if (!isEmailTemplate && !docResult) {
+        if (!isHtmlBody && !docResult) {
           throw new Error("Failed to create DOCX file for new template");
         }
 
@@ -1812,7 +1819,7 @@ const TemplateConfiguration = () => {
         });
 
         setGeneratedFile(
-          isEmailTemplate
+          isHtmlBody
             ? {
                 id: `template_${Date.now()}`,
                 name: data.templateName.trim(),
@@ -2284,7 +2291,7 @@ const TemplateConfiguration = () => {
               />
             </div>
 
-            {String(watchedTemplateType || "").toLowerCase() === "email" && (
+            {isHtmlBodyTemplateType(watchedTemplateType) && (
               <div style={{ marginBottom: "16px" }}>
                 <Controller
                   name="subject"
@@ -2297,7 +2304,7 @@ const TemplateConfiguration = () => {
                       value={field.value}
                       onChange={field.onChange}
                       onBlur={field.onBlur}
-                      placeholder="Enter email subject"
+                      placeholder="Enter subject"
                       required={true}
                       hasError={!!errors.subject}
                       errorMessage={errors.subject?.message}
@@ -2315,8 +2322,7 @@ const TemplateConfiguration = () => {
                 render={({ field }) => (
                   <MyInput
                     label={
-                      String(watchedTemplateType || "").toLowerCase() ===
-                      "email"
+                      isHtmlBodyTemplateType(watchedTemplateType)
                         ? "Plain text (optional)"
                         : "Description"
                     }
@@ -2326,8 +2332,7 @@ const TemplateConfiguration = () => {
                     type="textarea"
                     onBlur={field.onBlur}
                     placeholder={
-                      String(watchedTemplateType || "").toLowerCase() ===
-                      "email"
+                      isHtmlBodyTemplateType(watchedTemplateType)
                         ? "Optional plain text fallback"
                         : "Enter template description"
                     }

@@ -23,7 +23,7 @@ export const getRedirectUri = () => {
     // process.env.REACT_APP_REDIRECT_URI_VER ||
     process.env.REACT_APP_REDIRECT_URI;
   if (envOverride) {
-    return envOverride.replace(/\/+$/, "");
+    return envOverride;
   }
 
   // Determine based on NODE_ENV
