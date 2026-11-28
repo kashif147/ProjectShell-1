@@ -1,0 +1,317 @@
+{
+  "pkg": "projectshell-crm",
+  "globalName": "ProjectShellCRM",
+  "shape": "package",
+  "buildCmd": "node .design-sync/build-lib.mjs",
+  "entry": ".design-sync/.cache/dist/index.js",
+  "componentSrcMap": {
+    "DateRang": "src/component/common/DateRang.js",
+    "Gridmenu": "src/component/common/Gridmenu.js",
+    "MyDatePicker": "src/component/common/MyDatePicker.js",
+    "MyTable": "src/component/common/MyTable.js",
+    "NumberFilter": "src/component/common/NumberFilter.js",
+    "ProfileHeader": "src/component/common/ProfileHeader.js",
+    "ResizableComp": "src/component/common/ResizableComp.js",
+    "Sidebar": "src/component/common/Sidebar.js",
+    "SimpleMenu": "src/component/common/SimpleMenu.js",
+    "TableComponent": "src/component/common/TableComponent.js",
+    "TextFilter": "src/component/common/TextFilter.js",
+    "UndoCancellationModal": "src/component/common/UndoCancellationModal.js",
+    "ActionDropdown": "src/component/common/ActionDropdown.jsx",
+    "ApiPagination": "src/component/common/ApiPagination.jsx",
+    "AppTabs": "src/component/common/AppTabs.jsx",
+    "AuthorizedComponents": "src/component/common/AuthorizedComponents.jsx",
+    "Breadcrumb": "src/component/common/Breadcrumb.jsx",
+    "CommonPopConfirm": "src/component/common/CommonPopConfirm.jsx",
+    "ContactDrawer": "src/component/common/ContactDrawer.jsx",
+    "CreateBatchPayment": "src/component/common/CreateBatchPayment.jsx",
+    "CreateLifecycleBatchForm": "src/component/common/CreateLifecycleBatchForm.jsx",
+    "CustomSelect": "src/component/common/CustomSelect.jsx",
+    "ErrorBoundary": "src/component/common/ErrorBoundary.jsx",
+    "ExportCSV": "src/component/common/ExportCSV.jsx",
+    "ExportPDF": "src/component/common/ExportPDF.jsx",
+    "Header": "src/component/common/Header.jsx",
+    "HeaderDetails": "src/component/common/HeaderDetails.jsx",
+    "JiraLikeMenu": "src/component/common/JiraLikeMenu.jsx",
+    "MultiFilterDropdown": "src/component/common/MultiFilterDropdown.jsx",
+    "MyAlert": "src/component/common/MyAlert.jsx",
+    "MyConfirm": "src/component/common/MyConfirm.jsx",
+    "MyDatePicker1": "src/component/common/MyDatePicker1.jsx",
+    "MyDeatails": "src/component/common/MyDeatails.jsx",
+    "MyDrawer": "src/component/common/MyDrawer.jsx",
+    "MyDrowpDown": "src/component/common/MyDrowpDown.jsx",
+    "MyInput": "src/component/common/MyInput.jsx",
+    "MyMenu": "src/component/common/MyMenu.jsx",
+    "MySearchInput": "src/component/common/MySearchInput.jsx",
+    "MySelect": "src/component/common/MySelect.jsx",
+    "MyTransfer": "src/component/common/MyTransfer.jsx",
+    "NotificationPopover": "src/component/common/NotificationPopover.jsx",
+    "PopOut": "src/component/common/PopOut.jsx",
+    "ReportViewer": "src/component/common/ReportViewer.jsx",
+    "RoutePermissionWrapper": "src/component/common/RoutePermissionWrapper.jsx",
+    "SaveViewMenu": "src/component/common/SaveViewMenu.jsx",
+    "SideNav": "src/component/common/SideNav.jsx",
+    "SubscriptionHistoryDetail": "src/component/common/SubscriptionHistoryDetail.jsx",
+    "SubTableComp": "src/component/common/SubTableComp.jsx",
+    "ThreeDotsMenu": "src/component/common/ThreeDotsMenu.jsx",
+    "Toolbar": "src/component/common/Toolbar.jsx",
+    "UnifiedPagination": "src/component/common/UnifiedPagination.jsx",
+    "UserProfilePopover": "src/component/common/UserProfilePopover.jsx",
+    "CancallationDrawer": "src/component/common/cancallation/CancallationDrawer.jsx",
+    "AppLauncher": "src/component/common/Header.jsx"
+  },
+  "cssEntry": ".design-sync/.cache/dist/index.css",
+  "guidelinesGlob": [
+    "src/styles/ThemeGuide.md"
+  ],
+  "provider": {
+    "component": "CRMProvider"
+  },
+  "extraEntries": [
+    "antd",
+    "@ant-design/icons"
+  ],
+  "overrides": {
+    "MyTable": {
+      "cardMode": "column"
+    },
+    "AppTabs": {
+      "cardMode": "single",
+      "viewport": "1400x900"
+    },
+    "CreateBatchPayment": {
+      "cardMode": "column",
+      "viewport": "1100x1000"
+    },
+    "CancallationDrawer": {
+      "cardMode": "single",
+      "viewport": "1440x900"
+    },
+    "ContactDrawer": {
+      "cardMode": "single",
+      "viewport": "1200x800",
+      "primaryStory": "IroAssignment"
+    },
+    "CommonPopConfirm": {
+      "cardMode": "single",
+      "primaryStory": "MoveToExceptions"
+    },
+    "Header": {
+      "cardMode": "single",
+      "viewport": "1400x300"
+    },
+    "HeaderDetails": {
+      "cardMode": "column",
+      "viewport": "1400x400"
+    },
+    "Gridmenu": {
+      "cardMode": "single",
+      "primaryStory": "Open"
+    },
+    "MyDrawer": {
+      "cardMode": "single",
+      "viewport": "1000x760"
+    },
+    "MyConfirm": {
+      "cardMode": "single",
+      "viewport": "900x500"
+    },
+    "MyAlert": {
+      "cardMode": "single",
+      "viewport": "900x300"
+    },
+    "MyDeatails": {
+      "cardMode": "single",
+      "viewport": "1280x1000"
+    },
+    "MultiFilterDropdown": {
+      "cardMode": "single",
+      "primaryStory": "Open"
+    },
+    "ProfileHeader": {
+      "cardMode": "column",
+      "viewport": "1280x800"
+    },
+    "PopOut": {
+      "cardMode": "column"
+    },
+    "ReportViewer": {
+      "cardMode": "column"
+    },
+    "SubscriptionHistoryDetail": {
+      "cardMode": "single",
+      "viewport": "1200x900"
+    },
+    "UndoCancellationModal": {
+      "cardMode": "single",
+      "viewport": "1000x600"
+    },
+    "UserProfilePopover": {
+      "cardMode": "single",
+      "viewport": "700x520",
+      "primaryStory": "SignedOutContent"
+    },
+    "TableComponent": {
+      "cardMode": "column"
+    },
+    "Toolbar": {
+      "cardMode": "column"
+    },
+    "UnifiedPagination": {
+      "cardMode": "column"
+    },
+    "SubTableComp": {
+      "cardMode": "column"
+    },
+    "ActionDropdown": {
+      "cardMode": "single",
+      "primaryStory": "Open"
+    },
+    "ApiPagination": {
+      "cardMode": "column"
+    },
+    "Breadcrumb": {
+      "cardMode": "column"
+    },
+    "CreateLifecycleBatchForm": {
+      "cardMode": "column"
+    },
+    "DateRang": {
+      "cardMode": "single",
+      "primaryStory": "Open"
+    },
+    "ErrorBoundary": {
+      "cardMode": "column"
+    },
+    "MyDrowpDown": {
+      "cardMode": "single",
+      "primaryStory": "Open"
+    },
+    "MyMenu": {
+      "cardMode": "single",
+      "primaryStory": "Open"
+    },
+    "MyTransfer": {
+      "cardMode": "column"
+    },
+    "RoutePermissionWrapper": {
+      "cardMode": "column"
+    },
+    "ThreeDotsMenu": {
+      "cardMode": "column"
+    }
+  },
+  "dtsPropsFor": {
+    "MySelect": "placeholder?: string; options?: { value: string; label: string }[]; defaultValue?: string; value?: string; onChange?: (value: string) => void; isMenu?: boolean; isSimple?: boolean; width?: number | string; disabled?: boolean;",
+    "MyInput": "label?: string; id?: string; placeholder?: string; value?: string; onChange?: (e: { target: { name?: string; value: string } }) => void; name?: string; type?: \"text\" | \"email\" | \"password\" | \"number\" | \"date\" | \"textarea\" | \"mobile\" | \"iban\" | \"bic\"; required?: boolean; hasError?: boolean; errorMessage?: string; disabled?: boolean; rows?: number; extra?: React.ReactNode; onBlur?: (e: any) => void; onFocus?: (e: any) => void; maxLength?: number; prefix?: React.ReactNode; success?: boolean; allowClear?: boolean; onClear?: () => void;",
+    "MyTable": "columns: any[]; dataSource?: any[]; selection?: boolean; rowSelection?: any; onSelectionChange?: (keys: React.Key[], rows: any[]) => void; selectionType?: \"checkbox\" | \"radio\"; loading?: boolean; onRowClick?: (record: any) => void; tablePadding?: React.CSSProperties; scroll?: { x?: number | string; y?: number | string }; footerVariant?: \"pagination\" | \"infinite\"; infiniteInitialRows?: number; infiniteChunkSize?: number; infiniteLoadOnScroll?: boolean; defaultSortField?: string; defaultSortOrder?: \"ascend\" | \"descend\"; alwaysFirstSortField?: string; alwaysFirstSortOrder?: \"ascend\" | \"descend\"; tableComponents?: any; expandable?: any;",
+    "ActionDropdown": "items?: { label: React.ReactNode; onClick?: () => void }[];",
+    "ApiPagination": "apiEndpoint?: string; onDataChange?: (data: any[]) => void; onPaginationChange?: (p: { page: number; pageSize: number; total: number; totalPages: number }) => void; initialPage?: number; initialPageSize?: number | \"All\"; showSizeChanger?: boolean; showQuickJumper?: boolean; showTotal?: boolean; itemName?: string; apiConfig?: Record<string, any>; transformResponse?: (raw: any) => { data: any[]; total: number }; className?: string; style?: React.CSSProperties; children?: (state: { data: any[]; loading: boolean; pagination: { page: number; pageSize: number | \"All\"; total: number; totalPages: number } }) => React.ReactNode;",
+    "AppLauncher": "",
+    "AppTabs": "profileId?: string; subscriptionId?: string;",
+    "AuthorizedComponents": "children?: React.ReactNode; permission?: string; permissions?: string[]; role?: string; roles?: string[]; requireAllPermissions?: boolean; requireAllRoles?: boolean; disabled?: boolean; tooltip?: React.ReactNode; onClick?: (e: React.MouseEvent<HTMLElement>) => void; type?: \"primary\" | \"default\" | \"dashed\" | \"link\" | \"text\"; danger?: boolean; icon?: React.ReactNode; size?: \"small\" | \"middle\" | \"large\"; className?: string; style?: React.CSSProperties;",
+    "Breadcrumb": "",
+    "CancallationDrawer": "isOpen?: boolean; onClose?: () => void;",
+    "CommonPopConfirm": "title?: React.ReactNode; description?: React.ReactNode; onConfirm?: (e?: React.MouseEvent<HTMLElement>) => void; onCancel?: (e?: React.MouseEvent<HTMLElement>) => void; children?: React.ReactNode; okText?: React.ReactNode; cancelText?: React.ReactNode; placement?: \"top\" | \"left\" | \"right\" | \"bottom\" | \"topLeft\" | \"topRight\" | \"bottomLeft\" | \"bottomRight\" | \"leftTop\" | \"leftBottom\" | \"rightTop\" | \"rightBottom\";",
+    "ContactDrawer": "open?: boolean; onClose?: () => void; title?: string; onAssign?: (user: any | null, selectedWorkLocations: any[]) => void; onUnassign?: (selectedWorkLocations: any[]) => void; type?: \"workLocation\" | \"Branch\" | \"Region\";",
+    "CreateBatchPayment": "editBatchId?: string | null; editSource?: { _id: string; type?: string; batchDate?: string; paymentDate?: string; referenceNumber?: string; description?: string; name?: string; comments?: string; workLocation?: string; bankName?: string; batchStatus?: string; batchPayments?: any[] } | null; ref?: React.Ref<{ submit: () => Promise<any>; reset: () => void }>;",
+    "CreateLifecycleBatchForm": "variant?: 'reminder' | 'cancellation'; ref?: React.Ref<{ submit: () => Promise<{ _id?: string; id?: string; description: string; referenceNumber: string } | null>; reset: () => void }>;",
+    "CustomSelect": "label?: React.ReactNode; id?: string; name?: string; value?: string | { label?: string; name?: string; value?: string } | null; onChange?: (e: { target: { name?: string; value: any } }) => void; options?: Array<{ key?: string; value?: string; label: string }>; required?: boolean; hasError?: boolean; errorMessage?: string; disabled?: boolean; placeholder?: string; isMarginBtm?: boolean; extra?: React.ReactNode; isIDs?: boolean; isObjectValue?: boolean; showSearch?: boolean; sortOptions?: boolean; allowClear?: boolean;",
+    "DateRang": "label: string; selectedValues?: Array<string | number | null>; operator?: 'between' | 'within' | 'more_than'; onApply?: (filter: { label: string; operator: 'between' | 'within' | 'more_than'; selectedValues: Array<string | number> }) => void;",
+    "ErrorBoundary": "children?: React.ReactNode;",
+    "ExportCSV": "data: Array<Record<string, unknown>>; filename?: string; metadata?: string[];",
+    "ExportPDF": "data: Array<Record<string, unknown>>; filename?: string;",
+    "Gridmenu": "title: React.ReactNode; screenName: string; columnsForFilter: Array<{ title: string; dataIndex?: string | string[]; key?: string; isGride?: boolean; isVisible?: boolean; width?: number; contextLabel?: string }>; setColumnsForFilter: (cols: any[] | ((prev: any[]) => any[])) => void; setColumnsDragbe: (cols: any[]) => void;",
+    "Header": "",
+    "HeaderDetails": "hideBreadcrumb?: boolean; setcontactDrawer?: (open: boolean) => void; selectedRowsCount?: number;",
+    "JiraLikeMenu": "title: string; data?: Record<string, boolean>; isSimple?: boolean;",
+    "MultiFilterDropdown": "label: string; options?: string[]; selectedValues?: string[]; operator?: \"==\" | \"!=\"; onApply?: (filter: { label: string; operator: string; selectedValues: string[] }) => void; formatOptionLabel?: (option: string) => React.ReactNode;",
+    "MyAlert": "/* (function, not a component) MyAlert(type: \"success\" | \"error\" | \"info\" | \"warning\", message: React.ReactNode, description?: React.ReactNode): void */",
+    "MyConfirm": "/* (function, not a component) MyConfirm(opts: { title?: React.ReactNode; message?: React.ReactNode; onConfirm?: () => void | Promise<void> }): { destroy: () => void; update: (config: any) => void } */",
+    "MyDatePicker": "label?: string; name?: string; value?: string | Date | import(\"dayjs\").Dayjs | null; onChange?: (date: any, dateString: string) => void; required?: boolean; hasError?: boolean; errorMessage?: string; disabled?: boolean; placeholder?: string; isMarginBtm?: boolean; extra?: React.ReactNode; picker?: \"date\" | \"week\" | \"month\" | \"quarter\" | \"year\"; format?: string;",
+    "MyDatePicker1": "label?: string; name?: string; value?: import(\"dayjs\").Dayjs | null; onChange: (date: import(\"dayjs\").Dayjs | null) => void; required?: boolean; hasError?: boolean; errorMessage?: string; disabled?: boolean; placeholder?: string; isMarginBtm?: boolean; format?: string; extra?: React.ReactNode;",
+    "MyDeatails": "",
+    "MyDrawer": "title?: React.ReactNode; open?: boolean; onClose?: () => void; children?: React.ReactNode; add?: () => void; update?: () => void; isEdit?: boolean; width?: number | string; isLoading?: boolean; isDisable?: boolean; isPagination?: boolean; total?: number; onChange?: (page: number, pageSize: number) => void; pageSize?: number; showSizeChanger?: boolean; showQuickJumper?: boolean; extra?: React.ReactNode; className?: string; rootClassName?: string; antdDrawerStyles?: any; isHeader?: boolean; isContact?: boolean; isPyment?: boolean; isAss?: boolean; isAddMemeber?: boolean; isAprov?: boolean; isrecursion?: boolean; isGarda?: boolean; isManual?: boolean; isAppRej?: boolean; isMultiple?: { isGardaCheckbx?: boolean; value?: any; multipleFtn?: (e: any) => void }; handleChangeApprove?: () => void; rejFtn?: () => void; draftFtn?: () => void; nextPrevData?: { currentApp?: number; total?: number }; nextFtn?: () => void; PrevFtn?: () => void; status?: string; InfData?: any; infoDataChk?: any; pymntAddFtn?: () => void; pymentCloseFtn?: () => void;",
+    "MyDrowpDown": "title: React.ReactNode; items: { key: string; label: React.ReactNode }[];",
+    "MyMenu": "items?: { key: string; label: React.ReactNode; icon?: React.ReactNode; onClick?: () => void }[]; disabled?: boolean;",
+    "MySearchInput": "placeholder?: string; value?: string; onChange?: (e: React.ChangeEvent<HTMLInputElement>) => void; name?: string; disabled?: boolean;",
+    "MyTransfer": "",
+    "NotificationPopover": "isOpen?: boolean; onNavigateToAll?: () => void; onClose?: () => void;",
+    "NumberFilter": "label: string; selectedValues?: (number | string)[]; operator?: \"==\" | \"!=\" | \"<\" | \">\" | \"<=\" | \">=\" | \"between\"; onApply?: (filter: { label: string; operator: string; selectedValues: number[] }) => void;",
+    "PopOut": "",
+    "ProfileHeader": "layout?: \"side\" | \"top\"; onLayoutChange?: (layout: \"side\" | \"top\") => void; showButtons?: boolean; isDeceased?: boolean; onMembershipHeaderActionsMetaChange?: (meta: any) => void;",
+    "ReportViewer": "title?: string; subtitle?: string; data?: any[]; columns?: any[]; loading?: boolean; onRefresh?: () => void; onExportPDF?: () => void | Promise<void>; onExportExcel?: () => void | Promise<void>; onPrint?: () => void | Promise<void>; showFullscreen?: boolean; showExport?: boolean; showPrint?: boolean; showRefresh?: boolean; customActions?: { label: React.ReactNode; icon?: React.ReactNode; onClick?: () => void; type?: \"default\" | \"primary\" | \"dashed\" | \"link\" | \"text\" }[]; reportType?: string; className?: string; style?: React.CSSProperties; children?: React.ReactNode;",
+    "ResizableComp": "",
+    "RoutePermissionWrapper": "path: string; children: React.ReactElement<{ routePermissions?: { permissions: string[]; roles: string[] } }>;",
+    "SaveViewMenu": "className?: string; style?: React.CSSProperties;",
+    "SideNav": "",
+    "Sidebar": "",
+    "SimpleMenu": "title?: React.ReactNode; data?: Record<string, boolean | string>; isCheckBox?: boolean; actions?: (e: any) => void; vertical?: boolean; attachedFtn?: () => void; record?: any; index?: number; triggerClassName?: string;",
+    "SubTableComp": "columns: any[]; dataSource?: any[];",
+    "SubscriptionHistoryDetail": "open?: boolean; onClose?: () => void; subscription?: { _id?: string; membershipNumber?: string; membershipNo?: string; memberName?: string; user?: { userFullName?: string }; personalDetails?: { fullName?: string; membershipNo?: string }; professionalDetails?: { workLocation?: string; grade?: string; primarySection?: string; nmbiNumber?: string }; subscriptionYear?: number | string; startDate?: string; endDate?: string; subscriptionStatus?: \"Active\" | \"Lapsed\" | \"Suspended\" | \"Archived\" | \"Cancelled\" | \"Resigned\" | string; membershipCategory?: string; paymentType?: string; paymentFrequency?: string; payrollNo?: string; cancellation?: { dateCancelled?: string; reason?: string; reinstated?: boolean }; resignation?: { dateResigned?: string; reason?: string }; reminders?: { reminder1At?: string; reminder2At?: string; reminder3At?: string }; lastModifiedAt?: string } | null;",
+    "TableComponent": "data?: any[]; screenName: string; redirect?: string; isGrideLoading?: boolean; rowSelection?: any; selectedRowKeys?: React.Key[]; onSelectionChange?: (keys: React.Key[], rows: any[]) => void; selectionType?: \"checkbox\" | \"radio\"; enableRowSelection?: boolean; hideLegacyRowChrome?: boolean; rowActionsInGridmenu?: boolean; selectionToolbar?: React.ReactNode; onRowClick?: (record: any, rowIndex: number) => void; disableDefaultRowClick?: boolean; disableRowFn?: (record: any) => boolean; onDuplicateReviewRequest?: (record: any) => void; [key: string]: any;",
+    "TextFilter": "label: string; selectedValues?: string[]; operator?: \"contains\" | \"not_contains\" | \"starts_with\" | \"ends_with\" | \"==\" | \"!=\" | string; onApply?: (result: { label: string; operator: string; selectedValues: string[] }) => void;",
+    "ThreeDotsMenu": "items?: { key: string; label: React.ReactNode; icon?: React.ReactNode; iconColor?: string; onClick?: () => void }[]; onSelect?: (key: string) => void;",
+    "Toolbar": "",
+    "UndoCancellationModal": "visible?: boolean; onClose: () => void; subscriptionId?: string; onSuccess?: () => void;",
+    "UnifiedPagination": "total?: number; current?: number; pageSize?: number | \"All\"; onChange?: (page: number, pageSize: number) => void; onShowSizeChange?: (current: number, size: number) => void; showSizeChanger?: boolean; showQuickJumper?: boolean; showTotal?: boolean; pageSizeOptions?: string[]; showTotalFormatter?: (total: number, range: [number, number]) => React.ReactNode; itemName?: string; className?: string; style?: React.CSSProperties; [key: string]: any;",
+    "UserProfilePopover": "onLogout: () => void; onClose: () => void;"
+  },
+  "readmeHeader": ".design-sync/conventions.md",
+  "docsMap": {
+    "MyInput": ".design-sync/docs/MyInput.md",
+    "MySelect": ".design-sync/docs/MySelect.md",
+    "CustomSelect": ".design-sync/docs/CustomSelect.md",
+    "MyDatePicker": ".design-sync/docs/MyDatePicker.md",
+    "MyDatePicker1": ".design-sync/docs/MyDatePicker1.md",
+    "MySearchInput": ".design-sync/docs/MySearchInput.md",
+    "MyTable": ".design-sync/docs/MyTable.md",
+    "SubTableComp": ".design-sync/docs/SubTableComp.md",
+    "UnifiedPagination": ".design-sync/docs/UnifiedPagination.md",
+    "ApiPagination": ".design-sync/docs/ApiPagination.md",
+    "TextFilter": ".design-sync/docs/TextFilter.md",
+    "NumberFilter": ".design-sync/docs/NumberFilter.md",
+    "MultiFilterDropdown": ".design-sync/docs/MultiFilterDropdown.md",
+    "DateRang": ".design-sync/docs/DateRang.md",
+    "MyMenu": ".design-sync/docs/MyMenu.md",
+    "MyDrowpDown": ".design-sync/docs/MyDrowpDown.md",
+    "ThreeDotsMenu": ".design-sync/docs/ThreeDotsMenu.md",
+    "ActionDropdown": ".design-sync/docs/ActionDropdown.md",
+    "CommonPopConfirm": ".design-sync/docs/CommonPopConfirm.md",
+    "AuthorizedComponents": ".design-sync/docs/AuthorizedComponents.md",
+    "ExportCSV": ".design-sync/docs/ExportCSV.md",
+    "ExportPDF": ".design-sync/docs/ExportPDF.md",
+    "SimpleMenu": ".design-sync/docs/SimpleMenu.md",
+    "JiraLikeMenu": ".design-sync/docs/JiraLikeMenu.md",
+    "MyDrawer": ".design-sync/docs/MyDrawer.md",
+    "MyAlert": ".design-sync/docs/MyAlert.md",
+    "MyConfirm": ".design-sync/docs/MyConfirm.md",
+    "ErrorBoundary": ".design-sync/docs/ErrorBoundary.md",
+    "Header": ".design-sync/docs/Header.md",
+    "AppLauncher": ".design-sync/docs/AppLauncher.md",
+    "Sidebar": ".design-sync/docs/Sidebar.md",
+    "SideNav": ".design-sync/docs/SideNav.md",
+    "UserProfilePopover": ".design-sync/docs/UserProfilePopover.md",
+    "NotificationPopover": ".design-sync/docs/NotificationPopover.md",
+    "Breadcrumb": ".design-sync/docs/Breadcrumb.md",
+    "RoutePermissionWrapper": ".design-sync/docs/RoutePermissionWrapper.md",
+    "HeaderDetails": ".design-sync/docs/HeaderDetails.md",
+    "Toolbar": ".design-sync/docs/Toolbar.md",
+    "SaveViewMenu": ".design-sync/docs/SaveViewMenu.md",
+    "Gridmenu": ".design-sync/docs/Gridmenu.md",
+    "TableComponent": ".design-sync/docs/TableComponent.md",
+    "ProfileHeader": ".design-sync/docs/ProfileHeader.md",
+    "AppTabs": ".design-sync/docs/AppTabs.md",
+    "MyDeatails": ".design-sync/docs/MyDeatails.md",
+    "MyTransfer": ".design-sync/docs/MyTransfer.md",
+    "SubscriptionHistoryDetail": ".design-sync/docs/SubscriptionHistoryDetail.md",
+    "CreateBatchPayment": ".design-sync/docs/CreateBatchPayment.md",
+    "CreateLifecycleBatchForm": ".design-sync/docs/CreateLifecycleBatchForm.md",
+    "ContactDrawer": ".design-sync/docs/ContactDrawer.md",
+    "CancallationDrawer": ".design-sync/docs/CancallationDrawer.md",
+    "UndoCancellationModal": ".design-sync/docs/UndoCancellationModal.md",
+    "PopOut": ".design-sync/docs/PopOut.md",
+    "ResizableComp": ".design-sync/docs/ResizableComp.md"
+  },
+  "srcDir": "src/component/common"
+}

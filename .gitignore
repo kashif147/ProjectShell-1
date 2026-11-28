@@ -27,3 +27,10 @@ yarn-error.log*
 
 # Never commit JWT tokens (e.g. stray smoke-test tokens)
 *.jwt
+
+# design-sync (scratch + machine state; the rest of .design-sync/ is committed)
+.ds-sync/
+ds-bundle/
+.design-sync/.cache/
+.design-sync/learnings/
+.design-sync/node_modules
