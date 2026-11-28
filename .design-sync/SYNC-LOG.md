@@ -8,10 +8,12 @@ free text); this file is the human-readable record that goes with it. See NOTES.
 | Field | Value |
 |---|---|
 | Artifact | https://claude.ai/artifact/9VuFn8PgjKK3kKsC61Ztxj ("ProjectShell CRM", Design System type) |
-| Artifact version | Version 2, version id `1795842993-443e` (version 1 was the empty artifact) |
+| Artifact version | Version 2, version id `1795842993-443e` (version 1 was the empty artifact); bundle sha256 below |
 | Visibility | Private: readable only by the owner (service: "readable by only you"; plan `sharedWith: owner`). Page is read-only (changes come from code + /design-sync). |
-| Source | `frontend/ProjectShell-1`, branch `chore/design-sync` from `origin/develop` `5aa5174` (Merge PR #78). App source unmodified. |
-| Sync config | committed with this log on `chore/design-sync` (see `git log -- .design-sync`) |
+| Publication date | 2026-11-28 |
+| Source commit | `5aa5174ae1c683319ec489af8d9dceb90691161b` (`origin/develop`, Merge PR #78): the app code the bundle was built from. App source unmodified. |
+| Baseline commit | `17016b875ab7ca617ff67ccc993771a52e404879` on `chore/design-sync` (PR #79): the `.design-sync/` config, previews and scripts that produced this publish |
+| Baseline tag | `design-sync/2026-11-28` (annotated, pushed) → `17016b8`. Reproduce: check out the tag, `node .design-sync/build-lib.mjs`, then the driver (NOTES.md, "Incremental re-sync procedure"). Later commits that only touch this log don't change the build. |
 | Scope | 54 components (8 debug/example files + AuthorizationWrapper, ListModal, Content, QRCodeGen, IdleModal excluded by owner decision), 151 preview cells, all graded good |
 | Bundle | `components/bundle.js` 10,792,416 bytes, sha256 `f38df935d5984adbbcc7b653f3bb1a76…`; CRM components + antd 5.29.3 + @ant-design/icons + CRMProvider/CRMRoute/dayjs; React 18.3.1 shipped as `components/lib/react.js` |
 | Published | 119 files, 13,215,156 bytes, one call, 0 removed |
